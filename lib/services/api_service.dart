@@ -9,10 +9,8 @@ class ApiService {
     if (kIsWeb)
       return 'http://localhost:8082/api/v1';
     else if (Platform.isAndroid) {
-      // Use computer IP to avoid 'adb reverse'
-      return 'http://192.168.1.69:8082/api/v1';
+      return 'https://bawane-api.up.railway.app/api/v1';
     }
-    // iOS Simulator or real iOS device
     return 'http://192.168.1.69:8082/api/v1';
   }
 
