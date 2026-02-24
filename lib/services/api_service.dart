@@ -7,11 +7,11 @@ class ApiService {
   // Base URL logic for Android Emulator vs Real Device/iOS
   static String get baseUrl {
     if (kIsWeb)
-      return 'http://localhost:8082/api/v1';
-    else if (Platform.isAndroid) {
       return 'https://bawane-api.up.railway.app/api/v1';
+    else if (Platform.isAndroid) {
+      return 'http://192.168.1.69:8082/api/v1';
     }
-    return 'http://192.168.1.69:8082/api/v1';
+    return 'http://localhost:8082/api/v1';
   }
 
   static Future<List<dynamic>> getList(String endpoint) async {
