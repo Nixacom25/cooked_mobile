@@ -5,7 +5,6 @@ import 'package:app_ecommerce/utils/constants.dart';
 import 'package:app_ecommerce/widgets/dark_product_card.dart';
 import 'package:app_ecommerce/screens/video_preview_screen.dart';
 import 'package:app_ecommerce/widgets/filter_modal.dart';
-import 'package:app_ecommerce/widgets/search_bar_widget.dart';
 
 class CategoryDetailsScreen extends StatefulWidget {
   final Category initialCategory;
@@ -46,18 +45,8 @@ class _CategoryDetailsScreenState extends State<CategoryDetailsScreen> {
 
   void _onCategoryToggled(Category category) {
     setState(() {
-      if (_selectedCategories.contains(category.name)) {
-        _selectedCategories.remove(category.name);
-      } else {
-        _selectedCategories.add(category.name);
-      }
-      // Update header category if needed (optional, using first selected)
-      if (_selectedCategories.isNotEmpty) {
-        _selectedCategory = widget.allCategories.firstWhere(
-          (c) => c.name == _selectedCategories.first,
-          orElse: () => category,
-        );
-      }
+      _selectedCategories = [category.name];
+      _selectedCategory = category;
       FocusScope.of(context).unfocus();
       _applyFilters();
     });
@@ -164,24 +153,6 @@ class _CategoryDetailsScreenState extends State<CategoryDetailsScreen> {
                 ),
               ),
 
-              // Search Bar
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppConstants.defaultPadding,
-                ),
-                child: SearchBarWidget(
-                  hintText:
-                      'Rechercher dans ${_selectedCategory.name.replaceAll('\n', ' ')}',
-                  onSearch: (query) {
-                    setState(() {
-                      _searchQuery = query;
-                      _applyFilters();
-                    });
-                  },
-                ),
-              ),
-              const SizedBox(height: 16),
-
               // Category Switcher
               SizedBox(
                 height: 40,
@@ -247,7 +218,8 @@ class _CategoryDetailsScreenState extends State<CategoryDetailsScreen> {
                           PageRouteBuilder(
                             opaque: false,
                             pageBuilder: (context, _, __) => VideoPreviewScreen(
-                              product: _filteredProducts[index],
+                              products: _filteredProducts,
+                              initialIndex: index,
                             ),
                           ),
                         );

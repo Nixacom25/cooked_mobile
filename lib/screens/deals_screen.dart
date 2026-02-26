@@ -245,11 +245,13 @@ class _DealsScreenState extends State<DealsScreen> {
   }
 
   void _openProduct(BuildContext context, Product product) {
+    final index = _allDeals.indexOf(product);
     Navigator.push(
       context,
       PageRouteBuilder(
         opaque: false,
-        pageBuilder: (context, _, __) => VideoPreviewScreen(product: product),
+        pageBuilder: (context, _, __) =>
+            VideoPreviewScreen(products: _allDeals, initialIndex: index),
       ),
     );
   }

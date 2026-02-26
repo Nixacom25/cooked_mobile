@@ -251,34 +251,82 @@ class _ValidationScreenState extends State<ValidationScreen> {
 
   Future<void> _selectDate() async {
     DateTime now = DateTime.now();
-    DateTime? picked = await showDatePicker(
+
+    // D'aujourd'hui + 2 jours jusqu'à + 6 jours
+    // (Puisque Aujourd'hui et Demain sont déjà des options séparées)
+    List<DateTime> nextDays = List.generate(
+      5, // 5 prochains jours après demain
+      (index) => now.add(Duration(days: index + 2)),
+    );
+
+    showModalBottomSheet(
       context: context,
-      initialDate: now,
-      firstDate: now,
-      lastDate: now.add(const Duration(days: 6)),
-      locale: const Locale('fr', 'FR'),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(primary: Color(0xFFE65100)),
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Text(
+                  'CHOISIR UNE DATE',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w900,
+                    color: Colors.black87,
+                  ),
+                ),
+              ),
+              const Divider(height: 1),
+              ...nextDays.map((date) {
+                String formattedDate = DateFormat(
+                  'EEEE d MMMM yyyy',
+                  'fr_FR',
+                ).format(date);
+                // Majuscule sur le premier lettre
+                formattedDate =
+                    formattedDate[0].toUpperCase() + formattedDate.substring(1);
+                String shortDate = DateFormat('dd/MM/yyyy').format(date);
+
+                return ListTile(
+                  title: Text(
+                    formattedDate,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
+                  trailing: const Icon(
+                    Icons.calendar_today,
+                    size: 18,
+                    color: Color(0xFFE65100),
+                  ),
+                  onTap: () {
+                    setState(() {
+                      _selectedDate = 'CHOISIR UNE DATE';
+                      _dateController.text = shortDate;
+                    });
+                    Navigator.pop(context);
+                  },
+                );
+              }).toList(),
+            ],
           ),
-          child: child!,
         );
       },
     );
-
-    if (picked != null) {
-      setState(() {
-        _selectedDate = 'AUTRE DATE';
-        _dateController.text = DateFormat('dd/MM/yyyy').format(picked);
-      });
-    }
   }
 
   Future<void> _selectTime() async {
     TimeOfDay? picked = await showTimePicker(
       context: context,
       initialTime: TimeOfDay.now(),
+      initialEntryMode:
+          TimePickerEntryMode.input, // Utiliser le clavier par défaut
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
@@ -409,7 +457,7 @@ class _ValidationScreenState extends State<ValidationScreen> {
       DateTime deliveryDateTime = DateTime.now();
       if (_selectedDate == 'DEMAIN') {
         deliveryDateTime = DateTime.now().add(const Duration(days: 1));
-      } else if (_selectedDate == 'AUTRE DATE' &&
+      } else if (_selectedDate == 'CHOISIR UNE DATE' &&
           _dateController.text.isNotEmpty) {
         try {
           deliveryDateTime = DateFormat(
@@ -578,7 +626,7 @@ class _ValidationScreenState extends State<ValidationScreen> {
                             'LOCALISATION',
                             style: TextStyle(
                               fontWeight: FontWeight.w900,
-                              fontSize: 11,
+                              fontSize: 14,
                               color: Colors.black87,
                             ),
                           ),
@@ -595,6 +643,7 @@ class _ValidationScreenState extends State<ValidationScreen> {
                         decoration: BoxDecoration(
                           color: const Color(0xFFF5F5F5),
                           borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.black87, width: 1.5),
                         ),
                         child: Row(
                           children: [
@@ -655,7 +704,7 @@ class _ValidationScreenState extends State<ValidationScreen> {
                         'DATE DE LIVRAISON',
                         style: TextStyle(
                           fontWeight: FontWeight.w900,
-                          fontSize: 12,
+                          fontSize: 14,
                           color: Colors.black87,
                         ),
                       ),
@@ -691,30 +740,47 @@ class _ValidationScreenState extends State<ValidationScreen> {
                             height: 48,
                             alignment: Alignment.center,
                             decoration: BoxDecoration(
-                              color: _selectedDate == 'AUTRE DATE'
+                              color: _selectedDate == 'CHOISIR UNE DATE'
                                   ? const Color(0xFFE65100)
                                   : Colors.white,
                               border: Border.all(
-                                color: _selectedDate == 'AUTRE DATE'
+                                color: _selectedDate == 'CHOISIR UNE DATE'
                                     ? const Color(0xFFE65100)
                                     : Colors.black,
                                 width: 1.5,
                               ),
                               borderRadius: BorderRadius.circular(30),
                             ),
-                            child: Text(
-                              _selectedDate == 'AUTRE DATE' &&
-                                      _dateController.text.isNotEmpty
-                                  ? _dateController.text
-                                  : 'AUTRE DATE',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                color: _selectedDate == 'AUTRE DATE'
-                                    ? Colors.white
-                                    : Colors.black,
-                                fontWeight: FontWeight.w900,
-                                fontSize: 10,
-                              ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                if (_selectedDate == 'CHOISIR UNE DATE')
+                                  const Padding(
+                                    padding: EdgeInsets.only(right: 4),
+                                    child: Icon(
+                                      Icons.check_circle,
+                                      color: Colors.white,
+                                      size: 16,
+                                    ),
+                                  ),
+                                Flexible(
+                                  child: Text(
+                                    _selectedDate == 'CHOISIR UNE DATE' &&
+                                            _dateController.text.isNotEmpty
+                                        ? _dateController.text
+                                        : 'CHOISIR UNE DATE',
+                                    textAlign: TextAlign.center,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      color: _selectedDate == 'CHOISIR UNE DATE'
+                                          ? Colors.white
+                                          : Colors.black,
+                                      fontWeight: FontWeight.w900,
+                                      fontSize: 10,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ),
@@ -732,7 +798,7 @@ class _ValidationScreenState extends State<ValidationScreen> {
                         'HEURE DE LIVRAISON',
                         style: TextStyle(
                           fontWeight: FontWeight.w900,
-                          fontSize: 12,
+                          fontSize: 14,
                           color: Colors.black87,
                         ),
                       ),
@@ -744,10 +810,10 @@ class _ValidationScreenState extends State<ValidationScreen> {
                       Expanded(
                         flex: 3,
                         child: _buildSelectableButton(
-                          'LE PLUS RAPIDEMENT POSSIBLE',
-                          _selectedTime == 'LE PLUS RAPIDEMENT POSSIBLE',
+                          'JE SUIS DISPONIBLE',
+                          _selectedTime == 'JE SUIS DISPONIBLE',
                           () => setState(() {
-                            _selectedTime = 'LE PLUS RAPIDEMENT POSSIBLE';
+                            _selectedTime = 'JE SUIS DISPONIBLE';
                             _timeController.clear();
                           }),
                         ),
@@ -775,23 +841,35 @@ class _ValidationScreenState extends State<ValidationScreen> {
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Text(
-                                  _selectedTime == 'AUTRE HEURE' &&
-                                          _timeController.text.isNotEmpty
-                                      ? _timeController.text
-                                      : '--:--',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16,
-                                    color: _selectedTime == 'AUTRE HEURE'
-                                        ? const Color(0xFFE65100)
-                                        : Colors.black,
+                                if (_selectedTime == 'AUTRE HEURE')
+                                  const Padding(
+                                    padding: EdgeInsets.only(right: 4),
+                                    child: Icon(
+                                      Icons.check_circle,
+                                      color: Color(0xFFE65100),
+                                      size: 16,
+                                    ),
+                                  ),
+                                Flexible(
+                                  child: Text(
+                                    _selectedTime == 'AUTRE HEURE' &&
+                                            _timeController.text.isNotEmpty
+                                        ? _timeController.text
+                                        : 'CHOISIR HEURE',
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12,
+                                      color: _selectedTime == 'AUTRE HEURE'
+                                          ? const Color(0xFFE65100)
+                                          : Colors.black,
+                                    ),
                                   ),
                                 ),
-                                const SizedBox(width: 8),
+                                const SizedBox(width: 4),
                                 Icon(
                                   Icons.access_time_filled,
-                                  size: 18,
+                                  size: 16,
                                   color: _selectedTime == 'AUTRE HEURE'
                                       ? const Color(0xFFE65100)
                                       : Colors.black,
@@ -866,9 +944,24 @@ class _ValidationScreenState extends State<ValidationScreen> {
                             ],
                           ),
                         ),
+                        const Padding(
+                          padding: EdgeInsets.only(
+                            left: 16,
+                            right: 16,
+                            bottom: 8,
+                          ),
+                          child: Text(
+                            "Le service de montage vous permet de recevoir votre article déjà assemblé et prêt à l'emploi. Cochez cette option si vous le souhaitez.",
+                            style: TextStyle(
+                              color: Colors.black54,
+                              fontSize: 11,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                        ),
                         if (!_isDakar)
                           const Padding(
-                            padding: EdgeInsets.only(left: 16, bottom: 24),
+                            padding: EdgeInsets.only(left: 16, bottom: 5),
                             child: Text(
                               "* Service disponible uniquement à Dakar",
                               style: TextStyle(
@@ -879,7 +972,7 @@ class _ValidationScreenState extends State<ValidationScreen> {
                             ),
                           )
                         else
-                          const SizedBox(height: 24),
+                          const SizedBox(height: 16),
                       ],
                     ),
 
@@ -1049,7 +1142,7 @@ class _ValidationScreenState extends State<ValidationScreen> {
             padding: const EdgeInsets.all(24),
             decoration: const BoxDecoration(
               color: Colors.black,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
             ),
             child: Column(
               children: [
@@ -1057,31 +1150,7 @@ class _ValidationScreenState extends State<ValidationScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     const Text(
-                      'LIVRAISON',
-                      style: TextStyle(
-                        color: Colors.white70,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    Text(
-                      '${formatPrice(deliveryFee.toInt())} FCFA',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                const Divider(color: Colors.white24),
-                const SizedBox(height: 8),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'TOTAL À PAYER',
+                      'TOTAL + LIVRAISON',
                       style: TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.w800,
@@ -1093,7 +1162,7 @@ class _ValidationScreenState extends State<ValidationScreen> {
                         Text(
                           formatPrice(finalTotal.toInt()),
                           style: const TextStyle(
-                            color: Color(0xFFE65100),
+                            color: Colors.green,
                             fontSize: 32,
                             fontWeight: FontWeight.w900,
                           ),
@@ -1101,7 +1170,7 @@ class _ValidationScreenState extends State<ValidationScreen> {
                         const Text(
                           ' FCFA',
                           style: TextStyle(
-                            color: Color(0xFFE65100),
+                            color: Colors.green,
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
                             height: 2,
@@ -1127,7 +1196,7 @@ class _ValidationScreenState extends State<ValidationScreen> {
                     child: _isSubmitting
                         ? const CircularProgressIndicator(color: Colors.white)
                         : const Text(
-                            'JE VALIDE',
+                            "J'ACHÈTE",
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.w900,
@@ -1226,7 +1295,7 @@ class _ValidationScreenState extends State<ValidationScreen> {
                 label,
                 style: const TextStyle(
                   fontWeight: FontWeight.w900,
-                  fontSize: 11,
+                  fontSize: 14,
                   color: Colors.black87,
                 ),
               ),
@@ -1237,7 +1306,7 @@ class _ValidationScreenState extends State<ValidationScreen> {
             label,
             style: const TextStyle(
               fontWeight: FontWeight.w900,
-              fontSize: 11,
+              fontSize: 14,
               color: Colors.black87,
             ),
           ),
@@ -1247,6 +1316,7 @@ class _ValidationScreenState extends State<ValidationScreen> {
           decoration: BoxDecoration(
             color: const Color(0xFFF5F5F5),
             borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.black87, width: 1.5),
           ),
           child: TextField(
             controller: controller,
@@ -1285,14 +1355,25 @@ class _ValidationScreenState extends State<ValidationScreen> {
           ),
           borderRadius: BorderRadius.circular(30),
         ),
-        child: Text(
-          text,
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            color: isSelected ? Colors.white : Colors.black,
-            fontWeight: FontWeight.w900,
-            fontSize: 10,
-          ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (isSelected)
+              const Padding(
+                padding: EdgeInsets.only(right: 6),
+                child: Icon(Icons.check_circle, color: Colors.white, size: 16),
+              ),
+            Text(
+              text,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: isSelected ? Colors.white : Colors.black,
+                fontWeight: FontWeight.w900,
+                fontSize: 10,
+              ),
+            ),
+          ],
         ),
       ),
     );

@@ -307,12 +307,15 @@ class _HomeScreenState extends State<HomeScreen> {
               _navigateToCategoryDetails(category);
             },
             onProductTap: (product) {
+              final index = categoryProducts.indexOf(product);
               Navigator.push(
                 context,
                 PageRouteBuilder(
                   opaque: false,
-                  pageBuilder: (context, _, __) =>
-                      VideoPreviewScreen(product: product),
+                  pageBuilder: (context, _, __) => VideoPreviewScreen(
+                    products: categoryProducts,
+                    initialIndex: index,
+                  ),
                 ),
               );
             },

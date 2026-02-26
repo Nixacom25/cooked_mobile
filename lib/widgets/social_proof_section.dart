@@ -82,11 +82,11 @@ class SocialProofSection extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               Text(
-                'CLIENTS LIVRÉS PARTOUT AU SÉNÉGAL',
+                'AVIS CLIENTS',
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
-                  color: Colors.grey[700],
+                  color: Colors.black87,
                   letterSpacing: 0.5,
                 ),
               ),

@@ -4,14 +4,22 @@ import 'package:app_ecommerce/screens/reels_screen.dart';
 import 'package:app_ecommerce/screens/deals_screen.dart';
 
 class MainNavigation extends StatefulWidget {
-  const MainNavigation({super.key});
+  final int initialIndex;
+
+  const MainNavigation({super.key, this.initialIndex = 0});
 
   @override
   State<MainNavigation> createState() => _MainNavigationState();
 }
 
 class _MainNavigationState extends State<MainNavigation> {
-  int _currentIndex = 0;
+  late int _currentIndex;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentIndex = widget.initialIndex;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -34,6 +42,7 @@ class _MainNavigationState extends State<MainNavigation> {
         child: BottomNavigationBar(
           currentIndex: _currentIndex,
           onTap: (index) {
+            FocusManager.instance.primaryFocus?.unfocus();
             setState(() {
               _currentIndex = index;
             });

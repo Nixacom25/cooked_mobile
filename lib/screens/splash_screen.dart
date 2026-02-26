@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:app_ecommerce/utils/constants.dart';
-import 'package:app_ecommerce/screens/welcome_screen.dart';
-import 'package:app_ecommerce/services/data_cache_service.dart';
+import 'package:app_ecommerce/screens/main_navigation.dart';
+import 'package:app_ecommerce/services/video_preload_service.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -21,7 +21,7 @@ class _SplashScreenState extends State<SplashScreen>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 2),
+      duration: const Duration(seconds: 5),
     );
 
     _fadeAnimation = Tween<double>(
@@ -36,35 +36,34 @@ class _SplashScreenState extends State<SplashScreen>
 
     _controller.forward();
 
-    // Start fetching data immediately while animation plays
-    final dataFuture = _prefetchData();
+    // Ensure the splash screen is rendered before starting heavy tasks
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Start fetching data immediately while animation plays
+      final dataFuture = _prefetchData();
 
-    // Navigate to Welcome Screen after delay AND data fetch
-    Future.wait([
-      Future.delayed(const Duration(seconds: 2)), // Reduced from 3s to 2s
-      dataFuture,
-    ]).then((_) {
-      if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const WelcomeScreen()),
-        );
-      }
+      // Navigate to Main Navigation (Reels Tab) after delay AND data fetch
+      Future.wait([
+        Future.delayed(const Duration(seconds: 5)),
+        dataFuture,
+      ]).then((_) {
+        if (mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const MainNavigation(initialIndex: 1),
+            ),
+          );
+        }
+      });
     });
   }
 
   Future<void> _prefetchData() async {
-    // We just warm up the cache or service singleton here
-    // For now, let's assuming services have a caching layer or we just rely on OS network cache
-    // Real implementation would involve a DataProvider that holds state.
-    // Given the current architecture, we can't easily pass data to HomeScreen through WelcomeScreen
-    // without state management.
-    // However, simpler "warming" is to just call the APIs.
-    // If the APIs use a client with caching (like dio with cache interceptor), it helps.
-    // Mobile `http` doesn't cache by default.
-    // So this step mainly ensures the backend is "woken up" if sleeping.
-    // But wait, the user wants "instant".
-    // Best approach: Use a global state or simple singleton to hold fetched data.
+    // Start preloading videos immediately while splash screen is visible
+    VideoPreloadService.preloadFirstVideos();
+
+    // We could add more prefetching here (e.g. Products, Categories)
+    // if using a global caching service.
   }
 
   @override
@@ -76,7 +75,7 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.primary,
+      backgroundColor: AppColors.accent,
       body: Center(
         child: FadeTransition(
           opacity: _fadeAnimation,
@@ -114,7 +113,7 @@ class _SplashScreenState extends State<SplashScreen>
                   style: TextStyle(
                     fontSize: 40,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.accent,
+                    color: Colors.white,
                     letterSpacing: 4,
                   ),
                 ),

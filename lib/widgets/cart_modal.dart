@@ -55,22 +55,35 @@ class CartPopup extends StatelessWidget {
                           ),
                         ],
                       ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          '$totalItems articles',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 12,
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text(
+                              '$totalItems articles',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                              ),
+                            ),
                           ),
-                        ),
+                          const SizedBox(width: 8),
+                          GestureDetector(
+                            onTap: () => Navigator.pop(context),
+                            child: const Icon(
+                              Icons.close,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -148,8 +161,9 @@ class CartPopup extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         const Text(
-                          'TOTAL ESTIMÉ',
+                          'PRIX TOTAL',
                           style: TextStyle(
+                            color: Colors.black,
                             fontWeight: FontWeight.w900,
                             fontSize: 14,
                           ),
@@ -212,7 +226,7 @@ class CartPopup extends StatelessWidget {
                             ),
                             SizedBox(width: 8),
                             Text(
-                              'COMMANDER',
+                              'J\'ACCEPTE',
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
@@ -274,6 +288,7 @@ class CartPopup extends StatelessWidget {
               Text(
                 item.product.title.toUpperCase(),
                 style: const TextStyle(
+                  color: Colors.black,
                   fontWeight: FontWeight.bold,
                   fontSize: 12,
                 ),
@@ -284,7 +299,7 @@ class CartPopup extends StatelessWidget {
               Text(
                 item.product.price,
                 style: const TextStyle(
-                  color: Color(0xFFE65100),
+                  color: Colors.green,
                   fontWeight: FontWeight.bold,
                   fontSize: 14,
                 ),
@@ -298,7 +313,7 @@ class CartPopup extends StatelessWidget {
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: Colors.grey.shade300),
+            border: Border.all(color: Colors.black87),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -316,6 +331,7 @@ class CartPopup extends StatelessWidget {
               Text(
                 '${item.quantity}',
                 style: const TextStyle(
+                  color: Colors.black,
                   fontWeight: FontWeight.bold,
                   fontSize: 12,
                 ),
@@ -331,7 +347,8 @@ class CartPopup extends StatelessWidget {
         ),
         const SizedBox(width: 8),
         // Swipe Indicator Hint
-        const Icon(Icons.chevron_left, size: 20, color: Colors.grey),
+        const Icon(Icons.chevron_left, size: 15, color: Colors.red),
+        const Icon(Icons.delete_outline, size: 15, color: Colors.red),
       ],
     );
   }

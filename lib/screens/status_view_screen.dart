@@ -4,6 +4,7 @@ import 'package:app_ecommerce/models/status_category.dart';
 import 'package:app_ecommerce/models/testimonial.dart';
 import 'package:app_ecommerce/services/testimonial_service.dart';
 import 'package:video_player/video_player.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class StatusViewScreen extends StatefulWidget {
   final List<StatusCategory> allCategories;
@@ -35,17 +36,35 @@ class _StatusViewScreenState extends State<StatusViewScreen> {
 
   final Set<int> _likedStatuses = {};
   final Set<int> _viewedStatuses = {};
+  SharedPreferences? _prefs;
 
   @override
   void initState() {
     super.initState();
 
     _currentCategoryIndex = widget.initialCategoryIndex;
+    _initPrefs();
+  }
+
+  Future<void> _initPrefs() async {
+    _prefs = await SharedPreferences.getInstance();
+
+    // Load saved likes and views
+    final savedLikes = _prefs?.getStringList('liked_statuses') ?? [];
+    final savedViews = _prefs?.getStringList('viewed_statuses') ?? [];
+
+    setState(() {
+      _likedStatuses.addAll(savedLikes.map(int.parse));
+      _viewedStatuses.addAll(savedViews.map(int.parse));
+    });
+
     _startTimer();
     _markAsViewed(); // Mark initial status
   }
 
   void _markAsViewed() async {
+    if (_prefs == null) return;
+
     final category = widget.allCategories[_currentCategoryIndex];
     if (category.items.isNotEmpty) {
       final testimonial = category.items[_currentStatusIndex];
@@ -53,6 +72,13 @@ class _StatusViewScreenState extends State<StatusViewScreen> {
         setState(() {
           _viewedStatuses.add(testimonial.id);
         });
+
+        // Save to local storage
+        await _prefs!.setStringList(
+          'viewed_statuses',
+          _viewedStatuses.map((id) => id.toString()).toList(),
+        );
+
         try {
           final updated = await TestimonialService.incrementViews(
             testimonial.id,
@@ -70,6 +96,8 @@ class _StatusViewScreenState extends State<StatusViewScreen> {
   }
 
   void _likeCurrentStatus() async {
+    if (_prefs == null) return;
+
     final category = widget.allCategories[_currentCategoryIndex];
     if (category.items.isNotEmpty) {
       final testimonial = category.items[_currentStatusIndex];
@@ -77,11 +105,22 @@ class _StatusViewScreenState extends State<StatusViewScreen> {
         setState(() {
           _likedStatuses.remove(testimonial.id);
         });
+
+        await _prefs!.setStringList(
+          'liked_statuses',
+          _likedStatuses.map((id) => id.toString()).toList(),
+        );
         // Optional: Call unlike endpoint if created
       } else {
         setState(() {
           _likedStatuses.add(testimonial.id);
         });
+
+        await _prefs!.setStringList(
+          'liked_statuses',
+          _likedStatuses.map((id) => id.toString()).toList(),
+        );
+
         try {
           final updated = await TestimonialService.incrementLikes(
             testimonial.id,
