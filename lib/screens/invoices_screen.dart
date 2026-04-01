@@ -40,8 +40,7 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
               .where(
                 (o) =>
                     o.status == OrderStatus.delivered ||
-                    o.status == OrderStatus.confirmed ||
-                    o.status == OrderStatus.shipping,
+                    o.status == OrderStatus.on_the_way,
               )
               .toList();
           _isLoading = false;

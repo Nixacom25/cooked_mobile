@@ -134,11 +134,4 @@ class OrderItem {
   }
 }
 
-enum OrderStatus {
-  pending, // En attente
-  confirmed, // Confirmée
-  preparing, // En préparation
-  shipping, // En livraison
-  delivered, // Livrée
-  cancelled, // Annulée
-}
+enum OrderStatus { pending, on_the_way, delivered, cancelled }

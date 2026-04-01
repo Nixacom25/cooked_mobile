@@ -231,12 +231,8 @@ class _OrdersScreenState extends State<OrdersScreen> {
         statusLabel = 'En attente';
         statusColor = const Color(0xFFF59E0B);
         break;
-      case OrderStatus.confirmed:
-        statusLabel = 'Confirmée';
-        statusColor = const Color(0xFF10B981);
-        break;
-      case OrderStatus.shipping:
-        statusLabel = 'En livraison';
+      case OrderStatus.on_the_way:
+        statusLabel = 'En cours';
         statusColor = const Color(0xFF3B82F6);
         break;
       case OrderStatus.delivered:
@@ -246,8 +242,6 @@ class _OrdersScreenState extends State<OrdersScreen> {
       case OrderStatus.cancelled:
         statusLabel = 'Annulée';
         statusColor = const Color(0xFFEF4444);
-        break;
-      default:
         break;
     }
 

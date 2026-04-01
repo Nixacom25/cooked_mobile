@@ -35,11 +35,7 @@ class _ReviewsListScreenState extends State<ReviewsListScreen> {
       setState(() {
         // Filter for orders that are DELIVERED or COMPLETED to allow reviews
         _deliveredOrders = orders
-            .where(
-              (o) =>
-                  o.status == OrderStatus.delivered ||
-                  o.status == OrderStatus.confirmed,
-            )
+            .where((o) => o.status == OrderStatus.delivered)
             .toList();
         _isLoading = false;
       });
