@@ -4,20 +4,27 @@ import 'package:device_preview/device_preview.dart';
 import 'package:app_ecommerce/utils/theme.dart';
 import 'package:app_ecommerce/screens/splash_screen.dart';
 import 'package:app_ecommerce/services/global_video_cache.dart';
-import 'package:app_ecommerce/widgets/floating_cart_overlay.dart';
-import 'package:app_ecommerce/utils/cart_observer.dart';
+
+import 'package:app_ecommerce/screens/cart_screen.dart';
+import 'package:app_ecommerce/screens/validation_screen.dart';
 
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:app_ecommerce/services/fcm_service.dart';
 
-final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
-final GlobalKey _cartOverlayKey = GlobalKey();
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  try {
+    await Firebase.initializeApp();
+    FCMService().initialize();
+  } catch (e) {
+    debugPrint('Firebase initialization error: $e');
+  }
+
   runApp(
-    DevicePreview(
-      enabled: !kReleaseMode,
-      builder: (context) => const MyApp(), // Wrap your app
-    ),
+    DevicePreview(enabled: !kReleaseMode, builder: (context) => const MyApp()),
   );
 }
 
@@ -54,26 +61,20 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      navigatorKey: _navigatorKey, // Add key
-      navigatorObservers: [CartVisibilityObserver()], // Add observer
+      navigatorKey: navigatorKey, // Add key
       useInheritedMediaQuery: true, // Required for DevicePreview
       locale: DevicePreview.locale(context), // Add the locale
       builder: (context, child) {
-        final widget = DevicePreview.appBuilder(context, child);
-        return Stack(
-          children: [
-            widget,
-            FloatingCartOverlay(
-              key: _cartOverlayKey, // Ensure state is preserved
-              navigatorKey: _navigatorKey,
-            ),
-          ],
-        );
+        return DevicePreview.appBuilder(context, child);
       },
       debugShowCheckedModeBanner: false,
       title: 'Bawane',
       theme: AppTheme.lightTheme,
       home: const SplashScreen(),
+      routes: {
+        '/cart': (context) => const CartScreen(),
+        '/validation': (context) => const ValidationScreen(),
+      },
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,

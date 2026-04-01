@@ -80,6 +80,34 @@ class CartService {
     }
   }
 
+  void incrementQuantity(String productId) {
+    List<CartItem> currentItems = List.from(itemsNotifier.value);
+    final index = currentItems.indexWhere(
+      (item) => item.product.id == productId,
+    );
+    if (index >= 0) {
+      currentItems[index].quantity++;
+      itemsNotifier.value = currentItems;
+      _updateTotal();
+    }
+  }
+
+  void decrementQuantity(String productId) {
+    List<CartItem> currentItems = List.from(itemsNotifier.value);
+    final index = currentItems.indexWhere(
+      (item) => item.product.id == productId,
+    );
+    if (index >= 0) {
+      if (currentItems[index].quantity > 1) {
+        currentItems[index].quantity--;
+      } else {
+        currentItems.removeAt(index);
+      }
+      itemsNotifier.value = currentItems;
+      _updateTotal();
+    }
+  }
+
   void removeItemCompletely(Product product) {
     List<CartItem> currentItems = List.from(itemsNotifier.value);
     currentItems.removeWhere((item) => item.product.id == product.id);
@@ -130,6 +158,12 @@ class CartService {
   int get totalInstallationFees =>
       items.fold(0, (sum, item) => sum + item.installationFee);
   int get grandTotal => items.fold(0, (sum, item) => sum + item.total);
+
+  bool isInCart(String productId) {
+    return items.any((item) => item.product.id == productId);
+  }
+
+  int get uniqueProductCount => items.length;
 
   String formatPrice(int amount) {
     return '${amount.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')} FCFA';

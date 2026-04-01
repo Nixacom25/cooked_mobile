@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:app_ecommerce/utils/constants.dart';
 import 'package:app_ecommerce/services/cart_service.dart';
 import 'package:app_ecommerce/models/cart_item.dart';
-import 'package:app_ecommerce/screens/checkout_screen.dart'; // Unused
+import 'package:app_ecommerce/screens/validation_screen.dart';
 
 class CartScreen extends StatefulWidget {
   const CartScreen({super.key});
@@ -14,377 +13,348 @@ class CartScreen extends StatefulWidget {
 class _CartScreenState extends State<CartScreen> {
   final CartService _cartService = CartService();
 
-  void _updateQuantity(String productId, int newQuantity) {
-    setState(() {
-      // Determine product from items list safely
-      try {
-        final product = _cartService.items
-            .firstWhere((i) => i.product.id == productId)
-            .product;
-        _cartService.updateQuantity(product, newQuantity);
-      } catch (e) {
-        // Item might be gone
-      }
-    });
-  }
-
-  void _removeProduct(String productId) {
-    setState(() {
-      try {
-        final product = _cartService.items
-            .firstWhere((i) => i.product.id == productId)
-            .product;
-        _cartService.removeItemCompletely(product);
-      } catch (e) {
-        // Item gone
-      }
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     final items = _cartService.items;
 
-    if (items.isEmpty) {
-      return Scaffold(
-        backgroundColor: AppColors.primary,
-        appBar: AppBar(
-          title: const Text(
-            'Mon Panier',
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-          ),
-          backgroundColor: AppColors.primary,
-          elevation: 0,
-          automaticallyImplyLeading: false,
-        ),
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.shopping_cart_outlined,
-                size: 80,
-                color: Colors.white24,
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'Votre panier est vide',
-                style: TextStyle(color: Colors.white54, fontSize: 16),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
     return Scaffold(
-      backgroundColor: AppColors.primary,
+      backgroundColor: const Color.fromARGB(255, 242, 243, 243),
       appBar: AppBar(
+        backgroundColor: Colors.white,
+        automaticallyImplyLeading: false,
+        centerTitle: false,
+        titleSpacing: 16,
+        shape: const Border(
+          bottom: BorderSide(color: Color(0xFF000000), width: 0.5),
+        ),
         title: const Text(
-          'Mon Panier',
+          'MON PANIER',
           style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
+            color: Color(0xFF1E2832),
+            fontWeight: FontWeight.w900,
             fontSize: 20,
           ),
         ),
-        centerTitle: true,
-        backgroundColor: AppColors.primary,
-        elevation: 0,
-        automaticallyImplyLeading: false,
         actions: [
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.more_horiz, color: Colors.white),
-            color: AppColors.primaryLight,
-            onSelected: (value) {
-              if (value == 'clear') {
-                setState(() {
-                  _cartService.clear();
-                });
-              }
-            },
-            itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-              const PopupMenuItem<String>(
-                value: 'clear',
-                child: Row(
+          Padding(
+            padding: const EdgeInsets.only(right: 16.0),
+            child: Center(
+              child: Container(
+                width: 36,
+                height: 36,
+                decoration: const BoxDecoration(
+                  color: Color(0xFFF5F5F5),
+                  shape: BoxShape.circle,
+                ),
+                child: IconButton(
+                  padding: EdgeInsets.zero,
+                  onPressed: () => Navigator.pop(context),
+                  icon: const Icon(Icons.close, color: Colors.grey, size: 20),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+      body: items.isEmpty
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.shopping_cart_outlined,
+                    size: 80,
+                    color: Colors.grey[200],
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Votre panier est vide',
+                    style: TextStyle(
+                      color: Colors.grey[400],
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            )
+          : Stack(
+              children: [
+                ListView(
+                  padding: const EdgeInsets.all(16),
                   children: [
-                    Icon(Icons.delete_forever, color: Colors.red),
-                    SizedBox(width: 8),
+                    ...items.map(
+                      (item) => Padding(
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: _buildCartItem(item),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    _buildSummarySection(),
+                    const SizedBox(
+                      height: 100,
+                    ), // Reserve space for fixed button
+                  ],
+                ),
+                Align(
+                  alignment: Alignment.bottomCenter,
+                  child: _buildCheckoutButton(),
+                ),
+              ],
+            ),
+    );
+  }
+
+  Widget _buildCartItem(CartItem item) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.grey.shade100, width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Stack(
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Product Image
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Image.network(
+                  item.product.thumbnailUrl ?? '',
+                  width: 80,
+                  height: 80,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) => Container(
+                    width: 80,
+                    height: 80,
+                    color: Colors.grey[100],
+                    child: const Icon(
+                      Icons.image_not_supported_outlined,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 16),
+              // Product Details
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(
+                        right: 24.0,
+                      ), // Space for delete icon
+                      child: Text(
+                        item.product.title,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w900,
+                          fontSize: 14,
+                          color: Color(0xFF1E2832),
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
                     Text(
-                      'Vider le panier',
-                      style: TextStyle(color: Colors.red),
+                      '${_cartService.formatPrice(item.product.numericPrice)}',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w900,
+                        fontSize: 14,
+                        color: Color(0xFFFF6F00),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    // Quantity Controls
+                    Row(
+                      children: [
+                        _buildQtyBtn(Icons.remove, () {
+                          if (item.quantity > 1) {
+                            _cartService.decrementQuantity(item.product.id);
+                            setState(() {});
+                          } else {
+                            _cartService.removeItemCompletely(item.product);
+                            setState(() {});
+                          }
+                        }),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: Text(
+                            '${item.quantity}',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w900,
+                              color: Color(0xFF1E2832),
+                              fontSize: 16,
+                            ),
+                          ),
+                        ),
+                        _buildQtyBtn(Icons.add, () {
+                          _cartService.incrementQuantity(item.product.id);
+                          setState(() {});
+                        }),
+                      ],
                     ),
                   ],
                 ),
               ),
             ],
           ),
-        ],
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: ListView.separated(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              itemCount: items.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 20),
-              itemBuilder: (context, index) {
-                final item = items[index];
-                return _buildCartItem(item);
+          Positioned(
+            right: 0,
+            top: 0,
+            child: GestureDetector(
+              onTap: () {
+                _cartService.removeItemCompletely(item.product);
+                setState(() {});
               },
+              child: const Icon(Icons.close, color: Colors.grey, size: 20),
             ),
           ),
-          _buildBottomBar(),
         ],
       ),
     );
   }
 
-  Widget _buildCartItem(CartItem item) {
-    return Dismissible(
-      key: Key(item.product.id),
-      direction: DismissDirection.endToStart,
-      background: Container(
-        alignment: Alignment.centerRight,
-        padding: const EdgeInsets.only(right: 20),
-        decoration: BoxDecoration(
-          color: const Color(0xFFFF453A),
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: const [
-            Icon(Icons.delete_outline, color: Colors.white),
-            Text(
-              "Supprimer",
-              style: TextStyle(color: Colors.white, fontSize: 12),
-            ),
-          ],
-        ),
-      ),
-      onDismissed: (_) => _removeProduct(item.product.id),
-      child: Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: AppColors.primaryLight,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                color: Colors.white12,
-                borderRadius: BorderRadius.circular(16),
-                image: DecorationImage(
-                  image: NetworkImage(item.product.thumbnailUrl ?? ''),
-                  fit: BoxFit.cover,
-                ),
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    item.product.title,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                      color: Colors.white,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    "Taille : L",
-                    style: TextStyle(color: Colors.white54, fontSize: 12),
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        item.product.price,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                          color: AppColors.accent,
-                        ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white12,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Row(
-                          children: [
-                            _buildQtyBtn(Icons.remove, () {
-                              if (item.quantity > 1)
-                                _updateQuantity(
-                                  item.product.id,
-                                  item.quantity - 1,
-                                );
-                            }),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                              ),
-                              child: Text(
-                                '${item.quantity}',
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ),
-                            _buildQtyBtn(
-                              Icons.add,
-                              () => _updateQuantity(
-                                item.product.id,
-                                item.quantity + 1,
-                              ),
-                              isPlus: true,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 8),
-            const Icon(Icons.chevron_left, size: 20, color: Colors.white24),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildQtyBtn(
-    IconData icon,
-    VoidCallback onTap, {
-    bool isPlus = false,
-  }) {
+  Widget _buildQtyBtn(IconData icon, VoidCallback onTap) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 28,
-        height: 28,
+        width: 32,
+        height: 32,
         decoration: BoxDecoration(
-          color: isPlus ? const Color(0xFF4ADE80) : Colors.transparent,
+          color: Colors.white,
           shape: BoxShape.circle,
+          border: Border.all(color: Colors.grey.shade200),
         ),
-        child: Icon(
-          icon,
-          size: 16,
-          color: Colors.white, // Always white
+        child: Icon(icon, size: 18, color: Colors.grey[600]),
+      ),
+    );
+  }
+
+  Widget _buildSummarySection() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: 0,
+      ), // Removed horizontal padding here as it's already on the ListView
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: Colors.grey.shade100, width: 1),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Sous-total',
+                  style: TextStyle(
+                    color: Colors.grey,
+                    fontWeight: FontWeight.normal,
+                    fontSize: 14,
+                  ),
+                ),
+                Text(
+                  _cartService.formattedSubtotal,
+                  style: const TextStyle(
+                    color: Colors.grey,
+                    fontWeight: FontWeight.normal,
+                    fontSize: 14,
+                  ),
+                ),
+              ],
+            ),
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 12),
+              child: Divider(height: 1, thickness: 1, color: Color(0xFF1E2832)),
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'TOTAL ESTIMÉ',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w900,
+                    fontSize: 16,
+                    color: Color(0xFF1E2832),
+                  ),
+                ),
+                Text(
+                  _cartService.formattedGrandTotal,
+                  style: const TextStyle(
+                    color: Color(0xFFFF6F00),
+                    fontWeight: FontWeight.w900,
+                    fontSize: 18,
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildBottomBar() {
+  Widget _buildCheckoutButton() {
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 24, 20, 20), // Padded for Nav
-      decoration: BoxDecoration(
-        color: AppColors.primaryLight,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.2),
-            blurRadius: 10,
-            offset: const Offset(0, -5),
-          ),
-        ],
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        border: Border(top: BorderSide(color: Color(0xFF000000), width: 0.5)),
       ),
-      child: Column(
-        children: [
-          _buildSummaryRow('Sous-total', _cartService.formattedSubtotal),
-          const SizedBox(height: 8),
-          _buildSummaryRow('Livraison', 'Gratuite', color: AppColors.success),
-          if (_cartService.totalInstallationFees > 0)
-            Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: _buildSummaryRow(
-                'Installation',
-                _cartService.formattedInstallationFees,
-              ),
+      padding: const EdgeInsets.fromLTRB(20, 10, 20, 10),
+      child: Container(
+        width: double.infinity,
+        height: 60,
+        child: ElevatedButton(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const ValidationScreen()),
+            );
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFFFF6F00),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
             ),
-          const Divider(height: 24, color: Colors.white24),
-          _buildSummaryRow(
-            'Total à payer',
-            _cartService.formattedGrandTotal,
-            isMain: true,
+            elevation: 0,
           ),
-
-          const SizedBox(height: 20),
-
-          SizedBox(
-            width: double.infinity,
-            height: 56,
-            child: ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const CheckoutScreen(),
-                  ),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.accent,
-                foregroundColor: Colors.white,
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: const [
+              Icon(Icons.shopping_cart_outlined, color: Colors.white, size: 22),
+              SizedBox(width: 10),
+              Text(
+                'JE VALIDE',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w900,
                 ),
               ),
-              child: const Text(
-                "Commander",
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-              ),
-            ),
+            ],
           ),
-        ],
+        ),
       ),
-    );
-  }
-
-  Widget _buildSummaryRow(
-    String label,
-    String value, {
-    bool isMain = false,
-    Color? color,
-  }) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            color: isMain ? Colors.white : Colors.white70,
-            fontSize: isMain ? 18 : 14,
-            fontWeight: isMain ? FontWeight.bold : FontWeight.normal,
-          ),
-        ),
-        Text(
-          value,
-          style: TextStyle(
-            color: color ?? (isMain ? AppColors.accent : Colors.white),
-            fontSize: isMain ? 18 : 14,
-            fontWeight: isMain ? FontWeight.bold : FontWeight.bold,
-          ),
-        ),
-      ],
     );
   }
 }

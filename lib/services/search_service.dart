@@ -1,5 +1,6 @@
 import 'package:app_ecommerce/models/product.dart';
 import 'package:app_ecommerce/services/product_service.dart';
+import 'package:app_ecommerce/services/auth_service.dart';
 
 /// Service to search products
 class SearchService {
@@ -10,7 +11,11 @@ class SearchService {
     }
 
     final lowerQuery = query.toLowerCase().trim();
-    final allProducts = await ProductService.getProducts();
+    final user = AuthService().currentUser.value;
+    final clientId = user != null
+        ? '${user['firstName']} ${user['lastName']}'
+        : 'client123';
+    final allProducts = await ProductService.getProducts(clientId: clientId);
 
     return allProducts.where((product) {
       // Search in title
@@ -41,7 +46,11 @@ class SearchService {
 
   /// Get products by category
   static Future<List<Product>> getByCategory(String category) async {
-    final allProducts = await ProductService.getProducts();
+    final user = AuthService().currentUser.value;
+    final clientId = user != null
+        ? '${user['firstName']} ${user['lastName']}'
+        : 'client123';
+    final allProducts = await ProductService.getProducts(clientId: clientId);
     return allProducts
         .where(
           (product) => product.category.toLowerCase() == category.toLowerCase(),

@@ -31,42 +31,15 @@ class CategorySection extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Expanded(
-                child: Row(
-                  children: [
-                    Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade100,
-                        borderRadius: BorderRadius.circular(12),
-                        image: imageUrl != null && imageUrl!.isNotEmpty
-                            ? DecorationImage(
-                                image: NetworkImage(imageUrl!),
-                                fit: BoxFit.cover,
-                              )
-                            : null,
-                      ),
-                      child: imageUrl == null || imageUrl!.isEmpty
-                          ? const Icon(
-                              Icons.grid_view_rounded,
-                              color: Colors.black87,
-                            )
-                          : null,
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        title,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 20, // Slightly reduced for better fit
-                          fontWeight: FontWeight.w900,
-                          color: Colors.black87,
-                        ),
-                      ),
-                    ),
-                  ],
+                child: Text(
+                  title[0].toUpperCase() + title.substring(1),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w900, // Extra bold as in mockup
+                    color: Color(0xFF1E1E2C),
+                  ),
                 ),
               ),
               const SizedBox(width: 8),
@@ -74,28 +47,30 @@ class CategorySection extends StatelessWidget {
                 onTap: onTapSeeMore,
                 child: Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
+                    horizontal: 14,
                     vertical: 8,
                   ),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFFF3E0),
-                    borderRadius: BorderRadius.circular(20),
+                    color: const Color(0xFFFFF7F0), // Ultra light peach
+                    borderRadius: BorderRadius.circular(20), // Pill shape
                   ),
                   child: Row(
-                    children: const [
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
                       Text(
                         'VOIR PLUS',
                         style: TextStyle(
-                          fontSize: 12,
+                          color: AppColors.accent,
+                          fontSize: 10,
                           fontWeight: FontWeight.w900,
-                          color: Color.fromARGB(255, 156, 103, 23),
+                          letterSpacing: 0.5, // Sharper spacing
                         ),
                       ),
-                      SizedBox(width: 4),
+                      const SizedBox(width: 2),
                       Icon(
                         Icons.chevron_right,
+                        color: AppColors.accent,
                         size: 14,
-                        color: Color.fromARGB(255, 156, 103, 23),
                       ),
                     ],
                   ),

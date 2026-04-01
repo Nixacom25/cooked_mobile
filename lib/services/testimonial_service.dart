@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:app_ecommerce/models/testimonial.dart';
 import 'package:app_ecommerce/services/api_service.dart';
 
@@ -7,21 +8,27 @@ class TestimonialService {
     return json.map((data) => Testimonial.fromJson(data)).toList();
   }
 
-  static Future<Testimonial> incrementViews(int id) async {
+  static Future<Testimonial> incrementViews(String id) async {
     final json = await ApiService.post('/testimonials/$id/view', {});
     return Testimonial.fromJson(json);
   }
 
-  static Future<Testimonial> incrementLikes(int id) async {
+  static Future<Testimonial> incrementLikes(String id) async {
     final json = await ApiService.post('/testimonials/$id/like', {});
     return Testimonial.fromJson(json);
   }
 
-  static Future<Testimonial> updateStatus(int id, String status) async {
-    final json = await ApiService.patch(
-      '/testimonials/$id/status?status=$status',
+  static Future<Testimonial> createTestimonial(
+    Map<String, dynamic> data,
+    File? file,
+  ) async {
+    final response = await ApiService.postMultipart(
+      '/testimonials',
       {},
+      files: file != null ? {'file': file} : null,
+      jsonPartName: 'data',
+      jsonData: data,
     );
-    return Testimonial.fromJson(json);
+    return Testimonial.fromJson(response);
   }
 }

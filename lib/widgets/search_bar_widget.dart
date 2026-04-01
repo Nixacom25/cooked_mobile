@@ -50,34 +50,36 @@ class _SearchBarWidgetState extends State<SearchBarWidget> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 48,
+      height: 50, // Slightly taller
       decoration: BoxDecoration(
-        color: const Color(0xFFF3F4F6), // Light grey
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.grey.shade300),
+        color: const Color(0xFFF1F2F6), // Refined light grey
+        borderRadius: BorderRadius.circular(30),
       ),
       child: Row(
         children: [
-          const SizedBox(width: 16),
-          const SizedBox(width: 16),
-          const Icon(Icons.search, color: Colors.grey, size: 20),
-          const SizedBox(width: 8),
+          const SizedBox(width: 20),
+          const Icon(Icons.search, color: Color(0xFF8E8E93), size: 24),
+          const SizedBox(width: 12),
           Expanded(
             child: TextField(
               controller: _controller,
               onChanged: (val) => widget.onSearch(val),
               onSubmitted: (_) => _handleSearch(),
               style: const TextStyle(
-                fontSize: 14,
+                fontSize: 15,
                 color: Colors.black87,
-              ), // Black text
+                fontWeight: FontWeight.w500,
+              ),
               decoration: InputDecoration(
                 hintText:
-                    widget.hintText ?? 'Rechercher des produits, vibes...',
-                hintStyle: const TextStyle(color: Colors.grey, fontSize: 13),
+                    widget.hintText ?? 'Rechercher des produits, catégories...',
+                hintStyle: const TextStyle(
+                  color: Color(0xFF8E8E93),
+                  fontSize: 14,
+                ),
                 border: InputBorder.none,
                 isDense: true,
-                contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                contentPadding: const EdgeInsets.symmetric(vertical: 14),
               ),
             ),
           ),
@@ -88,7 +90,7 @@ class _SearchBarWidgetState extends State<SearchBarWidget> {
               padding: EdgeInsets.zero,
               constraints: const BoxConstraints(),
             ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 12),
         ],
       ),
     );

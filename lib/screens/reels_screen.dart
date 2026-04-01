@@ -3,10 +3,14 @@ import 'dart:async';
 import 'package:app_ecommerce/models/product.dart';
 import 'package:app_ecommerce/services/product_service.dart';
 import 'package:app_ecommerce/screens/reels_viewer_screen.dart';
+import 'package:app_ecommerce/widgets/dark_product_card.dart';
+import 'package:app_ecommerce/widgets/empty_state_widget.dart';
 import 'package:app_ecommerce/utils/constants.dart';
+import 'package:app_ecommerce/services/auth_service.dart';
 
 class ReelsScreen extends StatefulWidget {
-  const ReelsScreen({super.key});
+  final String? searchQuery;
+  const ReelsScreen({super.key, this.searchQuery});
 
   @override
   State<ReelsScreen> createState() => _ReelsScreenState();
@@ -19,38 +23,34 @@ class _ReelsScreenState extends State<ReelsScreen>
   bool _isLoading = true;
   String? _error;
 
-  bool _isSearching = false;
-  final TextEditingController _searchController = TextEditingController();
-  late AnimationController _animationController;
-  late Animation<double> _searchWidthAnimation;
-
+  String _selectedCategory = 'Tous';
+  List<String> _categories = ['Tous'];
   Timer? _timer;
 
   @override
   void initState() {
     super.initState();
-    _animationController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 300),
-    );
-    _searchWidthAnimation = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
-    );
     _loadProducts();
     // Refresh every 5 seconds
     _timer = Timer.periodic(const Duration(seconds: 5), (timer) {
-      if (mounted && !_isSearching) {
-        // Only refresh if not searching to avoid disrupting user
+      if (mounted &&
+          (widget.searchQuery == null || widget.searchQuery!.isEmpty)) {
         _loadProducts();
       }
     });
   }
 
   @override
+  void didUpdateWidget(ReelsScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.searchQuery != oldWidget.searchQuery) {
+      _applyFilters();
+    }
+  }
+
+  @override
   void dispose() {
     _timer?.cancel();
-    _searchController.dispose();
-    _animationController.dispose();
     super.dispose();
   }
 
@@ -63,12 +63,27 @@ class _ReelsScreenState extends State<ReelsScreen>
         });
       }
 
-      final products = await ProductService.getProducts();
+      final user = AuthService().currentUser.value;
+      final clientId = user != null
+          ? '${user['firstName']} ${user['lastName']}'
+          : 'client123';
+
+      final products = await ProductService.getProducts(clientId: clientId);
 
       if (mounted) {
         setState(() {
           _allProducts = products;
-          _filteredProducts = products;
+
+          // Extract unique categories
+          final uniqueCategories = products
+              .map((p) => p.category)
+              .where((c) => c.isNotEmpty)
+              .toSet()
+              .toList();
+          uniqueCategories.sort();
+          _categories = ['Tous', ...uniqueCategories];
+
+          _applyFilters();
           _isLoading = false;
         });
       }
@@ -82,32 +97,25 @@ class _ReelsScreenState extends State<ReelsScreen>
     }
   }
 
-  void _onSearchChanged(String query) {
+  void _onCategorySelected(String category) {
     setState(() {
-      if (query.isEmpty) {
-        _filteredProducts = _allProducts;
-      } else {
-        _filteredProducts = _allProducts
-            .where(
-              (p) =>
-                  p.title.toLowerCase().contains(query.toLowerCase()) ||
-                  p.category.toLowerCase().contains(query.toLowerCase()),
-            )
-            .toList();
-      }
+      _selectedCategory = category;
+      _applyFilters();
     });
   }
 
-  void _toggleSearch() {
+  void _applyFilters() {
+    final query = (widget.searchQuery ?? "").toLowerCase();
     setState(() {
-      _isSearching = !_isSearching;
-      if (_isSearching) {
-        _animationController.forward();
-      } else {
-        _animationController.reverse();
-        _searchController.clear();
-        _filteredProducts = _allProducts;
-      }
+      _filteredProducts = _allProducts.where((p) {
+        final matchesQuery =
+            p.title.toLowerCase().contains(query) ||
+            p.category.toLowerCase().contains(query) ||
+            p.keywords.any((k) => k.toLowerCase().contains(query));
+        final matchesCategory =
+            _selectedCategory == 'Tous' || p.category == _selectedCategory;
+        return matchesQuery && matchesCategory;
+      }).toList();
     });
   }
 
@@ -115,91 +123,83 @@ class _ReelsScreenState extends State<ReelsScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: _isSearching
-            ? null
-            : const Text(
-                'Catalogue Reels',
-                style: TextStyle(
-                  color: Colors.black,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 20,
-                ),
-              ),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        actions: [
-          _buildSearchField(),
-          IconButton(
-            icon: Icon(
-              _isSearching ? Icons.close : Icons.search,
-              color: Colors.black,
-            ),
-            onPressed: _toggleSearch,
-          ),
-          if (!_isSearching)
-            IconButton(
-              icon: const Icon(Icons.refresh, color: Colors.black),
-              onPressed: _loadProducts,
-            ),
-        ],
-        automaticallyImplyLeading: false,
-      ),
-      body: _buildBody(),
-    );
-  }
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 8),
 
-  Widget _buildSearchField() {
-    return AnimatedBuilder(
-      animation: _animationController,
-      builder: (context, child) {
-        final width =
-            MediaQuery.of(context).size.width *
-            0.7 *
-            _searchWidthAnimation.value;
-        return Container(
-          width: width,
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          child: width > 50
-              ? TextField(
-                  controller: _searchController,
-                  autofocus: true,
-                  onChanged: _onSearchChanged,
-                  decoration: InputDecoration(
-                    hintText: "Rechercher un produit...",
-                    hintStyle: const TextStyle(
-                      color: Colors.grey,
-                      fontSize: 14,
-                    ),
-                    border: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 10),
-                    filled: true,
-                    fillColor: Colors.grey.shade100,
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(20),
-                      borderSide: BorderSide.none,
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(20),
-                      borderSide: BorderSide.none,
+          // Title
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16.0),
+            child: Text(
+              'Découvrir',
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.w900,
+                color: Color(0xFF1E2832),
+                letterSpacing: -0.5,
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Categories
+          SizedBox(
+            height: 36,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              itemCount: _categories.length,
+              itemBuilder: (context, index) {
+                final category = _categories[index];
+                final isSelected = category == _selectedCategory;
+                return Padding(
+                  padding: const EdgeInsets.only(right: 8.0),
+                  child: GestureDetector(
+                    onTap: () => _onCategorySelected(category),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? const Color(0xFF1E2832)
+                            : Colors.grey[200],
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        category,
+                        style: TextStyle(
+                          color: isSelected ? Colors.white : Colors.grey[700],
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
+                        ),
+                      ),
                     ),
                   ),
-                  style: const TextStyle(color: Colors.black, fontSize: 14),
-                )
-              : const SizedBox(),
-        );
-      },
+                );
+              },
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Products Grid
+          Expanded(child: _buildBody()),
+        ],
+      ),
     );
   }
 
   Widget _buildBody() {
-    if (_isLoading) {
+    if (_isLoading && _allProducts.isEmpty) {
       return const Center(
         child: CircularProgressIndicator(color: AppColors.accent),
       );
     }
 
-    if (_error != null) {
+    if (_error != null && _allProducts.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -208,7 +208,13 @@ class _ReelsScreenState extends State<ReelsScreen>
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: _loadProducts,
-              child: const Text("Réessayer"),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.accent,
+              ),
+              child: const Text(
+                "Réessayer",
+                style: TextStyle(color: Colors.white),
+              ),
             ),
           ],
         ),
@@ -216,200 +222,40 @@ class _ReelsScreenState extends State<ReelsScreen>
     }
 
     if (_filteredProducts.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.search_off, size: 64, color: Colors.grey),
-            const SizedBox(height: 16),
-            Text(
-              _isSearching
-                  ? "Aucun produit trouvé pour cette recherche."
-                  : "Aucun produit disponible pour le moment.",
-              style: const TextStyle(color: Colors.grey),
-            ),
-          ],
-        ),
+      return const EmptyStateWidget(
+        icon: Icons.search_off,
+        title: "Aucun produit trouvé",
+        subtitle: "Essayez de modifier votre recherche ou catégorie.",
       );
     }
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-      child: GridView.builder(
-        itemCount: _filteredProducts.length,
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          childAspectRatio: 0.6,
-          crossAxisSpacing: 10,
-          mainAxisSpacing: 10,
-        ),
-        itemBuilder: (context, index) {
-          return _buildReelCard(context, _filteredProducts, index);
-        },
+    return GridView.builder(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+      itemCount: _filteredProducts.length,
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        childAspectRatio: 0.65,
+        crossAxisSpacing: 12,
+        mainAxisSpacing: 16,
       ),
-    );
-  }
-
-  Widget _buildReelCard(
-    BuildContext context,
-    List<Product> products,
-    int index,
-  ) {
-    final product = products[index];
-    final bool hasVideo = product.videoUrl.isNotEmpty;
-
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) =>
-                ReelsViewerScreen(products: products, initialIndex: index),
-          ),
+      itemBuilder: (context, index) {
+        final product = _filteredProducts[index];
+        return DarkProductCard(
+          product: product,
+          margin: EdgeInsets.zero,
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ReelsViewerScreen(
+                  products: _filteredProducts,
+                  initialIndex: index,
+                ),
+              ),
+            );
+          },
         );
       },
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.black,
-          borderRadius: BorderRadius.circular(16),
-          image: product.thumbnailUrl != null
-              ? DecorationImage(
-                  image: NetworkImage(product.thumbnailUrl!),
-                  fit: BoxFit.cover,
-                  colorFilter: ColorFilter.mode(
-                    Colors.black.withOpacity(0.3),
-                    BlendMode.darken,
-                  ),
-                )
-              : null,
-        ),
-        child: Stack(
-          children: [
-            // Top Badge if video exists
-            if (hasVideo)
-              Positioned(
-                top: 8,
-                left: 8,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 6,
-                    vertical: 2,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.red.withOpacity(0.8),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: const Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.play_arrow, color: Colors.white, size: 12),
-                      SizedBox(width: 2),
-                      Text(
-                        "REEL",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 8,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-            Center(
-              child: Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.5),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  hasVideo ? Icons.play_arrow : Icons.visibility,
-                  color: Colors.white,
-                  size: 24,
-                ),
-              ),
-            ),
-
-            // Red Dot Indicator
-            Positioned(
-              top: 12,
-              right: 12,
-              child: Container(
-                width: 10,
-                height: 10,
-                decoration: BoxDecoration(
-                  color: Colors.red.withOpacity(0.8),
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.red.withOpacity(0.4),
-                      blurRadius: 4,
-                      spreadRadius: 2,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            Positioned(
-              bottom: 12,
-              left: 12,
-              right: 12,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    product.title,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        product.price,
-                        style: const TextStyle(
-                          color: Color(0xFF4CAF50),
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                        ),
-                      ),
-                      if (product.promoLabel != null)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 4,
-                            vertical: 1,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.orange,
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            product.promoLabel!,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 8,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

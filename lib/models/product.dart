@@ -1,3 +1,5 @@
+import 'package:app_ecommerce/utils/url_sanitizer.dart';
+
 class Product {
   final String id;
   final String title;
@@ -16,6 +18,9 @@ class Product {
   final int installationFee; // Installation fee in FCFA (0 if not available)
   final List<String> keywords; // For search functionality
   final List<String> images; // Additional images for stories/status
+  final int stock; // Current stock inventory
+  final int commentCount; // Total number of approved comments
+  final int shareCount; // Total number of shares to external networks
 
   const Product({
     required this.id,
@@ -33,6 +38,9 @@ class Product {
     this.installationFee = 0,
     this.keywords = const [],
     this.images = const [],
+    this.stock = 0,
+    this.commentCount = 0,
+    this.shareCount = 0,
   });
 
   // Getter for backward compatibility
@@ -53,7 +61,16 @@ class Product {
     // Extract media
     List<String> mediaList = [];
     if (json['media'] != null) {
-      mediaList = List<String>.from(json['media']);
+      if (json['media'] is List) {
+        for (var item in json['media']) {
+          if (item is String) {
+            mediaList.add(item);
+          } else if (item is Map<String, dynamic>) {
+            final url = item['url'] ?? item['mediaUrl'];
+            if (url != null) mediaList.add(url.toString());
+          }
+        }
+      }
     }
 
     List<String> videos = [];
@@ -62,11 +79,14 @@ class Product {
 
     // Simple media sorting logic
     for (var m in mediaList) {
-      if (m.endsWith('.mp4') || m.endsWith('.m3u8')) {
-        videos.add(m);
+      final sanitized = UrlSanitizer.sanitize(m);
+      if (sanitized == null) continue;
+
+      if (sanitized.endsWith('.mp4') || sanitized.endsWith('.m3u8')) {
+        videos.add(sanitized);
       } else {
-        imgs.add(m);
-        if (thumb == null) thumb = m;
+        imgs.add(sanitized);
+        if (thumb == null) thumb = sanitized;
       }
     }
 
@@ -133,6 +153,54 @@ class Product {
       installationFee: 5000, // Default installation fee if applicable
       keywords: [],
       images: imgs,
+      stock: json['quantity'] ?? 0,
+      commentCount: json['comment_count'] ?? json['commentCount'] ?? 0,
+      shareCount: json['share_count'] ?? json['shareCount'] ?? 0,
+    );
+  }
+
+  Product copyWith({int? shareCount, int? commentCount, int? stock}) {
+    return Product(
+      id: id,
+      title: title,
+      price: price,
+      videoUrls: videoUrls,
+      category: category,
+      thumbnailUrl: thumbnailUrl,
+      originalPrice: originalPrice,
+      promoLabel: promoLabel,
+      description: description,
+      deliveryFee: deliveryFee,
+      hasInstallationOption: hasInstallationOption,
+      installationFee: installationFee,
+      keywords: keywords,
+      images: images,
+      stock: stock ?? this.stock,
+      commentCount: commentCount ?? this.commentCount,
+      shareCount: shareCount ?? this.shareCount,
+    );
+  }
+}
+
+class ProductComment {
+  final String id;
+  final String clientId;
+  final String content;
+  final String createdAt;
+
+  ProductComment({
+    required this.id,
+    required this.clientId,
+    required this.content,
+    required this.createdAt,
+  });
+
+  factory ProductComment.fromJson(Map<String, dynamic> json) {
+    return ProductComment(
+      id: json['id'] ?? '',
+      clientId: json['client_id'] ?? json['clientId'] ?? 'Anonyme',
+      content: json['content'] ?? '',
+      createdAt: json['created_at'] ?? json['createdAt'] ?? '',
     );
   }
 }

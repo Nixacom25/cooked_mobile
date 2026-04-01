@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:app_ecommerce/models/product.dart';
 import 'package:app_ecommerce/utils/constants.dart';
+import 'package:app_ecommerce/services/cart_service.dart';
+import 'package:app_ecommerce/models/cart_item.dart';
 
 class ProductCard extends StatelessWidget {
   final Product product;
@@ -143,27 +145,40 @@ class ProductCard extends StatelessWidget {
             Positioned(
               bottom: 12,
               right: 12,
-              child: GestureDetector(
-                onTap: () {
-                  // TODO: Add to cart functionality
-                  print('Add ${product.title} to cart');
-                },
-                child: Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.2),
-                        blurRadius: 4,
-                        offset: const Offset(0, 2),
+              child: ValueListenableBuilder<List<CartItem>>(
+                valueListenable: CartService().itemsNotifier,
+                builder: (context, items, _) {
+                  final isInCart = CartService().isInCart(product.id);
+                  return GestureDetector(
+                    onTap: () {
+                      if (isInCart) {
+                        CartService().removeItemCompletely(product);
+                      } else {
+                        CartService().addToCart(product);
+                      }
+                    },
+                    child: Container(
+                      width: 32,
+                      height: 32,
+                      decoration: BoxDecoration(
+                        color: isInCart ? AppColors.accent : Colors.white,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.2),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                  child: const Icon(Icons.add, color: Colors.black, size: 20),
-                ),
+                      child: Icon(
+                        isInCart ? Icons.close : Icons.add,
+                        color: isInCart ? Colors.white : Colors.black,
+                        size: 20,
+                      ),
+                    ),
+                  );
+                },
               ),
             ),
           ],

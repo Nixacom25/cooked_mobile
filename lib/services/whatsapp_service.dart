@@ -13,6 +13,17 @@ class WhatsAppService {
     await _sendWhatsApp(message);
   }
 
+  /// Send interest in services
+  static Future<void> sendServiceInterest() async {
+    final message = 'Bonjour,\nJe suis intéressé par vos services.';
+    await _sendWhatsApp(message);
+  }
+
+  /// Send custom message
+  static Future<void> sendMessage(String message) async {
+    await _sendWhatsApp(message);
+  }
+
   /// Send order with cart items and client form
   static Future<void> sendOrder({
     required List<CartItem> items,

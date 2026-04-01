@@ -8,6 +8,8 @@ import 'package:app_ecommerce/widgets/quantity_selector.dart';
 import 'package:app_ecommerce/widgets/service_option_selector.dart';
 import 'package:app_ecommerce/widgets/comments_modal.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:app_ecommerce/services/product_service.dart';
 
 class VideoFeedItem extends StatefulWidget {
   final Product product;
@@ -43,6 +45,8 @@ class _VideoFeedItemState extends State<VideoFeedItem> {
   bool _isLiked = false; // Like state
   bool _showHeart = false; // Show heart animation
   Timer? _tapTimer; // Timer for single/double tap distinction
+  bool _hasIncrementedView = false;
+  static const String _viewedMediaKey = 'viewed_product_media';
 
   @override
   void initState() {
@@ -98,6 +102,8 @@ class _VideoFeedItemState extends State<VideoFeedItem> {
           _controller = controller;
         });
 
+        _setupViewTracking();
+
         // Play video if focused AFTER loading
         if (widget.isFocused) {
           _controller!.setVolume(_isMuted ? 0.0 : 1.0);
@@ -106,6 +112,30 @@ class _VideoFeedItemState extends State<VideoFeedItem> {
       }
     } catch (e) {
       print('Error loading video: $e');
+    }
+  }
+
+  void _setupViewTracking() {
+    _hasIncrementedView = false;
+    _controller?.addListener(_viewListener);
+  }
+
+  void _viewListener() async {
+    if (_hasIncrementedView || _controller == null) return;
+
+    if (_controller!.value.position >= const Duration(seconds: 3)) {
+      _hasIncrementedView = true;
+      _controller?.removeListener(_viewListener);
+
+      final prefs = await SharedPreferences.getInstance();
+      final viewedMedia = prefs.getStringList(_viewedMediaKey) ?? [];
+      final mediaUrl = widget.product.videoUrls[_currentIndex];
+
+      if (!viewedMedia.contains(mediaUrl)) {
+        await ProductService.incrementMediaView(widget.product.id, mediaUrl);
+        viewedMedia.add(mediaUrl);
+        await prefs.setStringList(_viewedMediaKey, viewedMedia);
+      }
     }
   }
 
@@ -165,6 +195,7 @@ class _VideoFeedItemState extends State<VideoFeedItem> {
   void _nextMedia() {
     if (!mounted) return;
     if (_currentIndex < _totalItems - 1) {
+      _controller?.removeListener(_viewListener);
       setState(() {
         _currentIndex++;
       });
@@ -175,6 +206,7 @@ class _VideoFeedItemState extends State<VideoFeedItem> {
   void _previousMedia() {
     if (!mounted) return;
     if (_currentIndex > 0) {
+      _controller?.removeListener(_viewListener);
       setState(() {
         _currentIndex--;
       });
@@ -199,14 +231,10 @@ class _VideoFeedItemState extends State<VideoFeedItem> {
   }
 
   void _showComments() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => CommentsModal(
-        productId: _currentProduct.id,
-        productTitle: _currentProduct.title,
-      ),
+    CommentsModal.show(
+      context,
+      productId: _currentProduct.id,
+      productTitle: _currentProduct.title,
     );
   }
 
@@ -248,6 +276,7 @@ class _VideoFeedItemState extends State<VideoFeedItem> {
   void dispose() {
     // Pause with reference counting (safe now)
     if (_isCurrentMediaVideo) {
+      _controller?.removeListener(_viewListener);
       GlobalVideoCache.pause(
         widget.product.videoUrls[_currentIndex],
         ownerId: toString(),

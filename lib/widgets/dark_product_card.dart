@@ -1,10 +1,10 @@
-import 'dart:async';
+import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:video_player/video_player.dart';
-import 'package:visibility_detector/visibility_detector.dart';
 import 'package:app_ecommerce/models/product.dart';
+import 'package:visibility_detector/visibility_detector.dart';
+import 'package:video_player/video_player.dart';
 import 'package:app_ecommerce/services/global_video_cache.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:app_ecommerce/utils/url_sanitizer.dart';
 
 class DarkProductCard extends StatefulWidget {
   final Product product;
@@ -27,190 +27,179 @@ class DarkProductCard extends StatefulWidget {
 }
 
 class _DarkProductCardState extends State<DarkProductCard> {
-  VideoPlayerController? _controller;
-  bool _initialized = false;
-  bool _isLoading = false;
-  bool _hasError = false;
+  bool _isVisible = false;
+  VideoPlayerController? _videoController;
+  bool _isVideoInitialized = false;
 
   @override
   void initState() {
     super.initState();
-    if (GlobalVideoCache.hasController(widget.product.videoUrl)) {
-      _loadFromCache();
+    // Initialize video preview if thumbnail is missing OR if it's explicitly a video product
+    if ((widget.product.thumbnailUrl == null ||
+            widget.product.thumbnailUrl!.isEmpty) &&
+        widget.product.videoUrl.isNotEmpty) {
+      _initVideoPreview();
     }
   }
 
-  Future<void> _loadFromCache() async {
-    if (_initialized || _isLoading) return;
-
-    if (mounted)
-      setState(() {
-        _isLoading = true;
-        _hasError = false;
-      });
-
+  Future<void> _initVideoPreview() async {
     try {
       final controller = await GlobalVideoCache.getController(
         widget.product.videoUrl,
       );
       if (mounted) {
         setState(() {
-          _controller = controller;
-          _initialized = true;
-          _isLoading = false;
+          _videoController = controller;
+          _isVideoInitialized = true;
         });
       }
     } catch (e) {
-      if (mounted)
-        setState(() {
-          _isLoading = false;
-          _hasError = true;
-        });
-    }
-  }
-
-  void _handleVisibilityChange(VisibilityInfo info) {
-    if (widget.product.videoUrl.isEmpty) return;
-
-    final visiblePercentage = info.visibleFraction * 100;
-    if (visiblePercentage > 70) {
-      if (!_initialized && !_isLoading && !_hasError) {
-        _loadFromCache();
-      } else if (_initialized) {
-        _controller?.setVolume(0.0);
-        GlobalVideoCache.play(widget.product.videoUrl, ownerId: toString());
-      }
-    } else if (visiblePercentage < 10 && _initialized) {
-      GlobalVideoCache.pause(widget.product.videoUrl, ownerId: toString());
+      debugPrint('Error loading video preview: $e');
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final hasVideo = widget.product.videoUrl.isNotEmpty;
+    final hasThumbnail =
+        (widget.product.thumbnailUrl != null &&
+            widget.product.thumbnailUrl!.isNotEmpty) ||
+        UrlSanitizer.isLocal(widget.product.thumbnailUrl);
+
     return VisibilityDetector(
-      key: Key('dark_${widget.product.id}'),
-      onVisibilityChanged: _handleVisibilityChange,
+      key: Key('dark_product_${widget.product.id}'),
+      onVisibilityChanged: (info) {
+        if (mounted) {
+          final isCurrentlyVisible = info.visibleFraction > 0.1;
+          if (_isVisible != isCurrentlyVisible) {
+            setState(() {
+              _isVisible = isCurrentlyVisible;
+            });
+          }
+        }
+      },
       child: GestureDetector(
         onTap: widget.onTap,
         child: Container(
-          width: widget.width ?? 200,
-          height: widget.height ?? 250,
-          margin: widget.margin ?? const EdgeInsets.only(right: 12),
+          width: widget.width ?? 160,
+          height: widget.height ?? 260,
+          margin: widget.margin ?? const EdgeInsets.only(right: 16),
           decoration: BoxDecoration(
-            color: Colors.black,
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(22),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.15),
+                blurRadius: 12,
+                offset: const Offset(0, 6),
+              ),
+            ],
           ),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(22),
             child: Stack(
               children: [
-                // Thumbnail Image (Visible when no video playing)
-                if (!_initialized)
-                  Positioned.fill(
-                    child:
-                        widget.product.thumbnailUrl != null &&
-                            widget.product.thumbnailUrl!.isNotEmpty
-                        ? CachedNetworkImage(
-                            imageUrl: widget.product.thumbnailUrl!,
-                            fit: BoxFit.cover,
-                            memCacheWidth: 400, // Optimize memory
-                            placeholder: (context, url) =>
-                                Container(color: Colors.grey[900]),
-                            errorWidget: (context, url, error) => Container(
-                              color: Colors.grey[900],
-                              child: const Icon(
-                                Icons.broken_image,
-                                color: Colors.white24,
-                              ),
-                            ),
-                          )
-                        : Container(
-                            color: Colors.grey[900],
-                            child: const Icon(
-                              Icons.image_not_supported,
-                              color: Colors.white24,
-                            ),
-                          ),
-                  ),
+                /// IMAGE OR VIDEO PREVIEW
+                Positioned.fill(
+                  child: hasThumbnail
+                      ? UrlSanitizer.buildImage(
+                          widget.product.thumbnailUrl,
+                          fit: BoxFit.cover,
+                        )
+                      : (_isVideoInitialized && _videoController != null
+                            ? FittedBox(
+                                fit: BoxFit.cover,
+                                child: SizedBox(
+                                  width: _videoController!.value.size.width,
+                                  height: _videoController!.value.size.height,
+                                  child: VideoPlayer(_videoController!),
+                                ),
+                              )
+                            : Container(
+                                color: Colors.grey[900],
+                                child: const Icon(
+                                  Icons.image_not_supported,
+                                  color: Colors.white24,
+                                ),
+                              )),
+                ),
 
-                // Video Player
-                if (_initialized && _controller != null)
-                  Positioned.fill(
-                    child: FittedBox(
-                      fit: BoxFit.cover,
-                      child: SizedBox(
-                        width: _controller!.value.size.width,
-                        height: _controller!.value.size.height,
-                        child: VideoPlayer(_controller!),
+                /// CENTER ICON (Play or Eye)
+                if (hasVideo || (!hasVideo && _isVisible))
+                  Center(
+                    child: ClipOval(
+                      child: BackdropFilter(
+                        filter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
+                        child: Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.20),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            hasVideo
+                                ? Icons.play_arrow_rounded
+                                : Icons.remove_red_eye,
+                            color: Colors.white,
+                            size: 24,
+                          ),
+                        ),
                       ),
                     ),
                   ),
 
-                // Gradient Overlay
+                /// GRADIENT BAS
                 Positioned.fill(
                   child: Container(
-                    decoration: BoxDecoration(
+                    decoration: const BoxDecoration(
                       gradient: LinearGradient(
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
                         colors: [
                           Colors.transparent,
-                          Colors.black.withOpacity(0.8),
+                          Colors.black54,
+                          Colors.black87,
                         ],
+                        stops: [0.55, 0.8, 1],
                       ),
                     ),
                   ),
                 ),
 
-                // Red Dot
+                /// TEXTE
                 Positioned(
-                  top: 12,
-                  right: 12,
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
                   child: Container(
-                    width: 8,
-                    height: 8,
-                    decoration: const BoxDecoration(
-                      color: Colors.red,
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.red,
-                          blurRadius: 4,
-                          spreadRadius: 1,
+                    padding: const EdgeInsets.all(16.0),
+                    color: Colors.black.withOpacity(0.5),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          widget.product.title,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            height: 1.2,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          widget.product.price,
+                          style: const TextStyle(
+                            color: Color(0xFF00E676),
+                            fontSize: 13,
+                            fontWeight: FontWeight.w900,
+                          ),
                         ),
                       ],
                     ),
-                  ),
-                ),
-
-                // Text Content
-                Positioned(
-                  bottom: 16,
-                  left: 16,
-                  right: 16,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        widget.product.title,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        widget.product.price,
-                        style: const TextStyle(
-                          color: Color(0xFF4CAF50), // Green price
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
                   ),
                 ),
               ],

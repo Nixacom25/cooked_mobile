@@ -179,14 +179,10 @@ class _ProductPopupState extends State<ProductPopup> {
   }
 
   void _showComments() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => CommentsModal(
-        productId: _currentProduct.id,
-        productTitle: _currentProduct.title,
-      ),
+    CommentsModal.show(
+      context,
+      productId: _currentProduct.id,
+      productTitle: _currentProduct.title,
     );
   }
 
@@ -256,7 +252,18 @@ class _ProductPopupState extends State<ProductPopup> {
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
-                    // Video Background
+                    // 1. Background Thumbnail (base layer)
+                    if (widget.allProducts[index].thumbnailUrl != null)
+                      Image.network(
+                        widget.allProducts[index].thumbnailUrl!,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) =>
+                            Container(color: Colors.grey[900]),
+                      )
+                    else
+                      Container(color: Colors.grey[900]),
+
+                    // 2. Video Background (on top of thumbnail)
                     if (controller != null && controller.value.isInitialized)
                       FittedBox(
                         fit: BoxFit.cover,
@@ -266,12 +273,10 @@ class _ProductPopupState extends State<ProductPopup> {
                           child: VideoPlayer(controller),
                         ),
                       )
+                    // 3. Loading overlay if not initialized
                     else
-                      Container(
-                        color: Colors.grey[900],
-                        child: const Center(
-                          child: CircularProgressIndicator(color: Colors.white),
-                        ),
+                      const Center(
+                        child: CircularProgressIndicator(color: Colors.white),
                       ),
 
                     // Play/Pause icon overlay (center)

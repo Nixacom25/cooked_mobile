@@ -5,6 +5,9 @@ import 'package:app_ecommerce/models/testimonial.dart';
 import 'package:app_ecommerce/services/testimonial_service.dart';
 import 'package:video_player/video_player.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:audioplayers/audioplayers.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:app_ecommerce/utils/url_sanitizer.dart';
 
 class StatusViewScreen extends StatefulWidget {
   final List<StatusCategory> allCategories;
@@ -33,9 +36,12 @@ class _StatusViewScreenState extends State<StatusViewScreen> {
   double _dragOffsetY = 0.0;
   bool _isDragging = false;
   VideoPlayerController? _videoController;
+  AudioPlayer? _audioPlayer;
+  VideoPlayerController? _nextVideoController;
+  AudioPlayer? _nextAudioPlayer;
 
-  final Set<int> _likedStatuses = {};
-  final Set<int> _viewedStatuses = {};
+  final Set<String> _likedStatuses = {};
+  final Set<String> _viewedStatuses = {};
   SharedPreferences? _prefs;
 
   @override
@@ -54,8 +60,8 @@ class _StatusViewScreenState extends State<StatusViewScreen> {
     final savedViews = _prefs?.getStringList('viewed_statuses') ?? [];
 
     setState(() {
-      _likedStatuses.addAll(savedLikes.map(int.parse));
-      _viewedStatuses.addAll(savedViews.map(int.parse));
+      _likedStatuses.addAll(savedLikes);
+      _viewedStatuses.addAll(savedViews);
     });
 
     _startTimer();
@@ -138,7 +144,7 @@ class _StatusViewScreenState extends State<StatusViewScreen> {
   }
 
   void _startTimer() {
-    _disposeVideoController();
+    _disposeMediaControllers();
     _periodicTimer?.cancel();
     _progressValue = 0.0;
     _isPaused = false;
@@ -149,13 +155,41 @@ class _StatusViewScreenState extends State<StatusViewScreen> {
     final currentItem = currentCategory.items[_currentStatusIndex];
 
     if (currentItem.mediaType == 'VIDEO') {
-      _videoController =
-          VideoPlayerController.networkUrl(Uri.parse(currentItem.mediaUrl))
-            ..initialize().then((_) {
-              setState(() {});
-              _videoController?.play();
-            });
+      final sanitizedUrl = UrlSanitizer.getCleanPath(currentItem.mediaUrl);
+      if (_nextVideoController != null &&
+          _nextVideoController!.dataSource == sanitizedUrl) {
+        _videoController = _nextVideoController;
+        _nextVideoController = null;
+        if (_videoController!.value.isInitialized) {
+          _videoController?.play();
+        } else {
+          _videoController?.initialize().then((_) {
+            if (mounted) setState(() {});
+            _videoController?.play();
+          });
+        }
+      } else {
+        _videoController =
+            VideoPlayerController.networkUrl(Uri.parse(sanitizedUrl))
+              ..initialize().then((_) {
+                if (mounted) setState(() {});
+                _videoController?.play();
+              });
+      }
+    } else if (currentItem.mediaType == 'AUDIO' ||
+        currentItem.mediaUrl.contains('.m4a') ||
+        currentItem.mediaUrl.contains('.mp3')) {
+      final sanitizedUrl = UrlSanitizer.getCleanPath(currentItem.mediaUrl);
+      if (_nextAudioPlayer != null) {
+        _audioPlayer = _nextAudioPlayer;
+        _nextAudioPlayer = null;
+      } else {
+        _audioPlayer = AudioPlayer();
+      }
+      _audioPlayer?.play(UrlSource(sanitizedUrl));
     }
+
+    _preloadNext();
 
     _periodicTimer = Timer.periodic(_tickDuration, (timer) {
       if (!mounted) return;
@@ -176,7 +210,29 @@ class _StatusViewScreenState extends State<StatusViewScreen> {
             }
           }
         }
-        // If it's a video but not initialized/started, we wait (don't fall through to image logic)
+        return;
+      }
+
+      // If audio, sync progress with audio
+      if (currentItem.mediaType == 'AUDIO' ||
+          currentItem.mediaUrl.contains('.m4a') ||
+          currentItem.mediaUrl.contains('.mp3')) {
+        _audioPlayer?.onPositionChanged.listen((position) {
+          _audioPlayer?.getDuration().then((duration) {
+            if (duration != null && duration.inMilliseconds > 0) {
+              if (mounted) {
+                setState(() {
+                  _progressValue =
+                      position.inMilliseconds / duration.inMilliseconds;
+                });
+                if (_progressValue >= 1.0) {
+                  timer.cancel();
+                  _nextStatus();
+                }
+              }
+            }
+          });
+        });
         return;
       }
 
@@ -193,9 +249,48 @@ class _StatusViewScreenState extends State<StatusViewScreen> {
     });
   }
 
-  void _disposeVideoController() {
+  void _disposeMediaControllers() {
     _videoController?.dispose();
     _videoController = null;
+    _audioPlayer?.dispose();
+    _audioPlayer = null;
+    _nextVideoController?.dispose();
+    _nextVideoController = null;
+    _nextAudioPlayer?.dispose();
+    _nextAudioPlayer = null;
+  }
+
+  void _preloadNext() {
+    final currentCategory = widget.allCategories[_currentCategoryIndex];
+    Testimonial? nextItem;
+
+    if (_currentStatusIndex < currentCategory.items.length - 1) {
+      nextItem = currentCategory.items[_currentStatusIndex + 1];
+    } else if (_currentCategoryIndex < widget.allCategories.length - 1) {
+      final nextCategory = widget.allCategories[_currentCategoryIndex + 1];
+      if (nextCategory.items.isNotEmpty) {
+        nextItem = nextCategory.items[0];
+      }
+    }
+
+    if (nextItem == null) return;
+
+    if (nextItem.mediaType == 'VIDEO') {
+      final sanitizedUrl = UrlSanitizer.getCleanPath(nextItem.mediaUrl);
+      _nextVideoController =
+          VideoPlayerController.networkUrl(Uri.parse(sanitizedUrl))
+            ..initialize().then((_) {
+              // Pre-initialized and ready
+            });
+    } else if (nextItem.mediaType == 'AUDIO') {
+      final sanitizedUrl = UrlSanitizer.getCleanPath(nextItem.mediaUrl);
+      _nextAudioPlayer = AudioPlayer();
+      _nextAudioPlayer?.setSource(UrlSource(sanitizedUrl));
+    } else if (nextItem.mediaType == 'IMAGE') {
+      // Preload image into cache
+      final sanitizedUrl = UrlSanitizer.getCleanPath(nextItem.mediaUrl);
+      precacheImage(CachedNetworkImageProvider(sanitizedUrl), context);
+    }
   }
 
   void _nextStatus() {
@@ -250,7 +345,7 @@ class _StatusViewScreenState extends State<StatusViewScreen> {
 
   @override
   void dispose() {
-    _disposeVideoController();
+    _disposeMediaControllers();
 
     _periodicTimer?.cancel();
     super.dispose();
@@ -400,107 +495,16 @@ class _StatusViewScreenState extends State<StatusViewScreen> {
                                   Row(
                                     children: [
                                       Text(
-                                        currentItem.clientName,
+                                        currentItem.clientName ?? 'Anonyme',
                                         style: const TextStyle(
                                           color: Colors.white70,
                                           fontSize: 12,
                                         ),
                                       ),
-                                      if (currentItem.createdAt != null &&
-                                          currentItem.activityDuration !=
-                                              null) ...[
-                                        const SizedBox(width: 8),
-                                        Text(
-                                          _getRemainingTime(
-                                            currentItem.createdAt!,
-                                            currentItem.activityDuration!,
-                                          ),
-                                          style: const TextStyle(
-                                            color: Colors.white54,
-                                            fontSize: 10,
-                                          ),
-                                        ),
-                                      ],
-                                      if (currentItem.status == 'INACTIVE') ...[
-                                        const SizedBox(width: 8),
-                                        const Text(
-                                          '(Désactivé)',
-                                          style: TextStyle(
-                                            color: Colors.redAccent,
-                                            fontSize: 10,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ],
                                     ],
                                   ),
                                 ],
                               ),
-                            ),
-                            PopupMenuButton<String>(
-                              icon: const Icon(
-                                Icons.more_vert,
-                                color: Colors.white,
-                              ),
-                              onSelected: (value) async {
-                                _isPaused = true;
-                                _videoController?.pause();
-                                if (value == 'toggle_status') {
-                                  final newStatus =
-                                      currentItem.status == 'ACTIVE'
-                                      ? 'INACTIVE'
-                                      : 'ACTIVE';
-                                  try {
-                                    await TestimonialService.updateStatus(
-                                      currentItem.id,
-                                      newStatus,
-                                    );
-                                    // Update local state is tricky without refreshing whole list,
-                                    // but we can try to update the object in place for immediate feedback
-                                    setState(() {
-                                      // We might need to mutate the object directly since it's passed by reference usually
-                                      // But let's assume we can't easily replace it in the list without callbacks.
-                                      // Actually we can, because we have reference to allCategories
-                                      // But 'currentItem' is a local var.
-                                      // Re-fetching would be safer but slower.
-                                      // Let's just update UI and hopefully next fetch fixes it.
-                                      // FORCE REFRESH: Close and reopen? No.
-                                      // Ideally we update the item in the list.
-                                      // currentItem is reference? Yes.
-                                      // Testimonial is final fields? No, likes/views are mutable. Status should be too?
-                                      // Status is final in my model definition above!
-                                      // Wait, I made status final in the model.
-                                      // I should make it mutable or replace the object in the list.
-                                    });
-                                    Navigator.pop(
-                                      context,
-                                    ); // Close viewer to refresh? Or show toast?
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                          newStatus == 'ACTIVE'
-                                              ? 'Statut activé'
-                                              : 'Statut désactivé',
-                                        ),
-                                      ),
-                                    );
-                                  } catch (e) {
-                                    debugPrint('Error updating status: $e');
-                                    _isPaused = false;
-                                    _videoController?.play();
-                                  }
-                                }
-                              },
-                              itemBuilder: (context) => [
-                                PopupMenuItem(
-                                  value: 'toggle_status',
-                                  child: Text(
-                                    currentItem.status == 'ACTIVE'
-                                        ? 'Désactiver'
-                                        : 'Activer',
-                                  ),
-                                ),
-                              ],
                             ),
                           ],
                         ),
@@ -638,44 +642,69 @@ class _StatusViewScreenState extends State<StatusViewScreen> {
       return const Center(
         child: CircularProgressIndicator(color: Colors.white),
       );
+    } else if (item.mediaType == 'AUDIO' ||
+        item.mediaUrl.contains('.m4a') ||
+        item.mediaUrl.contains('.mp3')) {
+      return Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              const Color(0xFF1E2832),
+              const Color(0xFF1E2832).withOpacity(0.8),
+            ],
+          ),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(30),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFF6F00).withOpacity(0.1),
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: const Color(0xFFFF6F00).withOpacity(0.3),
+                  width: 2,
+                ),
+              ),
+              child: const Icon(Icons.mic, size: 80, color: Color(0xFFFF6F00)),
+            ),
+            const SizedBox(height: 30),
+            const Text(
+              'Témoignage Audio',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 1.2,
+              ),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              'Écoute en cours...',
+              style: TextStyle(
+                color: Colors.white.withOpacity(0.6),
+                fontSize: 14,
+              ),
+            ),
+          ],
+        ),
+      );
     }
 
-    // Default to Image for IMAGE or AUDIO (audio won't show much but placeholder)
-    return Image.network(
+    // Default to Image for IMAGE
+    return UrlSanitizer.buildImage(
       item.mediaUrl,
       fit: BoxFit.contain,
-      errorBuilder: (context, error, stackTrace) =>
-          const Icon(Icons.broken_image, color: Colors.white, size: 50),
-      loadingBuilder: (context, child, loadingProgress) {
-        if (loadingProgress == null) return child;
-        return const Center(
-          child: CircularProgressIndicator(color: Colors.white),
-        );
-      },
+      errorWidget: const Icon(
+        Icons.broken_image,
+        color: Colors.white,
+        size: 50,
+      ),
     );
-  }
-
-  String _getRemainingTime(DateTime createdAt, String durationStr) {
-    try {
-      final hours = int.parse(
-        durationStr.toLowerCase().replaceAll(RegExp(r'[^0-9]'), ''),
-      );
-      final expirationTime = createdAt.add(Duration(hours: hours));
-      final now = DateTime.now();
-
-      if (now.isAfter(expirationTime)) {
-        return 'Expiré';
-      }
-
-      final difference = expirationTime.difference(now);
-
-      if (difference.inHours > 0) {
-        return '${difference.inHours}h restants';
-      } else {
-        return '${difference.inMinutes}min restants';
-      }
-    } catch (e) {
-      return '';
-    }
   }
 }

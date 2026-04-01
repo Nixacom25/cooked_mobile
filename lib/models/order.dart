@@ -48,23 +48,29 @@ class Order {
   }
 
   factory Order.fromJson(Map<String, dynamic> json) {
+    final clientJson = json['client'] as Map<String, dynamic>?;
     return Order(
-      id: json['id'],
-      firstName: json['firstName'],
-      lastName: json['lastName'],
-      primaryPhone: json['primaryPhone'],
+      id: json['id'] ?? '',
+      firstName: clientJson?['firstName'] ?? json['firstName'] ?? '',
+      lastName: clientJson?['lastName'] ?? json['lastName'] ?? '',
+      primaryPhone: clientJson?['phone'] ?? json['primaryPhone'] ?? '',
       secondaryPhone: json['secondaryPhone'],
       googleMapsLink: json['googleMapsLink'],
-      deliveryDate: json['deliveryDate'],
-      deliveryTime: json['deliveryTime'],
-      comments: json['comments'],
-      items: (json['items'] as List)
-          .map((item) => OrderItem.fromJson(item))
-          .toList(),
-      totalAmount: json['totalAmount'],
-      createdAt: DateTime.parse(json['createdAt']),
+      deliveryDate: json['deliveryDate']?.toString() ?? '',
+      deliveryTime: json['deliveryTime'] ?? '',
+      comments: json['notes'] ?? json['comments'],
+      items:
+          (json['items'] as List?)
+              ?.map((item) => OrderItem.fromJson(item))
+              .toList() ??
+          [],
+      totalAmount: (json['totalAmount'] as num?)?.toInt() ?? 0,
+      createdAt: json['createdAt'] != null
+          ? DateTime.parse(json['createdAt'])
+          : DateTime.now(),
       status: OrderStatus.values.firstWhere(
-        (e) => e.toString() == json['status'],
+        (e) =>
+            e.name.toLowerCase() == (json['status'] as String?)?.toLowerCase(),
         orElse: () => OrderStatus.pending,
       ),
     );
@@ -109,16 +115,21 @@ class OrderItem {
   }
 
   factory OrderItem.fromJson(Map<String, dynamic> json) {
+    final productJson = json['product'] as Map<String, dynamic>?;
     return OrderItem(
-      productId: json['productId'],
-      productTitle: json['productTitle'],
-      productCategory: json['productCategory'],
-      quantity: json['quantity'],
-      unitPrice: json['unitPrice'],
-      deliveryFee: json['deliveryFee'],
-      includeInstallation: json['includeInstallation'],
-      installationFee: json['installationFee'],
-      total: json['total'],
+      productId: productJson?['id'] ?? json['productId'] ?? '',
+      productTitle: productJson?['title'] ?? json['productTitle'] ?? '',
+      productCategory:
+          productJson?['category'] ?? json['productCategory'] ?? '',
+      quantity: json['quantity'] ?? 0,
+      unitPrice: (json['unitPrice'] as num?)?.toInt() ?? 0,
+      deliveryFee: (json['deliveryFee'] as num?)?.toInt() ?? 0,
+      includeInstallation:
+          json['assemblyIncluded'] ?? json['includeInstallation'] ?? false,
+      installationFee: (json['installationFee'] as num?)?.toInt() ?? 0,
+      total:
+          (json['total'] as num?)?.toInt() ??
+          ((json['unitPrice'] ?? 0) * (json['quantity'] ?? 1)),
     );
   }
 }

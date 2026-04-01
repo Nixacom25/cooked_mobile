@@ -6,6 +6,7 @@ import 'package:app_ecommerce/services/category_service.dart';
 import 'package:app_ecommerce/services/product_service.dart';
 import 'package:app_ecommerce/services/testimonial_service.dart';
 import 'package:app_ecommerce/services/advertisement_service.dart';
+import 'package:app_ecommerce/services/auth_service.dart';
 
 class DataCacheService {
   static final DataCacheService _instance = DataCacheService._internal();
@@ -23,9 +24,14 @@ class DataCacheService {
 
   Future<void> prefetchAll() async {
     try {
+      final user = AuthService().currentUser.value;
+      final clientId = user != null
+          ? '${user['firstName']} ${user['lastName']}'
+          : 'client123';
+
       final results = await Future.wait([
         CategoryService.getCategories(),
-        ProductService.getProducts(),
+        ProductService.getProducts(clientId: clientId),
         TestimonialService.getTestimonials(),
         AdvertisementService.getAdvertisements(),
       ]);

@@ -1,30 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:app_ecommerce/utils/constants.dart';
-import 'dart:math';
 import 'package:app_ecommerce/screens/status_view_screen.dart';
 import 'package:app_ecommerce/models/status_category.dart';
 import 'package:app_ecommerce/models/testimonial.dart';
-
-import 'package:app_ecommerce/models/category.dart'; // Added import
+import 'package:app_ecommerce/models/category.dart';
+import 'package:app_ecommerce/utils/url_sanitizer.dart';
 
 class SocialProofSection extends StatelessWidget {
   final List<Testimonial> testimonials;
-  final List<Category> categories; // Added
+  final List<Category> categories;
 
   const SocialProofSection({
     super.key,
     required this.testimonials,
-    this.categories = const [], // Default empty
+    this.categories = const [],
   });
 
   List<StatusCategory> _getGroupedStatuses() {
     final Map<String, List<Testimonial>> grouped = {};
 
     for (var t in testimonials) {
-      if (!grouped.containsKey(t.category)) {
-        grouped[t.category] = [];
+      final key = t.categoryName ?? 'Autres';
+      if (!grouped.containsKey(key)) {
+        grouped[key] = [];
       }
-      grouped[t.category]!.add(t);
+      grouped[key]!.add(t);
     }
 
     return grouped.entries.map((entry) {
@@ -57,12 +57,11 @@ class SocialProofSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Filter categories that have items
-    final categories = _getGroupedStatuses()
+    final categoriesList = _getGroupedStatuses()
         .where((c) => c.items.isNotEmpty)
         .toList();
 
-    if (categories.isEmpty) {
+    if (categoriesList.isEmpty) {
       return const SizedBox.shrink();
     }
 
@@ -75,35 +74,44 @@ class SocialProofSection extends StatelessWidget {
           ),
           child: Row(
             children: [
-              const Icon(
-                Icons.check_circle_outline,
-                color: Colors.orange,
-                size: 20,
+              Container(
+                padding: const EdgeInsets.all(1),
+                decoration: const BoxDecoration(
+                  color: Color(0xFFFF7144),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.check_circle,
+                  color: Colors.white,
+                  size: 12,
+                ),
               ),
-              const SizedBox(width: 8),
-              Text(
-                'AVIS CLIENTS',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
-                  letterSpacing: 0.5,
+              const SizedBox(width: 10),
+              const Expanded(
+                child: Text(
+                  'CLIENTS LIVRÉS',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w900,
+                    color: Color(0xFF000000),
+                    letterSpacing: 0.1,
+                  ),
                 ),
               ),
             ],
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 10),
         SizedBox(
-          height: 120,
+          height: 115,
           child: ListView.builder(
             padding: const EdgeInsets.symmetric(
               horizontal: AppConstants.defaultPadding,
             ),
             scrollDirection: Axis.horizontal,
-            itemCount: categories.length,
+            itemCount: categoriesList.length,
             itemBuilder: (context, index) {
-              return _buildStatusItem(context, categories, index);
+              return _buildStatusItem(context, categoriesList, index);
             },
           ),
         ),
@@ -123,7 +131,7 @@ class SocialProofSection extends StatelessWidget {
         Navigator.push(
           context,
           PageRouteBuilder(
-            opaque: false, // Transparent background transition potentially
+            opaque: false,
             settings: const RouteSettings(name: '/status_view'),
             pageBuilder: (_, __, ___) => StatusViewScreen(
               allCategories: categories,
@@ -134,24 +142,35 @@ class SocialProofSection extends StatelessWidget {
       },
       child: Container(
         margin: const EdgeInsets.only(right: 15),
-        width: 80,
+        width: 60,
         child: Column(
           children: [
-            CustomPaint(
-              painter: StatusBorderPainter(
-                itemCount: category.items.length,
-                color: const Color(0xFF2E7D32), // WhatsApp Green
-                strokeWidth: 2.0,
-                gapSize: 0.2, // Gap in radians
+            Container(
+              padding: const EdgeInsets.all(2),
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: LinearGradient(
+                  begin: Alignment.bottomLeft,
+                  end: Alignment.topRight,
+                  colors: [
+                    Color(0xFFFCAF45),
+                    Color(0xFFF56040),
+                    Color(0xFFE1306C),
+                  ],
+                ),
               ),
               child: Container(
-                padding: const EdgeInsets.all(
-                  4,
-                ), // Space between border and avatar
+                padding: const EdgeInsets.all(2),
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                ),
                 child: CircleAvatar(
-                  radius: 30,
-                  backgroundColor: Colors.grey[200],
-                  backgroundImage: NetworkImage(category.avatarUrl),
+                  radius: 26,
+                  backgroundColor: Colors.grey[100],
+                  backgroundImage: UrlSanitizer.buildImageProvider(
+                    category.avatarUrl,
+                  ),
                 ),
               ),
             ),
@@ -159,69 +178,17 @@ class SocialProofSection extends StatelessWidget {
             Text(
               category.name,
               textAlign: TextAlign.center,
-              maxLines: 2,
+              maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 11,
+              style: const TextStyle(
+                fontSize: 10,
                 fontWeight: FontWeight.bold,
-                color: Colors.black87,
+                color: Color(0xFF1E1E2C),
               ),
             ),
           ],
         ),
       ),
     );
-  }
-}
-
-class StatusBorderPainter extends CustomPainter {
-  final int itemCount;
-  final Color color;
-  final double strokeWidth;
-  final double gapSize; // Gap size in radians
-
-  StatusBorderPainter({
-    required this.itemCount,
-    required this.color,
-    this.strokeWidth = 2.0,
-    this.gapSize = 0.2,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..strokeWidth = strokeWidth
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round;
-
-    final center = Offset(size.width / 2, size.height / 2);
-    final radius = (size.width - strokeWidth) / 2;
-
-    if (itemCount == 1) {
-      canvas.drawCircle(center, radius, paint);
-    } else {
-      final double totalGap = gapSize * itemCount;
-      final double totalSweep = 2 * pi - totalGap;
-      final double sweepAngle = totalSweep / itemCount;
-
-      double startAngle = -pi / 2; // Start from top
-
-      for (int i = 0; i < itemCount; i++) {
-        canvas.drawArc(
-          Rect.fromCircle(center: center, radius: radius),
-          startAngle,
-          sweepAngle,
-          false,
-          paint,
-        );
-        startAngle += sweepAngle + gapSize;
-      }
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant StatusBorderPainter oldDelegate) {
-    return oldDelegate.itemCount != itemCount;
   }
 }

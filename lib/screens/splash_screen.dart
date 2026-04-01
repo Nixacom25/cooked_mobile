@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:app_ecommerce/utils/constants.dart';
 import 'package:app_ecommerce/screens/main_navigation.dart';
 import 'package:app_ecommerce/services/video_preload_service.dart';
+import 'package:app_ecommerce/services/data_cache_service.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -50,7 +51,7 @@ class _SplashScreenState extends State<SplashScreen>
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
-              builder: (context) => const MainNavigation(initialIndex: 1),
+              builder: (context) => const MainNavigation(initialIndex: 0),
             ),
           );
         }
@@ -62,8 +63,12 @@ class _SplashScreenState extends State<SplashScreen>
     // Start preloading videos immediately while splash screen is visible
     VideoPreloadService.preloadFirstVideos();
 
-    // We could add more prefetching here (e.g. Products, Categories)
-    // if using a global caching service.
+    // Prefetch all critical home screen data globally before navigation
+    try {
+      await DataCacheService().prefetchAll();
+    } catch (e) {
+      debugPrint("Warning: Cache prefetch failed: $e");
+    }
   }
 
   @override
@@ -84,20 +89,10 @@ class _SplashScreenState extends State<SplashScreen>
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Logo from assets
                 Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.2),
-                        blurRadius: 10,
-                        spreadRadius: 2,
-                      ),
-                    ],
-                  ),
+                  height: 120,
+                  width: 120,
+                  decoration: BoxDecoration(shape: BoxShape.circle),
                   child: ClipOval(
                     child: Image.asset(
                       'assets/images/logo.png',
@@ -115,15 +110,6 @@ class _SplashScreenState extends State<SplashScreen>
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                     letterSpacing: 4,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                const Text(
-                  'La boutique qui vous accompagne partout',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.white70,
-                    letterSpacing: 2,
                   ),
                 ),
               ],

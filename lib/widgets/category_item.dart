@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:app_ecommerce/models/category.dart';
 import 'package:app_ecommerce/utils/constants.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:app_ecommerce/utils/url_sanitizer.dart';
 
 class CategoryItem extends StatelessWidget {
   final Category category;
@@ -17,11 +17,13 @@ class CategoryItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final hasImage = category.imageUrl.isNotEmpty;
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        margin: const EdgeInsets.only(right: 10),
-        width: 70, // Fixed width for alignment
+        margin: const EdgeInsets.only(right: 15),
+        width: 60,
         child: Column(
           children: [
             Container(
@@ -29,32 +31,31 @@ class CategoryItem extends StatelessWidget {
               height: 60,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: AppColors.primaryLight, // Dark circle
-                image: category.imageUrl.isNotEmpty
+                color: Colors.grey[100],
+                image: hasImage
                     ? DecorationImage(
-                        image: CachedNetworkImageProvider(
+                        image: UrlSanitizer.buildImageProvider(
                           category.imageUrl,
-                          maxWidth: 120, // 2x for retina
-                          maxHeight: 120,
                         ),
                         fit: BoxFit.cover,
                       )
                     : null,
               ),
-              child: category.imageUrl.isEmpty
-                  ? const Icon(Icons.category, color: Colors.white54)
+              child: !hasImage
+                  ? const Icon(Icons.category, color: Colors.grey, size: 20)
                   : null,
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 8),
             Text(
               category.name,
               textAlign: TextAlign.center,
-              maxLines: 2,
+              maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                fontSize: 11, // Reduced font size slightly
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                color: isSelected ? AppColors.accent : Colors.black87,
+                fontSize: 13,
+                fontWeight: FontWeight.bold,
+                color: isSelected ? AppColors.accent : const Color(0xFF2D3E50),
+                letterSpacing: 0.1,
               ),
             ),
           ],

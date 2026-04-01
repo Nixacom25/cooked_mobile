@@ -6,7 +6,7 @@ class AppColors {
   static const Color primaryLight = Color(0xFF2D2D44);
 
   // Accent Colors
-  static const Color accent = Color(0xFFFF7043); // Orange from mockup
+  static const Color accent = Color(0xFFFB8324); // Orange from mockup
   static const Color accentLight = Color(0xFFFFAB91);
 
   // Specific Colors

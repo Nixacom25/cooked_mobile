@@ -5,6 +5,7 @@ import 'package:app_ecommerce/services/product_service.dart';
 import 'package:app_ecommerce/widgets/dark_product_card.dart';
 import 'package:app_ecommerce/screens/video_preview_screen.dart';
 import 'package:app_ecommerce/utils/constants.dart';
+import 'package:app_ecommerce/services/auth_service.dart';
 
 class DealsScreen extends StatefulWidget {
   const DealsScreen({super.key});
@@ -47,7 +48,12 @@ class _DealsScreenState extends State<DealsScreen> {
         });
       }
 
-      final products = await ProductService.getProducts();
+      final user = AuthService().currentUser.value;
+      final clientId = user != null
+          ? '${user['firstName']} ${user['lastName']}'
+          : 'client123';
+
+      final products = await ProductService.getProducts(clientId: clientId);
 
       final promoProducts = products
           .where((p) => p.originalPrice != null || p.promoLabel != null)

@@ -1,15 +1,17 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:app_ecommerce/services/cart_service.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:app_ecommerce/screens/map_picker_screen.dart';
+import 'package:app_ecommerce/widgets/login_modal.dart';
 import 'package:record/record.dart';
 import 'package:audioplayers/audioplayers.dart';
-import 'dart:io';
 import 'package:path_provider/path_provider.dart';
-import 'package:permission_handler/permission_handler.dart';
+import 'dart:io';
 import 'package:app_ecommerce/services/api_service.dart';
+import 'package:app_ecommerce/services/auth_service.dart';
 import 'package:geocoding/geocoding.dart' as geo;
 
 class ValidationScreen extends StatefulWidget {
@@ -27,6 +29,12 @@ class _ValidationScreenState extends State<ValidationScreen> {
   String _paymentMethod = 'CASH';
   String _noteType = 'ECRIT';
 
+  // Multi-selection state
+  final Map<int, int> _selectedColors = {0xFF000000: 1}; // Default 1 Black
+  final Map<String, int> _selectedDimensions = {
+    'Standard': 1,
+  }; // Default 1 Standard
+
   // Controllers
   final TextEditingController _firstNameController = TextEditingController();
   final TextEditingController _lastNameController = TextEditingController();
@@ -41,42 +49,48 @@ class _ValidationScreenState extends State<ValidationScreen> {
   double? _latitude;
   double? _longitude;
   bool _isDakar = false;
-
-  // Audio State
-  late AudioRecorder _audioRecorder;
-  late AudioPlayer _audioPlayer;
+  bool get _isLoggedIn => AuthService().isLoggedIn.value;
   bool _isRecording = false;
-  bool _isPlaying = false;
+  int _recordingDuration = 0;
   String? _recordedFilePath;
+  Timer? _recordingTimer;
+  bool _isPlaying = false;
+  int _playbackPosition = 0;
+  Timer? _playbackTimer;
+
+  final AudioRecorder _audioRecorder = AudioRecorder();
+  final AudioPlayer _audioPlayer = AudioPlayer();
 
   @override
   void initState() {
     super.initState();
-
-    _audioRecorder = AudioRecorder();
-    _audioPlayer = AudioPlayer();
+    // Use the controllers defined in the class
+    _locationController.text = ''; // Placeholder
+    _firstNameController.text = '';
+    _lastNameController.text = '';
+    _phone1Controller.text = '';
 
     _audioPlayer.onPlayerComplete.listen((event) {
-      if (mounted) setState(() => _isPlaying = false);
+      _stopPlayback();
     });
   }
 
   @override
   void dispose() {
+    _noteController.dispose();
+    _locationController.dispose();
     _firstNameController.dispose();
     _lastNameController.dispose();
     _phone1Controller.dispose();
     _phone2Controller.dispose();
-    _noteController.dispose();
-    _locationController.dispose();
     _dateController.dispose();
     _timeController.dispose();
+    _recordingTimer?.cancel();
+    _playbackTimer?.cancel();
     _audioRecorder.dispose();
     _audioPlayer.dispose();
     super.dispose();
   }
-
-  // --- Logic ---
 
   Future<void> _getCurrentLocation() async {
     final bool hasPermission = await _handleLocationPermission();
@@ -270,8 +284,8 @@ class _ValidationScreenState extends State<ValidationScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Padding(
-                padding: const EdgeInsets.all(16.0),
+              const Padding(
+                padding: EdgeInsets.all(16.0),
                 child: Text(
                   'CHOISIR UNE DATE',
                   style: TextStyle(
@@ -307,7 +321,7 @@ class _ValidationScreenState extends State<ValidationScreen> {
                   ),
                   onTap: () {
                     setState(() {
-                      _selectedDate = 'CHOISIR UNE DATE';
+                      _selectedDate = 'AUTRE';
                       _dateController.text = shortDate;
                     });
                     Navigator.pop(context);
@@ -345,91 +359,19 @@ class _ValidationScreenState extends State<ValidationScreen> {
     }
   }
 
-  // --- Voice Recorder Logic ---
-
-  Future<void> _startRecording() async {
-    // Explicitly request microphone permission using permission_handler
-    var status = await Permission.microphone.request();
-
-    if (status.isGranted) {
-      final directory = await getTemporaryDirectory();
-      String filePath =
-          '${directory.path}/voice_note_${DateTime.now().millisecondsSinceEpoch}.m4a';
-
-      await _audioRecorder.start(const RecordConfig(), path: filePath);
-      setState(() {
-        _isRecording = true;
-        _recordedFilePath = null;
-      });
-    } else if (status.isPermanentlyDenied) {
-      if (mounted) {
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('Permission requise'),
-            content: const Text(
-              'Le microphone est nécessaire pour enregistrer une note vocale. Veuillez l\'activer dans les paramètres.',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Annuler'),
-              ),
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  openAppSettings();
-                },
-                child: const Text('Ouvrir les paramètres'),
-              ),
-            ],
-          ),
-        );
-      }
-    } else {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Permission microphone refusée')),
-        );
-      }
-    }
-  }
-
-  Future<void> _stopRecording() async {
-    final path = await _audioRecorder.stop();
-    setState(() {
-      _isRecording = false;
-      _recordedFilePath = path;
-    });
-  }
-
-  Future<void> _playRecording() async {
-    if (_recordedFilePath != null) {
-      await _audioPlayer.play(DeviceFileSource(_recordedFilePath!));
-      setState(() => _isPlaying = true);
-    }
-  }
-
-  Future<void> _stopPlayback() async {
-    await _audioPlayer.stop();
-    setState(() => _isPlaying = false);
-  }
-
-  Future<void> _deleteRecording() async {
-    await _audioPlayer.stop();
-    if (_recordedFilePath != null) {
-      final file = File(_recordedFilePath!);
-      if (await file.exists()) {
-        await file.delete();
-      }
-    }
-    setState(() {
-      _recordedFilePath = null;
-      _isPlaying = false;
-    });
-  }
+  // --- Logic ---
 
   Future<void> _submitOrder() async {
+    if (!_isLoggedIn) {
+      LoginModal.show(
+        context,
+        firstName: _firstNameController.text,
+        lastName: _lastNameController.text,
+        phone: _phone1Controller.text,
+      );
+      return;
+    }
+
     if (_firstNameController.text.isEmpty || _phone1Controller.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -442,11 +384,6 @@ class _ValidationScreenState extends State<ValidationScreen> {
     setState(() => _isSubmitting = true);
 
     try {
-      File? audioFile;
-      if (_recordedFilePath != null && _noteType == 'VOCAL') {
-        audioFile = File(_recordedFilePath!);
-      }
-
       final items = CartService().itemsNotifier.value
           .map(
             (item) => {'productId': item.product.id, 'quantity': item.quantity},
@@ -457,8 +394,7 @@ class _ValidationScreenState extends State<ValidationScreen> {
       DateTime deliveryDateTime = DateTime.now();
       if (_selectedDate == 'DEMAIN') {
         deliveryDateTime = DateTime.now().add(const Duration(days: 1));
-      } else if (_selectedDate == 'CHOISIR UNE DATE' &&
-          _dateController.text.isNotEmpty) {
+      } else if (_selectedDate == 'AUTRE' && _dateController.text.isNotEmpty) {
         try {
           deliveryDateTime = DateFormat(
             'dd/MM/yyyy',
@@ -488,13 +424,18 @@ class _ValidationScreenState extends State<ValidationScreen> {
         'paymentMethod': _paymentMethod,
         'notes': _noteType == 'ECRIT'
             ? _noteController.text
-            : 'Note vocale jointe',
+            : (_recordedFilePath != null ? 'Note vocale jointe' : ''),
+        'voiceNotePath': _noteType == 'VOCAL' ? _recordedFilePath : null,
       };
 
       await ApiService.postMultipart(
         '/orders',
-        orderData,
-        audioFile: audioFile,
+        {},
+        files: _recordedFilePath != null && _noteType == 'VOCAL'
+            ? {'audio': File(_recordedFilePath!)}
+            : null,
+        jsonPartName: 'order',
+        jsonData: orderData,
       );
 
       if (mounted) {
@@ -521,690 +462,372 @@ class _ValidationScreenState extends State<ValidationScreen> {
   @override
   Widget build(BuildContext context) {
     final cartTotal = CartService().totalNotifier.value;
-    final deliveryFee = 3000.0;
+    final deliveryFee = 5000.0; // Based on mockup
     final finalTotal = cartTotal + deliveryFee;
 
-    String formatPrice(int price) {
-      return '${price.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]} ')}';
-    }
-
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color.fromARGB(255, 242, 243, 243),
       appBar: AppBar(
-        backgroundColor: const Color(0xFFE65100), // Orange
-        elevation: 0,
+        backgroundColor: Colors.white,
+        automaticallyImplyLeading: false,
         centerTitle: false,
-        leading: IconButton(
-          icon: const Icon(Icons.check_circle_outline, color: Colors.white),
-          onPressed: () {},
+        titleSpacing: 16,
+        elevation: 0,
+        shape: const Border(
+          bottom: BorderSide(color: Color(0xFF000000), width: 1),
         ),
         title: const Text(
-          '5. VALIDATION',
+          'VALIDATION',
           style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-            fontSize: 18,
+            fontSize: 20,
+            fontWeight: FontWeight.w900,
+            color: Color(0xFF1E2832),
           ),
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.close, color: Colors.white),
-            onPressed: () => Navigator.pop(context),
+          Padding(
+            padding: const EdgeInsets.only(right: 16.0),
+            child: Center(
+              child: Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: Colors.grey[100],
+                  shape: BoxShape.circle,
+                ),
+                child: IconButton(
+                  padding: EdgeInsets.zero,
+                  onPressed: () => Navigator.pop(context),
+                  icon: const Icon(Icons.close, color: Colors.grey, size: 20),
+                ),
+              ),
+            ),
           ),
         ],
       ),
-      body: Column(
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
+        child: Column(
+          children: [
+            _buildArticlesSection(),
+            const SizedBox(height: 16),
+            _buildOptionsSection(),
+            const SizedBox(height: 16),
+            _buildPersonalInfoSection(),
+            const SizedBox(height: 16),
+            _buildDeliveryScheduleSection(),
+            const SizedBox(height: 16),
+            _buildAssemblySection(),
+            _buildNoteSection(),
+            const SizedBox(height: 16),
+            _buildPaymentSection(),
+            const SizedBox(height: 230),
+          ],
+        ),
+      ),
+      bottomSheet: _buildBottomSummary(finalTotal, deliveryFee),
+    );
+  }
+
+  Widget _buildArticlesSection() {
+    return ValueListenableBuilder<List>(
+      valueListenable: CartService().itemsNotifier,
+      builder: (context, items, _) {
+        return _buildSectionContainer(
+          title: 'ARTICLES & QUANTITÉ',
+          child: Column(
+            children: items.map((item) => _buildItemCard(item)).toList(),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildItemCard(dynamic item) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16.0),
+      child: Row(
         children: [
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 16.0,
-                vertical: 20.0,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Names
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _buildTextField(
-                          'NOM',
-                          'Votre nom',
-                          controller: _lastNameController,
-                          icon: Icons.person_outline,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: _buildTextField(
-                          'PRÉNOM',
-                          'Votre prénom',
-                          controller: _firstNameController,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-
-                  // Phones
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _buildTextField(
-                          'TEL. PRINCIPAL',
-                          '77...',
-                          controller: _phone1Controller,
-                          icon: Icons.phone_outlined,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: _buildTextField(
-                          'TEL. 2 (OPTIONNEL)',
-                          'Secondaire',
-                          controller: _phone2Controller,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-
-                  // Location with Button
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: const [
-                          Icon(
-                            Icons.location_on_outlined,
-                            size: 14,
-                            color: Colors.black87,
-                          ),
-                          SizedBox(width: 6),
-                          Text(
-                            'LOCALISATION',
-                            style: TextStyle(
-                              fontWeight: FontWeight.w900,
-                              fontSize: 14,
-                              color: Colors.black87,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Container(
-                        padding: const EdgeInsets.only(
-                          left: 16,
-                          right: 8,
-                          top: 4,
-                          bottom: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF5F5F5),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.black87, width: 1.5),
-                        ),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: TextField(
-                                controller: _locationController,
-                                readOnly: true,
-                                onTap: _openMapPicker,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 13,
-                                ),
-                                decoration: const InputDecoration(
-                                  hintText:
-                                      'Choisir la localisation sur la carte',
-                                  border: InputBorder.none,
-                                  hintStyle: TextStyle(
-                                    color: Colors.grey,
-                                    fontWeight: FontWeight.normal,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            IconButton(
-                              icon: const Icon(
-                                Icons.map_outlined,
-                                color: Color(0xFFE65100),
-                              ),
-                              onPressed: _openMapPicker,
-                              tooltip: 'Choisir sur la carte',
-                            ),
-                            IconButton(
-                              icon: const Icon(
-                                Icons.my_location,
-                                color: Color(0xFFE65100),
-                              ),
-                              onPressed: _getCurrentLocation,
-                              tooltip: 'Ma position actuelle',
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  // Delivery Date
-                  Row(
-                    children: const [
-                      Icon(
-                        Icons.calendar_today_outlined,
-                        size: 16,
-                        color: Colors.black87,
-                      ),
-                      SizedBox(width: 8),
-                      Text(
-                        'DATE DE LIVRAISON',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w900,
-                          fontSize: 14,
-                          color: Colors.black87,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      _buildSelectableButton(
-                        'AUJOURD\'HUI',
-                        _selectedDate == 'AUJOURD\'HUI',
-                        () => setState(() {
-                          _selectedDate = 'AUJOURD\'HUI';
-                          _dateController.clear();
-                        }),
-                      ),
-                      const SizedBox(width: 10),
-                      _buildSelectableButton(
-                        'DEMAIN',
-                        _selectedDate == 'DEMAIN',
-                        () => setState(() {
-                          _selectedDate = 'DEMAIN';
-                          _dateController.clear();
-                        }),
-                      ),
-                      const SizedBox(width: 10),
-
-                      // Custom Date Button
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: _selectDate,
-                          child: Container(
-                            height: 48,
-                            alignment: Alignment.center,
-                            decoration: BoxDecoration(
-                              color: _selectedDate == 'CHOISIR UNE DATE'
-                                  ? const Color(0xFFE65100)
-                                  : Colors.white,
-                              border: Border.all(
-                                color: _selectedDate == 'CHOISIR UNE DATE'
-                                    ? const Color(0xFFE65100)
-                                    : Colors.black,
-                                width: 1.5,
-                              ),
-                              borderRadius: BorderRadius.circular(30),
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                if (_selectedDate == 'CHOISIR UNE DATE')
-                                  const Padding(
-                                    padding: EdgeInsets.only(right: 4),
-                                    child: Icon(
-                                      Icons.check_circle,
-                                      color: Colors.white,
-                                      size: 16,
-                                    ),
-                                  ),
-                                Flexible(
-                                  child: Text(
-                                    _selectedDate == 'CHOISIR UNE DATE' &&
-                                            _dateController.text.isNotEmpty
-                                        ? _dateController.text
-                                        : 'CHOISIR UNE DATE',
-                                    textAlign: TextAlign.center,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(
-                                      color: _selectedDate == 'CHOISIR UNE DATE'
-                                          ? Colors.white
-                                          : Colors.black,
-                                      fontWeight: FontWeight.w900,
-                                      fontSize: 10,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Delivery Time
-                  Row(
-                    children: const [
-                      Icon(Icons.access_time, size: 16, color: Colors.black87),
-                      SizedBox(width: 8),
-                      Text(
-                        'HEURE DE LIVRAISON',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w900,
-                          fontSize: 14,
-                          color: Colors.black87,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                        flex: 3,
-                        child: _buildSelectableButton(
-                          'JE SUIS DISPONIBLE',
-                          _selectedTime == 'JE SUIS DISPONIBLE',
-                          () => setState(() {
-                            _selectedTime = 'JE SUIS DISPONIBLE';
-                            _timeController.clear();
-                          }),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        flex: 2,
-                        child: GestureDetector(
-                          onTap: _selectTime,
-                          child: Container(
-                            height: 48,
-                            decoration: BoxDecoration(
-                              border: Border.all(
-                                color: _selectedTime == 'AUTRE HEURE'
-                                    ? const Color(0xFFE65100)
-                                    : Colors.black87,
-                                width: 1.5,
-                              ),
-                              color: _selectedTime == 'AUTRE HEURE'
-                                  ? const Color(0xFFE65100).withOpacity(0.1)
-                                  : null,
-                              borderRadius: BorderRadius.circular(30),
-                            ),
-                            alignment: Alignment.center,
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                if (_selectedTime == 'AUTRE HEURE')
-                                  const Padding(
-                                    padding: EdgeInsets.only(right: 4),
-                                    child: Icon(
-                                      Icons.check_circle,
-                                      color: Color(0xFFE65100),
-                                      size: 16,
-                                    ),
-                                  ),
-                                Flexible(
-                                  child: Text(
-                                    _selectedTime == 'AUTRE HEURE' &&
-                                            _timeController.text.isNotEmpty
-                                        ? _timeController.text
-                                        : 'CHOISIR HEURE',
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 12,
-                                      color: _selectedTime == 'AUTRE HEURE'
-                                          ? const Color(0xFFE65100)
-                                          : Colors.black,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 4),
-                                Icon(
-                                  Icons.access_time_filled,
-                                  size: 16,
-                                  color: _selectedTime == 'AUTRE HEURE'
-                                      ? const Color(0xFFE65100)
-                                      : Colors.black,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Assembly Toggle (Conditional)
-                  if (CartService().items.any(
-                    (item) => item.product.hasInstallationOption,
-                  ))
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          margin: const EdgeInsets.only(bottom: 8),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 8,
-                          ),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFFFFDE7), // Very light yellow
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                              color: Colors.amber.withOpacity(0.3),
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Row(
-                                children: [
-                                  const Icon(
-                                    Icons.build,
-                                    color: Colors.orange,
-                                    size: 20,
-                                  ),
-                                  const SizedBox(width: 12),
-                                  const Text(
-                                    'AVEC MONTAGE',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.w900,
-                                      fontSize: 14,
-                                      color: Colors.black87,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              Switch(
-                                value: _withAssembly,
-                                onChanged: (val) {
-                                  if (val && !_isDakar) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text(
-                                          "Le service de montage est disponible principalement à Dakar. Votre localisation actuelle pourrait ne pas être couverte.",
-                                        ),
-                                        backgroundColor: Colors.orange,
-                                      ),
-                                    );
-                                  }
-                                  setState(() => _withAssembly = val);
-                                },
-                                activeColor: const Color(0xFFE65100),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const Padding(
-                          padding: EdgeInsets.only(
-                            left: 16,
-                            right: 16,
-                            bottom: 8,
-                          ),
-                          child: Text(
-                            "Le service de montage vous permet de recevoir votre article déjà assemblé et prêt à l'emploi. Cochez cette option si vous le souhaitez.",
-                            style: TextStyle(
-                              color: Colors.black54,
-                              fontSize: 11,
-                              fontStyle: FontStyle.italic,
-                            ),
-                          ),
-                        ),
-                        if (!_isDakar)
-                          const Padding(
-                            padding: EdgeInsets.only(left: 16, bottom: 5),
-                            child: Text(
-                              "* Service disponible uniquement à Dakar",
-                              style: TextStyle(
-                                color: Colors.orange,
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          )
-                        else
-                          const SizedBox(height: 16),
-                      ],
-                    ),
-
-                  const SizedBox(height: 24),
-                  // Payment Method
-                  const Text(
-                    'MODE DE PAIEMENT',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w900,
-                      fontSize: 14,
-                      color: Colors.black,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: [
-                        _buildSelectableButton(
-                          'ESPÈCES',
-                          _paymentMethod == 'CASH',
-                          () => setState(() => _paymentMethod = 'CASH'),
-                        ),
-                        const SizedBox(width: 8),
-                        _buildSelectableButton(
-                          'WAVE',
-                          _paymentMethod == 'WAVE',
-                          () => setState(() => _paymentMethod = 'WAVE'),
-                        ),
-                        const SizedBox(width: 8),
-                        _buildSelectableButton(
-                          'ORANGE MONEY',
-                          _paymentMethod == 'ORANGE_MONEY',
-                          () => setState(() => _paymentMethod = 'ORANGE_MONEY'),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Note Box
-                  Container(
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.black87, width: 1.5),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Column(
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Row(
-                            children: const [
-                              Icon(Icons.comment_outlined, size: 18),
-                              SizedBox(width: 8),
-                              Text(
-                                'NOTE PARTICULIÈRE POUR LE LIVREUR',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w900,
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        // Segmented Control Look-alike
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                          child: Container(
-                            padding: const EdgeInsets.all(4),
-                            decoration: BoxDecoration(
-                              color: Colors.grey[200],
-                              borderRadius: BorderRadius.circular(30),
-                            ),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: GestureDetector(
-                                    onTap: () =>
-                                        setState(() => _noteType = 'ECRIT'),
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        vertical: 10,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: _noteType == 'ECRIT'
-                                            ? Colors.black
-                                            : Colors.transparent,
-                                        borderRadius: BorderRadius.circular(25),
-                                      ),
-                                      alignment: Alignment.center,
-                                      child: Text(
-                                        'ÉCRIT',
-                                        style: TextStyle(
-                                          color: _noteType == 'ECRIT'
-                                              ? Colors.white
-                                              : Colors.black54,
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 12,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                Expanded(
-                                  child: GestureDetector(
-                                    onTap: () =>
-                                        setState(() => _noteType = 'VOCAL'),
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        vertical: 10,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: _noteType == 'VOCAL'
-                                            ? Colors.black
-                                            : Colors.transparent,
-                                        borderRadius: BorderRadius.circular(25),
-                                      ),
-                                      alignment: Alignment.center,
-                                      child: Text(
-                                        'VOCAL',
-                                        style: TextStyle(
-                                          color: _noteType == 'VOCAL'
-                                              ? Colors.white
-                                              : Colors.black54,
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 12,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-
-                        // Content Area (Text or Voice)
-                        Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: _noteType == 'ECRIT'
-                              ? TextField(
-                                  controller: _noteController,
-                                  maxLines: 4,
-                                  decoration: InputDecoration(
-                                    hintText:
-                                        'Note particulière pour le livreur...',
-                                    hintStyle: TextStyle(
-                                      color: Colors.grey[400],
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                    border: InputBorder.none,
-                                    contentPadding: EdgeInsets.zero,
-                                  ),
-                                )
-                              : _buildVoiceRecorder(),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+          ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: Image.network(
+              item.product.thumbnailUrl ?? '',
+              width: 50,
+              height: 50,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) => Container(
+                width: 50,
+                height: 50,
+                color: Colors.grey[200],
+                child: const Icon(
+                  Icons.image_not_supported_outlined,
+                  color: Colors.grey,
+                  size: 20,
+                ),
               ),
             ),
           ),
-
-          // Footer Total
-          Container(
-            padding: const EdgeInsets.all(24),
-            decoration: const BoxDecoration(
-              color: Colors.black,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-            ),
+          const SizedBox(width: 12),
+          Expanded(
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'TOTAL + LIVRAISON',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w800,
-                        fontSize: 14,
-                      ),
-                    ),
-                    Row(
-                      children: [
-                        Text(
-                          formatPrice(finalTotal.toInt()),
-                          style: const TextStyle(
-                            color: Colors.green,
-                            fontSize: 32,
-                            fontWeight: FontWeight.w900,
-                          ),
-                        ),
-                        const Text(
-                          ' FCFA',
-                          style: TextStyle(
-                            color: Colors.green,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            height: 2,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 24),
-                SizedBox(
-                  width: double.infinity,
-                  height: 56,
-                  child: ElevatedButton(
-                    onPressed: _isSubmitting ? null : _submitOrder,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFE65100), // Orange
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      elevation: 0,
-                    ),
-                    child: _isSubmitting
-                        ? const CircularProgressIndicator(color: Colors.white)
-                        : const Text(
-                            "J'ACHÈTE",
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w900,
-                              color: Colors.white,
-                              letterSpacing: 1,
-                            ),
-                          ),
+                Text(
+                  item.product.title,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w900,
+                    fontSize: 14,
+                    fontFamily: 'SF Pro',
+                    color: Color(0xFF1E2832),
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '${_formatPrice(item.product.numericPrice)} FCFA',
+                  style: const TextStyle(
+                    color: Color(0xFFFF6F00),
+                    fontWeight: FontWeight.w900,
+                    fontFamily: 'SF Pro',
+                    fontSize: 14,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          _buildQuantityControls(item),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQuantityControls(dynamic item) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(30),
+        border: Border.all(color: const Color(0xFF1E2832), width: 1.2),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _buildCircleButton(
+            icon: Icons.remove,
+            onTap: () => CartService().decrementQuantity(item.product.id),
+          ),
+          const SizedBox(width: 12),
+          Text(
+            '${item.quantity}',
+            style: const TextStyle(
+              fontWeight: FontWeight.w900,
+              fontSize: 15,
+              fontFamily: 'SF Pro',
+              color: Color(0xFF1E2832),
+            ),
+          ),
+          const SizedBox(width: 12),
+          _buildCircleButton(
+            icon: Icons.add,
+            onTap: () => CartService().incrementQuantity(item.product.id),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCircleButton({
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 28,
+        height: 28,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          border: Border.all(color: const Color(0xFF1E2832), width: 1),
+        ),
+        child: Icon(icon, size: 16, color: const Color(0xFF1E2832)),
+      ),
+    );
+  }
+
+  String _getColorsSubtitle() {
+    if (_selectedColors.isEmpty) return "";
+    return _selectedColors.entries
+        .map((e) {
+          final name = _getColorName(Color(e.key));
+          return "${e.value} $name";
+        })
+        .join(", ");
+  }
+
+  String _getDimensionsSubtitle() {
+    if (_selectedDimensions.isEmpty) return "";
+    return _selectedDimensions.entries
+        .map((e) => "${e.value} ${e.key}")
+        .join(", ");
+  }
+
+  String _getColorName(Color color) {
+    if (color == Colors.black) return "Noir";
+    if (color == Colors.white) return "Blanc";
+    if (color == Colors.grey) return "Gris";
+    if (color.value == 0xFFC49A6C) return "Beige";
+    return "";
+  }
+
+  Widget _buildOptionsSection() {
+    return _buildSectionContainer(
+      title: '',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Text(
+                'COULEUR',
+                style: TextStyle(
+                  fontWeight: FontWeight.w900,
+                  fontSize: 10,
+                  color: Colors.black,
+                  fontFamily: 'SF Pro',
+                  letterSpacing: 0.5,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                _getColorsSubtitle(),
+                style: const TextStyle(
+                  fontSize: 10,
+                  color: Colors.black38,
+                  fontFamily: 'SF Pro',
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              _buildColorCircle(Colors.black),
+              _buildColorCircle(Colors.white),
+              _buildColorCircle(Colors.grey),
+              _buildColorCircle(const Color(0xFFC49A6C)),
+            ],
+          ),
+          const SizedBox(height: 15),
+          Row(
+            children: [
+              const Text(
+                'DIMENSIONS',
+                style: TextStyle(
+                  fontWeight: FontWeight.w900,
+                  fontSize: 10,
+                  color: Colors.black,
+                  fontFamily: 'SF Pro',
+                  letterSpacing: 0.5,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                _getDimensionsSubtitle(),
+                style: const TextStyle(
+                  fontSize: 9,
+                  color: Colors.black38,
+                  fontFamily: 'SF Pro',
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _buildDimensionChip('Standard'),
+              _buildDimensionChip('1m20'),
+              _buildDimensionChip('2m'),
+              _buildDimensionChip('3m'),
+              _buildDimensionChip('Sur-mesure'),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPersonalInfoSection() {
+    return _buildSectionContainer(
+      title: '',
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: _buildTextField(
+                  'NOM',
+                  'Votre nom',
+                  controller: _lastNameController,
+                  icon: Icons.person_outline,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildTextField(
+                  'PRÉNOM',
+                  'Votre prénom',
+                  controller: _firstNameController,
+                  icon: Icons.person_outline,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: _buildTextField(
+                  'TÉL. PRINCIPAL',
+                  '77...',
+                  controller: _phone1Controller,
+                  icon: Icons.phone_outlined,
+                  keyboardType: TextInputType.phone,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildTextField(
+                  'TÉL. 2 (OPTIONNEL)',
+                  'Secondaire',
+                  controller: _phone2Controller,
+                  icon: Icons.phone_outlined,
+                  keyboardType: TextInputType.phone,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          _buildTextField(
+            'LOCALISATION (LIEN GOOGLE MAPS)',
+            'Coller le lien Google Maps ici',
+            controller: _locationController,
+            icon: Icons.location_on_outlined,
+            suffix: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  icon: const Icon(
+                    Icons.map_outlined,
+                    color: Color(0xFFFF6F00),
+                  ),
+                  onPressed: _openMapPicker,
+                ),
+                IconButton(
+                  icon: const Icon(Icons.my_location, color: Color(0xFFFF6F00)),
+                  onPressed: _getCurrentLocation,
                 ),
               ],
             ),
@@ -1214,65 +837,845 @@ class _ValidationScreenState extends State<ValidationScreen> {
     );
   }
 
-  Widget _buildVoiceRecorder() {
-    if (_recordedFilePath != null && !_isRecording) {
-      // Playback UI
-      return Row(
+  Widget _buildDeliveryScheduleSection() {
+    return _buildSectionContainer(
+      title: '',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          IconButton(
-            onPressed: _isPlaying ? _stopPlayback : _playRecording,
-            icon: Icon(
-              _isPlaying ? Icons.stop_circle : Icons.play_circle_fill,
-              size: 40,
-              color: const Color(0xFFE65100),
-            ),
+          Row(
+            children: const [
+              Icon(
+                Icons.calendar_today_outlined,
+                size: 14,
+                color: Color(0xFFFF6F00),
+              ),
+              SizedBox(width: 6),
+              Text(
+                'DATE DE LIVRAISON',
+                style: TextStyle(
+                  fontWeight: FontWeight.w900,
+                  fontSize: 10,
+                  color: Colors.black,
+                  fontFamily: 'SF Pro',
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(width: 8),
-          const Expanded(
-            child: Text(
-              "Note vocale enregistrée",
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              _buildScheduleChip(
+                'AUJOURD\'HUI',
+                _selectedDate == 'AUJOURD\'HUI',
+                () => setState(() => _selectedDate = 'AUJOURD\'HUI'),
+              ),
+              const SizedBox(width: 8),
+              _buildScheduleChip(
+                'DEMAIN',
+                _selectedDate == 'DEMAIN',
+                () => setState(() => _selectedDate = 'DEMAIN'),
+              ),
+              const SizedBox(width: 8),
+              _buildScheduleChip(
+                'AUTRE DATE',
+                _selectedDate == 'AUTRE',
+                _selectDate,
+              ),
+            ],
           ),
-          IconButton(
-            onPressed: _deleteRecording,
-            icon: const Icon(Icons.delete_outline, color: Colors.red),
+          const SizedBox(height: 20),
+          Row(
+            children: const [
+              Icon(Icons.access_time, size: 14, color: Color(0xFFFF6F00)),
+              SizedBox(width: 6),
+              Text(
+                'HEURE DE LIVRAISON',
+                style: TextStyle(
+                  fontWeight: FontWeight.w900,
+                  fontSize: 10,
+                  color: Colors.black,
+                  fontFamily: 'SF Pro',
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              _buildScheduleChip(
+                'LE PLUS RAPIDEMENT',
+                _selectedTime == 'LE PLUS RAPIDEMENT POSSIBLE',
+                () => setState(
+                  () => _selectedTime = 'LE PLUS RAPIDEMENT POSSIBLE',
+                ),
+              ),
+              const SizedBox(width: 8),
+              _buildTimeDisplayChip(),
+            ],
           ),
         ],
-      );
-    }
+      ),
+    );
+  }
 
-    // Recording UI
-    return GestureDetector(
-      onLongPressStart: (_) => _startRecording(),
-      onLongPressEnd: (_) => _stopRecording(),
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 20),
-        width: double.infinity,
-        decoration: BoxDecoration(
-          color: _isRecording ? Colors.red.withOpacity(0.1) : Colors.grey[100],
-          borderRadius: BorderRadius.circular(12),
-          border: _isRecording ? Border.all(color: Colors.red) : null,
-        ),
-        child: Column(
-          children: [
-            Icon(
-              _isRecording ? Icons.mic : Icons.mic_none,
-              size: 40,
-              color: _isRecording ? Colors.red : Colors.grey[600],
-            ),
-            const SizedBox(height: 8),
-            Text(
-              _isRecording
-                  ? "Relâchez pour envoyer"
-                  : "Maintenez pour enregistrer",
-              style: TextStyle(
-                color: _isRecording ? Colors.red : Colors.grey[600],
+  Widget _buildNoteSection() {
+    return _buildSectionContainer(
+      title: '',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(
+                Icons.description_outlined,
+                color: Color(0xFFFF6F00),
+                size: 16,
+              ),
+              const SizedBox(width: 6),
+              const Text(
+                'NOTE PARTICULIÈRE POUR LE LIVREUR',
+                style: TextStyle(
+                  fontWeight: FontWeight.w900,
+                  fontSize: 10,
+                  color: Colors.black,
+                  fontFamily: 'SF Pro',
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              _buildNoteTypeChip(
+                'ÉCRIT',
+                _noteType == 'ECRIT',
+                () => setState(() => _noteType = 'ECRIT'),
+              ),
+              const SizedBox(width: 12),
+              _buildNoteTypeChip(
+                'VOCAL',
+                _noteType == 'VOCAL',
+                () => setState(() => _noteType = 'VOCAL'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          if (_noteType == 'ECRIT')
+            TextField(
+              controller: _noteController,
+              maxLines: 3,
+              style: const TextStyle(
                 fontWeight: FontWeight.bold,
+                fontSize: 14,
+                fontFamily: 'SF Pro',
+              ),
+              decoration: InputDecoration(
+                hintText: 'Note particulière...',
+                hintStyle: TextStyle(
+                  color: Colors.grey[400],
+                  fontSize: 14,
+                  fontWeight: FontWeight.normal,
+                ),
+                filled: true,
+                fillColor: const Color(0xFFF8F9FA),
+                isDense: true,
+                contentPadding: const EdgeInsets.all(16),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(
+                    color: Colors.grey.shade200,
+                    width: 1.5,
+                  ),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(
+                    color: Colors.grey.shade200,
+                    width: 1.5,
+                  ),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: const BorderSide(
+                    color: Color(0xFF1E2832),
+                    width: 1.5,
+                  ),
+                ),
+              ),
+            )
+          else
+            _buildVocalNotePlaceholder(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNoteTypeChip(String label, bool selected, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: selected ? const Color(0xFFFF6F00) : Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: selected ? const Color(0xFFFF6F00) : Colors.grey.shade300,
+            width: 1.5,
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: selected ? Colors.white : Colors.black87,
+            fontWeight: FontWeight.w900,
+            fontSize: 11,
+            fontFamily: 'SF Pro',
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildVocalNotePlaceholder() {
+    return GestureDetector(
+      onTap: _isRecording
+          ? _stopRecording
+          : (_recordedFilePath == null ? _startRecording : null),
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF8F9FA),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.grey.shade200, width: 1.5),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (_isRecording) ...[
+              const Icon(Icons.circle, color: Colors.red, size: 12),
+              const SizedBox(width: 12),
+              Text(
+                _formatDuration(_recordingDuration),
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                  color: Colors.red,
+                ),
+              ),
+              const SizedBox(width: 8),
+              const Text(
+                'ENREGISTREMENT...',
+                style: TextStyle(
+                  fontWeight: FontWeight.w900,
+                  fontSize: 10,
+                  color: Colors.red,
+                  letterSpacing: 1,
+                ),
+              ),
+              const Spacer(),
+              IconButton(
+                onPressed: _stopRecording,
+                icon: const Icon(Icons.stop_circle, color: Colors.black),
+                iconSize: 32,
+                constraints: const BoxConstraints(),
+                padding: EdgeInsets.zero,
+              ),
+            ] else if (_recordedFilePath != null) ...[
+              const Icon(Icons.audiotrack, color: Color(0xFFFF6F00), size: 24),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text(
+                      'Note vocale enregistrée',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    if (_isPlaying)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4.0),
+                        child: LinearProgressIndicator(
+                          value: _playbackPosition / _recordingDuration,
+                          backgroundColor: Colors.grey[200],
+                          color: const Color(0xFFFF6F00),
+                          minHeight: 2,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              IconButton(
+                onPressed: () {
+                  _stopPlayback();
+                  setState(() => _recordedFilePath = null);
+                },
+                icon: const Icon(Icons.delete_outline, color: Colors.red),
+                constraints: const BoxConstraints(),
+                padding: EdgeInsets.zero,
+              ),
+              const SizedBox(width: 8),
+              IconButton(
+                onPressed: _isPlaying ? _stopPlayback : _playRecordedVoice,
+                icon: Icon(
+                  _isPlaying
+                      ? Icons.pause_circle_filled
+                      : Icons.play_circle_fill,
+                  color: const Color(0xFFFF6F00),
+                ),
+                iconSize: 32,
+                constraints: const BoxConstraints(),
+                padding: EdgeInsets.zero,
+              ),
+            ] else ...[
+              const Icon(Icons.mic, color: Color(0xFFFF6F00), size: 30),
+              const SizedBox(width: 12),
+              const Text(
+                'Appuyez pour enregistrer',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black54,
+                  fontFamily: 'SF Pro',
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _startRecording() async {
+    try {
+      if (await _audioRecorder.hasPermission()) {
+        final Directory appDocDir = await getApplicationDocumentsDirectory();
+        final String path =
+            '${appDocDir.path}/note_${DateTime.now().millisecondsSinceEpoch}.m4a';
+
+        const config = RecordConfig();
+        await _audioRecorder.start(config, path: path);
+
+        setState(() {
+          _isRecording = true;
+          _recordingDuration = 0;
+          _recordedFilePath = null;
+        });
+
+        _recordingTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+          if (mounted) {
+            setState(() => _recordingDuration++);
+          }
+        });
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Permission microphon refusée')),
+        );
+      }
+    } catch (e) {
+      print('Error starting recording: $e');
+    }
+  }
+
+  Future<void> _stopRecording() async {
+    _recordingTimer?.cancel();
+    final String? path = await _audioRecorder.stop();
+    setState(() {
+      _isRecording = false;
+      _recordedFilePath = path;
+    });
+  }
+
+  Future<void> _playRecordedVoice() async {
+    if (_recordedFilePath == null) return;
+
+    try {
+      await _audioPlayer.play(DeviceFileSource(_recordedFilePath!));
+      setState(() {
+        _isPlaying = true;
+        _playbackPosition = 0;
+      });
+
+      _playbackTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+        if (mounted) {
+          setState(() {
+            if (_playbackPosition < _recordingDuration) {
+              _playbackPosition++;
+            }
+          });
+        }
+      });
+    } catch (e) {
+      print('Error playing audio: $e');
+    }
+  }
+
+  void _stopPlayback() {
+    _audioPlayer.stop();
+    _playbackTimer?.cancel();
+    setState(() {
+      _isPlaying = false;
+      _playbackPosition = 0;
+    });
+  }
+
+  String _formatDuration(int seconds) {
+    final int minutes = seconds ~/ 60;
+    final int remainingSeconds = seconds % 60;
+    return '${minutes.toString().padLeft(2, '0')}:${remainingSeconds.toString().padLeft(2, '0')}';
+  }
+
+  Widget _buildPaymentSection() {
+    return _buildSectionContainer(
+      title: '',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: const [
+              Icon(
+                Icons.credit_card_outlined,
+                color: Color(0xFFFF6F00),
+                size: 16,
+              ),
+              SizedBox(width: 8),
+              Text(
+                'MÉTHODE DE PAIEMENT',
+                style: TextStyle(
+                  fontWeight: FontWeight.w900,
+                  fontSize: 10,
+                  color: Colors.black,
+                  fontFamily: 'SF Pro',
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          _buildPaymentOption(
+            id: 'WAVE',
+            title: 'Je valide',
+            assetPath: 'assets/images/wave.png',
+            isAsset: true,
+          ),
+          const SizedBox(height: 12),
+          _buildPaymentOption(
+            id: 'ORANGE_MONEY',
+            title: 'Je valide',
+            assetPath: 'assets/images/orange.png',
+            isAsset: true,
+          ),
+          const SizedBox(height: 12),
+          _buildPaymentOption(
+            id: 'CASH',
+            title: 'Liquide à la livraison 🚚',
+            isAsset: false,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPaymentOption({
+    required String id,
+    required String title,
+    String? assetPath,
+    bool isAsset = false,
+  }) {
+    final isSelected = _paymentMethod == id;
+    return GestureDetector(
+      onTap: () => setState(() => _paymentMethod = id),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFFFFF3E0) : const Color(0xFFF8F9FA),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isSelected ? const Color(0xFFFF6F00) : Colors.grey.shade200,
+            width: isSelected ? 2 : 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 24,
+              height: 24,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: isSelected
+                      ? const Color(0xFFFF6F00)
+                      : Colors.grey.shade400,
+                  width: 2,
+                ),
+              ),
+              child: isSelected
+                  ? Center(
+                      child: Container(
+                        width: 12,
+                        height: 12,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFFFF6F00),
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                    )
+                  : null,
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Text(
+                title,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w900,
+                  fontSize: 14,
+                  fontFamily: 'SF Pro',
+                  color: Color(0xFF1E2832),
+                ),
+              ),
+            ),
+            if (isAsset && assetPath != null)
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.asset(
+                  assetPath,
+                  width: 40,
+                  height: 40,
+                  fit: BoxFit.contain,
+                  errorBuilder: (context, error, stackTrace) => Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.grey.shade200),
+                    ),
+                    child: const Icon(
+                      Icons.payment,
+                      color: Colors.grey,
+                      size: 20,
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAssemblySection() {
+    return ValueListenableBuilder<List>(
+      valueListenable: CartService().itemsNotifier,
+      builder: (context, items, _) {
+        final hasAssemblyItems = items.any(
+          (item) => item.product.hasInstallationOption,
+        );
+
+        if (!hasAssemblyItems) return const SizedBox.shrink();
+
+        return Column(
+          children: [
+            _buildSectionContainer(
+              title: '',
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.build_circle_outlined,
+                    color: Color(0xFFFF6F00),
+                    size: 18,
+                  ),
+                  const SizedBox(width: 8),
+                  const Expanded(
+                    child: Text(
+                      'INCLURE LE MONTAGE',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w900,
+                        fontSize: 11,
+                        color: Color(0xFF1E2832),
+                        fontFamily: 'SF Pro',
+                      ),
+                    ),
+                  ),
+                  Switch(
+                    value: _withAssembly,
+                    onChanged: (val) {
+                      if (!_isDakar && val) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              'Le montage est disponible uniquement à Dakar.',
+                            ),
+                          ),
+                        );
+                        return;
+                      }
+                      setState(() => _withAssembly = val);
+                    },
+                    activeColor: const Color(0xFFFF6F00),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildBottomSummary(double total, double fee) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        border: Border(top: BorderSide(color: Colors.black, width: 1)),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Livraison',
+                  style: TextStyle(
+                    color: Colors.grey,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+                Text(
+                  '${_formatPrice(fee.toInt())} FCFA',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w900,
+                    fontSize: 16,
+                    color: Color(0xFF1E2832),
+                  ),
+                ),
+              ],
+            ),
+            const Divider(height: 24, thickness: 1.5, color: Colors.black),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'TOTAL À PAYER',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w900,
+                    fontSize: 18,
+                    color: Color(0xFF1E2832),
+                  ),
+                ),
+                Text(
+                  '${_formatPrice(total.toInt())} FCFA',
+                  style: const TextStyle(
+                    color: Color(0xFFFF6F00),
+                    fontWeight: FontWeight.w900,
+                    fontSize: 24,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              height: 60,
+              child: ElevatedButton(
+                onPressed: _isSubmitting ? null : _submitOrder,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFFF6F00),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  elevation: 0,
+                ),
+                child: _isSubmitting
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : const Text(
+                        'JE VALIDE',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildSectionContainer({
+    required String title,
+    required Widget child,
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFF1E2832), width: 1),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (title.isNotEmpty) ...[
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF000000),
+                letterSpacing: 0.2,
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+          child,
+        ],
+      ),
+    );
+  }
+
+  Widget _buildColorCircle(Color color) {
+    final int colorValue = color.value;
+    final int quantity = _selectedColors[colorValue] ?? 0;
+    final bool selected = quantity > 0;
+
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          if (selected) {
+            _selectedColors.remove(colorValue);
+          } else {
+            _selectedColors[colorValue] = 1;
+          }
+        });
+      },
+      child: Container(
+        margin: const EdgeInsets.only(right: 16),
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          color: color,
+          shape: BoxShape.circle,
+          border: Border.all(
+            color: selected ? Colors.black : Colors.grey.shade300,
+            width: selected ? 2.5 : 1,
+          ),
+          boxShadow: [
+            if (selected)
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 8,
+                spreadRadius: 2,
+              ),
+          ],
+        ),
+        child: selected
+            ? Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Positioned(
+                    right: -4,
+                    top: -4,
+                    child: Container(
+                      padding: const EdgeInsets.all(5),
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFFF6F00),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Text(
+                        '$quantity',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontFamily: 'SF Pro',
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              )
+            : null,
+      ),
+    );
+  }
+
+  Widget _buildDimensionChip(String label) {
+    final int quantity = _selectedDimensions[label] ?? 0;
+    final bool selected = quantity > 0;
+
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          if (selected) {
+            _selectedDimensions.remove(label);
+          } else {
+            _selectedDimensions[label] = 1;
+          }
+        });
+      },
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            decoration: BoxDecoration(
+              color: selected ? const Color(0xFFFFF3E0) : Colors.white,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: selected
+                    ? const Color(0xFFFF6F00)
+                    : Colors.grey.shade300,
+                width: selected ? 2 : 1,
+              ),
+            ),
+            child: Text(
+              label,
+              style: TextStyle(
+                color: selected ? const Color(0xFFFF6F00) : Colors.black87,
+                fontFamily: 'SF Pro',
+                fontWeight: selected ? FontWeight.w900 : FontWeight.bold,
+                fontSize: 10,
+              ),
+            ),
+          ),
+          if (selected)
+            Positioned(
+              right: -5,
+              top: -8,
+              child: Container(
+                padding: const EdgeInsets.all(5),
+                decoration: const BoxDecoration(
+                  color: Color(0xFFFF6F00),
+                  shape: BoxShape.circle,
+                ),
+                child: Text(
+                  '$quantity',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 10,
+                    fontFamily: 'SF Pro',
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -1280,102 +1683,143 @@ class _ValidationScreenState extends State<ValidationScreen> {
   Widget _buildTextField(
     String label,
     String hint, {
+    required TextEditingController controller,
     IconData? icon,
-    TextEditingController? controller,
+    TextInputType? keyboardType,
+    Widget? suffix,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (icon != null) ...[
-          Row(
-            children: [
-              Icon(icon, size: 14, color: Colors.black87),
-              const SizedBox(width: 6),
-              Text(
-                label,
-                style: const TextStyle(
-                  fontWeight: FontWeight.w900,
-                  fontSize: 14,
-                  color: Colors.black87,
-                ),
+        Row(
+          children: [
+            if (icon != null)
+              Icon(icon, size: 14, color: const Color(0xFFFF6F00)),
+            if (icon != null) const SizedBox(width: 6),
+            Text(
+              label,
+              style: const TextStyle(
+                fontWeight: FontWeight.w900,
+                fontSize: 10,
+                color: Colors.black,
+                fontFamily: 'SF Pro',
+                letterSpacing: 0.5,
               ),
-            ],
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        TextField(
+          controller: controller,
+          keyboardType: keyboardType,
+          style: const TextStyle(
+            fontWeight: FontWeight.w900,
+            fontSize: 15,
+            color: Color(0xFF1E2832),
           ),
-        ] else
-          Text(
-            label,
-            style: const TextStyle(
-              fontWeight: FontWeight.w900,
+          decoration: InputDecoration(
+            hintText: hint,
+            hintStyle: TextStyle(
+              color: Colors.grey[400],
+              fontWeight: FontWeight.normal,
               fontSize: 14,
-              color: Colors.black87,
             ),
-          ),
-        const SizedBox(height: 8),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-          decoration: BoxDecoration(
-            color: const Color(0xFFF5F5F5),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.black87, width: 1.5),
-          ),
-          child: TextField(
-            controller: controller,
-            style: const TextStyle(fontWeight: FontWeight.bold),
-            decoration: InputDecoration(
-              hintText: hint,
-              border: InputBorder.none,
-              hintStyle: TextStyle(
-                color: Colors.grey[400],
-                fontSize: 13,
-                fontWeight: FontWeight.normal,
+            filled: true,
+            fillColor: const Color(0xFFF8F9FA),
+            isDense: true,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 14,
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(color: Colors.grey.shade200, width: 1.5),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(color: Colors.grey.shade200, width: 1.5),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: const BorderSide(
+                color: Color(0xFF1E2832),
+                width: 1.5,
               ),
             ),
+            suffixIcon: suffix,
           ),
         ),
       ],
     );
   }
 
-  Widget _buildSelectableButton(
-    String text,
-    bool isSelected,
-    VoidCallback onTap,
-  ) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        height: 48,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFFE65100) : Colors.white,
-          border: Border.all(
-            color: isSelected ? const Color(0xFFE65100) : Colors.black,
-            width: 1.5,
-          ),
-          borderRadius: BorderRadius.circular(30),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            if (isSelected)
-              const Padding(
-                padding: EdgeInsets.only(right: 6),
-                child: Icon(Icons.check_circle, color: Colors.white, size: 16),
-              ),
-            Text(
-              text,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: isSelected ? Colors.white : Colors.black,
-                fontWeight: FontWeight.w900,
-                fontSize: 10,
-              ),
+  Widget _buildScheduleChip(String label, bool selected, VoidCallback onTap) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          height: 40,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: selected ? const Color(0xFFFF6F00) : Colors.white,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: selected ? const Color(0xFFFF6F00) : Colors.grey.shade300,
+              width: 1.5,
             ),
-          ],
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              color: selected ? Colors.white : Colors.black87,
+              fontWeight: FontWeight.w900,
+              fontSize: 11,
+            ),
+          ),
         ),
       ),
+    );
+  }
+
+  Widget _buildTimeDisplayChip() {
+    return Expanded(
+      child: GestureDetector(
+        onTap: _selectTime,
+        child: Container(
+          height: 40,
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: Colors.grey.shade300, width: 1.5),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                _selectedTime == 'AUTRE HEURE' ? _timeController.text : '--:--',
+                style: const TextStyle(
+                  fontWeight: FontWeight.w900,
+                  fontSize: 14,
+                  color: Color(0xFF1E2832),
+                ),
+              ),
+              const Icon(
+                Icons.access_time_filled,
+                size: 20,
+                color: Colors.grey,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _formatPrice(int price) {
+    return price.toString().replaceAllMapped(
+      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+      (Match m) => '${m[1]} ',
     );
   }
 }

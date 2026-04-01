@@ -1,524 +1,292 @@
 import 'package:flutter/material.dart';
-import 'package:app_ecommerce/utils/constants.dart';
-import 'package:app_ecommerce/models/product.dart';
+import 'package:app_ecommerce/widgets/global_header.dart';
+
+import 'package:app_ecommerce/models/order.dart';
+import 'package:intl/intl.dart';
 
 class OrderDetailsScreen extends StatelessWidget {
-  final Map<String, dynamic> order;
+  final Order order;
 
   const OrderDetailsScreen({super.key, required this.order});
 
   @override
   Widget build(BuildContext context) {
-    final bool isDelivered = order['status'] == 'Livré';
-
     return Scaffold(
-      backgroundColor: AppColors.primary, // Dark
-      appBar: AppBar(
-        title: Text(
-          'Détails Commande ${order['id']}',
-          style: const TextStyle(color: Colors.white),
-        ),
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
-        elevation: 0,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppConstants.defaultPadding),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Status Card
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: AppColors.primaryLight, // Dark Card
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.2),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
+      backgroundColor: const Color(0xFFF5F6F8),
+      body: Column(
+        children: [
+          // Persist GlobalHeader
+          GlobalHeader(
+            onSearch: (query) {
+              Navigator.of(context).popUntil((route) => route.isFirst);
+            },
+          ),
+
+          // Sub-Header: Back Button and Title
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              border: Border(
+                bottom: BorderSide(color: Color(0xFFEEEEEE), width: 1),
               ),
-              child: Row(
-                children: [
-                  Icon(
-                    isDelivered ? Icons.check_circle : Icons.local_shipping,
-                    color: isDelivered ? AppColors.success : AppColors.accent,
-                    size: 32,
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Statut: ${order['status']}',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                            color: isDelivered
-                                ? AppColors.success
-                                : AppColors.accent,
-                          ),
-                        ),
-                        Text(
-                          'Date: ${order['date']}',
-                          style: TextStyle(color: Colors.white60), // Light grey
+            ),
+            child: Row(
+              children: [
+                GestureDetector(
+                  onTap: () => Navigator.pop(context),
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(10),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.04),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
                         ),
                       ],
                     ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 24),
-
-            // Products List
-            const Text(
-              'Produits',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
-            const SizedBox(height: 12),
-            ...(order['items'] as List<Product>)
-                .map((product) => _buildProductItem(product))
-                .toList(),
-
-            const SizedBox(height: 24),
-
-            // Payment Details
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: AppColors.primaryLight, // Dark Card
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Column(
-                children: [
-                  _buildSummaryRow('Sous-total', order['total']),
-                  _buildSummaryRow('Livraison', 'Gratuit', isFree: true),
-                  const Divider(height: 24, color: Colors.white24),
-                  _buildSummaryRow(
-                    'Total Payé',
-                    order['total'],
-                    isBold: true,
-                    color: AppColors.accent, // Orange
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 32),
-
-            // Review Button (Only if delivered)
-            if (isDelivered)
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: () => _showReviewModal(context),
-                  icon: const Icon(Icons.star_outline),
-                  label: const Text('Donner un avis'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.accent,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                    child: const Icon(
+                      Icons.arrow_back_ios_new_rounded,
+                      size: 18,
+                      color: Color(0xFF1E2832),
                     ),
                   ),
                 ),
-              ),
-
-            if (!isDelivered)
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  onPressed: () => _showReportModal(context),
-                  icon: const Icon(Icons.help_outline),
-                  label: const Text('Signaler un problème'),
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    side: const BorderSide(color: Colors.red),
-                    foregroundColor: Colors.red,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildProductItem(Product product) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: AppColors.primaryLight,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: Image.network(
-              product.thumbnailUrl ?? '',
-              width: 60,
-              height: 60,
-              fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) =>
-                  Container(color: Colors.white12, width: 60, height: 60),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  product.title,
-                  style: const TextStyle(
+                const SizedBox(width: 20),
+                const Text(
+                  'Détails de la commande',
+                  style: TextStyle(
+                    fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                    color: Color(0xFF1E2832),
                   ),
-                ),
-                Text(
-                  product.price,
-                  style: const TextStyle(color: AppColors.accent, fontSize: 13),
                 ),
               ],
             ),
           ),
-          const Text(
-            'x1',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: Colors.white60,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
-  Widget _buildSummaryRow(
-    String label,
-    String value, {
-    bool isBold = false,
-    Color? color,
-    bool isFree = false,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
-              fontSize: isBold ? 16 : 14,
-              color: isBold ? Colors.white : Colors.white70,
-            ),
-          ),
-          Text(
-            value,
-            style: TextStyle(
-              fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
-              fontSize: isBold ? 16 : 14,
-              color: isFree ? AppColors.success : (color ?? Colors.white),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showReviewModal(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => const ReviewFormModal(),
-    );
-  }
-
-  void _showReportModal(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => const ReportProblemModal(),
-    );
-  }
-}
-
-class ReviewFormModal extends StatefulWidget {
-  const ReviewFormModal({super.key});
-
-  @override
-  State<ReviewFormModal> createState() => _ReviewFormModalState();
-}
-
-class _ReviewFormModalState extends State<ReviewFormModal> {
-  int _rating = 0;
-  final TextEditingController _commentController = TextEditingController();
-
-  @override
-  void dispose() {
-    _commentController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      color: AppColors.primary, // Dark background
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom,
-        left: 20,
-        right: 20,
-        top: 20,
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Noter votre commande',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
-          ),
-          const SizedBox(height: 20),
-
-          // Stars
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: List.generate(5, (index) {
-              return IconButton(
-                icon: Icon(
-                  index < _rating ? Icons.star : Icons.star_border,
-                  color: Colors.amber,
-                  size: 40,
-                ),
-                onPressed: () {
-                  setState(() {
-                    _rating = index + 1;
-                  });
-                },
-              );
-            }),
-          ),
-
-          const SizedBox(height: 20),
-
-          // Comment
-          TextField(
-            controller: _commentController,
-            maxLines: 4,
-            style: const TextStyle(color: Colors.white),
-            decoration: InputDecoration(
-              hintText: 'Partagez votre expérience...',
-              hintStyle: const TextStyle(color: Colors.white30),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide.none,
-              ),
-              filled: true,
-              fillColor: AppColors.primaryLight,
-            ),
-          ),
-
-          const SizedBox(height: 24),
-
-          // Submit
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Merci pour votre avis ! ⭐')),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: const Text(
-                'Envoyer mon avis',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 20),
-        ],
-      ),
-    );
-  }
-}
-
-class ReportProblemModal extends StatefulWidget {
-  const ReportProblemModal({super.key});
-
-  @override
-  State<ReportProblemModal> createState() => _ReportProblemModalState();
-}
-
-class _ReportProblemModalState extends State<ReportProblemModal> {
-  String? _selectedReason;
-  final TextEditingController _detailsController = TextEditingController();
-
-  final List<String> _reasons = [
-    'Article non reçu',
-    'Article endommagé',
-    'Article incorrect',
-    'Problème de qualité',
-    'Autre',
-  ];
-
-  @override
-  void dispose() {
-    _detailsController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      color: AppColors.primary,
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom,
-        left: 20,
-        right: 20,
-        top: 20,
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Signaler un problème',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: Colors.red,
-            ),
-          ),
-          const SizedBox(height: 20),
-
-          // Reason Dropdown
-          DropdownButtonFormField<String>(
-            value: _selectedReason,
-            dropdownColor: AppColors.primaryLight,
-            style: const TextStyle(color: Colors.white),
-            decoration: InputDecoration(
-              labelText: 'Motif du signalement',
-              labelStyle: const TextStyle(color: Colors.white70),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide.none,
-              ),
-              filled: true,
-              fillColor: AppColors.primaryLight,
-            ),
-            items: _reasons.map((reason) {
-              return DropdownMenuItem(value: reason, child: Text(reason));
-            }).toList(),
-            onChanged: (value) {
-              setState(() {
-                _selectedReason = value;
-              });
-            },
-          ),
-
-          const SizedBox(height: 16),
-
-          // Details TextField
-          TextField(
-            controller: _detailsController,
-            maxLines: 4,
-            style: const TextStyle(color: Colors.white),
-            decoration: InputDecoration(
-              labelText: 'Détails du problème',
-              labelStyle: const TextStyle(color: Colors.white70),
-              hintText: 'Décrivez le problème rencontré...',
-              hintStyle: const TextStyle(color: Colors.white30),
-              alignLabelWithHint: true,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide.none,
-              ),
-              filled: true,
-              fillColor: AppColors.primaryLight,
-            ),
-          ),
-
-          const SizedBox(height: 24),
-
-          // Submit Button
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: () {
-                if (_selectedReason == null) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Veuillez sélectionner un motif'),
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Order Summary Card
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(15),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.04),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
                     ),
-                  );
-                  return;
-                }
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text(
-                      'Signalement envoyé. Nous vous contacterons sous peu.',
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'CMD-${order.id.substring(0, 8).toUpperCase()}',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18,
+                                color: Color(0xFF1E2832),
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFDBEAFE),
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: Text(
+                                order.status.name.toUpperCase(),
+                                style: const TextStyle(
+                                  color: Color(0xFF2563EB),
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          DateFormat(
+                            'dd MMM yyyy HH:mm',
+                            'fr_FR',
+                          ).format(order.createdAt),
+                          style: const TextStyle(
+                            color: Colors.grey,
+                            fontSize: 14,
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        ...order.items
+                            .map(
+                              (item) => Padding(
+                                padding: const EdgeInsets.only(bottom: 8.0),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      '${item.quantity}x ${item.productTitle}',
+                                      style: const TextStyle(
+                                        color: Colors.grey,
+                                        fontSize: 15,
+                                      ),
+                                    ),
+                                    Text(
+                                      '${NumberFormat('#,###', 'fr_FR').format(item.total)} FCFA',
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 15,
+                                        color: Color(0xFF1E2832),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            )
+                            .toList(),
+                        const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 16),
+                          child: Divider(height: 1, color: Color(0xFFF1F5F9)),
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              'Total',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18,
+                              ),
+                            ),
+                            Text(
+                              '${NumberFormat('#,###', 'fr_FR').format(order.totalAmount)} FCFA',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w900,
+                                fontSize: 20,
+                                color: Color(0xFF1E2832),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
-                    backgroundColor: Colors.red,
                   ),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: const Text(
-                'Envoyer le signalement',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
+                  const SizedBox(height: 24),
+
+                  // Delivery Map Section
+                  const Text(
+                    '📍 Localisation du livreur',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF1E2832),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Container(
+                    height: 250,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(15),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.04),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Stack(
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(15),
+                          child: Image.network(
+                            'https://images.unsplash.com/photo-1524661135-423995f22d0b?w=800',
+                            width: double.infinity,
+                            height: double.infinity,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                        // Map marker or overlay icon
+                        const Center(
+                          child: Icon(
+                            Icons.location_on,
+                            color: Colors.red,
+                            size: 45,
+                          ),
+                        ),
+                        // Open in maps button
+                        Positioned(
+                          top: 15,
+                          left: 15,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(8),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.1),
+                                  blurRadius: 5,
+                                ),
+                              ],
+                            ),
+                            child: const Row(
+                              children: [
+                                Text(
+                                  'Open in Maps',
+                                  style: TextStyle(
+                                    color: Color(0xFF3B82F6),
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                                SizedBox(width: 6),
+                                Icon(
+                                  Icons.open_in_new,
+                                  color: Color(0xFF3B82F6),
+                                  size: 14,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  const Center(
+                    child: Text(
+                      'La position est mise à jour en temps réel.',
+                      style: TextStyle(color: Colors.grey, fontSize: 13),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
-          const SizedBox(height: 20),
         ],
       ),
     );

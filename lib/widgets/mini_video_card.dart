@@ -148,7 +148,18 @@ class _MiniVideoCardState extends State<MiniVideoCard> {
             borderRadius: BorderRadius.circular(12),
             child: Stack(
               children: [
-                // Video player or error/loading state
+                // 1. Background Thumbnail (Always show if available as base layer)
+                if (widget.product.thumbnailUrl != null)
+                  Positioned.fill(
+                    child: Image.network(
+                      widget.product.thumbnailUrl!,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) =>
+                          Container(color: AppColors.primaryLight),
+                    ),
+                  ),
+
+                // 2. Video Player (Layered on top of thumbnail)
                 if (_initialized && _controller != null)
                   Positioned.fill(
                     child: FittedBox(
@@ -160,32 +171,22 @@ class _MiniVideoCardState extends State<MiniVideoCard> {
                       ),
                     ),
                   )
-                else if (widget.product.videoUrl.isEmpty || _hasError)
-                  Positioned.fill(
-                    child: widget.product.thumbnailUrl != null
-                        ? Image.network(
-                            widget.product.thumbnailUrl!,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) =>
-                                const Center(
-                                  child: Icon(
-                                    Icons.image_not_supported,
-                                    color: Colors.white24,
-                                  ),
-                                ),
-                          )
-                        : const Center(
-                            child: Icon(
-                              Icons.image_not_supported,
-                              color: Colors.white24,
-                            ),
-                          ),
-                  )
-                else
+                // 3. Loading Spinner (Overlay on top of thumbnail while loading)
+                else if (!(_hasError || widget.product.videoUrl.isEmpty) &&
+                    _isLoading)
                   const Center(
                     child: CircularProgressIndicator(
                       color: Colors.white54,
                       strokeWidth: 2,
+                    ),
+                  ),
+
+                // 4. Error state placeholder (if no thumbnail and video failed)
+                if (_hasError && widget.product.thumbnailUrl == null)
+                  const Center(
+                    child: Icon(
+                      Icons.image_not_supported,
+                      color: Colors.white24,
                     ),
                   ),
 

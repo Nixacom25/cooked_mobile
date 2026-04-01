@@ -1,47 +1,73 @@
 class Testimonial {
-  final int id;
-  final String clientName;
+  final String id;
+  final String? clientId;
+  final String? clientName;
+  final String? categoryId;
+  final String? categoryName;
   final String content;
   final String mediaUrl;
-  final String mediaType; // AUDIO, VIDEO, IMAGE
-  final String category;
-  String status;
-  final String? activityDuration;
-  final DateTime? createdAt;
-  int likes;
+  final String mediaType;
+  final String status;
   int views;
+  int likes;
+  final int rating;
+  final String? orderId;
+  final DateTime? createdAt;
 
   Testimonial({
     required this.id,
-    required this.clientName,
+    this.clientId,
+    this.clientName,
+    this.categoryId,
+    this.categoryName,
     required this.content,
     required this.mediaUrl,
     required this.mediaType,
-    required this.category,
-    this.status = 'ACTIVE',
-    this.activityDuration,
-    this.createdAt,
-    this.likes = 0,
+    required this.status,
     this.views = 0,
+    this.likes = 0,
+    required this.rating,
+    this.orderId,
+    this.createdAt,
   });
 
   factory Testimonial.fromJson(Map<String, dynamic> json) {
     return Testimonial(
-      id: json['id'] is int
-          ? json['id']
-          : int.tryParse(json['id'].toString()) ?? 0,
-      clientName: json['clientName'] ?? 'Client',
+      id: json['id']?.toString() ?? '',
+      clientId: json['clientId']?.toString(),
+      clientName: json['clientName']?.toString(),
+      categoryId: json['categoryId']?.toString(),
+      categoryName: json['categoryName']?.toString(),
       content: json['content'] ?? '',
       mediaUrl: json['mediaUrl'] ?? '',
       mediaType: json['mediaType'] ?? 'IMAGE',
-      category: json['category'] ?? 'Général',
-      status: json['status'] ?? 'ACTIVE',
-      activityDuration: json['activityDuration'],
+      status: json['status'] ?? 'INACTIVE',
+      views: json['views'] ?? 0,
+      likes: json['likes'] ?? 0,
+      rating: json['rating'] ?? 0,
+      orderId: json['orderId']?.toString(),
       createdAt: json['createdAt'] != null
-          ? DateTime.tryParse(json['createdAt'])
+          ? DateTime.parse(json['createdAt'])
           : null,
-      likes: json['likes'] is int ? json['likes'] : 0,
-      views: json['views'] is int ? json['views'] : 0,
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'clientId': clientId,
+      'clientName': clientName,
+      'categoryId': categoryId,
+      'categoryName': categoryName,
+      'content': content,
+      'mediaUrl': mediaUrl,
+      'mediaType': mediaType,
+      'status': status,
+      'views': views,
+      'likes': likes,
+      'rating': rating,
+      'orderId': orderId,
+      'createdAt': createdAt?.toIso8601String(),
+    };
   }
 }

@@ -5,7 +5,6 @@ import 'package:app_ecommerce/models/product.dart';
 import 'package:app_ecommerce/models/testimonial.dart'; // Added
 import 'package:app_ecommerce/utils/constants.dart';
 import 'package:app_ecommerce/widgets/category_item.dart';
-import 'package:app_ecommerce/widgets/search_bar_widget.dart';
 import 'package:app_ecommerce/widgets/audio_player_card.dart';
 import 'package:app_ecommerce/widgets/social_proof_section.dart';
 import 'package:app_ecommerce/services/category_service.dart'; // Added
@@ -18,9 +17,13 @@ import 'package:app_ecommerce/services/data_cache_service.dart'; // Added
 import 'package:app_ecommerce/widgets/category_section.dart';
 import 'package:app_ecommerce/screens/category_details_screen.dart';
 import 'package:app_ecommerce/screens/video_preview_screen.dart';
+import 'package:app_ecommerce/widgets/empty_state_widget.dart';
+import 'package:app_ecommerce/widgets/login_banner.dart';
+import 'package:app_ecommerce/services/auth_service.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  final String? searchQuery;
+  const HomeScreen({super.key, this.searchQuery});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -41,6 +44,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    _searchQuery = widget.searchQuery ?? "";
 
     // Check cache first for instant load
     final cache = DataCacheService();
@@ -67,6 +71,16 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   @override
+  void didUpdateWidget(HomeScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.searchQuery != oldWidget.searchQuery) {
+      setState(() {
+        _searchQuery = widget.searchQuery ?? "";
+      });
+    }
+  }
+
+  @override
   void dispose() {
     _timer?.cancel();
     super.dispose();
@@ -81,8 +95,13 @@ class _HomeScreenState extends State<HomeScreen> {
         });
       }
 
+      final user = AuthService().currentUser.value;
+      final clientId = user != null
+          ? '${user['firstName']} ${user['lastName']}'
+          : 'client123';
+
       final categories = await CategoryService.getCategories();
-      final products = await ProductService.getProducts();
+      final products = await ProductService.getProducts(clientId: clientId);
       final testimonials = await TestimonialService.getTestimonials();
       final advertisements =
           await AdvertisementService.getAdvertisements(); // Added
@@ -125,11 +144,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) {
+    if (_isLoading && _categories.isEmpty) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
-    if (_errorMessage != null) {
+    if (_errorMessage != null && _categories.isEmpty) {
       return Scaffold(
         body: Center(
           child: Column(
@@ -147,82 +166,79 @@ class _HomeScreenState extends State<HomeScreen> {
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
         backgroundColor: Colors.white,
-        body: SafeArea(
-          bottom: false,
-          child: Column(
-            children: [
-              Expanded(
-                child: RefreshIndicator(
-                  onRefresh: _fetchData,
-                  child: SingleChildScrollView(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: 16),
-                        // Header: Search Bar
-                        Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: AppConstants.defaultPadding,
-                          ),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: SearchBarWidget(
-                                  onSearch: (query) {
-                                    setState(() {
-                                      _searchQuery = query;
-                                    });
-                                  },
-                                ),
-                              ),
-                            ],
+        body: Column(
+          children: [
+            Expanded(
+              child: RefreshIndicator(
+                onRefresh: _fetchData,
+                child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      ValueListenableBuilder<bool>(
+                        valueListenable: AuthService().isLoggedIn,
+                        builder: (context, isLoggedIn, _) {
+                          if (isLoggedIn) return const SizedBox.shrink();
+                          return ValueListenableBuilder<bool>(
+                            valueListenable: AuthService().isBannerVisible,
+                            builder: (context, isVisible, _) {
+                              if (!isVisible) return const SizedBox.shrink();
+                              return const LoginBanner();
+                            },
+                          );
+                        },
+                      ),
+
+                      // Categories List
+                      if (_categories.isNotEmpty)
+                        SizedBox(
+                          height: 110,
+                          child: ListView.builder(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: AppConstants.defaultPadding,
+                              vertical: 10,
+                            ),
+                            scrollDirection: Axis.horizontal,
+                            itemCount: _categories.length,
+                            itemBuilder: (context, index) {
+                              return CategoryItem(
+                                category: _categories[index],
+                                isSelected: index == _selectedCategoryIndex,
+                                onTap: () {
+                                  setState(() {
+                                    _selectedCategoryIndex = index;
+                                  });
+                                  FocusScope.of(context).unfocus();
+                                },
+                              );
+                            },
                           ),
                         ),
-                        const SizedBox(height: 24),
 
-                        // Categories List
-                        if (_categories.isNotEmpty)
-                          SizedBox(
-                            height: 110,
-                            child: ListView.builder(
+                      const SizedBox(height: 10),
+
+                      // Audio Player Carousel (Advertisements)
+                      () {
+                        final activeAds = _advertisements
+                            .where(
+                              (ad) =>
+                                  ad.status == 'ACTIVE' &&
+                                  ad.audioUrl.isNotEmpty,
+                            )
+                            .toList();
+
+                        if (activeAds.isEmpty) return const SizedBox.shrink();
+
+                        return Column(
+                          children: [
+                            Padding(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: AppConstants.defaultPadding,
+                                vertical: 10,
                               ),
-                              scrollDirection: Axis.horizontal,
-                              itemCount: _categories.length,
-                              itemBuilder: (context, index) {
-                                return CategoryItem(
-                                  category: _categories[index],
-                                  isSelected: index == _selectedCategoryIndex,
-                                  onTap: () {
-                                    setState(() {
-                                      _selectedCategoryIndex = index;
-                                    });
-                                    FocusScope.of(context).unfocus();
-                                  },
-                                );
-                              },
-                            ),
-                          ),
-
-                        const SizedBox(height: 24),
-
-                        // Audio Player Carousel (Advertisements)
-                        () {
-                          final activeAds = _advertisements
-                              .where(
-                                (ad) =>
-                                    ad.status == 'ACTIVE' &&
-                                    ad.audioUrl.isNotEmpty,
-                              )
-                              .toList();
-
-                          if (activeAds.isEmpty) return const SizedBox.shrink();
-
-                          return Column(
-                            children: [
-                              SizedBox(
-                                height: 80, // Height of the audio card
+                              child: SizedBox(
+                                height: 60,
                                 child: PageView.builder(
                                   scrollDirection: Axis.horizontal,
                                   controller: PageController(
@@ -243,31 +259,30 @@ class _HomeScreenState extends State<HomeScreen> {
                                   },
                                 ),
                               ),
-                              const SizedBox(height: 24),
-                            ],
-                          );
-                        }(),
+                            ),
+                            const SizedBox(
+                              height: 20,
+                            ), // Gap after Audio Player
+                          ],
+                        );
+                      }(),
 
-                        // Social Proof
-                        SocialProofSection(
-                          testimonials: _testimonials,
-                          categories: _categories,
-                        ),
+                      // Social Proof (Status/Stories)
+                      SocialProofSection(
+                        testimonials: _testimonials,
+                        categories: _categories,
+                      ),
 
-                        const SizedBox(height: 24),
+                      // Dynamic Category Sections
+                      ..._buildCategorySections(),
 
-                        // Dynamic Category Sections
-                        ..._buildCategorySections(),
-
-                        const SizedBox(height: 16),
-                        const SizedBox(height: 40),
-                      ],
-                    ),
+                      const SizedBox(height: 10),
+                    ],
                   ),
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -324,6 +339,19 @@ class _HomeScreenState extends State<HomeScreen> {
         sections.add(const SizedBox(height: 24));
       }
     }
+    if (sections.isEmpty) {
+      sections.add(
+        const Padding(
+          padding: EdgeInsets.symmetric(vertical: 40),
+          child: EmptyStateWidget(
+            icon: Icons.search_off_rounded,
+            title: 'Aucun produit trouvé',
+            subtitle: 'Essayez de modifier votre recherche ou votre catégorie.',
+          ),
+        ),
+      );
+    }
+
     return sections;
   }
 }
