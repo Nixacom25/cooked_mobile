@@ -32,11 +32,11 @@ jobs:
 
     - name: Zip .app bundle
       run: |
-        cd build/ios/simulator
+        cd build/ios/iphonesimulator
         zip -r Cooked_iOS_Simulator.app.zip Runner.app
 
     - name: Upload Artifact
       uses: actions/upload-artifact@v4
       with:
         name: ios-simulator-app
-        path: build/ios/simulator/Cooked_iOS_Simulator.app.zip
+        path: build/ios/iphonesimulator/Cooked_iOS_Simulator.app.zip
