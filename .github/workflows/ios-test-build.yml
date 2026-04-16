@@ -23,7 +23,6 @@ jobs:
       uses: subosito/flutter-action@v2
       with:
         channel: 'stable'
-        flutter-version-file: pubspec.yaml # Will use the sdk version from pubspec
 
     - name: Install dependencies
       run: flutter pub get
