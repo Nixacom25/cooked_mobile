@@ -27,16 +27,16 @@ jobs:
     - name: Install dependencies
       run: flutter pub get
 
-    - name: Build iOS (No Code Signing)
-      run: flutter build ios --release --no-codesign
+    - name: Build iOS (Simulator)
+      run: flutter build ios --simulator --no-codesign
 
     - name: Zip .app bundle
       run: |
-        cd build/ios/iphoneos
-        zip -r Cooked_iOS_Test.app.zip Runner.app
+        cd build/ios/simulator
+        zip -r Cooked_iOS_Simulator.app.zip Runner.app
 
     - name: Upload Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: ios-test-app
-        path: build/ios/iphoneos/Cooked_iOS_Test.app.zip
+        name: ios-simulator-app
+        path: build/ios/simulator/Cooked_iOS_Simulator.app.zip
