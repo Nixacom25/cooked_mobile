@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My Google AI Studio App</title>
+    <script type="module" crossorigin src="/assets/index-Ca5e7KPu.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-Cwad-KE-.css">
+  <script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load' , () => {
+    navigator.serviceWorker.register('./_service-worker.js')
+      .then(registration => {
+        console.log('Service Worker registered successfully with scope:', registration.scope);
+      })
+      .catch(error => {
+        console.error('Service Worker registration failed:', error);
+      });
+  });
+} else {
+  console.log('Service workers are not supported in this browser.');
+}
+</script><script src="/_websocket-interceptor.js" defer></script></head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>
+

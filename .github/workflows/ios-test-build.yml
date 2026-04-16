@@ -1,0 +1,43 @@
+name: iOS Test Build
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: macos-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Java
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+
+    - name: Set up Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        channel: 'stable'
+        flutter-version-file: pubspec.yaml # Will use the sdk version from pubspec
+
+    - name: Install dependencies
+      run: flutter pub get
+
+    - name: Build iOS (No Code Signing)
+      run: flutter build ios --release --no-codesign
+
+    - name: Zip .app bundle
+      run: |
+        cd build/ios/iphoneos
+        zip -r Cooked_iOS_Test.app.zip Runner.app
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ios-test-app
+        path: build/ios/iphoneos/Cooked_iOS_Test.app.zip

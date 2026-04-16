@@ -1,0 +1,781 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../../routes/app_routes.dart';
+import '../../services/user_service.dart';
+import '../../core/widgets/ios_toast.dart';
+import 'widgets/language_region_step.dart';
+import 'widgets/identity_step.dart';
+import 'widgets/source_step.dart';
+import 'widgets/dietary_preferences_step.dart';
+import 'widgets/allergies_step.dart';
+import 'widgets/dislikes_step.dart';
+import 'widgets/flavor_spice_step.dart';
+import 'widgets/cooking_skill_step.dart';
+import 'widgets/time_preference_step.dart';
+import 'widgets/cooking_target_step.dart';
+import 'widgets/cuisines_step.dart';
+import 'widgets/kitchen_step.dart';
+import 'widgets/meal_planning_step.dart';
+import 'widgets/notifications_step.dart';
+import 'widgets/goals_step.dart';
+import 'widgets/profile_loading_step.dart';
+import 'widgets/profile_summary_step.dart';
+import 'widgets/trial_step.dart';
+import 'widgets/profile_signup_step.dart';
+import 'widgets/account_step.dart';
+import 'widgets/otp_step.dart';
+import 'widgets/recipe_generation_loading_step.dart';
+import '../../services/auth_service.dart';
+import '../../services/iap_service.dart';
+import 'package:in_app_purchase/in_app_purchase.dart';
+import '../../core/utils/error_helper.dart';
+
+class OnboardingScreen extends StatefulWidget {
+  const OnboardingScreen({super.key});
+
+  @override
+  State<OnboardingScreen> createState() => _OnboardingScreenState();
+}
+
+class _OnboardingScreenState extends State<OnboardingScreen> {
+  final PageController _pageController = PageController();
+  int _currentPage = 0;
+  bool _isLoading = false;
+
+  // IAP
+  List<ProductDetails> _products = [];
+  bool _isIapAvailable = false;
+  String _selectedPlanId = 'yearly';
+
+  // State for all steps
+  // State for all steps
+  String _email = '';
+  String _password = '';
+  bool _acceptedTerms = false;
+  String _firstName = '';
+  String _lastName = '';
+  String _phone = '';
+  String _alternativeRegion = 'Senegal';
+  String _measurementSystem = 'Metric';
+  String? _source;
+  String? _otherSource;
+  String _language = 'French';
+  String _country = 'Senegal';
+  Set<String> _selectedDiet = {};
+  Set<String> _selectedAllergy = {};
+  Set<String> _selectedDislikes = {};
+  Map<String, int> _flavorDna = {};
+  String _spiceLevel = 'Medium heat';
+  String _cookingSkill = 'Home Cook';
+  String _cookingTime = '15–30 minutes';
+  String _cookingFrequency = '2–3 times a week';
+  String _cookingTarget = '3–4 people';
+  List<String> _favoriteCuisines = [];
+  List<String> _kitchenAppliances = [];
+  String _mealPlanningStyle = 'Weekly meal plan';
+  List<String> _notificationPreferences = [];
+  List<String> _onboardingGoals = [];
+  int _rating = 0;
+  String _feedback = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUser();
+    _initIap();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _preloadAssets();
+    });
+  }
+
+  void _initIap() async {
+    IapService.instance.initialize();
+    IapService.instance.onPurchaseSuccess = () {
+      if (mounted && _currentPage == 22) {
+        setState(() => _isLoading = false);
+        _pageController.nextPage(
+          duration: const Duration(milliseconds: 400),
+          curve: Curves.easeInOut,
+        );
+      }
+    };
+    IapService.instance.onPurchaseError = (error) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        IosToast.show(
+          context,
+          message: ErrorHelper.getFriendlyMessage(error),
+          type: ToastType.error,
+        );
+      }
+    };
+
+    final products = await IapService.instance.getProducts({
+      'cooked_premium_monthly',
+      'cooked_premium_yearly',
+    });
+    if (mounted) {
+      setState(() {
+        _products = products;
+        _isIapAvailable = products.isNotEmpty;
+      });
+    }
+  }
+
+  void _preloadAssets() {
+    final svgs = [
+      'assets/icones/Vector.svg',
+      'assets/icones/google.svg',
+      'assets/icones/apple.svg',
+      // Common onboarding icons
+      'assets/icones/cook-light-skin.svg',
+      'assets/icones/pan.svg',
+      'assets/icones/clock.svg',
+      'assets/icones/fire.svg',
+    ];
+
+    // Preloading assets into memory cache
+    for (final asset in svgs) {
+      DefaultAssetBundle.of(context).load(asset);
+    }
+
+    final images = ['assets/images/fond.png'];
+
+    for (final image in images) {
+      precacheImage(AssetImage(image), context);
+    }
+  }
+
+  Future<void> _loadUser() async {
+    try {
+      final user = await UserService.instance.getCurrentUser();
+      if (!mounted) return;
+      setState(() {
+        _firstName = user['firstname'] ?? '';
+        _lastName = user['lastname'] ?? '';
+      });
+    } catch (_) {
+      // Ignore
+    }
+  }
+
+  @override
+  void dispose() {
+    IapService.instance.dispose();
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  void _onStepChanged(int page) {
+    setState(() {
+      _currentPage = page;
+    });
+  }
+
+  int _getEffectiveStep() {
+    if (_currentPage < 15) return _currentPage + 1;
+    if (_currentPage == 15) return 15; // Freeze during ProfileLoadingStep
+    if (_currentPage > 15 && _currentPage < 21) return _currentPage;
+    return 20; // Freeze during RecipeGenerationLoadingStep (Step 20/20)
+  }
+
+  Future<void> _onContinue() async {
+    if (_currentPage == 0) {
+      if (_firstName.isEmpty || _email.isEmpty || _phone.isEmpty) {
+        IosToast.show(
+          context,
+          message: 'Please complete all fields',
+          type: ToastType.warning,
+        );
+        return;
+      }
+    }
+
+    if (_currentPage < 17) {
+      _pageController.nextPage(
+        duration: const Duration(milliseconds: 400),
+        curve: Curves.easeInOut,
+      );
+    } else if (_currentPage == 17) {
+      // ProfileSignupStep handles its own navigation via callbacks
+    } else if (_currentPage == 18) {
+      // AccountStep -> Submit and potentially OTP
+      _submitPreferences(isGuest: false);
+    } else if (_currentPage == 19) {
+      // OtpStep handles its own navigation via onComplete
+    } else if (_currentPage == 20) {
+      // TrialStep Payment Trigger
+      if (!_isIapAvailable || _products.isEmpty) {
+        // Fallback or dev: skip billing if store is unavailable
+        _pageController.nextPage(
+          duration: const Duration(milliseconds: 400),
+          curve: Curves.easeInOut,
+        );
+        return;
+      }
+
+      setState(() => _isLoading = true);
+      final targetId = _selectedPlanId == 'yearly'
+          ? 'cooked_premium_yearly'
+          : 'cooked_premium_monthly';
+      final product = _products.firstWhere(
+        (p) => p.id == targetId,
+        orElse: () => _products.first,
+      );
+
+      try {
+        await IapService.instance.buyProduct(product);
+      } catch (e) {
+        setState(() => _isLoading = false);
+        IosToast.show(
+          context,
+          message: 'Could not initiate purchase',
+          type: ToastType.error,
+        );
+      }
+    }
+  }
+
+  void _onBack() {
+    if (_currentPage == 21) return; // Prevent going back during final loading
+    if (_currentPage == 16) {
+      // Skip ProfileLoadingStep (15) when going back from ProfileSummaryStep
+      _pageController.animateToPage(
+        14,
+        duration: const Duration(milliseconds: 400),
+        curve: Curves.easeInOut,
+      );
+      return;
+    }
+    if (_currentPage > 0) {
+      _pageController.previousPage(
+        duration: const Duration(milliseconds: 400),
+        curve: Curves.easeInOut,
+      );
+    } else {
+      Navigator.pushReplacementNamed(context, AppRoutes.welcome);
+    }
+  }
+
+  Future<void> _submitPreferences({
+    bool isGuest = false,
+    String provider = 'LOCAL',
+  }) async {
+    bool isSocial = provider == 'GOOGLE' || provider == 'APPLE';
+    
+    // Validation before final submission
+    if (!isGuest &&
+        !isSocial &&
+        (_email.isEmpty || _password.isEmpty || !_acceptedTerms)) {
+      _pageController.animateToPage(
+        18, // AccountStep directly if email signup
+        duration: const Duration(milliseconds: 400),
+        curve: Curves.easeInOut,
+      );
+      IosToast.show(
+        context,
+        message: 'Please complete account info to save your profile',
+        type: ToastType.warning,
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      if (!isGuest) {
+        if (!isSocial) {
+          // Standard Email Signup
+          await AuthService.instance.register(
+            firstname: _firstName,
+            lastname: _lastName,
+            email: _email,
+            password: _password,
+            phone: _phone,
+            discoverySource: _source,
+            otherDiscoverySource: _otherSource,
+            dietaryPreferences: _selectedDiet.toList(),
+            allergies: _selectedAllergy.toList(),
+            foodDislikes: _selectedDislikes.toList(),
+            flavorDna: _flavorDna,
+            spiceLevel: _spiceLevel,
+            cookingSkill: _cookingSkill,
+            cookingTimePreference: _cookingTime,
+            cookingFrequency: _cookingFrequency,
+            cookingTarget: _cookingTarget,
+            favoriteCuisines: _favoriteCuisines,
+            kitchenAppliances: _kitchenAppliances,
+            mealPlanningStyle: _mealPlanningStyle,
+            notificationPreferences: _notificationPreferences,
+            onboardingGoals: _onboardingGoals,
+            onboardingRating: _rating,
+            onboardingFeedback: _feedback,
+            language: _language,
+            country: _country,
+          );
+        } else {
+          // Social Login Flow
+          if (provider == 'GOOGLE') {
+            await AuthService.instance.signInWithGoogle();
+          } else if (provider == 'APPLE') {
+            await AuthService.instance.signInWithApple();
+          }
+
+          // After successful social login, sync gathered preferences
+          await UserService.instance.updatePreferences(
+            dietaryPreferences: _selectedDiet.toList(),
+            allergies: _selectedAllergy.toList(),
+            foodDislikes: _selectedDislikes.toList(),
+            flavorDna: _flavorDna,
+            spiceLevel: _spiceLevel,
+            cookingSkill: _cookingSkill,
+            cookingTimePreference: _cookingTime,
+            cookingFrequency: _cookingFrequency,
+            cookingTarget: _cookingTarget,
+            favoriteCuisines: _favoriteCuisines,
+            kitchenAppliances: _kitchenAppliances,
+            mealPlanningStyle: _mealPlanningStyle,
+            notificationPreferences: _notificationPreferences,
+            onboardingGoals: _onboardingGoals,
+            onboardingRating: _rating,
+            onboardingFeedback: _feedback,
+            language: _language,
+            country: _country,
+          );
+        }
+      } else {
+        await Future.delayed(const Duration(seconds: 2));
+      }
+
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+
+      // Navigation logic ONLY after success
+      if (isGuest || isSocial) {
+        _pageController.animateToPage(
+          20, // Jump to TrialStep
+          duration: const Duration(milliseconds: 400),
+          curve: Curves.easeInOut,
+        );
+      } else {
+        _pageController.animateToPage(
+          19, // Jump to OtpStep
+          duration: const Duration(milliseconds: 400),
+          curve: Curves.easeInOut,
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+
+      // Stay on current page or specific step if error
+      if (_currentPage == 17 && (isSocial || isGuest)) {
+        // Stay on ProfileSignupStep
+      } else {
+        _pageController.animateToPage(
+          18, // AccountStep
+          duration: const Duration(milliseconds: 400),
+          curve: Curves.easeInOut,
+        );
+      }
+
+      IosToast.show(
+        context,
+        message: ErrorHelper.getFriendlyMessage(
+          e,
+        ).replaceAll('Exception: ', ''),
+        type: ToastType.error,
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      resizeToAvoidBottomInset: false,
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          Image.asset('assets/images/fond.png', fit: BoxFit.cover),
+          SafeArea(
+            child: Column(
+              children: [
+                // Header: Progress & Skip
+                Padding(
+                  padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 0),
+                  child: Row(
+                    children: [
+                      Opacity(
+                        opacity: (_currentPage == 21)
+                            ? 0.0
+                            : 1.0,
+                        child: GestureDetector(
+                          onTap: (_currentPage == 21)
+                              ? null
+                              : _onBack,
+                          child: Container(
+                            padding: EdgeInsets.all(8.r),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Colors.grey.withOpacity(0.05),
+                            ),
+                            child: Icon(
+                              Icons.arrow_back_rounded,
+                              size: 20.sp,
+                              color: const Color(0xFF374151),
+                            ),
+                          ),
+                        ),
+                      ),
+                      SizedBox(width: 16.w),
+                      Expanded(
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(10.r),
+                          child: Stack(
+                            children: [
+                              Container(
+                                height: 6.h,
+                                color: const Color(0xFFE5E7EB),
+                              ),
+                              AnimatedFractionallySizedBox(
+                                duration: const Duration(milliseconds: 400),
+                                widthFactor: _getEffectiveStep() / 20,
+                                child: Container(
+                                  height: 6.h,
+                                  color: const Color(0xFFC83A2D),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      SizedBox(width: 8.w),
+                      Text(
+                        '${_getEffectiveStep()}/20',
+                        style: TextStyle(
+                          fontSize: 14.sp,
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFF374151),
+                          fontFamily: 'SF Pro',
+                        ),
+                      ),
+                      SizedBox(width: 8.w),
+                    ],
+                  ),
+                ),
+
+                // Content
+                Expanded(
+                  child: PageView(
+                    controller: _pageController,
+                    physics: const NeverScrollableScrollPhysics(),
+                    onPageChanged: _onStepChanged,
+                    children: [
+                      IdentityStep(
+                        initialFirstName: _firstName,
+                        initialLastName: _lastName,
+                        initialEmail: _email,
+                        initialPhone: _phone,
+                        onChanged:
+                            ({
+                              required fullName,
+                              required lastName,
+                              required email,
+                              required phone,
+                            }) {
+                              setState(() {
+                                _firstName = fullName;
+                                _lastName = lastName;
+                                _email = email;
+                                _phone = phone;
+                              });
+                            },
+                      ),
+                      LanguageRegionStep(
+                        initialLanguage: _language,
+                        initialCountry: _country,
+                        initialAlternativeRegion: _alternativeRegion,
+                        initialMeasurementSystem: _measurementSystem,
+                        onChanged:
+                            ({
+                              required language,
+                              required country,
+                              required alternativeRegion,
+                              required measurementSystem,
+                            }) {
+                              setState(() {
+                                _language = language;
+                                _country = country;
+                                _alternativeRegion = alternativeRegion;
+                                _measurementSystem = measurementSystem;
+                              });
+                            },
+                      ),
+                      SourceStep(
+                        userName: _firstName.isEmpty ? 'Friend' : _firstName,
+                        initialSource: _source,
+                        initialOtherSource: _otherSource,
+                        onChanged: (src, other) {
+                          setState(() {
+                            _source = src;
+                            _otherSource = other;
+                          });
+                        },
+                      ),
+                      // Removed duplicated steps
+                      DietaryPreferencesStep(
+                        initialSelected: _selectedDiet,
+                        onChanged: (selected) =>
+                            setState(() => _selectedDiet = selected),
+                      ),
+                      AllergiesStep(
+                        initialSelected: _selectedAllergy,
+                        onChanged: (selected) =>
+                            setState(() => _selectedAllergy = selected),
+                      ),
+                      DislikesStep(
+                        initialSelected: _selectedDislikes,
+                        onChanged: (selected) =>
+                            setState(() => _selectedDislikes = selected),
+                      ),
+                      FlavorSpiceStep(
+                        initialDna: _flavorDna,
+                        initialSpice: _spiceLevel,
+                        onChanged: ({required dna, required spice}) {
+                          setState(() {
+                            _flavorDna = dna;
+                            _spiceLevel = spice;
+                          });
+                        },
+                      ),
+                      CookingSkillStep(
+                        initialSelected: _cookingSkill,
+                        onChanged: (selected) =>
+                            setState(() => _cookingSkill = selected),
+                      ),
+                      TimePreferenceStep(
+                        initialSelected: _cookingTime,
+                        onChanged: (selected) =>
+                            setState(() => _cookingTime = selected),
+                      ),
+                      CookingTargetStep(
+                        initialTarget: _cookingTarget,
+                        onChanged: (target) =>
+                            setState(() => _cookingTarget = target),
+                      ),
+                      CuisinesStep(
+                        initialSelected: _favoriteCuisines,
+                        onChanged: (selected) =>
+                            setState(() => _favoriteCuisines = selected),
+                      ),
+                      KitchenStep(
+                        initialSelected: _kitchenAppliances,
+                        onChanged: (selected) =>
+                            setState(() => _kitchenAppliances = selected),
+                      ),
+                      MealPlanningStep(
+                        initialSelected: _mealPlanningStyle,
+                        onChanged: (selected) =>
+                            setState(() => _mealPlanningStyle = selected),
+                      ),
+                      NotificationsStep(
+                        initialSelected: _notificationPreferences,
+                        onChanged: (selected) =>
+                            setState(() => _notificationPreferences = selected),
+                      ),
+                      GoalsStep(
+                        initialSelected: _onboardingGoals,
+                        onChanged: (selected) =>
+                            setState(() => _onboardingGoals = selected),
+                      ),
+                      ProfileLoadingStep(onComplete: _onContinue),
+                      ProfileSummaryStep(
+                        firstName: _firstName,
+                        favoriteCuisines: _favoriteCuisines,
+                        flavorDna: _flavorDna.keys.toList(),
+                        onContinue: _onContinue,
+                      ),
+                      ProfileSignupStep(
+                        onSignupEmail: () {
+                          _pageController.animateToPage(
+                            18, // AccountStep
+                            duration: const Duration(milliseconds: 400),
+                            curve: Curves.easeInOut,
+                          );
+                        },
+                        onSignupGoogle: () =>
+                            _submitPreferences(provider: 'GOOGLE'),
+                        onSignupApple: () =>
+                            _submitPreferences(provider: 'APPLE'),
+                        onGuest: () => _submitPreferences(isGuest: true),
+                      ),
+                      AccountStep(
+                        initialEmail: _email,
+                        initialPassword: _password,
+                        initialPhone: _phone,
+                        initialAcceptedTerms: _acceptedTerms,
+                        onChanged:
+                            ({
+                              required email,
+                              required password,
+                              required phone,
+                              required acceptedTerms,
+                            }) {
+                              setState(() {
+                                _email = email;
+                                _password = password;
+                                _phone = phone;
+                                _acceptedTerms = acceptedTerms;
+                              });
+                            },
+                      ),
+                      OtpStep(
+                        email: _email,
+                        onComplete: () {
+                          _pageController.animateToPage(
+                            20, // TrialStep
+                            duration: const Duration(milliseconds: 400),
+                            curve: Curves.easeInOut,
+                          );
+                        },
+                      ),
+                      TrialStep(
+                        onPlanSelected: (plan) {
+                          setState(() => _selectedPlanId = plan);
+                        },
+                        onSkip: () {
+                          _pageController.nextPage(
+                            duration: const Duration(milliseconds: 400),
+                            curve: Curves.easeInOut,
+                          );
+                        },
+                      ),
+                      RecipeGenerationLoadingStep(
+                        onComplete: () {
+                          if (mounted) {
+                            Navigator.pushReplacementNamed(
+                              context,
+                              AppRoutes.success,
+                              arguments: {'initialTab': 0},
+                            );
+                          }
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Footer: Continue Button
+                if (_currentPage != 15 &&
+                    _currentPage != 17 &&
+                    _currentPage != 19 &&
+                    _currentPage != 21)
+                  Padding(
+                    padding: EdgeInsets.fromLTRB(24.w, 10.h, 24.w, 20.h),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SizedBox(
+                          width: double.infinity,
+                          height: 56.h,
+                          child: ElevatedButton(
+                            onPressed:
+                                (_isLoading ||
+                                    (_currentPage == 0 &&
+                                        (_firstName.isEmpty ||
+                                            _email.isEmpty ||
+                                            _phone.isEmpty)) ||
+                                    (_currentPage == 2 &&
+                                        _source == null) || // SourceStep
+                                    (_currentPage == 4 && // AllergiesStep
+                                        _selectedAllergy.isEmpty) ||
+                                    (_currentPage == 18 && // AccountStep
+                                        (_email.isEmpty ||
+                                            _password.isEmpty ||
+                                            !_acceptedTerms)))
+                                ? null
+                                : _onContinue,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFFC83A2D),
+                              foregroundColor: Colors.white,
+                              disabledBackgroundColor: const Color(0xFFE5E7EB),
+                              disabledForegroundColor: const Color(0xFF9CA3AF),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(30.r),
+                              ),
+                              elevation: 0,
+                            ),
+                            child: _isLoading
+                                ? SizedBox(
+                                    height: 24.r,
+                                    width: 24.r,
+                                    child: const CircularProgressIndicator(
+                                      color: Colors.white,
+                                      strokeWidth: 2.5,
+                                    ),
+                                  )
+                                : Text(
+                                    _currentPage ==
+                                            20 // TrialStep
+                                        ? 'Start My 3-Day Free Trial'
+                                        : 'Continue',
+                                    style: TextStyle(
+                                      fontSize: 18.sp,
+                                      fontWeight: FontWeight.w700,
+                                      fontFamily: 'SF Pro',
+                                    ),
+                                  ),
+                          ),
+                        ),
+                        if (_currentPage == 20) ...[
+                          // TrialStep
+                          SizedBox(height: 12.h),
+                          Text(
+                            '3 days free',
+                            style: TextStyle(
+                              fontSize: 14.sp,
+                              color: const Color(0xFF7B8190),
+                              fontFamily: 'SF Pro',
+                            ),
+                          ),
+                        ],
+                        // "Sign In" link for all onboarding steps
+                        SizedBox(height: 16.h),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              'Already have an account? ',
+                              style: TextStyle(
+                                fontSize: 14.sp,
+                                color: const Color(0xFF7B8190),
+                                fontFamily: 'SF Pro',
+                              ),
+                            ),
+                            GestureDetector(
+                              onTap: () =>
+                                  Navigator.pushNamed(context, AppRoutes.login),
+                              child: Text(
+                                'Sign In',
+                                style: TextStyle(
+                                  fontSize: 14.sp,
+                                  fontWeight: FontWeight.w700,
+                                  color: const Color(0xFFC83A2D),
+                                  fontFamily: 'SF Pro',
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

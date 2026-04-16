@@ -1,0 +1,34 @@
+class AppRoutes {
+  static const String splash = '/';
+  static const String welcome = '/welcome';
+  static const String login = '/login';
+  static const String otp = '/otp';
+  static const String success = '/success';
+  static const String preferences = '/preferences';
+  static const String forgotPassword = '/forgot-password';
+  static const String forgotOtp = '/forgot-otp';
+  static const String resetPassword = '/reset-password';
+  static const String forgotSuccess = '/forgot-success';
+  static const String home = '/home';
+  static const String menu = '/menu';
+  static const String productDetail = '/product-detail';
+  static const String cart = '/cart';
+  static const String checkout = '/checkout';
+  static const String orders = '/orders';
+  static const String orderTracking = '/order-tracking';
+  static const String profile = '/profile';
+  static const String myAccount = '/my-account';
+  static const String changePassword = '/change-password';
+  static const String favorites = '/favorites';
+  static const String activityHistory = '/activity-history';
+  static const String helpCenter = '/help-center';
+  static const String viewAll = '/view-all';
+  static const String editPreferences = '/edit-preferences';
+  static const String cookbookDetail = '/cookbook-detail';
+  static const String cookbookForm = '/cookbook-form';
+  static const String recipeDetail = '/recipe-detail';
+  static const String subscriptionManagement = '/subscription-management';
+  static const String scan = '/scan';
+  static const String import = '/import';
+  static const String webSearch = '/web-search';
+}

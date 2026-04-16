@@ -1,0 +1,405 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import '../../core/theme/app_theme.dart';
+import '../../routes/app_routes.dart';
+import '../../services/auth_service.dart';
+import '../../core/widgets/ios_toast.dart';
+import '../../core/utils/error_helper.dart';
+
+class OtpScreen extends StatefulWidget {
+  const OtpScreen({super.key});
+
+  @override
+  State<OtpScreen> createState() => _OtpScreenState();
+}
+
+class _OtpScreenState extends State<OtpScreen> {
+  static const int _otpLength = 6;
+  final List<TextEditingController> _ctrls = List.generate(
+    _otpLength,
+    (_) => TextEditingController(),
+  );
+  final List<FocusNode> _nodes = List.generate(_otpLength, (_) => FocusNode());
+
+  bool _isLoading = false;
+  bool _isResending = false;
+
+  @override
+  void dispose() {
+    for (final c in _ctrls) {
+      c.dispose();
+    }
+    for (final n in _nodes) {
+      n.dispose();
+    }
+    super.dispose();
+  }
+
+  void _onChanged(String val, int idx) {
+    if (val.length == 1 && idx < _otpLength - 1) {
+      _nodes[idx + 1].requestFocus();
+    } else if (val.isEmpty && idx > 0) {
+      _nodes[idx - 1].requestFocus();
+    }
+    setState(() {});
+  }
+
+  String _getOtpCode() {
+    return _ctrls.map((c) => c.text).join();
+  }
+
+  Future<void> _verifyCode(String identifier) async {
+    final code = _getOtpCode();
+    if (code.length < _otpLength) {
+      IosToast.show(
+        context,
+        message: 'Please enter the complete 6-digit code.',
+        type: ToastType.success,
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+    final nav = Navigator.of(context);
+    try {
+      await AuthService.instance.verifyEmail(
+        identifier: identifier,
+        otpCode: code,
+      );
+      if (!mounted) return;
+      nav.pushReplacementNamed(AppRoutes.success);
+    } catch (e) {
+      IosToast.show(
+        context,
+        message: ErrorHelper.getFriendlyMessage(e),
+        type: ToastType.error,
+      );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _resendCode(String identifier) async {
+    setState(() => _isResending = true);
+    try {
+      await AuthService.instance.resendCode(identifier);
+      if (!mounted) return;
+      IosToast.show(
+        context,
+        message: 'Verification code resent.',
+        type: ToastType.success,
+      );
+    } catch (e) {
+      IosToast.show(
+        context,
+        message: ErrorHelper.getFriendlyMessage(e),
+        type: ToastType.error,
+      );
+    } finally {
+      if (mounted) setState(() => _isResending = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final statusBarH = MediaQuery.of(context).padding.top;
+    final String? identifier =
+        ModalRoute.of(context)?.settings.arguments as String?;
+
+    return Scaffold(
+      backgroundColor: Colors.white,
+      resizeToAvoidBottomInset: false,
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          // ── Full-screen food pattern ──
+          Image.asset('assets/images/fond.png', fit: BoxFit.cover),
+
+          // ── Cooked logo — centered on the page ──
+          Positioned.fill(
+            bottom: 220, // leave space for the card at bottom
+            child: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Image.asset(
+                    'assets/images/logo.png',
+                    width: 100,
+                    fit: BoxFit.contain,
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          // ── Red card pinned at bottom ──
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Color(0xFFC83A2D), Color(0x63C83A2D)],
+                ),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(15)),
+              ),
+              child: Stack(
+                children: [
+                  // Food pattern inside card
+                  Positioned.fill(
+                    child: ClipRRect(
+                      borderRadius: const BorderRadius.vertical(
+                        top: Radius.circular(30),
+                      ),
+                      child: Opacity(
+                        opacity: 0.12,
+                        child: Image.asset(
+                          'assets/images/fond.png',
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  SingleChildScrollView(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(24, 30, 24, 24),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'Please enter the code\nwe just sent to ${identifier ?? 'your email'}',
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                              fontFamily: 'SF Pro',
+                              height: 1.4,
+                            ),
+                          ),
+                          const SizedBox(height: 26),
+
+                          // 6 OTP boxes with dash separator
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              ..._buildBoxes(0, 3),
+                              const Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 4),
+                                child: Text(
+                                  '-',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 26,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ),
+                              ..._buildBoxes(3, 6),
+                            ],
+                          ),
+
+                          const SizedBox(height: 24),
+
+                          const Text(
+                            "If you didn't receive a code ?",
+                            style: TextStyle(
+                              color: Colors.white70,
+                              fontFamily: 'SF Pro',
+                              fontSize: 14,
+                            ),
+                          ),
+                          const SizedBox(height: 3),
+                          GestureDetector(
+                            onTap: _isResending
+                                ? null
+                                : () {
+                                    if (identifier != null) {
+                                      _resendCode(identifier);
+                                    }
+                                  },
+                            child: _isResending
+                                ? const SizedBox(
+                                    width: 14,
+                                    height: 14,
+                                    child: CircularProgressIndicator(
+                                      color: Color(0xFFFFF6D6),
+                                      strokeWidth: 1.5,
+                                    ),
+                                  )
+                                : const Text(
+                                    'Resend Code',
+                                    style: TextStyle(
+                                      color: Color(0xFFFFF6D6),
+                                      fontFamily: 'SF Pro',
+                                      fontWeight: FontWeight.w500,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                          ),
+
+                          const SizedBox(height: 28),
+
+                          SizedBox(
+                            width: double.infinity,
+                            height: 54,
+                            child: ElevatedButton(
+                              onPressed: _isLoading
+                                  ? null
+                                  : () {
+                                      if (identifier != null) {
+                                        _verifyCode(identifier);
+                                      } else {
+                                        IosToast.show(
+                                          context,
+                                          message:
+                                              'Missing identifier context. Please try again.',
+                                          type: ToastType.success,
+                                        );
+                                      }
+                                    },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFFC83A2D),
+                                foregroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(30),
+                                ),
+                                elevation: 0,
+                              ),
+                              child: _isLoading
+                                  ? const SizedBox(
+                                      width: 24,
+                                      height: 24,
+                                      child: CircularProgressIndicator(
+                                        color: Colors.white,
+                                        strokeWidth: 2,
+                                      ),
+                                    )
+                                  : const Text(
+                                      'Confirm',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                        fontFamily: 'SF Pro',
+                                      ),
+                                    ),
+                            ),
+                          ),
+                          SizedBox(
+                            height: MediaQuery.of(context).viewInsets.bottom,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          // ── Floating app bar (top) ──
+          Positioned(
+            top: statusBarH + 28,
+            left: 16,
+            right: 16,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                GestureDetector(
+                  onTap: () => Navigator.pop(context),
+                  child: Container(
+                    width: 42,
+                    height: 42,
+                    decoration: BoxDecoration(
+                      color: Color(0xffF8F5EF),
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.3),
+                          blurRadius: 8,
+                        ),
+                      ],
+                    ),
+                    child: const Icon(
+                      Icons.arrow_back_rounded,
+                      size: 24,
+                      color: AppColors.textDark,
+                    ),
+                  ),
+                ),
+                const Text(
+                  'VERIFICATION CODE',
+                  style: TextStyle(
+                    fontFamily: 'SF Pro',
+                    fontWeight: FontWeight.w800,
+                    fontSize: 14,
+                    letterSpacing: 0.8,
+                    color: AppColors.textDark,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  List<Widget> _buildBoxes(int from, int to) {
+    return List.generate(to - from, (i) {
+      final idx = from + i;
+      return Container(
+        width: 46,
+        height: 52,
+        margin: const EdgeInsets.symmetric(horizontal: 4),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(14),
+          child: TextField(
+            controller: _ctrls[idx],
+            focusNode: _nodes[idx],
+            textAlign: TextAlign.center,
+            keyboardType: TextInputType.number,
+            maxLength: 1,
+            onChanged: (v) => _onChanged(v, idx),
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            style: const TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w800,
+              fontFamily: 'SF Pro',
+              color: AppColors.textDark,
+            ),
+            decoration: InputDecoration(
+              counterText: '',
+              filled: true,
+              fillColor: Colors.white,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: BorderSide.none,
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: BorderSide.none,
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: const BorderSide(
+                  color: Color(0xFFCC3333),
+                  width: 1.5,
+                ),
+              ),
+              contentPadding: EdgeInsets.zero,
+            ),
+          ),
+        ),
+      );
+    });
+  }
+}
