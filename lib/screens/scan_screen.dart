@@ -14,18 +14,22 @@ import '../services/recipe_service.dart';
 import '../widgets/recipe_card.dart';
 import '../models/recipe.dart';
 import '../core/widgets/ios_toast.dart';
+import '../core/services/tutorial_service.dart';
+import '../core/utils/tutorial_helper.dart';
 
 enum ScanState { scan, type, saved, results }
 
 class ScanScreen extends StatefulWidget {
   final ValueNotifier<bool> isActiveNotifier;
   final ValueNotifier<bool>? isResultsModeNotifier;
+  final Function(int)? onTabSwitch;
   final VoidCallback? onClose;
 
   const ScanScreen({
     super.key,
     required this.isActiveNotifier,
     this.isResultsModeNotifier,
+    this.onTabSwitch,
     this.onClose,
   });
   @override
@@ -46,6 +50,11 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
   final List<Recipe> _recipes = [];
   final Set<String> _savedRecipeNames = {};
 
+  // GlobalKeys for tutorial
+  final GlobalKey _shutterKey = GlobalKey();
+  final GlobalKey _typeTabKey = GlobalKey();
+  final GlobalKey _scanMoreKey = GlobalKey();
+
   // LIVE CAMERA Logic
   CameraController? _cameraController;
   bool _isCameraInitialized = false;
@@ -62,6 +71,10 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
 
   // Placeholder background for scan simulation
   String? _capturedImagePath;
+
+  // Analysis Loading state
+  int _analysisDotCount = 0;
+  Timer? _analysisTimer;
 
   void _updateState(ScanState newState) {
     if (!mounted) return;
@@ -174,8 +187,18 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
   }
 
   void _onActiveStateChanged() {
-    if (widget.isActiveNotifier.value && !_isCameraInitialized) {
-      _initCamera();
+    if (widget.isActiveNotifier.value) {
+      // Trigger onboarding instantly if active
+      if (TutorialService.instance.isTutorialActive && TutorialService.instance.currentStep == 1) {
+        TutorialHelper.showScanOnboardingDialog(context, onTabSwitch: widget.onTabSwitch);
+      }
+      
+      if (!_isCameraInitialized) {
+        _initCamera();
+      }
+    } else {
+      // Release camera resources when switching away to prevent buffer overflow
+      _disposeCamera();
     }
   }
 
@@ -285,6 +308,8 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
         _cameraStatus = "Ready";
       });
       debugPrint("CAMERA_LOG: Setup finished.");
+
+
     } catch (e) {
       debugPrint("CAMERA_LOG: Critical HW Catch: $e");
       if (mounted) {
@@ -386,6 +411,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
     widget.isActiveNotifier.removeListener(_onActiveStateChanged);
     _disposeCamera();
     _ingCtrl.dispose();
+    _analysisTimer?.cancel();
     super.dispose();
   }
 
@@ -577,7 +603,10 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             GestureDetector(
-              onTap: widget.onClose,
+              onTap: () {
+                _updateState(ScanState.scan); // "enleve tout et affiche la page scan"
+                if (widget.onClose != null) widget.onClose!();
+              },
               child: Container(
                 padding: EdgeInsets.all(6.r),
                 decoration: BoxDecoration(
@@ -676,7 +705,10 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
     // "Add" or "Scan More" buttons
     Widget actionBtn;
     if (_state == ScanState.results) {
-      actionBtn = _buildWideBtn("Scan More", ScanState.scan);
+      actionBtn = SizedBox(
+        key: _scanMoreKey,
+        child: _buildWideBtn("Scan More", ScanState.scan),
+      );
     } else {
       actionBtn = _buildWideBtn("Add", _generateFromTyped);
     }
@@ -712,6 +744,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
     return GestureDetector(
       onTap: () => _pickAndScan(ImageSource.camera),
       child: Container(
+        key: _shutterKey,
         width: 70.r,
         height: 70.r,
         decoration: BoxDecoration(
@@ -778,6 +811,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
             onTap: () => _updateState(ScanState.scan),
           ),
           _PillTab(
+            key: _typeTabKey,
             label: 'Type Ingredients',
             active: _state == ScanState.type,
             onTap: () => _updateState(ScanState.type),
@@ -810,9 +844,18 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
           ),
           child: TextField(
             controller: _ingCtrl,
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               hintText: 'Garlic',
               border: InputBorder.none,
+              contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+              suffixIcon: IconButton(
+                onPressed: _addTypedIngredient,
+                icon: Icon(
+                  Icons.check_circle_rounded,
+                  color: const Color(0xFFCC3333),
+                  size: 24.sp,
+                ),
+              ),
             ),
             onSubmitted: (_) => _addTypedIngredient(),
           ),
@@ -1125,6 +1168,18 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
       _cameraStatus = "Scanning and generating recipes...";
       _capturedImagePath = photo!.path;
     });
+
+    // Start dots animation
+    _analysisDotCount = 0;
+    _analysisTimer?.cancel();
+    _analysisTimer = Timer.periodic(const Duration(milliseconds: 500), (timer) {
+      if (mounted) {
+        setState(() {
+          _analysisDotCount = (_analysisDotCount + 1) % 4;
+        });
+      }
+    });
+
     try {
       final result = await RecipeService.instance.scan(photo);
       setState(() {
@@ -1143,12 +1198,14 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
           (result['restricted_ingredients'] as List? ?? []).map((j) => RecipeIngredient.fromJson(j)).toList(),
         );
 
+        _analysisTimer?.cancel();
         _showingSuccessMessage = false;
         _capturedImagePath = null;
         _updateState(ScanState.results);
       });
     } catch (e) {
       setState(() {
+        _analysisTimer?.cancel();
         _showingSuccessMessage = false;
         _capturedImagePath = null;
       });
@@ -1185,25 +1242,27 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
   }
 
   Widget _buildSuccessOverlay() {
+    String dots = '.' * _analysisDotCount;
     return Container(
-      color: Colors.black.withOpacity(0.85),
+      color: Colors.black.withValues(alpha: 0.7),
       child: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.check_circle_outline, color: Colors.green, size: 80.sp),
+            Image.asset(
+              'assets/images/logo2.png',
+              width: 120.w,
+              fit: BoxFit.contain,
+            ),
             SizedBox(height: 24.h),
             Text(
-              'Success!',
+              'Analyzing$dots',
               style: TextStyle(
                 color: Colors.white,
-                fontSize: 28.sp,
-                fontWeight: FontWeight.bold,
+                fontSize: 18.sp,
+                fontWeight: FontWeight.w700,
+                fontFamily: 'SF Pro',
               ),
-            ),
-            SizedBox(height: 40.h),
-            const CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation(Color(0xFFCC3333)),
             ),
           ],
         ),
@@ -1217,6 +1276,7 @@ class _PillTab extends StatelessWidget {
   final bool active;
   final VoidCallback onTap;
   const _PillTab({
+    super.key,
     required this.label,
     required this.active,
     required this.onTap,

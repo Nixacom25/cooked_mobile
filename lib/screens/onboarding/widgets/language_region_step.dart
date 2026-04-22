@@ -67,11 +67,6 @@ class _LanguageRegionStepState extends State<LanguageRegionStep> {
     'SN Senegal',
     'NG Nigeria',
     'MA Morocco',
-    'MA Morocco',
-    'MA Morocco',
-    'MA Morocco',
-    'MA Morocco',
-    'MA Morocco',
   ];
 
   @override

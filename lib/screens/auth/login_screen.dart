@@ -5,6 +5,7 @@ import '../../routes/app_routes.dart';
 import '../../services/auth_service.dart';
 import '../../core/widgets/ios_toast.dart';
 import '../../core/utils/error_helper.dart';
+import '../../core/widgets/terms_validation_modal.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -70,34 +71,29 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _handleSocialLogin(String provider) async {
+    _handleSocialLoginActual(provider);
+  }
+
+  Future<void> _handleSocialLoginActual(String provider) async {
     setState(() => _isLoading = true);
     final nav = Navigator.of(context);
 
     try {
-      Map<String, dynamic> result;
       if (provider == 'GOOGLE') {
-        result = await AuthService.instance.signInWithGoogle();
+        await AuthService.instance.signInWithGoogle(isSignup: false);
       } else {
         // APPLE
-        result = await AuthService.instance.signInWithApple();
+        await AuthService.instance.signInWithApple();
       }
 
       if (!mounted) return;
 
-      if (result['success'] == true) {
-        IosToast.show(
-          context,
-          message: "Social login successful!",
-          type: ToastType.success,
-        );
-        nav.pushReplacementNamed(AppRoutes.home);
-      } else {
-        IosToast.show(
-          context,
-          message: result['message'] ?? "Social login failed",
-          type: ToastType.error,
-        );
-      }
+      IosToast.show(
+        context,
+        message: "Social login successful!",
+        type: ToastType.success,
+      );
+      nav.pushReplacementNamed(AppRoutes.home);
     } catch (e) {
       if (!mounted) return;
       IosToast.show(

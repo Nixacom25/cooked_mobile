@@ -47,6 +47,8 @@ void main() async {
   );
 }
 
+final RouteObserver<ModalRoute<void>> routeObserver = RouteObserver<ModalRoute<void>>();
+
 class CookedApp extends StatefulWidget {
   const CookedApp({super.key});
 
@@ -85,6 +87,7 @@ class _CookedAppState extends State<CookedApp> {
             theme: AppTheme.light,
             locale: DevicePreview.locale(context),
             builder: DevicePreview.appBuilder,
+            navigatorObservers: [routeObserver],
             routes: {
               AppRoutes.splash: (_) => const SplashScreen(),
               AppRoutes.welcome: (_) => const WelcomeScreen(),

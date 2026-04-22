@@ -222,11 +222,7 @@ class _MyAccountScreenState extends State<MyAccountScreen> {
                                 fit: BoxFit.cover,
                                 errorBuilder: (_, __, ___) => _defaultAvatar(),
                               )
-                            : Image.asset(
-                                'assets/images/profile.png',
-                                fit: BoxFit.cover,
-                                errorBuilder: (_, __, ___) => _defaultAvatar(),
-                              ),
+                            : _defaultAvatar(),
                       ),
                     ),
                   ),

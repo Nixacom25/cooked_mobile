@@ -27,8 +27,11 @@ import 'widgets/otp_step.dart';
 import 'widgets/recipe_generation_loading_step.dart';
 import '../../services/auth_service.dart';
 import '../../services/iap_service.dart';
+import '../../core/services/tutorial_service.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 import '../../core/utils/error_helper.dart';
+
+import '../../core/widgets/terms_validation_modal.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -55,12 +58,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   String _firstName = '';
   String _lastName = '';
   String _phone = '';
-  String _alternativeRegion = 'Senegal';
-  String _measurementSystem = 'Metric';
+  String _alternativeRegion = 'US United States';
+  String _measurementSystem = 'Imperial';
   String? _source;
   String? _otherSource;
-  String _language = 'French';
-  String _country = 'Senegal';
+  String _language = 'GB English';
+  String _country = 'US United States';
   Set<String> _selectedDiet = {};
   Set<String> _selectedAllergy = {};
   Set<String> _selectedDislikes = {};
@@ -261,6 +264,22 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     bool isGuest = false,
     String provider = 'LOCAL',
   }) async {
+    // Security/Compliance Gate: For social login, show Terms Validation first
+    bool isSocial = provider == 'GOOGLE' || provider == 'APPLE';
+    if (isSocial && !isGuest) {
+      TermsValidationModal.show(context, onAccepted: () {
+        _submitPreferencesActual(provider: provider, isGuest: isGuest);
+      });
+      return;
+    }
+
+    _submitPreferencesActual(provider: provider, isGuest: isGuest);
+  }
+
+  Future<void> _submitPreferencesActual({
+    bool isGuest = false,
+    String provider = 'LOCAL',
+  }) async {
     bool isSocial = provider == 'GOOGLE' || provider == 'APPLE';
     
     // Validation before final submission
@@ -314,15 +333,32 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             country: _country,
           );
         } else {
-          // Social Login Flow
+          // Atomic Social Registration Flow
+          Map<String, dynamic> socialRes;
           if (provider == 'GOOGLE') {
-            await AuthService.instance.signInWithGoogle();
-          } else if (provider == 'APPLE') {
-            await AuthService.instance.signInWithApple();
+            socialRes = await AuthService.instance.signInWithGoogle(
+              isSignup: true,
+              isManualBackendCall: false, // Don't login yet, just get identity
+            );
+          } else {
+            // Apple - would handle similarly
+            throw Exception('Apple Registration not implemented yet');
           }
 
-          // After successful social login, sync gathered preferences
-          await UserService.instance.updatePreferences(
+          if (socialRes['success'] != true) {
+            throw Exception('Social authentication failed');
+          }
+
+          // Now call register with ALL preferences + social identity
+          await AuthService.instance.register(
+            firstname: _firstName.isNotEmpty ? _firstName : socialRes['firstname'],
+            lastname: _lastName.isNotEmpty ? _lastName : socialRes['lastname'],
+            email: socialRes['email'],
+            password: socialRes['idToken'], // Send token as password for verification
+            provider: provider,
+            phone: _phone,
+            discoverySource: _source,
+            otherDiscoverySource: _otherSource,
             dietaryPreferences: _selectedDiet.toList(),
             allergies: _selectedAllergy.toList(),
             foodDislikes: _selectedDislikes.toList(),
@@ -350,6 +386,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       if (!mounted) return;
       setState(() => _isLoading = false);
 
+      // Reset tutorial for new accounts
+      if (!isGuest) {
+        TutorialService.instance.reset();
+      }
+
       // Navigation logic ONLY after success
       if (isGuest || isSocial) {
         _pageController.animateToPage(
@@ -368,22 +409,17 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       if (!mounted) return;
       setState(() => _isLoading = false);
 
-      // Stay on current page or specific step if error
-      if (_currentPage == 17 && (isSocial || isGuest)) {
-        // Stay on ProfileSignupStep
-      } else {
-        _pageController.animateToPage(
-          18, // AccountStep
-          duration: const Duration(milliseconds: 400),
-          curve: Curves.easeInOut,
-        );
+      final errorMsg = ErrorHelper.getFriendlyMessage(e).replaceAll('Exception: ', '');
+      
+      // Security Logic: Block navigation and show clear fallback instructions
+      String finalMsg = errorMsg;
+      if (isSocial && !errorMsg.contains('already exists')) {
+        finalMsg = '$errorMsg\n\nTip: If the problem persists with Google, try signing up via email.';
       }
-
+      
       IosToast.show(
         context,
-        message: ErrorHelper.getFriendlyMessage(
-          e,
-        ).replaceAll('Exception: ', ''),
+        message: finalMsg,
         type: ToastType.error,
       );
     }
@@ -740,34 +776,38 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             ),
                           ),
                         ],
-                        // "Sign In" link for all onboarding steps
-                        SizedBox(height: 16.h),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              'Already have an account? ',
-                              style: TextStyle(
-                                fontSize: 14.sp,
-                                color: const Color(0xFF7B8190),
-                                fontFamily: 'SF Pro',
-                              ),
-                            ),
-                            GestureDetector(
-                              onTap: () =>
-                                  Navigator.pushNamed(context, AppRoutes.login),
-                              child: Text(
-                                'Sign In',
+                        // "Sign In" link only for the first onboarding step
+                        if (_currentPage == 0) ...[
+                          SizedBox(height: 16.h),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                'Already have an account? ',
                                 style: TextStyle(
                                   fontSize: 14.sp,
-                                  fontWeight: FontWeight.w700,
-                                  color: const Color(0xFFC83A2D),
+                                  color: const Color(0xFF7B8190),
                                   fontFamily: 'SF Pro',
                                 ),
                               ),
-                            ),
-                          ],
-                        ),
+                              GestureDetector(
+                                onTap: () => Navigator.pushNamed(
+                                  context,
+                                  AppRoutes.login,
+                                ),
+                                child: Text(
+                                  'Sign In',
+                                  style: TextStyle(
+                                    fontSize: 14.sp,
+                                    fontWeight: FontWeight.w700,
+                                    color: const Color(0xFFC83A2D),
+                                    fontFamily: 'SF Pro',
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ],
                     ),
                   ),

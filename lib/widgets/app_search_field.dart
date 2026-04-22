@@ -8,6 +8,8 @@ class AppSearchField extends StatelessWidget {
   final ValueChanged<String>? onSubmitted;
   final Color? backgroundColor;
   final Color? borderColor;
+  final IconData? suffixIcon;
+  final VoidCallback? onSuffixTap;
 
   const AppSearchField({
     super.key,
@@ -17,6 +19,8 @@ class AppSearchField extends StatelessWidget {
     this.onSubmitted,
     this.backgroundColor,
     this.borderColor,
+    this.suffixIcon,
+    this.onSuffixTap,
   });
 
   @override
@@ -60,6 +64,18 @@ class AppSearchField extends StatelessWidget {
               ),
             ),
           ),
+          if (suffixIcon != null)
+            GestureDetector(
+              onTap: onSuffixTap,
+              child: Padding(
+                padding: EdgeInsets.only(left: 8.w),
+                child: Icon(
+                  suffixIcon,
+                  size: 22.sp,
+                  color: const Color(0xFFCC3333),
+                ),
+              ),
+            ),
         ],
       ),
     );

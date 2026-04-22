@@ -263,35 +263,6 @@ class _DislikesStepState extends State<DislikesStep> {
               }).toList(),
             ),
           ],
-
-          SizedBox(height: 40.h),
-
-          SizedBox(
-            width: double.infinity,
-            height: 50.h,
-            child: OutlinedButton(
-              onPressed: () {
-                setState(() => _selectedDislikes.clear());
-                widget.onChanged(_selectedDislikes);
-              },
-              style: OutlinedButton.styleFrom(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(50.r),
-                ),
-                backgroundColor: const Color(0xFFE5E7EB),
-                side: BorderSide.none,
-              ),
-              child: Text(
-                'Skip — I eat most things',
-                style: TextStyle(
-                  color: const Color(0xFF0D1B3E),
-                  fontSize: 15.sp,
-                  fontWeight: FontWeight.w600,
-                  fontFamily: 'SF Pro',
-                ),
-              ),
-            ),
-          ),
           SizedBox(height: 32.h),
         ],
       ),

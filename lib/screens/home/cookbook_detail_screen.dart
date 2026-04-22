@@ -9,6 +9,7 @@ import '../../services/recipe_service.dart';
 import '../../services/cookbook_service.dart';
 import '../../core/widgets/ios_toast.dart';
 import '../../core/utils/error_helper.dart';
+import '../../core/utils/tutorial_helper.dart';
 
 class CookbookDetailScreen extends StatefulWidget {
   const CookbookDetailScreen({super.key});
@@ -34,6 +35,13 @@ class _CookbookDetailScreenState extends State<CookbookDetailScreen> {
         _load();
       }
       _initialized = true;
+
+      // Trigger onboarding if active
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          TutorialHelper.showCookbookOnboardingDialog(context);
+        }
+      });
     }
   }
 

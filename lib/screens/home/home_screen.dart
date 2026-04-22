@@ -20,6 +20,9 @@ import '../../widgets/red_button.dart';
 import '../../widgets/cookbook_cover.dart';
 import '../../core/widgets/ios_toast.dart';
 import '../../core/utils/error_helper.dart';
+import '../../core/utils/tutorial_helper.dart';
+import '../../core/services/tutorial_service.dart';
+import '../../main.dart';
 
 class HomeScreen extends StatefulWidget {
   final int initialTab;
@@ -28,7 +31,8 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
+class _HomeScreenState extends State<HomeScreen>
+    with TickerProviderStateMixin, RouteAware {
   // Tab indices: 0=Home 1=Explore 2=SCAN 3=Grocery 4=Import
   late int _currentTab;
   late int _previousTab;
@@ -39,11 +43,16 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   final GlobalKey _scanTabKey = GlobalKey();
   final GlobalKey _importTabKey = GlobalKey();
   final GlobalKey _groceryTabKey = GlobalKey();
-  
+
   // Persistent tab widgets and notifier to prevent infinite rebuilds
   late final List<Widget> _tabWidgets;
   final ValueNotifier<bool> _scanActiveNotifier = ValueNotifier<bool>(false);
+  final ValueNotifier<bool> _importActiveNotifier = ValueNotifier<bool>(false);
   final ValueNotifier<bool> _isScanInResultsMode = ValueNotifier<bool>(false);
+  final ValueNotifier<bool> _isImportLoading = ValueNotifier<bool>(false);
+
+  // Tutorial keys
+  final GlobalKey _firstCookbookKey = GlobalKey();
 
   @override
   void initState() {
@@ -52,20 +61,26 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     _previousTab = 0;
     _navVisible = _currentTab != 2;
     _scanActiveNotifier.value = _currentTab == 2;
+    _importActiveNotifier.value = _currentTab == 4;
 
     _tabWidgets = [
       _HomeTab(
         onRefresh: () => setState(() {}),
         onScanTap: () => _switchTab(2),
+        firstCookbookKey: _firstCookbookKey,
       ),
       const ExploreScreen(),
       ScanScreen(
         isActiveNotifier: _scanActiveNotifier,
         isResultsModeNotifier: _isScanInResultsMode,
+        onTabSwitch: _switchTab,
         onClose: () => _switchTab(_previousTab),
       ),
       const GroceryScreen(),
-      const ImportScreen(),
+      ImportScreen(
+        isActiveNotifier: _importActiveNotifier,
+        isImportingNotifier: _isImportLoading,
+      ),
     ];
 
     _navCtrl = AnimationController(
@@ -77,30 +92,110 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       begin: Offset.zero,
       end: const Offset(0, 1.6),
     ).animate(CurvedAnimation(parent: _navCtrl, curve: Curves.easeInOut));
+
+    // Listen for cookbooks to become available before starting tutorial
+    CookbookService.instance.myCookbooksNotifier.addListener(_tutorialDataListener);
+    
+    // Initial trigger attempt
+    _startTutorial(delayMs: 2500);
+  }
+
+  void _tutorialDataListener() {
+    if (mounted && 
+        TutorialService.instance.isTutorialActive && 
+        CookbookService.instance.myCookbooksNotifier.value != null &&
+        CookbookService.instance.myCookbooksNotifier.value!.isNotEmpty) {
+      _startTutorial(delayMs: 800);
+    }
+  }
+
+  void _startTutorial({int delayMs = 500}) {
+    // Only show Home tutorial if on Home tab
+    if (_currentTab != 0) return;
+
+    Future.delayed(Duration(milliseconds: delayMs), () {
+      if (mounted && _currentTab == 0) {
+        final firstCb = CookbookService.instance.myCookbooksNotifier.value?.firstOrNull;
+        TutorialHelper.showTutorial(
+          context,
+          cookbookKey: _firstCookbookKey,
+          scanKey: _scanTabKey,
+          importKey: _importTabKey,
+          firstCookbook: firstCb,
+          onTabSwitch: (idx) => _switchTab(idx),
+        );
+      }
+    });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    routeObserver.subscribe(this, ModalRoute.of(context)!);
   }
 
   @override
   void dispose() {
+    routeObserver.unsubscribe(this);
+    CookbookService.instance.myCookbooksNotifier.removeListener(_tutorialDataListener);
     _navCtrl.dispose();
     _scanActiveNotifier.dispose();
     _isScanInResultsMode.dispose();
     super.dispose();
   }
 
+  @override
+  void didPopNext() {
+    if (TutorialService.instance.isTutorialActive) {
+      if (TutorialService.instance.currentStep == 0) {
+        TutorialService.instance.setStep(1);
+      }
+      _startTutorial(delayMs: 500); // Fast resumption
+    }
+  }
+
   void _switchTab(int i) {
     if (_scrollBusy) return;
+    
+    // Support for hiding nav during tutorial completion (-1)
+    if (i == -1) {
+      setState(() {
+        _navVisible = false;
+        _navCtrl.forward();
+      });
+      return;
+    }
+
+    final prev = _currentTab;
     setState(() {
+      _navVisible = (i != 2); // ONLY hide for Scan screen
       if (_currentTab != i) _previousTab = _currentTab;
-      _currentTab = i;
-      _navVisible = i != 2;
+      _currentTab = i; 
       _scanActiveNotifier.value = i == 2;
-      _isScanInResultsMode.value = false; // Reset results mode when switching tabs
+      _importActiveNotifier.value = i == 4;
+      _isScanInResultsMode.value = false; 
+      
       if (_navVisible) {
         _navCtrl.reverse();
       } else {
         _navCtrl.forward();
       }
     });
+
+    // If returning to Home during tutorial, advance step based on where we came from
+    if (TutorialService.instance.isTutorialActive && i == 0 && prev != 0) {
+      final service = TutorialService.instance;
+      if (prev == 2 && service.currentStep == 1) {
+        service.setStep(2); // Move to Import Target
+      } else if (prev == 4 && service.currentStep == 2) {
+        service.setStep(3); // Move to Completion Target
+      }
+      
+      _startTutorial(delayMs: 200);
+    } else if (i != 0 && prev == 0) {
+      // Switching away from home - dismiss Home tutorial if showing
+      TutorialHelper.dismissCurrent();
+    }
   }
 
   void _toggleNav() {
@@ -114,26 +209,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   // Called by scroll notifications from child scrollables
   bool _handleScroll(ScrollNotification notif) {
-    if (_currentTab == 2) return false; // scan tab – ignore
-    if (_scrollBusy) return false; // debounce
-    if (notif is ScrollUpdateNotification) {
-      final delta = notif.scrollDelta ?? 0;
-      if (delta > 4 && _navVisible) {
-        _scrollBusy = true;
-        SchedulerBinding.instance.addPostFrameCallback((_) {
-          if (mounted) setState(() => _navVisible = false);
-          _navCtrl.forward();
-          _scrollBusy = false;
-        });
-      } else if (delta < -4 && !_navVisible) {
-        _scrollBusy = true;
-        SchedulerBinding.instance.addPostFrameCallback((_) {
-          if (mounted) setState(() => _navVisible = true);
-          _navCtrl.reverse();
-          _scrollBusy = false;
-        });
-      }
-    }
+    // Disabled nav hiding as requested – bottom nav stays visible except on Scan tab
     return false;
   }
 
@@ -152,13 +228,17 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             ValueListenableBuilder<bool>(
               valueListenable: _isScanInResultsMode,
               builder: (context, inResultsMode, _) {
+                return ValueListenableBuilder<bool>(
+                  valueListenable: _isImportLoading,
+                  builder: (context, isImportLoading, _) {
+                    final hideNav = inResultsMode || isImportLoading;
                 return Stack(
                   children: [
                     // Peek handle – only shown when nav is hidden AND not in results mode
                     AnimatedPositioned(
                       duration: const Duration(milliseconds: 320),
                       curve: Curves.easeInOut,
-                      bottom: (_navVisible || inResultsMode) ? -60.h : 12.h,
+                      bottom: (_currentTab == 2 && !inResultsMode) ? 12.h : -60.h,
                       left: 0,
                       right: 0,
                       child: Center(
@@ -174,7 +254,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               borderRadius: BorderRadius.circular(30.r),
                               boxShadow: [
                                 BoxShadow(
-                                  color: const Color(0xFFCC3333).withValues(alpha: 0.4),
+                                  color: const Color(
+                                    0xFFCC3333,
+                                  ).withValues(alpha: 0.4),
                                   blurRadius: 14.r,
                                   offset: Offset(0, 4.h),
                                 ),
@@ -212,7 +294,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       bottom: 0,
                       child: SlideTransition(
                         position: _navSlide,
-                        child: inResultsMode
+                        child: hideNav
                             ? const SizedBox.shrink()
                             : _FloatingBottomNav(
                                 currentIndex: _currentTab,
@@ -234,8 +316,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   ],
                 );
               },
-            ),
-
+            );
+          },
+        ),
           ],
         ),
       ),
@@ -305,7 +388,7 @@ class _FloatingBottomNav extends StatelessWidget {
                 ),
                 const Expanded(child: SizedBox()),
                 _NavItem(
-                  key: groceryTabKey,
+                  iconKey: groceryTabKey,
                   icon: Icons.shopping_bag_outlined,
                   activeIcon: Icons.shopping_bag_rounded,
                   label: 'Grocery',
@@ -316,7 +399,7 @@ class _FloatingBottomNav extends StatelessWidget {
                   },
                 ),
                 _NavItem(
-                  key: importTabKey,
+                  iconKey: importTabKey,
                   icon: Icons.file_download_outlined,
                   activeIcon: Icons.file_download_rounded,
                   label: 'Import',
@@ -379,15 +462,16 @@ class _NavItem extends StatelessWidget {
   final int index;
   final int current;
   final void Function(int) onTap;
+  final GlobalKey? iconKey;
 
   const _NavItem({
-    super.key,
     required this.icon,
     required this.activeIcon,
     required this.label,
     required this.index,
     required this.current,
     required this.onTap,
+    this.iconKey,
   });
 
   @override
@@ -402,6 +486,7 @@ class _NavItem extends StatelessWidget {
           children: [
             Icon(
               active ? activeIcon : icon,
+              key: iconKey, // Use iconKey here to avoid duplicate GlobalKey on _NavItem itself
               size: 24.sp,
               color: active ? const Color(0xFFCC3333) : const Color(0xFF8E8E8E),
             ),
@@ -430,10 +515,8 @@ class _NavItem extends StatelessWidget {
 class _HomeTab extends StatelessWidget {
   final VoidCallback? onRefresh;
   final VoidCallback? onScanTap;
-  const _HomeTab({
-    this.onRefresh,
-    this.onScanTap,
-  });
+  final GlobalKey? firstCookbookKey;
+  const _HomeTab({this.onRefresh, this.onScanTap, this.firstCookbookKey});
 
   void _goViewAll(BuildContext ctx, ViewAllType type, String title) {
     Navigator.pushNamed(
@@ -463,7 +546,10 @@ class _HomeTab extends StatelessWidget {
               },
             ),
             SizedBox(height: 12.h),
-            _CookbooksRow(onRefresh: onRefresh),
+            _CookbooksRow(
+            onRefresh: onRefresh,
+            firstCookbookKey: firstCookbookKey,
+          ),
             if (_homeRecent.isNotEmpty) ...[
               _SectionRow(
                 title: 'Recently Viewed',
@@ -486,9 +572,7 @@ class _HomeTab extends StatelessWidget {
               ),
             ),
             SizedBox(height: 12.h),
-            _SavedRecipesGrid(
-              onScanTap: onScanTap,
-            ),
+            _SavedRecipesGrid(onScanTap: onScanTap),
             SizedBox(height: 30.h),
             // Dynamic bottom spacer for keyboard
             SizedBox(height: MediaQuery.of(context).viewInsets.bottom),
@@ -556,42 +640,32 @@ class _HeaderState extends State<_Header> {
 
           return Row(
             children: [
-              GestureDetector(
-                onTap: () => Navigator.pushNamed(context, AppRoutes.profile),
-                child: Container(
-                  width: 46.w,
-                  height: 46.h,
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Color(0xFFD0D0D0),
+              if (displayPhoto != null && displayPhoto.isNotEmpty) ...[
+                GestureDetector(
+                  onTap: () => Navigator.pushNamed(context, AppRoutes.profile),
+                  child: Container(
+                    width: 46.w,
+                    height: 46.h,
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Color(0xFFD0D0D0),
+                    ),
+                    clipBehavior: Clip.hardEdge,
+                    child: Image.network(
+                      displayPhoto,
+                      width: 46.w,
+                      height: 46.h,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => Icon(
+                        Icons.person_rounded,
+                        size: 32.sp,
+                        color: const Color(0xFF888888),
+                      ),
+                    ),
                   ),
-                  clipBehavior: Clip.hardEdge,
-                  child: displayPhoto != null && displayPhoto.isNotEmpty
-                      ? Image.network(
-                          displayPhoto,
-                          width: 46.w,
-                          height: 46.h,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => Icon(
-                            Icons.person_rounded,
-                            size: 32.sp,
-                            color: const Color(0xFF888888),
-                          ),
-                        )
-                      : Image.asset(
-                          'assets/images/profile.png',
-                          width: 45.w,
-                          height: 45.h,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => Icon(
-                            Icons.person_rounded,
-                            size: 32.sp,
-                            color: const Color(0xFF888888),
-                          ),
-                        ),
                 ),
-              ),
-              SizedBox(width: 12.w),
+                SizedBox(width: 12.w),
+              ],
               Expanded(
                 child: Text(
                   'Hi, ${displayName.isNotEmpty ? displayName : 'Guest'}',
@@ -751,10 +825,7 @@ class _SearchBar extends StatelessWidget {
 class _SectionRow extends StatelessWidget {
   final String title;
   final VoidCallback? onViewAll;
-  const _SectionRow({
-    required this.title,
-    this.onViewAll,
-  });
+  const _SectionRow({required this.title, this.onViewAll});
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -799,7 +870,8 @@ class _SectionRow extends StatelessWidget {
 
 class _CookbooksRow extends StatefulWidget {
   final VoidCallback? onRefresh;
-  const _CookbooksRow({this.onRefresh});
+  final GlobalKey? firstCookbookKey;
+  const _CookbooksRow({this.onRefresh, this.firstCookbookKey});
 
   @override
   State<_CookbooksRow> createState() => _CookbooksRowState();
@@ -907,13 +979,12 @@ class _CookbooksRowState extends State<_CookbooksRow> {
                     }
                   },
                   child: SizedBox(
+                    key: i == 0 ? widget.firstCookbookKey : null,
                     width: 158.w,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Expanded(
-                          child: CookbookCover(cookbook: cb),
-                        ),
+                        Expanded(child: CookbookCover(cookbook: cb)),
                         SizedBox(height: 7.h),
                         Text(
                           cb.name.toUpperCase(),
@@ -991,10 +1062,7 @@ class _RecentlyViewedRow extends StatelessWidget {
                 },
               ),
               child: Container(
-                padding: EdgeInsets.symmetric(
-                  horizontal: 10.w,
-                  vertical: 8.h,
-                ),
+                padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
                 decoration: BoxDecoration(
                   color: const Color(0xFFF2F1EF),
                   borderRadius: BorderRadius.circular(10.r),
@@ -1156,7 +1224,11 @@ class _SavedRecipesGridState extends State<_SavedRecipesGrid> {
                     // Just refresh this specific list if needed, or rely on future reload
                     setState(() => _loadData());
                   } catch (e) {
-                    IosToast.show(ctx, message: ErrorHelper.getFriendlyMessage(e), type: ToastType.error);
+                    IosToast.show(
+                      ctx,
+                      message: ErrorHelper.getFriendlyMessage(e),
+                      type: ToastType.error,
+                    );
                   }
                 },
                 onTap: () async {

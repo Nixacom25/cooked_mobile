@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../core/widgets/legal_content_modal.dart';
+import '../../core/widgets/terms_validation_modal.dart';
 
 // ══════════════════════════════════════════════════════════════════════════════
 // HELP CENTER SCREEN
@@ -44,8 +46,15 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
 
   Future<void> _openUrl(String url) async {
     final uri = Uri.parse(url);
-    if (await canLaunchUrl(uri))
-      launchUrl(uri, mode: LaunchMode.externalApplication);
+    try {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } catch (e) {
+      debugPrint('Could not launch $url : $e');
+    }
+  }
+
+  void _showPolicy(String title, String content) {
+    LegalContentModal.show(context, title: title, content: content);
   }
 
   // 0.0 = expanded, 1.0 = fully collapsed
@@ -105,8 +114,8 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
                         child: _ContactCard(
                           icon: Icons.email_rounded,
                           label: 'Email',
-                          subtitle: 'Send to your email',
-                          onTap: () => _openUrl('mailto:support@cooked.com'),
+                          subtitle: 'contact@cookedapp.com',
+                          onTap: () => _openUrl('mailto:contact@cookedapp.com'),
                         ),
                       ),
                       SizedBox(width: 16.w),
@@ -114,7 +123,7 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
                         child: _ContactCard(
                           icon: Icons.phone_rounded,
                           label: 'Phone Number',
-                          subtitle: 'Send to your phone',
+                          subtitle: '+1 (234) 567-890',
                           onTap: () => _openUrl('tel:+1234567890'),
                         ),
                       ),
@@ -152,27 +161,22 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
                       _PolicyButton(
                         icon: Icons.description_rounded,
                         label: 'Terms & Conditions',
-                        onTap: () =>
-                            _openUrl('https://cooked.com/terms-and-condition'),
+                        onTap: () => _showPolicy('Terms & Conditions', dummyTerms),
                       ),
                       _PolicyButton(
                         icon: Icons.receipt_long_rounded,
                         label: 'Refund & Cancellation',
-                        onTap: () => _openUrl(
-                          'https://cooked.com/refund-and-cancellation',
-                        ),
+                        onTap: () => _showPolicy('Refund & Cancellation', dummyRefund),
                       ),
                       _PolicyButton(
                         icon: Icons.policy_rounded,
                         label: 'Privacy Policy',
-                        onTap: () =>
-                            _openUrl('https://cooked.com/privacy-policy'),
+                        onTap: () => _showPolicy('Privacy Policy', dummyPrivacy),
                       ),
                       _PolicyButton(
                         icon: Icons.cookie_rounded,
                         label: 'Cookie Policy',
-                        onTap: () =>
-                            _openUrl('https://cooked.com/cookie-policy'),
+                        onTap: () => _showPolicy('Cookie Policy', dummyCookies),
                       ),
                     ],
                   ),

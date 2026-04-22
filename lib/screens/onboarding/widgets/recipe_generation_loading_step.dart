@@ -1,5 +1,8 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../../../services/recipe_service.dart';
+import '../../../services/cookbook_service.dart';
 
 class RecipeGenerationLoadingStep extends StatefulWidget {
   final VoidCallback? onComplete;
@@ -15,13 +18,17 @@ class _RecipeGenerationLoadingStepState
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _progressAnimation;
+  Timer? _pollingTimer;
+  bool _isDataReady = false;
+  int _retryCount = 0;
+  static const int _maxRetries = 20; // ~50 seconds total polling
 
   final List<Map<String, String>> _steps = [
     {'icon': '🥕', 'text': 'Analyzing your ingredients'},
     {'icon': '📊', 'text': 'Matching recipe database'},
     {'icon': '👨‍🍳', 'text': 'Generating recipe suggestions'},
     {'icon': '🔥', 'text': 'Optimizing cooking steps'},
-    {'icon': '⭐️', 'text': 'Finding the best recipes for you'},
+    {'icon': '⭐️', 'text': 'Finalizing your cookbooks'},
   ];
 
   @override
@@ -29,31 +36,80 @@ class _RecipeGenerationLoadingStepState
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 4),
+      duration: const Duration(seconds: 40), // Long duration for visual smoothness
     );
 
-    _progressAnimation =
-        Tween<double>(begin: 0, end: 100).animate(
-          CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-        )..addListener(() {
-          setState(() {});
-        });
-
-    _controller.addStatusListener((status) {
-      if (status == AnimationStatus.completed) {
-        Future.delayed(const Duration(milliseconds: 500), () {
-          if (mounted && widget.onComplete != null) {
-            widget.onComplete!();
-          }
-        });
-      }
-    });
+    _progressAnimation = Tween<double>(begin: 0, end: 95).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInCubic),
+    )..addListener(() {
+        setState(() {});
+      });
 
     _controller.forward();
+    _startPolling();
+  }
+
+  void _startPolling() {
+    // Immediate first check
+    _checkStatus();
+    
+    _pollingTimer = Timer.periodic(const Duration(milliseconds: 2500), (timer) {
+      _checkStatus();
+    });
+  }
+
+  Future<void> _checkStatus() async {
+    if (_isDataReady) return;
+
+    try {
+      final recipes = await RecipeService.instance.getMyRecipes();
+      final cookbooks = await CookbookService.instance.getMyCookbooks();
+
+      // Logic: Finalization is complete when we have 2 cookbooks and at least 8 recipes
+      // (This matches the Backend's UserInitializationServiceImpl logic)
+      if (cookbooks.length >= 2 && recipes.length >= 8) {
+        _isDataReady = true;
+        _finishLoading();
+      } else {
+        _retryCount++;
+        // If we exceeded max retries, or if we have at least SOME data after a while, proceed
+        if (_retryCount >= _maxRetries && (recipes.isNotEmpty || cookbooks.isNotEmpty)) {
+          _isDataReady = true;
+          _finishLoading();
+        }
+      }
+    } catch (e) {
+      _retryCount++;
+      if (_retryCount >= _maxRetries) {
+        _isDataReady = true;
+        _finishLoading();
+      }
+    }
+  }
+
+  void _finishLoading() {
+    _pollingTimer?.cancel();
+    _controller.stop();
+    
+    // Animate the rest of the bar quickly
+    final currentProgress = _progressAnimation.value;
+    _controller.duration = const Duration(milliseconds: 1000);
+    _progressAnimation = Tween<double>(begin: currentProgress, end: 100).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
+    )..addListener(() {
+        setState(() {});
+      });
+    
+    _controller.forward(from: 0).then((_) {
+      if (mounted && widget.onComplete != null) {
+        widget.onComplete!();
+      }
+    });
   }
 
   @override
   void dispose() {
+    _pollingTimer?.cancel();
     _controller.dispose();
     super.dispose();
   }
@@ -90,7 +146,9 @@ class _RecipeGenerationLoadingStepState
           ),
           SizedBox(height: 8.h),
           Text(
-            'Analyzing ingredients and generating\npersonalized recipes...',
+            _isDataReady 
+                ? 'Your recipes are ready! Redirecting...'
+                : 'Analyzing ingredients and generating\npersonalized recipes...',
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 14.sp,
@@ -110,7 +168,7 @@ class _RecipeGenerationLoadingStepState
             ),
             child: FractionallySizedBox(
               alignment: Alignment.centerLeft,
-              widthFactor: _progressAnimation.value / 100,
+              widthFactor: (_progressAnimation.value / 100).clamp(0.0, 1.0),
               child: Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(3.r),
@@ -128,7 +186,7 @@ class _RecipeGenerationLoadingStepState
           Align(
             alignment: Alignment.centerLeft,
             child: Text(
-              "Today's food recommendations",
+              _isDataReady ? "Sync completed" : "Checking generation status",
               style: TextStyle(
                 fontSize: 16.sp,
                 fontWeight: FontWeight.w700,
@@ -142,8 +200,15 @@ class _RecipeGenerationLoadingStepState
           ..._steps.asMap().entries.map((entry) {
             int index = entry.key;
             Map<String, String> step = entry.value;
-            // Reveal checkmarks sequentially: 18%, 36%, 54%, 72%, 90%
-            bool isActive = _progressAnimation.value >= ((index + 1) * 18);
+            
+            // Sequential checkmarks based on progress or data ready
+            bool isLast = index == _steps.length - 1;
+            bool isActive;
+            if (isLast) {
+              isActive = _isDataReady;
+            } else {
+              isActive = _progressAnimation.value >= ((index + 1) * 20) || _isDataReady;
+            }
 
             return Padding(
               padding: EdgeInsets.only(bottom: 20.h),
@@ -178,6 +243,10 @@ class _RecipeGenerationLoadingStepState
                           width: 2.w,
                         ),
                       ),
+                      child: isLast ? Padding(
+                        padding: EdgeInsets.all(4.r),
+                        child: const CircularProgressIndicator(strokeWidth: 2, color: Color(0xFFE5E7EB)),
+                      ) : null,
                     ),
                 ],
               ),

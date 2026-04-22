@@ -291,4 +291,9 @@ class RecipeService {
       throw Exception('Unable to load recent imports.');
     }
   }
+
+  void clearData() {
+    myRecipesNotifier.value = null;
+    favoriteRecipesNotifier.value = null;
+  }
 }

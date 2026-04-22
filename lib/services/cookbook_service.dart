@@ -106,4 +106,8 @@ class CookbookService {
     }
     return cb;
   }
+
+  void clearData() {
+    myCookbooksNotifier.value = null;
+  }
 }

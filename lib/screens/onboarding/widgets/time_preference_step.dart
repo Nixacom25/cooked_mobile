@@ -37,7 +37,7 @@ class _TimePreferenceStepState extends State<TimePreferenceStep> {
     },
     {
       'title': '30–60 minutes',
-      'desc': 'I have a normal evening',
+      'desc': 'I have time to cook a full meal',
       'icon': 'clock.svg',
     },
     {

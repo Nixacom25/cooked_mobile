@@ -214,4 +214,8 @@ class UserService {
     }
     return defaultMessage;
   }
+
+  void clearData() {
+    currentUserNotifier.value = null;
+  }
 }

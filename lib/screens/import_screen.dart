@@ -7,15 +7,19 @@ import '../services/recipe_service.dart';
 import '../models/recipe.dart';
 import 'home/view_all_screen.dart';
 import '../routes/app_routes.dart';
-import 'onboarding/widgets/recipe_generation_loading_step.dart';
+import '../widgets/import_loading_page.dart';
 import '../core/widgets/ios_toast.dart';
 import '../core/utils/error_helper.dart';
+import '../core/utils/tutorial_helper.dart';
+import '../core/services/tutorial_service.dart';
 
 // ══════════════════════════════════════════════════════════════════════════════
 // IMPORT SCREEN  –  matches mockup image 2
 // ══════════════════════════════════════════════════════════════════════════════
 class ImportScreen extends StatefulWidget {
-  const ImportScreen({super.key});
+  final ValueNotifier<bool>? isActiveNotifier;
+  final ValueNotifier<bool>? isImportingNotifier;
+  const ImportScreen({super.key, this.isActiveNotifier, this.isImportingNotifier});
   @override
   State<ImportScreen> createState() => _ImportScreenState();
 }
@@ -25,6 +29,24 @@ class _ImportScreenState extends State<ImportScreen> {
   void initState() {
     super.initState();
     _loadRecentImports();
+    
+    // Trigger onboarding modal if in tutorial mode
+    widget.isActiveNotifier?.addListener(_onActiveStateChanged);
+    
+    // Check initially (in case we start on this tab)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (widget.isActiveNotifier?.value ?? false) {
+        _onActiveStateChanged();
+      }
+    });
+  }
+
+  void _onActiveStateChanged() {
+    if (widget.isActiveNotifier?.value ?? false) {
+      if (TutorialService.instance.isTutorialActive && TutorialService.instance.currentStep == 2) {
+        TutorialHelper.showImportOnboardingDialog(context);
+      }
+    }
   }
 
   Future<void> _loadRecentImports() async {
@@ -74,6 +96,7 @@ class _ImportScreenState extends State<ImportScreen> {
     if (url.isEmpty) return;
 
     setState(() => _isImporting = true);
+    widget.isImportingNotifier?.value = true;
 
     try {
       final recipe = await RecipeService.instance.importRecipeFromUrl(url);
@@ -92,7 +115,38 @@ class _ImportScreenState extends State<ImportScreen> {
         type: ToastType.error,
       );
     } finally {
-      if (mounted) setState(() => _isImporting = false);
+      if (mounted) {
+        setState(() => _isImporting = false);
+        widget.isImportingNotifier?.value = false;
+      }
+    }
+  }
+
+  Future<void> _handleWebSearch(String val) async {
+    if (val.trim().isEmpty) return;
+    setState(() {
+      _isSearching = true;
+      _searchResults = [];
+    });
+    try {
+      final res = await RecipeService.instance.searchWeb(
+        val.trim(),
+      );
+      if (mounted) {
+        setState(() {
+          _searchResults = res;
+          _isSearching = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isSearching = false);
+        IosToast.show(
+          context,
+          message: ErrorHelper.getFriendlyMessage(e),
+          type: ToastType.error,
+        );
+      }
     }
   }
 
@@ -100,6 +154,7 @@ class _ImportScreenState extends State<ImportScreen> {
 
   @override
   void dispose() {
+    widget.isActiveNotifier?.removeListener(_onActiveStateChanged);
     _linkCtrl.dispose();
     _searchCtrl.dispose();
     super.dispose();
@@ -110,9 +165,7 @@ class _ImportScreenState extends State<ImportScreen> {
     if (_isImporting) {
       return Scaffold(
         backgroundColor: Colors.white,
-        body: RecipeGenerationLoadingStep(
-          onComplete: () {}, // Handled by navigation
-        ),
+        body: const ImportLoadingPage(),
       );
     }
 
@@ -277,33 +330,9 @@ class _ImportScreenState extends State<ImportScreen> {
               child: AppSearchField(
                 controller: _searchCtrl,
                 hintText: 'Search web',
-                onSubmitted: (val) async {
-                  if (val.trim().isEmpty) return;
-                  setState(() {
-                    _isSearching = true;
-                    _searchResults = [];
-                  });
-                  try {
-                    final res = await RecipeService.instance.searchWeb(
-                      val.trim(),
-                    );
-                    if (mounted) {
-                      setState(() {
-                        _searchResults = res;
-                        _isSearching = false;
-                      });
-                    }
-                  } catch (e) {
-                    if (mounted) {
-                      setState(() => _isSearching = false);
-                      IosToast.show(
-                        context,
-                        message: ErrorHelper.getFriendlyMessage(e),
-                        type: ToastType.error,
-                      );
-                    }
-                  }
-                },
+                suffixIcon: Icons.check_circle_rounded,
+                onSuffixTap: () => _handleWebSearch(_searchCtrl.text),
+                onSubmitted: (val) => _handleWebSearch(val),
               ),
             ),
 

@@ -3,15 +3,25 @@ class ErrorHelper {
     if (e == null) return 'An unexpected error occurred.';
     final str = e.toString();
 
-    // Extract JSON error message if the backend sends a raw payload like {"status":400,"message":"You already have a recipe named..."}
+    // Extract JSON error message if the backend sends a raw payload like {"status":400,"message":"...","source":"IA"}
     if (str.contains('{"') && str.contains('"message"')) {
       try {
-        final regExp = RegExp(r'"message"\s*:\s*"([^"]+)"');
-        final match = regExp.firstMatch(str);
-        if (match != null) {
-          return match.group(
-            1,
-          )!; // This will return exactly "You already have a recipe named '...'"
+        final msgReg = RegExp(r'"message"\s*:\s*"([^"]+)"');
+        final srcReg = RegExp(r'"source"\s*:\s*"([^"]+)"');
+
+        final msgMatch = msgReg.firstMatch(str);
+        final srcMatch = srcReg.firstMatch(str);
+
+        if (msgMatch != null) {
+          String msg = msgMatch.group(1)!;
+          if (srcMatch != null) {
+            String src = srcMatch.group(1)!;
+            if (src == "IA") return "🤖 IA Error: $msg";
+            if (src == "BACKEND") return "⚙️ Server Error: $msg";
+            if (src == "VALIDATION") return "📝 Input Error: $msg";
+            if (src == "AUTH") return "🔒 Auth Error: $msg";
+          }
+          return msg;
         }
       } catch (_) {}
     }
@@ -43,11 +53,17 @@ class ErrorHelper {
         lower.contains('network')) {
       return 'No internet connection. Please check your network and try again.';
     }
-    if (lower.contains('already exists') || lower.contains('duplicate')) {
+    if (lower.contains('already exists') || lower.contains('duplicate') || lower.contains('existe déjà')) {
+      if (lower.contains('email') || lower.contains('compte')) {
+        return 'This account already exists. Please log in.';
+      }
       return 'This item already exists.';
     }
     if (lower.contains('invalid verification code') || lower.contains('otp')) {
       return 'Invalid verification code. Please try again.';
+    }
+    if (lower.contains('inexistant') || (lower.contains('not found') && lower.contains('user')) || lower.contains('account not found')) {
+      return 'Account not found. Please sign up via onboarding.';
     }
 
     // Fallback logic

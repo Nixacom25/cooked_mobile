@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:url_launcher/url_launcher.dart';
+import '../../../core/widgets/legal_content_modal.dart';
+import '../../../core/widgets/terms_validation_modal.dart';
 
 class AccountStep extends StatefulWidget {
   final String initialEmail;
@@ -171,7 +172,7 @@ class _AccountStepState extends State<AccountStep> {
                         color: const Color(0xFF7B8190),
                       ),
                     ),
-                    _linkText('Terms of Use', 'https://cooked.com/terms'),
+                    _linkText('Terms of Use', false),
                     Text(
                       ' and the ',
                       style: TextStyle(
@@ -180,7 +181,7 @@ class _AccountStepState extends State<AccountStep> {
                         color: const Color(0xFF7B8190),
                       ),
                     ),
-                    _linkText('Privacy Policy', 'https://cooked.com/privacy'),
+                    _linkText('Privacy Policy', true),
                     Text(
                       '.',
                       style: TextStyle(
@@ -259,13 +260,14 @@ class _AccountStepState extends State<AccountStep> {
     );
   }
 
-  Widget _linkText(String text, String url) {
+  Widget _linkText(String text, bool isPrivacy) {
     return GestureDetector(
-      onTap: () async {
-        final uri = Uri.parse(url);
-        if (await canLaunchUrl(uri)) {
-          await launchUrl(uri);
-        }
+      onTap: () {
+        LegalContentModal.show(
+          context,
+          title: isPrivacy ? 'Privacy Policy' : 'Terms of Use',
+          content: isPrivacy ? dummyPrivacy : dummyTerms,
+        );
       },
       child: Text(
         text,

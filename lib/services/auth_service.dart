@@ -6,6 +6,9 @@ import '../core/api_config.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import '../models/device_session.dart';
+import 'recipe_service.dart';
+import 'cookbook_service.dart';
+import 'user_service.dart';
 
 class AuthService {
   // Singleton pattern
@@ -14,8 +17,14 @@ class AuthService {
 
   static const String _tokenKey = 'auth_token';
 
+  void _clearAllServiceData() {
+    RecipeService.instance.clearData();
+    CookbookService.instance.clearData();
+    UserService.instance.clearData();
+  }
+
   final GoogleSignIn _googleSignIn = GoogleSignIn(
-    clientId: ApiConfig.googleClientId,
+    serverClientId: ApiConfig.googleClientId,
   );
 
   // Helper method to retrieve token
@@ -30,24 +39,19 @@ class AuthService {
     await prefs.setString(_tokenKey, token);
   }
 
-  // Helper method to delete token
-  Future<void> _deleteToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_tokenKey);
-  }
-
   Future<Map<String, dynamic>> register({
     required String firstname,
     required String lastname,
     required String email,
     required String password,
     String? phone,
+    String? provider,
     String? discoverySource,
     String? otherDiscoverySource,
     List<String>? dietaryPreferences,
     List<String>? allergies,
     List<String>? foodDislikes,
-    Map<String, int>? flavorDna,
+    Map<String, dynamic>? flavorDna,
     String? spiceLevel,
     String? cookingSkill,
     String? cookingTimePreference,
@@ -71,6 +75,9 @@ class AuthService {
       'Attempting Register: $url',
       name: 'AuthService',
     );
+
+    // Clear any previous session data before starting fresh
+    _clearAllServiceData();
     
     final response = await http.post(
       url,
@@ -80,14 +87,10 @@ class AuthService {
         'lastname': lastname,
         'email': email,
         'password': password,
-        'phone': phone ?? '',
-        'provider': 'LOCAL',
+        'phone': phone,
+        'provider': provider ?? 'LOCAL',
         'discoverySource': discoverySource,
         'otherDiscoverySource': otherDiscoverySource,
-        'language': language,
-        'country': country,
-        'alternativeRegion': alternativeRegion,
-        'measurementSystem': measurementSystem,
         'dietaryPreferences': dietaryPreferences,
         'allergies': allergies,
         'foodDislikes': foodDislikes,
@@ -104,12 +107,20 @@ class AuthService {
         'onboardingGoals': onboardingGoals,
         'onboardingRating': onboardingRating,
         'onboardingFeedback': onboardingFeedback,
+        'language': language,
+        'country': country,
+        'alternativeRegion': alternativeRegion,
+        'measurementSystem': measurementSystem,
       }),
     );
 
     if (response.statusCode == 200 || response.statusCode == 201) {
       if (response.body.isNotEmpty) {
-        return jsonDecode(response.body);
+        final data = jsonDecode(response.body);
+        if (data is Map<String, dynamic> && data['token'] != null) {
+          await _saveToken(data['token']);
+        }
+        return data is Map<String, dynamic> ? data : {};
       }
       return {};
     } else {
@@ -120,7 +131,7 @@ class AuthService {
       throw Exception(
         _extractErrorMessage(
           response.body,
-          'Inscription échouée. Veuillez vérifier vos informations.',
+          'Registration failed. Please check your information.',
         ),
       );
     }
@@ -161,50 +172,98 @@ class AuthService {
       throw Exception(
         _extractErrorMessage(
           response.body,
-          'Identifiants incorrects ou erreur de connexion.',
+          'Invalid credentials, please try again',
         ),
       );
     }
   }
 
-  Future<Map<String, dynamic>> signInWithGoogle() async {
+  Future<Map<String, dynamic>> signInWithGoogle({
+    bool isSignup = false,
+    bool isManualBackendCall = true, // If false, just return token + user info
+    String? firstname,
+    String? lastname,
+    String? phone,
+  }) async {
     try {
-      final googleUser = await _googleSignIn.signIn();
-      if (googleUser == null) throw Exception('Google sign in cancelled');
+      // 1. Google Sign-In attempt
+      print('DEBUG: Starting Google Sign-In process (isSignup: $isSignup)...');
+      
+      // Force account selection by signing out first
+      try {
+        await _googleSignIn.signOut();
+      } catch (_) {}
+      
+      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+      
+      if (googleUser == null) {
+        print('DEBUG: Google Sign-In CANCELLED by user');
+        throw Exception('Google sign in cancelled');
+      }
+      
+      print('DEBUG: Google account selected: ${googleUser.email}');
 
-      final googleAuth = await googleUser.authentication;
-      final idToken = googleAuth.idToken;
+      // 2. Obtain Authentication Details
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final String? idToken = googleAuth.idToken;
 
-      if (idToken == null) throw Exception('Missing ID Token from Google');
+      if (idToken == null) {
+        print('DEBUG: ID Token is NULL');
+        throw Exception('Missing ID Token from Google');
+      }
 
-      // Send ID Token to backend for verification
+      print('DEBUG: Google Sign-In SUCCESS locally.');
+
+      if (!isManualBackendCall) {
+        return {
+          'success': true,
+          'email': googleUser.email,
+          'idToken': idToken,
+          'firstname': googleUser.displayName?.split(' ').first ?? '',
+          'lastname': googleUser.displayName?.split(' ').last ?? '',
+        };
+      }
+
       final url = Uri.parse('${ApiConfig.baseUrl}/auth/login');
+      final requestBody = {
+        'identifier': googleUser.email,
+        'password': idToken,
+        'provider': 'GOOGLE',
+        'isSignup': isSignup,
+        'firstname': firstname,
+        'lastname': lastname,
+        'phone': phone,
+      };
+      
+      print('DEBUG: Sending request to Backend: $url');
+      // Clear any previous session data before starting fresh
+      _clearAllServiceData();
+      
       final response = await http.post(
         url,
         headers: ApiConfig.defaultHeaders,
-        body: jsonEncode({
-          'identifier': googleUser.email,
-          'password': idToken, // We pass idToken as password for social providers
-          'provider': 'GOOGLE',
-        }),
-      );
+        body: jsonEncode(requestBody),
+      ).timeout(const Duration(seconds: 15));
+
+      print('DEBUG: Backend response status: ${response.statusCode}');
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        developer.log('Google Login SUCCESS: ${response.body}', name: 'AuthService');
         if (data['token'] != null) {
           await _saveToken(data['token']);
         }
         return data;
       } else {
-        developer.log('Google Login FAILED [${response.statusCode}]: ${response.body}', name: 'AuthService');
-        throw Exception(_extractErrorMessage(response.body, 'Google Login failed'));
+        throw Exception(_extractErrorMessage(response.body, 'Incorrect credentials, please try again'));
       }
-    } catch (e, stack) {
-      developer.log('Google Sign-In Error: $e', name: 'AuthService', error: e, stackTrace: stack);
-      rethrow;
+    } catch (e) {
+      print('DEBUG: Google Sign-In ERROR: $e');
+      throw Exception(_extractErrorMessage(e.toString(), 'Incorrect credentials, please try again'));
     }
   }
+
+  // Support for min function
+  int min(int a, int b) => a < b ? a : b;
 
   Future<Map<String, dynamic>> signInWithApple() async {
     try {
@@ -220,7 +279,11 @@ class AuthService {
 
       // Prepare backend call (currently backend restricted as requested)
       final url = Uri.parse('${ApiConfig.baseUrl}/auth/login');
-      final response = await http.post(
+    
+    // Clear any previous session data before starting fresh
+    _clearAllServiceData();
+
+    final response = await http.post(
         url,
         headers: ApiConfig.defaultHeaders,
         body: jsonEncode({
@@ -237,11 +300,11 @@ class AuthService {
         }
         return data;
       } else {
-        throw Exception(_extractErrorMessage(response.body, 'Apple Login failed'));
+        throw Exception(_extractErrorMessage(response.body, 'Incorrect credentials, please try again'));
       }
     } catch (e) {
       developer.log('Apple Sign-In Error: $e', name: 'AuthService');
-      rethrow;
+      throw Exception(_extractErrorMessage(e.toString(), 'Incorrect credentials, please try again'));
     }
   }
 
@@ -266,7 +329,7 @@ class AuthService {
       throw Exception(
         _extractErrorMessage(
           response.body,
-          'Code de vérification invalide ou expiré.',
+          'Invalid or expired verification code, please try again',
         ),
       );
     }
@@ -323,7 +386,7 @@ class AuthService {
       throw Exception(
         _extractErrorMessage(
           response.body,
-          'Code de réinitialisation invalide ou expiré.',
+          'Invalid or expired reset code, please try again',
         ),
       );
     }
@@ -354,9 +417,23 @@ class AuthService {
     final token = await getToken();
     if (token != null) {
       final url = Uri.parse('${ApiConfig.baseUrl}/auth/logout');
-      await http.post(url, headers: ApiConfig.authHeaders(token));
+      try {
+        await http.post(url, headers: ApiConfig.authHeaders(token)).timeout(const Duration(seconds: 5));
+      await _googleSignIn.signOut();
+    
+    // Global reset of all local services data
+    _clearAllServiceData();
+    
+    developer.log('Logged out successfully', name: 'AuthService');
+      } catch (e) {
+        developer.log('Backend logout failed: $e', name: 'AuthService');
+      }
     }
-    await _deleteToken();
+    
+    // Deep cleanup: Delete all local data to avoid leaks
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.clear();
+    developer.log('All local data cleared on logout', name: 'AuthService');
   }
 
   Future<List<DeviceSession>> getSessions() async {

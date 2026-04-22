@@ -5,7 +5,7 @@ class ApiConfig {
   }
 
   static const String googleClientId =
-      '560042995570-fjf76uj2f1fle9q355kv97sq2oisrial.apps.googleusercontent.com';
+      '560042995570-molk9k24g8i61vdpsov86fnmcogm73d7.apps.googleusercontent.com';
 
   static const Map<String, String> defaultHeaders = {
     'Content-Type': 'application/json',
