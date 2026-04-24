@@ -44,6 +44,10 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
   List<Map<String, dynamic>> _savedIngredients = [];
   final Set<String> _selectedSavedNames = {};
   bool _isLoadingSaved = false;
+  bool _useAllSaved = true;
+  List<Map<String, dynamic>> _recentIngredients = [];
+  List<Map<String, dynamic>> _suggestedIngredients = [];
+  Timer? _searchDebounce;
 
   final List<RecipeIngredient> _ingredients = [];
   final List<RecipeIngredient> _restrictedIngredients = [];
@@ -88,12 +92,36 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
   void initState() {
     super.initState();
     widget.isActiveNotifier.addListener(_onActiveStateChanged);
+    _ingCtrl.addListener(_onIngChanged);
     _fetchSavedIngredients();
+    _fetchRecentIngredients();
     if (widget.isActiveNotifier.value) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _initCamera());
     } else {
       _cameraStatus = "On hold";
     }
+  }
+
+  void _onIngChanged() {
+    final query = _ingCtrl.text.trim();
+    if (_searchDebounce?.isActive ?? false) _searchDebounce!.cancel();
+
+    if (query.length < 2) {
+      setState(() => _suggestedIngredients = []);
+      return;
+    }
+
+    _searchDebounce = Timer(const Duration(milliseconds: 300), () async {
+      final results = await IngredientService.instance.searchIngredients(query);
+      if (mounted) setState(() => _suggestedIngredients = results);
+    });
+  }
+
+  Future<void> _fetchRecentIngredients() async {
+    try {
+      final items = await IngredientService.instance.getRecentIngredients();
+      if (mounted) setState(() => _recentIngredients = items);
+    } catch (_) {}
   }
 
   Future<void> _fetchSavedIngredients() async {
@@ -104,6 +132,12 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
         setState(() {
           _savedIngredients = items;
           _isLoadingSaved = false;
+          if (_useAllSaved) {
+            _selectedSavedNames.clear();
+            for (var item in items) {
+              _selectedSavedNames.add(item['name'].toString());
+            }
+          }
         });
       }
     } catch (e) {
@@ -135,10 +169,6 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
     });
   }
 
-  Future<void> _deleteSavedIngredient(String id) async {
-    final success = await IngredientService.instance.unsaveIngredient(id);
-    if (success) _fetchSavedIngredients();
-  }
 
   Future<void> _generateFromTyped() async {
     final allIngredients = [..._typedIngredients, ..._selectedSavedNames];
@@ -189,8 +219,9 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
   void _onActiveStateChanged() {
     if (widget.isActiveNotifier.value) {
       // Trigger onboarding instantly if active
-      if (TutorialService.instance.isTutorialActive && TutorialService.instance.currentStep == 1) {
+      if (!TutorialService.instance.hasSeenScan) {
         TutorialHelper.showScanOnboardingDialog(context, onTabSwitch: widget.onTabSwitch);
+        TutorialService.instance.completeScan();
       }
       
       if (!_isCameraInitialized) {
@@ -702,19 +733,19 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
       );
     }
 
-    // "Add" or "Scan More" buttons
+    // "Get Recipes" or "Scan More" buttons
     Widget actionBtn;
     if (_state == ScanState.results) {
       actionBtn = SizedBox(
         key: _scanMoreKey,
-        child: _buildWideBtn("Scan More", ScanState.scan),
+        child: _buildWideBtn("Reprocess Recipes", ScanState.scan),
       );
     } else {
-      actionBtn = _buildWideBtn("Add", _generateFromTyped);
+      actionBtn = _buildWideBtn("Get Recipes", _generateFromTyped);
     }
 
     return Positioned(
-      bottom: _state == ScanState.results ? 30.h : 110.h,
+      bottom: _state == ScanState.results ? 30.h : 115.h,
       left: 22.w,
       right: 22.w,
       child: actionBtn,
@@ -832,39 +863,152 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
       padding: EdgeInsets.symmetric(horizontal: 22.w),
       children: [
         Text(
-          "Enter Name",
-          style: TextStyle(color: const Color(0xFF6B7280), fontSize: 14.sp),
-        ),
-        SizedBox(height: 6.h),
-        Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16.r),
-            border: Border.all(color: const Color(0xFFF1F5F9)),
+          "Enter ingredients one by one",
+          style: TextStyle(
+            color: const Color(0xFF64748B),
+            fontSize: 13.sp,
+            fontWeight: FontWeight.w500,
           ),
-          child: TextField(
-            controller: _ingCtrl,
-            decoration: InputDecoration(
-              hintText: 'Garlic',
-              border: InputBorder.none,
-              contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-              suffixIcon: IconButton(
-                onPressed: _addTypedIngredient,
-                icon: Icon(
-                  Icons.check_circle_rounded,
-                  color: const Color(0xFFCC3333),
-                  size: 24.sp,
+        ),
+        SizedBox(height: 10.h),
+        Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16.r),
+                border: Border.all(color: const Color(0xFFE2E8F0)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.03),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: TextField(
+                controller: _ingCtrl,
+                style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.w500),
+                decoration: InputDecoration(
+                  hintText: 'e.g., Tomato, Cheese...',
+                  hintStyle: TextStyle(color: const Color(0xFF94A3B8), fontSize: 14.sp),
+                  border: InputBorder.none,
+                  contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+                  suffixIcon: IconButton(
+                    onPressed: _addTypedIngredient,
+                    icon: Icon(
+                      Icons.add_circle_rounded,
+                      color: const Color(0xFFCC3333),
+                      size: 26.sp,
+                    ),
+                  ),
                 ),
+                onSubmitted: (_) => _addTypedIngredient(),
               ),
             ),
-            onSubmitted: (_) => _addTypedIngredient(),
+            if (_suggestedIngredients.isNotEmpty)
+              Positioned(
+                top: 55.h,
+                left: 0,
+                right: 0,
+                child: Material(
+                  elevation: 8,
+                  borderRadius: BorderRadius.circular(12.r),
+                  child: Container(
+                    constraints: BoxConstraints(maxHeight: 200.h),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12.r),
+                    ),
+                    child: ListView.separated(
+                      shrinkWrap: true,
+                      padding: EdgeInsets.zero,
+                      itemCount: _suggestedIngredients.length,
+                      separatorBuilder: (_, __) => Divider(height: 1, color: Colors.grey[100]),
+                      itemBuilder: (context, i) {
+                        final item = _suggestedIngredients[i];
+                        return ListTile(
+                          dense: true,
+                          title: Text(item['name'] ?? ''),
+                          leading: Text(item['icon'] ?? '🥕', style: TextStyle(fontSize: 16.sp)),
+                          onTap: () {
+                            _ingCtrl.text = item['name'] ?? '';
+                            _addTypedIngredient();
+                            setState(() => _suggestedIngredients = []);
+                          },
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+        SizedBox(height: 12.h),
+        Text(
+          "Add ingredients to find recipes you can make",
+          style: TextStyle(
+            color: const Color(0xFF94A3B8),
+            fontSize: 12.sp,
+            fontStyle: FontStyle.italic,
           ),
         ),
-        SizedBox(height: 20.h),
+        if (_recentIngredients.isNotEmpty && _ingCtrl.text.isEmpty) ...[
+          SizedBox(height: 24.h),
+          Text(
+            "Recently Used",
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 14.sp,
+              color: const Color(0xFF64748B),
+            ),
+          ),
+          SizedBox(height: 10.h),
+          Wrap(
+            spacing: 8.w,
+            runSpacing: 8.h,
+            children: _recentIngredients.take(5).map((ing) {
+              final name = ing['name'] ?? '';
+              return GestureDetector(
+                onTap: () {
+                  _ingCtrl.text = name;
+                  _addTypedIngredient();
+                },
+                child: Container(
+                  padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[100],
+                    borderRadius: BorderRadius.circular(20.r),
+                    border: Border.all(color: Colors.grey[200]!),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(ing['icon'] ?? '🥕', style: TextStyle(fontSize: 12.sp)),
+                      SizedBox(width: 4.w),
+                      Text(
+                        name,
+                        style: TextStyle(
+                          fontSize: 12.sp,
+                          color: const Color(0xFF475569),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ],
+        SizedBox(height: 24.h),
         ..._typedIngredients.map((ing) => _buildIngredientCard(
           ing,
           isSaved: _savedIngredients.any((si) => si['name'].toString().toLowerCase() == ing.toLowerCase()),
+          onContainerTap: () => _toggleSaveIngredient(ing),
           onHeartTap: () => _toggleSaveIngredient(ing),
+          onDeleteTap: () => setState(() => _typedIngredients.remove(ing)),
         )),
       ],
     );
@@ -886,16 +1030,81 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
         ),
       );
     }
+
     return ListView(
       padding: EdgeInsets.symmetric(horizontal: 22.w),
       children: [
-        ..._savedIngredients.map((ing) => _buildIngredientCard(
-          ing['name'] ?? '',
-          icon: ing['icon'],
-          isSelected: _selectedSavedNames.contains(ing['name']),
-          onSelectionTap: () => _toggleSavedSelection(ing['name']),
-          onDeleteTap: () => _deleteSavedIngredient(ing['id'].toString()),
-        )),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              children: [
+                Transform.scale(
+                  scale: 0.8,
+                  child: Switch(
+                    value: _useAllSaved,
+                    activeColor: const Color(0xFFCC3333),
+                    onChanged: (val) {
+                      setState(() {
+                        _useAllSaved = val;
+                        if (val) {
+                          _selectedSavedNames.clear();
+                          for (var item in _savedIngredients) {
+                            _selectedSavedNames.add(item['name'].toString());
+                          }
+                        }
+                      });
+                    },
+                  ),
+                ),
+                Text(
+                  "Use all",
+                  style: TextStyle(
+                    fontSize: 14.sp,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF475569),
+                  ),
+                ),
+              ],
+            ),
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  _useAllSaved = false;
+                  _selectedSavedNames.clear();
+                });
+              },
+              child: Text(
+                "Clear selection",
+                style: TextStyle(
+                  color: const Color(0xFF64748B),
+                  fontSize: 13.sp,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: 10.h),
+        ..._savedIngredients.map((ing) {
+          final name = ing['name'] ?? '';
+          final isSelected = _selectedSavedNames.contains(name);
+          return _buildIngredientCard(
+            name,
+            icon: ing['icon'],
+            isSelected: isSelected,
+            onContainerTap: () {
+              if (_useAllSaved) setState(() => _useAllSaved = false);
+              _toggleSavedSelection(name);
+            },
+            onSelectionTap: () {
+              if (_useAllSaved) setState(() => _useAllSaved = false);
+              _toggleSavedSelection(name);
+            },
+            onDeleteTap: () => _unsaveIngredientAction(ing['id'].toString()),
+            showIcon: true,
+          );
+        }),
       ],
     );
   }
@@ -905,69 +1114,78 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
     String? icon,
     bool? isSaved,
     bool? isSelected,
+    VoidCallback? onContainerTap,
     VoidCallback? onHeartTap,
     VoidCallback? onSelectionTap,
     VoidCallback? onDeleteTap,
     bool showIcon = false,
   }) {
-    return Container(
-      margin: EdgeInsets.only(bottom: 12.h),
-      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF9FAFB),
-        borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: const Color(0xFFF1F5F9)),
-      ),
-      child: Row(
-        children: [
-          if (onSelectionTap != null)
-            Padding(
-              padding: EdgeInsets.only(right: 12.w),
-              child: GestureDetector(
-                onTap: onSelectionTap,
-                child: Icon(
-                  (isSelected ?? false) ? Icons.check_box_rounded : Icons.check_box_outline_blank_rounded,
-                  color: (isSelected ?? false) ? const Color(0xFFCC3333) : const Color(0xFFCBD5E1),
-                  size: 24.sp,
+    return GestureDetector(
+      onTap: onContainerTap,
+      child: Container(
+        margin: EdgeInsets.only(bottom: 12.h),
+        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF9FAFB),
+          borderRadius: BorderRadius.circular(16.r),
+          border: Border.all(color: const Color(0xFFF1F5F9)),
+        ),
+        child: Row(
+          children: [
+            if (onSelectionTap != null)
+              Padding(
+                padding: EdgeInsets.only(right: 12.w),
+                child: GestureDetector(
+                  onTap: onSelectionTap,
+                  child: Icon(
+                    (isSelected ?? false) ? Icons.check_box_rounded : Icons.check_box_outline_blank_rounded,
+                    color: (isSelected ?? false) ? const Color(0xFFCC3333) : const Color(0xFFCBD5E1),
+                    size: 24.sp,
+                  ),
+                ),
+              ),
+            if (showIcon && icon != null) ...[
+              Text(icon, style: TextStyle(fontSize: 18.sp)),
+              SizedBox(width: 12.w),
+            ] else
+              SizedBox(width: 4.w),
+            Expanded(
+              child: Text(
+                name,
+                style: TextStyle(
+                  fontWeight: FontWeight.w500,
+                  fontSize: 16.sp,
+                  color: const Color(0xFF1E293B),
                 ),
               ),
             ),
-          if (showIcon && icon != null) ...[
-            Text(icon, style: TextStyle(fontSize: 18.sp)),
-            SizedBox(width: 12.w),
-          ] else
-            SizedBox(width: 4.w),
-          Expanded(
-            child: Text(
-              name,
-              style: TextStyle(
-                fontWeight: FontWeight.w500,
-                fontSize: 16.sp,
-                color: const Color(0xFF1E293B),
+            if (onHeartTap != null)
+              GestureDetector(
+                onTap: onHeartTap,
+                child: Icon(
+                  Icons.favorite_rounded,
+                  color: (isSaved ?? false) ? const Color(0xFFCC3333) : const Color(0xFFCBD5E1),
+                  size: 22.sp,
+                ),
               ),
-            ),
-          ),
-          if (onHeartTap != null)
-            GestureDetector(
-              onTap: onHeartTap,
-              child: Icon(
-                Icons.favorite_rounded,
-                color: (isSaved ?? false) ? const Color(0xFFCC3333) : const Color(0xFFCBD5E1),
-                size: 22.sp,
+            if (onDeleteTap != null)
+              GestureDetector(
+                onTap: onDeleteTap,
+                child: Icon(
+                  _state == ScanState.saved ? Icons.delete_outline_rounded : Icons.close_rounded,
+                  color: const Color(0xFF94A3B8),
+                  size: 22.sp,
+                ),
               ),
-            ),
-          if (onDeleteTap != null)
-            GestureDetector(
-              onTap: onDeleteTap,
-              child: Icon(
-                Icons.delete_outline_rounded,
-                color: const Color(0xFF94A3B8),
-                size: 22.sp,
-              ),
-            ),
-        ],
+          ],
+        ),
       ),
     );
+  }
+
+  Future<void> _unsaveIngredientAction(String id) async {
+    final success = await IngredientService.instance.unsaveIngredient(id);
+    if (success) _fetchSavedIngredients();
   }
 
   // ── Results Page ──────────────────────────────────────────────────────────

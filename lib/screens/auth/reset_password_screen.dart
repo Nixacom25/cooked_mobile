@@ -61,7 +61,10 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
         message: "Reset successful!",
         type: ToastType.success,
       );
-      nav.pushReplacementNamed(AppRoutes.forgotSuccess);
+      nav.pushNamedAndRemoveUntil(
+        AppRoutes.home,
+        (route) => false,
+      );
     } catch (e) {
       if (!mounted) return;
       IosToast.show(

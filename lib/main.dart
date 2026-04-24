@@ -28,10 +28,14 @@ import 'screens/profile/help_center_screen.dart';
 import 'screens/profile/user_preferences_screen.dart';
 import 'screens/profile/subscription_management_screen.dart';
 import 'screens/scan_screen.dart';
+import 'package:cooked/core/services/tutorial_service.dart';
+import 'package:cooked/services/notification_service.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await TutorialService.instance.init();
+  await NotificationService.instance.init();
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(

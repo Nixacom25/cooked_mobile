@@ -5,7 +5,6 @@ import '../../routes/app_routes.dart';
 import '../../services/auth_service.dart';
 import '../../core/widgets/ios_toast.dart';
 import '../../core/utils/error_helper.dart';
-import '../../core/widgets/terms_validation_modal.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});

@@ -12,6 +12,9 @@ import '../core/widgets/ios_toast.dart';
 import '../core/utils/error_helper.dart';
 import '../core/utils/tutorial_helper.dart';
 import '../core/services/tutorial_service.dart';
+import 'package:webview_flutter/webview_flutter.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 
 // ══════════════════════════════════════════════════════════════════════════════
 // IMPORT SCREEN  –  matches mockup image 2
@@ -43,8 +46,9 @@ class _ImportScreenState extends State<ImportScreen> {
 
   void _onActiveStateChanged() {
     if (widget.isActiveNotifier?.value ?? false) {
-      if (TutorialService.instance.isTutorialActive && TutorialService.instance.currentStep == 2) {
+      if (!TutorialService.instance.hasSeenImport) {
         TutorialHelper.showImportOnboardingDialog(context);
+        TutorialService.instance.completeImport();
       }
     }
   }
@@ -91,6 +95,30 @@ class _ImportScreenState extends State<ImportScreen> {
     'Lentil soup with spinach',
     'Tofu stir-fry with broccoli',
   ];
+
+  Future<void> _showWebPreview(String url, String title) async {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.zero),
+      ),
+      builder: (context) {
+        return SizedBox(
+          height: 1.sh,
+          child: _RecipeWebPreviewModal(
+            url: url,
+            title: title,
+            onImport: () {
+              Navigator.pop(context);
+              _importFromUrl(url);
+            },
+          ),
+        );
+      },
+    );
+  }
 
   Future<void> _importFromUrl(String url) async {
     if (url.isEmpty) return;
@@ -352,7 +380,7 @@ class _ImportScreenState extends State<ImportScreen> {
             else if (_searchResults.isNotEmpty)
               _WebSearchResults(
                 results: _searchResults,
-                onImport: (url) => _importFromUrl(url),
+                onView: (url, title) => _showWebPreview(url, title),
                 onClear: () => setState(() => _searchResults = []),
               ),
 
@@ -636,12 +664,12 @@ class _RecentImportTile extends StatelessWidget {
 // ── Web search results ────────────────────────────────────────────────────────
 class _WebSearchResults extends StatelessWidget {
   final List<Map<String, dynamic>> results;
-  final Function(String) onImport;
+  final Function(String, String) onView;
   final VoidCallback onClear;
 
   const _WebSearchResults({
     required this.results,
-    required this.onImport,
+    required this.onView,
     required this.onClear,
   });
 
@@ -682,7 +710,7 @@ class _WebSearchResults extends StatelessWidget {
             title: res['title'] ?? '',
             url: res['url'] ?? '',
             snippet: res['snippet'] ?? '',
-            onImport: () => onImport(res['url'] ?? ''),
+            onView: () => onView(res['url'] ?? '', res['title'] ?? 'Recipe Preview'),
           ),
         ),
         SizedBox(height: 20.h),
@@ -697,13 +725,13 @@ class _SearchResultTile extends StatelessWidget {
   final String title;
   final String url;
   final String snippet;
-  final VoidCallback onImport;
+  final VoidCallback onView;
 
   const _SearchResultTile({
     required this.title,
     required this.url,
     required this.snippet,
-    required this.onImport,
+    required this.onView,
   });
 
   @override
@@ -742,7 +770,7 @@ class _SearchResultTile extends StatelessWidget {
           ),
           SizedBox(height: 10.h),
           GestureDetector(
-            onTap: onImport,
+            onTap: onView,
             child: Container(
               padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
               decoration: BoxDecoration(
@@ -750,7 +778,7 @@ class _SearchResultTile extends StatelessWidget {
                 borderRadius: BorderRadius.circular(20.r),
               ),
               child: Text(
-                'Magic Import',
+                'View this recipe',
                 style: TextStyle(
                   fontFamily: 'SF Pro',
                   fontWeight: FontWeight.w700,
@@ -761,6 +789,139 @@ class _SearchResultTile extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ── Recipe Web Preview Modal ──────────────────────────────────────────────────
+class _RecipeWebPreviewModal extends StatefulWidget {
+  final String url;
+  final String title;
+  final VoidCallback onImport;
+
+  const _RecipeWebPreviewModal({
+    required this.url,
+    required this.title,
+    required this.onImport,
+  });
+
+  @override
+  State<_RecipeWebPreviewModal> createState() => _RecipeWebPreviewModalState();
+}
+
+class _RecipeWebPreviewModalState extends State<_RecipeWebPreviewModal> {
+  late final WebViewController _controller;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = WebViewController()
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..setNavigationDelegate(
+        NavigationDelegate(
+          onPageFinished: (_) => setState(() => _isLoading = false),
+          onNavigationRequest: (request) {
+            // Allow initial URL and simple redirects/subdomains
+            final uri = Uri.parse(request.url);
+            final targetUri = Uri.parse(widget.url);
+            if (uri.host == targetUri.host || _isLoading) {
+              return NavigationDecision.navigate;
+            }
+            return NavigationDecision.prevent;
+          },
+        ),
+      )
+      ..loadRequest(Uri.parse(widget.url));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      height: double.infinity,
+      color: Colors.white,
+      child: SafeArea(
+        bottom: false,
+        child: Column(
+          children: [
+            // Header
+            Padding(
+              padding: EdgeInsets.fromLTRB(10.w, 10.h, 16.w, 10.h),
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.keyboard_arrow_left_rounded, size: 28),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                  Expanded(
+                    child: Text(
+                      widget.title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontFamily: 'SF Pro',
+                        fontWeight: FontWeight.w800,
+                        fontSize: 16.sp,
+                        color: const Color(0xFF1A1A1A),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Divider(height: 1),
+            
+            // WebView
+            Expanded(
+              child: Stack(
+                children: [
+                  WebViewWidget(
+                    controller: _controller,
+                    gestureRecognizers: {
+                      Factory<VerticalDragGestureRecognizer>(
+                        () => VerticalDragGestureRecognizer(),
+                      ),
+                    },
+                  ),
+                  if (_isLoading)
+                    const Center(
+                      child: CircularProgressIndicator(color: Color(0xFFCC3333)),
+                    ),
+                ],
+              ),
+            ),
+            
+            // Actions
+            Padding(
+              padding: EdgeInsets.fromLTRB(20.w, 15.h, 20.w, 35.h),
+              child: SizedBox(
+                width: double.infinity,
+                height: 52.h,
+                child: ElevatedButton(
+                  onPressed: widget.onImport,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFCC3333),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16.r),
+                    ),
+                    elevation: 0,
+                  ),
+                  child: Text(
+                    'Import this recipe',
+                    style: TextStyle(
+                      fontFamily: 'SF Pro',
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

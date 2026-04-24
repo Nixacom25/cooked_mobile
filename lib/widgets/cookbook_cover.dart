@@ -15,7 +15,6 @@ class CookbookCover extends StatelessWidget {
     this.height,
   });
 
-  static const String _defaultPlaceholder = 'assets/images/cookbook.png';
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +25,7 @@ class CookbookCover extends StatelessWidget {
       height: height ?? double.infinity,
       decoration: BoxDecoration(
         color: const Color(0xFFF3F4F6),
-        borderRadius: BorderRadius.circular(10.r),
+        borderRadius: BorderRadius.circular(16.r),
       ),
       clipBehavior: Clip.antiAlias,
       child: _buildCoverContent(recipes),
@@ -34,68 +33,28 @@ class CookbookCover extends StatelessWidget {
   }
 
   Widget _buildCoverContent(List recipes) {
-    if (recipes.isEmpty) {
-      return Image.asset(
-        _defaultPlaceholder,
-        fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => _buildPlaceholderIcon(),
-      );
-    }
-
     final int count = recipes.length;
-    final displayRecipes = count > 4 ? recipes.sublist(0, 4) : recipes;
-
-    if (count == 1) {
-      return _buildImage(displayRecipes[0].image);
-    }
-
-    if (count == 2) {
-      return Row(
-        children: [
-          Expanded(child: _buildImage(displayRecipes[0].image)),
-          const SizedBox(width: 1.5),
-          Expanded(child: _buildImage(displayRecipes[1].image)),
-        ],
-      );
-    }
-
-    if (count == 3) {
-      return Row(
-        children: [
-          Expanded(child: _buildImage(displayRecipes[0].image)),
-          const SizedBox(width: 1.5),
-          Expanded(
-            child: Column(
-              children: [
-                Expanded(child: _buildImage(displayRecipes[1].image)),
-                const SizedBox(height: 1.5),
-                Expanded(child: _buildImage(displayRecipes[2].image)),
-              ],
-            ),
-          ),
-        ],
-      );
-    }
-
-    // Grid for 4 or more
-    return Column(
+    
+    return Row(
       children: [
+        // Left - Large image
         Expanded(
-          child: Row(
-            children: [
-              Expanded(child: _buildImage(displayRecipes[0].image)),
-              const SizedBox(width: 1.5),
-              Expanded(child: _buildImage(displayRecipes[1].image)),
-            ],
-          ),
+          flex: 3,
+          child: _buildImage(count > 0 ? recipes[0].image : null),
         ),
-        const SizedBox(height: 1.5),
+        Container(width: 1.5, color: Colors.white),
+        // Right - Two small images stacked
         Expanded(
-          child: Row(
+          flex: 2,
+          child: Column(
             children: [
-              Expanded(child: _buildImage(displayRecipes[2].image)),
-              const SizedBox(width: 1.5),
-              Expanded(child: _buildImage(displayRecipes[3].image)),
+              Expanded(
+                child: _buildImage(count > 1 ? recipes[1].image : null),
+              ),
+              Container(height: 1.5, color: Colors.white),
+              Expanded(
+                child: _buildImage(count > 2 ? recipes[2].image : null),
+              ),
             ],
           ),
         ),
@@ -105,14 +64,16 @@ class CookbookCover extends StatelessWidget {
 
   Widget _buildImage(String? imageUrl) {
     if (imageUrl == null || imageUrl.isEmpty) {
-      return Image.asset('assets/images/recipes.png', fit: BoxFit.cover);
+      return Container(
+        color: const Color(0xFFF2EFED),
+      );
     }
 
     return CachedNetworkImage(
       imageUrl: imageUrl,
       fit: BoxFit.cover,
       errorWidget: (_, __, ___) =>
-          Image.asset('assets/images/recipes.png', fit: BoxFit.cover),
+          Image.asset('assets/images/recipes.png', fit: BoxFit.contain),
       placeholder: (_, __) => Container(
         color: const Color(0xFFE5E7EB),
         child: const Center(
@@ -125,13 +86,4 @@ class CookbookCover extends StatelessWidget {
     );
   }
 
-  Widget _buildPlaceholderIcon() {
-    return Center(
-      child: Icon(
-        Icons.restaurant_menu_rounded,
-        size: 42.sp,
-        color: const Color(0xFFCCCCCC),
-      ),
-    );
-  }
 }

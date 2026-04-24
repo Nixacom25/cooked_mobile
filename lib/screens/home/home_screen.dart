@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:flutter/scheduler.dart';
 import '../../services/auth_service.dart';
 import '../../services/user_service.dart';
 import '../../routes/app_routes.dart';
@@ -9,14 +8,12 @@ import '../explore_screen.dart';
 import '../grocery_screen.dart';
 import '../import_screen.dart';
 import '../scan_screen.dart';
-import '../../core/api_config.dart';
 import '../../widgets/app_search_field.dart';
 import '../../services/recipe_service.dart';
 import '../../services/cookbook_service.dart';
 import '../../models/recipe.dart';
 import '../../models/cookbook.dart';
 import '../../widgets/recipe_card.dart';
-import '../../widgets/red_button.dart';
 import '../../widgets/cookbook_cover.dart';
 import '../../core/widgets/ios_toast.dart';
 import '../../core/utils/error_helper.dart';
@@ -94,18 +91,22 @@ class _HomeScreenState extends State<HomeScreen>
     ).animate(CurvedAnimation(parent: _navCtrl, curve: Curves.easeInOut));
 
     // Listen for cookbooks to become available before starting tutorial
-    CookbookService.instance.myCookbooksNotifier.addListener(_tutorialDataListener);
-    
-    // Initial trigger attempt
-    _startTutorial(delayMs: 2500);
+    CookbookService.instance.myCookbooksNotifier.addListener(
+      _tutorialDataListener,
+    );
+
+    // Initial trigger attempt if home tutorial never seen
+    if (!TutorialService.instance.hasSeenHome) {
+      _startTutorial(delayMs: 1500); 
+    }
   }
 
   void _tutorialDataListener() {
-    if (mounted && 
-        TutorialService.instance.isTutorialActive && 
+    if (mounted &&
+        !TutorialService.instance.hasSeenHome &&
         CookbookService.instance.myCookbooksNotifier.value != null &&
         CookbookService.instance.myCookbooksNotifier.value!.isNotEmpty) {
-      _startTutorial(delayMs: 800);
+      _startTutorial(delayMs: 500);
     }
   }
 
@@ -115,7 +116,8 @@ class _HomeScreenState extends State<HomeScreen>
 
     Future.delayed(Duration(milliseconds: delayMs), () {
       if (mounted && _currentTab == 0) {
-        final firstCb = CookbookService.instance.myCookbooksNotifier.value?.firstOrNull;
+        final firstCb =
+            CookbookService.instance.myCookbooksNotifier.value?.firstOrNull;
         TutorialHelper.showTutorial(
           context,
           cookbookKey: _firstCookbookKey,
@@ -137,7 +139,9 @@ class _HomeScreenState extends State<HomeScreen>
   @override
   void dispose() {
     routeObserver.unsubscribe(this);
-    CookbookService.instance.myCookbooksNotifier.removeListener(_tutorialDataListener);
+    CookbookService.instance.myCookbooksNotifier.removeListener(
+      _tutorialDataListener,
+    );
     _navCtrl.dispose();
     _scanActiveNotifier.dispose();
     _isScanInResultsMode.dispose();
@@ -156,7 +160,7 @@ class _HomeScreenState extends State<HomeScreen>
 
   void _switchTab(int i) {
     if (_scrollBusy) return;
-    
+
     // Support for hiding nav during tutorial completion (-1)
     if (i == -1) {
       setState(() {
@@ -168,18 +172,14 @@ class _HomeScreenState extends State<HomeScreen>
 
     final prev = _currentTab;
     setState(() {
-      _navVisible = (i != 2); // ONLY hide for Scan screen
+      _navVisible = true; // Default to visible
       if (_currentTab != i) _previousTab = _currentTab;
-      _currentTab = i; 
+      _currentTab = i;
       _scanActiveNotifier.value = i == 2;
       _importActiveNotifier.value = i == 4;
-      _isScanInResultsMode.value = false; 
-      
-      if (_navVisible) {
-        _navCtrl.reverse();
-      } else {
-        _navCtrl.forward();
-      }
+      _isScanInResultsMode.value = false;
+
+      _navCtrl.reverse(); // Default to showing
     });
 
     // If returning to Home during tutorial, advance step based on where we came from
@@ -190,7 +190,7 @@ class _HomeScreenState extends State<HomeScreen>
       } else if (prev == 4 && service.currentStep == 2) {
         service.setStep(3); // Move to Completion Target
       }
-      
+
       _startTutorial(delayMs: 200);
     } else if (i != 0 && prev == 0) {
       // Switching away from home - dismiss Home tutorial if showing
@@ -231,94 +231,98 @@ class _HomeScreenState extends State<HomeScreen>
                 return ValueListenableBuilder<bool>(
                   valueListenable: _isImportLoading,
                   builder: (context, isImportLoading, _) {
-                    final hideNav = inResultsMode || isImportLoading;
-                return Stack(
-                  children: [
-                    // Peek handle – only shown when nav is hidden AND not in results mode
-                    AnimatedPositioned(
-                      duration: const Duration(milliseconds: 320),
-                      curve: Curves.easeInOut,
-                      bottom: (_currentTab == 2 && !inResultsMode) ? 12.h : -60.h,
-                      left: 0,
-                      right: 0,
-                      child: Center(
-                        child: GestureDetector(
-                          onTap: _toggleNav,
-                          child: Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 18.w,
-                              vertical: 8.h,
-                            ),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFCC3333),
-                              borderRadius: BorderRadius.circular(30.r),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: const Color(
-                                    0xFFCC3333,
-                                  ).withValues(alpha: 0.4),
-                                  blurRadius: 14.r,
-                                  offset: Offset(0, 4.h),
+                    // Hide ONLY while actively scanning (Scan Tab + NOT in results mode) OR while importing
+                    final isScanning = (_currentTab == 2 && !inResultsMode);
+                    final hideNav = isScanning || isImportLoading;
+                    return Stack(
+                      children: [
+                        // Peek handle – only shown when nav is hidden AND not in results mode
+                        AnimatedPositioned(
+                          duration: const Duration(milliseconds: 320),
+                          curve: Curves.easeInOut,
+                          bottom: (_currentTab == 2 && !inResultsMode)
+                              ? 12.h
+                              : -60.h,
+                          left: 0,
+                          right: 0,
+                          child: Center(
+                            child: GestureDetector(
+                              onTap: _toggleNav,
+                              child: Container(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 18.w,
+                                  vertical: 8.h,
                                 ),
-                              ],
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Icons.keyboard_arrow_up_rounded,
-                                  color: Colors.white,
-                                  size: 18.sp,
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFCC3333),
+                                  borderRadius: BorderRadius.circular(30.r),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: const Color(
+                                        0xFFCC3333,
+                                      ).withValues(alpha: 0.4),
+                                      blurRadius: 14.r,
+                                      offset: Offset(0, 4.h),
+                                    ),
+                                  ],
                                 ),
-                                SizedBox(width: 4.w),
-                                Text(
-                                  'Menu',
-                                  style: TextStyle(
-                                    fontFamily: 'SF Pro',
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 13.sp,
-                                    color: Colors.white,
-                                  ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.keyboard_arrow_up_rounded,
+                                      color: Colors.white,
+                                      size: 18.sp,
+                                    ),
+                                    SizedBox(width: 4.w),
+                                    Text(
+                                      'Menu',
+                                      style: TextStyle(
+                                        fontFamily: 'SF Pro',
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: 13.sp,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                              ],
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                    ),
 
-                    // Custom Bottom Navigation Bar overlaid entirely on top
-                    Positioned(
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      child: SlideTransition(
-                        position: _navSlide,
-                        child: hideNav
-                            ? const SizedBox.shrink()
-                            : _FloatingBottomNav(
-                                currentIndex: _currentTab,
-                                navVisible: _navVisible,
-                                onTap: _switchTab,
-                                onCameraTap: () {
-                                  if (_currentTab == 2) {
-                                    _toggleNav(); // hide nav if already on scan tab
-                                  } else {
-                                    _switchTab(2); // go to scan tab
-                                  }
-                                },
-                                scanTabKey: _scanTabKey,
-                                groceryTabKey: _groceryTabKey,
-                                importTabKey: _importTabKey,
-                              ),
-                      ),
-                    ),
-                  ],
+                        // Custom Bottom Navigation Bar overlaid entirely on top
+                        Positioned(
+                          left: 0,
+                          right: 0,
+                          bottom: 0,
+                          child: SlideTransition(
+                            position: _navSlide,
+                            child: hideNav
+                                ? const SizedBox.shrink()
+                                : _FloatingBottomNav(
+                                    currentIndex: _currentTab,
+                                    navVisible: _navVisible,
+                                    onTap: _switchTab,
+                                    onCameraTap: () {
+                                      if (_currentTab == 2) {
+                                        _toggleNav(); // hide nav if already on scan tab
+                                      } else {
+                                        _switchTab(2); // go to scan tab
+                                      }
+                                    },
+                                    scanTabKey: _scanTabKey,
+                                    groceryTabKey: _groceryTabKey,
+                                    importTabKey: _importTabKey,
+                                  ),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
                 );
               },
-            );
-          },
-        ),
+            ),
           ],
         ),
       ),
@@ -349,7 +353,7 @@ class _FloatingBottomNav extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       color: Colors.transparent,
-      padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 20.h),
+      padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 10.h),
       child: Stack(
         clipBehavior: Clip.none,
         alignment: Alignment.topCenter,
@@ -486,7 +490,8 @@ class _NavItem extends StatelessWidget {
           children: [
             Icon(
               active ? activeIcon : icon,
-              key: iconKey, // Use iconKey here to avoid duplicate GlobalKey on _NavItem itself
+              key:
+                  iconKey, // Use iconKey here to avoid duplicate GlobalKey on _NavItem itself
               size: 24.sp,
               color: active ? const Color(0xFFCC3333) : const Color(0xFF8E8E8E),
             ),
@@ -532,50 +537,126 @@ class _HomeTab extends StatelessWidget {
       backgroundColor: Colors.white,
       body: SafeArea(
         bottom: false,
-        child: ListView(
-          padding: EdgeInsets.only(bottom: 40.h),
+        child: Column(
           children: [
             const _Header(),
             SizedBox(height: 14.h),
             const _SearchBar(),
-            SizedBox(height: 24.h),
-            _SectionRow(
-              title: 'Your Cookbooks',
-              onViewAll: () {
-                _goViewAll(context, ViewAllType.cookbooks, 'Cookbooks');
-              },
-            ),
-            SizedBox(height: 12.h),
-            _CookbooksRow(
-            onRefresh: onRefresh,
-            firstCookbookKey: firstCookbookKey,
-          ),
-            if (_homeRecent.isNotEmpty) ...[
-              _SectionRow(
-                title: 'Recently Viewed',
-                onViewAll: () => _goViewAll(
-                  context,
-                  ViewAllType.recentlyViewed,
-                  'Recently Viewed',
-                ),
+            SizedBox(height: 10.h),
+            Expanded(
+              child: ListView(
+                padding: EdgeInsets.only(bottom: 40.h, top: 10.h),
+                children: [
+                  _SectionRow(
+                    title: 'Your Cookbooks',
+                    onViewAll: () {
+                      _goViewAll(context, ViewAllType.cookbooks, 'Cookbooks');
+                    },
+                  ),
+                  SizedBox(height: 12.h),
+                  _CookbooksRow(
+                    onRefresh: onRefresh,
+                    firstCookbookKey: firstCookbookKey,
+                  ),
+                  SizedBox(height: 26.h),
+                  ValueListenableBuilder<List<Recipe>?>(
+                    valueListenable: RecipeService.instance.myRecipesNotifier,
+                    builder: (context, recipes, _) {
+                      if (recipes == null || recipes.isEmpty) return const SizedBox.shrink();
+                      
+                      final hasSuggestions = recipes.any((r) => r.isSuggested);
+                      final title = hasSuggestions
+                          ? 'Suggested Recipes'
+                          : 'Saved Recipes';
+                      return _SectionRow(
+                        title: title,
+                        onViewAll: () => _goViewAll(
+                          context,
+                          hasSuggestions
+                              ? ViewAllType.savedRecipes
+                              : ViewAllType.savedRecipes, // Keeps same type for now
+                          title,
+                        ),
+                      );
+                    },
+                  ),
+                  SizedBox(height: 12.h),
+                  _SavedRecipesGrid(onScanTap: onScanTap),
+                  SizedBox(height: 30.h),
+
+                  // Bottom Scan CTA
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 18.w),
+                    child: Container(
+                      padding: EdgeInsets.all(20.r),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFFC83A2D), Color(0xFFE57373)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(20.r),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFFC83A2D).withValues(alpha: 0.3),
+                            blurRadius: 12.r,
+                            offset: const Offset(0, 6),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "Search a recipe or scan",
+                                  style: TextStyle(
+                                    fontFamily: 'SF Pro',
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: 18.sp,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                SizedBox(height: 6.h),
+                                Text(
+                                  "Let our AI find the best recipes for you",
+                                  style: TextStyle(
+                                    fontFamily: 'SF Pro',
+                                    fontSize: 13.sp,
+                                    color: Colors.white.withOpacity(0.9),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          GestureDetector(
+                            onTap: onScanTap,
+                            child: Container(
+                              padding: EdgeInsets.all(12.r),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(14.r),
+                              ),
+                              child: Icon(
+                                Icons.qr_code_scanner_rounded,
+                                color: const Color(0xFFC83A2D),
+                                size: 24.sp,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  SizedBox(height: 100.h), // Extra space for nav
+                  // Dynamic bottom spacer for keyboard
+                  SizedBox(height: MediaQuery.of(context).viewInsets.bottom),
+                ],
               ),
-              SizedBox(height: 12.h),
-              const _RecentlyViewedRow(),
-            ],
-            SizedBox(height: 26.h),
-            _SectionRow(
-              title: 'Saved Recipes',
-              onViewAll: () => _goViewAll(
-                context,
-                ViewAllType.savedRecipes,
-                'Saved Recipes',
-              ),
             ),
-            SizedBox(height: 12.h),
-            _SavedRecipesGrid(onScanTap: onScanTap),
-            SizedBox(height: 30.h),
-            // Dynamic bottom spacer for keyboard
-            SizedBox(height: MediaQuery.of(context).viewInsets.bottom),
           ],
         ),
       ),
@@ -592,32 +673,6 @@ class _Header extends StatefulWidget {
 }
 
 class _HeaderState extends State<_Header> {
-  String _name = '...';
-  String? _photoUrl;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadUser();
-  }
-
-  Future<void> _loadUser() async {
-    try {
-      final user = await UserService.instance.getCurrentUser();
-      if (!mounted) return;
-      setState(() {
-        _name = '${user['firstname'] ?? ''}'.trim();
-        String? photo = user['profilePictureUrl'];
-        if (photo != null && photo.isNotEmpty && !photo.startsWith('http')) {
-          _photoUrl = '${ApiConfig.baseUrl}$photo';
-        } else {
-          _photoUrl = photo;
-        }
-      });
-    } catch (_) {
-      // ignore
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -626,57 +681,19 @@ class _HeaderState extends State<_Header> {
       child: ValueListenableBuilder<Map<String, dynamic>?>(
         valueListenable: UserService.instance.currentUserNotifier,
         builder: (context, userMap, _) {
-          final displayName = userMap?['firstname'] ?? _name;
-
-          String? displayPhoto = _photoUrl;
-          if (userMap != null && userMap['profilePictureUrl'] != null) {
-            final photo = userMap['profilePictureUrl'].toString();
-            if (photo.isNotEmpty) {
-              displayPhoto = photo.startsWith('http')
-                  ? photo
-                  : '${ApiConfig.baseUrl}$photo';
-            }
-          }
-
           return Row(
             children: [
-              if (displayPhoto != null && displayPhoto.isNotEmpty) ...[
-                GestureDetector(
-                  onTap: () => Navigator.pushNamed(context, AppRoutes.profile),
-                  child: Container(
-                    width: 46.w,
-                    height: 46.h,
-                    decoration: const BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Color(0xFFD0D0D0),
-                    ),
-                    clipBehavior: Clip.hardEdge,
-                    child: Image.network(
-                      displayPhoto,
-                      width: 46.w,
-                      height: 46.h,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => Icon(
-                        Icons.person_rounded,
-                        size: 32.sp,
-                        color: const Color(0xFF888888),
-                      ),
-                    ),
-                  ),
-                ),
-                SizedBox(width: 12.w),
-              ],
-              Expanded(
-                child: Text(
-                  'Hi, ${displayName.isNotEmpty ? displayName : 'Guest'}',
-                  style: TextStyle(
-                    fontFamily: 'SF Pro',
-                    fontWeight: FontWeight.w800,
-                    fontSize: 22.sp,
-                    color: const Color(0xFF1A1A1A),
-                  ),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Image.asset(
+                  'assets/images/logo4.png',
+                  height: 20.h,
+                  fit: BoxFit.contain,
+                  errorBuilder: (_, __, ___) => const SizedBox.shrink(),
                 ),
               ),
+              const Spacer(),
+              SizedBox(width: 4.w),
               PopupMenuButton<String>(
                 icon: Icon(
                   Icons.more_vert_rounded,
@@ -815,7 +832,7 @@ class _SearchBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 18.w),
+      padding: EdgeInsets.symmetric(horizontal: 20.w),
       child: const AppSearchField(),
     );
   }
@@ -909,34 +926,19 @@ class _CookbooksRowState extends State<_CookbooksRow> {
           );
         }
 
-        if (cookbooks.isEmpty) {
-          return Container(
-            height: 140.h,
-            margin: EdgeInsets.symmetric(horizontal: 18.w),
-            padding: EdgeInsets.all(20.r),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF9FAFB),
-              borderRadius: BorderRadius.circular(16.r),
-              border: Border.all(color: const Color(0xFFE5E7EB)),
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  "You don't have any cookbooks yet.",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontFamily: 'SF Pro',
-                    color: const Color(0xFF6B7280),
-                    fontSize: 14.sp,
-                  ),
-                ),
-                SizedBox(height: 12.h),
-                SizedBox(
-                  width: 160.w,
-                  height: 36.h,
-                  child: RedButton(
-                    label: 'Create a cookbook',
+
+        return SizedBox(
+          height: 200.h,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            padding: EdgeInsets.symmetric(horizontal: 18.w),
+            itemCount: cookbooks.length + 1,
+            itemBuilder: (_, i) {
+              if (i == 0) {
+                // The "+" Card for creating a new cookbook
+                return Padding(
+                  padding: EdgeInsets.only(right: 16.w),
+                  child: GestureDetector(
                     onTap: () async {
                       final result = await Navigator.pushNamed(
                         context,
@@ -948,24 +950,61 @@ class _CookbooksRowState extends State<_CookbooksRow> {
                         widget.onRefresh?.call();
                       }
                     },
+                    child: SizedBox(
+                      width: 150.w,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF9FAFB),
+                                borderRadius: BorderRadius.circular(16.r),
+                                border: Border.all(color: const Color(0xFFC83A2D), width: 1.5),
+                              ),
+                              child: Center(
+                                child: Icon(
+                                  Icons.add_rounded,
+                                  size: 40.sp,
+                                  color: const Color(0xFFC83A2D),
+                                ),
+                              ),
+                            ),
+                          ),
+                          SizedBox(height: 7.h),
+                          Text(
+                            "New cookbook",
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontFamily: 'SF Pro',
+                              fontWeight: FontWeight.w700,
+                              fontSize: 16.sp,
+                              color: const Color(0xFF1A1A1A),
+                            ),
+                          ),
+                          // Placeholder for alignment with recipes count
+                          SizedBox(height: 2.h),
+                          Opacity(
+                            opacity: 0,
+                            child: Row(
+                              children: [
+                                Icon(Icons.restaurant_outlined, size: 13.sp),
+                                SizedBox(width: 4.w),
+                                Text('0 Recipes', style: TextStyle(fontSize: 12.sp)),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                ),
-              ],
-            ),
-          );
-        }
-
-        return SizedBox(
-          height: 188.h,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            padding: EdgeInsets.symmetric(horizontal: 18.w),
-            itemCount: cookbooks.length,
-            itemBuilder: (_, i) {
-              final cb = cookbooks[i];
+                );
+              }
+              final cb = cookbooks[i - 1];
               return Padding(
                 padding: EdgeInsets.only(
-                  right: i < cookbooks.length - 1 ? 14 : 0,
+                  right: i < cookbooks.length ? 16.w : 0,
                 ),
                 child: GestureDetector(
                   onTap: () async {
@@ -979,15 +1018,15 @@ class _CookbooksRowState extends State<_CookbooksRow> {
                     }
                   },
                   child: SizedBox(
-                    key: i == 0 ? widget.firstCookbookKey : null,
-                    width: 158.w,
+                    key: i == 1 ? widget.firstCookbookKey : null,
+                    width: 180.w,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Expanded(child: CookbookCover(cookbook: cb)),
                         SizedBox(height: 7.h),
                         Text(
-                          cb.name.toUpperCase(),
+                          cb.name,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
@@ -1025,103 +1064,6 @@ class _CookbooksRowState extends State<_CookbooksRow> {
           ),
         );
       },
-    );
-  }
-}
-
-// ══════════════════════════════════════════════════════════════════════════════
-// RECENTLY VIEWED (home horizontal row)
-// ══════════════════════════════════════════════════════════════════════════════
-const _homeRecent = [];
-
-class _RecentlyViewedRow extends StatelessWidget {
-  const _RecentlyViewedRow();
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 62.h,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        padding: EdgeInsets.symmetric(horizontal: 18.w),
-        itemCount: _homeRecent.length,
-        itemBuilder: (_, i) {
-          final (img, name, color) = _homeRecent[i];
-          return Padding(
-            padding: EdgeInsets.only(
-              right: i < _homeRecent.length - 1 ? 12 : 0,
-            ),
-            child: GestureDetector(
-              onTap: () => Navigator.pushNamed(
-                context,
-                AppRoutes.recipeDetail,
-                arguments: {
-                  'img': img,
-                  'name': name,
-                  'time': '15 min',
-                  'kcal': '250 kcal',
-                },
-              ),
-              child: Container(
-                padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF2F1EF),
-                  borderRadius: BorderRadius.circular(10.r),
-                  border: Border.all(
-                    color: const Color(0xFFEDEDED),
-                    width: 1.2,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.04),
-                      blurRadius: 8,
-                    ),
-                  ],
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 38.w,
-                      height: 38.h,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFE1E0DD),
-                        borderRadius: BorderRadius.circular(5.r),
-                      ),
-                      alignment: Alignment.center,
-                      child: Image.asset(
-                        img,
-                        width: 38.w,
-                        height: 38.h,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => Container(
-                          color: const Color(0xFFEEEEEE),
-                          child: Center(
-                            child: Icon(
-                              Icons.fastfood_rounded,
-                              size: 42.sp,
-                              color: const Color(0xFFCCCCCC),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    SizedBox(width: 10.w),
-                    Text(
-                      name,
-                      style: TextStyle(
-                        fontFamily: 'Open Sans',
-                        fontWeight: FontWeight.w800,
-                        fontSize: 14.sp,
-                        color: const Color(0xFF1A1A1A),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          );
-        },
-      ),
     );
   }
 }
@@ -1168,38 +1110,29 @@ class _SavedRecipesGridState extends State<_SavedRecipesGrid> {
           );
         }
 
-        if (recipes.isEmpty) {
-          return Container(
-            width: double.infinity,
-            padding: EdgeInsets.all(24.r),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF9FAFB),
-              borderRadius: BorderRadius.circular(16.r),
-              border: Border.all(color: const Color(0xFFE5E7EB)),
-            ),
-            child: Column(
-              children: [
-                Text(
-                  "You don't have any saved recipes yet.",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontFamily: 'SF Pro',
-                    color: const Color(0xFF6B7280),
-                    fontSize: 14.sp,
-                  ),
-                ),
-                SizedBox(height: 16.h),
-                SizedBox(
-                  width: 180.w,
-                  height: 44.h,
-                  child: RedButton(
-                    label: 'Scan',
-                    onTap: widget.onScanTap ?? () {},
-                  ),
-                ),
-              ],
-            ),
-          );
+        // Filter expired suggestions and limit to 4 if suggesting
+        // Requirement: suggestions visible until user saves recipes
+        final hasSavedRecipes = recipes.any((r) => !r.isSuggested);
+
+        List<Recipe> filteredRecipes = recipes.where((r) {
+          if (r.isSuggested) {
+            if (hasSavedRecipes)
+              return false; // Hide suggestions if user has saved recipes
+            if (r.expiresAt != null && r.expiresAt!.isBefore(DateTime.now()))
+              return false; // Filter expired
+          }
+          return true;
+        }).toList();
+
+        final isSuggesting =
+            filteredRecipes.isNotEmpty &&
+            filteredRecipes.every((r) => r.isSuggested);
+        if (isSuggesting) {
+          filteredRecipes = filteredRecipes.take(4).toList();
+        }
+
+        if (filteredRecipes.isEmpty) {
+          return const SizedBox.shrink();
         }
 
         return Padding(
@@ -1207,7 +1140,7 @@ class _SavedRecipesGridState extends State<_SavedRecipesGrid> {
           child: GridView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            itemCount: recipes.length,
+            itemCount: filteredRecipes.length,
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
               mainAxisSpacing: 14.h,
@@ -1215,7 +1148,7 @@ class _SavedRecipesGridState extends State<_SavedRecipesGrid> {
               childAspectRatio: 0.82,
             ),
             itemBuilder: (ctx, i) {
-              final r = recipes[i];
+              final r = filteredRecipes[i];
               return RecipeCard(
                 recipe: r,
                 onHeartTap: () async {

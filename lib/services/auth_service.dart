@@ -392,7 +392,7 @@ class AuthService {
     }
   }
 
-  Future<void> resetPassword({
+  Future<Map<String, dynamic>> resetPassword({
     required String identifier,
     required String password,
   }) async {
@@ -403,7 +403,13 @@ class AuthService {
       body: jsonEncode({'identifier': identifier, 'newPassword': password}),
     );
 
-    if (response.statusCode != 200) {
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      if (data['token'] != null) {
+        await _saveToken(data['token']);
+      }
+      return data;
+    } else {
       throw Exception(
         _extractErrorMessage(
           response.body,

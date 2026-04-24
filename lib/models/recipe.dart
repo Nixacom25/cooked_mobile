@@ -3,6 +3,7 @@ class Recipe {
   final String name;
   final String? image;
   final int cookTime;
+  final int? prepTime;
   final int kcal;
   final List<String> steps;
   final List<RecipeIngredient> ingredients;
@@ -15,12 +16,15 @@ class Recipe {
   final String? sourceUrl;
   final int? servings;
   final String? tips;
+  final bool isSuggested;
+  final DateTime? expiresAt;
 
   Recipe({
     required this.id,
     required this.name,
     this.image,
     required this.cookTime,
+    this.prepTime,
     required this.kcal,
     required this.steps,
     required this.ingredients,
@@ -33,6 +37,8 @@ class Recipe {
     this.sourceUrl,
     this.servings,
     this.tips,
+    this.isSuggested = false,
+    this.expiresAt,
   });
 
   factory Recipe.fromJson(Map<String, dynamic> json) {
@@ -46,8 +52,8 @@ class Recipe {
       ingredients: (json['ingredients'] as List? ?? [])
           .map((i) => RecipeIngredient.fromJson(i))
           .toList(),
-      isPublic: json['public'] ?? false,
-      isFavorite: json['favorite'] ?? false,
+      isPublic: json['isPublic'] ?? json['public'] ?? false,
+      isFavorite: json['isFavorite'] ?? json['favorite'] ?? false,
       createdAt: json['createdAt'] != null
           ? DateTime.parse(json['createdAt'])
           : DateTime.now(),
@@ -61,6 +67,11 @@ class Recipe {
       sourceUrl: json['sourceUrl'],
       servings: json['servings'],
       tips: json['tips'],
+      prepTime: json['prepTime'],
+      isSuggested: json['isSuggested'] ?? json['suggested'] ?? false,
+      expiresAt: json['expiresAt'] != null
+          ? DateTime.parse(json['expiresAt'])
+          : null,
     );
   }
 }

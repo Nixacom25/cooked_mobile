@@ -1,4 +1,3 @@
-import '../../widgets/rename_recipe_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -88,36 +87,33 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
     return '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}';
   }
 
-  Future<void> _saveRecipe(Recipe r) async {
+  Future<void> _handleShare() async {
+    final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>? ?? {};
+    final Recipe? r = args['recipe'] as Recipe?;
+    if (r == null) return;
+
     try {
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (_) => const Center(child: CircularProgressIndicator()),
-      );
-      final saved = await RecipeService.instance.createRecipe(r);
-      if (!mounted) return;
-      Navigator.pop(context);
-      IosToast.show(
-        context,
-        message: 'Recipe saved to your cookbook!',
-        type: ToastType.success,
-      );
-      Navigator.pushReplacementNamed(
-        context,
-        AppRoutes.recipeDetail,
-        arguments: {'recipe': saved, 'isPreview': false},
-      );
+      final link = await RecipeService.instance.getShareLink(r.id);
+      final name = r.name;
+      final time = '${r.cookTime} min';
+      final kcal = '${r.kcal} kcal';
+      
+      // Emojis mapping to requested mockup icons
+      final template = "Discover this recipe: $name\nReady in 🕒 $time, 🔥 $kcal.\n\nSee on Cooked: $link";
+      
+      Share.share(template);
     } catch (e) {
       if (!mounted) return;
-      Navigator.pop(context);
-      final msg = ErrorHelper.getFriendlyMessage(e);
-      if (msg.contains('You already have a recipe named')) {
-        showRenameRecipeDialog(context, r, (updatedR) => _saveRecipe(updatedR));
-      } else {
-        IosToast.show(context, message: msg, type: ToastType.error);
-      }
+      IosToast.show(
+        context,
+        message: ErrorHelper.getFriendlyMessage(e),
+        type: ToastType.error,
+      );
     }
+  }
+
+  Future<void> _saveRecipe(Recipe r) async {
+    _showAddToCookbookModal(context, r);
   }
 
   @override
@@ -136,6 +132,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
     final String kcal = r != null
         ? '${r.kcal} kcal'
         : (args['kcal'] as String? ?? '');
+    final String prep = r?.prepTime != null ? '${r!.prepTime} min prep' : '';
 
     final bool isPreview = args['isPreview'] ?? false;
 
@@ -167,6 +164,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                       if (r == null) return;
                       await _saveRecipe(r);
                     },
+                    onShare: _handleShare,
                   ),
 
                   // ── Content ─────────────────────────────────────────────
@@ -192,36 +190,38 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                                 ),
                               ),
                             ),
-                            const SizedBox(width: 12),
-                            GestureDetector(
-                              onTap: () async {
-                                if (r != null) {
-                                  try {
-                                    await RecipeService.instance.toggleFavorite(
-                                      r.id,
-                                    );
-                                    setState(() {
-                                      _isFavorited = !_isFavorited;
-                                    });
-                                  } catch (e) {
-                                    IosToast.show(
-                                      context,
-                                      message: ErrorHelper.getFriendlyMessage(
-                                        e,
-                                      ),
-                                      type: ToastType.error,
-                                    );
+                            if (!isPreview) ...[
+                              const SizedBox(width: 12),
+                              GestureDetector(
+                                onTap: () async {
+                                  if (r != null) {
+                                    try {
+                                      await RecipeService.instance.toggleFavorite(
+                                        r.id,
+                                      );
+                                      setState(() {
+                                        _isFavorited = !_isFavorited;
+                                      });
+                                    } catch (e) {
+                                      IosToast.show(
+                                        context,
+                                        message: ErrorHelper.getFriendlyMessage(
+                                          e,
+                                        ),
+                                        type: ToastType.error,
+                                      );
+                                    }
                                   }
-                                }
-                              },
-                              child: Icon(
-                                _isFavorited
-                                    ? Icons.favorite_rounded
-                                    : Icons.favorite_border_rounded,
-                                color: const Color(0xFFCC3333),
-                                size: 28,
+                                },
+                                child: Icon(
+                                  _isFavorited
+                                      ? Icons.favorite_rounded
+                                      : Icons.favorite_border_rounded,
+                                  color: const Color(0xFFCC3333),
+                                  size: 28,
+                                ),
                               ),
-                            ),
+                            ],
                           ],
                         ),
                         const SizedBox(height: 10),
@@ -230,6 +230,11 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                         Wrap(
                           spacing: 8,
                           children: [
+                            if (prep.isNotEmpty)
+                              _TagPill(
+                                icon: Icons.timer_outlined,
+                                label: prep,
+                              ),
                             if (time.isNotEmpty)
                               _TagPill(
                                 icon: Icons.access_time_rounded,
@@ -386,21 +391,18 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
               child: Container(
                 color: Colors.white,
                 padding: EdgeInsets.fromLTRB(20, 10, 20, 10 + bottomPad),
-                child: isPreview
+                child: (isPreview || (r?.isSuggested ?? false))
                     ? GestureDetector(
-                        onTap: () {
-                          if (r == null) return;
-                          _saveRecipe(r);
-                        },
+                        onTap: () => _showAddToCookbookModal(context, r!),
                         child: Container(
-                          height: 50.h,
+                          height: 56.h,
                           decoration: BoxDecoration(
-                            color: const Color(0xFFCC3333),
-                            borderRadius: BorderRadius.circular(30.r),
+                            color: const Color(0xFFC83A2D),
+                            borderRadius: BorderRadius.circular(16.r),
                             boxShadow: [
                               BoxShadow(
-                                color: const Color(0xFFCC3333).withOpacity(0.3),
-                                blurRadius: 10,
+                                color: const Color(0xFFC83A2D).withOpacity(0.2),
+                                blurRadius: 12,
                                 offset: const Offset(0, 4),
                               ),
                             ],
@@ -408,15 +410,18 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              const Icon(Icons.check_circle_outline_rounded,
-                                  color: Colors.white, size: 20),
+                              const Icon(
+                                Icons.bookmark_add_rounded,
+                                color: Colors.white,
+                                size: 20,
+                              ),
                               SizedBox(width: 8.w),
-                              const Text(
-                                'Validate & Save Recipe',
+                              Text(
+                                'Add to recipe book',
                                 style: TextStyle(
                                   fontFamily: 'SF Pro',
                                   fontWeight: FontWeight.w700,
-                                  fontSize: 15,
+                                  fontSize: 16.sp,
                                   color: Colors.white,
                                 ),
                               ),
@@ -465,6 +470,7 @@ class _ImageHeader extends StatelessWidget {
   final String kcal;
   final bool isPreview;
   final VoidCallback onValidate;
+  final VoidCallback onShare;
 
   const _ImageHeader({
     required this.img,
@@ -473,6 +479,7 @@ class _ImageHeader extends StatelessWidget {
     required this.kcal,
     required this.isPreview,
     required this.onValidate,
+    required this.onShare,
   });
 
   @override
@@ -513,11 +520,7 @@ class _ImageHeader extends StatelessWidget {
                   GestureDetector(
                     onTap: isPreview
                         ? onValidate
-                        : () {
-                            Share.share(
-                              'Découvrez cette délicieuse recette de $name ! Elle prend $time et contient $kcal.\n\nRegardez-la sur l\'application Cooked !',
-                            );
-                          },
+                        : onShare,
                     child: Container(
                       child: Icon(
                         isPreview
@@ -746,16 +749,17 @@ class _StepsList extends StatelessWidget {
     return Column(
       children: [
         ...List.generate(steps.length, (i) {
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 16),
+          return Container(
+            margin: const EdgeInsets.only(bottom: 20),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Premium step number circle
                 Container(
-                  width: 30,
-                  height: 30,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFFCC3333),
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFCC3333).withOpacity(0.1),
                     shape: BoxShape.circle,
                   ),
                   alignment: Alignment.center,
@@ -763,25 +767,39 @@ class _StepsList extends StatelessWidget {
                     '${i + 1}',
                     style: const TextStyle(
                       fontFamily: 'SF Pro',
-                      fontWeight: FontWeight.w700,
-                      fontSize: 13,
-                      color: Colors.white,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 14,
+                      color: Color(0xFFCC3333),
                     ),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 16),
                 Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.only(top: 5),
-                    child: Text(
-                      steps[i],
-                      style: const TextStyle(
-                        fontFamily: 'SF Pro',
-                        fontSize: 14,
-                        height: 1.4,
-                        color: Color(0xFF444444),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Step ${i + 1}',
+                        style: TextStyle(
+                          fontFamily: 'SF Pro',
+                          fontWeight: FontWeight.w700,
+                          fontSize: 13,
+                          color: Colors.grey[500],
+                          letterSpacing: 0.5,
+                        ),
                       ),
-                    ),
+                      const SizedBox(height: 4),
+                      Text(
+                        steps[i],
+                        style: const TextStyle(
+                          fontFamily: 'SF Pro',
+                          fontSize: 15,
+                          height: 1.6,
+                          color: Color(0xFF1A1A1A),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
@@ -845,52 +863,41 @@ class _AddToCookbookSheet extends StatefulWidget {
 }
 
 class _AddToCookbookSheetState extends State<_AddToCookbookSheet> {
-  String? _selectedId;
-  String? _selectedName;
+  final Set<String> _selectedIds = {};
+  bool _isSaving = false;
 
   @override
   Widget build(BuildContext context) {
     final bottomPad = MediaQuery.of(context).padding.bottom;
 
     return Container(
+      constraints: BoxConstraints(maxHeight: 0.8.sh),
       decoration: BoxDecoration(
+        color: const Color(0xFFC83A2D),
         borderRadius: BorderRadius.vertical(top: Radius.circular(28.r)),
       ),
       child: Stack(
         children: [
-          // Subtle watermark background
           Positioned.fill(
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.vertical(top: Radius.circular(28.r)),
-                gradient: const LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [Color(0xFFC83A2D), Color(0x63C83A2D)],
-                ),
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.vertical(top: Radius.circular(28.r)),
-                child: Opacity(
-                  opacity: 0.12,
-                  child: Image.asset(
-                    'assets/images/fond.png',
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => const SizedBox.shrink(),
-                  ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.vertical(top: Radius.circular(28.r)),
+              child: Opacity(
+                opacity: 0.12,
+                child: Image.asset(
+                  'assets/images/fond.png',
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => const SizedBox.shrink(),
                 ),
               ),
             ),
           ),
 
-          // Main content column
           Padding(
             padding: EdgeInsets.fromLTRB(22.w, 14.h, 22.w, bottomPad + 20.h),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Drag handle
                 Center(
                   child: Container(
                     width: 40.w,
@@ -903,12 +910,11 @@ class _AddToCookbookSheetState extends State<_AddToCookbookSheet> {
                 ),
                 SizedBox(height: 18.h),
 
-                // Title + X
                 Row(
                   children: [
                     Expanded(
                       child: Text(
-                        'Add to Cookbook',
+                        'Add to Recipe Books',
                         style: TextStyle(
                           fontFamily: 'SF Pro',
                           fontWeight: FontWeight.w800,
@@ -920,8 +926,7 @@ class _AddToCookbookSheetState extends State<_AddToCookbookSheet> {
                     GestureDetector(
                       onTap: () => Navigator.pop(context),
                       child: Container(
-                        width: 30.w,
-                        height: 30.h,
+                        padding: EdgeInsets.all(6.r),
                         decoration: BoxDecoration(
                           color: Colors.white.withOpacity(0.2),
                           shape: BoxShape.circle,
@@ -937,195 +942,130 @@ class _AddToCookbookSheetState extends State<_AddToCookbookSheet> {
                 ),
                 SizedBox(height: 18.h),
 
-                // Cookbook label
-                Text(
-                  'Cookbook',
-                  style: TextStyle(
-                    fontFamily: 'SF Pro',
-                    fontWeight: FontWeight.w600,
-                    fontSize: 12.sp,
-                    color: Colors.white,
+                Flexible(
+                  child: FutureBuilder<List<Cookbook>>(
+                    future: CookbookService.instance.getMyCookbooks(),
+                    builder: (ctx, snapshot) {
+                      final cookbooks = snapshot.data ?? [];
+                      
+                      return Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Create New Option
+                          _buildActionTile(
+                            icon: Icons.add_circle_outline_rounded,
+                            label: 'Create a new recipe book',
+                            onTap: () async {
+                              final result = await Navigator.pushNamed(
+                                context,
+                                AppRoutes.cookbookForm,
+                                arguments: {'mode': 'add'},
+                              );
+                              if (result == true) {
+                                setState(() {});
+                              }
+                            },
+                          ),
+                          SizedBox(height: 12.h),
+
+                          if (snapshot.connectionState == ConnectionState.waiting && cookbooks.isEmpty)
+                             const Center(child: CircularProgressIndicator(color: Colors.white))
+                          else if (cookbooks.isEmpty)
+                            Padding(
+                              padding: EdgeInsets.symmetric(vertical: 20.h),
+                              child: Text(
+                                "No recipe books found. Create one above!",
+                                style: TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 14.sp,
+                                  fontFamily: 'SF Pro',
+                                ),
+                              ),
+                            )
+                          else
+                            Flexible(
+                              child: ListView.builder(
+                                shrinkWrap: true,
+                                itemCount: cookbooks.length,
+                                itemBuilder: (lCtx, i) {
+                                  final cb = cookbooks[i];
+                                  final isSelected = _selectedIds.contains(cb.id);
+                                  return Container(
+                                    margin: EdgeInsets.only(bottom: 10.h),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withOpacity(isSelected ? 0.25 : 0.1),
+                                      borderRadius: BorderRadius.circular(15.r),
+                                      border: Border.all(
+                                        color: isSelected ? Colors.white : Colors.transparent,
+                                        width: 2,
+                                      ),
+                                    ),
+                                    child: ListTile(
+                                      onTap: () {
+                                        setState(() {
+                                          if (isSelected) _selectedIds.remove(cb.id);
+                                          else _selectedIds.add(cb.id);
+                                        });
+                                      },
+                                      contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 2.h),
+                                      title: Text(
+                                        cb.name,
+                                        style: TextStyle(
+                                          fontFamily: 'SF Pro',
+                                          fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                                          fontSize: 15.sp,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                      trailing: isSelected 
+                                          ? Icon(Icons.check_circle_rounded, color: Colors.white, size: 24.sp)
+                                          : Icon(Icons.radio_button_unchecked_rounded, color: Colors.white30, size: 24.sp),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                        ],
+                      );
+                    },
                   ),
                 ),
-                SizedBox(height: 8.h),
 
-                // Dropdown selector
-                FutureBuilder<List<Cookbook>>(
-                  future: CookbookService.instance.getMyCookbooks(),
-                  builder: (context, snapshot) {
-                    final cookbooks = snapshot.data ?? [];
-                    return GestureDetector(
-                      onTap: () async {
-                        if (cookbooks.isEmpty) return;
-                        final picked = await showModalBottomSheet<Cookbook>(
-                          context: context,
-                          backgroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.vertical(
-                              top: Radius.circular(28.r),
-                            ),
-                          ),
-                          builder: (pickerCtx) => Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              SizedBox(height: 12.h),
-                              Container(
-                                width: 40.w,
-                                height: 4.h,
-                                decoration: BoxDecoration(
-                                  color: Colors.grey[300],
-                                  borderRadius: BorderRadius.circular(2.r),
-                                ),
-                              ),
-                              SizedBox(height: 8.h),
-                              ...cookbooks.map(
-                                (cb) => ListTile(
-                                  title: Text(
-                                    cb.name,
-                                    style: TextStyle(
-                                      fontFamily: 'SF Pro',
-                                      fontSize: 14.sp,
-                                    ),
-                                  ),
-                                  onTap: () => Navigator.pop(pickerCtx, cb),
-                                ),
-                              ),
-                              SizedBox(height: 10.h),
-                            ],
-                          ),
-                        );
-                        if (picked != null) {
-                          setState(() {
-                            _selectedId = picked.id;
-                            _selectedName = picked.name;
-                          });
-                        }
-                      },
-                      child: Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 16.w,
-                          vertical: 14.h,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(14.r),
-                        ),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                _selectedName ??
-                                    (cookbooks.isEmpty
-                                        ? 'No cookbooks available'
-                                        : 'Choisir un cookbook'),
-                                style: TextStyle(
-                                  fontFamily: 'SF Pro',
-                                  fontSize: 14.sp,
-                                  color: _selectedName != null
-                                      ? const Color(0xFF1A1A1A)
-                                      : Colors.grey[500],
-                                ),
-                              ),
-                            ),
-                            Icon(
-                              Icons.arrow_drop_down_rounded,
-                              color: const Color(0xFF888888),
-                              size: 26.sp,
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
-                ),
-
-                SizedBox(height: 30.h),
+                SizedBox(height: 20.h),
 
                 // Confirm button
                 GestureDetector(
-                  onTap: () async {
-                    if (_selectedId != null) {
-                      try {
-                        if (widget.recipe.id.isEmpty) {
-                          await RecipeService.instance.createRecipe(
-                            widget.recipe,
-                            cookbookIds: [_selectedId!],
-                          );
-                        } else {
-                          await CookbookService.instance.addRecipeToCookbook(
-                            _selectedId!,
-                            widget.recipe.id,
-                          );
-                        }
-
-                        if (!mounted) return;
-                        Navigator.pop(context);
-                        IosToast.show(
-                          context,
-                          message: 'Recette ajoutée à ${_selectedName} !',
-                          type: ToastType.success,
-                        );
-                      } catch (e) {
-                        final msg = ErrorHelper.getFriendlyMessage(e);
-                        if (msg.contains('You already have a recipe named')) {
-                          Navigator.pop(context);
-                          showRenameRecipeDialog(context, widget.recipe, (
-                            updatedR,
-                          ) async {
-                            try {
-                              if (updatedR.id.isEmpty) {
-                                await RecipeService.instance.createRecipe(
-                                  updatedR,
-                                  cookbookIds: [_selectedId!],
-                                );
-                              } else {
-                                await CookbookService.instance
-                                    .addRecipeToCookbook(
-                                      _selectedId!,
-                                      updatedR.id,
-                                    );
-                              }
-                              if (!mounted) return;
-                              IosToast.show(
-                                context,
-                                message: 'Recette ajoutée à ${_selectedName} !',
-                                type: ToastType.success,
-                              );
-                            } catch (e2) {
-                              if (!mounted) return;
-                              IosToast.show(
-                                context,
-                                message: ErrorHelper.getFriendlyMessage(e2),
-                                type: ToastType.error,
-                              );
-                            }
-                          });
-                        } else {
-                          IosToast.show(
-                            context,
-                            message: msg,
-                            type: ToastType.error,
-                          );
-                        }
-                      }
-                    }
-                  },
+                  onTap: (_isSaving || _selectedIds.isEmpty) ? null : _handleConfirm,
                   child: Container(
                     height: 52.h,
                     decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(14.r),
+                      color: _selectedIds.isEmpty 
+                          ? Colors.white.withOpacity(0.5) 
+                          : Colors.white,
+                      borderRadius: BorderRadius.circular(15.r),
+                      boxShadow: [
+                        if (_selectedIds.isNotEmpty)
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                      ],
                     ),
                     child: Center(
-                      child: Text(
-                        'Confirm',
-                        style: TextStyle(
-                          fontFamily: 'SF Pro',
-                          fontWeight: FontWeight.w700,
-                          fontSize: 16.sp,
-                          color: const Color(0xFFCC3333),
-                        ),
-                      ),
+                      child: _isSaving 
+                        ? const CircularProgressIndicator(color: Color(0xFFCC3333))
+                        : Text(
+                            _selectedIds.isEmpty 
+                                ? 'Select at least one book' 
+                                : 'Confirm (${_selectedIds.length})',
+                            style: TextStyle(
+                              fontFamily: 'SF Pro',
+                              fontWeight: FontWeight.w700,
+                              fontSize: 16.sp,
+                              color: const Color(0xFFCC3333),
+                            ),
+                          ),
                     ),
                   ),
                 ),
@@ -1135,5 +1075,72 @@ class _AddToCookbookSheetState extends State<_AddToCookbookSheet> {
         ],
       ),
     );
+  }
+
+  Widget _buildActionTile({required IconData icon, required String label, required VoidCallback onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14.r),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: const Color(0xFFCC3333), size: 22.sp),
+            SizedBox(width: 12.w),
+            Text(
+              label,
+              style: TextStyle(
+                fontFamily: 'SF Pro',
+                fontWeight: FontWeight.w700,
+                fontSize: 14.sp,
+                color: const Color(0xFFCC3333),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _handleConfirm() async {
+    setState(() => _isSaving = true);
+    final idsList = _selectedIds.toList();
+    
+    try {
+      if (widget.recipe.id.isEmpty) {
+        // Recipe is not saved yet (Preview mode)
+        await RecipeService.instance.createRecipe(
+          widget.recipe,
+          cookbookIds: idsList,
+        );
+      } else {
+        // Recipe exists, add to each selected cookbook
+        for (final cbId in idsList) {
+          await CookbookService.instance.addRecipeToCookbook(
+            cbId,
+            widget.recipe.id,
+          );
+        }
+      }
+
+      if (!mounted) return;
+      Navigator.pop(context); // Close sheet
+      IosToast.show(
+        context,
+        message: 'Successfully added to ${idsList.length} book${idsList.length > 1 ? 's' : ''}!',
+        type: ToastType.success,
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isSaving = false);
+      IosToast.show(
+        context,
+        message: ErrorHelper.getFriendlyMessage(e),
+        type: ToastType.error,
+      );
+    }
   }
 }

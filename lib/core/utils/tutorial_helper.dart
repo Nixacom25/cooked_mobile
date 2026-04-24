@@ -3,7 +3,6 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import '../services/tutorial_service.dart';
-import '../../routes/app_routes.dart';
 import '../../models/cookbook.dart';
 
 class TutorialHelper {
@@ -54,14 +53,18 @@ class TutorialHelper {
       focusAnimationDuration: const Duration(milliseconds: 500),
       unFocusAnimationDuration: const Duration(milliseconds: 500),
       onClickTarget: (target) {
-        _handleTargetClick(context, target, firstCookbook, onTabSwitch);
+        // Do nothing - user MUST click the "Next" button in the content
+      },
+      onClickOverlay: (target) {
+        // Do nothing - user MUST click the "Next" button in the content
       },
       onSkip: () {
-        service.complete();
+        service.completeHome();
         _activeCoachMark = null;
         return true;
       },
-      onFinish: () {
+      onFinish: () async {
+        await service.completeHome();
         _activeCoachMark = null;
       },
     );
@@ -103,7 +106,7 @@ class TutorialHelper {
     Function(int)? onTabSwitch,
   }) {
     final service = TutorialService.instance;
-    if (!service.isTutorialActive || service.currentStep != 1) return;
+    if (service.hasSeenScan) return;
 
     // Ensure we don't have overlapping tutorials
     dismissCurrent();
@@ -131,7 +134,7 @@ class TutorialHelper {
   // Specialized onboarding for Import screen
   static void showImportOnboardingDialog(BuildContext context) {
     final service = TutorialService.instance;
-    if (!service.isTutorialActive || service.currentStep != 2) return;
+    if (service.hasSeenImport) return;
 
     // Ensure we don't have overlapping tutorials
     dismissCurrent();
@@ -156,34 +159,7 @@ class TutorialHelper {
     );
   }
 
-  static void _handleTargetClick(
-    BuildContext context,
-    TargetFocus target,
-    Cookbook? cookbook,
-    Function(int)? onTabSwitch,
-  ) {
-    final service = TutorialService.instance;
-
-    if (target.identify == "cookbook") {
-      dismissCurrent();
-      if (cookbook != null) {
-        Navigator.pushNamed(
-          context,
-          AppRoutes.cookbookDetail,
-          arguments: {'cookbook': cookbook},
-        );
-      }
-    } else if (target.identify == "scan") {
-      dismissCurrent();
-      if (onTabSwitch != null) onTabSwitch(2);
-    } else if (target.identify == "import") {
-      dismissCurrent();
-      if (onTabSwitch != null) onTabSwitch(4);
-    } else if (target.identify == "completion") {
-      dismissCurrent();
-      service.complete();
-    }
-  }
+  // Target clicking handled via _TutorialContent Next buttons
 
   static List<TargetFocus> _createTargets({
     required BuildContext context,
@@ -195,112 +171,102 @@ class TutorialHelper {
   }) {
     final List<TargetFocus> targets = [];
 
-    // Step 1: Cookbooks
-    if (currentStep <= 0) {
-      targets.add(
-        TargetFocus(
-          identify: "cookbook",
-          keyTarget: cookbookKey,
-          alignSkip: Alignment.topRight,
-          shape: ShapeLightFocus.RRect,
-          radius: 16.r,
-          contents: [
-            TargetContent(
-              align: ContentAlign.bottom,
-              builder: (context, controller) {
-                return _TutorialContent(
-                  title: "Your Cookbooks",
-                  description:
-                      "Save and organize your recipes here. (Click the icon to see more)",
-                  step: 1,
-                  totalSteps: 3,
-                  onNext: () {
-                    TutorialService.instance.setStep(1);
-                    controller.next();
-                  },
-                  onSkip: () {
-                    TutorialService.instance.complete();
-                    controller.skip();
-                  },
-                );
-              },
-            ),
-          ],
-        ),
-      );
-    }
+    // Step 1: Scan
+    targets.add(
+      TargetFocus(
+        identify: "scan",
+        keyTarget: scanKey,
+        alignSkip: Alignment.topRight,
+        shape: ShapeLightFocus.RRect,
+        radius: 30.r,
+        contents: [
+          TargetContent(
+            align: ContentAlign.top,
+            builder: (context, controller) {
+              return _TutorialContent(
+                title: "Scan",
+                description: "Scan your ingredients or your recipe and our AI will take care of the rest.",
+                step: 1,
+                totalSteps: 3,
+                onNext: () {
+                  controller.next();
+                },
+                onSkip: () {
+                  TutorialService.instance.completeHome();
+                  controller.skip();
+                },
+              );
+            },
+          ),
+        ],
+      ),
+    );
 
-    // Step 2: Scan
-    if (currentStep <= 1) {
-      targets.add(
-        TargetFocus(
-          identify: "scan",
-          keyTarget: scanKey,
-          alignSkip: Alignment.topRight,
-          shape: ShapeLightFocus.RRect,
-          radius: 30.r,
-          contents: [
-            TargetContent(
-              align: ContentAlign.top,
-              builder: (context, controller) {
-                return _TutorialContent(
-                  title: "Scan Ingredients",
-                  description:
-                      "Scan and get instant recipes. (Click the icon to try it)",
-                  step: 2,
-                  totalSteps: 3,
-                  onNext: () {
-                    TutorialService.instance.setStep(2);
-                    controller.next();
-                  },
-                  onSkip: () {
-                    TutorialService.instance.complete();
-                    controller.skip();
-                  },
-                );
-              },
-            ),
-          ],
-        ),
-      );
-    }
+    // Step 2: Import
+    targets.add(
+      TargetFocus(
+        identify: "import",
+        keyTarget: importKey,
+        alignSkip: Alignment.topRight,
+        shape: ShapeLightFocus.Circle,
+        radius: 35.r,
+        paddingFocus: 5,
+        contents: [
+          TargetContent(
+            align: ContentAlign.top,
+            builder: (context, controller) {
+              return _TutorialContent(
+                title: "Import",
+                description: "Import yours recipes from TikTok, Instagram, or any site link.",
+                step: 2,
+                totalSteps: 3,
+                onNext: () {
+                  controller.next();
+                },
+                onSkip: () {
+                  TutorialService.instance.completeHome();
+                  controller.skip();
+                },
+              );
+            },
+          ),
+        ],
+      ),
+    );
 
-    // Step 3: Import
-    if (currentStep <= 2) {
-      targets.add(
-        TargetFocus(
-          identify: "import",
-          keyTarget: importKey,
-          alignSkip: Alignment.topRight,
-          shape: ShapeLightFocus.Circle,
-          radius: 35.r,
-          paddingFocus: 5,
-          contents: [
-            TargetContent(
-              align: ContentAlign.top,
-              builder: (context, controller) {
-                return _TutorialContent(
-                  title: "Import Recipes",
-                  description:
-                      "Import from TikTok, Instagram, or Links. (Click the icon to open)",
-                  step: 3,
-                  totalSteps: 3,
-                  isLast: true,
-                  onNext: () {
-                    TutorialService.instance.complete();
-                    controller.next();
-                  },
-                  onSkip: () {
-                    TutorialService.instance.complete();
-                    controller.skip();
-                  },
-                );
-              },
-            ),
-          ],
-        ),
-      );
-    }
+    // Step 3: Cookbooks
+    targets.add(
+      TargetFocus(
+        identify: "cookbook",
+        keyTarget: cookbookKey,
+        alignSkip: Alignment.topRight,
+        shape: ShapeLightFocus.RRect,
+        radius: 16.r,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            builder: (context, controller) {
+              return _TutorialContent(
+                title: "Recipe Books",
+                description: "Store all yours recipes here and organize them as you want.",
+                step: 3,
+                totalSteps: 3,
+                isLast: true,
+                onNext: () {
+                  TutorialService.instance.completeHome();
+                  controller.next();
+                },
+                onSkip: () {
+                  TutorialService.instance.completeHome();
+                  controller.skip();
+                },
+              );
+            },
+          ),
+        ],
+      ),
+    );
+
     return targets;
   }
 }

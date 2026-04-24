@@ -57,4 +57,40 @@ class IngredientService {
 
     return response.statusCode == 204;
   }
+ 
+  Future<List<Map<String, dynamic>>> searchIngredients(String query) async {
+    final token = await AuthService.instance.getToken();
+    if (token == null) return [];
+ 
+    final response = await http.get(
+      Uri.parse('${ApiConfig.baseUrl}/ingredients/search?q=$query'),
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
+ 
+    if (response.statusCode == 200) {
+      final List<dynamic> data = json.decode(response.body);
+      return data.map((e) => e as Map<String, dynamic>).toList();
+    }
+    return [];
+  }
+
+  Future<List<Map<String, dynamic>>> getRecentIngredients() async {
+    final token = await AuthService.instance.getToken();
+    if (token == null) return [];
+
+    final response = await http.get(
+      Uri.parse('${ApiConfig.baseUrl}/ingredients/recent'),
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = json.decode(response.body);
+      return data.map((e) => e as Map<String, dynamic>).toList();
+    }
+    return [];
+  }
 }

@@ -263,6 +263,17 @@ class RecipeService {
     }
   }
 
+  Future<String> getShareLink(String id) async {
+    final endpoint = Uri.parse('${ApiConfig.baseUrl}/recipes/$id/share');
+    final response = await http.get(endpoint, headers: await _getHeaders());
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body)['link'];
+    } else {
+      throw Exception('Failed to generate share link');
+    }
+  }
+
   Future<List<Map<String, dynamic>>> searchWeb(String query) async {
     final endpoint = Uri.parse(
       '${ApiConfig.baseUrl}/recipes/web-search?query=${Uri.encodeComponent(query)}',
@@ -289,6 +300,19 @@ class RecipeService {
       return content.map((json) => Recipe.fromJson(json)).toList();
     } else {
       throw Exception('Unable to load recent imports.');
+    }
+  }
+
+  Future<Recipe> validateRecipe(String id) async {
+    final url = Uri.parse('${ApiConfig.baseUrl}/recipes/$id/validate');
+    final response = await http.put(url, headers: await _getHeaders());
+
+    if (response.statusCode == 200) {
+      // Trigger background refresh 
+      getMyRecipes().then((_) => null).catchError((_) => null);
+      return Recipe.fromJson(jsonDecode(response.body));
+    } else {
+      throw Exception('Failed to validate recipe.');
     }
   }
 

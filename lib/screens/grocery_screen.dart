@@ -5,6 +5,7 @@ import '../services/recipe_service.dart';
 import '../models/grocery_item.dart';
 import '../core/widgets/ios_toast.dart';
 import '../core/utils/error_helper.dart';
+import '../services/notification_service.dart';
 
 // ══════════════════════════════════════════════════════════════════════════════
 // GROCERY SCREEN
@@ -16,7 +17,7 @@ class GroceryScreen extends StatefulWidget {
 }
 
 class _GroceryScreenState extends State<GroceryScreen> {
-  DateTime _selectedDate = DateTime.now();
+  DateTime? _selectedDate = DateTime.now();
   List<GroceryItem> _allItems = [];
   bool _isLoading = true;
 
@@ -42,13 +43,18 @@ class _GroceryScreenState extends State<GroceryScreen> {
   }
 
   // Filtered by selected date
-  List<GroceryItem> get _filteredItems => _allItems
-      .where(
-        (item) =>
-            item.plannedDate != null &&
-            _sameDay(item.plannedDate!, _selectedDate),
-      )
-      .toList();
+  List<GroceryItem> get _filteredItems {
+    if (_selectedDate == null) {
+      return _allItems.where((item) => item.plannedDate == null).toList();
+    }
+    return _allItems
+        .where(
+          (item) =>
+              item.plannedDate != null &&
+              _sameDay(item.plannedDate!, _selectedDate!),
+        )
+        .toList();
+  }
 
   // Grouped by recipe name (simulated grouping for display)
   Map<String, List<GroceryItem>> get _grouped {
@@ -81,7 +87,11 @@ class _GroceryScreenState extends State<GroceryScreen> {
         child: child!,
       ),
     );
-    if (picked != null) setState(() => _selectedDate = picked);
+    if (picked != null) {
+      setState(() => _selectedDate = picked);
+      // Schedule reminder for the new date
+      NotificationService.instance.scheduleShoppingReminder(picked);
+    }
   }
 
   @override
@@ -103,23 +113,51 @@ class _GroceryScreenState extends State<GroceryScreen> {
                   child: Row(
                     children: [
                       Expanded(
-                        child: Text(
-                          'Grocery List',
-                          style: TextStyle(
-                            fontFamily: 'SF Pro',
-                            fontWeight: FontWeight.w800,
-                            fontSize: 24.sp,
-                            color: const Color(0xFF1A1A1A),
-                          ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Grocery List',
+                              style: TextStyle(
+                                fontFamily: 'SF Pro',
+                                fontWeight: FontWeight.w800,
+                                fontSize: 24.sp,
+                                color: const Color(0xFF1A1A1A),
+                              ),
+                            ),
+                            Text(
+                              _selectedDate == null 
+                                  ? 'General items' 
+                                  : '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}',
+                              style: TextStyle(
+                                fontFamily: 'SF Pro',
+                                fontSize: 13.sp,
+                                color: const Color(0xFF666666),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                       // Calendar icon with selected date label
                       GestureDetector(
+                        onTap: () => setState(() => _selectedDate = null),
+                        child: Container(
+                          padding: EdgeInsets.all(8.r),
+                          child: Icon(
+                            Icons.all_inclusive_rounded,
+                            size: 20.sp,
+                            color: _selectedDate == null ? const Color(0xFFCC3333) : Colors.grey,
+                          ),
+                        ),
+                      ),
+                      GestureDetector(
                         onTap: _pickDate,
                         child: Container(
+                          padding: EdgeInsets.all(8.r),
                           child: Icon(
                             Icons.calendar_today_outlined,
                             size: 20.sp,
+                            color: _selectedDate != null ? const Color(0xFFCC3333) : Colors.grey,
                           ),
                         ),
                       ),
@@ -266,12 +304,43 @@ class _GroceryScreenState extends State<GroceryScreen> {
           ),
           SizedBox(height: 14.h),
           Text(
-            'No groceries planned\nfor this day',
+            _selectedDate == null 
+                ? 'No general items' 
+                : 'No groceries planned\nfor this day',
             textAlign: TextAlign.center,
             style: TextStyle(
               fontFamily: 'SF Pro',
               fontSize: 15.sp,
               color: Colors.grey[400],
+            ),
+          ),
+          SizedBox(height: 8.h),
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 40.w),
+            child: Text(
+              'You can enter your shopping list manually OR use ingredients from your recipes and cookbooks.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontFamily: 'SF Pro',
+                fontSize: 12.sp,
+                color: Colors.grey[400],
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+          ),
+          SizedBox(height: 30.h),
+          // Grand bouton "+ Ajouter des recettes"
+          ElevatedButton.icon(
+            onPressed: () => _showAddGrocerySheet(context),
+            icon: const Icon(Icons.add_rounded, color: Colors.white),
+            label: const Text('Add Recipes'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFCC3333),
+              padding: EdgeInsets.symmetric(horizontal: 32.w, vertical: 16.h),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(30.r),
+              ),
+              elevation: 0,
             ),
           ),
         ],
@@ -285,7 +354,7 @@ class _GroceryScreenState extends State<GroceryScreen> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (_) => _AddGrocerySheet(
-        selectedDate: _selectedDate,
+        selectedDate: _selectedDate ?? DateTime.now(),
         allItems: _allItems,
         onSave: (name, qty, date, icon, recipeId) async {
           try {
