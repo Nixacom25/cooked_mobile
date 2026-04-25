@@ -56,224 +56,233 @@ class _CookbookFormScreenState extends State<CookbookFormScreen> {
 
     return Scaffold(
       backgroundColor: Colors.white,
-      body: Stack(
-        children: [
-          // ── Scrollable content ───────────────────────────────────────────
-          SingleChildScrollView(
-            padding: EdgeInsets.only(bottom: 90 + bottomPad),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // ── Header ─────────────────────────────────────────────
-                  Padding(
-                    padding: const EdgeInsets.only(top: 30),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            isEdit ? 'Edit Cookbook' : 'Add Cookbook',
-                            style: const TextStyle(
-                              fontFamily: 'SF Pro',
-                              fontWeight: FontWeight.w800,
-                              fontSize: 24,
-                              color: Color(0xFF1A1A1A),
-                            ),
-                          ),
-                        ),
-                        if (isEdit)
-                          GestureDetector(
-                            onTap: () async {
-                              final confirm = await showDialog<bool>(
-                                context: context,
-                                builder: (ctx) => AlertDialog(
-                                  title: const Text('Delete Cookbook'),
-                                  content: const Text(
-                                    'Are you sure you want to delete this cookbook?',
-                                  ),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () =>
-                                          Navigator.pop(ctx, false),
-                                      child: const Text('Cancel'),
-                                    ),
-                                    TextButton(
-                                      onPressed: () => Navigator.pop(ctx, true),
-                                      child: const Text(
-                                        'Delete',
-                                        style: TextStyle(color: Colors.red),
-                                      ),
-                                    ),
-                                  ],
+      body: SafeArea(
+        bottom: false,
+        child: Column(
+          children: [
+            // ── Scrollable content ───────────────────────────────────────────
+            Expanded(
+              child: SingleChildScrollView(
+                padding: EdgeInsets.only(bottom: 20.h),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // ── Header ─────────────────────────────────────────────
+                      Padding(
+                        padding: EdgeInsets.only(top: 30.h),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                isEdit ? 'Edit Cookbook' : 'Add Cookbook',
+                                style: TextStyle(
+                                  fontFamily: 'SF Pro',
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 24.sp,
+                                  color: const Color(0xFF1A1A1A),
                                 ),
-                              );
-                              if (confirm == true) {
-                                try {
-                                  await CookbookService.instance.deleteCookbook(
-                                    _cookbook!.id,
+                              ),
+                            ),
+                            if (isEdit)
+                              GestureDetector(
+                                onTap: () async {
+                                  final confirm = await showDialog<bool>(
+                                    context: context,
+                                    builder: (ctx) => AlertDialog(
+                                      title: const Text('Delete Cookbook'),
+                                      content: const Text(
+                                        'Are you sure you want to delete this cookbook?',
+                                      ),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () =>
+                                              Navigator.pop(ctx, false),
+                                          child: const Text('Cancel'),
+                                        ),
+                                        TextButton(
+                                          onPressed: () => Navigator.pop(ctx, true),
+                                          child: const Text(
+                                            'Delete',
+                                            style: TextStyle(color: Colors.red),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   );
-                                  if (mounted) Navigator.pop(context, true);
-                                } catch (e) {
-                                  if (mounted) {
-                                    IosToast.show(context, message: ErrorHelper.getFriendlyMessage(e), type: ToastType.error);
+                                  if (confirm == true) {
+                                    try {
+                                      await CookbookService.instance.deleteCookbook(
+                                        _cookbook!.id,
+                                      );
+                                      if (mounted) Navigator.pop(context, true);
+                                    } catch (e) {
+                                      if (mounted) {
+                                        IosToast.show(context, message: ErrorHelper.getFriendlyMessage(e), type: ToastType.error);
+                                      }
+                                    }
                                   }
+                                },
+                                child: Container(
+                                  width: 36.r,
+                                  height: 36.r,
+                                  margin: EdgeInsets.only(right: 8.w),
+                                  decoration: const BoxDecoration(
+                                    color: Color(0xFFFFE5E5),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Icon(
+                                    Icons.delete_outline_rounded,
+                                    size: 20.sp,
+                                    color: const Color(0xFFCC3333),
+                                  ),
+                                ),
+                              ),
+                            GestureDetector(
+                              onTap: () => Navigator.pop(context),
+                              child: Container(
+                                width: 36.r,
+                                height: 36.r,
+                                decoration: const BoxDecoration(
+                                  color: Color(0xFFF0F0F0),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(
+                                  Icons.close_rounded,
+                                  size: 20.sp,
+                                  color: const Color(0xFF555555),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+    
+                      SizedBox(height: 24.h),
+    
+                      // ── Name field ─────────────────────────────────────────
+                      Text(
+                        'Name',
+                        style: TextStyle(
+                          fontFamily: 'SF Pro',
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14.sp,
+                          color: const Color(0xFF999999),
+                        ),
+                      ),
+                      SizedBox(height: 8.h),
+                      TextField(
+                        controller: _nameCtrl,
+                        style: TextStyle(
+                          fontFamily: 'SF Pro',
+                          fontSize: 15.sp,
+                          color: const Color(0xFF1A1A1A),
+                        ),
+                        decoration: InputDecoration(
+                          hintText: 'Everyday meal',
+                          hintStyle: TextStyle(
+                            fontFamily: 'SF Pro',
+                            fontSize: 15.sp,
+                            color: Colors.grey[400],
+                          ),
+                          filled: true,
+                          fillColor: const Color(0xFFF5F5F5),
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: 16.w,
+                            vertical: 14.h,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12.r),
+                            borderSide: BorderSide.none,
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12.r),
+                            borderSide: BorderSide.none,
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12.r),
+                            borderSide: const BorderSide(
+                              color: Color(0xFFCC3333),
+                              width: 1.5,
+                            ),
+                          ),
+                        ),
+                      ),
+    
+                      SizedBox(height: 28.h),
+    
+                      // ── Recipes section ────────────────────────────────────
+                      Text(
+                        'Recipes',
+                        style: TextStyle(
+                          fontFamily: 'SF Pro',
+                          fontWeight: FontWeight.w800,
+                          fontSize: 18.sp,
+                          color: const Color(0xFF1A1A1A),
+                        ),
+                      ),
+    
+                      SizedBox(height: 12.h),
+    
+                      // Grid of recipe mini-cards + add slot
+                      GridView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: _recipes.length + 1, // +1 for add slot
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          mainAxisSpacing: 14.h,
+                          crossAxisSpacing: 14.w,
+                          childAspectRatio: 0.82,
+                        ),
+                        itemBuilder: (_, i) {
+                          // Last item = add slot
+                          if (i == _recipes.length) {
+                            return _AddRecipeSlot(
+                              onTap: () async {
+                                final List<Recipe>? selected =
+                                    await showModalBottomSheet<List<Recipe>>(
+                                      context: context,
+                                      isScrollControlled: true,
+                                      backgroundColor: Colors.transparent,
+                                      builder: (ctx) =>
+                                          _RecipePicker(alreadySelected: _recipes),
+                                    );
+                                if (selected != null && mounted) {
+                                  setState(() {
+                                    _recipes.addAll(selected);
+                                  });
                                 }
-                              }
-                            },
-                            child: Container(
-                              width: 36,
-                              height: 36,
-                              margin: const EdgeInsets.only(right: 8),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFFFE5E5),
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(
-                                Icons.delete_outline_rounded,
-                                size: 20,
-                                color: Color(0xFFCC3333),
-                              ),
-                            ),
-                          ),
-                        GestureDetector(
-                          onTap: () => Navigator.pop(context),
-                          child: Container(
-                            width: 36,
-                            height: 36,
-                            decoration: const BoxDecoration(
-                              color: Color(0xFFF0F0F0),
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(
-                              Icons.close_rounded,
-                              size: 20,
-                              color: Color(0xFF555555),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
+                              },
+                            );
+                          }
+                          final r = _recipes[i];
+                          return _FormRecipeCard(
+                            recipe: r,
+                            onDelete: () => setState(() => _recipes.removeAt(i)),
+                          );
+                        },
+                      ),
+                    ],
                   ),
-
-                  const SizedBox(height: 24),
-
-                  // ── Name field ─────────────────────────────────────────
-                  const Text(
-                    'Name',
-                    style: TextStyle(
-                      fontFamily: 'SF Pro',
-                      fontWeight: FontWeight.w600,
-                      fontSize: 14,
-                      color: Color(0xFF999999),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: _nameCtrl,
-                    style: const TextStyle(
-                      fontFamily: 'SF Pro',
-                      fontSize: 15,
-                      color: Color(0xFF1A1A1A),
-                    ),
-                    decoration: InputDecoration(
-                      hintText: 'Everyday meal',
-                      hintStyle: TextStyle(
-                        fontFamily: 'SF Pro',
-                        fontSize: 15,
-                        color: Colors.grey[400],
-                      ),
-                      filled: true,
-                      fillColor: const Color(0xFFF5F5F5),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 14,
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide.none,
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide.none,
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(
-                          color: Color(0xFFCC3333),
-                          width: 1.5,
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 28),
-
-                  // ── Recipes section ────────────────────────────────────
-                  const Text(
-                    'Recipes',
-                    style: TextStyle(
-                      fontFamily: 'SF Pro',
-                      fontWeight: FontWeight.w800,
-                      fontSize: 18,
-                      color: Color(0xFF1A1A1A),
-                    ),
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  // Grid of recipe mini-cards + add slot
-                  GridView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: _recipes.length + 1, // +1 for add slot
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      mainAxisSpacing: 14.h,
-                      crossAxisSpacing: 14.w,
-                      childAspectRatio: 0.82,
-                    ),
-                    itemBuilder: (_, i) {
-                      // Last item = add slot
-                      if (i == _recipes.length) {
-                        return _AddRecipeSlot(
-                          onTap: () async {
-                            final List<Recipe>? selected =
-                                await showModalBottomSheet<List<Recipe>>(
-                                  context: context,
-                                  isScrollControlled: true,
-                                  backgroundColor: Colors.transparent,
-                                  builder: (ctx) =>
-                                      _RecipePicker(alreadySelected: _recipes),
-                                );
-                            if (selected != null && mounted) {
-                              setState(() {
-                                _recipes.addAll(selected);
-                              });
-                            }
-                          },
-                        );
-                      }
-                      final r = _recipes[i];
-                      return _FormRecipeCard(
-                        recipe: r,
-                        onDelete: () => setState(() => _recipes.removeAt(i)),
-                      );
-                    },
+                ),
+              ),
+            ),
+    
+            // ── Save button (fixed bottom) ──────────────────────────────────
+            Container(
+              padding: EdgeInsets.fromLTRB(20.w, 10.h, 20.w, bottomPad + 12.h),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, -5),
                   ),
                 ],
               ),
-            ),
-          ),
-
-          // ── Save button (sticky bottom) ──────────────────────────────────
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: Container(
-              color: Colors.white,
-              padding: EdgeInsets.fromLTRB(20, 10, 20, bottomPad + 12),
               child: GestureDetector(
                 onTap: _saving
                     ? null
@@ -309,20 +318,20 @@ class _CookbookFormScreenState extends State<CookbookFormScreen> {
                         }
                       },
                 child: Container(
-                  height: 52,
+                  height: 52.h,
                   decoration: BoxDecoration(
                     color: const Color(0xFFCC3333),
-                    borderRadius: BorderRadius.circular(30),
+                    borderRadius: BorderRadius.circular(30.r),
                   ),
                   child: Center(
                     child: _saving
                         ? const CircularProgressIndicator(color: Colors.white)
-                        : const Text(
+                        : Text(
                             'Save',
                             style: TextStyle(
                               fontFamily: 'SF Pro',
                               fontWeight: FontWeight.w700,
-                              fontSize: 16,
+                              fontSize: 16.sp,
                               color: Colors.white,
                             ),
                           ),
@@ -330,8 +339,8 @@ class _CookbookFormScreenState extends State<CookbookFormScreen> {
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

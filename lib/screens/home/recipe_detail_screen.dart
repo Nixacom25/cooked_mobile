@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../../services/history_service.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:share_plus/share_plus.dart';
@@ -7,10 +8,12 @@ import '../../models/recipe.dart';
 import '../../models/cookbook.dart';
 import '../../services/recipe_service.dart';
 import '../../services/cookbook_service.dart';
-import '../../services/grocery_service.dart';
 import '../../routes/app_routes.dart';
 import '../../core/widgets/ios_toast.dart';
 import '../../core/utils/error_helper.dart';
+import '../../widgets/add_to_grocery_modal.dart';
+
+enum DetailTab { steps, ingredients, equipment }
 
 class RecipeDetailScreen extends StatefulWidget {
   const RecipeDetailScreen({super.key});
@@ -19,16 +22,25 @@ class RecipeDetailScreen extends StatefulWidget {
 }
 
 class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
-  bool _isIngredientsTab = true; // false = Steps
-  late bool _isFavorited;
-  DateTime? _selectedDate;
+  DetailTab _activeTab = DetailTab.steps;
+  bool _historyLogged = false;
 
-
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_historyLogged) {
+      final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>? ?? {};
+      final Recipe? r = args['recipe'] as Recipe?;
+      if (r != null) {
+        HistoryService.instance.addToHistory(r);
+        _historyLogged = true;
+      }
+    }
+  }
 
   @override
   void initState() {
     super.initState();
-    _isFavorited = false;
   }
 
   // ── Add-to-Cookbook modal ─────────────────────────────────────────────────
@@ -39,52 +51,6 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
       isScrollControlled: true,
       builder: (_) => _AddToCookbookSheet(recipe: recipe),
     );
-  }
-
-  Future<void> _addToGrocery(
-    BuildContext context,
-    Recipe r, [
-    DateTime? date,
-  ]) async {
-    try {
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (_) => const Center(child: CircularProgressIndicator()),
-      );
-
-      for (var ing in r.ingredients) {
-        await GroceryService.instance.addGroceryItem(
-          name: ing.name,
-          quantity: ing.quantity,
-          icon: ing.icon,
-          recipeId: r.id,
-          date: date,
-        );
-      }
-
-      if (!mounted) return;
-      Navigator.pop(context);
-      IosToast.show(
-        context,
-        message: date == null
-            ? 'Ingredients added to your grocery list!'
-            : 'Recipe scheduled for ${_fmtDate(date)}!',
-        type: ToastType.success,
-      );
-    } catch (e) {
-      if (!mounted) return;
-      Navigator.pop(context);
-      IosToast.show(
-        context,
-        message: ErrorHelper.getFriendlyMessage(e),
-        type: ToastType.error,
-      );
-    }
-  }
-
-  String _fmtDate(DateTime d) {
-    return '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}';
   }
 
   Future<void> _handleShare() async {
@@ -135,8 +101,8 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
     final String prep = r?.prepTime != null ? '${r!.prepTime} min prep' : '';
 
     final bool isPreview = args['isPreview'] ?? false;
-
-    _isFavorited = r?.isFavorite ?? args['hearted'] ?? false;
+    final bool isTrend = args['isTrend'] ?? false;
+    final VoidCallback? onImport = args['onImport'] as VoidCallback?;
 
     final bottomPad = MediaQuery.of(context).padding.bottom;
 
@@ -200,7 +166,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                                         r.id,
                                       );
                                       setState(() {
-                                        _isFavorited = !_isFavorited;
+                                        r.isFavorite = !r.isFavorite;
                                       });
                                     } catch (e) {
                                       IosToast.show(
@@ -214,7 +180,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                                   }
                                 },
                                 child: Icon(
-                                  _isFavorited
+                                  (r?.isFavorite ?? false)
                                       ? Icons.favorite_rounded
                                       : Icons.favorite_border_rounded,
                                   color: const Color(0xFFCC3333),
@@ -229,6 +195,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                         // Tag pills
                         Wrap(
                           spacing: 8,
+                          runSpacing: 8,
                           children: [
                             if (prep.isNotEmpty)
                               _TagPill(
@@ -254,98 +221,62 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
 
                         const SizedBox(height: 15),
 
-                        if (!isPreview) ...[
-                          // Buttons row
-                          Row(
-                            children: [
-                              Expanded(
-                                child: GestureDetector(
-                                  onTap: () {
-                                    if (r != null) {
-                                      _addToGrocery(
-                                        context,
-                                        r,
-                                        _selectedDate ?? DateTime.now(),
-                                      );
-                                    }
-                                  },
-                                  child: Container(
-                                    height: 50,
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFFCC3333),
-                                      borderRadius: BorderRadius.circular(30),
-                                    ),
-                                    child: const Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        Icon(
-                                          Icons.shopping_cart_outlined,
-                                          color: Colors.white,
-                                          size: 18,
-                                        ),
-                                        SizedBox(width: 8),
-                                        Text(
-                                          'Add to Grocery',
-                                          style: TextStyle(
-                                            fontFamily: 'SF Pro',
-                                            fontWeight: FontWeight.w700,
-                                            fontSize: 14,
+                          if (!isPreview) ...[
+                            // Buttons row
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      if (r != null) {
+                                        showModalBottomSheet(
+                                          context: context,
+                                          isScrollControlled: true,
+                                          backgroundColor: Colors.transparent,
+                                          builder: (context) => AddToGroceryModal(recipe: r),
+                                        );
+                                      }
+                                    },
+                                    child: Container(
+                                      height: 50,
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFFCC3333),
+                                        borderRadius: BorderRadius.circular(30),
+                                      ),
+                                      child: const Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          Icon(
+                                            Icons.shopping_cart_outlined,
                                             color: Colors.white,
+                                            size: 18,
                                           ),
-                                        ),
-                                      ],
+                                          SizedBox(width: 8),
+                                          Text(
+                                            'Add to Grocery',
+                                            style: TextStyle(
+                                              fontFamily: 'SF Pro',
+                                              fontWeight: FontWeight.w700,
+                                              fontSize: 14,
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ),
                                 ),
-                              ),
-                              const SizedBox(width: 15),
-                              GestureDetector(
-                                onTap: () async {
-                                  final DateTime? pickedDate =
-                                      await showDatePicker(
-                                        context: context,
-                                        initialDate:
-                                            _selectedDate ?? DateTime.now(),
-                                        firstDate: DateTime.now(),
-                                        lastDate: DateTime.now().add(
-                                          const Duration(days: 365),
-                                        ),
-                                      );
-                                  if (pickedDate != null) {
-                                    setState(() {
-                                      _selectedDate = pickedDate;
-                                    });
-                                  }
-                                },
-                                child: Container(
-                                  width: 45,
-                                  height: 45,
-                                  decoration: BoxDecoration(
-                                    color: _selectedDate != null
-                                        ? const Color(0xFFCC3333)
-                                        : const Color(0xFFEAEAEA),
-                                    borderRadius: BorderRadius.circular(50),
-                                  ),
-                                  child: Icon(
-                                    Icons.calendar_today_outlined,
-                                    color: _selectedDate != null
-                                        ? Colors.white
-                                        : const Color(0xFF111827),
-                                    size: 20,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 20),
-                        ],
+                              ],
+                            ),
+                            const SizedBox(height: 20),
+                          ],
 
-                        // Steps / Ingredients toggle
+                        // Tabs row
                         Container(
                           padding: const EdgeInsets.all(4),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFFFFBEF),
+                            color: const Color(0xFFF9FAFB),
                             borderRadius: BorderRadius.circular(30),
                             border: Border.all(color: const Color(0xFFE5E7EB)),
                           ),
@@ -353,15 +284,18 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                             children: [
                               _TabPill(
                                 label: 'Steps',
-                                active: !_isIngredientsTab,
-                                onTap: () =>
-                                    setState(() => _isIngredientsTab = false),
+                                active: _activeTab == DetailTab.steps,
+                                onTap: () => setState(() => _activeTab = DetailTab.steps),
+                              ),
+                              _TabPill(
+                                label: 'Equipment',
+                                active: _activeTab == DetailTab.equipment,
+                                onTap: () => setState(() => _activeTab = DetailTab.equipment),
                               ),
                               _TabPill(
                                 label: 'Ingredients',
-                                active: _isIngredientsTab,
-                                onTap: () =>
-                                    setState(() => _isIngredientsTab = true),
+                                active: _activeTab == DetailTab.ingredients,
+                                onTap: () => setState(() => _activeTab = DetailTab.ingredients),
                               ),
                             ],
                           ),
@@ -370,8 +304,10 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                         const SizedBox(height: 16),
 
                         // Content based on tab
-                        if (_isIngredientsTab)
+                        if (_activeTab == DetailTab.ingredients)
                           _IngredientsList(ingredients: r?.ingredients ?? [])
+                        else if (_activeTab == DetailTab.equipment)
+                          _EquipmentList(equipment: r?.equipment ?? [])
                         else
                           _StepsList(steps: r?.steps ?? [], tips: r?.tips),
 
@@ -391,43 +327,106 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
               child: Container(
                 color: Colors.white,
                 padding: EdgeInsets.fromLTRB(20, 10, 20, 10 + bottomPad),
-                child: (isPreview || (r?.isSuggested ?? false))
-                    ? GestureDetector(
-                        onTap: () => _showAddToCookbookModal(context, r!),
-                        child: Container(
-                          height: 56.h,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFC83A2D),
-                            borderRadius: BorderRadius.circular(16.r),
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(0xFFC83A2D).withOpacity(0.2),
-                                blurRadius: 12,
-                                offset: const Offset(0, 4),
+                child: (isPreview || (r?.origin == 'SUGGESTED'))
+                    ? Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (isPreview) ...[
+                            Padding(
+                              padding: EdgeInsets.only(bottom: 10.h),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.info_outline_rounded,
+                                      size: 14.sp, color: const Color(0xFF64748B)),
+                                  SizedBox(width: 6.w),
+                                  Text(
+                                    "Please verify if this matches the source",
+                                    style: TextStyle(
+                                      fontSize: 12.sp,
+                                      color: const Color(0xFF64748B),
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Icon(
-                                Icons.bookmark_add_rounded,
-                                color: Colors.white,
-                                size: 20,
-                              ),
-                              SizedBox(width: 8.w),
-                              Text(
-                                'Add to recipe book',
-                                style: TextStyle(
-                                  fontFamily: 'SF Pro',
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 16.sp,
-                                  color: Colors.white,
+                            ),
+                            if (r?.sourceUrl != null && r!.sourceUrl!.isNotEmpty)
+                              Padding(
+                                padding: EdgeInsets.only(bottom: 12.h),
+                                child: GestureDetector(
+                                  onTap: () {
+                                    Navigator.pushNamed(
+                                      context,
+                                      AppRoutes.import,
+                                      arguments: {'initialUrl': r.sourceUrl},
+                                    );
+                                  },
+                                  child: Text(
+                                    "View Original Source",
+                                    style: TextStyle(
+                                      color: const Color(0xFFC83A2D),
+                                      fontSize: 13.sp,
+                                      fontWeight: FontWeight.w600,
+                                      decoration: TextDecoration.underline,
+                                    ),
+                                  ),
                                 ),
                               ),
-                            ],
+                          ],
+                          GestureDetector(
+                            onTap: () {
+                              if (isTrend && onImport != null) {
+                                Navigator.pop(context);
+                                onImport();
+                              } else {
+                                _showAddToCookbookModal(context, r!);
+                              }
+                            },
+                            child: Container(
+                              height: 56.h,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFC83A2D),
+                                borderRadius: BorderRadius.circular(16.r),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: const Color(0xFFC83A2D).withOpacity(0.2),
+                                    blurRadius: 12,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    isTrend
+                                        ? Icons.cloud_download_rounded
+                                        : (isPreview
+                                            ? Icons.check_circle_outline_rounded
+                                            : Icons.bookmark_add_rounded),
+                                    color: Colors.white,
+                                    size: 20,
+                                  ),
+                                  SizedBox(width: 8.w),
+                                  Text(
+                                    isTrend
+                                        ? 'Import this recipe'
+                                        : (isPreview
+                                            ? 'Confirm and Save Recipe'
+                                            : 'Add to recipe book'),
+                                    style: TextStyle(
+                                      fontFamily: 'SF Pro',
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 16.sp,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
-                        ),
+                        ],
                       )
                     : GestureDetector(
                         onTap: () {
@@ -732,6 +731,65 @@ class _IngredientsList extends StatelessWidget {
   }
 }
 
+// ── Equipment list ─────────────────────────────────────────────────────────────
+class _EquipmentList extends StatelessWidget {
+  final List<String> equipment;
+  const _EquipmentList({required this.equipment});
+
+  @override
+  Widget build(BuildContext context) {
+    if (equipment.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 20),
+        child: Text("No specific equipment listed."),
+      );
+    }
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFF1F5F9)),
+      ),
+      child: ListView.separated(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        itemCount: equipment.length,
+        separatorBuilder: (_, __) => const Divider(height: 0, color: Color(0xFFF1F5F9)),
+        itemBuilder: (context, i) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(
+              children: [
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF1F5F9),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.handyman_outlined, size: 16, color: Color(0xFF64748B)),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    equipment[i],
+                    style: const TextStyle(
+                      fontFamily: 'SF Pro',
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF1E293B),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
 // ── Steps list ────────────────────────────────────────────────────────────────
 class _StepsList extends StatelessWidget {
   final List<String> steps;
@@ -778,27 +836,7 @@ class _StepsList extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'Step ${i + 1}',
-                        style: TextStyle(
-                          fontFamily: 'SF Pro',
-                          fontWeight: FontWeight.w700,
-                          fontSize: 13,
-                          color: Colors.grey[500],
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        steps[i],
-                        style: const TextStyle(
-                          fontFamily: 'SF Pro',
-                          fontSize: 15,
-                          height: 1.6,
-                          color: Color(0xFF1A1A1A),
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
+                      _StepContent(step: steps[i], index: i),
                     ],
                   ),
                 ),
@@ -871,205 +909,187 @@ class _AddToCookbookSheetState extends State<_AddToCookbookSheet> {
     final bottomPad = MediaQuery.of(context).padding.bottom;
 
     return Container(
-      constraints: BoxConstraints(maxHeight: 0.8.sh),
+      constraints: BoxConstraints(maxHeight: 0.85.sh),
       decoration: BoxDecoration(
-        color: const Color(0xFFC83A2D),
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28.r)),
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
       ),
-      child: Stack(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Positioned.fill(
-            child: ClipRRect(
-              borderRadius: BorderRadius.vertical(top: Radius.circular(28.r)),
-              child: Opacity(
-                opacity: 0.12,
-                child: Image.asset(
-                  'assets/images/fond.png',
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => const SizedBox.shrink(),
-                ),
-              ),
+          // Handle
+          Container(
+            width: 40.w,
+            height: 4.h,
+            margin: EdgeInsets.symmetric(vertical: 12.h),
+            decoration: BoxDecoration(
+              color: const Color(0xFFE5E7EB),
+              borderRadius: BorderRadius.circular(2.r),
             ),
           ),
 
+          // Header
           Padding(
-            padding: EdgeInsets.fromLTRB(22.w, 14.h, 22.w, bottomPad + 20.h),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
+            padding: EdgeInsets.symmetric(horizontal: 20.w),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Center(
-                  child: Container(
-                    width: 40.w,
-                    height: 4.h,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.5),
-                      borderRadius: BorderRadius.circular(2.r),
-                    ),
+                Text(
+                  'Add to Cookbook',
+                  style: TextStyle(
+                    fontFamily: 'SF Pro',
+                    fontWeight: FontWeight.w800,
+                    fontSize: 20.sp,
+                    color: const Color(0xFF1A1A1A),
                   ),
                 ),
-                SizedBox(height: 18.h),
-
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        'Add to Recipe Books',
-                        style: TextStyle(
-                          fontFamily: 'SF Pro',
-                          fontWeight: FontWeight.w800,
-                          fontSize: 20.sp,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                    GestureDetector(
-                      onTap: () => Navigator.pop(context),
-                      child: Container(
-                        padding: EdgeInsets.all(6.r),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          Icons.close_rounded,
-                          color: Colors.white,
-                          size: 18.sp,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 18.h),
-
-                Flexible(
-                  child: FutureBuilder<List<Cookbook>>(
-                    future: CookbookService.instance.getMyCookbooks(),
-                    builder: (ctx, snapshot) {
-                      final cookbooks = snapshot.data ?? [];
-                      
-                      return Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          // Create New Option
-                          _buildActionTile(
-                            icon: Icons.add_circle_outline_rounded,
-                            label: 'Create a new recipe book',
-                            onTap: () async {
-                              final result = await Navigator.pushNamed(
-                                context,
-                                AppRoutes.cookbookForm,
-                                arguments: {'mode': 'add'},
-                              );
-                              if (result == true) {
-                                setState(() {});
-                              }
-                            },
-                          ),
-                          SizedBox(height: 12.h),
-
-                          if (snapshot.connectionState == ConnectionState.waiting && cookbooks.isEmpty)
-                             const Center(child: CircularProgressIndicator(color: Colors.white))
-                          else if (cookbooks.isEmpty)
-                            Padding(
-                              padding: EdgeInsets.symmetric(vertical: 20.h),
-                              child: Text(
-                                "No recipe books found. Create one above!",
-                                style: TextStyle(
-                                  color: Colors.white70,
-                                  fontSize: 14.sp,
-                                  fontFamily: 'SF Pro',
-                                ),
-                              ),
-                            )
-                          else
-                            Flexible(
-                              child: ListView.builder(
-                                shrinkWrap: true,
-                                itemCount: cookbooks.length,
-                                itemBuilder: (lCtx, i) {
-                                  final cb = cookbooks[i];
-                                  final isSelected = _selectedIds.contains(cb.id);
-                                  return Container(
-                                    margin: EdgeInsets.only(bottom: 10.h),
-                                    decoration: BoxDecoration(
-                                      color: Colors.white.withOpacity(isSelected ? 0.25 : 0.1),
-                                      borderRadius: BorderRadius.circular(15.r),
-                                      border: Border.all(
-                                        color: isSelected ? Colors.white : Colors.transparent,
-                                        width: 2,
-                                      ),
-                                    ),
-                                    child: ListTile(
-                                      onTap: () {
-                                        setState(() {
-                                          if (isSelected) _selectedIds.remove(cb.id);
-                                          else _selectedIds.add(cb.id);
-                                        });
-                                      },
-                                      contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 2.h),
-                                      title: Text(
-                                        cb.name,
-                                        style: TextStyle(
-                                          fontFamily: 'SF Pro',
-                                          fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                                          fontSize: 15.sp,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                      trailing: isSelected 
-                                          ? Icon(Icons.check_circle_rounded, color: Colors.white, size: 24.sp)
-                                          : Icon(Icons.radio_button_unchecked_rounded, color: Colors.white30, size: 24.sp),
-                                    ),
-                                  );
-                                },
-                              ),
-                            ),
-                        ],
-                      );
-                    },
-                  ),
-                ),
-
-                SizedBox(height: 20.h),
-
-                // Confirm button
-                GestureDetector(
-                  onTap: (_isSaving || _selectedIds.isEmpty) ? null : _handleConfirm,
-                  child: Container(
-                    height: 52.h,
-                    decoration: BoxDecoration(
-                      color: _selectedIds.isEmpty 
-                          ? Colors.white.withOpacity(0.5) 
-                          : Colors.white,
-                      borderRadius: BorderRadius.circular(15.r),
-                      boxShadow: [
-                        if (_selectedIds.isNotEmpty)
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          ),
-                      ],
-                    ),
-                    child: Center(
-                      child: _isSaving 
-                        ? const CircularProgressIndicator(color: Color(0xFFCC3333))
-                        : Text(
-                            _selectedIds.isEmpty 
-                                ? 'Select at least one book' 
-                                : 'Confirm (${_selectedIds.length})',
-                            style: TextStyle(
-                              fontFamily: 'SF Pro',
-                              fontWeight: FontWeight.w700,
-                              fontSize: 16.sp,
-                              color: const Color(0xFFCC3333),
-                            ),
-                          ),
-                    ),
-                  ),
+                IconButton(
+                  onPressed: () => Navigator.pop(context),
+                  icon: Icon(Icons.close_rounded, size: 24.sp, color: const Color(0xFF64748B)),
                 ),
               ],
+            ),
+          ),
+
+          const Divider(height: 1),
+
+          Flexible(
+            child: ListView(
+              shrinkWrap: true,
+              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
+              children: [
+                // Create New Option
+                _buildActionTile(
+                  icon: Icons.add_circle_outline_rounded,
+                  label: 'Create a new recipe book',
+                  onTap: () async {
+                    final result = await Navigator.pushNamed(
+                      context,
+                      AppRoutes.cookbookForm,
+                      arguments: {'mode': 'add'},
+                    );
+                    if (result == true) {
+                      setState(() {});
+                    }
+                  },
+                ),
+                SizedBox(height: 20.h),
+
+                Text(
+                  'Select Recipe Books',
+                  style: TextStyle(
+                    fontFamily: 'SF Pro',
+                    fontWeight: FontWeight.w700,
+                    fontSize: 14.sp,
+                    color: const Color(0xFF64748B),
+                  ),
+                ),
+                SizedBox(height: 12.h),
+
+                FutureBuilder<List<Cookbook>>(
+                  future: CookbookService.instance.getMyCookbooks(),
+                  builder: (ctx, snapshot) {
+                    final cookbooks = snapshot.data ?? [];
+                    
+                    if (snapshot.connectionState == ConnectionState.waiting && cookbooks.isEmpty) {
+                      return SizedBox(
+                        height: 100.h,
+                        child: const Center(child: CircularProgressIndicator(color: Color(0xFFCC3333))),
+                      );
+                    }
+                    
+                    if (cookbooks.isEmpty) {
+                      return Padding(
+                        padding: EdgeInsets.symmetric(vertical: 20.h),
+                        child: Center(
+                          child: Text(
+                            "No recipe books found.",
+                            style: TextStyle(
+                              color: const Color(0xFF64748B),
+                              fontSize: 14.sp,
+                              fontFamily: 'SF Pro',
+                            ),
+                          ),
+                        ),
+                      );
+                    }
+
+                    return Container(
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF9FAFB),
+                        borderRadius: BorderRadius.circular(16.r),
+                        border: Border.all(color: const Color(0xFFF3F4F6)),
+                      ),
+                      child: ListView.separated(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: cookbooks.length,
+                        separatorBuilder: (_, __) => const Divider(height: 1, color: Color(0xFFF3F4F6)),
+                        itemBuilder: (lCtx, i) {
+                          final cb = cookbooks[i];
+                          final isSelected = _selectedIds.contains(cb.id);
+                          return ListTile(
+                            onTap: () {
+                              setState(() {
+                                if (isSelected) _selectedIds.remove(cb.id);
+                                else _selectedIds.add(cb.id);
+                              });
+                            },
+                            contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
+                            title: Text(
+                              cb.name,
+                              style: TextStyle(
+                                fontFamily: 'SF Pro',
+                                fontWeight: FontWeight.w600,
+                                fontSize: 15.sp,
+                                color: const Color(0xFF1F2937),
+                              ),
+                            ),
+                            trailing: Icon(
+                              isSelected 
+                                  ? Icons.check_circle_rounded 
+                                  : Icons.radio_button_unchecked_rounded,
+                              color: isSelected ? const Color(0xFFCC3333) : const Color(0xFFD1D5DB),
+                              size: 24.sp,
+                            ),
+                          );
+                        },
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+
+          // Confirm Button
+          Padding(
+            padding: EdgeInsets.fromLTRB(20.w, 10.h, 20.w, 10.h + bottomPad),
+            child: SizedBox(
+              width: double.infinity,
+              height: 54.h,
+              child: ElevatedButton(
+                onPressed: (_isSaving || _selectedIds.isEmpty) ? null : _handleConfirm,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFCC3333),
+                  foregroundColor: Colors.white,
+                  disabledBackgroundColor: const Color(0xFFE5E7EB),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+                  elevation: 0,
+                ),
+                child: _isSaving
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : Text(
+                        _selectedIds.isEmpty 
+                            ? 'Select at least one book' 
+                            : 'Add to selected books (${_selectedIds.length})',
+                        style: TextStyle(
+                          fontFamily: 'SF Pro',
+                          fontWeight: FontWeight.w700,
+                          fontSize: 16.sp,
+                        ),
+                      ),
+              ),
             ),
           ),
         ],
@@ -1083,8 +1103,9 @@ class _AddToCookbookSheetState extends State<_AddToCookbookSheet> {
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(14.r),
+          color: const Color(0xFFCC3333).withOpacity(0.05),
+          borderRadius: BorderRadius.circular(16.r),
+          border: Border.all(color: const Color(0xFFCC3333).withOpacity(0.2)),
         ),
         child: Row(
           children: [
@@ -1095,10 +1116,12 @@ class _AddToCookbookSheetState extends State<_AddToCookbookSheet> {
               style: TextStyle(
                 fontFamily: 'SF Pro',
                 fontWeight: FontWeight.w700,
-                fontSize: 14.sp,
+                fontSize: 15.sp,
                 color: const Color(0xFFCC3333),
               ),
             ),
+            const Spacer(),
+            Icon(Icons.chevron_right_rounded, color: const Color(0xFFCC3333), size: 20.sp),
           ],
         ),
       ),
@@ -1142,5 +1165,63 @@ class _AddToCookbookSheetState extends State<_AddToCookbookSheet> {
         type: ToastType.error,
       );
     }
+  }
+}
+class _StepContent extends StatelessWidget {
+  final String step;
+  final int index;
+
+  const _StepContent({required this.step, required this.index});
+
+  @override
+  Widget build(BuildContext context) {
+    String title = 'Step ${index + 1}';
+    String content = step;
+
+    // Detect if the string already contains a title like "Step 1: Prepare..." or just "Prepare..."
+    // Look for first colon within first 60 chars
+    final colonIndex = step.indexOf(':');
+    if (colonIndex != -1 && colonIndex < 60) {
+      final prefix = step.substring(0, colonIndex).trim();
+      // If prefix contains "Step" or is just a short title
+      if (prefix.toLowerCase().contains('step') || prefix.split(' ').length <= 4) {
+        title = prefix;
+        content = step.substring(colonIndex + 1).trim();
+      }
+    } else {
+      // Check if there's a newline separating a title
+      final newlineIndex = step.indexOf('\n');
+      if (newlineIndex != -1 && newlineIndex < 60) {
+        title = step.substring(0, newlineIndex).trim();
+        content = step.substring(newlineIndex + 1).trim();
+      }
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: TextStyle(
+            fontFamily: 'SF Pro',
+            fontWeight: FontWeight.w700,
+            fontSize: 13,
+            color: Colors.grey[500],
+            letterSpacing: 0.5,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          content,
+          style: const TextStyle(
+            fontFamily: 'SF Pro',
+            fontSize: 15,
+            height: 1.6,
+            color: Color(0xFF1A1A1A),
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
+    );
   }
 }

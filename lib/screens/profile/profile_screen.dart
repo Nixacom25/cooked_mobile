@@ -363,117 +363,102 @@ class _LogoutSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(28.r)),
-      child: Stack(
+    final bottomPad = MediaQuery.of(context).padding.bottom;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          // Background image
-          Positioned.fill(
-            child: Image.asset(
-              'assets/images/fond2.png',
-              fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+          // Handle
+          Container(
+            width: 40.w,
+            height: 4.h,
+            margin: EdgeInsets.symmetric(vertical: 12.h),
+            decoration: BoxDecoration(
+              color: const Color(0xFFE5E7EB),
+              borderRadius: BorderRadius.circular(2.r),
             ),
           ),
-          // Gradient overlay
-          Positioned.fill(
-            child: Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [Color(0xFFCC3333), Color(0x80CC3333)],
+
+          // Header
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20.w),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Logout',
+                  style: TextStyle(
+                    fontFamily: 'SF Pro',
+                    fontWeight: FontWeight.w800,
+                    fontSize: 20.sp,
+                    color: const Color(0xFF1A1A1A),
+                  ),
                 ),
-              ),
+                IconButton(
+                  onPressed: () => Navigator.pop(context),
+                  icon: Icon(Icons.close_rounded, size: 24.sp, color: const Color(0xFF64748B)),
+                ),
+              ],
             ),
           ),
-          // Content
-          SafeArea(
-            top: false,
-            child: Padding(
-              padding: EdgeInsets.fromLTRB(20.w, 24.h, 20.w, 32.h),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Title row
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          'Logout',
-                          style: TextStyle(
-                            fontFamily: 'SF Pro',
-                            fontWeight: FontWeight.w800,
-                            fontSize: 20.sp,
-                            color: const Color(0xFF1A1A1A),
-                          ),
-                        ),
-                      ),
-                      GestureDetector(
-                        onTap: () => Navigator.pop(context),
-                        child: Container(
-                          width: 34.w,
-                          height: 34.h,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.25),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(
-                            Icons.close_rounded,
-                            size: 18.sp,
-                            color: const Color(0xFF1A1A1A),
-                          ),
-                        ),
-                      ),
-                    ],
+
+          const Divider(height: 1),
+
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Are you sure you want to log out of your account? You will need to enter your credentials to log back in.',
+                  style: TextStyle(
+                    fontFamily: 'SF Pro',
+                    fontSize: 14.sp,
+                    color: const Color(0xFF64748B),
+                    height: 1.6,
                   ),
-                  SizedBox(height: 14.h),
-                  // Description
-                  Text(
-                    'Are you sure you want to log out of your account? You will need to enter your credentials to log back in.',
-                    style: TextStyle(
-                      fontFamily: 'SF Pro',
-                      fontSize: 14.sp,
-                      color: const Color(0xFF1A1A1A),
-                      height: 1.6,
+                ),
+                SizedBox(height: 28.h),
+
+                // Logout button
+                GestureDetector(
+                  onTap: () async {
+                    Navigator.pop(context); // close sheet
+                    await AuthService.instance.logout();
+                    if (!context.mounted) return;
+                    Navigator.pushNamedAndRemoveUntil(
+                      context,
+                      AppRoutes.welcome,
+                      (_) => false,
+                    );
+                  },
+                  child: Container(
+                    width: double.infinity,
+                    height: 54.h,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFCC3333),
+                      borderRadius: BorderRadius.circular(16.r),
                     ),
-                  ),
-                  SizedBox(height: 28.h),
-                  // Logout button
-                  GestureDetector(
-                    onTap: () async {
-                      Navigator.pop(context); // close sheet
-                      await AuthService.instance.logout();
-                      if (!context.mounted) return;
-                      Navigator.pushNamedAndRemoveUntil(
-                        context,
-                        AppRoutes.welcome,
-                        (_) => false,
-                      );
-                    },
-                    child: Container(
-                      width: double.infinity,
-                      height: 52.h,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFC83A2D),
-                        borderRadius: BorderRadius.circular(30.r),
-                      ),
-                      child: Center(
-                        child: Text(
-                          'Logout',
-                          style: TextStyle(
-                            fontFamily: 'SF Pro',
-                            fontWeight: FontWeight.w700,
-                            fontSize: 16.sp,
-                            color: Colors.white,
-                          ),
+                    child: Center(
+                      child: Text(
+                        'Logout',
+                        style: TextStyle(
+                          fontFamily: 'SF Pro',
+                          fontWeight: FontWeight.w700,
+                          fontSize: 16.sp,
+                          color: Colors.white,
                         ),
                       ),
                     ),
                   ),
-                ],
-              ),
+                ),
+                SizedBox(height: bottomPad + 10.h),
+              ],
             ),
           ),
         ],

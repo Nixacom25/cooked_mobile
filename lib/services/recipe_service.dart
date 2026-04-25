@@ -15,6 +15,7 @@ class RecipeService {
   final ValueNotifier<List<Recipe>?> favoriteRecipesNotifier = ValueNotifier(
     null,
   );
+  final ValueNotifier<List<Recipe>?> recentImportsNotifier = ValueNotifier(null);
 
   Future<Map<String, String>> _getHeaders() async {
     final token = await AuthService.instance.getToken();
@@ -256,6 +257,7 @@ class RecipeService {
 
     if (response.statusCode == 200) {
       getMyRecipes().then((_) => null).catchError((_) => null);
+      getRecentImports().then((_) => null).catchError((_) => null);
       return Recipe.fromJson(jsonDecode(response.body));
     } else {
       final error = jsonDecode(response.body)['message'] ?? 'Import failed';
@@ -297,7 +299,9 @@ class RecipeService {
     if (response.statusCode == 200) {
       final Map<String, dynamic> data = jsonDecode(response.body);
       final List<dynamic> content = data['content'];
-      return content.map((json) => Recipe.fromJson(json)).toList();
+      final recipes = content.map((json) => Recipe.fromJson(json)).toList();
+      recentImportsNotifier.value = recipes;
+      return recipes;
     } else {
       throw Exception('Unable to load recent imports.');
     }

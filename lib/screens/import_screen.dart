@@ -32,6 +32,7 @@ class _ImportScreenState extends State<ImportScreen> {
   void initState() {
     super.initState();
     _loadRecentImports();
+    _loadTrending();
     
     // Trigger onboarding modal if in tutorial mode
     widget.isActiveNotifier?.addListener(_onActiveStateChanged);
@@ -79,6 +80,17 @@ class _ImportScreenState extends State<ImportScreen> {
     }
   }
 
+  Future<void> _loadTrending() async {
+    try {
+      final trending = await RecipeService.instance.getPopularRecipes(size: 5);
+      if (mounted) {
+        setState(() {
+          _trendingRecipes = trending;
+        });
+      }
+    } catch (_) {}
+  }
+
   final _linkCtrl = TextEditingController();
   final _searchCtrl = TextEditingController();
   bool _isImporting = false;
@@ -87,14 +99,9 @@ class _ImportScreenState extends State<ImportScreen> {
   List<Recipe> _recentImportsList = [];
   bool _isLoadingRecent = true;
 
-  static const _trending = [
-    'High protein dinner',
-    'Quinoa salad with chickpeas',
-    'Grilled salmon with asparagus',
-    'Stuffed bell peppers with turkey',
-    'Lentil soup with spinach',
-    'Tofu stir-fry with broccoli',
-  ];
+  List<Recipe> _trendingRecipes = [];
+
+  // static const _trending = [ ... REMOVED in favor of _trendingRecipes
 
   Future<void> _showWebPreview(String url, String title) async {
     showModalBottomSheet(
@@ -384,29 +391,32 @@ class _ImportScreenState extends State<ImportScreen> {
                 onClear: () => setState(() => _searchResults = []),
               ),
 
-            if (_searchResults.isEmpty && !_isSearching) ...[
-              // ── Trending ──────────────────────────────────────────────────────
-              Text(
-                'Trending',
-                style: TextStyle(
-                  fontFamily: 'SF Pro',
-                  fontWeight: FontWeight.w800,
-                  fontSize: 16.sp,
-                  color: const Color(0xFF1A1A1A),
+              if (_trendingRecipes.isNotEmpty) ...[
+                Text(
+                  'Trending',
+                  style: TextStyle(
+                    fontFamily: 'SF Pro',
+                    fontWeight: FontWeight.w800,
+                    fontSize: 16.sp,
+                    color: const Color(0xFF1A1A1A),
+                  ),
                 ),
-              ),
-
-              SizedBox(height: 12.h),
-
-              Wrap(
-                spacing: 8.w,
-                runSpacing: 8.h,
-                children: _trending
-                    .map((t) => _TrendingChip(label: t))
-                    .toList(),
-              ),
-
-              SizedBox(height: 25.h),
+                SizedBox(height: 12.h),
+                Wrap(
+                  spacing: 8.w,
+                  runSpacing: 8.h,
+                  children: _trendingRecipes
+                      .map((r) => _TrendingChip(
+                            recipe: r,
+                            onImport: () {
+                              _searchCtrl.text = r.name;
+                              _handleWebSearch(r.name);
+                            },
+                          ))
+                      .toList(),
+                ),
+                SizedBox(height: 25.h),
+              ],
 
               // ── Recent Imports ────────────────────────────────────────────────
               Row(
@@ -421,27 +431,28 @@ class _ImportScreenState extends State<ImportScreen> {
                       color: const Color(0xFF1A1A1A),
                     ),
                   ),
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.pushNamed(
-                        context,
-                        AppRoutes.viewAll,
-                        arguments: {
-                          'type': ViewAllType.imports,
-                          'title': 'Recent Imports',
+                    if (_recentImportsList.length > 3)
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.pushNamed(
+                            context,
+                            AppRoutes.viewAll,
+                            arguments: {
+                              'type': ViewAllType.imports,
+                              'title': 'Recent Imports',
+                            },
+                          );
                         },
-                      );
-                    },
-                    child: Text(
-                      'View All',
-                      style: TextStyle(
-                        fontFamily: 'SF Pro',
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14.sp,
-                        color: const Color(0xFFC83A2D),
+                        child: Text(
+                          'View All',
+                          style: TextStyle(
+                            fontFamily: 'SF Pro',
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14.sp,
+                            color: const Color(0xFFC83A2D),
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
                 ],
               ),
 
@@ -497,7 +508,6 @@ class _ImportScreenState extends State<ImportScreen> {
                   );
                 }),
             ],
-          ],
         ),
       ),
     );
@@ -529,42 +539,57 @@ class _PlatformImg extends StatelessWidget {
 
 // ── Trending chip ─────────────────────────────────────────────────────────────
 class _TrendingChip extends StatelessWidget {
-  final String label;
-  const _TrendingChip({required this.label});
+  final Recipe recipe;
+  final VoidCallback onImport;
+  const _TrendingChip({required this.recipe, required this.onImport});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
-      decoration: BoxDecoration(
-        color: const Color(0xFFEAEAEA),
-        borderRadius: BorderRadius.circular(20.r),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            child: SvgPicture.asset(
-              'assets/icones/trending.svg',
-              height: 10.sp,
-              width: 10.sp,
-              placeholderBuilder: (context) => SizedBox(
+    return GestureDetector(
+      onTap: () {
+        Navigator.pushNamed(
+          context,
+          AppRoutes.recipeDetail,
+          arguments: {
+            'recipe': recipe,
+            'isPreview': true,
+            'isTrend': true,
+            'onImport': onImport,
+          },
+        );
+      },
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+        decoration: BoxDecoration(
+          color: const Color(0xFFEAEAEA),
+          borderRadius: BorderRadius.circular(20.r),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              child: SvgPicture.asset(
+                'assets/icones/trending.svg',
                 height: 10.sp,
                 width: 10.sp,
-                child: const CircularProgressIndicator(strokeWidth: 2),
+                placeholderBuilder: (context) => SizedBox(
+                  height: 10.sp,
+                  width: 10.sp,
+                  child: const CircularProgressIndicator(strokeWidth: 2),
+                ),
               ),
             ),
-          ),
-          SizedBox(width: 10.w),
-          Text(
-            label,
-            style: TextStyle(
-              fontFamily: 'SF Pro',
-              fontSize: 13.sp,
-              color: const Color(0xFF111827),
+            SizedBox(width: 10.w),
+            Text(
+              recipe.name,
+              style: TextStyle(
+                fontFamily: 'SF Pro',
+                fontSize: 13.sp,
+                color: const Color(0xFF111827),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

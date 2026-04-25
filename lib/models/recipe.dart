@@ -6,6 +6,7 @@ class Recipe {
   final int? prepTime;
   final int kcal;
   final List<String> steps;
+  final List<String> equipment;
   final List<RecipeIngredient> ingredients;
   bool isPublic;
   bool isFavorite;
@@ -16,8 +17,8 @@ class Recipe {
   final String? sourceUrl;
   final int? servings;
   final String? tips;
-  final bool isSuggested;
   final DateTime? expiresAt;
+  final String? origin;
 
   Recipe({
     required this.id,
@@ -27,6 +28,7 @@ class Recipe {
     this.prepTime,
     required this.kcal,
     required this.steps,
+    required this.equipment,
     required this.ingredients,
     required this.isPublic,
     required this.isFavorite,
@@ -37,8 +39,8 @@ class Recipe {
     this.sourceUrl,
     this.servings,
     this.tips,
-    this.isSuggested = false,
     this.expiresAt,
+    this.origin,
   });
 
   factory Recipe.fromJson(Map<String, dynamic> json) {
@@ -49,6 +51,7 @@ class Recipe {
       cookTime: json['cookTime'] ?? 0,
       kcal: json['kcal'] ?? 0,
       steps: List<String>.from(json['steps'] ?? []),
+      equipment: List<String>.from(json['equipment'] ?? []),
       ingredients: (json['ingredients'] as List? ?? [])
           .map((i) => RecipeIngredient.fromJson(i))
           .toList(),
@@ -68,10 +71,81 @@ class Recipe {
       servings: json['servings'],
       tips: json['tips'],
       prepTime: json['prepTime'],
-      isSuggested: json['isSuggested'] ?? json['suggested'] ?? false,
       expiresAt: json['expiresAt'] != null
           ? DateTime.parse(json['expiresAt'])
           : null,
+      origin: json['origin'],
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'image': image,
+      'cookTime': cookTime,
+      'kcal': kcal,
+      'steps': steps,
+      'equipment': equipment,
+      'ingredients': ingredients.map((i) => i.toJson()).toList(),
+      'isPublic': isPublic,
+      'isFavorite': isFavorite,
+      'createdAt': createdAt.toIso8601String(),
+      'updatedAt': updatedAt.toIso8601String(),
+      'category': category,
+      'creator': creator?.toJson(),
+      'sourceUrl': sourceUrl,
+      'servings': servings,
+      'tips': tips,
+      'prepTime': prepTime,
+      'expiresAt': expiresAt?.toIso8601String(),
+      'origin': origin,
+    };
+  }
+
+  Recipe copyWith({
+    String? id,
+    String? name,
+    String? image,
+    int? cookTime,
+    int? prepTime,
+    int? kcal,
+    List<String>? steps,
+    List<String>? equipment,
+    List<RecipeIngredient>? ingredients,
+    bool? isPublic,
+    bool? isFavorite,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    String? category,
+    RecipeCreator? creator,
+    String? sourceUrl,
+    int? servings,
+    String? tips,
+    DateTime? expiresAt,
+    String? origin,
+  }) {
+    return Recipe(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      image: image ?? this.image,
+      cookTime: cookTime ?? this.cookTime,
+      prepTime: prepTime ?? this.prepTime,
+      kcal: kcal ?? this.kcal,
+      steps: steps ?? this.steps,
+      equipment: equipment ?? this.equipment,
+      ingredients: ingredients ?? this.ingredients,
+      isPublic: isPublic ?? this.isPublic,
+      isFavorite: isFavorite ?? this.isFavorite,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      category: category ?? this.category,
+      creator: creator ?? this.creator,
+      sourceUrl: sourceUrl ?? this.sourceUrl,
+      servings: servings ?? this.servings,
+      tips: tips ?? this.tips,
+      expiresAt: expiresAt ?? this.expiresAt,
+      origin: origin ?? this.origin,
     );
   }
 }
@@ -96,6 +170,15 @@ class RecipeCreator {
       lastname: json['lastname'] ?? '',
       photo: json['photo'],
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'firstname': firstname,
+      'lastname': lastname,
+      'photo': photo,
+    };
   }
 
   String get displayName => '$firstname $lastname';
@@ -148,5 +231,16 @@ class RecipeIngredient {
       quantity: quantity.isEmpty ? '1' : quantity,
       icon: json['icon'], 
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'amount': amount,
+      'unit': unit,
+      'quantity': quantity,
+      'icon': icon,
+    };
   }
 }

@@ -8,6 +8,7 @@ import '../../models/cookbook.dart';
 import '../../models/creator.dart';
 import '../../widgets/cookbook_cover.dart';
 import '../../services/recipe_service.dart';
+import '../../services/history_service.dart';
 import '../../services/cookbook_service.dart';
 import '../../services/grocery_service.dart';
 import '../../core/widgets/ios_toast.dart';
@@ -71,14 +72,20 @@ class _ViewAllScreenState extends State<ViewAllScreen> {
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: Text(
-                      title.toUpperCase(),
-                      style: const TextStyle(
-                        fontFamily: 'SF Pro',
-                        fontWeight: FontWeight.w800,
-                        fontSize: 20,
-                        color: Color(0xFF1A1A1A),
-                      ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          title.toUpperCase(),
+                          style: const TextStyle(
+                            fontFamily: 'SF Pro',
+                            fontWeight: FontWeight.w800,
+                            fontSize: 20,
+                            color: Color(0xFF1A1A1A),
+                          ),
+                        ),
+                        _buildSubtitleBadge(type),
+                      ],
                     ),
                   ),
                   if (showPlus)
@@ -144,6 +151,34 @@ class _ViewAllScreenState extends State<ViewAllScreen> {
       case ViewAllType.creators:
         return _CreatorsGrid();
     }
+  }
+
+  Widget _buildSubtitleBadge(ViewAllType type) {
+    ValueNotifier<List<Recipe>?>? notifier;
+    if (type == ViewAllType.savedRecipes)
+      notifier = RecipeService.instance.myRecipesNotifier;
+    else if (type == ViewAllType.favorites)
+      notifier = RecipeService.instance.favoriteRecipesNotifier;
+    else if (type == ViewAllType.imports)
+      notifier = RecipeService.instance.recentImportsNotifier;
+
+    if (notifier == null) return const SizedBox.shrink();
+
+    return ValueListenableBuilder<List<Recipe>?>(
+      valueListenable: notifier,
+      builder: (context, recipes, _) {
+        final count = recipes?.length ?? 0;
+        return Text(
+          '$count Recipes',
+          style: TextStyle(
+            fontFamily: 'SF Pro',
+            fontSize: 12,
+            color: Colors.grey[500],
+            fontWeight: FontWeight.w500,
+          ),
+        );
+      },
+    );
   }
 }
 
@@ -278,15 +313,17 @@ class _RecipesGridState extends State<_RecipesGrid> {
       case ViewAllType.favorites:
         RecipeService.instance.getFavoriteRecipes(size: 50);
         break;
-      case ViewAllType.explore:
+      case ViewAllType.imports:
+        RecipeService.instance.getRecentImports(size: 50);
+        break;
       case ViewAllType.recentlyViewed:
+        HistoryService.instance.loadHistory();
+        break;
+      case ViewAllType.explore:
         _future = RecipeService.instance.getExploreRecipes(size: 50);
         break;
       case ViewAllType.groceryHistory:
         _future = _fetchGroceryHistory();
-        break;
-      case ViewAllType.imports:
-        _future = RecipeService.instance.getRecentImports(size: 50);
         break;
       default:
         if (RecipeService.instance.myRecipesNotifier.value == null) {
@@ -360,10 +397,14 @@ class _RecipesGridState extends State<_RecipesGrid> {
 
   @override
   Widget build(BuildContext context) {
-    if (_type == ViewAllType.savedRecipes || _type == ViewAllType.favorites) {
+    if (_type == ViewAllType.savedRecipes || _type == ViewAllType.favorites || _type == ViewAllType.imports || _type == ViewAllType.recentlyViewed) {
       final notifier = _type == ViewAllType.savedRecipes
           ? RecipeService.instance.myRecipesNotifier
-          : RecipeService.instance.favoriteRecipesNotifier;
+          : _type == ViewAllType.favorites 
+              ? RecipeService.instance.favoriteRecipesNotifier
+              : _type == ViewAllType.imports
+                  ? RecipeService.instance.recentImportsNotifier
+                  : HistoryService.instance.recentlyViewedNotifier;
 
       return ValueListenableBuilder<List<Recipe>?>(
         valueListenable: notifier,

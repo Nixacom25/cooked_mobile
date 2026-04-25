@@ -234,7 +234,7 @@ class TutorialHelper {
       ),
     );
 
-    // Step 3: Cookbooks
+    // Step 3: Cookbooks (Redirected to Creation flow as requested)
     targets.add(
       TargetFocus(
         identify: "cookbook",
@@ -247,8 +247,8 @@ class TutorialHelper {
             align: ContentAlign.bottom,
             builder: (context, controller) {
               return _TutorialContent(
-                title: "Recipe Books",
-                description: "Store all yours recipes here and organize them as you want.",
+                title: "Create your first Book",
+                description: "Organize your recipes by creating your own cookbooks here.",
                 step: 3,
                 totalSteps: 3,
                 isLast: true,

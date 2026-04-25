@@ -96,7 +96,9 @@ class _CookbookDetailScreenState extends State<CookbookDetailScreen> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      name.toUpperCase(),
+                      name.isEmpty 
+                          ? name 
+                          : name[0].toUpperCase() + name.substring(1).toLowerCase(),
                       style: const TextStyle(
                         fontFamily: 'SF Pro',
                         fontWeight: FontWeight.w800,

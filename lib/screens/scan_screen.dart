@@ -44,7 +44,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
   List<Map<String, dynamic>> _savedIngredients = [];
   final Set<String> _selectedSavedNames = {};
   bool _isLoadingSaved = false;
-  bool _useAllSaved = true;
+  bool _useAllSaved = false;
   List<Map<String, dynamic>> _recentIngredients = [];
   List<Map<String, dynamic>> _suggestedIngredients = [];
   Timer? _searchDebounce;
@@ -137,6 +137,9 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
             for (var item in items) {
               _selectedSavedNames.add(item['name'].toString());
             }
+          } else {
+            // Ensure we don't clear if user already selected some before refresh, 
+            // but for now, default is empty selection on first load.
           }
         });
       }
@@ -163,8 +166,12 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
     setState(() {
       if (_selectedSavedNames.contains(name)) {
         _selectedSavedNames.remove(name);
+        _useAllSaved = false;
       } else {
         _selectedSavedNames.add(name);
+        if (_selectedSavedNames.length == _savedIngredients.length) {
+          _useAllSaved = true;
+        }
       }
     });
   }
@@ -437,6 +444,11 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
     }
   }
 
+  String _capitalize(String text) {
+    if (text.isEmpty) return text;
+    return text[0].toUpperCase() + text.substring(1);
+  }
+
   @override
   void dispose() {
     widget.isActiveNotifier.removeListener(_onActiveStateChanged);
@@ -449,9 +461,11 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     debugPrint("BUILD_SCAN: state=$_state manual=$_useManualStreaming init=$_isCameraInitialized status=$_cameraStatus notify=${widget.isActiveNotifier.value}");
-    bool showPill = _state != ScanState.results;
+    final bool isKeyboardOpen = MediaQuery.of(context).viewInsets.bottom > 0;
+    bool showPill = _state != ScanState.results && !isKeyboardOpen;
     return Scaffold(
       backgroundColor: _state == ScanState.scan ? Colors.black : Colors.white,
+      resizeToAvoidBottomInset: false,
       body: Stack(
         children: [
           // 1. Background Content
@@ -479,7 +493,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
             Positioned.fill(child: _buildScanBrackets()),
 
           // 4. Floating Action Buttons (Fixed at bottom above pill)
-          _buildFloatingActions(),
+          if (!isKeyboardOpen) _buildFloatingActions(),
 
           // 5. Success Message Overlay
           if (_showingSuccessMessage) _buildSuccessOverlay(),
@@ -498,20 +512,73 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
   }
 
   Widget _buildBackground() {
+    Widget? loadingOverlay;
+    if (_isInitializing) {
+      loadingOverlay = Positioned.fill(
+        child: Container(
+          color: Colors.black.withOpacity(0.4),
+          child: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const CircularProgressIndicator(color: Colors.white),
+                SizedBox(height: 16.h),
+                Text(
+                  "Analyzing...",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16.sp,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
     // Show white/empty background for non-scan states
     if (_state != ScanState.scan) {
-      return Container(color: Colors.white);
+      return Stack(
+        children: [
+          Container(color: Colors.white),
+          if (loadingOverlay != null) loadingOverlay,
+        ],
+      );
     }
 
     // NEW: If we are scanning, show the captured frame (freeze-frame)
     if (_showingSuccessMessage && _capturedImagePath != null) {
-      return Container(
-        width: double.infinity,
-        height: double.infinity,
-        child: Image.file(
-          File(_capturedImagePath!),
-          fit: BoxFit.cover,
-        ),
+      return Stack(
+        children: [
+          Container(
+            width: double.infinity,
+            height: double.infinity,
+            child: Image.file(
+              File(_capturedImagePath!),
+              fit: BoxFit.cover,
+            ),
+          ),
+          if (loadingOverlay != null) loadingOverlay,
+          
+          // 4. Close Icon (Top-left) for Scan mode
+          Positioned(
+            top: 50.h,
+            left: 20.w,
+            child: GestureDetector(
+              onTap: widget.onClose,
+              child: Container(
+                padding: EdgeInsets.all(8.r),
+                decoration: const BoxDecoration(
+                  color: Colors.black26,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Icons.close_rounded, color: Colors.white, size: 22.sp),
+              ),
+            ),
+          ),
+        ],
       );
     }
 
@@ -525,7 +592,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
           ),
         ),
 
-        // 2. DIAGNOSTIC LAYER (Only show if NOT ready or if manual is active)
+        // 2. Loading / Status Layer
         if (!_isCameraInitialized || _hasCameraError || _isInitializing)
           Positioned.fill(
             child: Center(
@@ -533,7 +600,9 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   if (_isInitializing)
-                    const CircularProgressIndicator(color: Colors.white),
+                    const CircularProgressIndicator(color: Colors.white)
+                  else if (!_isCameraInitialized && !_hasCameraError)
+                    const CircularProgressIndicator(color: Colors.white70),
                   SizedBox(height: 16.h),
                   // Status Text
                   Container(
@@ -572,22 +641,23 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
           ),
         
         // 4. Close Icon (Top-left) for Scan mode
-        if (_state == ScanState.scan)
-          Positioned(
-            top: 50.h,
-            left: 20.w,
-            child: GestureDetector(
-              onTap: widget.onClose,
-              child: Container(
-                padding: EdgeInsets.all(8.r),
-                decoration: const BoxDecoration(
-                  color: Colors.black26,
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(Icons.close_rounded, color: Colors.white, size: 22.sp),
+        Positioned(
+          top: 50.h,
+          left: 20.w,
+          child: GestureDetector(
+            onTap: widget.onClose,
+            child: Container(
+              padding: EdgeInsets.all(8.r),
+              decoration: const BoxDecoration(
+                color: Colors.black26,
+                shape: BoxShape.circle,
               ),
+              child: Icon(Icons.close_rounded, color: Colors.white, size: 22.sp),
             ),
           ),
+        ),
+
+        if (loadingOverlay != null) loadingOverlay,
       ],
     );
   }
@@ -648,7 +718,10 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
               ),
             ),
             // Optional: Info button on the right for results page too if needed
-            Icon(Icons.help_outline_rounded, color: Colors.grey[400], size: 20.sp),
+            GestureDetector(
+              onTap: _showScanHelpModal,
+              child: Icon(Icons.help_outline_rounded, color: Colors.grey[400], size: 20.sp),
+            ),
           ],
         ),
       );
@@ -738,7 +811,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
     if (_state == ScanState.results) {
       actionBtn = SizedBox(
         key: _scanMoreKey,
-        child: _buildWideBtn("Reprocess Recipes", ScanState.scan),
+        child: _buildWideBtn("Show Updated Recipes", _reprocessFromResults),
       );
     } else {
       actionBtn = _buildWideBtn("Get Recipes", _generateFromTyped);
@@ -859,157 +932,164 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
 
   // ── Tab 2: Type Ingredient ────────────────────────────────────────────────
   Widget _buildTypeTab() {
-    return ListView(
-      padding: EdgeInsets.symmetric(horizontal: 22.w),
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          "Enter ingredients one by one",
-          style: TextStyle(
-            color: const Color(0xFF64748B),
-            fontSize: 13.sp,
-            fontWeight: FontWeight.w500,
+        // ── FIXED HEADER PART ─────────────────────────────────────────────
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: 22.w),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "Enter ingredients one by one",
+                style: TextStyle(
+                  color: const Color(0xFF64748B),
+                  fontSize: 13.sp,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              SizedBox(height: 10.h),
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16.r),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.03),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: TextField(
+                  controller: _ingCtrl,
+                  textCapitalization: TextCapitalization.sentences,
+                  style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.w500),
+                  decoration: InputDecoration(
+                    hintText: 'e.g., Tomato, Cheese...',
+                    hintStyle: TextStyle(color: const Color(0xFF94A3B8), fontSize: 14.sp),
+                    border: InputBorder.none,
+                    contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+                    suffixIcon: IconButton(
+                      onPressed: _addTypedIngredient,
+                      icon: Icon(
+                        Icons.add_circle_rounded,
+                        color: const Color(0xFFCC3333),
+                        size: 26.sp,
+                      ),
+                    ),
+                  ),
+                  onSubmitted: (_) => _addTypedIngredient(),
+                ),
+              ),
+              if (_suggestedIngredients.isNotEmpty)
+                Padding(
+                  padding: EdgeInsets.only(top: 0.h),
+                  child: Material(
+                    elevation: 4,
+                    borderRadius: BorderRadius.circular(12.r),
+                    child: Container(
+                      constraints: BoxConstraints(maxHeight: 200.h),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12.r),
+                        border: Border.all(color: const Color(0xFFE2E8F0)),
+                      ),
+                      child: ListView.separated(
+                        shrinkWrap: true,
+                        padding: EdgeInsets.zero,
+                        itemCount: _suggestedIngredients.length,
+                        separatorBuilder: (_, __) => Divider(height: 1, color: Colors.grey[100]),
+                        itemBuilder: (context, i) {
+                          final item = _suggestedIngredients[i];
+                          return ListTile(
+                            dense: true,
+                            title: Text(_capitalize(item['name'] ?? '')),
+                            onTap: () {
+                              _ingCtrl.text = _capitalize(item['name'] ?? '');
+                              _addTypedIngredient();
+                              setState(() => _suggestedIngredients = []);
+                            },
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                ),
+            ],
           ),
         ),
-        SizedBox(height: 10.h),
-        Stack(
-          clipBehavior: Clip.none,
-          children: [
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16.r),
-                border: Border.all(color: const Color(0xFFE2E8F0)),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.03),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
+
+        // ── SCROLLABLE LIST PART ──────────────────────────────────────────
+        Expanded(
+          child: ListView(
+            padding: EdgeInsets.fromLTRB(22.w, 15.h, 22.w, bottomInset + 120.h),
+            children: [
+              if (_ingCtrl.text.isEmpty) ...[
+                Text(
+                  "Add ingredients to find recipes you can make",
+                  style: TextStyle(
+                    color: const Color(0xFF94A3B8),
+                    fontSize: 12.sp,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+                if (_recentIngredients.isNotEmpty) ...[
+                  SizedBox(height: 20.h),
+                  Text(
+                    "Recently Used",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14.sp,
+                      color: const Color(0xFF64748B),
+                    ),
+                  ),
+                  SizedBox(height: 10.h),
+                  Wrap(
+                    spacing: 8.w,
+                    runSpacing: 8.h,
+                    children: _recentIngredients.take(5).map((ing) {
+                      final name = ing['name'] ?? '';
+                      return GestureDetector(
+                        onTap: () {
+                          _ingCtrl.text = name;
+                          _addTypedIngredient();
+                        },
+                        child: Container(
+                          padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+                          decoration: BoxDecoration(
+                            color: Colors.grey[100],
+                            borderRadius: BorderRadius.circular(20.r),
+                            border: Border.all(color: Colors.grey[200]!),
+                          ),
+                          child: Text(
+                            name,
+                            style: TextStyle(
+                              fontSize: 12.sp,
+                              color: const Color(0xFF475569),
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      );
+                    }).toList(),
                   ),
                 ],
-              ),
-              child: TextField(
-                controller: _ingCtrl,
-                style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.w500),
-                decoration: InputDecoration(
-                  hintText: 'e.g., Tomato, Cheese...',
-                  hintStyle: TextStyle(color: const Color(0xFF94A3B8), fontSize: 14.sp),
-                  border: InputBorder.none,
-                  contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
-                  suffixIcon: IconButton(
-                    onPressed: _addTypedIngredient,
-                    icon: Icon(
-                      Icons.add_circle_rounded,
-                      color: const Color(0xFFCC3333),
-                      size: 26.sp,
-                    ),
-                  ),
-                ),
-                onSubmitted: (_) => _addTypedIngredient(),
-              ),
-            ),
-            if (_suggestedIngredients.isNotEmpty)
-              Positioned(
-                top: 55.h,
-                left: 0,
-                right: 0,
-                child: Material(
-                  elevation: 8,
-                  borderRadius: BorderRadius.circular(12.r),
-                  child: Container(
-                    constraints: BoxConstraints(maxHeight: 200.h),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12.r),
-                    ),
-                    child: ListView.separated(
-                      shrinkWrap: true,
-                      padding: EdgeInsets.zero,
-                      itemCount: _suggestedIngredients.length,
-                      separatorBuilder: (_, __) => Divider(height: 1, color: Colors.grey[100]),
-                      itemBuilder: (context, i) {
-                        final item = _suggestedIngredients[i];
-                        return ListTile(
-                          dense: true,
-                          title: Text(item['name'] ?? ''),
-                          leading: Text(item['icon'] ?? '🥕', style: TextStyle(fontSize: 16.sp)),
-                          onTap: () {
-                            _ingCtrl.text = item['name'] ?? '';
-                            _addTypedIngredient();
-                            setState(() => _suggestedIngredients = []);
-                          },
-                        );
-                      },
-                    ),
-                  ),
-                ),
-              ),
-          ],
-        ),
-        SizedBox(height: 12.h),
-        Text(
-          "Add ingredients to find recipes you can make",
-          style: TextStyle(
-            color: const Color(0xFF94A3B8),
-            fontSize: 12.sp,
-            fontStyle: FontStyle.italic,
+              ],
+              SizedBox(height: 24.h),
+              ..._typedIngredients.map((ing) => _buildIngredientCard(
+                ing,
+                isSaved: _savedIngredients.any((si) => si['name'].toString().toLowerCase() == ing.toLowerCase()),
+                onContainerTap: () => _toggleSaveIngredient(ing),
+                onHeartTap: () => _toggleSaveIngredient(ing),
+                onDeleteTap: () => setState(() => _typedIngredients.remove(ing)),
+              )),
+            ],
           ),
         ),
-        if (_recentIngredients.isNotEmpty && _ingCtrl.text.isEmpty) ...[
-          SizedBox(height: 24.h),
-          Text(
-            "Recently Used",
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 14.sp,
-              color: const Color(0xFF64748B),
-            ),
-          ),
-          SizedBox(height: 10.h),
-          Wrap(
-            spacing: 8.w,
-            runSpacing: 8.h,
-            children: _recentIngredients.take(5).map((ing) {
-              final name = ing['name'] ?? '';
-              return GestureDetector(
-                onTap: () {
-                  _ingCtrl.text = name;
-                  _addTypedIngredient();
-                },
-                child: Container(
-                  padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[100],
-                    borderRadius: BorderRadius.circular(20.r),
-                    border: Border.all(color: Colors.grey[200]!),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(ing['icon'] ?? '🥕', style: TextStyle(fontSize: 12.sp)),
-                      SizedBox(width: 4.w),
-                      Text(
-                        name,
-                        style: TextStyle(
-                          fontSize: 12.sp,
-                          color: const Color(0xFF475569),
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-        ],
-        SizedBox(height: 24.h),
-        ..._typedIngredients.map((ing) => _buildIngredientCard(
-          ing,
-          isSaved: _savedIngredients.any((si) => si['name'].toString().toLowerCase() == ing.toLowerCase()),
-          onContainerTap: () => _toggleSaveIngredient(ing),
-          onHeartTap: () => _toggleSaveIngredient(ing),
-          onDeleteTap: () => setState(() => _typedIngredients.remove(ing)),
-        )),
       ],
     );
   }
@@ -1019,92 +1099,93 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
     if (_isLoadingSaved) {
       return const Center(child: CircularProgressIndicator());
     }
-    if (_savedIngredients.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: EdgeInsets.only(top: 40.h),
-          child: Text(
-            "No saved ingredients yet.",
-            style: TextStyle(color: const Color(0xFF6B7280), fontSize: 14.sp),
-          ),
-        ),
-      );
-    }
-
     return ListView(
       padding: EdgeInsets.symmetric(horizontal: 22.w),
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
+        if (_savedIngredients.isNotEmpty) ...[
+          if (_selectedSavedNames.isNotEmpty) ...[
             Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Transform.scale(
-                  scale: 0.8,
-                  child: Switch(
-                    value: _useAllSaved,
-                    activeColor: const Color(0xFFCC3333),
-                    onChanged: (val) {
-                      setState(() {
-                        _useAllSaved = val;
-                        if (val) {
-                          _selectedSavedNames.clear();
-                          for (var item in _savedIngredients) {
-                            _selectedSavedNames.add(item['name'].toString());
-                          }
-                        }
-                      });
-                    },
-                  ),
+                Row(
+                  children: [
+                    Transform.scale(
+                      scale: 0.8,
+                      child: Switch(
+                        value: _useAllSaved,
+                        activeColor: const Color(0xFFCC3333),
+                        onChanged: (val) {
+                          setState(() {
+                            _useAllSaved = val;
+                            if (val) {
+                              _selectedSavedNames.clear();
+                              for (var item in _savedIngredients) {
+                                _selectedSavedNames.add(item['name'].toString());
+                              }
+                            } else {
+                              _selectedSavedNames.clear();
+                            }
+                          });
+                        },
+                      ),
+                    ),
+                    Text(
+                      "Use all",
+                      style: TextStyle(
+                        fontSize: 14.sp,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF475569),
+                      ),
+                    ),
+                  ],
                 ),
-                Text(
-                  "Use all",
-                  style: TextStyle(
-                    fontSize: 14.sp,
-                    fontWeight: FontWeight.w600,
-                    color: const Color(0xFF475569),
+                TextButton(
+                  onPressed: () {
+                    setState(() {
+                      _useAllSaved = false;
+                      _selectedSavedNames.clear();
+                    });
+                  },
+                  child: Text(
+                    "Clear selection",
+                    style: TextStyle(
+                      color: const Color(0xFF64748B),
+                      fontSize: 13.sp,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ),
               ],
             ),
-            TextButton(
-              onPressed: () {
-                setState(() {
-                  _useAllSaved = false;
-                  _selectedSavedNames.clear();
-                });
+            SizedBox(height: 10.h),
+          ],
+          ..._savedIngredients.map((ing) {
+            final name = ing['name'] ?? '';
+            final isSelected = _selectedSavedNames.contains(name);
+            return _buildIngredientCard(
+              name,
+              icon: ing['icon'],
+              isSelected: isSelected,
+              onContainerTap: () {
+                _toggleSavedSelection(name);
               },
+              onSelectionTap: () {
+                _toggleSavedSelection(name);
+              },
+              onDeleteTap: () => _unsaveIngredientAction(ing['id'].toString()),
+              showIcon: true,
+            );
+          }),
+        ] else
+          Center(
+            child: Padding(
+              padding: EdgeInsets.only(top: 40.h),
               child: Text(
-                "Clear selection",
-                style: TextStyle(
-                  color: const Color(0xFF64748B),
-                  fontSize: 13.sp,
-                  fontWeight: FontWeight.w500,
-                ),
+                "No saved ingredients yet.",
+                style: TextStyle(color: const Color(0xFF6B7280), fontSize: 14.sp),
               ),
             ),
-          ],
-        ),
-        SizedBox(height: 10.h),
-        ..._savedIngredients.map((ing) {
-          final name = ing['name'] ?? '';
-          final isSelected = _selectedSavedNames.contains(name);
-          return _buildIngredientCard(
-            name,
-            icon: ing['icon'],
-            isSelected: isSelected,
-            onContainerTap: () {
-              if (_useAllSaved) setState(() => _useAllSaved = false);
-              _toggleSavedSelection(name);
-            },
-            onSelectionTap: () {
-              if (_useAllSaved) setState(() => _useAllSaved = false);
-              _toggleSavedSelection(name);
-            },
-            onDeleteTap: () => _unsaveIngredientAction(ing['id'].toString()),
-            showIcon: true,
-          );
-        }),
+          ),
       ],
     );
   }
@@ -1123,7 +1204,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
     return GestureDetector(
       onTap: onContainerTap,
       child: Container(
-        margin: EdgeInsets.only(bottom: 12.h),
+        margin: EdgeInsets.only(bottom: 16.h),
         padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
         decoration: BoxDecoration(
           color: const Color(0xFFF9FAFB),
@@ -1133,10 +1214,11 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
         child: Row(
           children: [
             if (onSelectionTap != null)
-              Padding(
-                padding: EdgeInsets.only(right: 12.w),
-                child: GestureDetector(
-                  onTap: onSelectionTap,
+              GestureDetector(
+                onTap: onSelectionTap,
+                behavior: HitTestBehavior.opaque,
+                child: Padding(
+                  padding: EdgeInsets.only(right: 12.w),
                   child: Icon(
                     (isSelected ?? false) ? Icons.check_box_rounded : Icons.check_box_outline_blank_rounded,
                     color: (isSelected ?? false) ? const Color(0xFFCC3333) : const Color(0xFFCBD5E1),
@@ -1144,37 +1226,43 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                   ),
                 ),
               ),
-            if (showIcon && icon != null) ...[
-              Text(icon, style: TextStyle(fontSize: 18.sp)),
-              SizedBox(width: 12.w),
-            ] else
-              SizedBox(width: 4.w),
+            
             Expanded(
               child: Text(
                 name,
                 style: TextStyle(
-                  fontWeight: FontWeight.w500,
+                  fontWeight: FontWeight.w600,
                   fontSize: 16.sp,
                   color: const Color(0xFF1E293B),
                 ),
               ),
             ),
+
             if (onHeartTap != null)
               GestureDetector(
                 onTap: onHeartTap,
-                child: Icon(
-                  Icons.favorite_rounded,
-                  color: (isSaved ?? false) ? const Color(0xFFCC3333) : const Color(0xFFCBD5E1),
-                  size: 22.sp,
+                behavior: HitTestBehavior.opaque,
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                  child: Icon(
+                    Icons.favorite_rounded,
+                    color: (isSaved ?? false) ? const Color(0xFFCC3333) : const Color(0xFFCBD5E1),
+                    size: 24.sp,
+                  ),
                 ),
               ),
+            
             if (onDeleteTap != null)
               GestureDetector(
                 onTap: onDeleteTap,
-                child: Icon(
-                  _state == ScanState.saved ? Icons.delete_outline_rounded : Icons.close_rounded,
-                  color: const Color(0xFF94A3B8),
-                  size: 22.sp,
+                behavior: HitTestBehavior.opaque,
+                child: Padding(
+                  padding: EdgeInsets.fromLTRB(8.w, 4.h, 4.w, 4.h),
+                  child: Icon(
+                    _state == ScanState.saved ? Icons.delete_outline_rounded : Icons.close_rounded,
+                    color: const Color(0xFF94A3B8),
+                    size: 24.sp,
+                  ),
                 ),
               ),
           ],
@@ -1236,7 +1324,6 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
             );
           },
         ),
-        SizedBox(height: 30.h),
         Text(
           "Your Ingredients",
           style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20.sp),
@@ -1244,6 +1331,29 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
         Text(
           "We found ${(_ingredients.length + _restrictedIngredients.length) > 0 ? (_ingredients.length + _restrictedIngredients.length) : 0} items in your kitchen",
           style: TextStyle(color: Color(0xFF6B7280), fontSize: 14.sp),
+        ),
+        SizedBox(height: 12.h),
+        // Add Ingredient Input
+        Container(
+          decoration: BoxDecoration(
+            color: const Color(0xFFF8FAFC),
+            borderRadius: BorderRadius.circular(12.r),
+            border: Border.all(color: const Color(0xFFE2E8F0)),
+          ),
+          child: TextField(
+            onSubmitted: (val) {
+              if (val.trim().isNotEmpty) {
+                _addIngredientToResults(val.trim());
+              }
+            },
+            decoration: InputDecoration(
+              hintText: "Add missing ingredient...",
+              hintStyle: TextStyle(fontSize: 13.sp, color: const Color(0xFF94A3B8)),
+              border: InputBorder.none,
+              prefixIcon: Icon(Icons.add_rounded, color: const Color(0xFFCC3333), size: 20.sp),
+              contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
+            ),
+          ),
         ),
         SizedBox(height: 16.h),
         if (_ingredients.isEmpty && _restrictedIngredients.isEmpty)
@@ -1253,9 +1363,38 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
             spacing: 8.w,
             runSpacing: 10.h,
             children: [
-              ..._ingredients.map((ing) => _buildYellowChip(ing.name, icon: ing.icon, showIcon: true)),
-              ..._restrictedIngredients.map((ing) => _buildYellowChip(ing.name, icon: ing.icon, isRestricted: true, showIcon: true)),
+              ..._ingredients.map((ing) => _buildYellowChip(
+                ing.name, 
+                icon: ing.icon,
+                onDelete: () => _removeIngredientFromResults(ing, false),
+              )),
+              ..._restrictedIngredients.map((ing) => _buildYellowChip(
+                ing.name, 
+                icon: ing.icon, 
+                isRestricted: true,
+                onDelete: () => _removeIngredientFromResults(ing, true),
+              )),
             ],
+          ),
+        if (_restrictedIngredients.isNotEmpty)
+          Padding(
+            padding: EdgeInsets.only(top: 10.h),
+            child: Row(
+              children: [
+                Icon(Icons.info_outline_rounded, size: 14.sp, color: Colors.red[400]),
+                SizedBox(width: 6.w),
+                Expanded(
+                  child: Text(
+                    "Some ingredients may not match your dietary preferences.",
+                    style: TextStyle(
+                      color: Colors.red[600],
+                      fontSize: 12.sp,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         SizedBox(height: 40.h),
       ],
@@ -1287,9 +1426,9 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildYellowChip(String label, {String? icon, bool isRestricted = false, bool showIcon = false}) {
+  Widget _buildYellowChip(String label, {String? icon, bool isRestricted = false, VoidCallback? onDelete}) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 8.h),
+      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
       decoration: BoxDecoration(
         color: isRestricted ? Colors.red[50] : const Color(0xFFF2C94C),
         borderRadius: BorderRadius.circular(20.r),
@@ -1298,31 +1437,25 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (showIcon && icon != null && icon.isNotEmpty) ...[
-            Text(icon, style: TextStyle(fontSize: 14.sp)),
-            SizedBox(width: 6.w),
-          ],
           Text(
-            label,
+            _capitalize(label),
             style: TextStyle(
               fontWeight: FontWeight.w600,
-              fontSize: 13.sp,
+              fontSize: 12.sp,
               color: Colors.black,
             ),
           ),
-          SizedBox(width: 6.w),
-          Container(
-            padding: EdgeInsets.all(2.r),
-            decoration: const BoxDecoration(
-              color: Color(0xFF755F0E),
-              shape: BoxShape.circle,
+          if (onDelete != null) ...[
+            SizedBox(width: 4.w),
+            GestureDetector(
+              onTap: onDelete,
+              child: Icon(
+                Icons.close_rounded,
+                size: 14.sp,
+                color: isRestricted ? Colors.red[400] : const Color(0xFF755F0E),
+              ),
             ),
-            child: Icon(
-              Icons.close_rounded,
-              size: 10.sp,
-              color: const Color(0xFFF2C94C),
-            ),
-          ),
+          ],
         ],
       ),
     );
@@ -1357,7 +1490,10 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
     final text = _ingCtrl.text.trim();
     if (text.isNotEmpty) {
       setState(() {
-        _typedIngredients.add(text);
+        final capitalized = _capitalize(text);
+        if (!_typedIngredients.contains(capitalized)) {
+          _typedIngredients.add(capitalized);
+        }
         _ingCtrl.clear();
       });
     }
@@ -1486,6 +1622,100 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
         ),
       ),
     );
+  }
+
+  void _showScanHelpModal() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        alignment: const Alignment(0, -1), // Positioned towards the top near the icon
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+        content: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Expanded(
+              child: Text(
+                "For best results, ensure all ingredients are clearly visible when scanning. Add missing items manually.",
+                style: TextStyle(fontSize: 14.sp, color: const Color(0xFF1A1A1A), height: 1.5, fontWeight: FontWeight.w500),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _removeIngredientFromResults(RecipeIngredient ing, bool isRestricted) {
+    setState(() {
+      if (isRestricted) {
+        _restrictedIngredients.remove(ing);
+      } else {
+        _ingredients.remove(ing);
+      }
+    });
+  }
+
+  void _addIngredientToResults(String name) {
+    setState(() {
+      _ingredients.add(RecipeIngredient(
+        id: DateTime.now().toString(),
+        name: name,
+        amount: 1.0,
+        unit: "",
+        quantity: "1",
+      ));
+    });
+  }
+
+  Future<void> _reprocessFromResults() async {
+    final allNames = [
+      ..._ingredients.map((i) => i.name),
+      ..._restrictedIngredients.map((i) => i.name),
+    ];
+    
+    if (allNames.isEmpty) {
+      IosToast.show(context, message: "Please keep at least one ingredient", type: ToastType.error);
+      return;
+    }
+
+    setState(() {
+      _isInitializing = true;
+      _cameraStatus = "Updating Recipes...";
+    });
+
+    try {
+      final response = await RecipeService.instance.scanTyped(allNames);
+      
+      final List<RecipeIngredient> allowed = (response['allowed_ingredients'] as List)
+          .map((i) => RecipeIngredient.fromJson(i))
+          .toList();
+      final List<RecipeIngredient> restricted = (response['restricted_ingredients'] as List)
+          .map((i) => RecipeIngredient.fromJson(i))
+          .toList();
+      final List<Recipe> recipes = (response['recipes'] as List)
+          .map((r) => Recipe.fromJson(r))
+          .toList();
+
+      if (mounted) {
+        setState(() {
+          _ingredients.clear();
+          _ingredients.addAll(allowed);
+          _restrictedIngredients.clear();
+          _restrictedIngredients.addAll(restricted);
+          _recipes.clear();
+          _recipes.addAll(recipes);
+          _isInitializing = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isInitializing = false);
+        IosToast.show(context, message: e.toString(), type: ToastType.error);
+      }
+    }
   }
 }
 

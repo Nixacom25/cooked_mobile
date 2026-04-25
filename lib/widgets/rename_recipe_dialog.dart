@@ -52,22 +52,7 @@ void showRenameRecipeDialog(
               final newName = nameController.text.trim();
               if (newName.isNotEmpty) {
                 Navigator.pop(context);
-                final updatedRecipe = Recipe(
-                  id: recipe.id,
-                  name: newName,
-                  image: recipe.image,
-                  cookTime: recipe.cookTime,
-                  kcal: recipe.kcal,
-                  category: recipe.category,
-                  isPublic: recipe.isPublic,
-                  sourceUrl: recipe.sourceUrl,
-                  steps: recipe.steps,
-                  ingredients: recipe.ingredients,
-                  isFavorite: recipe.isFavorite,
-                  createdAt: recipe.createdAt,
-                  updatedAt: recipe.updatedAt,
-                  creator: recipe.creator,
-                );
+                final updatedRecipe = recipe.copyWith(name: newName);
                 onRetry(updatedRecipe);
               }
             },

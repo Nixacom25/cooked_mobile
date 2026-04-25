@@ -49,14 +49,15 @@ class RecipeCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ── Photo area ─────────────────────────────────────────────────
-          Expanded(
+          SizedBox(
+            height: 130.h,
             child: Stack(
               children: [
                 ClipRRect(
                   borderRadius: BorderRadius.all(Radius.circular(12.r)),
                   child: Container(
                     width: double.infinity,
+                    height: double.infinity,
                     color: const Color(0xFFF2F1EF),
                     child: _buildImage(displayImg),
                   ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../models/cookbook.dart';
+import '../models/recipe.dart';
 
 class CookbookCover extends StatelessWidget {
   final Cookbook cookbook;
@@ -32,15 +33,39 @@ class CookbookCover extends StatelessWidget {
     );
   }
 
-  Widget _buildCoverContent(List recipes) {
-    final int count = recipes.length;
+  Widget _buildCoverContent(List<Recipe> recipes) {
+    // Prioritize recipes that actually have images for the collage
+    final recipesWithImages = recipes.where((r) => r.image != null && r.image!.isNotEmpty).toList();
+    final int count = recipesWithImages.length;
+    
+    if (count == 0) {
+      // Premium placeholder for empty cookbook
+      return Container(
+        color: const Color(0xFFF9FAFB),
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Image.asset(
+                'assets/images/cookbook.png',
+                width: 60.w,
+                height: 60.h,
+                fit: BoxFit.contain,
+                color: const Color(0xFFCC3333).withValues(alpha: 0.1),
+                colorBlendMode: BlendMode.srcIn,
+              ),
+            ],
+          ),
+        ),
+      );
+    }
     
     return Row(
       children: [
         // Left - Large image
         Expanded(
           flex: 3,
-          child: _buildImage(count > 0 ? recipes[0].image : null),
+          child: _buildImage(count > 0 ? recipesWithImages[0].image : null),
         ),
         Container(width: 1.5, color: Colors.white),
         // Right - Two small images stacked
@@ -49,11 +74,11 @@ class CookbookCover extends StatelessWidget {
           child: Column(
             children: [
               Expanded(
-                child: _buildImage(count > 1 ? recipes[1].image : null),
+                child: _buildImage(count > 1 ? recipesWithImages[1].image : null),
               ),
               Container(height: 1.5, color: Colors.white),
               Expanded(
-                child: _buildImage(count > 2 ? recipes[2].image : null),
+                child: _buildImage(count > 2 ? recipesWithImages[2].image : null),
               ),
             ],
           ),

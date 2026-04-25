@@ -9,6 +9,7 @@ import '../models/device_session.dart';
 import 'recipe_service.dart';
 import 'cookbook_service.dart';
 import 'user_service.dart';
+import 'history_service.dart';
 
 class AuthService {
   // Singleton pattern
@@ -21,6 +22,7 @@ class AuthService {
     RecipeService.instance.clearData();
     CookbookService.instance.clearData();
     UserService.instance.clearData();
+    HistoryService.instance.clearData();
   }
 
   final GoogleSignIn _googleSignIn = GoogleSignIn(

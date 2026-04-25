@@ -24,11 +24,10 @@ class _RecipeGenerationLoadingStepState
   static const int _maxRetries = 20; // ~50 seconds total polling
 
   final List<Map<String, String>> _steps = [
-    {'icon': '🥕', 'text': 'Analyzing your ingredients'},
-    {'icon': '📊', 'text': 'Matching recipe database'},
-    {'icon': '👨‍🍳', 'text': 'Generating recipe suggestions'},
-    {'icon': '🔥', 'text': 'Optimizing cooking steps'},
-    {'icon': '⭐️', 'text': 'Finalizing your cookbooks'},
+    {'icon': '🥕', 'text': 'Building your recommendations'},
+    {'icon': '📊', 'text': 'Curating recipes for you'},
+    {'icon': '👨‍🍳', 'text': 'Preparing your cooking tools'},
+    {'icon': '🔥', 'text': 'Finalizing setup'},
   ];
 
   @override
@@ -134,10 +133,10 @@ class _RecipeGenerationLoadingStepState
           ),
           SizedBox(height: 16.h),
           Text(
-            'Creating recipes from\nyour ingredients 🍳',
+            'Getting everything ready for you',
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: 24.sp,
+              fontSize: 20.sp,
               fontWeight: FontWeight.w800,
               color: const Color(0xFF0D1B3E),
               fontFamily: 'SF Pro',
@@ -147,8 +146,8 @@ class _RecipeGenerationLoadingStepState
           SizedBox(height: 8.h),
           Text(
             _isDataReady 
-                ? 'Your recipes are ready! Redirecting...'
-                : 'Analyzing ingredients and generating\npersonalized recipes...',
+                ? 'Redirecting to Home...'
+                : 'We’re preparing your personalized recipes\nand setting up your experience',
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 14.sp,
@@ -186,7 +185,7 @@ class _RecipeGenerationLoadingStepState
           Align(
             alignment: Alignment.centerLeft,
             child: Text(
-              _isDataReady ? "Sync completed" : "Checking generation status",
+              _isDataReady ? "Sync completed" : "Progress Steps",
               style: TextStyle(
                 fontSize: 16.sp,
                 fontWeight: FontWeight.w700,
