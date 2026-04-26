@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../widgets/app_search_field.dart';
+import '../data/explore_data.dart';
+import '../routes/app_routes.dart';
+import 'home/view_all_screen.dart';
 
 // ══════════════════════════════════════════════════════════════════════════════
 // EXPLORE SCREEN (Static Version)
@@ -13,6 +16,14 @@ class ExploreScreen extends StatefulWidget {
 
 class _ExploreScreenState extends State<ExploreScreen> {
   final _searchCtrl = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _searchCtrl.addListener(() {
+      if (mounted) setState(() {});
+    });
+  }
 
   @override
   void dispose() {
@@ -31,10 +42,12 @@ class _ExploreScreenState extends State<ExploreScreen> {
             child: ListView(
               padding: EdgeInsets.only(top: 24.h, bottom: 120.h),
               children: [
-                _buildBrowseByCuisine(),
-                SizedBox(height: 32.h),
-                _buildPopularCategories(),
-                SizedBox(height: 32.h),
+                if (_searchCtrl.text.isEmpty) ...[
+                  _buildBrowseByCuisine(),
+                  SizedBox(height: 32.h),
+                  _buildPopularCategories(),
+                  SizedBox(height: 32.h),
+                ],
                 _buildPopularNow(),
               ],
             ),
@@ -93,18 +106,21 @@ class _ExploreScreenState extends State<ExploreScreen> {
 
   // ── Browse by Cuisine ───────────────────────────────────────────────────────
   Widget _buildBrowseByCuisine() {
-    final cuisines = [
-      ('Italian', 'assets/images/italian.png'),
-      ('Mexican', 'assets/images/mexican.png'),
-      ('Chinese', 'assets/images/chinese.png'),
-      ('Japanese', 'assets/images/japanese.png'),
-      ('East', 'assets/images/east.png'),
-    ];
+    final cuisines = ExploreData.cuisines;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _SectionHeader(title: 'Browse by Cuisine', onViewAll: () {}),
+        _SectionHeader(title: 'Browse by Cuisine', onViewAll: () {
+          Navigator.pushNamed(
+            context,
+            AppRoutes.viewAll,
+            arguments: {
+              'type': ViewAllType.exploreCuisines,
+              'title': 'Browse by Cuisine',
+            },
+          );
+        }),
         SizedBox(height: 8.h),
         SizedBox(
           height: 110.h,
@@ -113,39 +129,49 @@ class _ExploreScreenState extends State<ExploreScreen> {
             padding: EdgeInsets.symmetric(horizontal: 20.w),
             itemCount: cuisines.length,
             itemBuilder: (context, i) {
+              final item = cuisines[i];
               return Padding(
                 padding: EdgeInsets.only(right: 20.w),
-                child: Column(
-                  children: [
-                    Container(
-                      width: 76.w,
-                      height: 76.h,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.1),
-                            blurRadius: 8,
-                            offset: const Offset(0, 4),
+                child: GestureDetector(
+                  onTap: () {
+                    Navigator.pushNamed(
+                      context,
+                      AppRoutes.cookbookDetail,
+                      arguments: {'cookbook': item.cookbook},
+                    );
+                  },
+                  child: Column(
+                    children: [
+                      Container(
+                        width: 76.w,
+                        height: 76.h,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.1),
+                              blurRadius: 8,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                          image: DecorationImage(
+                            image: AssetImage(item.image),
+                            fit: BoxFit.cover,
                           ),
-                        ],
-                        image: DecorationImage(
-                          image: AssetImage(cuisines[i].$2),
-                          fit: BoxFit.cover,
                         ),
                       ),
-                    ),
-                    SizedBox(height: 8.h),
-                    Text(
-                      cuisines[i].$1,
-                      style: TextStyle(
-                        fontFamily: 'SF Pro',
-                        fontWeight: FontWeight.w700,
-                        fontSize: 13.sp,
-                        color: const Color(0xFF1A1A1A),
+                      SizedBox(height: 8.h),
+                      Text(
+                        item.cookbook.name,
+                        style: TextStyle(
+                          fontFamily: 'SF Pro',
+                          fontWeight: FontWeight.w700,
+                          fontSize: 13.sp,
+                          color: const Color(0xFF1A1A1A),
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               );
             },
@@ -157,70 +183,85 @@ class _ExploreScreenState extends State<ExploreScreen> {
 
   // ── Popular Categories ──────────────────────────────────────────────────────
   Widget _buildPopularCategories() {
-    final categories = [
-      ('High Protein Low Calorie', 'assets/images/explore_autumn.png', '18 Recipes'),
-      ('Easy Desserts', 'assets/images/cookbook_healthy.png', '6 Recipes'),
-      ('30 Min Meals', 'assets/images/explore_spring.png', '24 Recipes'),
-    ];
+    final categories = ExploreData.niches.take(5).toList();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _SectionHeader(title: 'Popular Categories', onViewAll: () {}),
+        _SectionHeader(title: 'Popular Categories', onViewAll: () {
+          Navigator.pushNamed(
+            context,
+            AppRoutes.viewAll,
+            arguments: {
+              'type': ViewAllType.exploreCategories,
+              'title': 'Popular Categories',
+            },
+          );
+        }),
         SizedBox(height: 8.h),
         SizedBox(
-          height: 220.h,
+          height: 200.h,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             padding: EdgeInsets.zero,
             itemCount: categories.length,
             itemBuilder: (context, i) {
-              return Container(
-                width: 180.w,
-                margin: EdgeInsets.only(
-                  left: i == 0 ? 20.w : 0,
-                  right: 16.w,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(16.r),
-                      child: Image.asset(
-                        categories[i].$2,
-                        width: 180.w,
-                        height: 150.h,
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                    SizedBox(height: 10.h),
-                    Text(
-                      categories[i].$1,
-                      maxLines: 2,
-                      style: TextStyle(
-                        fontFamily: 'SF Pro',
-                        fontWeight: FontWeight.w800,
-                        fontSize: 15.sp,
-                        color: const Color(0xFF1A1A1A),
-                        height: 1.2,
-                      ),
-                    ),
-                    SizedBox(height: 4.h),
-                    Row(
-                      children: [
-                        Icon(Icons.favorite_border, size: 14.sp, color: const Color(0xFFBBBBBB)),
-                        SizedBox(width: 4.w),
-                        Text(
-                          categories[i].$3,
-                          style: TextStyle(
-                            fontFamily: 'SF Pro',
-                            fontSize: 12.sp,
-                            color: const Color(0xFF999999),
-                          ),
+              final item = categories[i];
+              return GestureDetector(
+                onTap: () {
+                  Navigator.pushNamed(
+                    context,
+                    AppRoutes.cookbookDetail,
+                    arguments: {'cookbook': item.cookbook},
+                  );
+                },
+                child: Container(
+                  width: 180.w,
+                  margin: EdgeInsets.only(
+                    left: i == 0 ? 20.w : 0,
+                    right: 16.w,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(16.r),
+                        child: Image.asset(
+                          item.image,
+                          width: 180.w,
+                          height: 150.h,
+                          fit: BoxFit.cover,
                         ),
-                      ],
-                    ),
-                  ],
+                      ),
+                      SizedBox(height: 10.h),
+                      Text(
+                        item.cookbook.name,
+                        maxLines: 2,
+                        style: TextStyle(
+                          fontFamily: 'SF Pro',
+                          fontWeight: FontWeight.w800,
+                          fontSize: 15.sp,
+                          color: const Color(0xFF1A1A1A),
+                          height: 1.2,
+                        ),
+                      ),
+                      SizedBox(height: 4.h),
+                      Row(
+                        children: [
+                          Icon(Icons.favorite_border, size: 14.sp, color: const Color(0xFFBBBBBB)),
+                          SizedBox(width: 4.w),
+                          Text(
+                            '${item.cookbook.recipes.length} Recipes',
+                            style: TextStyle(
+                              fontFamily: 'SF Pro',
+                              fontSize: 12.sp,
+                              color: const Color(0xFF999999),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               );
             },
@@ -231,18 +272,35 @@ class _ExploreScreenState extends State<ExploreScreen> {
   }
 
   // ── Popular Now ─────────────────────────────────────────────────────────────
-  Widget _buildPopularNow() {
-    final popular = [
-      ('Chicken Stir-Fry', 'assets/images/recipe_stir_fry.png', '25 min', '18 Recipes'),
-      ('Grilled Salmon', 'assets/images/recipe_salmon.png', '15 min', '6 Recipes'),
-      ('Beef Tacos', 'assets/images/mexican.png', '25 min', '18 Recipes'),
-      ('Pasta Alfredo', 'assets/images/recipe_pasta.png', '10 min', '8 Recipes'),
-    ];
+  Widget _buildPopularNow() { 
+    final query = _searchCtrl.text.trim().toLowerCase();
+    var popular = ExploreData.popularNow;
+    if (query.isNotEmpty) {
+      popular = popular.where((r) => r.name.toLowerCase().contains(query)).toList();
+    }
+
+    if (popular.isEmpty) {
+      return Padding(
+        padding: EdgeInsets.symmetric(vertical: 40.h),
+        child: const Center(child: Text('No recipes match your search.')),
+      );
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _SectionHeader(title: 'Popular Now', onViewAll: () {}),
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: 20.w),
+          child: Text(
+            'Popular Now',
+            style: TextStyle(
+              fontFamily: 'SF Pro',
+              fontWeight: FontWeight.w800,
+              fontSize: 20.sp,
+              color: const Color(0xFF1A1A1A),
+            ),
+          ),
+        ),
         SizedBox(height: 8.h),
         Padding(
           padding: EdgeInsets.symmetric(horizontal: 20.w),
@@ -258,75 +316,85 @@ class _ExploreScreenState extends State<ExploreScreen> {
               childAspectRatio: 0.85,
             ),
             itemBuilder: (context, i) {
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(16.r),
-                      child: Image.asset(
-                        popular[i].$2,
-                        width: double.infinity,
-                        fit: BoxFit.cover,
+              final recipe = popular[i];
+              return GestureDetector(
+                onTap: () {
+                  Navigator.pushNamed(
+                    context,
+                    AppRoutes.recipeDetail,
+                    arguments: {'recipe': recipe},
+                  );
+                },
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(16.r),
+                        child: Image.asset(
+                          recipe.image ?? 'assets/images/others.png',
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                        ),
                       ),
                     ),
-                  ),
-                  SizedBox(height: 8.h),
-                  Row(
-                    children: [
-                      Text(
-                        '${i + 1}',
-                        style: TextStyle(
-                          fontFamily: 'SF Pro',
-                          fontWeight: FontWeight.w900,
-                          fontSize: 20.sp,
-                          color: const Color(0xFFEDEDED),
-                        ),
-                      ),
-                      SizedBox(width: 8.w),
-                      Expanded(
-                        child: Text(
-                          popular[i].$1,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                    SizedBox(height: 8.h),
+                    Row(
+                      children: [
+                        Text(
+                          '${i + 1}',
                           style: TextStyle(
                             fontFamily: 'SF Pro',
-                            fontWeight: FontWeight.w800,
-                            fontSize: 14.sp,
-                            color: const Color(0xFF1A1A1A),
+                            fontWeight: FontWeight.w900,
+                            fontSize: 20.sp,
+                            color: const Color(0xFFEDEDED),
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 4.h),
-                  Row(
-                    children: [
-                      SizedBox(width: 24.w), // Offset for number
-                      Icon(Icons.access_time, size: 12.sp, color: const Color(0xFF999999)),
-                      SizedBox(width: 4.w),
-                      Text(
-                        popular[i].$3,
-                        style: TextStyle(
-                          fontFamily: 'SF Pro',
-                          fontSize: 11.sp,
-                          color: const Color(0xFF999999),
+                        SizedBox(width: 8.w),
+                        Expanded(
+                          child: Text(
+                            recipe.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontFamily: 'SF Pro',
+                              fontWeight: FontWeight.w800,
+                              fontSize: 14.sp,
+                              color: const Color(0xFF1A1A1A),
+                            ),
+                          ),
                         ),
-                      ),
-                      SizedBox(width: 10.w),
-                      Icon(Icons.favorite_border, size: 12.sp, color: const Color(0xFF999999)),
-                      SizedBox(width: 4.w),
-                      Text(
-                        popular[i].$4,
-                        style: TextStyle(
-                          fontFamily: 'SF Pro',
-                          fontSize: 11.sp,
-                          color: const Color(0xFF999999),
+                      ],
+                    ),
+                    SizedBox(height: 4.h),
+                    Row(
+                      children: [
+                        SizedBox(width: 24.w), // Offset for number
+                        Icon(Icons.access_time, size: 12.sp, color: const Color(0xFF999999)),
+                        SizedBox(width: 4.w),
+                        Text(
+                          '${recipe.cookTime} min',
+                          style: TextStyle(
+                            fontFamily: 'SF Pro',
+                            fontSize: 11.sp,
+                            color: const Color(0xFF999999),
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                ],
+                        SizedBox(width: 10.w),
+                        Icon(Icons.local_fire_department_outlined, size: 12.sp, color: const Color(0xFF999999)),
+                        SizedBox(width: 4.w),
+                        Text(
+                          '${recipe.kcal} kcal',
+                          style: TextStyle(
+                            fontFamily: 'SF Pro',
+                            fontSize: 11.sp,
+                            color: const Color(0xFF999999),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               );
             },
           ),

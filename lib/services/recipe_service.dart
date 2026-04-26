@@ -135,7 +135,10 @@ class RecipeService {
         'name': recipe.name,
         'image': recipe.image,
         'cookTime': recipe.cookTime,
+        'prepTime': recipe.prepTime,
         'kcal': recipe.kcal,
+        'servings': recipe.servings,
+        'tips': recipe.tips,
         'ingredients': recipe.ingredients
             .map(
               (ing) => {
@@ -146,7 +149,9 @@ class RecipeService {
             )
             .toList(),
         'steps': recipe.steps,
+        'equipment': recipe.equipment,
         'sourceUrl': recipe.sourceUrl,
+        'origin': recipe.origin,
         'cookbookIds': cookbookIds,
       }),
     );
@@ -273,6 +278,18 @@ class RecipeService {
       return jsonDecode(response.body)['link'];
     } else {
       throw Exception('Failed to generate share link');
+    }
+  }
+
+  Future<List<String>> getTrendingAiDishes() async {
+    final endpoint = Uri.parse('${ApiConfig.baseUrl}/recipes/trending-ai');
+    final response = await http.get(endpoint, headers: await _getHeaders());
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+      return data.cast<String>();
+    } else {
+      throw Exception('Failed to load trending AI dishes');
     }
   }
 

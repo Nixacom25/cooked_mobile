@@ -171,20 +171,29 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                                     } catch (e) {
                                       IosToast.show(
                                         context,
-                                        message: ErrorHelper.getFriendlyMessage(
-                                          e,
-                                        ),
+                                        message: ErrorHelper.getFriendlyMessage(e),
                                         type: ToastType.error,
                                       );
                                     }
                                   }
                                 },
-                                child: Icon(
-                                  (r?.isFavorite ?? false)
-                                      ? Icons.favorite_rounded
-                                      : Icons.favorite_border_rounded,
-                                  color: const Color(0xFFCC3333),
-                                  size: 28,
+                                child: Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: (r?.isFavorite ?? false)
+                                        ? const Color(0xFFCC3333).withOpacity(0.1)
+                                        : const Color(0xFFF9FAFB),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Icon(
+                                    (r?.isFavorite ?? false)
+                                        ? Icons.favorite_rounded
+                                        : Icons.favorite_border_rounded,
+                                    color: (r?.isFavorite ?? false)
+                                        ? const Color(0xFFCC3333)
+                                        : const Color(0xFF9CA3AF),
+                                    size: 24,
+                                  ),
                                 ),
                               ),
                             ],

@@ -1,8 +1,11 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../services/grocery_service.dart';
 import '../services/recipe_service.dart';
+import '../services/ingredient_service.dart';
 import '../models/grocery_item.dart';
+import '../models/recipe.dart';
 import '../core/widgets/ios_toast.dart';
 import '../core/utils/error_helper.dart';
 import '../services/notification_service.dart';
@@ -376,30 +379,7 @@ class _GroceryScreenState extends State<GroceryScreen> {
   }
 }
 
-// ── Planned Recipe helper model ────────────────────────────────────────────────
-class _PlannedRecipe {
-  final String id;
-  final String name;
-  final DateTime date;
-  const _PlannedRecipe({
-    required this.id,
-    required this.name,
-    required this.date,
-  });
 
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is _PlannedRecipe &&
-          runtimeType == other.runtimeType &&
-          id == other.id &&
-          date.year == other.date.year &&
-          date.month == other.date.month &&
-          date.day == other.date.day;
-
-  @override
-  int get hashCode => id.hashCode ^ date.day.hashCode ^ date.month.hashCode;
-}
 
 // ── Empty-state widget ────────────────────────────────────────────────────────
 
@@ -501,7 +481,7 @@ class _AddGrocerySheet extends StatefulWidget {
   final void Function(
     String name,
     String qty,
-    DateTime date,
+    DateTime? date,
     String? icon,
     String? recipeId,
   )
@@ -521,51 +501,50 @@ class _AddGrocerySheetState extends State<_AddGrocerySheet> {
   final _nameController = TextEditingController();
   final _qtyController = TextEditingController();
   late DateTime _date;
-  bool _isRecipeMode = true;
-  _PlannedRecipe? _selectedPlannedRecipe;
+  bool _isRecipeMode = false;
+  Recipe? _selectedRecipe;
   bool _isSaving = false;
+
+  Timer? _searchDebounce;
+  List<Map<String, dynamic>> _suggestedIngredients = [];
+  String _lastSelectedName = '';
 
   @override
   void initState() {
     super.initState();
     _date = widget.selectedDate;
+    if (RecipeService.instance.myRecipesNotifier.value == null) {
+      RecipeService.instance.getMyRecipes();
+    }
+    _nameController.addListener(_onNameChanged);
   }
 
-  List<_PlannedRecipe> get _plannedRecipes {
-    final now = DateTime.now();
-    final startOfToday = DateTime(now.year, now.month, now.day);
-    final seen = <String>{};
-    final list = <_PlannedRecipe>[];
+  void _onNameChanged() {
+    final query = _nameController.text.trim();
+    if (_searchDebounce?.isActive ?? false) _searchDebounce!.cancel();
 
-    for (var item in widget.allItems) {
-      if (item.recipeId != null && item.plannedDate != null) {
-        if (!item.plannedDate!.isBefore(startOfToday)) {
-          final dateStr = item.plannedDate!.toIso8601String().split('T')[0];
-          final key = '${item.recipeId}_$dateStr';
-          if (!seen.contains(key)) {
-            seen.add(key);
-            list.add(
-              _PlannedRecipe(
-                id: item.recipeId!,
-                name: item.recipeName ?? 'Unknown',
-                date: item.plannedDate!,
-              ),
-            );
-          }
-        }
-      }
+    if (query.length < 2 || query.toLowerCase() == _lastSelectedName.toLowerCase()) {
+      setState(() => _suggestedIngredients = []);
+      return;
     }
-    // Sort by date then name
-    list.sort((a, b) {
-      final dateCmp = a.date.compareTo(b.date);
-      if (dateCmp != 0) return dateCmp;
-      return a.name.compareTo(b.name);
+    
+    _lastSelectedName = '';
+
+    _searchDebounce = Timer(const Duration(milliseconds: 300), () async {
+      final results = await IngredientService.instance.searchIngredients(query);
+      if (mounted) setState(() => _suggestedIngredients = results);
     });
-    return list;
+  }
+
+  String _capitalize(String s) {
+    if (s.isEmpty) return s;
+    return s[0].toUpperCase() + s.substring(1);
   }
 
   @override
   void dispose() {
+    _searchDebounce?.cancel();
+    _nameController.removeListener(_onNameChanged);
     _nameController.dispose();
     _qtyController.dispose();
     super.dispose();
@@ -677,82 +656,72 @@ class _AddGrocerySheetState extends State<_AddGrocerySheet> {
 
                 SizedBox(height: 24.h),
 
-                // ── Recipe Selector (Always visible) ────────────────────
-                Text(
-                  'Attach to Recipe',
-                  style: TextStyle(
-                    fontFamily: 'SF Pro',
-                    fontWeight: FontWeight.w700,
-                    fontSize: 14.sp,
-                    color: const Color(0xFF64748B),
+                // ── Recipe Selector ──────────────────────────────────────────
+                if (_isRecipeMode) ...[
+                  Text(
+                    'Attach to Recipe',
+                    style: TextStyle(
+                      fontFamily: 'SF Pro',
+                      fontWeight: FontWeight.w700,
+                      fontSize: 14.sp,
+                      color: const Color(0xFF64748B),
+                    ),
                   ),
-                ),
-                SizedBox(height: 8.h),
-                Builder(
-                  builder: (context) {
-                    final plans = _plannedRecipes;
-                    if (plans.isEmpty) {
+                  SizedBox(height: 8.h),
+                  ValueListenableBuilder<List<Recipe>?>(
+                    valueListenable: RecipeService.instance.myRecipesNotifier,
+                    builder: (context, recipes, _) {
+                      final hasRecipes = recipes != null && recipes.isNotEmpty;
+
                       return Container(
-                        padding: EdgeInsets.all(16.r),
                         decoration: BoxDecoration(
                           color: const Color(0xFFF9FAFB),
                           borderRadius: BorderRadius.circular(14.r),
                           border: Border.all(color: const Color(0xFFF3F4F6)),
                         ),
-                        child: Text(
-                          'No active plans scheduled.',
-                          style: TextStyle(color: const Color(0xFF9CA3AF), fontSize: 13.sp),
-                        ),
-                      );
-                    }
-
-                    return Container(
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF9FAFB),
-                        borderRadius: BorderRadius.circular(14.r),
-                        border: Border.all(color: const Color(0xFFF3F4F6)),
-                      ),
-                      child: DropdownButtonHideUnderline(
-                        child: DropdownButton<_PlannedRecipe>(
-                          isExpanded: true,
-                          value: _selectedPlannedRecipe,
-                          hint: Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 16.w),
-                            child: Text('Pick a planned recipe', style: TextStyle(color: const Color(0xFF9CA3AF), fontSize: 14.sp)),
-                          ),
-                          icon: Padding(
-                            padding: EdgeInsets.only(right: 12.w),
-                            child: const Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFF64748B)),
-                          ),
-                          items: plans.map((p) {
-                            return DropdownMenuItem(
-                              value: p,
-                              child: Padding(
-                                padding: EdgeInsets.symmetric(horizontal: 16.w),
-                                child: Text(
-                                  '${p.name} (${_fmt(p.date)})',
-                                  style: TextStyle(
-                                    fontFamily: 'SF Pro',
-                                    fontSize: 14.sp,
-                                    color: const Color(0xFF1F2937),
+                        child: DropdownButtonHideUnderline(
+                          child: DropdownButton<Recipe>(
+                            isExpanded: true,
+                            value: _selectedRecipe,
+                            hint: Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 16.w),
+                              child: Text(
+                                hasRecipes ? 'Pick a recipe' : 'No recipes found.',
+                                style: TextStyle(color: const Color(0xFF9CA3AF), fontSize: 14.sp)
+                              ),
+                            ),
+                            icon: Padding(
+                              padding: EdgeInsets.only(right: 12.w),
+                              child: const Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFF64748B)),
+                            ),
+                            items: !hasRecipes ? null : recipes.map((r) {
+                              return DropdownMenuItem(
+                                value: r,
+                                child: Padding(
+                                  padding: EdgeInsets.symmetric(horizontal: 16.w),
+                                  child: Text(
+                                    r.name,
+                                    style: TextStyle(
+                                      fontFamily: 'SF Pro',
+                                      fontSize: 14.sp,
+                                      color: const Color(0xFF1F2937),
+                                    ),
                                   ),
                                 ),
-                              ),
-                            );
-                          }).toList(),
-                          onChanged: (val) {
-                            setState(() {
-                              _selectedPlannedRecipe = val;
-                              if (val != null) _date = val.date;
-                            });
-                          },
+                              );
+                            }).toList(),
+                            onChanged: !hasRecipes ? null : (val) {
+                              setState(() {
+                                _selectedRecipe = val;
+                              });
+                            },
+                          ),
                         ),
-                      ),
-                    );
-                  },
-                ),
-
-                SizedBox(height: 20.h),
+                      );
+                    },
+                  ),
+                  SizedBox(height: 20.h),
+                ],
 
                 if (!_isRecipeMode) ...[
                   // ── Ingredient Name Field ─────────────────────────────
@@ -787,6 +756,44 @@ class _AddGrocerySheetState extends State<_AddGrocerySheet> {
                       ),
                     ),
                   ),
+
+                  if (_suggestedIngredients.isNotEmpty)
+                    Padding(
+                      padding: EdgeInsets.only(top: 8.h),
+                      child: Material(
+                        elevation: 4,
+                        borderRadius: BorderRadius.circular(12.r),
+                        child: Container(
+                          constraints: BoxConstraints(maxHeight: 200.h),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12.r),
+                            border: Border.all(color: const Color(0xFFE2E8F0)),
+                          ),
+                          child: ListView.separated(
+                            shrinkWrap: true,
+                            padding: EdgeInsets.zero,
+                            itemCount: _suggestedIngredients.length,
+                            separatorBuilder: (_, __) => Divider(height: 1, color: Colors.grey[100]),
+                            itemBuilder: (context, i) {
+                              final item = _suggestedIngredients[i];
+                              return ListTile(
+                                dense: true,
+                                title: Text(_capitalize(item['name'] ?? '')),
+                                onTap: () {
+                                  final selected = _capitalize(item['name'] ?? '');
+                                  _lastSelectedName = selected;
+                                  _nameController.text = selected;
+                                  _searchDebounce?.cancel();
+                                  setState(() => _suggestedIngredients = []);
+                                  FocusScope.of(context).unfocus();
+                                },
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                    ),
 
                   SizedBox(height: 20.h),
 
@@ -882,15 +889,15 @@ class _AddGrocerySheetState extends State<_AddGrocerySheet> {
                 onPressed: _isSaving
                     ? null
                     : () async {
-                        if (_selectedPlannedRecipe == null) {
-                          IosToast.show(context, message: 'Please select a recipe', type: ToastType.success);
-                          return;
-                        }
-
                         setState(() => _isSaving = true);
                         try {
                           if (_isRecipeMode) {
-                            final fullRecipe = await RecipeService.instance.getRecipe(_selectedPlannedRecipe!.id);
+                            if (_selectedRecipe == null) {
+                              IosToast.show(context, message: 'Please select a recipe', type: ToastType.success);
+                              setState(() => _isSaving = false);
+                              return;
+                            }
+                            final fullRecipe = await RecipeService.instance.getRecipe(_selectedRecipe!.id);
 
                             for (var ing in fullRecipe.ingredients) {
                               widget.onSave(
@@ -910,7 +917,7 @@ class _AddGrocerySheetState extends State<_AddGrocerySheet> {
                                 qty,
                                 _date,
                                 null,
-                                _selectedPlannedRecipe!.id,
+                                null,
                               );
                             }
                           }

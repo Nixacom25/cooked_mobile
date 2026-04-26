@@ -46,7 +46,7 @@ class _CookbookDetailScreenState extends State<CookbookDetailScreen> {
   }
 
   Future<void> _load() async {
-    if (_cookbook == null) return;
+    if (_cookbook == null || _cookbook!.id.startsWith('static_')) return;
     setState(() => _loading = true);
     try {
       final updated = await CookbookService.instance.getCookbook(_cookbook!.id);
@@ -108,29 +108,30 @@ class _CookbookDetailScreenState extends State<CookbookDetailScreen> {
                     ),
                   ),
                   // + button opens Edit Cookbook form
-                  GestureDetector(
-                    onTap: () async {
-                      final result = await Navigator.pushNamed(
-                        context,
-                        AppRoutes.cookbookForm,
-                        arguments: {'mode': 'edit', 'cookbook': _cookbook},
-                      );
-                      if (result == true) _load();
-                    },
-                    child: Container(
-                      width: 30,
-                      height: 30,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFCC3333),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: const Icon(
-                        Icons.add_rounded,
-                        color: Colors.white,
-                        size: 20,
+                  if (_cookbook != null && !_cookbook!.id.startsWith('static_'))
+                    GestureDetector(
+                      onTap: () async {
+                        final result = await Navigator.pushNamed(
+                          context,
+                          AppRoutes.cookbookForm,
+                          arguments: {'mode': 'edit', 'cookbook': _cookbook},
+                        );
+                        if (result == true) _load();
+                      },
+                      child: Container(
+                        width: 30,
+                        height: 30,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFCC3333),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Icon(
+                          Icons.add_rounded,
+                          color: Colors.white,
+                          size: 20,
+                        ),
                       ),
                     ),
-                  ),
                 ],
               ),
             ),
@@ -187,7 +188,7 @@ class _CookbookDetailScreenState extends State<CookbookDetailScreen> {
                         crossAxisCount: 2,
                         mainAxisSpacing: 14.h,
                         crossAxisSpacing: 14.w,
-                        childAspectRatio: 0.82,
+                        mainAxisExtent: 240.h,
                       ),
                       itemBuilder: (ctx, i) {
                         final r = recipes[i];

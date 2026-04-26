@@ -49,20 +49,22 @@ class RecipeCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(
-            height: 130.h,
+          // ── Photo area ─────────────────────────────────────────────────
+          Expanded(
             child: Stack(
               children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.all(Radius.circular(12.r)),
-                  child: Container(
-                    width: double.infinity,
-                    height: double.infinity,
-                    color: const Color(0xFFF2F1EF),
-                    child: _buildImage(displayImg),
+                Positioned.fill(
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.all(Radius.circular(12.r)),
+                    child: Container(
+                      width: double.infinity,
+                      height: double.infinity,
+                      color: const Color(0xFFF2F1EF),
+                      child: _buildImage(displayImg),
+                    ),
                   ),
                 ),
-                // Action icon top-right (Heart or Validation)
+                // Heart icon top-right
                 Positioned(
                   top: 8.h,
                   right: 8.w,
@@ -151,6 +153,8 @@ class RecipeCard extends StatelessWidget {
               SizedBox(width: 3.w),
               Text(
                 displayTime,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   fontFamily: 'SF Pro',
                   fontSize: 11.sp,
@@ -167,6 +171,7 @@ class RecipeCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   displayKcal,
+                  maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontFamily: 'SF Pro',

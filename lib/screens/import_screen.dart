@@ -82,7 +82,7 @@ class _ImportScreenState extends State<ImportScreen> {
 
   Future<void> _loadTrending() async {
     try {
-      final trending = await RecipeService.instance.getPopularRecipes(size: 5);
+      final trending = await RecipeService.instance.getTrendingAiDishes();
       if (mounted) {
         setState(() {
           _trendingRecipes = trending;
@@ -99,7 +99,7 @@ class _ImportScreenState extends State<ImportScreen> {
   List<Recipe> _recentImportsList = [];
   bool _isLoadingRecent = true;
 
-  List<Recipe> _trendingRecipes = [];
+  List<String> _trendingRecipes = [];
 
   // static const _trending = [ ... REMOVED in favor of _trendingRecipes
 
@@ -406,11 +406,11 @@ class _ImportScreenState extends State<ImportScreen> {
                   spacing: 8.w,
                   runSpacing: 8.h,
                   children: _trendingRecipes
-                      .map((r) => _TrendingChip(
-                            recipe: r,
+                      .map((name) => _TrendingChip(
+                            name: name,
                             onImport: () {
-                              _searchCtrl.text = r.name;
-                              _handleWebSearch(r.name);
+                              _searchCtrl.text = name;
+                              _handleWebSearch(name);
                             },
                           ))
                       .toList(),
@@ -539,25 +539,14 @@ class _PlatformImg extends StatelessWidget {
 
 // ── Trending chip ─────────────────────────────────────────────────────────────
 class _TrendingChip extends StatelessWidget {
-  final Recipe recipe;
+  final String name;
   final VoidCallback onImport;
-  const _TrendingChip({required this.recipe, required this.onImport});
+  const _TrendingChip({required this.name, required this.onImport});
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () {
-        Navigator.pushNamed(
-          context,
-          AppRoutes.recipeDetail,
-          arguments: {
-            'recipe': recipe,
-            'isPreview': true,
-            'isTrend': true,
-            'onImport': onImport,
-          },
-        );
-      },
+      onTap: onImport,
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
         decoration: BoxDecoration(
@@ -581,7 +570,7 @@ class _TrendingChip extends StatelessWidget {
             ),
             SizedBox(width: 10.w),
             Text(
-              recipe.name,
+              name,
               style: TextStyle(
                 fontFamily: 'SF Pro',
                 fontSize: 13.sp,

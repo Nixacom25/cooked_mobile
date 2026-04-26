@@ -99,7 +99,7 @@ class _HomeScreenState extends State<HomeScreen>
 
     // Initial trigger attempt if home tutorial never seen
     if (!TutorialService.instance.hasSeenHome) {
-      _startTutorial(delayMs: 1500); 
+      _startTutorial(delayMs: 1500);
     }
 
     // Load initial data
@@ -248,12 +248,13 @@ class _HomeScreenState extends State<HomeScreen>
                     // Hide ONLY while actively scanning (Scan Tab + NOT in results mode) OR while importing
                     // We also want to hide it in results mode as requested
                     final isScanningTab = (_currentTab == 2);
-                    final hideNavInScan = isScanningTab && (inResultsMode || !_navVisible);
-                    final hideNav = hideNavInScan || isImportLoading;
+                    // Hide nav entirely on Scan tab as requested
+                    final hideNav = isScanningTab || isImportLoading;
 
                     return Stack(
                       children: [
                         // Peek handle – only shown when nav is hidden AND not in results mode
+                        /* 
                         AnimatedPositioned(
                           duration: const Duration(milliseconds: 320),
                           curve: Curves.easeInOut,
@@ -307,6 +308,7 @@ class _HomeScreenState extends State<HomeScreen>
                             ),
                           ),
                         ),
+                        */
 
                         // Custom Bottom Navigation Bar overlaid entirely on top
                         Positioned(
@@ -534,11 +536,24 @@ class _NavItem extends StatelessWidget {
 // ══════════════════════════════════════════════════════════════════════════════
 // HOME TAB
 // ══════════════════════════════════════════════════════════════════════════════
-class _HomeTab extends StatelessWidget {
+class _HomeTab extends StatefulWidget {
   final VoidCallback? onRefresh;
   final VoidCallback? onScanTap;
   final GlobalKey? firstCookbookKey;
   const _HomeTab({this.onRefresh, this.onScanTap, this.firstCookbookKey});
+
+  @override
+  State<_HomeTab> createState() => _HomeTabState();
+}
+
+class _HomeTabState extends State<_HomeTab> {
+  final ValueNotifier<String> _searchQueryNotifier = ValueNotifier('');
+
+  @override
+  void dispose() {
+    _searchQueryNotifier.dispose();
+    super.dispose();
+  }
 
   void _goViewAll(BuildContext ctx, ViewAllType type, String title) {
     Navigator.pushNamed(
@@ -558,77 +573,93 @@ class _HomeTab extends StatelessWidget {
           children: [
             const _Header(),
             SizedBox(height: 14.h),
-            const _SearchBar(),
+            _SearchBar(
+              onChanged: (val) {
+                _searchQueryNotifier.value = val;
+              },
+            ),
             SizedBox(height: 10.h),
             Expanded(
-              child: ListView(
-                padding: EdgeInsets.only(bottom: 40.h, top: 15.h),
-                children: [
-                  ValueListenableBuilder<List<Cookbook>?>(
-                    valueListenable: CookbookService.instance.myCookbooksNotifier,
-                    builder: (context, cookbooks, _) {
-                      final countBadge = (cookbooks != null && cookbooks.isNotEmpty) 
-                          ? ' (${cookbooks.length})' 
-                          : '';
-                      return _SectionRow(
-                        title: 'Your cookbooks$countBadge',
-                        onViewAll: () {
-                          _goViewAll(context, ViewAllType.cookbooks, 'Cookbooks');
-                        },
-                      );
-                    }
-                  ),
-                  SizedBox(height: 12.h),
-                  _CookbooksRow(
-                    onRefresh: onRefresh,
-                    firstCookbookKey: firstCookbookKey,
-                  ),
-                  ValueListenableBuilder<List<Recipe>>(
-                    valueListenable: HistoryService.instance.recentlyViewedNotifier,
-                    builder: (context, recent, _) {
-                      final bool shouldShow = recent.isNotEmpty;
-                      return Visibility(
-                        visible: shouldShow,
-                        maintainState: false,
-                        child: Column(
-                          children: [
-                            SizedBox(height: 30.h),
-                            _SectionRow(
-                              title: 'Recently Viewed',
-                              onViewAll: () => _goViewAll(
-                                context,
-                                ViewAllType.recentlyViewed,
-                                'Recently Viewed',
+              child: ValueListenableBuilder<String>(
+                valueListenable: _searchQueryNotifier,
+                builder: (context, searchQuery, _) {
+                  return ListView(
+                    padding: EdgeInsets.only(bottom: 40.h, top: 15.h),
+                    children: [
+                      if (searchQuery.isEmpty) ...[
+                    ValueListenableBuilder<List<Cookbook>?>(
+                      valueListenable:
+                          CookbookService.instance.myCookbooksNotifier,
+                      builder: (context, cookbooks, _) {
+                        final countBadge =
+                            (cookbooks != null && cookbooks.isNotEmpty)
+                            ? ' (${cookbooks.length})'
+                            : '';
+                        return _SectionRow(
+                          title: 'Your cookbooks$countBadge',
+                          onViewAll: () {
+                            _goViewAll(
+                              context,
+                              ViewAllType.cookbooks,
+                              'Cookbooks',
+                            );
+                          },
+                        );
+                      },
+                    ),
+                    SizedBox(height: 12.h),
+                    _CookbooksRow(
+                      onRefresh: widget.onRefresh,
+                      firstCookbookKey: widget.firstCookbookKey,
+                    ),
+                  ],
+                  if (searchQuery.isEmpty) ...[
+                    ValueListenableBuilder<List<Recipe>>(
+                      valueListenable:
+                          HistoryService.instance.recentlyViewedNotifier,
+                      builder: (context, recent, _) {
+                        final bool shouldShow = recent.isNotEmpty;
+                        return Visibility(
+                          visible: shouldShow,
+                          maintainState: false,
+                          child: Column(
+                            children: [
+                              SizedBox(height: 30.h),
+                              _SectionRow(
+                                title: 'Recently Viewed',
+                                onViewAll: () => _goViewAll(
+                                  context,
+                                  ViewAllType.recentlyViewed,
+                                  'Recently Viewed',
+                                ),
                               ),
-                            ),
-                            SizedBox(height: 12.h),
-                            _RecentlyViewedRow(recipes: recent),
-                          ],
-                        ),
-                      );
-                    }
-                  ),
+                              SizedBox(height: 12.h),
+                              _RecentlyViewedRow(recipes: recent),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ],
                   ValueListenableBuilder<List<Recipe>?>(
                     valueListenable: RecipeService.instance.myRecipesNotifier,
                     builder: (context, recipes, _) {
-                      final hasAction = recipes?.any((r) => r.origin != 'SUGGESTED') ?? false;
+                      final hasAction =
+                          recipes?.any((r) => r.origin != 'SUGGESTED') ?? false;
 
                       // Show Unified Saved/Suggested Section
-                      final title = hasAction ? 'Saved Recipes' : 'Suggested Recipes';
-                      
+                      final title = hasAction
+                          ? 'Saved Recipes'
+                          : 'Suggested Recipes';
+
                       return Column(
                         children: [
                           SizedBox(height: 30.h),
                           _SectionRow(
                             title: title,
-                            onViewAll: () => _goViewAll(
-                              context, 
-                              ViewAllType.savedRecipes, 
-                              title,
-                            ),
                           ),
                           SizedBox(height: 12.h),
-                          const _SavedRecipesGrid(),
+                          _SavedRecipesGrid(searchQuery: searchQuery),
                         ],
                       );
                     },
@@ -639,62 +670,91 @@ class _HomeTab extends StatelessWidget {
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: 18.w),
                     child: Container(
-                      padding: EdgeInsets.all(20.r),
+                      clipBehavior: Clip.antiAlias,
                       decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFFC83A2D), Color(0xFFE57373)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        borderRadius: BorderRadius.circular(20.r),
+                        color: const Color(0xFFCC3333),
+                        borderRadius: BorderRadius.circular(24.r),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFFC83A2D).withValues(alpha: 0.3),
-                            blurRadius: 12.r,
-                            offset: const Offset(0, 6),
+                            color: const Color(
+                              0xFFCC3333,
+                            ).withValues(alpha: 0.3),
+                            blurRadius: 20.r,
+                            offset: const Offset(0, 10),
                           ),
                         ],
                       ),
-                      child: Row(
+                      child: Stack(
                         children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                          Positioned(
+                            right: -15.w,
+                            bottom: -15.h,
+                            child: Opacity(
+                              opacity: 0.15,
+                              child: Image.asset(
+                                'assets/images/scan_illustration.png',
+                                height: 110.h,
+                                errorBuilder: (_, __, ___) =>
+                                    const SizedBox.shrink(),
+                              ),
+                            ),
+                          ),
+                          Padding(
+                            padding: EdgeInsets.all(22.r),
+                            child: Row(
                               children: [
-                                Text(
-                                  "Scan your refrigerator",
-                                  style: TextStyle(
-                                    fontFamily: 'SF Pro',
-                                    fontWeight: FontWeight.w800,
-                                    fontSize: 18.sp,
-                                    color: Colors.white,
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        "Scan your refrigerator",
+                                        style: TextStyle(
+                                          fontFamily: 'SF Pro',
+                                          fontWeight: FontWeight.w900,
+                                          fontSize: 18.sp,
+                                          color: Colors.white,
+                                          letterSpacing: -0.5,
+                                        ),
+                                      ),
+                                      SizedBox(height: 6.h),
+                                      Text(
+                                        "Let our AI find the best recipes for you",
+                                        style: TextStyle(
+                                          fontFamily: 'SF Pro',
+                                          fontSize: 13.sp,
+                                          color: Colors.white.withOpacity(0.9),
+                                          height: 1.3,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
-                                SizedBox(height: 6.h),
-                                Text(
-                                  "Let our AI find the best recipes for you",
-                                  style: TextStyle(
-                                    fontFamily: 'SF Pro',
-                                    fontSize: 13.sp,
-                                    color: Colors.white.withOpacity(0.9),
+                                SizedBox(width: 12.w),
+                                GestureDetector(
+                                  onTap: widget.onScanTap,
+                                  child: Container(
+                                    padding: EdgeInsets.all(12.r),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(16.r),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withOpacity(0.1),
+                                          blurRadius: 8.r,
+                                          offset: const Offset(0, 4),
+                                        ),
+                                      ],
+                                    ),
+                                    child: Icon(
+                                      Icons.qr_code_scanner_rounded,
+                                      color: const Color(0xFFCC3333),
+                                      size: 24.sp,
+                                    ),
                                   ),
                                 ),
                               ],
-                            ),
-                          ),
-                          GestureDetector(
-                            onTap: onScanTap,
-                            child: Container(
-                              padding: EdgeInsets.all(12.r),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(14.r),
-                              ),
-                              child: Icon(
-                                Icons.qr_code_scanner_rounded,
-                                color: const Color(0xFFC83A2D),
-                                size: 24.sp,
-                              ),
                             ),
                           ),
                         ],
@@ -706,13 +766,15 @@ class _HomeTab extends StatelessWidget {
                   // Dynamic bottom spacer for keyboard
                   SizedBox(height: MediaQuery.of(context).viewInsets.bottom),
                 ],
-              ),
+              );
+             },
             ),
-          ],
-        ),
+          ),
+        ],
       ),
-    );
-  }
+    ),
+  );
+}
 }
 
 // ── Header ─────────────────────────────────────────────────────────────────────
@@ -724,7 +786,6 @@ class _Header extends StatefulWidget {
 }
 
 class _HeaderState extends State<_Header> {
-
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -879,12 +940,13 @@ class _HeaderState extends State<_Header> {
 
 // ── Search bar ─────────────────────────────────────────────────────────────────
 class _SearchBar extends StatelessWidget {
-  const _SearchBar();
+  final ValueChanged<String>? onChanged;
+  const _SearchBar({this.onChanged});
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 20.w),
-      child: const AppSearchField(),
+      child: AppSearchField(onChanged: onChanged),
     );
   }
 }
@@ -914,18 +976,19 @@ class _SectionRow extends StatelessWidget {
               ),
             ],
           ),
-          GestureDetector(
-            onTap: onViewAll,
-            child: Text(
-              'View All',
-              style: TextStyle(
-                fontFamily: 'SF Pro',
-                fontWeight: FontWeight.w600,
-                fontSize: 14.sp,
-                color: const Color(0xFFCC3333),
+          if (onViewAll != null)
+            GestureDetector(
+              onTap: onViewAll,
+              child: Text(
+                'View All',
+                style: TextStyle(
+                  fontFamily: 'SF Pro',
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14.sp,
+                  color: const Color(0xFFCC3333),
+                ),
               ),
             ),
-          ),
         ],
       ),
     );
@@ -977,7 +1040,6 @@ class _CookbooksRowState extends State<_CookbooksRow> {
           );
         }
 
-
         return SizedBox(
           height: 200.h,
           child: ListView.builder(
@@ -1012,7 +1074,12 @@ class _CookbooksRowState extends State<_CookbooksRow> {
                               decoration: BoxDecoration(
                                 color: const Color(0xFFF9FAFB),
                                 borderRadius: BorderRadius.circular(16.r),
-                                border: Border.all(color: const Color(0xFFC83A2D).withValues(alpha: 0.4), width: 1),
+                                border: Border.all(
+                                  color: const Color(
+                                    0xFFC83A2D,
+                                  ).withValues(alpha: 0.4),
+                                  width: 1,
+                                ),
                               ),
                               child: Center(
                                 child: Icon(
@@ -1043,7 +1110,10 @@ class _CookbooksRowState extends State<_CookbooksRow> {
                               children: [
                                 Icon(Icons.restaurant_outlined, size: 13.sp),
                                 SizedBox(width: 4.w),
-                                Text('0 Recipes', style: TextStyle(fontSize: 12.sp)),
+                                Text(
+                                  '0 Recipes',
+                                  style: TextStyle(fontSize: 12.sp),
+                                ),
                               ],
                             ),
                           ),
@@ -1070,7 +1140,9 @@ class _CookbooksRowState extends State<_CookbooksRow> {
                     }
                   },
                   child: SizedBox(
-                    key: (i == 1 && cookbooks.isNotEmpty) ? widget.firstCookbookKey : null,
+                    key: (i == 1 && cookbooks.isNotEmpty)
+                        ? widget.firstCookbookKey
+                        : null,
                     width: 180.w,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1078,9 +1150,10 @@ class _CookbooksRowState extends State<_CookbooksRow> {
                         Expanded(child: CookbookCover(cookbook: cb)),
                         SizedBox(height: 7.h),
                         Text(
-                          cb.name.isEmpty 
-                              ? cb.name 
-                              : cb.name[0].toUpperCase() + cb.name.substring(1).toLowerCase(),
+                          cb.name.isEmpty
+                              ? cb.name
+                              : cb.name[0].toUpperCase() +
+                                    cb.name.substring(1).toLowerCase(),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
@@ -1140,9 +1213,7 @@ class _RecentlyViewedRow extends StatelessWidget {
         itemBuilder: (_, i) {
           final r = recipes[i];
           return Padding(
-            padding: EdgeInsets.only(
-              right: i < recipes.length - 1 ? 12 : 0,
-            ),
+            padding: EdgeInsets.only(right: i < recipes.length - 1 ? 12 : 0),
             child: GestureDetector(
               onTap: () => Navigator.pushNamed(
                 context,
@@ -1150,10 +1221,7 @@ class _RecentlyViewedRow extends StatelessWidget {
                 arguments: {'recipe': r},
               ),
               child: Container(
-                padding: EdgeInsets.symmetric(
-                  horizontal: 10.w,
-                  vertical: 8.h,
-                ),
+                padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
                 decoration: BoxDecoration(
                   color: const Color(0xFFF2F1EF),
                   borderRadius: BorderRadius.circular(10.r),
@@ -1186,9 +1254,10 @@ class _RecentlyViewedRow extends StatelessWidget {
                     ),
                     SizedBox(width: 10.w),
                     Text(
-                      r.name.isEmpty 
-                          ? r.name 
-                          : r.name[0].toUpperCase() + r.name.substring(1).toLowerCase(),
+                      r.name.isEmpty
+                          ? r.name
+                          : r.name[0].toUpperCase() +
+                                r.name.substring(1).toLowerCase(),
                       style: TextStyle(
                         fontFamily: 'Open Sans',
                         fontWeight: FontWeight.w800,
@@ -1235,7 +1304,8 @@ class _RecentlyViewedRow extends StatelessWidget {
 // SAVED RECIPES (home 2-col grid, uses shared RecipeCard)
 // ══════════════════════════════════════════════════════════════════════════════
 class _SavedRecipesGrid extends StatefulWidget {
-  const _SavedRecipesGrid();
+  final String searchQuery;
+  const _SavedRecipesGrid({this.searchQuery = ''});
   @override
   State<_SavedRecipesGrid> createState() => _SavedRecipesGridState();
 }
@@ -1273,9 +1343,9 @@ class _SavedRecipesGridState extends State<_SavedRecipesGrid> {
         }
 
         final hasAction = recipes.any((r) => r.origin != 'SUGGESTED');
-        
+
         List<Recipe> displayList = [];
-        
+
         if (hasAction) {
           // Show REAL recipes (Imports, Scans, etc)
           displayList = recipes.where((r) => r.origin != 'SUGGESTED').toList();
@@ -1284,11 +1354,16 @@ class _SavedRecipesGridState extends State<_SavedRecipesGrid> {
           displayList = recipes.where((r) {
             if (r.origin == 'SUGGESTED') {
               if (r.expiresAt != null && r.expiresAt!.isBefore(DateTime.now()))
-                return false; 
+                return false;
               return true;
             }
             return false;
           }).toList();
+        }
+
+        if (displayList.isNotEmpty && widget.searchQuery.trim().isNotEmpty) {
+          final query = widget.searchQuery.trim().toLowerCase();
+          displayList = displayList.where((r) => r.name.toLowerCase().contains(query)).toList();
         }
 
         if (displayList.isEmpty) {

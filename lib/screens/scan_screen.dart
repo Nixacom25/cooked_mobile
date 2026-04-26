@@ -225,6 +225,9 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
 
   void _onActiveStateChanged() {
     if (widget.isActiveNotifier.value) {
+      // Always start with Scan tab when joining the page
+      _updateState(ScanState.scan);
+
       // Trigger onboarding instantly if active
       if (!TutorialService.instance.hasSeenScan) {
         TutorialHelper.showScanOnboardingDialog(context, onTabSwitch: widget.onTabSwitch);
@@ -235,8 +238,11 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
         _initCamera();
       }
     } else {
-      // Release camera resources when switching away to prevent buffer overflow
-      _disposeCamera();
+      // Keep camera alive but maybe stop stream if any to save resources
+      // instead of full dispose which causes the re-init delay the user dislikes.
+      if (_cameraController != null && _useManualStreaming) {
+         _toggleManualStreaming(); // Stop stream if active
+      }
     }
   }
 
@@ -501,7 +507,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
           // 6. Bottom Pill Navigation
           if (showPill)
             Positioned(
-              bottom: 60.h,
+              bottom: 30.h,
               left: 22.w,
               right: 22.w,
               child: _buildBottomPillNav(),
@@ -791,7 +797,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
   Widget _buildFloatingActions() {
     if (_state == ScanState.scan) {
       return Positioned(
-        bottom: 130.h,
+        bottom: 90.h,
         left: 0,
         right: 0,
         child: Row(
@@ -818,7 +824,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
     }
 
     return Positioned(
-      bottom: _state == ScanState.results ? 30.h : 115.h,
+      bottom: _state == ScanState.results ? 30.h : 90.h,
       left: 22.w,
       right: 22.w,
       child: actionBtn,
@@ -1289,7 +1295,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
             color: const Color(0xFF1E293B),
           ),
         ),
-        SizedBox(height: 16.h),
+        SizedBox(height: 20.h),
         GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),

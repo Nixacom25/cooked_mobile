@@ -13,6 +13,7 @@ import '../../services/cookbook_service.dart';
 import '../../services/grocery_service.dart';
 import '../../core/widgets/ios_toast.dart';
 import '../../core/utils/error_helper.dart';
+import '../../data/explore_data.dart';
 
 // ── View-all type ─────────────────────────────────────────────────────────────
 enum ViewAllType {
@@ -24,6 +25,8 @@ enum ViewAllType {
   groceryHistory,
   creators,
   imports,
+  exploreCuisines,
+  exploreCategories,
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -36,11 +39,11 @@ class ViewAllScreen extends StatefulWidget {
 }
 
 class _ViewAllScreenState extends State<ViewAllScreen> {
-  final _searchCtrl = TextEditingController();
+  final ValueNotifier<String> _searchQueryNotifier = ValueNotifier('');
 
   @override
   void dispose() {
-    _searchCtrl.dispose();
+    _searchQueryNotifier.dispose();
     super.dispose();
   }
 
@@ -122,7 +125,9 @@ class _ViewAllScreenState extends State<ViewAllScreen> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 18),
               child: AppSearchField(
-                controller: _searchCtrl,
+                onChanged: (val) {
+                  _searchQueryNotifier.value = val;
+                },
                 hintText: 'Search recipes, cookbooks...',
               ),
             ),
@@ -130,26 +135,36 @@ class _ViewAllScreenState extends State<ViewAllScreen> {
             const SizedBox(height: 16),
 
             // ── Content ───────────────────────────────────────────────────
-            Expanded(child: _buildContent(type)),
+            Expanded(
+              child: ValueListenableBuilder<String>(
+                valueListenable: _searchQueryNotifier,
+                builder: (context, query, _) {
+                  return _buildContent(type, query);
+                },
+              ),
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildContent(ViewAllType type) {
+  Widget _buildContent(ViewAllType type, String query) {
     switch (type) {
       case ViewAllType.cookbooks:
-        return _CookbooksGrid();
+        return _CookbooksGrid(searchQuery: query);
       case ViewAllType.savedRecipes:
       case ViewAllType.recentlyViewed:
       case ViewAllType.favorites:
       case ViewAllType.explore:
       case ViewAllType.groceryHistory:
       case ViewAllType.imports:
-        return _RecipesGrid();
+        return _RecipesGrid(searchQuery: query);
       case ViewAllType.creators:
-        return _CreatorsGrid();
+        return _CreatorsGrid(searchQuery: query);
+      case ViewAllType.exploreCuisines:
+      case ViewAllType.exploreCategories:
+        return _StaticCookbooksGrid(type: type, searchQuery: query);
     }
   }
 
@@ -186,6 +201,9 @@ class _ViewAllScreenState extends State<ViewAllScreen> {
 // COOKBOOKS GRID
 // ══════════════════════════════════════════════════════════════════════════════
 class _CookbooksGrid extends StatefulWidget {
+  final String searchQuery;
+  const _CookbooksGrid({this.searchQuery = ''});
+
   @override
   State<_CookbooksGrid> createState() => _CookbooksGridState();
 }
@@ -214,9 +232,19 @@ class _CookbooksGridState extends State<_CookbooksGrid> {
           return const Center(child: Text("No cookbooks found."));
         }
 
+        List<Cookbook> displayList = cookbooks;
+        if (widget.searchQuery.trim().isNotEmpty) {
+          final query = widget.searchQuery.trim().toLowerCase();
+          displayList = displayList.where((cb) => cb.name.toLowerCase().contains(query)).toList();
+        }
+
+        if (displayList.isEmpty) {
+          return const Center(child: Text("No cookbooks match your search."));
+        }
+
         return GridView.builder(
           padding: const EdgeInsets.fromLTRB(16, 4, 16, 20),
-          itemCount: cookbooks.length,
+          itemCount: displayList.length,
           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 2,
             crossAxisSpacing: 12,
@@ -224,7 +252,7 @@ class _CookbooksGridState extends State<_CookbooksGrid> {
             childAspectRatio: 0.82,
           ),
           itemBuilder: (ctx, i) {
-            final cb = cookbooks[i];
+            final cb = displayList[i];
             return GestureDetector(
               onTap: () async {
                 await Navigator.pushNamed(
@@ -286,6 +314,9 @@ class _CookbooksGridState extends State<_CookbooksGrid> {
 // RECIPES GRID  (saved recipes)
 // ══════════════════════════════════════════════════════════════════════════════
 class _RecipesGrid extends StatefulWidget {
+  final String searchQuery;
+  const _RecipesGrid({this.searchQuery = ''});
+
   @override
   State<_RecipesGrid> createState() => _RecipesGridState();
 }
@@ -350,13 +381,19 @@ class _RecipesGridState extends State<_RecipesGrid> {
   }
 
   Widget _buildGrid(List<Recipe> recipes) {
-    if (recipes.isEmpty) {
-      return const Center(child: Text("No recipes found."));
+    List<Recipe> displayList = recipes;
+    if (widget.searchQuery.trim().isNotEmpty) {
+      final query = widget.searchQuery.trim().toLowerCase();
+      displayList = displayList.where((r) => r.name.toLowerCase().contains(query)).toList();
+    }
+
+    if (displayList.isEmpty) {
+      return const Center(child: Text("No recipes match your search."));
     }
 
     return GridView.builder(
       padding: const EdgeInsets.fromLTRB(16, 4, 16, 20),
-      itemCount: recipes.length,
+      itemCount: displayList.length,
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
         mainAxisSpacing: 14.h,
@@ -364,7 +401,7 @@ class _RecipesGridState extends State<_RecipesGrid> {
         childAspectRatio: 0.82,
       ),
       itemBuilder: (ctx, i) {
-        final r = recipes[i];
+        final r = displayList[i];
         return RecipeCard(
           recipe: r,
           onHeartTap: () async {
@@ -439,6 +476,9 @@ class _RecipesGridState extends State<_RecipesGrid> {
 // CREATORS GRID
 // ══════════════════════════════════════════════════════════════════════════════
 class _CreatorsGrid extends StatefulWidget {
+  final String searchQuery;
+  const _CreatorsGrid({this.searchQuery = ''});
+
   @override
   State<_CreatorsGrid> createState() => _CreatorsGridState();
 }
@@ -465,13 +505,19 @@ class _CreatorsGridState extends State<_CreatorsGrid> {
 
         final creators = snapshot.data ?? [];
 
-        if (creators.isEmpty) {
-          return const Center(child: Text("No creators found."));
+        List<Creator> displayList = creators;
+        if (widget.searchQuery.trim().isNotEmpty) {
+          final query = widget.searchQuery.trim().toLowerCase();
+          displayList = displayList.where((c) => c.displayName.toLowerCase().contains(query)).toList();
+        }
+
+        if (displayList.isEmpty) {
+          return const Center(child: Text("No creators match your search."));
         }
 
         return GridView.builder(
           padding: const EdgeInsets.fromLTRB(16, 4, 16, 20),
-          itemCount: creators.length,
+          itemCount: displayList.length,
           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 3,
             crossAxisSpacing: 12,
@@ -479,7 +525,7 @@ class _CreatorsGridState extends State<_CreatorsGrid> {
             childAspectRatio: 0.75,
           ),
           itemBuilder: (ctx, i) {
-            final c = creators[i];
+            final c = displayList[i];
             return Column(
               children: [
                 CircleAvatar(
@@ -526,6 +572,102 @@ class _CreatorsGridState extends State<_CreatorsGrid> {
               ],
             );
           },
+        );
+      },
+    );
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// STATIC COOKBOOKS GRID (Cuisines & Categories)
+// ══════════════════════════════════════════════════════════════════════════════
+class _StaticCookbooksGrid extends StatelessWidget {
+  final ViewAllType type;
+  final String searchQuery;
+
+  const _StaticCookbooksGrid({required this.type, this.searchQuery = ''});
+
+  @override
+  Widget build(BuildContext context) {
+    List<({Cookbook cookbook, String image})> items = type == ViewAllType.exploreCuisines 
+        ? ExploreData.cuisines 
+        : ExploreData.niches;
+
+    if (searchQuery.trim().isNotEmpty) {
+      final query = searchQuery.trim().toLowerCase();
+      items = items.where((item) => item.cookbook.name.toLowerCase().contains(query)).toList();
+    }
+
+    if (items.isEmpty) {
+      return const Center(child: Text("No items match your search."));
+    }
+
+    return GridView.builder(
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 20),
+      itemCount: items.length,
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        crossAxisSpacing: 12,
+        mainAxisSpacing: 16,
+        childAspectRatio: 0.82,
+      ),
+      itemBuilder: (ctx, i) {
+        final cb = items[i].cookbook;
+        final img = items[i].image;
+        return GestureDetector(
+          onTap: () {
+            Navigator.pushNamed(
+              ctx,
+              AppRoutes.cookbookDetail,
+              arguments: {'cookbook': cb},
+            );
+          },
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    width: double.infinity,
+                    color: const Color(0xFFF2F1EF),
+                    child: Image.asset(img, fit: BoxFit.cover),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 7),
+              Text(
+                cb.name.toUpperCase(),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontFamily: 'SF Pro',
+                  fontWeight: FontWeight.w700,
+                  fontSize: 16,
+                  color: Color(0xFF1A1A1A),
+                ),
+              ),
+              const SizedBox(height: 2),
+              Row(
+                children: [
+                  const Icon(
+                    Icons.restaurant_outlined,
+                    size: 14,
+                    color: Color(0xFF999999),
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    '${cb.recipes.length} Recipes',
+                    style: const TextStyle(
+                      fontFamily: 'SF Pro',
+                      fontSize: 12,
+                      color: Color(0xFF999999),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         );
       },
     );
