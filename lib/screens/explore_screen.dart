@@ -4,9 +4,11 @@ import '../widgets/app_search_field.dart';
 import '../data/explore_data.dart';
 import '../routes/app_routes.dart';
 import 'home/view_all_screen.dart';
+import '../services/recipe_service.dart';
+import '../models/recipe.dart';
 
 // ══════════════════════════════════════════════════════════════════════════════
-// EXPLORE SCREEN (Static Version)
+// EXPLORE SCREEN (Backend Driven)
 // ══════════════════════════════════════════════════════════════════════════════
 class ExploreScreen extends StatefulWidget {
   const ExploreScreen({super.key});
@@ -35,6 +37,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
+      resizeToAvoidBottomInset: false,
       body: Column(
         children: [
           _buildHeader(),
@@ -106,84 +109,104 @@ class _ExploreScreenState extends State<ExploreScreen> {
 
   // ── Browse by Cuisine ───────────────────────────────────────────────────────
   Widget _buildBrowseByCuisine() {
-    final cuisines = ExploreData.cuisines;
+    return FutureBuilder<Map<String, int>>(
+      future: RecipeService.instance.getExploreCuisines(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData || snapshot.data!.isEmpty) return const SizedBox.shrink();
+        final cuisinesMap = snapshot.data!;
+        final names = cuisinesMap.keys.toList();
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _SectionHeader(title: 'Browse by Cuisine', onViewAll: () {
-          Navigator.pushNamed(
-            context,
-            AppRoutes.viewAll,
-            arguments: {
-              'type': ViewAllType.exploreCuisines,
-              'title': 'Browse by Cuisine',
-            },
-          );
-        }),
-        SizedBox(height: 8.h),
-        SizedBox(
-          height: 110.h,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            padding: EdgeInsets.symmetric(horizontal: 20.w),
-            itemCount: cuisines.length,
-            itemBuilder: (context, i) {
-              final item = cuisines[i];
-              return Padding(
-                padding: EdgeInsets.only(right: 20.w),
-                child: GestureDetector(
-                  onTap: () {
-                    Navigator.pushNamed(
-                      context,
-                      AppRoutes.cookbookDetail,
-                      arguments: {'cookbook': item.cookbook},
-                    );
-                  },
-                  child: Column(
-                    children: [
-                      Container(
-                        width: 76.w,
-                        height: 76.h,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.1),
-                              blurRadius: 8,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                          image: DecorationImage(
-                            image: AssetImage(item.image),
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                      ),
-                      SizedBox(height: 8.h),
-                      Text(
-                        item.cookbook.name,
-                        style: TextStyle(
-                          fontFamily: 'SF Pro',
-                          fontWeight: FontWeight.w700,
-                          fontSize: 13.sp,
-                          color: const Color(0xFF1A1A1A),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _SectionHeader(title: 'Browse by Cuisine', onViewAll: () {
+              Navigator.pushNamed(
+                context,
+                AppRoutes.viewAll,
+                arguments: {
+                  'type': ViewAllType.exploreCuisines,
+                  'title': 'Browse by Cuisine',
+                },
               );
-            },
-          ),
-        ),
-      ],
+            }),
+            SizedBox(height: 8.h),
+            SizedBox(
+              height: 110.h,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                padding: EdgeInsets.symmetric(horizontal: 20.w),
+                itemCount: names.length,
+                itemBuilder: (context, i) {
+                  final name = names[i];
+                  
+                  // Try to find image
+                  String imgPath = 'assets/images/others.png';
+                  final staticItem = ExploreData.cuisines.cast<dynamic>().firstWhere(
+                    (c) => c.cookbook.name.toLowerCase() == name.toLowerCase(),
+                    orElse: () => null,
+                  );
+                  if (staticItem != null) imgPath = staticItem.image;
+
+                  return Padding(
+                    padding: EdgeInsets.only(right: 20.w),
+                    child: GestureDetector(
+                      onTap: () {
+                        Navigator.pushNamed(
+                          context,
+                          AppRoutes.viewAll,
+                          arguments: {
+                            'type': ViewAllType.exploreRecipesByCuisine,
+                            'title': name,
+                            'cuisine': name,
+                          },
+                        );
+                      },
+                      child: Column(
+                        children: [
+                          Container(
+                            width: 76.w,
+                            height: 76.h,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.1),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                              image: DecorationImage(
+                                image: AssetImage(imgPath),
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                          ),
+                          SizedBox(height: 8.h),
+                          Text(
+                            name,
+                            style: TextStyle(
+                              fontFamily: 'SF Pro',
+                              fontWeight: FontWeight.w700,
+                              fontSize: 13.sp,
+                              color: const Color(0xFF1A1A1A),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 
   // ── Popular Categories ──────────────────────────────────────────────────────
   Widget _buildPopularCategories() {
-    final categories = ExploreData.niches.take(5).toList();
+    final categories = ExploreData.niches;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -207,12 +230,20 @@ class _ExploreScreenState extends State<ExploreScreen> {
             itemCount: categories.length,
             itemBuilder: (context, i) {
               final item = categories[i];
+              final name = item.cookbook.name;
+              final imgPath = item.image;
+              final count = item.cookbook.recipes.length;
+
               return GestureDetector(
                 onTap: () {
                   Navigator.pushNamed(
                     context,
-                    AppRoutes.cookbookDetail,
-                    arguments: {'cookbook': item.cookbook},
+                    AppRoutes.viewAll,
+                    arguments: {
+                      'type': ViewAllType.exploreRecipesByCategory,
+                      'title': name,
+                      'category': name,
+                    },
                   );
                 },
                 child: Container(
@@ -227,7 +258,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                       ClipRRect(
                         borderRadius: BorderRadius.circular(16.r),
                         child: Image.asset(
-                          item.image,
+                          imgPath,
                           width: 180.w,
                           height: 150.h,
                           fit: BoxFit.cover,
@@ -235,7 +266,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                       ),
                       SizedBox(height: 10.h),
                       Text(
-                        item.cookbook.name,
+                        name,
                         maxLines: 2,
                         style: TextStyle(
                           fontFamily: 'SF Pro',
@@ -248,10 +279,10 @@ class _ExploreScreenState extends State<ExploreScreen> {
                       SizedBox(height: 4.h),
                       Row(
                         children: [
-                          Icon(Icons.favorite_border, size: 14.sp, color: const Color(0xFFBBBBBB)),
+                          Icon(Icons.restaurant_menu, size: 14.sp, color: const Color(0xFFBBBBBB)),
                           SizedBox(width: 4.w),
                           Text(
-                            '${item.cookbook.recipes.length} Recipes',
+                            '$count Recipes',
                             style: TextStyle(
                               fontFamily: 'SF Pro',
                               fontSize: 12.sp,
@@ -272,134 +303,162 @@ class _ExploreScreenState extends State<ExploreScreen> {
   }
 
   // ── Popular Now ─────────────────────────────────────────────────────────────
-  Widget _buildPopularNow() { 
-    final query = _searchCtrl.text.trim().toLowerCase();
-    var popular = ExploreData.popularNow;
-    if (query.isNotEmpty) {
-      popular = popular.where((r) => r.name.toLowerCase().contains(query)).toList();
-    }
+  Widget _buildPopularNow() {
+    return FutureBuilder<List<Recipe>>(
+      future: RecipeService.instance.getPopularRecipes(size: 20),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Padding(
+            padding: EdgeInsets.symmetric(vertical: 40.h),
+            child: const Center(child: CircularProgressIndicator(color: Color(0xFFC83A2D))),
+          );
+        }
 
-    if (popular.isEmpty) {
-      return Padding(
-        padding: EdgeInsets.symmetric(vertical: 40.h),
-        child: const Center(child: Text('No recipes match your search.')),
-      );
-    }
+        final query = _searchCtrl.text.trim().toLowerCase();
+        var popular = snapshot.data ?? [];
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: EdgeInsets.symmetric(horizontal: 20.w),
-          child: Text(
-            'Popular Now',
-            style: TextStyle(
-              fontFamily: 'SF Pro',
-              fontWeight: FontWeight.w800,
-              fontSize: 20.sp,
-              color: const Color(0xFF1A1A1A),
+        if (query.isNotEmpty) {
+          popular = popular
+              .where((r) => r.name.toLowerCase().contains(query))
+              .toList();
+        }
+
+        if (popular.isEmpty) {
+          return Padding(
+            padding: EdgeInsets.symmetric(vertical: 40.h),
+            child: const Center(child: Text('No recipes found.')),
+          );
+        }
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20.w),
+              child: Text(
+                'Popular Now',
+                style: TextStyle(
+                  fontFamily: 'SF Pro',
+                  fontWeight: FontWeight.w800,
+                  fontSize: 20.sp,
+                  color: const Color(0xFF1A1A1A),
+                ),
+              ),
             ),
-          ),
-        ),
-        SizedBox(height: 8.h),
-        Padding(
-          padding: EdgeInsets.symmetric(horizontal: 20.w),
-          child: GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            padding: EdgeInsets.zero,
-            itemCount: popular.length,
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              crossAxisSpacing: 16.w,
-              mainAxisSpacing: 20.h,
-              childAspectRatio: 0.85,
-            ),
-            itemBuilder: (context, i) {
-              final recipe = popular[i];
-              return GestureDetector(
-                onTap: () {
-                  Navigator.pushNamed(
-                    context,
-                    AppRoutes.recipeDetail,
-                    arguments: {'recipe': recipe},
+            SizedBox(height: 8.h),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20.w),
+              child: GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                padding: EdgeInsets.zero,
+                itemCount: popular.length,
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 16.w,
+                  mainAxisSpacing: 20.h,
+                  childAspectRatio: 0.85,
+                ),
+                itemBuilder: (context, i) {
+                  final recipe = popular[i];
+                  return GestureDetector(
+                    onTap: () {
+                      Navigator.pushNamed(
+                        context,
+                        AppRoutes.recipeDetail,
+                        arguments: {'recipe': recipe},
+                      );
+                    },
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(16.r),
+                            child: recipe.image != null && recipe.image!.startsWith('http')
+                                ? Image.network(
+                                    recipe.image!,
+                                    width: double.infinity,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (_, __, ___) => Image.asset(
+                                      'assets/images/others.png',
+                                      width: double.infinity,
+                                      fit: BoxFit.cover,
+                                    ),
+                                  )
+                                : Image.asset(
+                                    recipe.image ?? 'assets/images/others.png',
+                                    width: double.infinity,
+                                    fit: BoxFit.cover,
+                                  ),
+                          ),
+                        ),
+                        SizedBox(height: 8.h),
+                        Row(
+                          children: [
+                            Text(
+                              '${i + 1}',
+                              style: TextStyle(
+                                fontFamily: 'SF Pro',
+                                fontWeight: FontWeight.w900,
+                                fontSize: 20.sp,
+                                color: const Color(0xFFEDEDED),
+                              ),
+                            ),
+                            SizedBox(width: 8.w),
+                            Expanded(
+                              child: Text(
+                                recipe.name,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontFamily: 'SF Pro',
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 14.sp,
+                                  color: const Color(0xFF1A1A1A),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 4.h),
+                        Row(
+                          children: [
+                            SizedBox(width: 24.w), // Offset for number
+                            Icon(Icons.access_time,
+                                size: 12.sp, color: const Color(0xFF999999)),
+                            SizedBox(width: 4.w),
+                            Text(
+                              '${recipe.cookTime} min',
+                              style: TextStyle(
+                                fontFamily: 'SF Pro',
+                                fontSize: 11.sp,
+                                color: const Color(0xFF999999),
+                              ),
+                            ),
+                            SizedBox(width: 10.w),
+                            Icon(Icons.local_fire_department_outlined,
+                                size: 12.sp, color: const Color(0xFF999999)),
+                            SizedBox(width: 4.w),
+                            Text(
+                              '${recipe.kcal} kcal',
+                              style: TextStyle(
+                                fontFamily: 'SF Pro',
+                                fontSize: 11.sp,
+                                color: const Color(0xFF999999),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   );
                 },
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(16.r),
-                        child: Image.asset(
-                          recipe.image ?? 'assets/images/others.png',
-                          width: double.infinity,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 8.h),
-                    Row(
-                      children: [
-                        Text(
-                          '${i + 1}',
-                          style: TextStyle(
-                            fontFamily: 'SF Pro',
-                            fontWeight: FontWeight.w900,
-                            fontSize: 20.sp,
-                            color: const Color(0xFFEDEDED),
-                          ),
-                        ),
-                        SizedBox(width: 8.w),
-                        Expanded(
-                          child: Text(
-                            recipe.name,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontFamily: 'SF Pro',
-                              fontWeight: FontWeight.w800,
-                              fontSize: 14.sp,
-                              color: const Color(0xFF1A1A1A),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 4.h),
-                    Row(
-                      children: [
-                        SizedBox(width: 24.w), // Offset for number
-                        Icon(Icons.access_time, size: 12.sp, color: const Color(0xFF999999)),
-                        SizedBox(width: 4.w),
-                        Text(
-                          '${recipe.cookTime} min',
-                          style: TextStyle(
-                            fontFamily: 'SF Pro',
-                            fontSize: 11.sp,
-                            color: const Color(0xFF999999),
-                          ),
-                        ),
-                        SizedBox(width: 10.w),
-                        Icon(Icons.local_fire_department_outlined, size: 12.sp, color: const Color(0xFF999999)),
-                        SizedBox(width: 4.w),
-                        Text(
-                          '${recipe.kcal} kcal',
-                          style: TextStyle(
-                            fontFamily: 'SF Pro',
-                            fontSize: 11.sp,
-                            color: const Color(0xFF999999),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
-        ),
-      ],
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }

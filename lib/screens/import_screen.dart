@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter/services.dart';
@@ -98,6 +99,9 @@ class _ImportScreenState extends State<ImportScreen> {
   List<Map<String, dynamic>> _searchResults = [];
   List<Recipe> _recentImportsList = [];
   bool _isLoadingRecent = true;
+  
+  Timer? _searchDebounce;
+  List<Map<String, dynamic>> _suggestedWebRecipes = [];
 
   List<String> _trendingRecipes = [];
 
@@ -185,6 +189,27 @@ class _ImportScreenState extends State<ImportScreen> {
     }
   }
 
+  void _onSearchChanged(String val) {
+    if (_searchDebounce?.isActive ?? false) _searchDebounce!.cancel();
+
+    if (val.trim().length < 3) {
+      setState(() => _suggestedWebRecipes = []);
+      return;
+    }
+
+    _searchDebounce = Timer(const Duration(milliseconds: 500), () async {
+      try {
+        final res = await RecipeService.instance.searchWeb(val.trim());
+        if (mounted) {
+          setState(() {
+            // Take up to 5 results for suggestions
+            _suggestedWebRecipes = res.take(5).toList();
+          });
+        }
+      } catch (_) {}
+    });
+  }
+
   // static const _recentImports = ... REMOVED in favor of _recentImportsList
 
   @override
@@ -192,6 +217,7 @@ class _ImportScreenState extends State<ImportScreen> {
     widget.isActiveNotifier?.removeListener(_onActiveStateChanged);
     _linkCtrl.dispose();
     _searchCtrl.dispose();
+    _searchDebounce?.cancel();
     super.dispose();
   }
 
@@ -206,6 +232,7 @@ class _ImportScreenState extends State<ImportScreen> {
 
     return Scaffold(
       backgroundColor: Colors.white,
+      resizeToAvoidBottomInset: false,
       body: SafeArea(
         bottom: false,
         child: ListView(
@@ -292,19 +319,31 @@ class _ImportScreenState extends State<ImportScreen> {
                       ),
                     ),
                   ),
-                  GestureDetector(
-                    onTap: () async {
-                      final d = await Clipboard.getData('text/plain');
-                      if (d?.text != null) _linkCtrl.text = d!.text!;
+                  ValueListenableBuilder<TextEditingValue>(
+                    valueListenable: _linkCtrl,
+                    builder: (context, value, _) {
+                      final bool hasText = value.text.isNotEmpty;
+                      return GestureDetector(
+                        onTap: () async {
+                          if (hasText) {
+                            _linkCtrl.clear();
+                          } else {
+                            final d = await Clipboard.getData('text/plain');
+                            if (d?.text != null) _linkCtrl.text = d!.text!;
+                          }
+                        },
+                        child: Padding(
+                          padding: EdgeInsets.only(right: 18.w),
+                          child: Icon(
+                            hasText
+                                ? Icons.close_rounded
+                                : Icons.content_paste_rounded,
+                            size: 20.sp,
+                            color: const Color(0xFF7A8499),
+                          ),
+                        ),
+                      );
                     },
-                    child: Padding(
-                      padding: EdgeInsets.only(right: 18.w),
-                      child: Icon(
-                        Icons.content_paste_rounded,
-                        size: 20.sp,
-                        color: const Color(0xFF7A8499),
-                      ),
-                    ),
                   ),
                 ],
               ),
@@ -366,10 +405,57 @@ class _ImportScreenState extends State<ImportScreen> {
                 controller: _searchCtrl,
                 hintText: 'Search web',
                 suffixIcon: Icons.check_circle_rounded,
-                onSuffixTap: () => _handleWebSearch(_searchCtrl.text),
-                onSubmitted: (val) => _handleWebSearch(val),
+                onSuffixTap: () {
+                  setState(() => _suggestedWebRecipes = []);
+                  _handleWebSearch(_searchCtrl.text);
+                },
+                onSubmitted: (val) {
+                  setState(() => _suggestedWebRecipes = []);
+                  _handleWebSearch(val);
+                },
+                onChanged: _onSearchChanged,
               ),
             ),
+
+            if (_suggestedWebRecipes.isNotEmpty && !_isSearching)
+              Container(
+                margin: EdgeInsets.symmetric(horizontal: 18.w, vertical: 8.h),
+                constraints: BoxConstraints(maxHeight: 250.h),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12.r),
+                  border: Border.all(color: Colors.grey.shade200),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    )
+                  ],
+                ),
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  padding: EdgeInsets.zero,
+                  itemCount: _suggestedWebRecipes.length,
+                  itemBuilder: (ctx, i) {
+                    final res = _suggestedWebRecipes[i];
+                    return ListTile(
+                      title: Text(
+                        res['title'] ?? '',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(fontFamily: 'SF Pro', fontSize: 14.sp),
+                      ),
+                      onTap: () {
+                        final title = res['title'] ?? '';
+                        setState(() => _suggestedWebRecipes = []);
+                        _searchCtrl.text = title;
+                        _handleWebSearch(title);
+                      },
+                    );
+                  },
+                ),
+              ),
 
             SizedBox(height: 25.h),
 

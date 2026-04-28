@@ -27,6 +27,8 @@ enum ViewAllType {
   imports,
   exploreCuisines,
   exploreCategories,
+  exploreRecipesByCuisine,
+  exploreRecipesByCategory,
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -57,6 +59,7 @@ class _ViewAllScreenState extends State<ViewAllScreen> {
 
     return Scaffold(
       backgroundColor: Colors.white,
+      resizeToAvoidBottomInset: false,
       body: SafeArea(
         child: Column(
           children: [
@@ -159,6 +162,8 @@ class _ViewAllScreenState extends State<ViewAllScreen> {
       case ViewAllType.explore:
       case ViewAllType.groceryHistory:
       case ViewAllType.imports:
+      case ViewAllType.exploreRecipesByCuisine:
+      case ViewAllType.exploreRecipesByCategory:
         return _RecipesGrid(searchQuery: query);
       case ViewAllType.creators:
         return _CreatorsGrid(searchQuery: query);
@@ -352,6 +357,34 @@ class _RecipesGridState extends State<_RecipesGrid> {
         break;
       case ViewAllType.explore:
         _future = RecipeService.instance.getExploreRecipes(size: 50);
+        break;
+      case ViewAllType.exploreRecipesByCuisine:
+        final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+        final cuisine = args['cuisine'] as String?;
+        // Try to get from static first for consistency if backend is empty
+        final staticCuisine = ExploreData.cuisines.cast<dynamic>().firstWhere(
+          (c) => c.cookbook.name.toLowerCase() == cuisine?.toLowerCase(),
+          orElse: () => null,
+        );
+        if (staticCuisine != null) {
+          _future = Future.value(staticCuisine.cookbook.recipes);
+        } else {
+          _future = RecipeService.instance.getExploreRecipes(cuisine: cuisine, size: 50);
+        }
+        break;
+      case ViewAllType.exploreRecipesByCategory:
+        final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+        final category = args['category'] as String?;
+        // Always use static for niches/categories as requested
+        final staticNiche = ExploreData.niches.cast<dynamic>().firstWhere(
+          (n) => n.cookbook.name.toLowerCase() == category?.toLowerCase(),
+          orElse: () => null,
+        );
+        if (staticNiche != null) {
+          _future = Future.value(staticNiche.cookbook.recipes);
+        } else {
+          _future = RecipeService.instance.getPopularRecipes(category: category, size: 50);
+        }
         break;
       case ViewAllType.groceryHistory:
         _future = _fetchGroceryHistory();
@@ -579,7 +612,7 @@ class _CreatorsGridState extends State<_CreatorsGrid> {
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
-// STATIC COOKBOOKS GRID (Cuisines & Categories)
+// DYNAMIC EXPLORE GRID (Cuisines & Categories from Backend)
 // ══════════════════════════════════════════════════════════════════════════════
 class _StaticCookbooksGrid extends StatelessWidget {
   final ViewAllType type;
@@ -589,87 +622,146 @@ class _StaticCookbooksGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    List<({Cookbook cookbook, String image})> items = type == ViewAllType.exploreCuisines 
-        ? ExploreData.cuisines 
-        : ExploreData.niches;
+    if (type == ViewAllType.exploreCategories) {
+      final categories = ExploreData.niches;
+      var names = categories.map((n) => n.cookbook.name).toList();
 
-    if (searchQuery.trim().isNotEmpty) {
-      final query = searchQuery.trim().toLowerCase();
-      items = items.where((item) => item.cookbook.name.toLowerCase().contains(query)).toList();
+      if (searchQuery.trim().isNotEmpty) {
+        final query = searchQuery.trim().toLowerCase();
+        names = names.where((name) => name.toLowerCase().contains(query)).toList();
+      }
+
+      return GridView.builder(
+        padding: const EdgeInsets.fromLTRB(16, 4, 16, 20),
+        itemCount: names.length,
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          crossAxisSpacing: 12,
+          mainAxisSpacing: 16,
+          childAspectRatio: 0.82,
+        ),
+        itemBuilder: (ctx, i) {
+          final name = names[i];
+          final item = categories.firstWhere((n) => n.cookbook.name == name);
+          final count = item.cookbook.recipes.length;
+          final img = item.image;
+
+          return _buildItem(ctx, name, img, count);
+        },
+      );
     }
 
-    if (items.isEmpty) {
-      return const Center(child: Text("No items match your search."));
-    }
+    final Future<Map<String, int>> future = type == ViewAllType.exploreCuisines 
+        ? RecipeService.instance.getExploreCuisines() 
+        : RecipeService.instance.getExploreCategories();
 
-    return GridView.builder(
-      padding: const EdgeInsets.fromLTRB(16, 4, 16, 20),
-      itemCount: items.length,
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        crossAxisSpacing: 12,
-        mainAxisSpacing: 16,
-        childAspectRatio: 0.82,
-      ),
-      itemBuilder: (ctx, i) {
-        final cb = items[i].cookbook;
-        final img = items[i].image;
-        return GestureDetector(
-          onTap: () {
-            Navigator.pushNamed(
-              ctx,
-              AppRoutes.cookbookDetail,
-              arguments: {'cookbook': cb},
-            );
-          },
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: Container(
-                    width: double.infinity,
-                    color: const Color(0xFFF2F1EF),
-                    child: Image.asset(img, fit: BoxFit.cover),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 7),
-              Text(
-                cb.name.toUpperCase(),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  fontFamily: 'SF Pro',
-                  fontWeight: FontWeight.w700,
-                  fontSize: 16,
-                  color: Color(0xFF1A1A1A),
-                ),
-              ),
-              const SizedBox(height: 2),
-              Row(
-                children: [
-                  const Icon(
-                    Icons.restaurant_outlined,
-                    size: 14,
-                    color: Color(0xFF999999),
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    '${cb.recipes.length} Recipes',
-                    style: const TextStyle(
-                      fontFamily: 'SF Pro',
-                      fontSize: 12,
-                      color: Color(0xFF999999),
-                    ),
-                  ),
-                ],
-              ),
-            ],
+    return FutureBuilder<Map<String, int>>(
+      future: future,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(
+            child: CircularProgressIndicator(color: Color(0xFFCC3333)),
+          );
+        }
+
+        final Map<String, int> itemsMap = snapshot.data ?? {};
+        var names = itemsMap.keys.toList();
+
+        if (searchQuery.trim().isNotEmpty) {
+          final query = searchQuery.trim().toLowerCase();
+          names = names.where((name) => name.toLowerCase().contains(query)).toList();
+        }
+
+        if (names.isEmpty) {
+          return const Center(child: Text("No items found."));
+        }
+
+        return GridView.builder(
+          padding: const EdgeInsets.fromLTRB(16, 4, 16, 20),
+          itemCount: names.length,
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            crossAxisSpacing: 12,
+            mainAxisSpacing: 16,
+            childAspectRatio: 0.82,
           ),
+          itemBuilder: (ctx, i) {
+            final name = names[i];
+            final count = itemsMap[name] ?? 0;
+            
+            String img = 'assets/images/others.png';
+            if (type == ViewAllType.exploreCuisines) {
+              final staticCuisine = ExploreData.cuisines.cast<dynamic>().firstWhere(
+                (c) => c.cookbook.name.toLowerCase() == name.toLowerCase(),
+                orElse: () => null,
+              );
+              if (staticCuisine != null) img = staticCuisine.image;
+            } else {
+              final staticNiche = ExploreData.niches.cast<dynamic>().firstWhere(
+                (n) => n.cookbook.name.toLowerCase() == name.toLowerCase(),
+                orElse: () => null,
+              );
+              if (staticNiche != null) img = staticNiche.image;
+            }
+
+            return _buildItem(ctx, name, img, count);
+          },
+        );
+      }
+    );
+  }
+
+  Widget _buildItem(BuildContext ctx, String name, String img, int count) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.pushNamed(
+          ctx,
+          AppRoutes.viewAll,
+          arguments: {
+            'type': type == ViewAllType.exploreCuisines 
+                ? ViewAllType.exploreRecipesByCuisine 
+                : ViewAllType.exploreRecipesByCategory,
+            'title': name,
+            if (type == ViewAllType.exploreCuisines) 'cuisine': name else 'category': name,
+          },
         );
       },
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Container(
+                width: double.infinity,
+                color: const Color(0xFFF2F1EF),
+                child: Image.asset(img, fit: BoxFit.cover),
+              ),
+            ),
+          ),
+          const SizedBox(height: 7),
+          Text(
+            name.toUpperCase(),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontFamily: 'SF Pro',
+              fontWeight: FontWeight.w700,
+              fontSize: 16,
+              color: Color(0xFF1A1A1A),
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            '$count Recipes',
+            style: const TextStyle(
+              fontFamily: 'SF Pro',
+              fontSize: 12,
+              color: Color(0xFF999999),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

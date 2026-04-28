@@ -41,6 +41,7 @@ class AppSearchField extends StatelessWidget {
               controller: controller,
               onChanged: onChanged,
               onSubmitted: onSubmitted,
+              textCapitalization: TextCapitalization.words,
               style: TextStyle(
                 fontFamily: 'SF Pro',
                 fontSize: 14.sp,

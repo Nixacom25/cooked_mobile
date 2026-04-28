@@ -6,6 +6,7 @@ import '../../services/cookbook_service.dart';
 import '../../services/recipe_service.dart';
 import '../../core/widgets/ios_toast.dart';
 import '../../core/utils/error_helper.dart';
+import '../../routes/app_routes.dart';
 
 class CookbookFormScreen extends StatefulWidget {
   const CookbookFormScreen({super.key});
@@ -56,6 +57,7 @@ class _CookbookFormScreenState extends State<CookbookFormScreen> {
 
     return Scaffold(
       backgroundColor: Colors.white,
+      resizeToAvoidBottomInset: false,
       body: SafeArea(
         bottom: false,
         child: Column(
@@ -174,6 +176,7 @@ class _CookbookFormScreenState extends State<CookbookFormScreen> {
                       SizedBox(height: 8.h),
                       TextField(
                         controller: _nameCtrl,
+                        textCapitalization: TextCapitalization.words,
                         style: TextStyle(
                           fontFamily: 'SF Pro',
                           fontSize: 15.sp,
@@ -264,6 +267,10 @@ class _CookbookFormScreenState extends State<CookbookFormScreen> {
                           );
                         },
                       ),
+                      SizedBox(height: 12.h),
+                      
+                      // Manual keyboard spacer
+                      SizedBox(height: MediaQuery.of(context).viewInsets.bottom),
                     ],
                   ),
                 ),
@@ -593,7 +600,90 @@ class _RecipePickerState extends State<_RecipePicker> {
             child: _loading
                 ? const Center(child: CircularProgressIndicator())
                 : _allRecipes == null || _allRecipes!.isEmpty
-                ? const Center(child: Text('No recipes found'))
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          width: 80,
+                          height: 80,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFF5F5F5),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.menu_book_rounded,
+                            size: 40,
+                            color: Color(0xFFCCCCCC),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        const Text(
+                          'No recipes found',
+                          style: TextStyle(
+                            fontFamily: 'SF Pro',
+                            fontWeight: FontWeight.w700,
+                            fontSize: 18,
+                            color: Color(0xFF1A1A1A),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'Add recipes to your cookbook by scanning,\nimporting, or exploring.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontFamily: 'SF Pro',
+                            fontSize: 14,
+                            color: Color(0xFF999999),
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            _EmptyStateButton(
+                              icon: Icons.qr_code_scanner_rounded,
+                              label: 'Scan',
+                              onTap: () {
+                                Navigator.pushNamedAndRemoveUntil(
+                                  context,
+                                  AppRoutes.home,
+                                  (route) => false,
+                                  arguments: {'initialTab': 2},
+                                );
+                              },
+                            ),
+                            const SizedBox(width: 12),
+                            _EmptyStateButton(
+                              icon: Icons.file_download_outlined,
+                              label: 'Import',
+                              onTap: () {
+                                Navigator.pushNamedAndRemoveUntil(
+                                  context,
+                                  AppRoutes.home,
+                                  (route) => false,
+                                  arguments: {'initialTab': 4},
+                                );
+                              },
+                            ),
+                            const SizedBox(width: 12),
+                            _EmptyStateButton(
+                              icon: Icons.search_rounded,
+                              label: 'Explore',
+                              onTap: () {
+                                Navigator.pushNamedAndRemoveUntil(
+                                  context,
+                                  AppRoutes.home,
+                                  (route) => false,
+                                  arguments: {'initialTab': 1},
+                                );
+                              },
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  )
                 : ListView.builder(
                     itemCount: _allRecipes!.length,
                     itemBuilder: (ctx, i) {
@@ -657,6 +747,49 @@ class _RecipePickerState extends State<_RecipePicker> {
                   ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _EmptyStateButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  const _EmptyStateButton({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFFF9F9),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0xFFFFEBEB)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 16, color: const Color(0xFFCC3333)),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: const TextStyle(
+                fontFamily: 'SF Pro',
+                fontWeight: FontWeight.w600,
+                fontSize: 13,
+                color: Color(0xFFCC3333),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

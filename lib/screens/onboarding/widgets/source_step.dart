@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../../../core/extensions/string_extensions.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class DiscoverySource {
@@ -60,7 +61,7 @@ class _SourceStepState extends State<SourceStep> {
     });
     widget.onChanged(
       _selectedSource!,
-      _selectedSource == 'Others' ? _otherController.text : null,
+      _selectedSource == 'Others' ? _otherController.text.toTitleCase() : null,
     );
   }
 
@@ -161,7 +162,8 @@ class _SourceStepState extends State<SourceStep> {
             SizedBox(height: 24.h),
             TextField(
               controller: _otherController,
-              onChanged: (val) => widget.onChanged(_selectedSource!, val),
+              textCapitalization: TextCapitalization.words,
+              onChanged: (val) => widget.onChanged(_selectedSource!, val.toTitleCase()),
               decoration: InputDecoration(
                 hintText: 'Please specify...',
                 hintStyle: TextStyle(

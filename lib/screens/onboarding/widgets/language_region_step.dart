@@ -52,6 +52,7 @@ class _LanguageRegionStepState extends State<LanguageRegionStep> {
   }
 
   final List<String> _languages = [
+    'US English',
     'GB English',
     'FR Français',
     'ES Español',

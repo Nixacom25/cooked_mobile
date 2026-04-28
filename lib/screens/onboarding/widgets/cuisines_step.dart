@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../../../core/extensions/string_extensions.dart';
 
 class CuisinesStep extends StatefulWidget {
   final List<String> initialSelected;
@@ -26,19 +27,67 @@ class _CuisinesStepState extends State<CuisinesStep> {
     {'id': 'west', 'title': 'West African'},
     {'id': 'east', 'title': 'East African'},
     {'id': 'caribbean', 'title': 'Caribbean'},
+    {'id': 'indian', 'title': 'Indian'},
     {'id': 'others', 'title': 'Others'},
   ];
 
   late Set<String> _selected;
+  final TextEditingController _othersController = TextEditingController();
+  final FocusNode _othersFocusNode = FocusNode();
 
   @override
   void initState() {
     super.initState();
     _selected = widget.initialSelected.toSet();
+    _othersFocusNode.addListener(() {
+      if (_othersFocusNode.hasFocus) {
+        Future.delayed(const Duration(milliseconds: 300), () {
+          final context = _othersFocusNode.context;
+          if (context != null) {
+            Scrollable.ensureVisible(context, duration: const Duration(milliseconds: 300), alignment: 0.5);
+          }
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _othersController.dispose();
+    _othersFocusNode.dispose();
+    super.dispose();
+  }
+
+  void _addCustomCuisine() {
+    final text = _othersController.text.trim();
+    if (text.isEmpty) return;
+
+    setState(() {
+      // Split by comma in case they pasted multiple
+      final items = text.split(',').map((s) => s.trim().toTitleCase()).where((s) => s.isNotEmpty);
+      for (var item in items) {
+        if (!_selected.contains(item) && _selected.length < 10) { // Limit to 10 total
+          _selected.add(item);
+        }
+      }
+      _othersController.clear();
+    });
+    widget.onChanged(_selected.toList());
+  }
+
+  void _removeCuisine(String title) {
+    setState(() {
+      _selected.remove(title);
+    });
+    widget.onChanged(_selected.toList());
   }
 
   @override
   Widget build(BuildContext context) {
+    final predefinedTitles = _cuisines.map((c) => c['title']).toSet();
+    final customCuisines = _selected.where((s) => !predefinedTitles.contains(s)).toList();
+    final bool isOthersSelected = _selected.contains('Others');
+
     return SingleChildScrollView(
       padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 30.h),
       child: Column(
@@ -56,7 +105,7 @@ class _CuisinesStepState extends State<CuisinesStep> {
           ),
           SizedBox(height: 8.h),
           Text(
-            'Select up to 6 favorites',
+            'Select your favorites',
             style: TextStyle(
               fontSize: 14.sp,
               color: const Color(0xFF7B8190),
@@ -79,7 +128,68 @@ class _CuisinesStepState extends State<CuisinesStep> {
               return _buildCuisineCard(cuisine);
             },
           ),
-          SizedBox(height: 10.h),
+          
+          if (isOthersSelected) ...[
+            SizedBox(height: 24.h),
+            Text(
+              'Specify other cuisines',
+              style: TextStyle(
+                fontFamily: 'SF Pro',
+                fontSize: 14.sp,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF7B8190),
+              ),
+            ),
+            SizedBox(height: 8.h),
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12.r),
+                border: Border.all(color: const Color(0xFFE5E7EB)),
+              ),
+              child: TextField(
+                controller: _othersController,
+                focusNode: _othersFocusNode,
+                onSubmitted: (_) => _addCustomCuisine(),
+                textCapitalization: TextCapitalization.words,
+                style: TextStyle(
+                  fontFamily: 'SF Pro',
+                  fontSize: 14.sp,
+                  color: const Color(0xFF1A1A1A),
+                ),
+                decoration: InputDecoration(
+                  hintText: 'Enter a cuisine and press Enter',
+                  hintStyle: TextStyle(
+                    fontFamily: 'SF Pro',
+                    fontSize: 14.sp,
+                    color: Colors.grey[400],
+                  ),
+                  border: InputBorder.none,
+                  contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
+                  suffixIcon: IconButton(
+                    icon: const Icon(Icons.add_rounded, color: Color(0xFFC83A2D)),
+                    onPressed: _addCustomCuisine,
+                  ),
+                ),
+              ),
+            ),
+            if (customCuisines.isNotEmpty) ...[
+              SizedBox(height: 12.h),
+              Wrap(
+                spacing: 8.w,
+                runSpacing: 8.h,
+                children: customCuisines.map((c) => Chip(
+                  label: Text(c, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  backgroundColor: const Color(0xFFC83A2D),
+                  deleteIcon: const Icon(Icons.close, size: 14, color: Colors.white),
+                  onDeleted: () => _removeCuisine(c),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.r)),
+                )).toList(),
+              ),
+            ],
+          ],
+          
+          SizedBox(height: MediaQuery.of(context).viewInsets.bottom + 120.h),
         ],
       ),
     );
@@ -92,8 +202,16 @@ class _CuisinesStepState extends State<CuisinesStep> {
         setState(() {
           if (isSelected) {
             _selected.remove(cuisine['title']);
-          } else if (_selected.length < 6) {
+            if (cuisine['title'] == 'Others') {
+              // Clear custom ones if unselecting Others? 
+              // Actually user might want to keep them but hide the field.
+              // Let's just hide the field.
+            }
+          } else {
             _selected.add(cuisine['title']!);
+            if (cuisine['title'] == 'Others') {
+              // Expand field but don't focus automatically
+            }
           }
         });
         widget.onChanged(_selected.toList());

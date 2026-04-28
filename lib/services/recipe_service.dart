@@ -180,9 +180,10 @@ class RecipeService {
     getFavoriteRecipes(size: 100).then((_) => null).catchError((_) => null);
   }
 
-  Future<List<Recipe>> getExploreRecipes({int page = 0, int size = 10}) async {
+  Future<List<Recipe>> getExploreRecipes({String? cuisine, int page = 0, int size = 10}) async {
+    final cuisineParam = cuisine != null ? '&cuisine=$cuisine' : '';
     final url = Uri.parse(
-      '${ApiConfig.baseUrl}/recipes/explore?page=$page&size=$size',
+      '${ApiConfig.baseUrl}/recipes/explore?page=$page&size=$size$cuisineParam',
     );
     final response = await http.get(url, headers: await _getHeaders());
 
@@ -192,6 +193,30 @@ class RecipeService {
       return content.map((json) => Recipe.fromJson(json)).toList();
     } else {
       throw Exception('Unable to load explore recipes.');
+    }
+  }
+
+  Future<Map<String, int>> getExploreCuisines() async {
+    final url = Uri.parse('${ApiConfig.baseUrl}/recipes/explore/cuisines');
+    final response = await http.get(url, headers: await _getHeaders());
+
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> data = jsonDecode(response.body);
+      return data.cast<String, int>();
+    } else {
+      throw Exception('Unable to load cuisines.');
+    }
+  }
+
+  Future<Map<String, int>> getExploreCategories() async {
+    final url = Uri.parse('${ApiConfig.baseUrl}/recipes/explore/categories');
+    final response = await http.get(url, headers: await _getHeaders());
+
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> data = jsonDecode(response.body);
+      return data.cast<String, int>();
+    } else {
+      throw Exception('Unable to load categories.');
     }
   }
 
@@ -234,12 +259,14 @@ class RecipeService {
 
   Future<List<Recipe>> getPopularRecipes({
     String? category,
+    String? cuisine,
     int page = 0,
     int size = 10,
   }) async {
     final categoryParam = category != null ? '&category=$category' : '';
+    final cuisineParam = cuisine != null ? '&cuisine=$cuisine' : '';
     final url = Uri.parse(
-      '${ApiConfig.baseUrl}/recipes/popular?page=$page&size=$size$categoryParam',
+      '${ApiConfig.baseUrl}/recipes/popular?page=$page&size=$size$categoryParam$cuisineParam',
     );
     final response = await http.get(url, headers: await _getHeaders());
 

@@ -16,6 +16,7 @@ import '../models/recipe.dart';
 import '../core/widgets/ios_toast.dart';
 import '../core/services/tutorial_service.dart';
 import '../core/utils/tutorial_helper.dart';
+import '../core/extensions/string_extensions.dart';
 
 enum ScanState { scan, type, saved, results }
 
@@ -451,8 +452,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
   }
 
   String _capitalize(String text) {
-    if (text.isEmpty) return text;
-    return text[0].toUpperCase() + text.substring(1);
+    return text.toTitleCase();
   }
 
   @override
@@ -972,7 +972,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                 ),
                 child: TextField(
                   controller: _ingCtrl,
-                  textCapitalization: TextCapitalization.sentences,
+                  textCapitalization: TextCapitalization.words,
                   style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.w500),
                   decoration: InputDecoration(
                     hintText: 'e.g., Tomato, Cheese...',
@@ -1347,6 +1347,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
             border: Border.all(color: const Color(0xFFE2E8F0)),
           ),
           child: TextField(
+            textCapitalization: TextCapitalization.words,
             onSubmitted: (val) {
               if (val.trim().isNotEmpty) {
                 _addIngredientToResults(val.trim());

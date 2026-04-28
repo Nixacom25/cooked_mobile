@@ -9,6 +9,7 @@ import '../models/recipe.dart';
 import '../core/widgets/ios_toast.dart';
 import '../core/utils/error_helper.dart';
 import '../services/notification_service.dart';
+import '../core/extensions/string_extensions.dart';
 
 // ══════════════════════════════════════════════════════════════════════════════
 // GROCERY SCREEN
@@ -176,13 +177,10 @@ class _GroceryScreenState extends State<GroceryScreen> {
                         )
                       : _filteredItems.isEmpty
                       ? _buildEmpty()
-                      : ListView.builder(
+                        : ListView.builder(
                           padding: EdgeInsets.only(bottom: 120.h),
-                          itemCount: _grouped.length + 1,
+                          itemCount: _grouped.length,
                           itemBuilder: (_, gi) {
-                            if (gi == _grouped.length) {
-                              return SizedBox(height: MediaQuery.of(context).viewInsets.bottom);
-                            }
                             final recipeName = _grouped.keys.elementAt(gi);
                             final items = _grouped[recipeName]!;
 
@@ -537,8 +535,7 @@ class _AddGrocerySheetState extends State<_AddGrocerySheet> {
   }
 
   String _capitalize(String s) {
-    if (s.isEmpty) return s;
-    return s[0].toUpperCase() + s.substring(1);
+    return s.toTitleCase();
   }
 
   @override
@@ -743,6 +740,7 @@ class _AddGrocerySheetState extends State<_AddGrocerySheet> {
                     ),
                     child: TextField(
                       controller: _nameController,
+                      textCapitalization: TextCapitalization.words,
                       style: TextStyle(
                         fontFamily: 'SF Pro',
                         fontSize: 14.sp,
@@ -816,6 +814,7 @@ class _AddGrocerySheetState extends State<_AddGrocerySheet> {
                     ),
                     child: TextField(
                       controller: _qtyController,
+                      textCapitalization: TextCapitalization.words,
                       style: TextStyle(
                         fontFamily: 'SF Pro',
                         fontSize: 14.sp,

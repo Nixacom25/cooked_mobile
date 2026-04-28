@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../../../core/extensions/string_extensions.dart';
 
 class AllergyOption {
   final String title;
@@ -79,7 +80,7 @@ class _AllergiesStepState extends State<AllergiesStep> {
   }
 
   void _addCustomAllergy() {
-    final val = _otherController.text.trim();
+    final val = _otherController.text.trim().toTitleCase();
     if (val.isNotEmpty) {
       setState(() {
         _selectedAllergies.remove('No allergies');
@@ -162,7 +163,7 @@ class _AllergiesStepState extends State<AllergiesStep> {
           if (_showOtherInput) ...[
             TextField(
               controller: _otherController,
-              autofocus: true,
+              autofocus: false,
               decoration: InputDecoration(
                 hintText: 'Type your allergy..',
                 hintStyle: const TextStyle(color: Color(0xFFBDC3C7)),
@@ -188,6 +189,7 @@ class _AllergiesStepState extends State<AllergiesStep> {
                   ),
                 ),
               ),
+              textCapitalization: TextCapitalization.words,
               onSubmitted: (_) => _addCustomAllergy(),
             ),
             SizedBox(height: 16.h),

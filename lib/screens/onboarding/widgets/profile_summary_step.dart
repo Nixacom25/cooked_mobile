@@ -6,6 +6,7 @@ class ProfileSummaryStep extends StatelessWidget {
   final String firstName;
   final List<String> favoriteCuisines;
   final List<String> flavorDna;
+  final int recipeCount;
   final VoidCallback onContinue;
 
   const ProfileSummaryStep({
@@ -13,6 +14,7 @@ class ProfileSummaryStep extends StatelessWidget {
     required this.firstName,
     required this.favoriteCuisines,
     required this.flavorDna,
+    required this.recipeCount,
     required this.onContinue,
   });
 
@@ -24,7 +26,7 @@ class ProfileSummaryStep extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '$firstName, your profile is ready!',
+            '${firstName.isNotEmpty ? firstName[0].toUpperCase() : ''}, your profile is ready!',
             style: TextStyle(
               fontSize: 24.sp,
               fontWeight: FontWeight.w900,
@@ -54,7 +56,10 @@ class ProfileSummaryStep extends StatelessWidget {
             child: Column(
               children: [
                 Text(
-                  '1,847',
+                  recipeCount.toString().replaceAllMapped(
+                    RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+                    (Match m) => '${m[1]},',
+                  ),
                   style: TextStyle(
                     fontSize: 32.sp,
                     fontWeight: FontWeight.w900,

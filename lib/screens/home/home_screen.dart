@@ -229,6 +229,7 @@ class _HomeScreenState extends State<HomeScreen>
 
   @override
   Widget build(BuildContext context) {
+    final isKeyboardOpen = MediaQuery.of(context).viewInsets.bottom > 0;
     return Scaffold(
       backgroundColor: Colors.white,
       resizeToAvoidBottomInset: false,
@@ -317,7 +318,7 @@ class _HomeScreenState extends State<HomeScreen>
                           bottom: 0,
                           child: SlideTransition(
                             position: _navSlide,
-                            child: hideNav
+                            child: hideNav || isKeyboardOpen
                                 ? const SizedBox.shrink()
                                 : _FloatingBottomNav(
                                     currentIndex: _currentTab,
@@ -550,9 +551,22 @@ class _HomeTabState extends State<_HomeTab> {
   final ValueNotifier<String> _searchQueryNotifier = ValueNotifier('');
 
   @override
+  void initState() {
+    super.initState();
+    HistoryService.instance.recentlyViewedNotifier.addListener(_onHistoryChanged);
+  }
+
+  @override
   void dispose() {
     _searchQueryNotifier.dispose();
+    HistoryService.instance.recentlyViewedNotifier.removeListener(_onHistoryChanged);
     super.dispose();
+  }
+
+  void _onHistoryChanged() {
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   void _goViewAll(BuildContext ctx, ViewAllType type, String title) {
@@ -565,9 +579,9 @@ class _HomeTabState extends State<_HomeTab> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
+    return Container(
+      color: Colors.white,
+      child: SafeArea(
         bottom: false,
         child: Column(
           children: [
@@ -615,28 +629,26 @@ class _HomeTabState extends State<_HomeTab> {
                   ],
                   if (searchQuery.isEmpty) ...[
                     ValueListenableBuilder<List<Recipe>>(
-                      valueListenable:
-                          HistoryService.instance.recentlyViewedNotifier,
+                      valueListenable: HistoryService.instance.recentlyViewedNotifier,
                       builder: (context, recent, _) {
-                        final bool shouldShow = recent.isNotEmpty;
-                        return Visibility(
-                          visible: shouldShow,
-                          maintainState: false,
-                          child: Column(
-                            children: [
-                              SizedBox(height: 30.h),
-                              _SectionRow(
-                                title: 'Recently Viewed',
-                                onViewAll: () => _goViewAll(
-                                  context,
-                                  ViewAllType.recentlyViewed,
-                                  'Recently Viewed',
-                                ),
+                        if (recent.isEmpty) return const SizedBox.shrink();
+                        return Column(
+                          children: [
+                            SizedBox(height: 30.h),
+                            _SectionRow(
+                              title: 'Recently Viewed',
+                              onViewAll: () => _goViewAll(
+                                context,
+                                ViewAllType.recentlyViewed,
+                                'Recently Viewed',
                               ),
-                              SizedBox(height: 12.h),
-                              _RecentlyViewedRow(recipes: recent),
-                            ],
-                          ),
+                            ),
+                            SizedBox(height: 12.h),
+                            _RecentlyViewedRow(
+                              key: ValueKey(recent.first.id),
+                              recipes: recent,
+                            ),
+                          ],
                         );
                       },
                     ),
@@ -669,102 +681,75 @@ class _HomeTabState extends State<_HomeTab> {
                   // Bottom Scan CTA
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: 18.w),
-                    child: Container(
-                      clipBehavior: Clip.antiAlias,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFCC3333),
-                        borderRadius: BorderRadius.circular(24.r),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(
-                              0xFFCC3333,
-                            ).withValues(alpha: 0.3),
-                            blurRadius: 20.r,
-                            offset: const Offset(0, 10),
-                          ),
-                        ],
-                      ),
-                      child: Stack(
-                        children: [
-                          Positioned(
-                            right: -15.w,
-                            bottom: -15.h,
-                            child: Opacity(
-                              opacity: 0.15,
-                              child: Image.asset(
-                                'assets/images/scan_illustration.png',
-                                height: 110.h,
-                                errorBuilder: (_, __, ___) =>
-                                    const SizedBox.shrink(),
+                    child: GestureDetector(
+                      onTap: widget.onScanTap,
+                      child: Container(
+                        padding: EdgeInsets.all(16.r),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFFF9F9), // Very light red
+                          borderRadius: BorderRadius.circular(16.r),
+                          border: Border.all(color: const Color(0xFFFFEBEB)),
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: EdgeInsets.all(12.r),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.05),
+                                    blurRadius: 8.r,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: Icon(
+                                Icons.qr_code_scanner_rounded,
+                                color: const Color(0xFFCC3333),
+                                size: 22.sp,
                               ),
                             ),
-                          ),
-                          Padding(
-                            padding: EdgeInsets.all(22.r),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        "Scan your refrigerator",
-                                        style: TextStyle(
-                                          fontFamily: 'SF Pro',
-                                          fontWeight: FontWeight.w900,
-                                          fontSize: 18.sp,
-                                          color: Colors.white,
-                                          letterSpacing: -0.5,
-                                        ),
-                                      ),
-                                      SizedBox(height: 6.h),
-                                      Text(
-                                        "Let our AI find the best recipes for you",
-                                        style: TextStyle(
-                                          fontFamily: 'SF Pro',
-                                          fontSize: 13.sp,
-                                          color: Colors.white.withOpacity(0.9),
-                                          height: 1.3,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                SizedBox(width: 12.w),
-                                GestureDetector(
-                                  onTap: widget.onScanTap,
-                                  child: Container(
-                                    padding: EdgeInsets.all(12.r),
-                                    decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      borderRadius: BorderRadius.circular(16.r),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.black.withOpacity(0.1),
-                                          blurRadius: 8.r,
-                                          offset: const Offset(0, 4),
-                                        ),
-                                      ],
-                                    ),
-                                    child: Icon(
-                                      Icons.qr_code_scanner_rounded,
-                                      color: const Color(0xFFCC3333),
-                                      size: 24.sp,
+                            SizedBox(width: 14.w),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    "Scan your refrigerator",
+                                    style: TextStyle(
+                                      fontFamily: 'SF Pro',
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 15.sp,
+                                      color: const Color(0xFF1A1A1A),
                                     ),
                                   ),
-                                ),
-                              ],
+                                  SizedBox(height: 4.h),
+                                  Text(
+                                    "Let our AI find the best recipes for you",
+                                    style: TextStyle(
+                                      fontFamily: 'SF Pro',
+                                      fontSize: 13.sp,
+                                      color: const Color(0xFF7A8499),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
-                        ],
+                            Icon(
+                              Icons.arrow_forward_ios_rounded,
+                              size: 14.sp,
+                              color: const Color(0xFFCCCCCC),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
 
                   SizedBox(height: 100.h), // Extra space for nav
                   // Dynamic bottom spacer for keyboard
-                  SizedBox(height: MediaQuery.of(context).viewInsets.bottom),
                 ],
               );
              },
@@ -1200,7 +1185,7 @@ class _CookbooksRowState extends State<_CookbooksRow> {
 // ══════════════════════════════════════════════════════════════════════════════
 class _RecentlyViewedRow extends StatelessWidget {
   final List<Recipe> recipes;
-  const _RecentlyViewedRow({required this.recipes});
+  const _RecentlyViewedRow({super.key, required this.recipes});
 
   @override
   Widget build(BuildContext context) {
@@ -1311,11 +1296,55 @@ class _SavedRecipesGrid extends StatefulWidget {
 }
 
 class _SavedRecipesGridState extends State<_SavedRecipesGrid> {
+  List<Recipe>? _suggestedRecipes;
+  bool _loadingSuggestions = false;
+
   @override
   void initState() {
     super.initState();
     if (RecipeService.instance.myRecipesNotifier.value == null) {
       RecipeService.instance.getMyRecipes();
+    } else {
+      _checkSuggestions();
+    }
+    RecipeService.instance.myRecipesNotifier.addListener(_checkSuggestions);
+  }
+
+  @override
+  void dispose() {
+    RecipeService.instance.myRecipesNotifier.removeListener(_checkSuggestions);
+    super.dispose();
+  }
+
+  void _checkSuggestions() {
+    final recipes = RecipeService.instance.myRecipesNotifier.value;
+    if (recipes != null) {
+      final hasAction = recipes.any((r) => r.origin != 'SUGGESTED');
+      final hasBackendSuggestions = recipes.any((r) => r.origin == 'SUGGESTED');
+      if (!hasAction && !hasBackendSuggestions && _suggestedRecipes == null && !_loadingSuggestions) {
+        _fetchSuggestions();
+      }
+    }
+  }
+
+  Future<void> _fetchSuggestions() async {
+    _loadingSuggestions = true;
+    try {
+      final daysSinceEpoch = DateTime.now().difference(DateTime(2024, 1, 1)).inDays;
+      final page = daysSinceEpoch ~/ 3;
+      final suggestions = await RecipeService.instance.getExploreRecipes(page: page, size: 6);
+      if (mounted) {
+        setState(() {
+          _suggestedRecipes = suggestions.map((r) => r.copyWith(origin: 'SUGGESTED')).toList();
+          _loadingSuggestions = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _loadingSuggestions = false;
+        });
+      }
     }
   }
 
@@ -1359,6 +1388,10 @@ class _SavedRecipesGridState extends State<_SavedRecipesGrid> {
             }
             return false;
           }).toList();
+          
+          if (displayList.isEmpty && _suggestedRecipes != null) {
+            displayList = _suggestedRecipes!;
+          }
         }
 
         if (displayList.isNotEmpty && widget.searchQuery.trim().isNotEmpty) {
@@ -1367,10 +1400,18 @@ class _SavedRecipesGridState extends State<_SavedRecipesGrid> {
         }
 
         if (displayList.isEmpty) {
+          if (_loadingSuggestions) {
+            return SizedBox(
+              height: 200.h,
+              child: const Center(
+                child: CircularProgressIndicator(color: Color(0xFFCC3333)),
+              ),
+            );
+          }
           return const SizedBox.shrink();
         }
 
-        final itemsToDisplay = displayList.take(6).toList();
+        final itemsToDisplay = hasAction ? displayList : displayList.take(6).toList();
 
         return Padding(
           padding: EdgeInsets.symmetric(horizontal: 18.w),

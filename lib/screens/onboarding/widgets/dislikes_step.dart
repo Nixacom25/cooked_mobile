@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../../../core/extensions/string_extensions.dart';
 
 class DislikesStep extends StatefulWidget {
   final Set<String> initialSelected;
@@ -54,7 +55,7 @@ class _DislikesStepState extends State<DislikesStep> {
   }
 
   void _addDislike(String val) {
-    final cleanVal = val.trim();
+    final cleanVal = val.trim().toTitleCase();
     if (cleanVal.isNotEmpty) {
       setState(() {
         _selectedDislikes.add(cleanVal);
@@ -141,6 +142,7 @@ class _DislikesStepState extends State<DislikesStep> {
                     ),
                   ),
                   onSubmitted: _addDislike,
+                  textCapitalization: TextCapitalization.words,
                 ),
               ),
               SizedBox(width: 12.w),

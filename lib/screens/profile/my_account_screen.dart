@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import '../../core/extensions/string_extensions.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../widgets/red_button.dart';
@@ -72,7 +73,8 @@ class _MyAccountScreenState extends State<MyAccountScreen> {
   Future<void> _saveProfile() async {
     setState(() => _isSaving = true);
     try {
-      final nameParts = _nameCtrl.text.trim().split(' ');
+      final fullName = _nameCtrl.text.trim().toTitleCase();
+      final nameParts = fullName.split(' ');
       final lastname = nameParts.length > 1 ? nameParts.last : 'Doe';
       final firstname = nameParts.length > 1
           ? nameParts.sublist(0, nameParts.length - 1).join(' ')
@@ -258,6 +260,7 @@ class _MyAccountScreenState extends State<MyAccountScreen> {
                     child: TextField(
                       controller: _nameCtrl,
                       style: _textStyle(),
+                      textCapitalization: TextCapitalization.words,
                       decoration: _dec('Name'),
                     ),
                   ),
@@ -370,7 +373,6 @@ class _MyAccountScreenState extends State<MyAccountScreen> {
                   SizedBox(height: 40.h),
                   
                   // Keyboard spacer
-                  SizedBox(height: MediaQuery.of(context).viewInsets.bottom),
                 ],
               ),
             ),

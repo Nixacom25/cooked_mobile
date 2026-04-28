@@ -38,9 +38,59 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
     }
   }
 
+  final ScrollController _scrollController = ScrollController();
+  final ValueNotifier<double> _scrollOffset = ValueNotifier(0.0);
+
   @override
   void initState() {
     super.initState();
+    _scrollController.addListener(() {
+      _scrollOffset.value = _scrollController.offset;
+    });
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    _scrollOffset.dispose();
+    super.dispose();
+  }
+
+  void _onTabChanged(DetailTab tab) {
+    if (_activeTab == tab) return;
+
+    setState(() {
+      _activeTab = tab;
+    });
+
+    // Calculate the offset where the Tab Bar is pinned at the top.
+    // This is the "beginning" of the tab content.
+    final double topPadding = MediaQuery.of(context).padding.top;
+    final double maxImg = 350.h;
+    final double minImg = topPadding + 60.h;
+    
+    // The Name section disappears at offset 200.
+    // The Image header finishes collapsing at (maxImg - minImg).
+    // Let's assume the name section is approx 100px.
+    // The Tags are 30.h, Buttons are 80.h.
+    
+    // A robust way to find the "content start" is to sum the scroll needed 
+    // to collapse everything above the tab bar.
+    double collapseOffset = (maxImg - minImg);
+    // Since NameSection returns shrink at 200, it basically stops contributing 
+    // to the total height at that point.
+    
+    // Let's use a value that ensures the TabBar is pinned.
+    // Roughly 400-500 depending on screen.
+    double targetOffset = collapseOffset + 150.h; 
+
+    if (_scrollController.hasClients && _scrollController.offset > targetOffset) {
+      _scrollController.animateTo(
+        targetOffset,
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOutCubic,
+      );
+    }
   }
 
   // ── Add-to-Cookbook modal ─────────────────────────────────────────────────
@@ -114,13 +164,13 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
         body: Stack(
           children: [
             // ── Scrollable body ───────────────────────────────────────────
-            SingleChildScrollView(
-              padding: EdgeInsets.only(bottom: 90 + bottomPad),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // ── Image header area ───────────────────────────────────
-                  _ImageHeader(
+            CustomScrollView(
+              controller: _scrollController,
+              slivers: [
+                // ── Animated Image Header ─────────────────────────────────
+                SliverPersistentHeader(
+                  pinned: true,
+                  delegate: _RecipeDetailHeaderDelegate(
                     img: img,
                     name: name,
                     time: time,
@@ -131,158 +181,236 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                       await _saveRecipe(r);
                     },
                     onShare: _handleShare,
+                    isFavorite: r?.isFavorite ?? false,
+                    onToggleFavorite: () async {
+                      if (r != null) {
+                        try {
+                          await RecipeService.instance.toggleFavorite(r.id);
+                          setState(() {
+                            r.isFavorite = !r.isFavorite;
+                          });
+                        } catch (e) {
+                          IosToast.show(
+                            context,
+                            message: ErrorHelper.getFriendlyMessage(e),
+                            type: ToastType.error,
+                          );
+                        }
+                      }
+                    },
+                    topPadding: MediaQuery.of(context).padding.top,
                   ),
+                ),
 
-                  // ── Content ─────────────────────────────────────────────
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+                // ── Name and Heart Section ────────────────────────────────────────
+                SliverPadding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  sliver: SliverToBoxAdapter(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Name + heart
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(
-                              child: Text(
-                                name,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  fontFamily: 'Poppins',
-                                  fontWeight: FontWeight.w800,
-                                  fontSize: 20,
-                                  color: Color(0xFF1A1A1A),
-                                ),
-                              ),
-                            ),
-                            if (!isPreview) ...[
-                              const SizedBox(width: 12),
-                              GestureDetector(
-                                onTap: () async {
-                                  if (r != null) {
-                                    try {
-                                      await RecipeService.instance.toggleFavorite(
-                                        r.id,
-                                      );
-                                      setState(() {
-                                        r.isFavorite = !r.isFavorite;
-                                      });
-                                    } catch (e) {
-                                      IosToast.show(
-                                        context,
-                                        message: ErrorHelper.getFriendlyMessage(e),
-                                        type: ToastType.error,
-                                      );
-                                    }
-                                  }
-                                },
-                                child: Container(
-                                  padding: const EdgeInsets.all(8),
-                                  decoration: BoxDecoration(
-                                    color: (r?.isFavorite ?? false)
-                                        ? const Color(0xFFCC3333).withOpacity(0.1)
-                                        : const Color(0xFFF9FAFB),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: Icon(
-                                    (r?.isFavorite ?? false)
-                                        ? Icons.favorite_rounded
-                                        : Icons.favorite_border_rounded,
-                                    color: (r?.isFavorite ?? false)
-                                        ? const Color(0xFFCC3333)
-                                        : const Color(0xFF9CA3AF),
-                                    size: 24,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ],
-                        ),
                         const SizedBox(height: 10),
-
-                        // Tag pills
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: [
-                            if (prep.isNotEmpty)
-                              _TagPill(
-                                icon: Icons.timer_outlined,
-                                label: prep,
-                              ),
-                            if (time.isNotEmpty)
-                              _TagPill(
-                                icon: Icons.access_time_rounded,
-                                label: time,
-                              ),
-                            if (kcal.isNotEmpty)
-                              _TagPill(
-                                icon: Icons.local_fire_department_rounded,
-                                label: kcal,
-                              ),
-                            _TagPill(
-                              icon: Icons.people_rounded,
-                              label: r?.servings != null ? '${r!.servings} People' : '2 People',
-                            ),
-                          ],
-                        ),
-
-                        const SizedBox(height: 15),
-
-                          if (!isPreview) ...[
-                            // Buttons row
-                            Row(
+                        // Name and Heart Row
+                        ValueListenableBuilder<double>(
+                          valueListenable: _scrollOffset,
+                          builder: (context, offset, child) {
+                            double threshold = 200.0;
+                            double opacity =
+                                (1.0 - (offset / threshold)).clamp(0.0, 1.0);
+                            if (opacity == 0) return const SizedBox.shrink();
+                            return Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Expanded(
-                                  child: GestureDetector(
-                                    onTap: () {
-                                      if (r != null) {
-                                        showModalBottomSheet(
-                                          context: context,
-                                          isScrollControlled: true,
-                                          backgroundColor: Colors.transparent,
-                                          builder: (context) => AddToGroceryModal(recipe: r),
-                                        );
-                                      }
-                                    },
-                                    child: Container(
-                                      height: 50,
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFFCC3333),
-                                        borderRadius: BorderRadius.circular(30),
-                                      ),
-                                      child: const Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: [
-                                          Icon(
-                                            Icons.shopping_cart_outlined,
-                                            color: Colors.white,
-                                            size: 18,
-                                          ),
-                                          SizedBox(width: 8),
-                                          Text(
-                                            'Add to Grocery',
-                                            style: TextStyle(
-                                              fontFamily: 'SF Pro',
-                                              fontWeight: FontWeight.w700,
-                                              fontSize: 14,
-                                              color: Colors.white,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
+                                Opacity(
+                                  opacity: opacity,
+                                  child: child!,
+                                ),
+                                const SizedBox(height: 10),
+                              ],
+                            );
+                          },
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  name,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    fontFamily: 'Poppins',
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: 24,
+                                    color: Color(0xFF1A1A1A),
                                   ),
+                                ),
+                              ),
+                              if (!isPreview) ...[
+                                SizedBox(width: 10.w),
+                                ValueListenableBuilder<List<Recipe>?>(
+                                  valueListenable: RecipeService.instance
+                                      .favoriteRecipesNotifier,
+                                  builder: (context, favorites, _) {
+                                    bool isFav = false;
+                                    if (r != null) {
+                                      if (favorites != null) {
+                                        isFav = favorites
+                                            .any((fav) => fav.id == r.id);
+                                      } else {
+                                        isFav = r.isFavorite;
+                                      }
+                                    }
+                                    return GestureDetector(
+                                      onTap: () async {
+                                        if (r != null) {
+                                          try {
+                                            await RecipeService.instance
+                                                .toggleFavorite(r.id);
+                                            setState(() {
+                                              r.isFavorite = !r.isFavorite;
+                                            });
+                                          } catch (e) {
+                                            IosToast.show(
+                                              context,
+                                              message: ErrorHelper
+                                                  .getFriendlyMessage(e),
+                                              type: ToastType.error,
+                                            );
+                                          }
+                                        }
+                                      },
+                                      child: Container(
+                                        padding: const EdgeInsets.all(8),
+                                        decoration: BoxDecoration(
+                                          color: isFav
+                                              ? const Color(0xFFCC3333)
+                                                  .withOpacity(0.1)
+                                              : const Color(0xFFF9FAFB),
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: Icon(
+                                          isFav
+                                              ? Icons.favorite_rounded
+                                              : Icons.favorite_border_rounded,
+                                          color: isFav
+                                              ? const Color(0xFFCC3333)
+                                              : const Color(0xFF1A1A1A),
+                                          size: 24,
+                                        ),
+                                      ),
+                                    );
+                                  },
                                 ),
                               ],
-                            ),
-                            const SizedBox(height: 20),
-                          ],
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
 
-                        // Tabs row
-                        Container(
+                // ── Tags Section ───────────────────────────────────────
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                    child: Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      alignment: WrapAlignment.start,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        if (prep.isNotEmpty)
+                          _TagPill(
+                            icon: Icons.timer_outlined,
+                            label: prep,
+                          ),
+                        if (time.isNotEmpty)
+                          _TagPill(
+                            icon: Icons.access_time_rounded,
+                            label: time,
+                          ),
+                        if (kcal.isNotEmpty)
+                          _TagPill(
+                            icon: Icons.local_fire_department_rounded,
+                            label: kcal,
+                          ),
+                        _TagPill(
+                          icon: Icons.people_rounded,
+                          label: r?.servings != null
+                              ? '${r!.servings} People'
+                              : '2 People',
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                // ── Buttons Section ───────────────────────────────────────
+                if (!isPreview)
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 15),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () {
+                                if (r != null) {
+                                  showModalBottomSheet(
+                                    context: context,
+                                    isScrollControlled: true,
+                                    backgroundColor: Colors.transparent,
+                                    builder: (context) =>
+                                        AddToGroceryModal(recipe: r),
+                                  );
+                                }
+                              },
+                              child: Container(
+                                height: 50,
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFCC3333),
+                                  borderRadius: BorderRadius.circular(30),
+                                ),
+                                child: const Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.shopping_cart_outlined,
+                                      color: Colors.white,
+                                      size: 18,
+                                    ),
+                                    SizedBox(width: 8),
+                                    Text(
+                                      'Add to Grocery',
+                                      style: TextStyle(
+                                        fontFamily: 'SF Pro',
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: 14,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                // ── Sticky Tabs Header ────────────────────────────────────────
+                SliverPersistentHeader(
+                  pinned: true,
+                  delegate: _SimplePinnedHeaderDelegate(
+                    height: 60.h,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Center(
+                        child: Container(
                           padding: const EdgeInsets.all(4),
                           decoration: BoxDecoration(
                             color: const Color(0xFFF9FAFB),
@@ -294,40 +422,50 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                               _TabPill(
                                 label: 'Steps',
                                 active: _activeTab == DetailTab.steps,
-                                onTap: () => setState(() => _activeTab = DetailTab.steps),
+                                onTap: () => _onTabChanged(DetailTab.steps),
                               ),
                               _TabPill(
                                 label: 'Equipment',
                                 active: _activeTab == DetailTab.equipment,
-                                onTap: () => setState(() => _activeTab = DetailTab.equipment),
+                                onTap: () => _onTabChanged(DetailTab.equipment),
                               ),
                               _TabPill(
                                 label: 'Ingredients',
                                 active: _activeTab == DetailTab.ingredients,
-                                onTap: () => setState(() => _activeTab = DetailTab.ingredients),
+                                onTap: () => _onTabChanged(DetailTab.ingredients),
                               ),
                             ],
                           ),
                         ),
-
-                        const SizedBox(height: 16),
-
-                        // Content based on tab
-                        if (_activeTab == DetailTab.ingredients)
-                          _IngredientsList(ingredients: r?.ingredients ?? [])
-                        else if (_activeTab == DetailTab.equipment)
-                          _EquipmentList(equipment: r?.equipment ?? [])
-                        else
-                          _StepsList(steps: r?.steps ?? [], tips: r?.tips),
-
-
-                        // Dynamic bottom spacer for keyboard
-                        SizedBox(height: MediaQuery.of(context).viewInsets.bottom),
-                      ],
+                      ),
                     ),
                   ),
-                ],
-              ),
+                ),
+
+                // ── Tab Content ──────────────────────────────────────────────
+                SliverPadding(
+                  padding: EdgeInsets.fromLTRB(20, 16, 20, 100 + bottomPad),
+                  sliver: SliverToBoxAdapter(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        // Min height to allow headers to pin, but no more.
+                        minHeight: 400.h,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (_activeTab == DetailTab.ingredients)
+                            _IngredientsList(ingredients: r?.ingredients ?? [])
+                          else if (_activeTab == DetailTab.equipment)
+                            _EquipmentList(equipment: r?.equipment ?? [])
+                          else
+                            _StepsList(steps: r?.steps ?? [], tips: r?.tips),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
             Positioned(
               bottom: 0,
@@ -470,8 +608,34 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
   }
 }
 
-// ── Image header with back + share ─────────────────────────────────────────────
-class _ImageHeader extends StatelessWidget {
+class _SimplePinnedHeaderDelegate extends SliverPersistentHeaderDelegate {
+  final Widget child;
+  final double height;
+
+  _SimplePinnedHeaderDelegate({
+    required this.child,
+    required this.height,
+  });
+
+  @override
+  double get minExtent => height;
+  @override
+  double get maxExtent => height;
+
+  @override
+  Widget build(
+      BuildContext context, double shrinkOffset, bool overlapsContent) {
+    return Container(height: height, child: child);
+  }
+
+  @override
+  bool shouldRebuild(covariant _SimplePinnedHeaderDelegate oldDelegate) {
+    return oldDelegate.child != child || oldDelegate.height != height;
+  }
+}
+
+// ── Animated Image Header Delegate ─────────────────────────────────────────
+class _RecipeDetailHeaderDelegate extends SliverPersistentHeaderDelegate {
   final String img;
   final String name;
   final String time;
@@ -479,8 +643,11 @@ class _ImageHeader extends StatelessWidget {
   final bool isPreview;
   final VoidCallback onValidate;
   final VoidCallback onShare;
+  final bool isFavorite;
+  final VoidCallback onToggleFavorite;
+  final double topPadding;
 
-  const _ImageHeader({
+  const _RecipeDetailHeaderDelegate({
     required this.img,
     required this.name,
     required this.time,
@@ -488,58 +655,173 @@ class _ImageHeader extends StatelessWidget {
     required this.isPreview,
     required this.onValidate,
     required this.onShare,
+    required this.isFavorite,
+    required this.onToggleFavorite,
+    required this.topPadding,
   });
 
   @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 350.h,
+  double get maxExtent => 350.h;
+
+  @override
+  double get minExtent => topPadding + 60.h;
+
+  @override
+  bool shouldRebuild(covariant _RecipeDetailHeaderDelegate oldDelegate) {
+    return img != oldDelegate.img ||
+        name != oldDelegate.name ||
+        isPreview != oldDelegate.isPreview ||
+        isFavorite != oldDelegate.isFavorite ||
+        topPadding != oldDelegate.topPadding;
+  }
+
+  @override
+  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+    final double maxShrinkOffset = maxExtent - minExtent;
+    final double progress = (shrinkOffset / maxShrinkOffset).clamp(0.0, 1.0);
+
+    final Color bgColor = Color.lerp(Colors.transparent, Colors.white, progress)!;
+
+    final double expandedImageHeight = 300.h;
+    final double collapsedImageSize = 38.h;
+    final double currentImageHeight = expandedImageHeight - (expandedImageHeight - collapsedImageSize) * progress;
+    final double currentImageWidth = MediaQuery.of(context).size.width - (MediaQuery.of(context).size.width - collapsedImageSize) * progress;
+
+    final double expandedTop = 50.h;
+    final double collapsedTop = topPadding + (minExtent - topPadding - collapsedImageSize) / 2;
+    final double currentTop = expandedTop - (expandedTop - collapsedTop) * progress;
+
+    final double expandedLeft = 0.0;
+    final double collapsedLeft = 48.w; 
+    final double currentLeft = expandedLeft - (expandedLeft - collapsedLeft) * progress;
+
+    final double expandedRadius = 28.r;
+    final double collapsedRadius = 8.r;
+    final double currentRadius = expandedRadius - (expandedRadius - collapsedRadius) * progress;
+
+    final double titleOpacity = progress > 0.8 ? (progress - 0.8) / 0.2 : 0.0;
+
+    return Container(
+      color: bgColor,
       child: Stack(
+        fit: StackFit.expand,
         children: [
-          // Food image - Full Bleed
-          Positioned.fill(
-            top: 50.h,
+          Positioned(
+            top: currentTop,
+            left: currentLeft,
+            width: currentImageWidth,
+            height: currentImageHeight,
             child: ClipRRect(
-              borderRadius: BorderRadius.vertical(
-                bottom: Radius.circular(28.r),
-              ),
-              child: _buildImage(img),
+              borderRadius: progress > 0.0 
+                ? BorderRadius.circular(currentRadius) 
+                : BorderRadius.vertical(bottom: Radius.circular(expandedRadius)),
+              child: _buildImage(img, currentImageWidth, currentImageHeight, progress),
             ),
           ),
-          // Back + Share
-          SafeArea(
+
+          if (titleOpacity > 0)
+            Positioned(
+              left: collapsedLeft + collapsedImageSize + 12.w,
+              right: 100.w,
+              top: topPadding,
+              bottom: 0,
+              child: Opacity(
+                opacity: titleOpacity,
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      fontWeight: FontWeight.w700,
+                      fontSize: 16.sp,
+                      color: const Color(0xFF1A1A1A),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+          Positioned(
+            top: topPadding,
+            left: 0,
+            right: 0,
+            height: minExtent - topPadding,
             child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 20.h),
+              padding: EdgeInsets.symmetric(horizontal: 16.w),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   GestureDetector(
-                    onTap: () {
-                      Navigator.pop(context);
-                    },
+                    onTap: () => Navigator.pop(context),
                     child: Container(
+                      width: 32.w,
+                      height: 32.w,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF9FAFB).withOpacity(progress),
+                        shape: BoxShape.circle,
+                      ),
+                      alignment: Alignment.center,
                       child: const Icon(
                         Icons.arrow_back_rounded,
-                        size: 24,
+                        size: 20,
                         color: Color(0xFF1A1A1A),
                       ),
                     ),
                   ),
-                  GestureDetector(
-                    onTap: isPreview
-                        ? onValidate
-                        : onShare,
-                    child: Container(
-                      child: Icon(
-                        isPreview
-                            ? Icons.check_circle_rounded
-                            : Icons.share_outlined,
-                        size: 24,
-                        color: isPreview
-                            ? const Color(0xFF27AE60)
-                            : const Color(0xFF1A1A1A),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (!isPreview) ...[
+                        Opacity(
+                          opacity: titleOpacity,
+                          child: GestureDetector(
+                            onTap: onToggleFavorite,
+                            child: Container(
+                              width: 32.w,
+                              height: 32.w,
+                              decoration: BoxDecoration(
+                                color: isFavorite
+                                    ? const Color(0xFFCC3333).withOpacity(0.1)
+                                    : const Color(0xFFF9FAFB).withOpacity(progress),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(
+                                isFavorite
+                                    ? Icons.favorite_rounded
+                                    : Icons.favorite_border_rounded,
+                                color: isFavorite
+                                    ? const Color(0xFFCC3333)
+                                    : const Color(0xFF1A1A1A),
+                                size: 20,
+                              ),
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: 8.w),
+                      ],
+                      GestureDetector(
+                        onTap: isPreview ? onValidate : onShare,
+                        child: Container(
+                          width: 32.w,
+                          height: 32.w,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF9FAFB).withOpacity(progress),
+                            shape: BoxShape.circle,
+                          ),
+                          alignment: Alignment.center,
+                          child: Icon(
+                            isPreview ? Icons.check_circle_rounded : Icons.share_outlined,
+                            size: 20,
+                            color: isPreview 
+                              ? const Color(0xFF27AE60) 
+                              : const Color(0xFF1A1A1A),
+                          ),
+                        ),
                       ),
-                    ),
+                    ],
                   ),
                 ],
               ),
@@ -550,30 +832,32 @@ class _ImageHeader extends StatelessWidget {
     );
   }
 
-  Widget _buildImage(String path) {
+  Widget _buildImage(String path, double width, double height, double progress) {
+    final fit = progress > 0 ? BoxFit.cover : BoxFit.contain;
+    
     if (path.isEmpty) {
       return Image.asset(
         'assets/images/recipes.png',
-        height: 300,
-        width: 300,
-        fit: BoxFit.contain,
+        width: width,
+        height: height,
+        fit: fit,
       );
     }
     if (path.startsWith('http')) {
       return CachedNetworkImage(
         imageUrl: path,
-        height: 300,
-        width: 300,
-        fit: BoxFit.contain,
+        width: width,
+        height: height,
+        fit: fit,
         errorWidget: (_, __, ___) => Image.asset(
           'assets/images/recipes.png',
-          height: 300,
-          width: 300,
-          fit: BoxFit.contain,
+          width: width,
+          height: height,
+          fit: fit,
         ),
         placeholder: (_, __) => Container(
-          height: 300,
-          width: 300,
+          width: width,
+          height: height,
           color: const Color(0xFFF2F1EF),
           child: const Center(
             child: CircularProgressIndicator(color: Color(0xFFCC3333)),
@@ -583,14 +867,14 @@ class _ImageHeader extends StatelessWidget {
     }
     return Image.asset(
       path,
-      height: 300,
-      width: 300,
-      fit: BoxFit.contain,
+      width: width,
+      height: height,
+      fit: fit,
       errorBuilder: (_, __, ___) => Image.asset(
         'assets/images/recipes.png',
-        height: 300,
-        width: 300,
-        fit: BoxFit.contain,
+        width: width,
+        height: height,
+        fit: fit,
       ),
     );
   }

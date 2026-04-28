@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../../../core/extensions/string_extensions.dart';
 
 class IdentityStep extends StatefulWidget {
   final String initialFirstName;
@@ -49,7 +50,7 @@ class _IdentityStepState extends State<IdentityStep> {
 
   void _notifyChange() {
     widget.onChanged(
-      fullName: _nameController.text.trim(),
+      fullName: _nameController.text.trim().toTitleCase(),
       lastName: '',
       email: _emailController.text.trim(),
       phone: _phone,
@@ -215,6 +216,7 @@ class _IdentityStepState extends State<IdentityStep> {
       controller: controller,
       onChanged: (_) => _notifyChange(),
       keyboardType: keyboardType,
+      textCapitalization: keyboardType == TextInputType.emailAddress ? TextCapitalization.none : TextCapitalization.words,
       style: TextStyle(
         fontFamily: 'SF Pro',
         fontSize: 16.sp,

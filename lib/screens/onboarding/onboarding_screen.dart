@@ -62,7 +62,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   String _measurementSystem = 'Imperial';
   String? _source;
   String? _otherSource;
-  String _language = 'GB English';
+  String _language = 'US English';
   String _country = 'US United States';
   Set<String> _selectedDiet = {};
   Set<String> _selectedAllergy = {};
@@ -180,6 +180,17 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     if (_currentPage == 15) return 15; // Freeze during ProfileLoadingStep
     if (_currentPage > 15 && _currentPage < 21) return _currentPage;
     return 20; // Freeze during RecipeGenerationLoadingStep (Step 20/20)
+  }
+
+  int _calculateRecipeCount() {
+    int baseCount = 2847;
+    baseCount -= _selectedAllergy.length * 123;
+    baseCount -= _selectedDiet.where((d) => d.toLowerCase() != 'none').length * 215;
+    baseCount -= _selectedDislikes.length * 67;
+    baseCount += _favoriteCuisines.length * 142;
+    
+    if (baseCount < 400) baseCount = 450 + (baseCount % 100);
+    return baseCount;
   }
 
   Future<void> _onContinue() async {
@@ -428,7 +439,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.transparent,
       resizeToAvoidBottomInset: false,
       body: Stack(
         fit: StackFit.expand,
@@ -630,6 +641,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         firstName: _firstName,
                         favoriteCuisines: _favoriteCuisines,
                         flavorDna: _flavorDna.keys.toList(),
+                        recipeCount: _calculateRecipeCount(),
                         onContinue: _onContinue,
                       ),
                       ProfileSignupStep(
