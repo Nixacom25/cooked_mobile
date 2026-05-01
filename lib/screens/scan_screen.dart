@@ -149,6 +149,25 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
     }
   }
 
+  void _startAnalysisLoading(String status) {
+    _showingSuccessMessage = true;
+    _cameraStatus = status;
+    _analysisDotCount = 0;
+    _analysisTimer?.cancel();
+    _analysisTimer = Timer.periodic(const Duration(milliseconds: 500), (timer) {
+      if (mounted) {
+        setState(() {
+          _analysisDotCount = (_analysisDotCount + 1) % 4;
+        });
+      }
+    });
+  }
+
+  void _stopAnalysisLoading() {
+    _analysisTimer?.cancel();
+    _showingSuccessMessage = false;
+  }
+
   Future<void> _toggleSaveIngredient(String name) async {
     final existing = _savedIngredients.firstWhere(
       (i) => i['name'].toString().toLowerCase() == name.toLowerCase(),
@@ -186,8 +205,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
     }
 
     setState(() {
-      _isInitializing = true;
-      _cameraStatus = "Generating Recipes...";
+      _startAnalysisLoading("Analyzing...");
     });
 
     try {
@@ -211,14 +229,14 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
           _restrictedIngredients.addAll(restricted);
           _recipes.clear();
           _recipes.addAll(recipes);
-          _isInitializing = false;
+          _stopAnalysisLoading();
           _typedIngredients.clear();
           _updateState(ScanState.results);
         });
       }
     } catch (e) {
       if (mounted) {
-        setState(() => _isInitializing = false);
+        setState(() => _stopAnalysisLoading());
         IosToast.show(context, message: e.toString(), type: ToastType.error);
       }
     }
@@ -296,8 +314,6 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
 
     // On some Androids, camera init fails without both permissions
     final camStat = await Permission.camera.request();
-    await Permission.microphone.request();
-    
     if (camStat != PermissionStatus.granted) {
       if (mounted) {
         setState(() {
@@ -519,7 +535,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
 
   Widget _buildBackground() {
     Widget? loadingOverlay;
-    if (_isInitializing) {
+    if (_isInitializing && _state == ScanState.scan) {
       loadingOverlay = Positioned.fill(
         child: Container(
           color: Colors.black.withOpacity(0.4),
@@ -530,7 +546,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                 const CircularProgressIndicator(color: Colors.white),
                 SizedBox(height: 16.h),
                 Text(
-                  "Analyzing...",
+                  "Initializing Camera...",
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 16.sp,
@@ -1284,8 +1300,9 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
 
   // ── Results Page ──────────────────────────────────────────────────────────
   Widget _buildResultsPage() {
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
     return ListView(
-      padding: EdgeInsets.symmetric(horizontal: 22.w),
+      padding: EdgeInsets.fromLTRB(22.w, 0, 22.w, bottomInset + 120.h),
       children: [
         Text(
           "Recipes You Can Cook Now",
@@ -1347,6 +1364,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
             border: Border.all(color: const Color(0xFFE2E8F0)),
           ),
           child: TextField(
+            controller: _ingCtrl,
             textCapitalization: TextCapitalization.words,
             onSubmitted: (val) {
               if (val.trim().isNotEmpty) {
@@ -1362,6 +1380,38 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
             ),
           ),
         ),
+        if (_suggestedIngredients.isNotEmpty && _state == ScanState.results)
+          Padding(
+            padding: EdgeInsets.only(top: 4.h),
+            child: Material(
+              elevation: 4,
+              borderRadius: BorderRadius.circular(12.r),
+              child: Container(
+                constraints: BoxConstraints(maxHeight: 180.h),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12.r),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                ),
+                child: ListView.separated(
+                  shrinkWrap: true,
+                  padding: EdgeInsets.zero,
+                  itemCount: _suggestedIngredients.length,
+                  separatorBuilder: (_, __) => Divider(height: 1, color: Colors.grey[100]),
+                  itemBuilder: (context, i) {
+                    final item = _suggestedIngredients[i];
+                    return ListTile(
+                      dense: true,
+                      title: Text(_capitalize(item['name'] ?? '')),
+                      onTap: () {
+                        _addIngredientToResults(_capitalize(item['name'] ?? ''));
+                      },
+                    );
+                  },
+                ),
+              ),
+            ),
+          ),
         SizedBox(height: 16.h),
         if (_ingredients.isEmpty && _restrictedIngredients.isEmpty)
           Text("No items detected.", style: TextStyle(color: Colors.grey, fontSize: 13.sp))
@@ -1525,20 +1575,8 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
 
     if (photo == null) return;
     setState(() {
-      _showingSuccessMessage = true;
-      _cameraStatus = "Scanning and generating recipes...";
+      _startAnalysisLoading("Analyzing...");
       _capturedImagePath = photo!.path;
-    });
-
-    // Start dots animation
-    _analysisDotCount = 0;
-    _analysisTimer?.cancel();
-    _analysisTimer = Timer.periodic(const Duration(milliseconds: 500), (timer) {
-      if (mounted) {
-        setState(() {
-          _analysisDotCount = (_analysisDotCount + 1) % 4;
-        });
-      }
     });
 
     try {
@@ -1560,14 +1598,13 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
         );
 
         _analysisTimer?.cancel();
-        _showingSuccessMessage = false;
+        _stopAnalysisLoading();
         _capturedImagePath = null;
         _updateState(ScanState.results);
       });
     } catch (e) {
       setState(() {
-        _analysisTimer?.cancel();
-        _showingSuccessMessage = false;
+        _stopAnalysisLoading();
         _capturedImagePath = null;
       });
       IosToast.show(
@@ -1674,6 +1711,8 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
         unit: "",
         quantity: "1",
       ));
+      _ingCtrl.clear();
+      _suggestedIngredients = [];
     });
   }
 
@@ -1689,8 +1728,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
     }
 
     setState(() {
-      _isInitializing = true;
-      _cameraStatus = "Updating Recipes...";
+      _startAnalysisLoading("Analyzing...");
     });
 
     try {
@@ -1714,12 +1752,12 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
           _restrictedIngredients.addAll(restricted);
           _recipes.clear();
           _recipes.addAll(recipes);
-          _isInitializing = false;
+          _stopAnalysisLoading();
         });
       }
     } catch (e) {
       if (mounted) {
-        setState(() => _isInitializing = false);
+        setState(() => _stopAnalysisLoading());
         IosToast.show(context, message: e.toString(), type: ToastType.error);
       }
     }

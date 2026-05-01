@@ -11,11 +11,13 @@ extension DateTimeExtension on DateTime {
 class TrialStep extends StatefulWidget {
   final Function(String plan) onPlanSelected;
   final VoidCallback onSkip;
+  final bool showTrialBadge;
 
   const TrialStep({
     super.key,
     required this.onPlanSelected,
     required this.onSkip,
+    this.showTrialBadge = true,
   });
 
   @override
@@ -35,14 +37,14 @@ class _TrialStepState extends State<TrialStep> {
 
   void _loadPrices() async {
     final products = await IapService.instance.getProducts({
-      'cooked_premium_monthly',
-      'cooked_premium_yearly',
+      'monthly_sub',
+      'yearly_sub',
     });
     if (mounted) {
       setState(() {
         for (var p in products) {
-          if (p.id == 'cooked_premium_monthly') _monthlyPrice = p.price;
-          if (p.id == 'cooked_premium_yearly') _yearlyPrice = p.price;
+          if (p.id == 'monthly_sub') _monthlyPrice = p.price;
+          if (p.id == 'yearly_sub') _yearlyPrice = p.price;
         }
       });
     }
@@ -109,7 +111,7 @@ class _TrialStepState extends State<TrialStep> {
                   title: 'Yearly',
                   price: _yearlyPrice,
                   isSelected: _selectedPlan == 'yearly',
-                  badge: '3 days free',
+                  badge: widget.showTrialBadge ? '3 days free' : null,
                 ),
               ),
             ],

@@ -4,7 +4,7 @@ import '../../routes/app_routes.dart';
 import '../../services/auth_service.dart';
 import '../../services/user_service.dart';
 import '../../core/api_config.dart';
-import '../home/view_all_screen.dart';
+import '../../models/view_all_type.dart';
 
 // ══════════════════════════════════════════════════════════════════════════════
 // PROFILE SCREEN

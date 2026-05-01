@@ -180,10 +180,11 @@ class RecipeService {
     getFavoriteRecipes(size: 100).then((_) => null).catchError((_) => null);
   }
 
-  Future<List<Recipe>> getExploreRecipes({String? cuisine, int page = 0, int size = 10}) async {
+  Future<List<Recipe>> getExploreRecipes({String? cuisine, String? category, int page = 0, int size = 10}) async {
     final cuisineParam = cuisine != null ? '&cuisine=$cuisine' : '';
+    final categoryParam = category != null ? '&category=$category' : '';
     final url = Uri.parse(
-      '${ApiConfig.baseUrl}/recipes/explore?page=$page&size=$size$cuisineParam',
+      '${ApiConfig.baseUrl}/recipes/explore?page=$page&size=$size$cuisineParam$categoryParam',
     );
     final response = await http.get(url, headers: await _getHeaders());
 

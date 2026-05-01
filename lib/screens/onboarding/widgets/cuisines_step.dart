@@ -28,7 +28,6 @@ class _CuisinesStepState extends State<CuisinesStep> {
     {'id': 'east', 'title': 'East African'},
     {'id': 'caribbean', 'title': 'Caribbean'},
     {'id': 'indian', 'title': 'Indian'},
-    {'id': 'others', 'title': 'Others'},
   ];
 
   late Set<String> _selected;
@@ -86,7 +85,6 @@ class _CuisinesStepState extends State<CuisinesStep> {
   Widget build(BuildContext context) {
     final predefinedTitles = _cuisines.map((c) => c['title']).toSet();
     final customCuisines = _selected.where((s) => !predefinedTitles.contains(s)).toList();
-    final bool isOthersSelected = _selected.contains('Others');
 
     return SingleChildScrollView(
       padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 30.h),
@@ -129,64 +127,62 @@ class _CuisinesStepState extends State<CuisinesStep> {
             },
           ),
           
-          if (isOthersSelected) ...[
-            SizedBox(height: 24.h),
-            Text(
-              'Specify other cuisines',
+          SizedBox(height: 24.h),
+          Text(
+            'Specify other cuisines',
+            style: TextStyle(
+              fontFamily: 'SF Pro',
+              fontSize: 14.sp,
+              fontWeight: FontWeight.w600,
+              color: const Color(0xFF7B8190),
+            ),
+          ),
+          SizedBox(height: 8.h),
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12.r),
+              border: Border.all(color: const Color(0xFFE5E7EB)),
+            ),
+            child: TextField(
+              controller: _othersController,
+              focusNode: _othersFocusNode,
+              onSubmitted: (_) => _addCustomCuisine(),
+              textCapitalization: TextCapitalization.words,
               style: TextStyle(
                 fontFamily: 'SF Pro',
                 fontSize: 14.sp,
-                fontWeight: FontWeight.w600,
-                color: const Color(0xFF7B8190),
+                color: const Color(0xFF1A1A1A),
               ),
-            ),
-            SizedBox(height: 8.h),
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12.r),
-                border: Border.all(color: const Color(0xFFE5E7EB)),
-              ),
-              child: TextField(
-                controller: _othersController,
-                focusNode: _othersFocusNode,
-                onSubmitted: (_) => _addCustomCuisine(),
-                textCapitalization: TextCapitalization.words,
-                style: TextStyle(
+              decoration: InputDecoration(
+                hintText: 'Enter a cuisine and press Enter',
+                hintStyle: TextStyle(
                   fontFamily: 'SF Pro',
                   fontSize: 14.sp,
-                  color: const Color(0xFF1A1A1A),
+                  color: Colors.grey[400],
                 ),
-                decoration: InputDecoration(
-                  hintText: 'Enter a cuisine and press Enter',
-                  hintStyle: TextStyle(
-                    fontFamily: 'SF Pro',
-                    fontSize: 14.sp,
-                    color: Colors.grey[400],
-                  ),
-                  border: InputBorder.none,
-                  contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
-                  suffixIcon: IconButton(
-                    icon: const Icon(Icons.add_rounded, color: Color(0xFFC83A2D)),
-                    onPressed: _addCustomCuisine,
-                  ),
+                border: InputBorder.none,
+                contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
+                suffixIcon: IconButton(
+                  icon: const Icon(Icons.add_rounded, color: Color(0xFFC83A2D)),
+                  onPressed: _addCustomCuisine,
                 ),
               ),
             ),
-            if (customCuisines.isNotEmpty) ...[
-              SizedBox(height: 12.h),
-              Wrap(
-                spacing: 8.w,
-                runSpacing: 8.h,
-                children: customCuisines.map((c) => Chip(
-                  label: Text(c, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                  backgroundColor: const Color(0xFFC83A2D),
-                  deleteIcon: const Icon(Icons.close, size: 14, color: Colors.white),
-                  onDeleted: () => _removeCuisine(c),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.r)),
-                )).toList(),
-              ),
-            ],
+          ),
+          if (customCuisines.isNotEmpty) ...[
+            SizedBox(height: 12.h),
+            Wrap(
+              spacing: 8.w,
+              runSpacing: 8.h,
+              children: customCuisines.map((c) => Chip(
+                label: Text(c, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                backgroundColor: const Color(0xFFC83A2D),
+                deleteIcon: const Icon(Icons.close, size: 14, color: Colors.white),
+                onDeleted: () => _removeCuisine(c),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.r)),
+              )).toList(),
+            ),
           ],
           
           SizedBox(height: MediaQuery.of(context).viewInsets.bottom + 120.h),
@@ -202,16 +198,8 @@ class _CuisinesStepState extends State<CuisinesStep> {
         setState(() {
           if (isSelected) {
             _selected.remove(cuisine['title']);
-            if (cuisine['title'] == 'Others') {
-              // Clear custom ones if unselecting Others? 
-              // Actually user might want to keep them but hide the field.
-              // Let's just hide the field.
-            }
           } else {
             _selected.add(cuisine['title']!);
-            if (cuisine['title'] == 'Others') {
-              // Expand field but don't focus automatically
-            }
           }
         });
         widget.onChanged(_selected.toList());

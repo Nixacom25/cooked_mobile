@@ -9,9 +9,13 @@ class TutorialHelper {
   static TutorialCoachMark? _activeCoachMark;
 
   static void dismissCurrent() {
-    _activeCoachMark?.finish();
-    _activeCoachMark = null;
+    if (_activeCoachMark != null) {
+      _activeCoachMark!.finish();
+      _activeCoachMark = null;
+    }
   }
+
+  static bool get isShowing => _activeCoachMark != null;
 
   static void showTutorial(
     BuildContext context, {
@@ -22,7 +26,7 @@ class TutorialHelper {
     Function(int)? onTabSwitch,
   }) {
     final service = TutorialService.instance;
-    if (!service.isTutorialActive) return;
+    if (!service.isTutorialActive || isShowing) return;
 
     // Ensure we don't have overlapping tutorials
     dismissCurrent();
@@ -185,7 +189,8 @@ class TutorialHelper {
             builder: (context, controller) {
               return _TutorialContent(
                 title: "Scan",
-                description: "Scan your ingredients or your recipe and our AI will take care of the rest.",
+                description:
+                    "Scan your ingredients or your recipe and our AI will take care of the rest.",
                 step: 1,
                 totalSteps: 3,
                 onNext: () {
@@ -217,7 +222,8 @@ class TutorialHelper {
             builder: (context, controller) {
               return _TutorialContent(
                 title: "Import",
-                description: "Import yours recipes from TikTok, Instagram, or any site link.",
+                description:
+                    "Import yours recipes from TikTok, Instagram, or any site link.",
                 step: 2,
                 totalSteps: 3,
                 onNext: () {
@@ -248,7 +254,8 @@ class TutorialHelper {
             builder: (context, controller) {
               return _TutorialContent(
                 title: "Create your first Book",
-                description: "Organize your recipes by creating your own cookbooks here.",
+                description:
+                    "Organize your recipes by creating your own cookbooks here.",
                 step: 3,
                 totalSteps: 3,
                 isLast: true,
@@ -296,13 +303,14 @@ class _ScanOnboardingModalState extends State<ScanOnboardingModal> {
     },
     {
       'title': 'We instantly find your ingredients',
-      'image': 'assets/images/onboarding_scan_2.png',
+      'image': 'assets/images/fond.png',
       'items': [
         'Snap a photo of your ingredients',
         'We detect what\'s inside instantly',
         'Edit anything that looks off',
       ],
       'btnText': 'Next',
+      'showCard': true,
     },
     {
       'title': 'Ready to scan',
@@ -351,22 +359,27 @@ class _ScanOnboardingModalState extends State<ScanOnboardingModal> {
             child: Container(color: Colors.black.withValues(alpha: 0.1)),
           ),
 
-          // Close button
+          // Skip button
           Positioned(
             top: 50.h,
             right: 20.w,
             child: GestureDetector(
               onTap: () => Navigator.pop(context),
               child: Container(
-                padding: EdgeInsets.all(8.r),
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  shape: BoxShape.circle,
+                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 5.h),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFF6D6),
+                  borderRadius: BorderRadius.circular(30.r),
+                  border: Border.all(color: Color(0xFFF2C94C), width: 1.w),
                 ),
-                child: Icon(
-                  Icons.close_rounded,
-                  size: 20.sp,
-                  color: Colors.black,
+                child: Text(
+                  'Skip',
+                  style: TextStyle(
+                    fontFamily: 'SF Pro',
+                    fontSize: 13.sp,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF1A1A1A),
+                  ),
                 ),
               ),
             ),
@@ -382,6 +395,15 @@ class _ScanOnboardingModalState extends State<ScanOnboardingModal> {
               height: 40.h,
             ),
           ),
+
+          // Step 2 Ingredients Card
+          if (step['showCard'] == true)
+            Positioned(
+              top: 150.h,
+              left: 24.w,
+              right: 24.w,
+              child: _IngredientsDetectedCard(),
+            ),
 
           // Bottom Content
           Align(
@@ -402,7 +424,7 @@ class _ScanOnboardingModalState extends State<ScanOnboardingModal> {
                       step['title'],
                       style: TextStyle(
                         fontFamily: 'SF Pro',
-                        fontSize: 26.sp,
+                        fontSize: 25.sp,
                         fontWeight: FontWeight.w800,
                         color: const Color(0xFF1A1A1A),
                       ),
@@ -448,18 +470,31 @@ class _ScanOnboardingModalState extends State<ScanOnboardingModal> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFFCC3333),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16.r),
+                            borderRadius: BorderRadius.circular(20.r),
                           ),
                           elevation: 0,
                         ),
-                        child: Text(
-                          step['btnText'],
-                          style: TextStyle(
-                            fontFamily: 'SF Pro',
-                            fontSize: 16.sp,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white,
-                          ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            if (_currentPage == 2) ...[
+                              Icon(
+                                Icons.qr_code_scanner,
+                                size: 20.sp,
+                                color: Colors.white,
+                              ),
+                              SizedBox(width: 8.w),
+                            ],
+                            Text(
+                              step['btnText'],
+                              style: TextStyle(
+                                fontFamily: 'SF Pro',
+                                fontSize: 16.sp,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
@@ -1233,6 +1268,110 @@ class _CookbookOnboardingModalState extends State<CookbookOnboardingModal> {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _IngredientsDetectedCard extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16.r),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Header
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFFF7E6),
+              borderRadius: BorderRadius.vertical(top: Radius.circular(16.r)),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: EdgeInsets.all(6.r),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFCC00),
+                    borderRadius: BorderRadius.circular(8.r),
+                  ),
+                  child: Icon(Icons.auto_awesome_rounded, size: 16.sp, color: Colors.white),
+                ),
+                SizedBox(width: 12.w),
+                Expanded(
+                  child: Text(
+                    'Ingredients detected',
+                    style: TextStyle(
+                      fontFamily: 'SF Pro',
+                      fontSize: 15.sp,
+                      fontWeight: FontWeight.bold,
+                      color: const Color(0xFF1A1A1A),
+                    ),
+                  ),
+                ),
+                Text(
+                  'Edit',
+                  style: TextStyle(
+                    fontFamily: 'SF Pro',
+                    fontSize: 14.sp,
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFFC83A2D),
+                    decoration: TextDecoration.underline,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // List
+          Padding(
+            padding: EdgeInsets.all(16.r),
+            child: Column(
+              children: [
+                _IngredientItem(icon: Icons.apple_rounded, name: 'Tomatoes'),
+                SizedBox(height: 12.h),
+                _IngredientItem(icon: Icons.egg_rounded, name: 'Chicken breast'),
+                SizedBox(height: 12.h),
+                _IngredientItem(icon: Icons.grass_rounded, name: 'Garlic'),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _IngredientItem extends StatelessWidget {
+  final IconData icon;
+  final String name;
+  const _IngredientItem({required this.icon, required this.name});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(icon, size: 16.sp, color: Colors.black87),
+        SizedBox(width: 12.w),
+        Text(
+          name,
+          style: TextStyle(
+            fontFamily: 'SF Pro',
+            fontSize: 14.sp,
+            fontWeight: FontWeight.w600,
+            color: const Color(0xFF1A1A1A),
+          ),
+        ),
+      ],
     );
   }
 }

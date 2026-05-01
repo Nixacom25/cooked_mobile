@@ -6,14 +6,18 @@ import 'package:flutter_svg/svg.dart';
 import '../widgets/app_search_field.dart';
 import '../services/recipe_service.dart';
 import '../models/recipe.dart';
-import 'home/view_all_screen.dart';
 import '../routes/app_routes.dart';
+import '../models/view_all_type.dart';
 import '../widgets/import_loading_page.dart';
 import '../core/widgets/ios_toast.dart';
 import '../core/utils/error_helper.dart';
 import '../core/utils/tutorial_helper.dart';
 import '../core/services/tutorial_service.dart';
+import '../core/extensions/string_extensions.dart';
+import '../services/ingredient_service.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 
@@ -69,16 +73,8 @@ class _ImportScreenState extends State<ImportScreen> {
     });
 
     try {
-      final imports = await RecipeService.instance.getRecentImports(size: 6);
-      if (mounted) {
-        setState(() {
-          _recentImportsList = imports;
-          _isLoadingRecent = false;
-        });
-      }
-    } catch (e) {
-      if (mounted) setState(() => _isLoadingRecent = false);
-    }
+      await RecipeService.instance.getRecentImports(size: 6);
+    } catch (_) {}
   }
 
   Future<void> _loadTrending() async {
@@ -97,15 +93,11 @@ class _ImportScreenState extends State<ImportScreen> {
   bool _isImporting = false;
   bool _isSearching = false;
   List<Map<String, dynamic>> _searchResults = [];
-  List<Recipe> _recentImportsList = [];
-  bool _isLoadingRecent = true;
   
   Timer? _searchDebounce;
   List<Map<String, dynamic>> _suggestedWebRecipes = [];
 
   List<String> _trendingRecipes = [];
-
-  // static const _trending = [ ... REMOVED in favor of _trendingRecipes
 
   Future<void> _showWebPreview(String url, String title) async {
     showModalBottomSheet(
@@ -192,17 +184,16 @@ class _ImportScreenState extends State<ImportScreen> {
   void _onSearchChanged(String val) {
     if (_searchDebounce?.isActive ?? false) _searchDebounce!.cancel();
 
-    if (val.trim().length < 3) {
+    if (val.trim().length < 2) {
       setState(() => _suggestedWebRecipes = []);
       return;
     }
 
-    _searchDebounce = Timer(const Duration(milliseconds: 500), () async {
+    _searchDebounce = Timer(const Duration(milliseconds: 300), () async {
       try {
-        final res = await RecipeService.instance.searchWeb(val.trim());
+        final res = await IngredientService.instance.searchIngredients(val.trim());
         if (mounted) {
           setState(() {
-            // Take up to 5 results for suggestions
             _suggestedWebRecipes = res.take(5).toList();
           });
         }
@@ -210,7 +201,9 @@ class _ImportScreenState extends State<ImportScreen> {
     });
   }
 
-  // static const _recentImports = ... REMOVED in favor of _recentImportsList
+  String _capitalize(String text) {
+    return text.toTitleCase();
+  }
 
   @override
   void dispose() {
@@ -230,13 +223,14 @@ class _ImportScreenState extends State<ImportScreen> {
       );
     }
 
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
     return Scaffold(
       backgroundColor: Colors.white,
       resizeToAvoidBottomInset: false,
       body: SafeArea(
         bottom: false,
         child: ListView(
-          padding: EdgeInsets.fromLTRB(18.w, 30.h, 18.w, 120.h),
+          padding: EdgeInsets.fromLTRB(22.w, 0, 22.w, bottomInset + 120.h),
           children: [
             // ── Title ────────────────────────────────────────────────────────
             Text(
@@ -307,8 +301,7 @@ class _ImportScreenState extends State<ImportScreen> {
                           color: Colors.grey[400],
                         ),
                         filled: true,
-                        fillColor: Colors
-                            .transparent, // Background handled by outer Container
+                        fillColor: Colors.transparent, 
                         border: InputBorder.none,
                         enabledBorder: InputBorder.none,
                         focusedBorder: InputBorder.none,
@@ -441,13 +434,13 @@ class _ImportScreenState extends State<ImportScreen> {
                     final res = _suggestedWebRecipes[i];
                     return ListTile(
                       title: Text(
-                        res['title'] ?? '',
+                        _capitalize(res['name'] ?? ''),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(fontFamily: 'SF Pro', fontSize: 14.sp),
                       ),
                       onTap: () {
-                        final title = res['title'] ?? '';
+                        final title = _capitalize(res['name'] ?? '');
                         setState(() => _suggestedWebRecipes = []);
                         _searchCtrl.text = title;
                         _handleWebSearch(title);
@@ -477,123 +470,147 @@ class _ImportScreenState extends State<ImportScreen> {
                 onClear: () => setState(() => _searchResults = []),
               ),
 
-              if (_trendingRecipes.isNotEmpty) ...[
-                Text(
-                  'Trending',
-                  style: TextStyle(
-                    fontFamily: 'SF Pro',
-                    fontWeight: FontWeight.w800,
-                    fontSize: 16.sp,
-                    color: const Color(0xFF1A1A1A),
-                  ),
+            if (_trendingRecipes.isNotEmpty) ...[
+              Text(
+                'Trending',
+                style: TextStyle(
+                  fontFamily: 'SF Pro',
+                  fontWeight: FontWeight.w800,
+                  fontSize: 16.sp,
+                  color: const Color(0xFF1A1A1A),
                 ),
-                SizedBox(height: 12.h),
-                Wrap(
-                  spacing: 8.w,
-                  runSpacing: 8.h,
-                  children: _trendingRecipes
-                      .map((name) => _TrendingChip(
-                            name: name,
-                            onImport: () {
-                              _searchCtrl.text = name;
-                              _handleWebSearch(name);
-                            },
-                          ))
-                      .toList(),
-                ),
-                SizedBox(height: 25.h),
-              ],
+              ),
+              SizedBox(height: 12.h),
+              Wrap(
+                spacing: 8.w,
+                runSpacing: 8.h,
+                children: _trendingRecipes
+                    .map((name) => _TrendingChip(
+                          name: name,
+                          onImport: () {
+                            _searchCtrl.text = name;
+                            _handleWebSearch(name);
+                          },
+                        ))
+                    .toList(),
+              ),
+              SizedBox(height: 25.h),
+            ],
 
-              // ── Recent Imports ────────────────────────────────────────────────
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Recent Imports',
-                    style: TextStyle(
-                      fontFamily: 'SF Pro',
-                      fontWeight: FontWeight.w800,
-                      fontSize: 18.sp,
-                      color: const Color(0xFF1A1A1A),
-                    ),
-                  ),
-                    if (_recentImportsList.length > 3)
-                      GestureDetector(
-                        onTap: () {
-                          Navigator.pushNamed(
-                            context,
-                            AppRoutes.viewAll,
-                            arguments: {
-                              'type': ViewAllType.imports,
-                              'title': 'Recent Imports',
-                            },
-                          );
-                        },
-                        child: Text(
-                          'View All',
+            // ── Recent Imports ────────────────────────────────────────────────
+            ValueListenableBuilder<List<Recipe>?>(
+              valueListenable: RecipeService.instance.recentImportsNotifier,
+              builder: (context, importsList, _) {
+                final List<Recipe> list = importsList ?? [];
+                return Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Recent Imports',
                           style: TextStyle(
                             fontFamily: 'SF Pro',
-                            fontWeight: FontWeight.w600,
-                            fontSize: 14.sp,
-                            color: const Color(0xFFC83A2D),
+                            fontWeight: FontWeight.w800,
+                            fontSize: 18.sp,
+                            color: const Color(0xFF1A1A1A),
                           ),
                         ),
-                      ),
-                ],
-              ),
-
-              if (_isLoadingRecent)
-                const Center(child: CircularProgressIndicator())
-              else if (_recentImportsList.isEmpty)
-                Center(
-                  child: Text(
-                    'No recent imports yet.',
-                    style: TextStyle(color: Colors.grey, fontSize: 13.sp),
-                  ),
-                )
-              else
-                ..._recentImportsList.map((r) {
-                  // Determine source based on sourceUrl
-                  String source = 'Web';
-                  IconData icon = Icons.language_rounded;
-                  Color iconColor = const Color(0xFF888888);
-
-                  if (r.sourceUrl?.contains('instagram.com') ?? false) {
-                    source = 'Instagram';
-                    icon = Icons.camera_alt_rounded;
-                    iconColor = const Color(0xFFe6683c);
-                  } else if (r.sourceUrl?.contains('tiktok.com') ?? false) {
-                    source = 'TikTok';
-                    icon = Icons.music_note_rounded;
-                    iconColor = Colors.black;
-                  } else if (r.sourceUrl?.contains('youtube.com') ?? false) {
-                    source = 'YouTube';
-                    icon = Icons.play_arrow_rounded;
-                    iconColor = Colors.red;
-                  } else if (r.sourceUrl?.contains('facebook.com') ?? false) {
-                    source = 'Facebook';
-                    icon = Icons.facebook_rounded;
-                    iconColor = Colors.blue;
-                  }
-
-                  return GestureDetector(
-                    onTap: () {
-                      Navigator.pushNamed(
-                        context,
-                        AppRoutes.recipeDetail,
-                        arguments: {'recipe': r},
-                      );
-                    },
-                    child: _RecentImportTile(
-                      img: r.image ?? '',
-                      title: r.name,
-                      source: source,
-                      srcIcon: icon,
-                      srcIconColor: iconColor,
+                        if (list.length > 3)
+                          GestureDetector(
+                            onTap: () {
+                              Navigator.pushNamed(
+                                context,
+                                AppRoutes.viewAll,
+                                arguments: {
+                                  'type': ViewAllType.imports,
+                                  'title': 'Recent Imports',
+                                },
+                              );
+                            },
+                            child: Text(
+                              'View All',
+                              style: TextStyle(
+                                fontFamily: 'SF Pro',
+                                fontWeight: FontWeight.w600,
+                                fontSize: 14.sp,
+                                color: const Color(0xFFC83A2D),
+                              ),
+                            ),
+                          ),
+                      ],
                     ),
-                  );
-                }),
-            ],
+                    SizedBox(height: 12.h),
+                    if (importsList == null)
+                      const Center(child: CircularProgressIndicator())
+                    else if (list.isEmpty)
+                      Center(
+                        child: Text(
+                          'No recent imports yet.',
+                          style: TextStyle(color: Colors.grey, fontSize: 13.sp),
+                        ),
+                      )
+                    else
+                      ...list.map((r) {
+                        // Determine source based on sourceUrl
+                        String source = 'Web';
+                        IconData icon = Icons.language_rounded;
+                        Color iconColor = const Color(0xFF888888);
+
+                        if (r.sourceUrl?.contains('instagram.com') ?? false) {
+                          source = 'Instagram';
+                          icon = Icons.camera_alt_rounded;
+                          iconColor = const Color(0xFFe6683c);
+                        } else if (r.sourceUrl?.contains('tiktok.com') ?? false) {
+                          source = 'TikTok';
+                          icon = Icons.music_note_rounded;
+                          iconColor = Colors.black;
+                        } else if (r.sourceUrl?.contains('youtube.com') ?? false) {
+                          source = 'YouTube';
+                          icon = Icons.play_arrow_rounded;
+                          iconColor = Colors.red;
+                        } else if (r.sourceUrl?.contains('facebook.com') ?? false) {
+                          source = 'Facebook';
+                          icon = Icons.facebook_rounded;
+                          iconColor = Colors.blue;
+                        }
+
+                        // Determine source asset if available
+                        String? sourceAsset;
+                        if (source == 'Instagram') {
+                          sourceAsset = 'assets/images/instagram.png';
+                        } else if (source == 'TikTok') {
+                          sourceAsset = 'assets/images/tiktok.png';
+                        } else if (source == 'YouTube') {
+                          sourceAsset = 'assets/images/youtube.png';
+                        } else if (source == 'Facebook') {
+                          sourceAsset = 'assets/images/facebook.png';
+                        }
+
+                        return GestureDetector(
+                          onTap: () {
+                            Navigator.pushNamed(
+                              context,
+                              AppRoutes.recipeDetail,
+                              arguments: {'recipe': r},
+                            );
+                          },
+                          child: _RecentImportTile(
+                            img: r.image ?? '',
+                            title: r.name,
+                            source: source,
+                            sourceUrl: r.sourceUrl,
+                            srcIcon: icon,
+                            srcIconColor: iconColor,
+                            srcAsset: sourceAsset,
+                          ),
+                        );
+                      }),
+                  ],
+                );
+              },
+            ),
+          ],
         ),
       ),
     );
@@ -675,24 +692,69 @@ class _RecentImportTile extends StatelessWidget {
   final String img;
   final String title;
   final String source;
+  final String? sourceUrl;
   final IconData srcIcon;
   final Color srcIconColor;
+  final String? srcAsset;
   const _RecentImportTile({
     required this.img,
     required this.title,
     required this.source,
+    this.sourceUrl,
     required this.srcIcon,
     required this.srcIconColor,
+    this.srcAsset,
   });
+
+  Future<void> _launchUrl() async {
+    if (sourceUrl == null || sourceUrl!.isEmpty) return;
+    final Uri url = Uri.parse(sourceUrl!);
+    if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
+      throw Exception('Could not launch $sourceUrl');
+    }
+  }
+
+  Widget _buildImage(String path) {
+    if (path.isEmpty) {
+      return Image.asset(
+        'assets/images/recipes.png',
+        fit: BoxFit.cover,
+      );
+    }
+    if (path.startsWith('http')) {
+      return CachedNetworkImage(
+        imageUrl: path,
+        fit: BoxFit.cover,
+        placeholder: (_, __) => Container(
+          color: const Color(0xFFF2F1EF),
+          child: const Center(
+            child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFFCC3333)),
+          ),
+        ),
+        errorWidget: (_, __, ___) => Image.asset(
+          'assets/images/recipes.png',
+          fit: BoxFit.cover,
+        ),
+      );
+    }
+    return Image.asset(
+      path,
+      fit: BoxFit.cover,
+      errorBuilder: (_, __, ___) => Image.asset(
+        'assets/images/recipes.png',
+        fit: BoxFit.cover,
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: EdgeInsets.only(bottom: 10.h),
-      padding: EdgeInsets.all(14.r),
+      margin: EdgeInsets.only(bottom: 12.h),
+      padding: EdgeInsets.all(12.r),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8F8F8),
-        borderRadius: BorderRadius.circular(14.r),
+        color: const Color(0xFFF9F8F6),
+        borderRadius: BorderRadius.circular(16.r),
       ),
       child: Row(
         children: [
@@ -700,20 +762,9 @@ class _RecentImportTile extends StatelessWidget {
           ClipRRect(
             borderRadius: BorderRadius.circular(12.r),
             child: SizedBox(
-              width: 60.w,
-              height: 60.h,
-              child: Image.network(
-                img,
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => Container(
-                  color: const Color(0xFFEEEEEE),
-                  child: Icon(
-                    Icons.fastfood_rounded,
-                    size: 24.sp,
-                    color: const Color(0xFFCCCCCC),
-                  ),
-                ),
-              ),
+              width: 56.w,
+              height: 56.h,
+              child: _buildImage(img),
             ),
           ),
           SizedBox(width: 14.w),
@@ -723,6 +774,8 @@ class _RecentImportTile extends StatelessWidget {
               children: [
                 Text(
                   title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontFamily: 'SF Pro',
                     fontWeight: FontWeight.w700,
@@ -730,27 +783,38 @@ class _RecentImportTile extends StatelessWidget {
                     color: const Color(0xFF1A1A1A),
                   ),
                 ),
-                SizedBox(height: 6.h),
-                Row(
-                  children: [
-                    Container(
-                      padding: EdgeInsets.all(4.r),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF757A84),
-                        borderRadius: BorderRadius.circular(6.r),
+                SizedBox(height: 4.h),
+                GestureDetector(
+                  onTap: _launchUrl,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        padding: EdgeInsets.all(3.r),
+                        decoration: BoxDecoration(
+                          color: srcAsset != null ? Colors.transparent : const Color(0xFF757A84),
+                          borderRadius: BorderRadius.circular(5.r),
+                        ),
+                        child: srcAsset != null
+                            ? Image.asset(srcAsset!, width: 14.w, height: 14.h, fit: BoxFit.contain)
+                            : Icon(srcIcon, size: 10.sp, color: Colors.white),
                       ),
-                      child: Icon(srcIcon, size: 12.sp, color: Colors.white),
-                    ),
-                    SizedBox(width: 6.w),
-                    Text(
-                      source,
-                      style: TextStyle(
-                        fontFamily: 'SF Pro',
-                        fontSize: 14.sp,
-                        color: const Color(0xFF757A84),
+                      SizedBox(width: 6.w),
+                      Flexible(
+                        child: Text(
+                          source,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontFamily: 'SF Pro',
+                            fontSize: 13.sp,
+                            color: const Color(0xFF757A84),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -808,9 +872,9 @@ class _WebSearchResults extends StatelessWidget {
         ...results.map(
           (res) => _SearchResultTile(
             title: res['title'] ?? '',
-            url: res['url'] ?? '',
+            url: res['url'] ?? res['link'] ?? '',
             snippet: res['snippet'] ?? '',
-            onView: () => onView(res['url'] ?? '', res['title'] ?? 'Recipe Preview'),
+            onView: () => onView(res['url'] ?? res['link'] ?? '', res['title'] ?? 'Recipe Preview'),
           ),
         ),
         SizedBox(height: 20.h),

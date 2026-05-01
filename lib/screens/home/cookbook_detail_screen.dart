@@ -9,6 +9,7 @@ import '../../services/recipe_service.dart';
 import '../../services/cookbook_service.dart';
 import '../../core/widgets/ios_toast.dart';
 import '../../core/utils/error_helper.dart';
+import '../../core/extensions/string_extensions.dart';
 import '../../core/utils/tutorial_helper.dart';
 
 class CookbookDetailScreen extends StatefulWidget {
@@ -97,9 +98,7 @@ class _CookbookDetailScreenState extends State<CookbookDetailScreen> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      name.isEmpty 
-                          ? name 
-                          : name[0].toUpperCase() + name.substring(1).toLowerCase(),
+                      name.toTitleCase(),
                       style: const TextStyle(
                         fontFamily: 'SF Pro',
                         fontWeight: FontWeight.w800,

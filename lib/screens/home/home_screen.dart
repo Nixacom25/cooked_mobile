@@ -1,10 +1,10 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../services/auth_service.dart';
 import '../../services/user_service.dart';
 import '../../routes/app_routes.dart';
-import 'view_all_screen.dart';
 import '../explore_screen.dart';
 import '../grocery_screen.dart';
 import '../import_screen.dart';
@@ -22,6 +22,7 @@ import '../../core/utils/tutorial_helper.dart';
 import '../../core/services/tutorial_service.dart';
 import '../../main.dart';
 import '../../services/history_service.dart';
+import '../../models/view_all_type.dart';
 
 class HomeScreen extends StatefulWidget {
   final int initialTab;
@@ -120,12 +121,17 @@ class _HomeScreenState extends State<HomeScreen>
     }
   }
 
+  Timer? _tutorialTimer;
+
   void _startTutorial({int delayMs = 500}) {
     // Only show Home tutorial if on Home tab
     if (_currentTab != 0) return;
 
-    Future.delayed(Duration(milliseconds: delayMs), () {
+    _tutorialTimer?.cancel();
+    _tutorialTimer = Timer(Duration(milliseconds: delayMs), () {
       if (mounted && _currentTab == 0) {
+        if (TutorialHelper.isShowing) return;
+        
         final firstCb =
             CookbookService.instance.myCookbooksNotifier.value?.firstOrNull;
         TutorialHelper.showTutorial(
@@ -611,13 +617,15 @@ class _HomeTabState extends State<_HomeTab> {
                             : '';
                         return _SectionRow(
                           title: 'Your cookbooks$countBadge',
-                          onViewAll: () {
-                            _goViewAll(
-                              context,
-                              ViewAllType.cookbooks,
-                              'Cookbooks',
-                            );
-                          },
+                          onViewAll: (cookbooks != null && cookbooks.length > 5)
+                              ? () {
+                                  _goViewAll(
+                                    context,
+                                    ViewAllType.cookbooks,
+                                    'Cookbooks',
+                                  );
+                                }
+                              : null,
                         );
                       },
                     ),
@@ -637,11 +645,13 @@ class _HomeTabState extends State<_HomeTab> {
                             SizedBox(height: 30.h),
                             _SectionRow(
                               title: 'Recently Viewed',
-                              onViewAll: () => _goViewAll(
-                                context,
-                                ViewAllType.recentlyViewed,
-                                'Recently Viewed',
-                              ),
+                              onViewAll: recent.length > 5
+                                  ? () => _goViewAll(
+                                        context,
+                                        ViewAllType.recentlyViewed,
+                                        'Recently Viewed',
+                                      )
+                                  : null,
                             ),
                             SizedBox(height: 12.h),
                             _RecentlyViewedRow(
@@ -1037,7 +1047,7 @@ class _CookbooksRowState extends State<_CookbooksRow> {
                 return Padding(
                   padding: EdgeInsets.only(right: 16.w),
                   child: GestureDetector(
-                    key: cookbooks.isEmpty ? widget.firstCookbookKey : null,
+                    key: widget.firstCookbookKey,
                     onTap: () async {
                       final result = await Navigator.pushNamed(
                         context,
@@ -1125,9 +1135,6 @@ class _CookbooksRowState extends State<_CookbooksRow> {
                     }
                   },
                   child: SizedBox(
-                    key: (i == 1 && cookbooks.isNotEmpty)
-                        ? widget.firstCookbookKey
-                        : null,
                     width: 180.w,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1206,6 +1213,7 @@ class _RecentlyViewedRow extends StatelessWidget {
                 arguments: {'recipe': r},
               ),
               child: Container(
+                constraints: BoxConstraints(maxWidth: 180.w),
                 padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
                 decoration: BoxDecoration(
                   color: const Color(0xFFF2F1EF),
@@ -1238,16 +1246,20 @@ class _RecentlyViewedRow extends StatelessWidget {
                       ),
                     ),
                     SizedBox(width: 10.w),
-                    Text(
-                      r.name.isEmpty
-                          ? r.name
-                          : r.name[0].toUpperCase() +
-                                r.name.substring(1).toLowerCase(),
-                      style: TextStyle(
-                        fontFamily: 'Open Sans',
-                        fontWeight: FontWeight.w800,
-                        fontSize: 14.sp,
-                        color: const Color(0xFF1A1A1A),
+                    Flexible(
+                      child: Text(
+                        r.name.isEmpty
+                            ? r.name
+                            : r.name[0].toUpperCase() +
+                                  r.name.substring(1).toLowerCase(),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontFamily: 'Open Sans',
+                          fontWeight: FontWeight.w800,
+                          fontSize: 14.sp,
+                          color: const Color(0xFF1A1A1A),
+                        ),
                       ),
                     ),
                   ],

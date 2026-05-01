@@ -114,8 +114,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     };
 
     final products = await IapService.instance.getProducts({
-      'cooked_premium_monthly',
-      'cooked_premium_yearly',
+      'monthly_sub',
+      'yearly_sub',
     });
     if (mounted) {
       setState(() {
@@ -195,7 +195,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   Future<void> _onContinue() async {
     if (_currentPage == 0) {
-      if (_firstName.isEmpty || _email.isEmpty || _phone.isEmpty) {
+      if (_firstName.isEmpty || _email.isEmpty) {
         IosToast.show(
           context,
           message: 'Please complete all fields',
@@ -230,12 +230,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
       setState(() => _isLoading = true);
       final targetId = _selectedPlanId == 'yearly'
-          ? 'cooked_premium_yearly'
-          : 'cooked_premium_monthly';
-      final product = _products.firstWhere(
-        (p) => p.id == targetId,
-        orElse: () => _products.first,
-      );
+          ? 'yearly_sub'
+          : 'monthly_sub';
+      ProductDetails product = _products.first;
+      for (var p in _products) {
+        if (p.id == targetId) {
+          product = p;
+          break;
+        }
+      }
 
       try {
         await IapService.instance.buyProduct(product);
@@ -732,8 +735,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                 (_isLoading ||
                                     (_currentPage == 0 &&
                                         (_firstName.isEmpty ||
-                                            _email.isEmpty ||
-                                            _phone.isEmpty)) ||
+                                            _email.isEmpty)) ||
                                     (_currentPage == 2 &&
                                         _source == null) || // SourceStep
                                     (_currentPage == 4 && // AllergiesStep

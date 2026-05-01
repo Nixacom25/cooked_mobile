@@ -42,11 +42,11 @@ class IapService {
     return response.productDetails;
   }
 
-  Future<void> buyProduct(ProductDetails productDetails) async {
+  Future<bool> buyProduct(ProductDetails productDetails) async {
     final PurchaseParam purchaseParam = PurchaseParam(
       productDetails: productDetails,
     );
-    await _inAppPurchase.buyNonConsumable(purchaseParam: purchaseParam);
+    return await _inAppPurchase.buyNonConsumable(purchaseParam: purchaseParam);
   }
 
   void _listenToPurchaseUpdated(

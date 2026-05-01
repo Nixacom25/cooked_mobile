@@ -84,14 +84,14 @@ class _IdentityStepState extends State<IdentityStep> {
             ),
           ),
           SizedBox(height: 32.h),
-          _buildLabel('Full Name'),
+          _buildLabel('Full Name', isRequired: true),
           SizedBox(height: 8.h),
           _buildField(
             controller: _nameController,
             hint: 'Enter your full name',
           ),
           SizedBox(height: 20.h),
-          _buildLabel('Email'),
+          _buildLabel('Email', isRequired: true),
           SizedBox(height: 8.h),
           _buildField(
             controller: _emailController,
@@ -194,14 +194,26 @@ class _IdentityStepState extends State<IdentityStep> {
     );
   }
 
-  Widget _buildLabel(String label) {
-    return Text(
-      label,
-      style: TextStyle(
-        fontSize: 14.sp,
-        fontWeight: FontWeight.w600,
-        color: const Color(0xFF7B8190),
-        fontFamily: 'SF Pro',
+  Widget _buildLabel(String label, {bool isRequired = false}) {
+    return RichText(
+      text: TextSpan(
+        text: label,
+        style: TextStyle(
+          fontSize: 14.sp,
+          fontWeight: FontWeight.w600,
+          color: const Color(0xFF7B8190),
+          fontFamily: 'SF Pro',
+        ),
+        children: isRequired ? [
+          TextSpan(
+            text: ' *',
+            style: TextStyle(
+              color: const Color(0xFFC83A2D),
+              fontSize: 14.sp,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ] : null,
       ),
     );
   }

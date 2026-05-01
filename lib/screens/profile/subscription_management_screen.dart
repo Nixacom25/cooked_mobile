@@ -53,8 +53,8 @@ class _SubscriptionManagementScreenState
     };
 
     final products = await IapService.instance.getProducts({
-      'cooked_premium_monthly',
-      'cooked_premium_yearly',
+      'monthly_sub',
+      'yearly_sub',
     });
     if (mounted) {
       setState(() {
@@ -143,6 +143,7 @@ class _SubscriptionManagementScreenState
               child: Stack(
                 children: [
                   TrialStep(
+                    showTrialBadge: false,
                     onPlanSelected: (plan) {
                       setModalState(() => _selectedPlanId = plan);
                     },
@@ -198,16 +199,23 @@ class _SubscriptionManagementScreenState
     }
 
     final targetId = _selectedPlanId == 'yearly'
-        ? 'cooked_premium_yearly'
-        : 'cooked_premium_monthly';
-    final product = _products.firstWhere(
-      (p) => p.id == targetId,
-      orElse: () => _products.first,
-    );
+        ? 'yearly_sub'
+        : 'monthly_sub';
+    ProductDetails product = _products.first;
+    for (var p in _products) {
+      if (p.id == targetId) {
+        product = p;
+        break;
+      }
+    }
 
     try {
-      await IapService.instance.buyProduct(product);
-      // Success is handled by IapService.instance.onPurchaseSuccess listener!
+      print('Initiating purchase for: ${product.id}');
+      final success = await IapService.instance.buyProduct(product);
+      print('Purchase initiation result: $success');
+      if (!success) {
+         IosToast.show(context, message: 'Could not contact Google Play Store', type: ToastType.error);
+      }
     } catch (e) {
       if (!mounted) return;
       IosToast.show(

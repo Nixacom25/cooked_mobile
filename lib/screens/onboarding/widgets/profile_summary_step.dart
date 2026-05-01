@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import '../../../core/extensions/string_extensions.dart';
 
 class ProfileSummaryStep extends StatelessWidget {
   final String firstName;
@@ -26,7 +27,7 @@ class ProfileSummaryStep extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '${firstName.isNotEmpty ? firstName[0].toUpperCase() : ''}, your profile is ready!',
+            '${firstName.toTitleCase()}, your profile is ready!',
             style: TextStyle(
               fontSize: 24.sp,
               fontWeight: FontWeight.w900,

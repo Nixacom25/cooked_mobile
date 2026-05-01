@@ -23,18 +23,20 @@ class RecipeDetailScreen extends StatefulWidget {
 
 class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
   DetailTab _activeTab = DetailTab.steps;
-  bool _historyLogged = false;
+  bool _isPreview = false;
+  bool _isInitialized = false;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (!_historyLogged) {
+    if (!_isInitialized) {
       final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>? ?? {};
       final Recipe? r = args['recipe'] as Recipe?;
+      _isPreview = args['isPreview'] ?? false;
       if (r != null) {
         HistoryService.instance.addToHistory(r);
-        _historyLogged = true;
       }
+      _isInitialized = true;
     }
   }
 
@@ -94,12 +96,15 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
   }
 
   // ── Add-to-Cookbook modal ─────────────────────────────────────────────────
-  void _showAddToCookbookModal(BuildContext ctx, Recipe recipe) {
+  void _showAddToCookbookModal(BuildContext ctx, Recipe recipe, {VoidCallback? onSuccess}) {
     showModalBottomSheet(
       context: ctx,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      builder: (_) => _AddToCookbookSheet(recipe: recipe),
+      builder: (_) => _AddToCookbookSheet(
+        recipe: recipe,
+        onSuccess: onSuccess,
+      ),
     );
   }
 
@@ -129,7 +134,11 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
   }
 
   Future<void> _saveRecipe(Recipe r) async {
-    _showAddToCookbookModal(context, r);
+    _showAddToCookbookModal(context, r, onSuccess: () {
+      setState(() {
+        _isPreview = false;
+      });
+    });
   }
 
   @override
@@ -150,7 +159,6 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
         : (args['kcal'] as String? ?? '');
     final String prep = r?.prepTime != null ? '${r!.prepTime} min prep' : '';
 
-    final bool isPreview = args['isPreview'] ?? false;
     final bool isTrend = args['isTrend'] ?? false;
     final VoidCallback? onImport = args['onImport'] as VoidCallback?;
 
@@ -175,7 +183,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                     name: name,
                     time: time,
                     kcal: kcal,
-                    isPreview: isPreview,
+                    isPreview: _isPreview,
                     onValidate: () async {
                       if (r == null) return;
                       await _saveRecipe(r);
@@ -246,7 +254,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                                   ),
                                 ),
                               ),
-                              if (!isPreview) ...[
+                              if (!_isPreview) ...[
                                 SizedBox(width: 10.w),
                                 ValueListenableBuilder<List<Recipe>?>(
                                   valueListenable: RecipeService.instance
@@ -348,7 +356,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                 ),
 
                 // ── Buttons Section ───────────────────────────────────────
-                if (!isPreview)
+                if (!_isPreview)
                   SliverToBoxAdapter(
                     child: Padding(
                       padding: const EdgeInsets.symmetric(
@@ -474,11 +482,11 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
               child: Container(
                 color: Colors.white,
                 padding: EdgeInsets.fromLTRB(20, 10, 20, 10 + bottomPad),
-                child: (isPreview || (r?.origin == 'SUGGESTED'))
+                child: (_isPreview || (r?.origin == 'SUGGESTED'))
                     ? Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          if (isPreview) ...[
+                          if (_isPreview) ...[
                             Padding(
                               padding: EdgeInsets.only(bottom: 10.h),
                               child: Row(
@@ -527,7 +535,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                                 Navigator.pop(context);
                                 onImport();
                               } else {
-                                _showAddToCookbookModal(context, r!);
+                                _saveRecipe(r!);
                               }
                             },
                             child: Container(
@@ -549,7 +557,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                                   Icon(
                                     isTrend
                                         ? Icons.cloud_download_rounded
-                                        : (isPreview
+                                        : (_isPreview
                                             ? Icons.check_circle_outline_rounded
                                             : Icons.bookmark_add_rounded),
                                     color: Colors.white,
@@ -559,7 +567,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                                   Text(
                                     isTrend
                                         ? 'Import this recipe'
-                                        : (isPreview
+                                        : (_isPreview
                                             ? 'Confirm and Save Recipe'
                                             : 'Add to recipe book'),
                                     style: TextStyle(
@@ -578,7 +586,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                     : GestureDetector(
                         onTap: () {
                           if (r == null) return;
-                          _showAddToCookbookModal(context, r);
+                          _saveRecipe(r);
                         },
                         child: Container(
                           height: 50.h,
@@ -1032,54 +1040,110 @@ class _EquipmentList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (equipment.isEmpty) {
-      return const Padding(
-        padding: EdgeInsets.symmetric(vertical: 20),
-        child: Text("No specific equipment listed."),
+      return Container(
+        width: double.infinity,
+        padding: EdgeInsets.symmetric(vertical: 40.h, horizontal: 20.w),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF9FAFB),
+          borderRadius: BorderRadius.circular(20.r),
+          border: Border.all(color: const Color(0xFFF1F5F9)),
+        ),
+        child: Column(
+          children: [
+            Icon(Icons.soup_kitchen_outlined, size: 48.sp, color: const Color(0xFFCBD5E1)),
+            SizedBox(height: 16.h),
+            Text(
+              "No specific equipment listed",
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontFamily: 'SF Pro',
+                fontSize: 15.sp,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF64748B),
+              ),
+            ),
+            SizedBox(height: 8.h),
+            Text(
+              "Standard kitchen tools should be enough.",
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontFamily: 'SF Pro',
+                fontSize: 13.sp,
+                color: const Color(0xFF94A3B8),
+              ),
+            ),
+          ],
+        ),
       );
     }
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFF1F5F9)),
-      ),
-      child: ListView.separated(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        itemCount: equipment.length,
-        separatorBuilder: (_, __) => const Divider(height: 0, color: Color(0xFFF1F5F9)),
-        itemBuilder: (context, i) {
-          return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Row(
-              children: [
-                Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF1F5F9),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.handyman_outlined, size: 16, color: Color(0xFF64748B)),
+
+    return Column(
+      children: List.generate(equipment.length, (i) {
+        final item = equipment[i];
+        return Container(
+          margin: EdgeInsets.only(bottom: 12.h),
+          padding: EdgeInsets.all(14.r),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16.r),
+            border: Border.all(color: const Color(0xFFF1F5F9)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.02),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 36.w,
+                height: 36.h,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFEF9C3), // Light yellow matching ingredients
+                  borderRadius: BorderRadius.circular(10.r),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    equipment[i],
-                    style: const TextStyle(
-                      fontFamily: 'SF Pro',
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF1E293B),
-                    ),
+                alignment: Alignment.center,
+                child: Icon(
+                  _getEquipmentIcon(item),
+                  size: 18.sp,
+                  color: const Color(0xFFD97706),
+                ),
+              ),
+              SizedBox(width: 14.w),
+              Expanded(
+                child: Text(
+                  item,
+                  style: TextStyle(
+                    fontFamily: 'SF Pro',
+                    fontSize: 15.sp,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF1E293B),
                   ),
                 ),
-              ],
-            ),
-          );
-        },
-      ),
+              ),
+              Icon(
+                Icons.check_circle_outline_rounded,
+                size: 18.sp,
+                color: const Color(0xFFCBD5E1),
+              ),
+            ],
+          ),
+        );
+      }),
     );
+  }
+
+  IconData _getEquipmentIcon(String name) {
+    final n = name.toLowerCase();
+    if (n.contains('pan') || n.contains('skillet')) return Icons.soup_kitchen_rounded;
+    if (n.contains('pot')) return Icons.soup_kitchen_rounded;
+    if (n.contains('oven')) return Icons.microwave_rounded;
+    if (n.contains('knife')) return Icons.flatware_rounded;
+    if (n.contains('bowl')) return Icons.soup_kitchen_outlined;
+    if (n.contains('mixer') || n.contains('blender')) return Icons.blender_rounded;
+    return Icons.handyman_outlined;
   }
 }
 
@@ -1188,7 +1252,8 @@ class _StepsList extends StatelessWidget {
 // ══════════════════════════════════════════════════════════════════════════════
 class _AddToCookbookSheet extends StatefulWidget {
   final Recipe recipe;
-  const _AddToCookbookSheet({required this.recipe});
+  final VoidCallback? onSuccess;
+  const _AddToCookbookSheet({required this.recipe, this.onSuccess});
   @override
   State<_AddToCookbookSheet> createState() => _AddToCookbookSheetState();
 }
@@ -1444,6 +1509,7 @@ class _AddToCookbookSheetState extends State<_AddToCookbookSheet> {
 
       if (!mounted) return;
       Navigator.pop(context); // Close sheet
+      widget.onSuccess?.call();
       IosToast.show(
         context,
         message: 'Successfully added to ${idsList.length} book${idsList.length > 1 ? 's' : ''}!',

@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../routes/app_routes.dart';
@@ -13,23 +14,9 @@ import '../../services/cookbook_service.dart';
 import '../../services/grocery_service.dart';
 import '../../core/widgets/ios_toast.dart';
 import '../../core/utils/error_helper.dart';
-import '../../data/explore_data.dart';
-
-// ── View-all type ─────────────────────────────────────────────────────────────
-enum ViewAllType {
-  cookbooks,
-  savedRecipes,
-  recentlyViewed,
-  favorites,
-  explore,
-  groceryHistory,
-  creators,
-  imports,
-  exploreCuisines,
-  exploreCategories,
-  exploreRecipesByCuisine,
-  exploreRecipesByCategory,
-}
+import '../../models/view_all_type.dart';
+import '../../core/extensions/string_extensions.dart';
+import '../explore_screen.dart';
 
 // ══════════════════════════════════════════════════════════════════════════════
 // VIEW ALL SCREEN
@@ -82,7 +69,7 @@ class _ViewAllScreenState extends State<ViewAllScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          title.toUpperCase(),
+                          title.toTitleCase(),
                           style: const TextStyle(
                             fontFamily: 'SF Pro',
                             fontWeight: FontWeight.w800,
@@ -276,7 +263,7 @@ class _CookbooksGridState extends State<_CookbooksGrid> {
                   ),
                   const SizedBox(height: 7),
                   Text(
-                    cb.name.toUpperCase(),
+                    cb.name.toTitleCase(),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
@@ -361,30 +348,12 @@ class _RecipesGridState extends State<_RecipesGrid> {
       case ViewAllType.exploreRecipesByCuisine:
         final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
         final cuisine = args['cuisine'] as String?;
-        // Try to get from static first for consistency if backend is empty
-        final staticCuisine = ExploreData.cuisines.cast<dynamic>().firstWhere(
-          (c) => c.cookbook.name.toLowerCase() == cuisine?.toLowerCase(),
-          orElse: () => null,
-        );
-        if (staticCuisine != null) {
-          _future = Future.value(staticCuisine.cookbook.recipes);
-        } else {
-          _future = RecipeService.instance.getExploreRecipes(cuisine: cuisine, size: 50);
-        }
+        _future = RecipeService.instance.getExploreRecipes(cuisine: cuisine, size: 50);
         break;
       case ViewAllType.exploreRecipesByCategory:
         final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
         final category = args['category'] as String?;
-        // Always use static for niches/categories as requested
-        final staticNiche = ExploreData.niches.cast<dynamic>().firstWhere(
-          (n) => n.cookbook.name.toLowerCase() == category?.toLowerCase(),
-          orElse: () => null,
-        );
-        if (staticNiche != null) {
-          _future = Future.value(staticNiche.cookbook.recipes);
-        } else {
-          _future = RecipeService.instance.getPopularRecipes(category: category, size: 50);
-        }
+        _future = RecipeService.instance.getExploreRecipes(category: category, size: 50);
         break;
       case ViewAllType.groceryHistory:
         _future = _fetchGroceryHistory();
@@ -618,54 +587,72 @@ class _StaticCookbooksGrid extends StatelessWidget {
   final ViewAllType type;
   final String searchQuery;
 
+  static const List<String> _allowedCuisines = [
+    'Italian',
+    'Mexican',
+    'Chinese',
+    'Japanese',
+    'Thai',
+    'Indian',
+    'Korean',
+    'Mediterranean',
+    'Middle Eastern',
+    'French',
+    'Spanish',
+    'Greek',
+    'Caribbean',
+    'West African',
+  ];
+
+  static const List<String> _allowedNiches = [
+    'High Protein, Low Calorie',
+    'Easy Desserts',
+    '30-Minute Meals',
+    'Meal Prep Favorites',
+    'Comfort Food',
+    'Healthy Breakfasts',
+    'Quick Lunches',
+    'Vegan Essentials',
+    'Low-Carb Meals',
+  ];
+
   const _StaticCookbooksGrid({required this.type, this.searchQuery = ''});
 
   @override
   Widget build(BuildContext context) {
     if (type == ViewAllType.exploreCategories) {
-      final categories = ExploreData.niches;
-      var names = categories.map((n) => n.cookbook.name).toList();
+      return FutureBuilder<Map<String, int>>(
+        future: RecipeService.instance.getExploreCategories(),
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) return const Center(child: CircularProgressIndicator(color: Color(0xFFCC3333)));
+          final categoriesMap = snapshot.data!;
+          var names = categoriesMap.keys
+              .where((name) => _allowedNiches.any((an) => an.toLowerCase() == name.toLowerCase()))
+              .toList();
 
-      if (searchQuery.trim().isNotEmpty) {
-        final query = searchQuery.trim().toLowerCase();
-        names = names.where((name) => name.toLowerCase().contains(query)).toList();
-      }
+          if (searchQuery.trim().isNotEmpty) {
+            final query = searchQuery.trim().toLowerCase();
+            names = names.where((n) => n.toLowerCase().contains(query)).toList();
+          }
 
-      return GridView.builder(
-        padding: const EdgeInsets.fromLTRB(16, 4, 16, 20),
-        itemCount: names.length,
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          crossAxisSpacing: 12,
-          mainAxisSpacing: 16,
-          childAspectRatio: 0.82,
-        ),
-        itemBuilder: (ctx, i) {
-          final name = names[i];
-          final item = categories.firstWhere((n) => n.cookbook.name == name);
-          final count = item.cookbook.recipes.length;
-          final img = item.image;
-
-          return _buildItem(ctx, name, img, count);
+          return _buildGrid(names, (name) {
+            return ExploreScreen.nicheImages[name] ?? 'assets/images/explore_autumn.png';
+          }, (name) => categoriesMap[name] ?? 0);
         },
       );
     }
 
-    final Future<Map<String, int>> future = type == ViewAllType.exploreCuisines 
-        ? RecipeService.instance.getExploreCuisines() 
-        : RecipeService.instance.getExploreCategories();
-
     return FutureBuilder<Map<String, int>>(
-      future: future,
+      future: RecipeService.instance.getExploreCuisines(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(
-            child: CircularProgressIndicator(color: Color(0xFFCC3333)),
-          );
+          return const Center(child: CircularProgressIndicator(color: Color(0xFFCC3333)));
         }
 
         final Map<String, int> itemsMap = snapshot.data ?? {};
-        var names = itemsMap.keys.toList();
+        var names = itemsMap.keys.where((name) {
+          return _allowedCuisines.any((ac) => ac.toLowerCase() == name.toLowerCase());
+        }).toList();
 
         if (searchQuery.trim().isNotEmpty) {
           final query = searchQuery.trim().toLowerCase();
@@ -676,38 +663,29 @@ class _StaticCookbooksGrid extends StatelessWidget {
           return const Center(child: Text("No items found."));
         }
 
-        return GridView.builder(
-          padding: const EdgeInsets.fromLTRB(16, 4, 16, 20),
-          itemCount: names.length,
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            crossAxisSpacing: 12,
-            mainAxisSpacing: 16,
-            childAspectRatio: 0.82,
-          ),
-          itemBuilder: (ctx, i) {
-            final name = names[i];
-            final count = itemsMap[name] ?? 0;
-            
-            String img = 'assets/images/others.png';
-            if (type == ViewAllType.exploreCuisines) {
-              final staticCuisine = ExploreData.cuisines.cast<dynamic>().firstWhere(
-                (c) => c.cookbook.name.toLowerCase() == name.toLowerCase(),
-                orElse: () => null,
-              );
-              if (staticCuisine != null) img = staticCuisine.image;
-            } else {
-              final staticNiche = ExploreData.niches.cast<dynamic>().firstWhere(
-                (n) => n.cookbook.name.toLowerCase() == name.toLowerCase(),
-                orElse: () => null,
-              );
-              if (staticNiche != null) img = staticNiche.image;
-            }
+        return _buildGrid(names, (name) {
+          return ExploreScreen.cuisineImages[name] ?? 'assets/images/others.png';
+        }, (name) => itemsMap[name] ?? 0);
+      },
+    );
+  }
 
-            return _buildItem(ctx, name, img, count);
-          },
-        );
-      }
+  Widget _buildGrid(List<String> names, String Function(String) getImg, int Function(String) getCount) {
+    return GridView.builder(
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 20),
+      itemCount: names.length,
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        crossAxisSpacing: 12,
+        mainAxisSpacing: 16,
+        childAspectRatio: 0.82,
+      ),
+      itemBuilder: (ctx, i) {
+        final name = names[i];
+        final img = getImg(name);
+        final count = getCount(name);
+        return _buildItem(ctx, name, img, count);
+      },
     );
   }
 
@@ -741,7 +719,7 @@ class _StaticCookbooksGrid extends StatelessWidget {
           ),
           const SizedBox(height: 7),
           Text(
-            name.toUpperCase(),
+            name.toTitleCase(),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(
