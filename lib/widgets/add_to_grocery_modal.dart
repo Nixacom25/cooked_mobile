@@ -90,7 +90,7 @@ class _AddToGroceryModalState extends State<AddToGroceryModal> {
             end: Alignment.bottomRight,
             colors: [
               const Color(0xFFC83A2D),
-              const Color(0xFFC83A2D).withOpacity(0.8),
+              const Color(0xFFC83A2D).withOpacity(0.9),
             ],
             stops: const [0.0, 1.0],
           ),

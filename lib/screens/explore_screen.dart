@@ -47,6 +47,16 @@ class ExploreScreen extends StatefulWidget {
 
 class _ExploreScreenState extends State<ExploreScreen> {
   final _searchCtrl = TextEditingController();
+  int _selectedCategory = 0;
+
+  static const _categories = [
+    ('🍕', 'Italian'),
+    ('🥗', 'Healthy'),
+    ('🥦', 'Vegetarian'),
+    ('💪', 'High Protein'),
+    ('🍜', 'Asian'),
+    ('🥐', 'Bakery'),
+  ];
 
   @override
   void initState() {
@@ -142,9 +152,10 @@ class _ExploreScreenState extends State<ExploreScreen> {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              const Color(0xFFC83A2D).withValues(alpha: 0.95),
-              const Color(0xFFC83A2D).withValues(alpha: 0.7),
+              const Color(0xFFC83A2D),
+              const Color(0xE6C83A2D),
             ],
+            stops: const [0.0, 1.0],
           ),
         ),
         child: Column(
@@ -163,6 +174,59 @@ class _ExploreScreenState extends State<ExploreScreen> {
             AppSearchField(
               controller: _searchCtrl,
               hintText: 'Search recipes, ingredients....',
+            ),
+            SizedBox(height: 16.h),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: List.generate(_categories.length, (i) {
+                  final (emoji, label) = _categories[i];
+                  final active = _selectedCategory == i;
+                  return GestureDetector(
+                    onTap: () {
+                      setState(() => _selectedCategory = i);
+                      // _loadPopularRecipes(label); // Note: Removed in recent cleanup
+                    },
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      margin: EdgeInsets.only(right: 8.w),
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
+                      decoration: BoxDecoration(
+                        color:
+                            active
+                                ? const Color(0xFFFFF6D6)
+                                : Colors.white.withOpacity(0.18),
+                        borderRadius: BorderRadius.circular(30.r),
+                        border: Border.all(
+                          color:
+                              active
+                                  ? const Color(0xFFF2C94C)
+                                  : Colors.white.withOpacity(0.35),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Text(emoji, style: TextStyle(fontSize: 13.sp)),
+                          SizedBox(width: 6.w),
+                          Text(
+                            label,
+                            style: TextStyle(
+                              fontFamily: 'SF Pro',
+                              fontWeight: FontWeight.w600,
+                              fontSize: 13.sp,
+                              color:
+                                  active
+                                      ? const Color(0xFFCC3333)
+                                      : Colors.white,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }),
+              ),
             ),
           ],
         ),

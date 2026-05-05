@@ -363,13 +363,11 @@ class _LoginScreenState extends State<LoginScreen> {
                           onTap: _isLoading ? null : () => _handleSocialLogin('GOOGLE'),
                         ),
                         SizedBox(height: 12.h),
-                        /*
                         _SocialBtn(
                           label: 'Sign in with Apple',
                           icon: Image.asset('assets/images/apple.png', width: 20.w, fit: BoxFit.contain),
                           onTap: _isLoading ? null : () => _handleSocialLogin('APPLE'),
                         ),
-                        */
 
                         // Dynamic keyboard spacer
                         SizedBox(height: bottomInset > 0 ? bottomInset : 20.h),

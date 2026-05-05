@@ -212,17 +212,16 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
 
                 // ── Name and Heart Section ────────────────────────────────────────
                 SliverPadding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
                   sliver: SliverToBoxAdapter(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const SizedBox(height: 10),
                         // Name and Heart Row
                         ValueListenableBuilder<double>(
                           valueListenable: _scrollOffset,
                           builder: (context, offset, child) {
-                            double threshold = 200.0;
+                            double threshold = 150.0;
                             double opacity =
                                 (1.0 - (offset / threshold)).clamp(0.0, 1.0);
                             if (opacity == 0) return const SizedBox.shrink();
@@ -234,7 +233,6 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                                   opacity: opacity,
                                   child: child!,
                                 ),
-                                const SizedBox(height: 10),
                               ],
                             );
                           },
@@ -322,7 +320,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                 // ── Tags Section ───────────────────────────────────────
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                    padding: const EdgeInsets.fromLTRB(20, 10, 20, 10),
                     child: Wrap(
                       spacing: 8,
                       runSpacing: 8,
@@ -690,12 +688,15 @@ class _RecipeDetailHeaderDelegate extends SliverPersistentHeaderDelegate {
 
     final Color bgColor = Color.lerp(Colors.transparent, Colors.white, progress)!;
 
-    final double expandedImageHeight = 300.h;
+    final double expandedImageHeight = 350.h;
     final double collapsedImageSize = 38.h;
     final double currentImageHeight = expandedImageHeight - (expandedImageHeight - collapsedImageSize) * progress;
-    final double currentImageWidth = MediaQuery.of(context).size.width - (MediaQuery.of(context).size.width - collapsedImageSize) * progress;
+    
+    // FULL WIDTH: No horizontal margins, but keep vertical offset
+    final double expandedWidth = MediaQuery.of(context).size.width;
+    final double currentImageWidth = expandedWidth - (expandedWidth - collapsedImageSize) * progress;
 
-    final double expandedTop = 50.h;
+    final double expandedTop = 0.0; // Start at the very top of the screen
     final double collapsedTop = topPadding + (minExtent - topPadding - collapsedImageSize) / 2;
     final double currentTop = expandedTop - (expandedTop - collapsedTop) * progress;
 
@@ -703,7 +704,7 @@ class _RecipeDetailHeaderDelegate extends SliverPersistentHeaderDelegate {
     final double collapsedLeft = 48.w; 
     final double currentLeft = expandedLeft - (expandedLeft - collapsedLeft) * progress;
 
-    final double expandedRadius = 28.r;
+    final double expandedRadius = 0.0; // Sharp edges for full width look
     final double collapsedRadius = 8.r;
     final double currentRadius = expandedRadius - (expandedRadius - collapsedRadius) * progress;
 
@@ -714,19 +715,19 @@ class _RecipeDetailHeaderDelegate extends SliverPersistentHeaderDelegate {
       child: Stack(
         fit: StackFit.expand,
         children: [
+          // Image
           Positioned(
             top: currentTop,
             left: currentLeft,
             width: currentImageWidth,
             height: currentImageHeight,
             child: ClipRRect(
-              borderRadius: progress > 0.0 
-                ? BorderRadius.circular(currentRadius) 
-                : BorderRadius.vertical(bottom: Radius.circular(expandedRadius)),
+              borderRadius: BorderRadius.circular(currentRadius),
               child: _buildImage(img, currentImageWidth, currentImageHeight, progress),
             ),
           ),
 
+          // Collapsed Title in AppBar
           if (titleOpacity > 0)
             Positioned(
               left: collapsedLeft + collapsedImageSize + 12.w,
@@ -752,6 +753,7 @@ class _RecipeDetailHeaderDelegate extends SliverPersistentHeaderDelegate {
               ),
             ),
 
+          // AppBar Controls (Back, Share, etc.)
           Positioned(
             top: topPadding,
             left: 0,
@@ -762,70 +764,50 @@ class _RecipeDetailHeaderDelegate extends SliverPersistentHeaderDelegate {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
+                  // Back button
                   GestureDetector(
                     onTap: () => Navigator.pop(context),
                     child: Container(
                       width: 32.w,
                       height: 32.w,
                       decoration: BoxDecoration(
-                        color: const Color(0xFFF9FAFB).withOpacity(progress),
+                        color: progress > 0.2 
+                          ? const Color(0xFFF9FAFB).withOpacity(progress)
+                          : Colors.black12,
                         shape: BoxShape.circle,
                       ),
                       alignment: Alignment.center,
-                      child: const Icon(
+                      child: Icon(
                         Icons.arrow_back_rounded,
                         size: 20,
-                        color: Color(0xFF1A1A1A),
+                        color: progress > 0.5 ? const Color(0xFF1A1A1A) : Colors.white,
                       ),
                     ),
                   ),
+
+                  // Actions
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      if (!isPreview) ...[
-                        Opacity(
-                          opacity: titleOpacity,
-                          child: GestureDetector(
-                            onTap: onToggleFavorite,
-                            child: Container(
-                              width: 32.w,
-                              height: 32.w,
-                              decoration: BoxDecoration(
-                                color: isFavorite
-                                    ? const Color(0xFFCC3333).withOpacity(0.1)
-                                    : const Color(0xFFF9FAFB).withOpacity(progress),
-                                shape: BoxShape.circle,
-                              ),
-                              child: Icon(
-                                isFavorite
-                                    ? Icons.favorite_rounded
-                                    : Icons.favorite_border_rounded,
-                                color: isFavorite
-                                    ? const Color(0xFFCC3333)
-                                    : const Color(0xFF1A1A1A),
-                                size: 20,
-                              ),
-                            ),
-                          ),
-                        ),
-                        SizedBox(width: 8.w),
-                      ],
+                      // Share button (or validate if preview)
                       GestureDetector(
                         onTap: isPreview ? onValidate : onShare,
                         child: Container(
                           width: 32.w,
                           height: 32.w,
                           decoration: BoxDecoration(
-                            color: const Color(0xFFF9FAFB).withOpacity(progress),
+                            color: progress > 0.2 
+                              ? const Color(0xFFF9FAFB).withOpacity(progress)
+                              : Colors.black12,
                             shape: BoxShape.circle,
                           ),
                           alignment: Alignment.center,
                           child: Icon(
                             isPreview ? Icons.check_circle_rounded : Icons.share_outlined,
-                            size: 20,
+                            size: 18,
                             color: isPreview 
                               ? const Color(0xFF27AE60) 
-                              : const Color(0xFF1A1A1A),
+                              : (progress > 0.5 ? const Color(0xFF1A1A1A) : Colors.white),
                           ),
                         ),
                       ),
@@ -841,7 +823,7 @@ class _RecipeDetailHeaderDelegate extends SliverPersistentHeaderDelegate {
   }
 
   Widget _buildImage(String path, double width, double height, double progress) {
-    final fit = progress > 0 ? BoxFit.cover : BoxFit.contain;
+    final fit = BoxFit.cover;
     
     if (path.isEmpty) {
       return Image.asset(

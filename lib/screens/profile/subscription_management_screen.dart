@@ -60,8 +60,8 @@ class _SubscriptionManagementScreenState
       setState(() {
         _products = products;
         for (var p in products) {
-          if (p.id == 'cooked_premium_monthly') _monthlyPrice = p.price;
-          if (p.id == 'cooked_premium_yearly') _yearlyPrice = p.price;
+          if (p.id == 'monthly_sub') _monthlyPrice = p.price;
+          if (p.id == 'yearly_sub') _yearlyPrice = p.price;
         }
       });
     }
@@ -96,7 +96,9 @@ class _SubscriptionManagementScreenState
 
   String _getTimeRemaining() {
     if (_subscription == null) return '';
-    final endDate = DateTime.parse(_subscription!['endDate']);
+    final endDateStr = _subscription!['endDate'];
+    if (endDateStr == null) return 'No active subscription';
+    final endDate = DateTime.parse(endDateStr);
     final now = DateTime.now();
     final difference = endDate.difference(now);
 
@@ -113,8 +115,12 @@ class _SubscriptionManagementScreenState
 
   double _getProgress() {
     if (_subscription == null) return 0;
-    final startDate = DateTime.parse(_subscription!['startDate']);
-    final endDate = DateTime.parse(_subscription!['endDate']);
+    final startDateStr = _subscription!['startDate'];
+    final endDateStr = _subscription!['endDate'];
+    if (startDateStr == null || endDateStr == null) return 0;
+    
+    final startDate = DateTime.parse(startDateStr);
+    final endDate = DateTime.parse(endDateStr);
     final now = DateTime.now();
 
     final total = endDate.difference(startDate).inSeconds;
@@ -427,74 +433,99 @@ class _SubscriptionManagementScreenState
   }
 
   Widget _buildHistoryCard(SubscriptionPayment payment) {
+    final isSuccess = payment.status == 'SUCCESS';
+    
     return Container(
-      margin: EdgeInsets.only(bottom: 12.h),
-      padding: EdgeInsets.all(16.r),
+      margin: EdgeInsets.only(bottom: 16.h),
+      padding: EdgeInsets.all(20.r),
       decoration: BoxDecoration(
-        color: const Color(0xFFF9FAFB),
-        borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
+        color: const Color(0xFF161616),
+        borderRadius: BorderRadius.circular(20.r),
+        border: Border.all(color: const Color(0xFF222222)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.2),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: Column(
         children: [
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Container(
-                padding: EdgeInsets.all(10.r),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12.r),
-                  border: Border.all(color: const Color(0xFFE5E7EB)),
-                ),
-                child: Icon(
-                  Icons.receipt_long_rounded,
-                  color: const Color(0xFF6B7280),
-                  size: 20.sp,
-                ),
-              ),
-              SizedBox(width: 16.w),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              Row(
                 children: [
-                  Text(
-                    '${payment.planType} Plan',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16.sp,
+                  Container(
+                    padding: EdgeInsets.all(8.r),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.05),
+                      borderRadius: BorderRadius.circular(10.r),
+                    ),
+                    child: Icon(
+                      Icons.account_balance_wallet_rounded,
+                      color: const Color(0xFFC83A2D),
+                      size: 18.sp,
                     ),
                   ),
-                  SizedBox(height: 4.h),
-                  Text(
-                    _formatDate(payment.createdAt.toIso8601String()),
-                    style: TextStyle(
-                      color: const Color(0xFF6B7280),
-                      fontSize: 13.sp,
-                    ),
+                  SizedBox(width: 12.w),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        payment.planType,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 15.sp,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                      Text(
+                        _formatDate(payment.createdAt.toIso8601String()),
+                        style: TextStyle(
+                          color: Colors.white38,
+                          fontSize: 12.sp,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+                decoration: BoxDecoration(
+                  color: isSuccess ? Colors.green.withOpacity(0.1) : Colors.red.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8.r),
+                ),
+                child: Text(
+                  isSuccess ? 'RENEWAL' : 'FAILED',
+                  style: TextStyle(
+                    color: isSuccess ? Colors.green : Colors.red,
+                    fontSize: 10.sp,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
             ],
           ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
+          SizedBox(height: 16.h),
+          Divider(color: Colors.white.withOpacity(0.05), height: 1),
+          SizedBox(height: 16.h),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
+              Text(
+                'Revenue',
+                style: TextStyle(color: Colors.white38, fontSize: 13.sp),
+              ),
               Text(
                 '\$${payment.amount.toStringAsFixed(2)}',
                 style: TextStyle(
-                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w900,
                   fontSize: 16.sp,
-                ),
-              ),
-              SizedBox(height: 4.h),
-              Text(
-                payment.status,
-                style: TextStyle(
-                  color: payment.status == 'SUCCESS'
-                      ? Colors.green
-                      : Colors.red,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12.sp,
                 ),
               ),
             ],
