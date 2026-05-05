@@ -67,11 +67,8 @@ jobs:
         export CLEAN_KEY_ID=$(echo "$API_KEY_ID" | tr -d ' ')
         export CLEAN_ISSUER_ID=$(echo "$API_ISSUER_ID" | tr -d ' ')
 
-        # Créer le dossier
-        mkdir -p ~/private_keys
-        
-        # Utiliser Python pour écrire la clé (version stable une-ligne)
-        python3 -c "import os; f=open(os.path.expanduser('~/private_keys/AuthKey_'+os.environ['CLEAN_KEY_ID']+'.p8'), 'w'); f.write(os.environ['API_PRIVATE_KEY']); f.close()"
+        # Utiliser Python pour nettoyer et écrire la clé (version stable une-ligne ultra-robuste)
+        python3 -c "import os; k=os.environ['API_PRIVATE_KEY']; ki=os.environ['CLEAN_KEY_ID']; ck='\n'.join([l.strip() for l in k.replace('\r','').split('\n') if l.strip()]); [ (os.makedirs(os.path.expanduser(p), exist_ok=True), open(os.path.expanduser(f'{p}/AuthKey_{ki}.p8'), 'w').write(ck+'\n')) for p in ['~/private_keys', './private_keys'] ]"
 
         chmod 700 ~/private_keys
         chmod 600 ~/private_keys/AuthKey_$CLEAN_KEY_ID.p8
