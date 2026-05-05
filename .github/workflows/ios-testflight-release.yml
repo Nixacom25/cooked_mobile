@@ -50,13 +50,25 @@ jobs:
       run: flutter build ipa --release --export-options-plist=ios/ExportOptions.plist
 
     - name: Upload to TestFlight
-      uses: apple-actions/upload-testflight-build@v1
-      with:
-        app-path: build/ios/ipa/Runner.ipa  # Chemin direct
-        issuer-id: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
-        api-key-id: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
-        api-private-key: ${{ secrets.APP_STORE_CONNECT_KEY_CONTENT }} # Correction du nom
+      env:
+        API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+        API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+        API_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_KEY_CONTENT }}
+      run: |
+        # Trouver le fichier IPA (il peut s'appeler cooked.ipa ou Runner.ipa)
+        IPA_PATH=$(find build/ios/ipa -name "*.ipa" | head -n 1)
+        if [ -z "$IPA_PATH" ]; then
+          echo "Erreur : Aucun fichier .ipa trouvé dans build/ios/ipa"
+          exit 1
+        fi
+        echo "Fichier IPA trouvé : $IPA_PATH"
 
+        # Créer le dossier pour la clé privée (requis par xcrun altool)
+        mkdir -p ~/.private_keys
+        echo "$API_PRIVATE_KEY" > ~/.private_keys/AuthKey_$API_KEY_ID.p8
+
+        # Upload direct via xcrun altool
+        xcrun altool --upload-app --type ios --file "$IPA_PATH" --apiKey "$API_KEY_ID" --apiIssuer "$API_ISSUER_ID"
 
     - name: Upload IPA Artifact
       uses: actions/upload-artifact@v4
