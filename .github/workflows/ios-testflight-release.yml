@@ -49,6 +49,14 @@ jobs:
     - name: Build IPA
       run: flutter build ipa --release --export-options-plist=ios/ExportOptions.plist
 
+    - name: Upload to TestFlight
+      uses: apple-actions/upload-testflight-build@v1
+      with:
+        app-path: build/ios/ipa/*.ipa
+        issuer-id: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+        api-key-id: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+        api-key-content: ${{ secrets.APP_STORE_CONNECT_KEY_CONTENT }}
+
     - name: Upload IPA Artifact
       uses: actions/upload-artifact@v4
       with:
