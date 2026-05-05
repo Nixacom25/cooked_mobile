@@ -65,7 +65,8 @@ jobs:
 
         # Créer le dossier pour la clé privée (SANS le point, chemin officiel Apple)
         mkdir -p ~/private_keys
-        printf "%s" "$API_PRIVATE_KEY" > ~/private_keys/AuthKey_$API_KEY_ID.p8
+        # Décoder la clé API depuis le Base64
+        echo -n "$API_PRIVATE_KEY" | base64 --decode > ~/private_keys/AuthKey_$API_KEY_ID.p8
 
         # Upload direct
         xcrun altool --upload-app --type ios --file "$IPA_PATH" --apiKey "$API_KEY_ID" --apiIssuer "$API_ISSUER_ID"
