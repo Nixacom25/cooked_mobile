@@ -69,12 +69,7 @@ jobs:
 
         # Créer le dossier et la clé
         mkdir -p ~/private_keys
-        cat <<EOF > ~/private_keys/AuthKey_$CLEAN_KEY_ID.p8
-        $API_PRIVATE_KEY
-        EOF
-        
-        # Nettoyer les éventuels espaces de début de ligne ajoutés par le heredoc indenté
-        sed -i 's/^[[:space:]]*//' ~/private_keys/AuthKey_$CLEAN_KEY_ID.p8
+        printf "%s" "$API_PRIVATE_KEY" > ~/private_keys/AuthKey_$CLEAN_KEY_ID.p8
 
         chmod 700 ~/private_keys
         chmod 600 ~/private_keys/AuthKey_$CLEAN_KEY_ID.p8
