@@ -32,7 +32,7 @@ jobs:
 
         # import certificate to keychain
         security import $CERTIFICATE_PATH -P "$P12_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
-        security list-keychain -d user -s $KEYCHAIN_PATH
+        security list-chain -d user -s $KEYCHAIN_PATH
 
         # apply provisioning profile
         mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
@@ -55,19 +55,19 @@ jobs:
         API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
         API_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_KEY_CONTENT }}
       run: |
-        # Trouver le fichier IPA (il peut s'appeler cooked.ipa ou Runner.ipa)
+        # Trouver le fichier IPA
         IPA_PATH=$(find build/ios/ipa -name "*.ipa" | head -n 1)
         if [ -z "$IPA_PATH" ]; then
-          echo "Erreur : Aucun fichier .ipa trouvé dans build/ios/ipa"
+          echo "Erreur : Aucun fichier .ipa trouvé"
           exit 1
         fi
-        echo "Fichier IPA trouvé : $IPA_PATH"
+        echo "IPA : $IPA_PATH"
 
-        # Créer le dossier pour la clé privée (requis par xcrun altool)
-        mkdir -p ~/.private_keys
-        echo "$API_PRIVATE_KEY" > ~/.private_keys/AuthKey_$API_KEY_ID.p8
+        # Créer le dossier pour la clé privée (SANS le point, chemin officiel Apple)
+        mkdir -p ~/private_keys
+        printf "%s" "$API_PRIVATE_KEY" > ~/private_keys/AuthKey_$API_KEY_ID.p8
 
-        # Upload direct via xcrun altool
+        # Upload direct
         xcrun altool --upload-app --type ios --file "$IPA_PATH" --apiKey "$API_KEY_ID" --apiIssuer "$API_ISSUER_ID"
 
     - name: Upload IPA Artifact
