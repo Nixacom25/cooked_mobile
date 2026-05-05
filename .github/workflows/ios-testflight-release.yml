@@ -68,10 +68,23 @@ jobs:
         export CLEAN_ISSUER_ID=$(echo "$API_ISSUER_ID" | tr -d ' ')
 
         # Utiliser Python pour nettoyer et écrire la clé (version stable une-ligne ultra-robuste)
-        python3 -c "import os; k=os.environ['API_PRIVATE_KEY']; ki=os.environ['CLEAN_KEY_ID']; ck='\n'.join([l.strip() for l in k.replace('\r','').split('\n') if l.strip()]); [ (os.makedirs(os.path.expanduser(p), exist_ok=True), open(os.path.expanduser(f'{p}/AuthKey_{ki}.p8'), 'w').write(ck+'\n')) for p in ['~/private_keys', './private_keys'] ]"
+        python3 - <<'EOF'
+        import os
 
-        chmod 700 ~/private_keys
-        chmod 600 ~/private_keys/AuthKey_$CLEAN_KEY_ID.p8
+        key = os.environ["API_PRIVATE_KEY"]
+        key_id = os.environ["CLEAN_KEY_ID"]
+
+        # Cas GitHub Secrets: convertir les \n en vraies lignes
+        key = key.replace("\\n", "\n").strip()
+
+        os.makedirs("./private_keys", exist_ok=True)
+
+        with open(f"./private_keys/AuthKey_{key_id}.p8", "w") as f:
+          f.write(key + "\n")
+        EOF
+
+        chmod 700 ./private_keys
+        chmod 600 ./private_keys/AuthKey_$CLEAN_KEY_ID.p8
 
         # Upload direct
         xcrun altool --upload-app --type ios --file "$IPA_PATH" --apiKey "$CLEAN_KEY_ID" --apiIssuer "$CLEAN_ISSUER_ID"
