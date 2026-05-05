@@ -63,9 +63,9 @@ jobs:
         fi
         echo "IPA : $IPA_PATH"
 
-        # Nettoyer les IDs
-        CLEAN_KEY_ID=$(echo "$API_KEY_ID" | tr -d ' ')
-        CLEAN_ISSUER_ID=$(echo "$API_ISSUER_ID" | tr -d ' ')
+        # Nettoyer les IDs et les exporter pour Python
+        export CLEAN_KEY_ID=$(echo "$API_KEY_ID" | tr -d ' ')
+        export CLEAN_ISSUER_ID=$(echo "$API_ISSUER_ID" | tr -d ' ')
 
         # Créer le dossier
         mkdir -p ~/private_keys
