@@ -27,9 +27,11 @@ jobs:
       run: flutter pub get
 
     - name: Decode Keystore
+      env:
+        ENCODED_KEYSTORE: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
       run: |
-        # Nettoyage ultra-robuste du Base64 avant décodage (enlève espaces et retours ligne)
-        echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | tr -d '[:space:]' | base64 --decode > android/app/upload-keystore.jks
+        # Utilisation de printf + variable d'env pour éviter toute corruption par le shell
+        printf "%s" "$ENCODED_KEYSTORE" | tr -d '[:space:]' | base64 --decode > android/app/upload-keystore.jks
 
     - name: Build App Bundle
       env:
