@@ -1,7 +1,9 @@
 name: iOS TestFlight Release
 
 on:
-  workflow_dispatch: # Permet de lancer le build manuellement
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
 
 jobs:
   build:

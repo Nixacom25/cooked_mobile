@@ -44,5 +44,11 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
+
 # ios setup
-/ios_setup
+/ios_setup/
+
+# Android security
+/android/app/*.json
+/android/app/*.jks
+/android/key.properties
