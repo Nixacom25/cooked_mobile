@@ -40,6 +40,20 @@ android {
                 storePassword = keyProps.getProperty("storePassword")
                 keyAlias = keyProps.getProperty("keyAlias")
                 keyPassword = keyProps.getProperty("keyPassword")
+            } else {
+                // Fallback for CI/CD (GitHub Actions)
+                val keystorePath = System.getenv("ANDROID_KEYSTORE_PATH")
+                if (keystorePath != null) {
+                    // Utiliser le chemin absolu du projet pour éviter les erreurs de chemin relatif
+                    storeFile = rootProject.file("app/$keystorePath")
+                    storePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD")
+                    keyAlias = System.getenv("ANDROID_KEY_ALIAS")
+                    keyPassword = System.getenv("ANDROID_KEY_PASSWORD")
+                    
+                    if (storePassword == null || keyAlias == null || keyPassword == null) {
+                        println("❌ ERREUR : Variables de signature manquantes dans l'environnement CI")
+                    }
+                }
             }
         }
     }
