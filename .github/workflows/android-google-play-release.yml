@@ -30,8 +30,15 @@ jobs:
       env:
         ENCODED_KEYSTORE: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
       run: |
-        # Utilisation de printf + variable d'env pour éviter toute corruption par le shell
         printf "%s" "$ENCODED_KEYSTORE" | tr -d '[:space:]' | base64 --decode > android/app/upload-keystore.jks
+        
+        # 🔍 DIAGNOSTIC : Vérifier si le fichier est un Keystore valide
+        echo "Vérification du fichier généré..."
+        ls -l android/app/upload-keystore.jks
+        file android/app/upload-keystore.jks
+        
+        # Tester avec keytool (sans afficher le mot de passe)
+        keytool -list -keystore android/app/upload-keystore.jks -storepass "${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" || echo "❌ LE FICHIER N'EST PAS UN KEYSTORE VALIDE"
 
     - name: Build App Bundle
       env:
