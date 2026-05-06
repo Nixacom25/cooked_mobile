@@ -28,7 +28,8 @@ jobs:
 
     - name: Decode Keystore
       run: |
-        echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > android/app/upload-keystore.jks
+        # Nettoyage ultra-robuste du Base64 avant décodage (enlève espaces et retours ligne)
+        echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | tr -d '[:space:]' | base64 --decode > android/app/upload-keystore.jks
 
     - name: Build App Bundle
       env:

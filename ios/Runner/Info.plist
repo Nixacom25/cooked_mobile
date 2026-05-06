@@ -62,5 +62,7 @@
 		<string>Nous avons besoin d'accéder à votre caméra pour scanner vos ingrédients et vous proposer des recettes.</string>
 		<key>NSPhotoLibraryUsageDescription</key>
 		<string>Nous avons besoin d'accéder à votre galerie pour que vous puissiez importer des photos de vos ingrédients.</string>
+		<key>ITSAppUsesNonExemptEncryption</key>
+		<false/>
 	</dict>
 </plist>
