@@ -50,7 +50,7 @@ jobs:
         packageName: com.cookedapp.app
         releaseFiles: build/app/outputs/bundle/release/app-release.aab
         track: internal
-        status: completed
+        status: draft
 
     - name: Upload Artifact
       uses: actions/upload-artifact@v4
