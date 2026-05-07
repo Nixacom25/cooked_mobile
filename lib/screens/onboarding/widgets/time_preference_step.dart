@@ -156,7 +156,7 @@ class _TimePreferenceStepState extends State<TimePreferenceStep> {
                 ),
               ),
             );
-          }).toList(),
+          }),
           SizedBox(height: 32.h),
         ],
       ),

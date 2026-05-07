@@ -32,6 +32,7 @@ import 'package:in_app_purchase/in_app_purchase.dart';
 import '../../core/utils/error_helper.dart';
 
 import '../../core/widgets/terms_validation_modal.dart';
+import 'onboarding_storage.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -41,7 +42,7 @@ class OnboardingScreen extends StatefulWidget {
 }
 
 class _OnboardingScreenState extends State<OnboardingScreen> {
-  final PageController _pageController = PageController();
+  late PageController _pageController;
   int _currentPage = 0;
   bool _isLoading = false;
 
@@ -71,19 +72,21 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   String _spiceLevel = 'Medium heat';
   String _cookingSkill = 'Home Cook';
   String _cookingTime = '15–30 minutes';
-  String _cookingFrequency = '2–3 times a week';
+  final String _cookingFrequency = '2–3 times a week';
   String _cookingTarget = '3–4 people';
   List<String> _favoriteCuisines = [];
   List<String> _kitchenAppliances = [];
   String _mealPlanningStyle = 'Weekly meal plan';
   List<String> _notificationPreferences = [];
   List<String> _onboardingGoals = [];
-  int _rating = 0;
-  String _feedback = '';
+  final int _rating = 0;
+  final String _feedback = '';
 
   @override
   void initState() {
     super.initState();
+    _pageController = PageController(); // Initial fallback
+    _restoreProgress();
     _loadUser();
     _initIap();
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -173,6 +176,103 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     setState(() {
       _currentPage = page;
     });
+    _saveProgress();
+  }
+
+  Future<void> _saveProgress() async {
+    final data = {
+      'email': _email,
+      'password': _password,
+      'acceptedTerms': _acceptedTerms,
+      'firstName': _firstName,
+      'lastName': _lastName,
+      'phone': _phone,
+      'alternativeRegion': _alternativeRegion,
+      'measurementSystem': _measurementSystem,
+      'source': _source,
+      'otherSource': _otherSource,
+      'language': _language,
+      'country': _country,
+      'selectedDiet': _selectedDiet,
+      'selectedAllergy': _selectedAllergy,
+      'selectedDislikes': _selectedDislikes,
+      'flavorDna': _flavorDna,
+      'spiceLevel': _spiceLevel,
+      'cookingSkill': _cookingSkill,
+      'cookingTime': _cookingTime,
+      'cookingTarget': _cookingTarget,
+      'favoriteCuisines': _favoriteCuisines,
+      'kitchenAppliances': _kitchenAppliances,
+      'mealPlanningStyle': _mealPlanningStyle,
+      'notificationPreferences': _notificationPreferences,
+      'onboardingGoals': _onboardingGoals,
+    };
+    await OnboardingStorage.saveProgress(_currentPage, data);
+  }
+
+  Future<void> _restoreProgress() async {
+    final progress = await OnboardingStorage.loadProgress();
+    if (progress == null) return;
+
+    if (!mounted) return;
+
+    setState(() {
+      _currentPage = progress['step'] ?? 0;
+      _email = progress['email'] ?? '';
+      _password = progress['password'] ?? '';
+      _acceptedTerms = progress['acceptedTerms'] ?? false;
+      _firstName = progress['firstName'] ?? '';
+      _lastName = progress['lastName'] ?? '';
+      _phone = progress['phone'] ?? '';
+      _alternativeRegion = progress['alternativeRegion'] ?? 'US United States';
+      _measurementSystem = progress['measurementSystem'] ?? 'Imperial';
+      _source = progress['source'];
+      _otherSource = progress['otherSource'];
+      _language = progress['language'] ?? 'US English';
+      _country = progress['country'] ?? 'US United States';
+      
+      if (progress['selectedDiet'] != null) {
+        _selectedDiet = (progress['selectedDiet'] as List).cast<String>().toSet();
+      }
+      if (progress['selectedAllergy'] != null) {
+        _selectedAllergy = (progress['selectedAllergy'] as List).cast<String>().toSet();
+      }
+      if (progress['selectedDislikes'] != null) {
+        _selectedDislikes = (progress['selectedDislikes'] as List).cast<String>().toSet();
+      }
+      if (progress['flavorDna'] != null) {
+        _flavorDna = Map<String, int>.from(progress['flavorDna']);
+      }
+      
+      _spiceLevel = progress['spiceLevel'] ?? 'Medium heat';
+      _cookingSkill = progress['cookingSkill'] ?? 'Home Cook';
+      _cookingTime = progress['cookingTime'] ?? '15–30 minutes';
+      _cookingTarget = progress['cookingTarget'] ?? '3–4 people';
+      
+      if (progress['favoriteCuisines'] != null) {
+        _favoriteCuisines = (progress['favoriteCuisines'] as List).cast<String>();
+      }
+      if (progress['kitchenAppliances'] != null) {
+        _kitchenAppliances = (progress['kitchenAppliances'] as List).cast<String>();
+      }
+      
+      _mealPlanningStyle = progress['mealPlanningStyle'] ?? 'Weekly meal plan';
+      
+      if (progress['notificationPreferences'] != null) {
+        _notificationPreferences = (progress['notificationPreferences'] as List).cast<String>();
+      }
+      if (progress['onboardingGoals'] != null) {
+        _onboardingGoals = (progress['onboardingGoals'] as List).cast<String>();
+      }
+    });
+
+    if (_currentPage > 0) {
+      if (_pageController.hasClients) {
+        _pageController.jumpToPage(_currentPage);
+      } else {
+        _pageController = PageController(initialPage: _currentPage);
+      }
+    }
   }
 
   int _getEffectiveStep() {
@@ -403,6 +503,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       // Reset tutorial for new accounts
       if (!isGuest) {
         TutorialService.instance.reset();
+        await OnboardingStorage.clear();
       }
 
       // Navigation logic ONLY after success
@@ -444,9 +545,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     return Scaffold(
       backgroundColor: Colors.transparent,
       resizeToAvoidBottomInset: false,
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
+      body: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
           Image.asset('assets/images/fond.png', fit: BoxFit.cover),
           SafeArea(
             child: Column(
@@ -500,16 +603,16 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           ),
                         ),
                       ),
-                      SizedBox(width: 8.w),
-                      Text(
-                        '${_getEffectiveStep()}/20',
-                        style: TextStyle(
-                          fontSize: 14.sp,
-                          fontWeight: FontWeight.w700,
-                          color: const Color(0xFF374151),
-                          fontFamily: 'SF Pro',
-                        ),
-                      ),
+                      // SizedBox(width: 8.w),
+                      // Text(
+                      //   '${_getEffectiveStep()}/20',
+                      //   style: TextStyle(
+                      //     fontSize: 14.sp,
+                      //     fontWeight: FontWeight.w700,
+                      //     color: const Color(0xFF374151),
+                      //     fontFamily: 'SF Pro',
+                      //   ),
+                      // ),
                       SizedBox(width: 8.w),
                     ],
                   ),
@@ -830,6 +933,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           ),
         ],
       ),
-    );
-  }
+    ),
+  );
+}
 }

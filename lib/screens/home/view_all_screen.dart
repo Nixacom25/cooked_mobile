@@ -162,9 +162,9 @@ class _ViewAllScreenState extends State<ViewAllScreen> {
 
   Widget _buildSubtitleBadge(ViewAllType type) {
     ValueNotifier<List<Recipe>?>? notifier;
-    if (type == ViewAllType.savedRecipes)
+    if (type == ViewAllType.savedRecipes) {
       notifier = RecipeService.instance.myRecipesNotifier;
-    else if (type == ViewAllType.favorites)
+    } else if (type == ViewAllType.favorites)
       notifier = RecipeService.instance.favoriteRecipesNotifier;
     else if (type == ViewAllType.imports)
       notifier = RecipeService.instance.recentImportsNotifier;

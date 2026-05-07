@@ -92,7 +92,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             child: Stack(
               children: [
                 // Red background with pattern overlay
-                Container(
+                SizedBox(
                   height: 170.h,
                   width: double.infinity,
                   child: ClipRRect(

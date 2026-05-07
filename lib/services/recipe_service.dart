@@ -98,7 +98,10 @@ class RecipeService {
     }
   }
 
-  Future<List<Recipe>> getMyRecipes() async {
+  Future<List<Recipe>> getMyRecipes({bool forceRefresh = false}) async {
+    if (!forceRefresh && myRecipesNotifier.value != null) {
+      return myRecipesNotifier.value!;
+    }
     final url = Uri.parse('${ApiConfig.baseUrl}/recipes');
     final response = await http.get(url, headers: await _getHeaders());
 
@@ -158,7 +161,7 @@ class RecipeService {
 
     if (response.statusCode == 200 || response.statusCode == 201) {
       // Trigger background refresh of recipes list
-      getMyRecipes().then((_) => null).catchError((_) => null);
+      getMyRecipes(forceRefresh: true).then((_) => null).catchError((_) => null);
       return Recipe.fromJson(jsonDecode(response.body));
     } else {
       print('Failed to save recipe: ${response.statusCode}');
@@ -176,8 +179,8 @@ class RecipeService {
     }
 
     // Refresh local state in background
-    getMyRecipes().then((_) => null).catchError((_) => null);
-    getFavoriteRecipes(size: 100).then((_) => null).catchError((_) => null);
+    getMyRecipes(forceRefresh: true).then((_) => null).catchError((_) => null);
+    getFavoriteRecipes(size: 100, forceRefresh: true).then((_) => null).catchError((_) => null);
   }
 
   Future<List<Recipe>> getExploreRecipes({String? cuisine, String? category, int page = 0, int size = 10}) async {
@@ -221,7 +224,10 @@ class RecipeService {
     }
   }
 
-  Future<List<Recipe>> getFavoriteRecipes({int page = 0, int size = 10}) async {
+  Future<List<Recipe>> getFavoriteRecipes({int page = 0, int size = 10, bool forceRefresh = false}) async {
+    if (!forceRefresh && page == 0 && favoriteRecipesNotifier.value != null) {
+      return favoriteRecipesNotifier.value!;
+    }
     final url = Uri.parse(
       '${ApiConfig.baseUrl}/recipes/favorites?page=$page&size=$size',
     );
@@ -289,8 +295,8 @@ class RecipeService {
     );
 
     if (response.statusCode == 200) {
-      getMyRecipes().then((_) => null).catchError((_) => null);
-      getRecentImports().then((_) => null).catchError((_) => null);
+      getMyRecipes(forceRefresh: true).then((_) => null).catchError((_) => null);
+      getRecentImports(forceRefresh: true).then((_) => null).catchError((_) => null);
       return Recipe.fromJson(jsonDecode(response.body));
     } else {
       final error = jsonDecode(response.body)['message'] ?? 'Import failed';
@@ -335,7 +341,10 @@ class RecipeService {
     }
   }
 
-  Future<List<Recipe>> getRecentImports({int page = 0, int size = 6}) async {
+  Future<List<Recipe>> getRecentImports({int page = 0, int size = 6, bool forceRefresh = false}) async {
+    if (!forceRefresh && page == 0 && recentImportsNotifier.value != null) {
+      return recentImportsNotifier.value!;
+    }
     final url = Uri.parse(
       '${ApiConfig.baseUrl}/recipes/imports?page=$page&size=$size',
     );
@@ -358,7 +367,7 @@ class RecipeService {
 
     if (response.statusCode == 200) {
       // Trigger background refresh 
-      getMyRecipes().then((_) => null).catchError((_) => null);
+      getMyRecipes(forceRefresh: true).then((_) => null).catchError((_) => null);
       return Recipe.fromJson(jsonDecode(response.body));
     } else {
       throw Exception('Failed to validate recipe.');

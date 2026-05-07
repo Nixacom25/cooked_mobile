@@ -12,6 +12,7 @@ import '../core/utils/error_helper.dart';
 import '../services/ingredient_service.dart';
 import '../services/recipe_service.dart';
 import '../widgets/recipe_card.dart';
+import '../widgets/add_to_cookbook_sheet.dart';
 import '../models/recipe.dart';
 import '../core/widgets/ios_toast.dart';
 import '../core/services/tutorial_service.dart';
@@ -96,6 +97,15 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
     _ingCtrl.addListener(_onIngChanged);
     _fetchSavedIngredients();
     _fetchRecentIngredients();
+    
+    // Sync saved recipes status
+    RecipeService.instance.myRecipesNotifier.addListener(_onRecipesChanged);
+    _onRecipesChanged();
+    // Pre-fetch if null to ensure we have the data
+    if (RecipeService.instance.myRecipesNotifier.value == null) {
+      RecipeService.instance.getMyRecipes().catchError((_) => []);
+    }
+
     if (widget.isActiveNotifier.value) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _initCamera());
     } else {
@@ -123,6 +133,17 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
       final items = await IngredientService.instance.getRecentIngredients();
       if (mounted) setState(() => _recentIngredients = items);
     } catch (_) {}
+  }
+
+  void _onRecipesChanged() {
+    if (!mounted) return;
+    final recipes = RecipeService.instance.myRecipesNotifier.value;
+    if (recipes != null) {
+      setState(() {
+        _savedRecipeNames.clear();
+        _savedRecipeNames.addAll(recipes.map((r) => r.name));
+      });
+    }
   }
 
   Future<void> _fetchSavedIngredients() async {
@@ -474,6 +495,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
   @override
   void dispose() {
     widget.isActiveNotifier.removeListener(_onActiveStateChanged);
+    RecipeService.instance.myRecipesNotifier.removeListener(_onRecipesChanged);
     _disposeCamera();
     _ingCtrl.dispose();
     _analysisTimer?.cancel();
@@ -574,7 +596,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
     if (_showingSuccessMessage && _capturedImagePath != null) {
       return Stack(
         children: [
-          Container(
+          SizedBox(
             width: double.infinity,
             height: double.infinity,
             child: Image.file(
@@ -796,7 +818,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
 
   Widget _buildScanBrackets() {
     return Center(
-      child: Container(
+      child: SizedBox(
         width: 300.w,
         height: 250.h,
         child: CustomPaint(
@@ -1316,7 +1338,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
         GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          itemCount: _recipes.length > 0
+          itemCount: _recipes.isNotEmpty
               ? (_recipes.length > 10 ? 10 : _recipes.length)
               : 4,
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -1333,7 +1355,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
               recipe: recipe,
               useValidationIcon: true,
               isValidated: isSaved,
-              onValidateTap: isSaved ? null : () => _saveGeneratedRecipe(recipe),
+              onValidateTap: () => _saveGeneratedRecipe(recipe),
               onTap: () {
                 Navigator.pushNamed(
                   context,
@@ -1616,27 +1638,28 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
   }
 
   Future<void> _saveGeneratedRecipe(Recipe recipe) async {
-    try {
-      await RecipeService.instance.createRecipe(recipe);
-      if (mounted) {
-        setState(() {
-          _savedRecipeNames.add(recipe.name);
-        });
-        IosToast.show(
-          context,
-          message: "Recipe saved to your collection!",
-          type: ToastType.success,
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        IosToast.show(
-          context,
-          message: "Failed to save recipe: ${e.toString()}",
-          type: ToastType.error,
-        );
-      }
+    final isSaved = _savedRecipeNames.contains(recipe.name);
+    if (isSaved) {
+      IosToast.show(
+        context,
+        message: "This recipe is already present in your recipes",
+        type: ToastType.success,
+      );
+      return;
     }
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => AddToCookbookSheet(
+        recipe: recipe,
+        onSuccess: () {
+          // No need to manually add to _savedRecipeNames here 
+          // because our listener on myRecipesNotifier will handle it.
+        },
+      ),
+    );
   }
 
   Widget _buildSuccessOverlay() {

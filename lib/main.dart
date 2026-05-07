@@ -1,3 +1,4 @@
+import 'package:cooked/services/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart';
@@ -97,37 +98,107 @@ class _CookedAppState extends State<CookedApp> {
             locale: DevicePreview.locale(context),
             builder: DevicePreview.appBuilder,
             navigatorObservers: [routeObserver],
-            routes: {
-              AppRoutes.splash: (_) => const SplashScreen(),
-              AppRoutes.welcome: (_) => const WelcomeScreen(),
-              AppRoutes.login: (_) => const LoginScreen(),
-              AppRoutes.otp: (_) => const OtpScreen(),
-              AppRoutes.success: (_) => const SuccessScreen(),
-              AppRoutes.preferences: (_) => const OnboardingScreen(),
-              AppRoutes.forgotPassword: (_) => const ForgotPasswordScreen(),
-              AppRoutes.forgotOtp: (_) => const ForgotOtpScreen(),
-              AppRoutes.resetPassword: (_) => const ResetPasswordScreen(),
-              AppRoutes.forgotSuccess: (_) => const ForgotSuccessScreen(),
-              AppRoutes.home: (context) {
-                final args =
-                    ModalRoute.of(context)?.settings.arguments
-                        as Map<String, dynamic>?;
-                return HomeScreen(initialTab: args?['initialTab'] ?? 0);
-              },
-              AppRoutes.viewAll: (_) => const ViewAllScreen(),
-              AppRoutes.cookbookDetail: (_) => const CookbookDetailScreen(),
-              AppRoutes.cookbookForm: (_) => const CookbookFormScreen(),
-              AppRoutes.recipeDetail: (_) => const RecipeDetailScreen(),
-              AppRoutes.profile: (_) => const ProfileScreen(),
-              AppRoutes.myAccount: (_) => const MyAccountScreen(),
-              AppRoutes.changePassword: (_) => const ChangePasswordScreen(),
-              AppRoutes.favorites: (_) => const FavoritesScreen(),
-              AppRoutes.activityHistory: (_) => const ActivityHistoryScreen(),
-              AppRoutes.helpCenter: (_) => const HelpCenterScreen(),
-              AppRoutes.editPreferences: (_) => const UserPreferencesScreen(),
-              AppRoutes.subscriptionManagement: (_) =>
-                  const SubscriptionManagementScreen(),
-              AppRoutes.scan: (_) => ScanScreen(isActiveNotifier: ValueNotifier<bool>(true)),
+            onGenerateRoute: (settings) {
+              final isLoggedIn = AuthService.instance.isLoggedIn;
+              final name = settings.name;
+
+              // 🛡️ Navigation Guard
+              if (isLoggedIn) {
+                // If logged in, don't allow going back to auth screens
+                if (name == AppRoutes.welcome || name == AppRoutes.login) {
+                  return MaterialPageRoute(builder: (_) => const HomeScreen());
+                }
+              } else {
+                // If NOT logged in, don't allow going to protected screens
+                if (name == AppRoutes.home || name == AppRoutes.profile) {
+                  return MaterialPageRoute(builder: (_) => const WelcomeScreen());
+                }
+              }
+
+              // Normal Routing
+              Widget builder;
+              switch (name) {
+                case AppRoutes.splash:
+                  builder = const SplashScreen();
+                  break;
+                case AppRoutes.welcome:
+                  builder = const WelcomeScreen();
+                  break;
+                case AppRoutes.login:
+                  builder = const LoginScreen();
+                  break;
+                case AppRoutes.otp:
+                  builder = const OtpScreen();
+                  break;
+                case AppRoutes.success:
+                  builder = const SuccessScreen();
+                  break;
+                case AppRoutes.preferences:
+                  builder = const OnboardingScreen();
+                  break;
+                case AppRoutes.forgotPassword:
+                  builder = const ForgotPasswordScreen();
+                  break;
+                case AppRoutes.forgotOtp:
+                  builder = const ForgotOtpScreen();
+                  break;
+                case AppRoutes.resetPassword:
+                  builder = const ResetPasswordScreen();
+                  break;
+                case AppRoutes.forgotSuccess:
+                  builder = const ForgotSuccessScreen();
+                  break;
+                case AppRoutes.home:
+                  final args = settings.arguments as Map<String, dynamic>?;
+                  builder = HomeScreen(initialTab: args?['initialTab'] ?? 0);
+                  break;
+                case AppRoutes.viewAll:
+                  builder = const ViewAllScreen();
+                  break;
+                case AppRoutes.cookbookDetail:
+                  builder = const CookbookDetailScreen();
+                  break;
+                case AppRoutes.cookbookForm:
+                  builder = const CookbookFormScreen();
+                  break;
+                case AppRoutes.recipeDetail:
+                  builder = const RecipeDetailScreen();
+                  break;
+                case AppRoutes.profile:
+                  builder = const ProfileScreen();
+                  break;
+                case AppRoutes.myAccount:
+                  builder = const MyAccountScreen();
+                  break;
+                case AppRoutes.changePassword:
+                  builder = const ChangePasswordScreen();
+                  break;
+                case AppRoutes.favorites:
+                  builder = const FavoritesScreen();
+                  break;
+                case AppRoutes.activityHistory:
+                  builder = const ActivityHistoryScreen();
+                  break;
+                case AppRoutes.helpCenter:
+                  builder = const HelpCenterScreen();
+                  break;
+                case AppRoutes.editPreferences:
+                  builder = const UserPreferencesScreen();
+                  break;
+                case AppRoutes.subscriptionManagement:
+                  builder = const SubscriptionManagementScreen();
+                  break;
+                case AppRoutes.scan:
+                  builder = ScanScreen(isActiveNotifier: ValueNotifier<bool>(true));
+                  break;
+                default:
+                  builder = const SplashScreen();
+              }
+
+              return MaterialPageRoute(
+                builder: (context) => builder,
+                settings: settings,
+              );
             },
           ),
         );

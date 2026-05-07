@@ -25,8 +25,12 @@ class _ForgotOtpScreenState extends State<ForgotOtpScreen> {
 
   @override
   void dispose() {
-    for (final c in _ctrls) c.dispose();
-    for (final n in _nodes) n.dispose();
+    for (final c in _ctrls) {
+      c.dispose();
+    }
+    for (final n in _nodes) {
+      n.dispose();
+    }
     super.dispose();
   }
 

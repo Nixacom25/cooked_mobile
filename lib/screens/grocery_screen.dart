@@ -237,7 +237,7 @@ class _GroceryScreenState extends State<GroceryScreen> {
                                       ),
                                     ],
                                   );
-                                }).toList(),
+                                }),
                               ],
                             );
                           },

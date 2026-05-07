@@ -19,6 +19,7 @@ import '../../widgets/cookbook_cover.dart';
 import '../../core/widgets/ios_toast.dart';
 import '../../core/utils/error_helper.dart';
 import '../../core/utils/tutorial_helper.dart';
+import '../../widgets/add_to_cookbook_sheet.dart';
 import '../../core/services/tutorial_service.dart';
 import '../../main.dart';
 import '../../services/history_service.dart';
@@ -37,7 +38,7 @@ class _HomeScreenState extends State<HomeScreen>
   late int _currentTab;
   late int _previousTab;
   late bool _navVisible;
-  bool _scrollBusy = false; // debounce guard
+  final bool _scrollBusy = false; // debounce guard
   late final AnimationController _navCtrl;
   late final Animation<Offset> _navSlide;
   final GlobalKey _scanTabKey = GlobalKey();
@@ -379,7 +380,7 @@ class _FloatingBottomNav extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       color: Colors.transparent,
-      padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 10.h),
+      padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 40.h),
       child: Stack(
         clipBehavior: Clip.none,
         alignment: Alignment.topCenter,
@@ -666,22 +667,31 @@ class _HomeTabState extends State<_HomeTab> {
                   ValueListenableBuilder<List<Recipe>?>(
                     valueListenable: RecipeService.instance.myRecipesNotifier,
                     builder: (context, recipes, _) {
-                      final hasAction =
-                          recipes?.any((r) => r.origin != 'SUGGESTED') ?? false;
-
-                      // Show Unified Saved/Suggested Section
-                      final title = hasAction
-                          ? 'Saved Recipes'
-                          : 'Suggested Recipes';
+                      final allRecipes = recipes ?? [];
+                      final savedRecipes = allRecipes.where((r) => r.origin != 'SUGGESTED').toList();
+                      final hasSaved = savedRecipes.isNotEmpty;
 
                       return Column(
                         children: [
-                          SizedBox(height: 30.h),
-                          _SectionRow(
-                            title: title,
+                          if (hasSaved) ...[
+                            SizedBox(height: 30.h),
+                            _SectionRow(
+                              title: 'Saved Recipes',
+                              onViewAll: savedRecipes.length > 6 ? () {
+                                _goViewAll(context, ViewAllType.savedRecipes, 'Saved Recipes');
+                              } : null,
+                            ),
+                            SizedBox(height: 12.h),
+                            _SavedRecipesGrid(
+                              searchQuery: searchQuery,
+                              recipes: savedRecipes,
+                            ),
+                          ],
+                          
+                          _SuggestedRecipesSection(
+                            searchQuery: searchQuery,
+                            isCompact: hasSaved,
                           ),
-                          SizedBox(height: 12.h),
-                          _SavedRecipesGrid(searchQuery: searchQuery),
                         ],
                       );
                     },
@@ -1298,174 +1308,237 @@ class _RecentlyViewedRow extends StatelessWidget {
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
-// SAVED RECIPES (home 2-col grid, uses shared RecipeCard)
+// SAVED RECIPES GRID
 // ══════════════════════════════════════════════════════════════════════════════
-class _SavedRecipesGrid extends StatefulWidget {
+class _SavedRecipesGrid extends StatelessWidget {
   final String searchQuery;
-  const _SavedRecipesGrid({this.searchQuery = ''});
+  final List<Recipe> recipes;
+
+  const _SavedRecipesGrid({
+    required this.searchQuery,
+    required this.recipes,
+  });
+
   @override
-  State<_SavedRecipesGrid> createState() => _SavedRecipesGridState();
+  Widget build(BuildContext context) {
+    List<Recipe> displayList = recipes;
+    if (searchQuery.trim().isNotEmpty) {
+      final query = searchQuery.trim().toLowerCase();
+      displayList = recipes.where((r) => r.name.toLowerCase().contains(query)).toList();
+    }
+
+    if (displayList.isEmpty) return const SizedBox.shrink();
+
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 18.w),
+      child: GridView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        itemCount: displayList.length,
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          mainAxisSpacing: 14.h,
+          crossAxisSpacing: 14.w,
+          childAspectRatio: 0.82,
+        ),
+        itemBuilder: (ctx, i) {
+          final r = displayList[i];
+          return RecipeCard(
+            recipe: r,
+            onHeartTap: () async {
+              try {
+                await RecipeService.instance.toggleFavorite(r.id);
+              } catch (e) {
+                IosToast.show(
+                  ctx,
+                  message: ErrorHelper.getFriendlyMessage(e),
+                  type: ToastType.error,
+                );
+              }
+            },
+            onTap: () async {
+              await Navigator.pushNamed(
+                ctx,
+                AppRoutes.recipeDetail,
+                arguments: {'recipe': r},
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
 }
 
-class _SavedRecipesGridState extends State<_SavedRecipesGrid> {
-  List<Recipe>? _suggestedRecipes;
-  bool _loadingSuggestions = false;
+// ══════════════════════════════════════════════════════════════════════════════
+// SUGGESTED RECIPES SECTION
+// ══════════════════════════════════════════════════════════════════════════════
+class _SuggestedRecipesSection extends StatefulWidget {
+  final String searchQuery;
+  final bool isCompact;
+
+  const _SuggestedRecipesSection({
+    required this.searchQuery,
+    required this.isCompact,
+  });
+
+  @override
+  State<_SuggestedRecipesSection> createState() => _SuggestedRecipesSectionState();
+}
+
+class _SuggestedRecipesSectionState extends State<_SuggestedRecipesSection> {
+  List<Recipe>? _suggestions;
+  bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    if (RecipeService.instance.myRecipesNotifier.value == null) {
-      RecipeService.instance.getMyRecipes();
-    } else {
-      _checkSuggestions();
-    }
-    RecipeService.instance.myRecipesNotifier.addListener(_checkSuggestions);
+    _fetchSuggestions();
+    RecipeService.instance.myRecipesNotifier.addListener(_syncSuggestions);
   }
 
   @override
   void dispose() {
-    RecipeService.instance.myRecipesNotifier.removeListener(_checkSuggestions);
+    RecipeService.instance.myRecipesNotifier.removeListener(_syncSuggestions);
     super.dispose();
   }
 
-  void _checkSuggestions() {
-    final recipes = RecipeService.instance.myRecipesNotifier.value;
-    if (recipes != null) {
-      final hasAction = recipes.any((r) => r.origin != 'SUGGESTED');
-      final hasBackendSuggestions = recipes.any((r) => r.origin == 'SUGGESTED');
-      if (!hasAction && !hasBackendSuggestions && _suggestedRecipes == null && !_loadingSuggestions) {
-        _fetchSuggestions();
-      }
-    }
+  void _syncSuggestions() {
+    if (mounted) setState(() {});
   }
 
   Future<void> _fetchSuggestions() async {
-    _loadingSuggestions = true;
+    setState(() => _isLoading = true);
     try {
       final daysSinceEpoch = DateTime.now().difference(DateTime(2024, 1, 1)).inDays;
       final page = daysSinceEpoch ~/ 3;
-      final suggestions = await RecipeService.instance.getExploreRecipes(page: page, size: 6);
+      final results = await RecipeService.instance.getExploreRecipes(page: page, size: 8);
       if (mounted) {
         setState(() {
-          _suggestedRecipes = suggestions.map((r) => r.copyWith(origin: 'SUGGESTED')).toList();
-          _loadingSuggestions = false;
+          _suggestions = results.map((r) => r.copyWith(origin: 'SUGGESTED')).toList();
+          _isLoading = false;
         });
       }
     } catch (e) {
-      if (mounted) {
-        setState(() {
-          _loadingSuggestions = false;
-        });
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
-  }
-
-  void _loadData() {
-    RecipeService.instance.getMyRecipes();
-  }
-
-  @override
-  void didUpdateWidget(_SavedRecipesGrid oldWidget) {
-    super.didUpdateWidget(oldWidget);
   }
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<List<Recipe>?>(
-      valueListenable: RecipeService.instance.myRecipesNotifier,
-      builder: (context, recipes, _) {
-        if (recipes == null) {
+    if (_isLoading && _suggestions == null) {
+      return SizedBox(
+        height: 150.h,
+        child: const Center(child: CircularProgressIndicator(color: Color(0xFFCC3333))),
+      );
+    }
+
+    final allSaved = RecipeService.instance.myRecipesNotifier.value ?? [];
+    final savedNames = allSaved.map((r) => r.name.toLowerCase()).toSet();
+
+    List<Recipe> displayList = _suggestions ?? [];
+    if (widget.searchQuery.trim().isNotEmpty) {
+      final query = widget.searchQuery.trim().toLowerCase();
+      displayList = displayList.where((r) => r.name.toLowerCase().contains(query)).toList();
+    }
+
+    if (displayList.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      children: [
+        SizedBox(height: 30.h),
+        _SectionRow(title: 'Suggested Recipes'),
+        SizedBox(height: 12.h),
+        if (widget.isCompact)
+          _buildHorizontalList(displayList, savedNames)
+        else
+          _buildGrid(displayList, savedNames),
+      ],
+    );
+  }
+
+  Widget _buildHorizontalList(List<Recipe> items, Set<String> savedNames) {
+    return SizedBox(
+      height: 240.h,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: EdgeInsets.symmetric(horizontal: 18.w),
+        itemCount: items.length,
+        separatorBuilder: (_, __) => SizedBox(width: 14.w),
+        itemBuilder: (ctx, i) {
+          final r = items[i];
+          final isSaved = savedNames.contains(r.name.toLowerCase());
           return SizedBox(
-            height: 200.h,
-            child: const Center(
-              child: CircularProgressIndicator(color: Color(0xFFCC3333)),
+            width: 160.w,
+            child: RecipeCard(
+              recipe: r,
+              useValidationIcon: true,
+              isValidated: isSaved,
+              onValidateTap: () => _handleValidation(r, isSaved),
+              onTap: () => Navigator.pushNamed(
+                context,
+                AppRoutes.recipeDetail,
+                arguments: {'recipe': r, 'isPreview': !isSaved},
+              ),
             ),
           );
-        }
+        },
+      ),
+    );
+  }
 
-        final hasAction = recipes.any((r) => r.origin != 'SUGGESTED');
-
-        List<Recipe> displayList = [];
-
-        if (hasAction) {
-          // Show REAL recipes (Imports, Scans, etc)
-          displayList = recipes.where((r) => r.origin != 'SUGGESTED').toList();
-        } else {
-          // Show SUGGESTIONS
-          displayList = recipes.where((r) {
-            if (r.origin == 'SUGGESTED') {
-              if (r.expiresAt != null && r.expiresAt!.isBefore(DateTime.now()))
-                return false;
-              return true;
-            }
-            return false;
-          }).toList();
-          
-          if (displayList.isEmpty && _suggestedRecipes != null) {
-            displayList = _suggestedRecipes!;
-          }
-        }
-
-        if (displayList.isNotEmpty && widget.searchQuery.trim().isNotEmpty) {
-          final query = widget.searchQuery.trim().toLowerCase();
-          displayList = displayList.where((r) => r.name.toLowerCase().contains(query)).toList();
-        }
-
-        if (displayList.isEmpty) {
-          if (_loadingSuggestions) {
-            return SizedBox(
-              height: 200.h,
-              child: const Center(
-                child: CircularProgressIndicator(color: Color(0xFFCC3333)),
-              ),
-            );
-          }
-          return const SizedBox.shrink();
-        }
-
-        final itemsToDisplay = hasAction ? displayList : displayList.take(6).toList();
-
-        return Padding(
-          padding: EdgeInsets.symmetric(horizontal: 18.w),
-          child: GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: itemsToDisplay.length,
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              mainAxisSpacing: 14.h,
-              crossAxisSpacing: 14.w,
-              childAspectRatio: 0.82,
+  Widget _buildGrid(List<Recipe> items, Set<String> savedNames) {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 18.w),
+      child: GridView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        itemCount: items.length,
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          mainAxisSpacing: 14.h,
+          crossAxisSpacing: 14.w,
+          childAspectRatio: 0.82,
+        ),
+        itemBuilder: (ctx, i) {
+          final r = items[i];
+          final isSaved = savedNames.contains(r.name.toLowerCase());
+          return RecipeCard(
+            recipe: r,
+            useValidationIcon: true,
+            isValidated: isSaved,
+            onValidateTap: () => _handleValidation(r, isSaved),
+            onTap: () => Navigator.pushNamed(
+              context,
+              AppRoutes.recipeDetail,
+              arguments: {'recipe': r, 'isPreview': !isSaved},
             ),
-            itemBuilder: (ctx, i) {
-              final r = itemsToDisplay[i];
-              return RecipeCard(
-                recipe: r,
-                onHeartTap: () async {
-                  try {
-                    await RecipeService.instance.toggleFavorite(r.id);
-                    setState(() => _loadData());
-                  } catch (e) {
-                    IosToast.show(
-                      ctx,
-                      message: ErrorHelper.getFriendlyMessage(e),
-                      type: ToastType.error,
-                    );
-                  }
-                },
-                onTap: () async {
-                  await Navigator.pushNamed(
-                    ctx,
-                    AppRoutes.recipeDetail,
-                    arguments: {'recipe': r},
-                  );
-                  setState(() => _loadData());
-                },
-              );
-            },
-          ),
-        );
-      },
+          );
+        },
+      ),
+    );
+  }
+
+  void _handleValidation(Recipe r, bool isSaved) {
+    if (isSaved) {
+      IosToast.show(
+        context,
+        message: "This recipe is already present in your recipes",
+        type: ToastType.success,
+      );
+      return;
+    }
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => AddToCookbookSheet(
+        recipe: r,
+        onSuccess: () {
+          // Success! myRecipesNotifier will refresh and sync state.
+        },
+      ),
     );
   }
 }

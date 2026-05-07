@@ -21,7 +21,10 @@ class CookbookService {
     };
   }
 
-  Future<List<Cookbook>> getMyCookbooks() async {
+  Future<List<Cookbook>> getMyCookbooks({bool forceRefresh = false}) async {
+    if (!forceRefresh && myCookbooksNotifier.value != null) {
+      return myCookbooksNotifier.value!;
+    }
     final url = Uri.parse('${ApiConfig.baseUrl}/cookbooks');
     final response = await http.get(url, headers: await _getHeaders());
 

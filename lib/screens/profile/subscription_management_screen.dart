@@ -144,7 +144,7 @@ class _SubscriptionManagementScreenState
             padding: EdgeInsets.only(
               bottom: MediaQuery.of(context).viewInsets.bottom,
             ),
-            child: Container(
+            child: SizedBox(
               height: MediaQuery.of(context).size.height * 0.85,
               child: Stack(
                 children: [

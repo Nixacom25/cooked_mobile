@@ -239,8 +239,9 @@ class _ExploreScreenState extends State<ExploreScreen> {
     return FutureBuilder<Map<String, int>>(
       future: RecipeService.instance.getExploreCuisines(),
       builder: (context, snapshot) {
-        if (!snapshot.hasData || snapshot.data!.isEmpty)
+        if (!snapshot.hasData || snapshot.data!.isEmpty) {
           return const SizedBox.shrink();
+        }
         final cuisinesMap = snapshot.data!;
         final names = cuisinesMap.keys
             .where(
@@ -345,8 +346,9 @@ class _ExploreScreenState extends State<ExploreScreen> {
     return FutureBuilder<Map<String, int>>(
       future: RecipeService.instance.getExploreCategories(),
       builder: (context, snapshot) {
-        if (!snapshot.hasData || snapshot.data!.isEmpty)
+        if (!snapshot.hasData || snapshot.data!.isEmpty) {
           return const SizedBox.shrink();
+        }
         final categoriesMap = snapshot.data!;
         final names = categoriesMap.keys
             .where(

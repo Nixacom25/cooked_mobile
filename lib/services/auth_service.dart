@@ -17,6 +17,9 @@ class AuthService {
   static final AuthService instance = AuthService._privateConstructor();
 
   static const String _tokenKey = 'auth_token';
+  String? _token;
+
+  bool get isLoggedIn => _token != null && _token!.isNotEmpty;
 
   void _clearAllServiceData() {
     RecipeService.instance.clearData();
@@ -27,16 +30,21 @@ class AuthService {
 
   final GoogleSignIn _googleSignIn = GoogleSignIn(
     serverClientId: ApiConfig.googleClientId,
+    // On iOS, the clientId is usually different from the serverClientId. 
+    // Providing it here helps ensure a native modal experience.
   );
 
   // Helper method to retrieve token
   Future<String?> getToken() async {
+    if (_token != null) return _token;
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_tokenKey);
+    _token = prefs.getString(_tokenKey);
+    return _token;
   }
 
   // Helper method to save token
   Future<void> _saveToken(String token) async {
+    _token = token;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_tokenKey, token);
   }
@@ -274,6 +282,12 @@ class AuthService {
           AppleIDAuthorizationScopes.email,
           AppleIDAuthorizationScopes.fullName,
         ],
+        // Required for Android to open a modal-like Chrome Custom Tab 
+        // instead of redirecting to the external browser app.
+        webAuthenticationOptions: WebAuthenticationOptions(
+          clientId: 'com.cookedapp.app.service', // Replace with your Service ID
+          redirectUri: Uri.parse('https://cooked-backend-latest.onrender.com/api/auth/apple/callback'),
+        ),
       );
 
       final identityToken = credential.identityToken;
@@ -431,6 +445,7 @@ class AuthService {
     
     // Global reset of all local services data
     _clearAllServiceData();
+    _token = null;
     
     developer.log('Logged out successfully', name: 'AuthService');
       } catch (e) {

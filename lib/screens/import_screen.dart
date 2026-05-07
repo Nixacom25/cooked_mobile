@@ -623,7 +623,7 @@ class _PlatformImg extends StatelessWidget {
   const _PlatformImg({required this.asset});
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return SizedBox(
       width: 22.w,
       height: 22.h,
       child: ClipRRect(

@@ -107,31 +107,38 @@ class _ProfileLoadingStepState extends State<ProfileLoadingStep>
             },
           ),
           SizedBox(height: 48.h),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                'Building your recipe profile',
-                style: TextStyle(
-                  fontSize: 24.sp,
-                  fontWeight: FontWeight.w900,
-                  color: const Color(0xFF0D1B3E),
-                  fontFamily: 'SF Pro',
-                ),
-              ),
-              SizedBox(
-                width: 30,
-                child: Text(
-                  '.' * _dotCount,
-                  style: TextStyle(
-                    fontSize: 24.sp,
-                    fontWeight: FontWeight.w900,
-                    color: const Color(0xFF0D1B3E),
-                    fontFamily: 'SF Pro',
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 24.w),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Text(
+                    'Building your recipe profile',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 20.sp,
+                      fontWeight: FontWeight.w900,
+                      color: const Color(0xFF0D1B3E),
+                      fontFamily: 'SF Pro',
+                    ),
                   ),
                 ),
-              ),
-            ],
+                SizedBox(
+                  width: 20.w,
+                  child: Text(
+                    '.' * _dotCount,
+                    style: TextStyle(
+                      fontSize: 20.sp,
+                      fontWeight: FontWeight.w900,
+                      color: const Color(0xFF0D1B3E),
+                      fontFamily: 'SF Pro',
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
           SizedBox(height: 8.h),
           Text(

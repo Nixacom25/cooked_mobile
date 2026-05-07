@@ -215,7 +215,7 @@ class _AddToGroceryModalState extends State<AddToGroceryModal> {
                       ),
                       if (_isSpecificDate && _selectedDate != null)
                         Text(
-                          "Date: " + _fmtDate(_selectedDate!),
+                          "Date: ${_fmtDate(_selectedDate!)}",
                           style: TextStyle(
                             fontFamily: 'SF Pro',
                             fontWeight: FontWeight.w700,

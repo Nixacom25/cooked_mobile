@@ -153,7 +153,7 @@ class _CookingSkillStepState extends State<CookingSkillStep> {
                 ),
               ),
             );
-          }).toList(),
+          }),
           SizedBox(height: 32.h),
         ],
       ),

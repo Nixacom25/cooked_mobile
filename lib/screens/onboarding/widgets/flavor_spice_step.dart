@@ -260,7 +260,7 @@ class _FlavorSpiceStepState extends State<FlavorSpiceStep> {
                 ],
               ),
             );
-          }).toList(),
+          }),
 
           const SizedBox(height: 24),
 
