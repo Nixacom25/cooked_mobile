@@ -94,24 +94,24 @@ class _CuisinesStepState extends State<CuisinesStep> {
           Text(
             'Which cuisines do you love?',
             style: TextStyle(
-              fontSize: 20.sp,
-              fontWeight: FontWeight.w700,
+              fontSize: 16.sp,
+              fontWeight: FontWeight.w800,
               color: const Color(0xFF0D1B36),
               fontFamily: 'SF Pro',
               height: 1.2,
               letterSpacing: -0.5,
             ),
           ),
-          SizedBox(height: 8.h),
+          SizedBox(height: 6.h),
           Text(
             'Select your favorites',
             style: TextStyle(
-              fontSize: 13.sp,
+              fontSize: 10.sp,
               color: const Color(0xFF7B8190),
               fontFamily: 'SF Pro',
             ),
           ),
-          SizedBox(height: 25.h),
+          SizedBox(height: 16.h),
           GridView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
@@ -132,9 +132,8 @@ class _CuisinesStepState extends State<CuisinesStep> {
           Text(
             'Specify other cuisines',
             style: TextStyle(
-              fontFamily: 'SF Pro',
-              fontSize: 14.sp,
-              fontWeight: FontWeight.w600,
+              fontSize: 10.sp,
+              fontWeight: FontWeight.w700,
               color: const Color(0xFF7B8190),
             ),
           ),
@@ -152,14 +151,14 @@ class _CuisinesStepState extends State<CuisinesStep> {
               textCapitalization: TextCapitalization.words,
               style: TextStyle(
                 fontFamily: 'SF Pro',
-                fontSize: 14.sp,
+                fontSize: 12.sp,
                 color: const Color(0xFF1A1A1A),
               ),
               decoration: InputDecoration(
                 hintText: 'Enter a cuisine and press Enter',
                 hintStyle: TextStyle(
                   fontFamily: 'SF Pro',
-                  fontSize: 14.sp,
+                  fontSize: 12.sp,
                   color: Colors.grey[400],
                 ),
                 border: InputBorder.none,
@@ -252,8 +251,7 @@ class _CuisinesStepState extends State<CuisinesStep> {
                 cuisine['title']!,
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontFamily: 'SF Pro',
-                  fontSize: 11.sp,
+                  fontSize: 10.sp,
                   fontWeight: FontWeight.w700,
                   color: const Color(0xFF0D1B3E),
                 ),

@@ -5,7 +5,6 @@ import '../models/recipe.dart';
 
 class RecipeCard extends StatelessWidget {
   final Recipe? recipe;
-  // Fallback fields for backward compatibility during migration
   final String? img;
   final String? name;
   final String? time;
@@ -13,6 +12,7 @@ class RecipeCard extends StatelessWidget {
   final bool hearted;
   final bool useValidationIcon;
   final bool isValidated;
+  final int? rank;
   final VoidCallback? onHeartTap;
   final VoidCallback? onSaveTap;
   final VoidCallback? onValidateTap;
@@ -28,6 +28,7 @@ class RecipeCard extends StatelessWidget {
     this.hearted = false,
     this.useValidationIcon = false,
     this.isValidated = false,
+    this.rank,
     this.onHeartTap,
     this.onSaveTap,
     this.onValidateTap,
@@ -38,9 +39,7 @@ class RecipeCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final displayImg = recipe?.image ?? img ?? '';
     final displayName = recipe?.name ?? name ?? 'Unknown Recipe';
-    final displayTime = recipe != null
-        ? '${recipe!.cookTime} min'
-        : (time ?? '');
+    final displayTime = recipe != null ? '${recipe!.cookTime} min' : (time ?? '');
     final displayKcal = recipe != null ? '${recipe!.kcal} kcal' : (kcal ?? '');
     final isHearted = recipe?.isFavorite ?? hearted;
 
@@ -55,11 +54,11 @@ class RecipeCard extends StatelessWidget {
               children: [
                 Positioned.fill(
                   child: ClipRRect(
-                    borderRadius: BorderRadius.all(Radius.circular(16.r)),
+                    borderRadius: BorderRadius.all(Radius.circular(20.r)),
                     child: Container(
                       width: double.infinity,
                       height: double.infinity,
-                      color: Colors.white,
+                      color: const Color(0xFFF2F1EF),
                       child: _buildImage(displayImg),
                     ),
                   ),
@@ -85,140 +84,115 @@ class RecipeCard extends StatelessWidget {
                                 ? Icons.favorite_rounded
                                 : Icons.favorite_border_rounded),
                         color: useValidationIcon
-                            ? (isValidated
-                                ? Colors.green
-                                : const Color(0xFFAAAAAA))
-                            : (isHearted
-                                ? const Color(0xFFCC3333)
-                                : const Color(0xFFAAAAAA)),
+                            ? (isValidated ? Colors.green : const Color(0xFFAAAAAA))
+                            : (isHearted ? const Color(0xFFCC3333) : const Color(0xFFAAAAAA)),
                         size: useValidationIcon ? 20.sp : 18.sp,
                       ),
                     ),
                   ),
                 ),
-                // Save icon bottom-right
-                if (onSaveTap != null)
-                  Positioned(
-                    bottom: 8.h,
-                    right: 8.w,
-                    child: GestureDetector(
-                      onTap: onSaveTap,
-                      child: Container(
-                        padding: EdgeInsets.all(6.r),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFCC3333),
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
-                              blurRadius: 4.r,
-                              offset: Offset(0, 2.h),
-                            ),
-                          ],
-                        ),
-                        child: Icon(
-                          Icons.bookmark_add_rounded,
-                          color: Colors.white,
-                          size: 18.sp,
-                        ),
-                      ),
-                    ),
-                  ),
               ],
             ),
           ),
 
           SizedBox(height: 8.h),
 
-          // ── Info area ──────────────────────────────────────────────────
-          Text(
-            displayName,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontFamily: 'SF Pro',
-              fontWeight: FontWeight.w700,
-              fontSize: 13.sp,
-              color: const Color(0xFF1A1A1A),
-              height: 1.3,
-              letterSpacing: -0.3,
-            ),
-          ),
-          SizedBox(height: 2.h),
+          // ── Info area with Large Rank ──────────────────────────────────
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(
-                Icons.timer,
-                size: 12.sp,
-                color: const Color(0xFF9CA3AF),
-              ),
-              SizedBox(width: 3.w),
-              Text(
-                displayTime,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontFamily: 'SF Pro',
-                  fontSize: 11.sp,
-                  color: const Color(0xFF9CA3AF),
-                ),
-              ),
-              SizedBox(width: 8.w),
-              Icon(
-                Icons.local_fire_department,
-                size: 12.sp,
-                color: const Color(0xFF9CA3AF),
-              ),
-              SizedBox(width: 3.w),
-              Expanded(
-                child: Text(
-                  displayKcal,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+              if (rank != null) ...[
+                Text(
+                  '$rank',
                   style: TextStyle(
                     fontFamily: 'SF Pro',
-                    fontSize: 11.sp,
-                    color: const Color(0xFF9CA3AF),
+                    fontWeight: FontWeight.w700,
+                    fontSize: 32.sp,
+                    color: const Color(0xFFE5E7EB),
+                    height: 0.9,
                   ),
+                ),
+                SizedBox(width: 8.w),
+              ],
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      displayName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontFamily: 'SF Pro',
+                        fontWeight: FontWeight.w700,
+                        fontSize: 12.sp,
+                        color: const Color(0xFF111827),
+                        height: 1.2,
+                      ),
+                    ),
+                    SizedBox(height: 4.h),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.timer,
+                          size: 10.sp,
+                          color: const Color(0xFF9CA3AF),
+                        ),
+                        SizedBox(width: 3.w),
+                        Flexible(
+                          child: Text(
+                            displayTime,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontFamily: 'SF Pro',
+                              fontSize: 10.sp,
+                              color: const Color(0xFF9CA3AF),
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: 12.w),
+                        Icon(
+                          Icons.local_fire_department,
+                          size: 10.sp,
+                          color: const Color(0xFF9CA3AF),
+                        ),
+                        SizedBox(width: 3.w),
+                        Expanded(
+                          child: Text(
+                            displayKcal,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontFamily: 'SF Pro',
+                              fontSize: 10.sp,
+                              color: const Color(0xFF9CA3AF),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
             ],
           ),
-          SizedBox(height: 4.h),
+          SizedBox(height: 8.h),
         ],
       ),
     );
   }
 
   Widget _buildImage(String path) {
-    if (path.isEmpty) {
-      return Image.asset('assets/images/recipes.png', fit: BoxFit.cover);
-    }
-
+    if (path.isEmpty) return Image.asset('assets/images/recipes.png', fit: BoxFit.cover);
     if (path.startsWith('http')) {
       return CachedNetworkImage(
         imageUrl: path,
         fit: BoxFit.cover,
-        errorWidget: (_, __, ___) =>
-            Image.asset('assets/images/recipes.png', fit: BoxFit.cover),
-        placeholder: (_, __) => Container(
-          color: const Color(0xFFF2F1EF),
-          child: const Center(
-            child: CircularProgressIndicator(
-              strokeWidth: 2,
-              color: Color(0xFFCC3333),
-            ),
-          ),
-        ),
+        errorWidget: (_, __, ___) => Image.asset('assets/images/recipes.png', fit: BoxFit.cover),
+        placeholder: (_, __) => const Center(child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFFCC3333))),
       );
     }
-
-    // Assume asset path
-    return Image.asset(
-      path,
-      fit: BoxFit.cover,
-      errorBuilder: (_, __, ___) =>
-          Image.asset('assets/images/recipes.png', fit: BoxFit.cover),
-    );
+    return Image.asset(path, fit: BoxFit.cover, errorBuilder: (_, __, ___) => Image.asset('assets/images/recipes.png', fit: BoxFit.cover));
   }
 }

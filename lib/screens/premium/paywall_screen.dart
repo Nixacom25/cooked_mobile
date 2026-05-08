@@ -49,7 +49,6 @@ class _PaywallScreenState extends State<PaywallScreen> {
   }
 
   Future<void> _completePurchase() async {
-    // Propose notification and close
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Achat réussi ! Bienvenue dans Cooked Premium.")),
@@ -71,7 +70,6 @@ class _PaywallScreenState extends State<PaywallScreen> {
         if (mounted) {
           setState(() {
             isLoading = false;
-            // Provide a minimal local config if backend fails or store unavailable
             config = {
               'title': 'Go Premium',
               'subtitle': 'Unlock all Cooked features',
@@ -111,11 +109,17 @@ class _PaywallScreenState extends State<PaywallScreen> {
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
-      return const Scaffold(backgroundColor: Color(0xFF0F0F0F), body: Center(child: CircularProgressIndicator(color: Color(0xFFFFD700))));
+      return const Scaffold(
+        backgroundColor: Color(0xFF0F0F0F),
+        body: Center(child: CircularProgressIndicator(color: Color(0xFFFFD700))),
+      );
     }
 
     if (config == null) {
-      return Scaffold(backgroundColor: AppColors.background, body: const Center(child: Text("Unavailable", style: TextStyle(color: AppColors.textDark))));
+      return Scaffold(
+        backgroundColor: AppColors.background,
+        body: const Center(child: Text("Unavailable", style: TextStyle(color: AppColors.textDark))),
+      );
     }
 
     return Container(
@@ -129,7 +133,6 @@ class _PaywallScreenState extends State<PaywallScreen> {
         backgroundColor: Colors.transparent,
         body: Stack(
           children: [
-            // Background Gradient
             Positioned.fill(
               child: Container(
                 decoration: BoxDecoration(
@@ -145,101 +148,103 @@ class _PaywallScreenState extends State<PaywallScreen> {
               ),
             ),
             SafeArea(
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 24.w),
-                child: Column(
-                  children: [
-                    SizedBox(height: 12.h),
-                    Center(
-                      child: Container(
-                        width: 40.w,
-                        height: 4.h,
-                        decoration: BoxDecoration(
-                          color: AppColors.textMuted.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
-                    ),
-                    Align(
-                      alignment: Alignment.topRight,
-                      child: IconButton(
-                        icon: const Icon(Icons.close_rounded, color: AppColors.textMuted),
-                        onPressed: () => Navigator.pop(context),
-                      ),
-                    ),
-                    SizedBox(height: 5.h),
-                    // App Logo or Icon could go here
-                    Container(
-                      padding: EdgeInsets.all(16.w),
+              child: Column(
+                children: [
+                  SizedBox(height: 12.h),
+                  Center(
+                    child: Container(
+                      width: 40.w,
+                      height: 4.h,
                       decoration: BoxDecoration(
-                        color: AppColors.primary.withOpacity(0.1),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(Icons.star_rounded, color: AppColors.primary, size: 40.sp),
-                    ),
-                    SizedBox(height: 20.h),
-                    Text(
-                      config!['title'] ?? 'Go Premium',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: AppColors.textDark, fontSize: 24.sp, fontWeight: FontWeight.bold),
-                    ),
-                    SizedBox(height: 10.h),
-                    Text(
-                      config!['subtitle'] ?? 'Unlock all features',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: AppColors.textMuted, fontSize: 14.sp),
-                    ),
-                    SizedBox(height: 30.h),
-                    
-                    ..._buildFeatures(),
-                    
-                    const Spacer(),
-
-                    _buildPlanCard('yearly_sub', config!['yearlyPriceLabel'] ?? '29.99€ / an', "ÉCONOMISEZ 50%"),
-                    SizedBox(height: 12.h),
-                    _buildPlanCard('monthly_sub', config!['monthlyPriceLabel'] ?? '9.99€ / mois', ""),
-
-                    SizedBox(height: 30.h),
-
-                    Container(
-                      width: double.infinity,
-                      height: 56.h,
-                      child: ElevatedButton(
-                        onPressed: () => _handlePurchase(),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
-                          foregroundColor: Colors.white,
-                          elevation: 4,
-                          shadowColor: AppColors.primary.withOpacity(0.4),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                        ),
-                        child: Text(
-                          (config!['ctaText'] ?? 'Subscribe').toUpperCase(),
-                          style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold),
-                        ),
+                        color: AppColors.textMuted.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(2),
                       ),
                     ),
-                    SizedBox(height: 20.h),
-                    
-                    if (Platform.isIOS)
-                      TextButton(
-                        onPressed: () {
-                          setState(() => isLoading = true);
-                          IapService.instance.restorePurchases();
-                        },
-                        child: Text(
-                          "Restore Purchases",
-                          style: TextStyle(color: AppColors.textMuted, fontSize: 13.sp),
-                        ),
+                  ),
+                  Align(
+                    alignment: Alignment.topRight,
+                    child: IconButton(
+                      icon: const Icon(Icons.close_rounded, color: AppColors.textMuted),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: EdgeInsets.symmetric(horizontal: 24.w),
+                      child: Column(
+                        children: [
+                          SizedBox(height: 5.h),
+                          Container(
+                            padding: EdgeInsets.all(14.w),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withOpacity(0.1),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(Icons.star_rounded, color: AppColors.primary, size: 32.sp),
+                          ),
+                          SizedBox(height: 16.h),
+                          Text(
+                            config!['title'] ?? 'Go Premium',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: AppColors.textDark,
+                              fontSize: 20.sp,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: -0.5,
+                            ),
+                          ),
+                          SizedBox(height: 8.h),
+                          Text(
+                            config!['subtitle'] ?? 'Unlock all features',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(color: AppColors.textMuted, fontSize: 13.sp),
+                          ),
+                          SizedBox(height: 25.h),
+                          ..._buildFeatures(),
+                          SizedBox(height: 25.h),
+                          _buildPlanCard('yearly_sub', config!['yearlyPriceLabel'] ?? '29.99€ / an', "ÉCONOMISEZ 50%"),
+                          SizedBox(height: 12.h),
+                          _buildPlanCard('monthly_sub', config!['monthlyPriceLabel'] ?? '9.99€ / mois', ""),
+                          SizedBox(height: 25.h),
+                          Container(
+                            width: double.infinity,
+                            height: 52.h,
+                            child: ElevatedButton(
+                              onPressed: () => _handlePurchase(),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.primary,
+                                foregroundColor: Colors.white,
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+                              ),
+                              child: Text(
+                                (config!['ctaText'] ?? 'Subscribe').toUpperCase(),
+                                style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w700),
+                              ),
+                            ),
+                          ),
+                          SizedBox(height: 16.h),
+                          if (Platform.isIOS)
+                            TextButton(
+                              onPressed: () {
+                                setState(() => isLoading = true);
+                                IapService.instance.restorePurchases();
+                              },
+                              child: Text(
+                                "Restore Purchases",
+                                style: TextStyle(color: AppColors.textMuted, fontSize: 12.sp),
+                              ),
+                            ),
+                          SizedBox(height: 20.h),
+                        ],
                       ),
-                    
-                    SizedBox(height: 10.h),
-                  ],
-                ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
-        )
+        ),
       ),
     );
   }
@@ -252,18 +257,20 @@ class _PaywallScreenState extends State<PaywallScreen> {
         padding: EdgeInsets.all(16.w),
         decoration: BoxDecoration(
           color: isSelected ? AppColors.primary.withOpacity(0.05) : Colors.white,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(16.r),
           border: Border.all(
             color: isSelected ? AppColors.primary : const Color(0xFFEEEEEE),
             width: 2,
           ),
-          boxShadow: isSelected ? [
-            BoxShadow(
-              color: AppColors.primary.withOpacity(0.1),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            )
-          ] : [],
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: AppColors.primary.withOpacity(0.1),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  )
+                ]
+              : [],
         ),
         child: Row(
           children: [
@@ -279,13 +286,13 @@ class _PaywallScreenState extends State<PaywallScreen> {
                   id == 'yearly_sub' ? "Yearly Plan" : "Monthly Plan",
                   style: TextStyle(
                     color: AppColors.textDark,
-                    fontSize: 16.sp,
+                    fontSize: 14.sp,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 Text(
                   price,
-                  style: TextStyle(color: AppColors.textMuted, fontSize: 14.sp),
+                  style: TextStyle(color: AppColors.textMuted, fontSize: 12.sp),
                 ),
               ],
             ),
@@ -315,21 +322,23 @@ class _PaywallScreenState extends State<PaywallScreen> {
   List<Widget> _buildFeatures() {
     try {
       final List<dynamic> features = List<dynamic>.from(jsonDecode(config!['featuresJson'] ?? '[]'));
-      return features.map((f) => Padding(
-        padding: EdgeInsets.only(bottom: 12.h),
-        child: Row(
-          children: [
-            const Icon(Icons.check_circle_outline, color: AppColors.primary, size: 20),
-            SizedBox(width: 12.w),
-            Expanded(
-              child: Text(
-                f,
-                style: TextStyle(color: AppColors.textDark, fontSize: 14.sp),
-              ),
-            ),
-          ],
-        ),
-      )).toList();
+      return features
+          .map((f) => Padding(
+                padding: EdgeInsets.only(bottom: 12.h),
+                child: Row(
+                  children: [
+                    const Icon(Icons.check_circle_outline, color: AppColors.primary, size: 20),
+                    SizedBox(width: 12.w),
+                    Expanded(
+                      child: Text(
+                        f,
+                        style: TextStyle(color: AppColors.textDark, fontSize: 12.sp),
+                      ),
+                    ),
+                  ],
+                ),
+              ))
+          .toList();
     } catch (e) {
       return [const Text("Premium Features Unlocked", style: TextStyle(color: AppColors.textDark))];
     }
@@ -337,12 +346,10 @@ class _PaywallScreenState extends State<PaywallScreen> {
 
   Future<void> _handlePurchase() async {
     widget.paywallService.trackEvent('paywall_click', config!['variantKey'] ?? 'default', metadata: _selectedPlanId);
-    
     if (_products.isEmpty) {
       _showErrorSnackBar("Store products unavailable. Try again later.");
       return;
     }
-
     try {
       final product = _products.firstWhere((p) => p.id == _selectedPlanId);
       setState(() => isLoading = true);

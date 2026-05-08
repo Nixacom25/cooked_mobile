@@ -195,7 +195,7 @@ class _CookbookDetailScreenState extends State<CookbookDetailScreen> {
                                   fontFamily: 'SF Pro',
                                   fontWeight: FontWeight.w600,
                                   color: Colors.grey[600],
-                                  fontSize: 18,
+                                  fontSize: 16.sp,
                                 ),
                               ),
                             ],
@@ -206,9 +206,9 @@ class _CookbookDetailScreenState extends State<CookbookDetailScreen> {
                           itemCount: recipes.length,
                           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                             crossAxisCount: 2,
-                            mainAxisSpacing: 14.h,
-                            crossAxisSpacing: 14.w,
-                            mainAxisExtent: 240.h,
+                            mainAxisSpacing: 12.h,
+                            crossAxisSpacing: 12.w,
+                            childAspectRatio: 0.85,
                           ),
                           itemBuilder: (ctx, i) {
                             final r = recipes[i];

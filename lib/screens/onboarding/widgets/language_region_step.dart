@@ -80,25 +80,25 @@ class _LanguageRegionStepState extends State<LanguageRegionStep> {
           Text(
             'Language & Region',
             style: TextStyle(
-              fontSize: 20.sp,
-              fontWeight: FontWeight.w700,
+              fontSize: 18.sp,
+              fontWeight: FontWeight.w800,
               color: const Color(0xFF0D1B36),
               fontFamily: 'SF Pro',
               height: 1.2,
               letterSpacing: -0.5,
             ),
           ),
-          SizedBox(height: 8.h),
+          SizedBox(height: 6.h),
           Text(
             "We'll use this to suggest local recipes and ingredients available near you",
             style: TextStyle(
-              fontSize: 13.sp,
+              fontSize: 11.sp,
               color: const Color(0xFF7B8190),
               fontFamily: 'SF Pro',
               height: 1.5,
             ),
           ),
-          SizedBox(height: 40.h),
+          SizedBox(height: 32.h),
 
           _buildLabel('Language'),
           SizedBox(height: 8.h),
@@ -137,7 +137,7 @@ class _LanguageRegionStepState extends State<LanguageRegionStep> {
             },
           ),
 
-          SizedBox(height: 32.h),
+          SizedBox(height: 24.h),
           Container(
             padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
             decoration: BoxDecoration(
@@ -152,7 +152,7 @@ class _LanguageRegionStepState extends State<LanguageRegionStep> {
               ? 'Imperial (cups, oz, °F)'
               : 'Metric (grams, ml, °C)'} ',
                     style: TextStyle(
-                      fontSize: 12.sp,
+                      fontSize: 11.sp,
                       color: const Color(0xFF7B8190),
                       fontFamily: 'SF Pro',
                     ),
@@ -163,7 +163,7 @@ class _LanguageRegionStepState extends State<LanguageRegionStep> {
           ),
           SizedBox(height: 8.h),
           _buildMeasurementSelector(),
-          SizedBox(height: 48.h),
+          SizedBox(height: 32.h),
         ],
       ),
     );
@@ -217,7 +217,7 @@ class _LanguageRegionStepState extends State<LanguageRegionStep> {
           textAlign: TextAlign.center,
           style: TextStyle(
             fontFamily: 'SF Pro',
-            fontSize: 12.sp,
+            fontSize: 11.sp,
             fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
             color: isSelected ? Colors.white : const Color(0xFF7B8190),
           ),
@@ -230,7 +230,7 @@ class _LanguageRegionStepState extends State<LanguageRegionStep> {
     return Text(
       text,
       style: TextStyle(
-        fontSize: 13.sp,
+        fontSize: 11.sp,
         fontWeight: FontWeight.w600,
         color: const Color(0xFF7B8190),
         fontFamily: 'SF Pro',
@@ -302,7 +302,7 @@ class _LanguageRegionStepState extends State<LanguageRegionStep> {
                     value,
                     style: TextStyle(
                       fontFamily: 'SF Pro',
-                      fontSize: 16.sp,
+                      fontSize: 14.sp,
                       fontWeight: FontWeight.w600,
                       color: const Color(0xFF1A1A1A),
                     ),
@@ -311,7 +311,7 @@ class _LanguageRegionStepState extends State<LanguageRegionStep> {
                 Icon(
                   Icons.keyboard_arrow_down_rounded,
                   color: const Color(0xFF1A1A1A),
-                  size: 24.sp,
+                  size: 20.sp,
                 ),
               ],
             ),

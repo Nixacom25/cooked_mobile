@@ -117,25 +117,25 @@ class _OtpStepState extends State<OtpStep> {
           Text(
             'Verify your account',
             style: TextStyle(
-              fontSize: 24.sp,
-              fontWeight: FontWeight.w700,
+              fontSize: 18.sp,
+              fontWeight: FontWeight.w800,
               color: const Color(0xFF0D1B3E),
               fontFamily: 'SF Pro',
               height: 1.2,
               letterSpacing: -0.5,
             ),
           ),
-          SizedBox(height: 8.h),
+          SizedBox(height: 6.h),
           Text(
             'Please enter the 6-digit code we sent to\n${widget.email}',
             style: TextStyle(
-              fontSize: 13.sp,
+              fontSize: 11.sp,
               color: const Color(0xFF7B8190),
               fontFamily: 'SF Pro',
               height: 1.4,
             ),
           ),
-          SizedBox(height: 48.h),
+          SizedBox(height: 32.h),
 
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -163,7 +163,7 @@ class _OtpStepState extends State<OtpStep> {
                   onChanged: (v) => _onChanged(v, idx),
                   inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   style: TextStyle(
-                    fontSize: 20.sp,
+                    fontSize: 18.sp,
                     fontWeight: FontWeight.w700,
                     fontFamily: 'SF Pro',
                     color: const Color(0xFF0D1B3E),
@@ -186,7 +186,7 @@ class _OtpStepState extends State<OtpStep> {
                 Text(
                   "Didn't receive a code?",
                   style: TextStyle(
-                    fontSize: 15.sp,
+                    fontSize: 14.sp,
                     color: const Color(0xFF7B8190),
                     fontFamily: 'SF Pro',
                   ),

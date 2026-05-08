@@ -93,24 +93,24 @@ class _DislikesStepState extends State<DislikesStep> {
           Text(
             'Foods you dislike',
             style: TextStyle(
-              fontSize: 20.sp,
-              fontWeight: FontWeight.w700,
+              fontSize: 18.sp,
+              fontWeight: FontWeight.w800,
               color: const Color(0xFF0D1B3E),
               fontFamily: 'SF Pro',
               height: 1.2,
               letterSpacing: -0.5,
             ),
           ),
-          SizedBox(height: 8.h),
+          SizedBox(height: 6.h),
           Text(
             "We'll avoid these in your recipes",
             style: TextStyle(
-              fontSize: 13.sp,
+              fontSize: 11.sp,
               color: const Color(0xFF9CA3AF),
               fontFamily: 'SF Pro',
             ),
           ),
-          SizedBox(height: 30.h),
+          SizedBox(height: 24.h),
 
           Row(
             children: [
@@ -204,8 +204,8 @@ class _DislikesStepState extends State<DislikesStep> {
                       color: isSelected
                           ? Colors.white
                           : const Color(0xFF4B5563),
-                      fontSize: 12.sp,
-                      fontWeight: FontWeight.w600,
+                    fontSize: 11.sp,
+                      fontWeight: FontWeight.w700,
                       fontFamily: 'SF Pro',
                     ),
                   ),
@@ -213,13 +213,12 @@ class _DislikesStepState extends State<DislikesStep> {
               );
             }).toList(),
           ),
-
           if (_selectedDislikes.isNotEmpty) ...[
-            SizedBox(height: 20.h),
+            SizedBox(height: 16.h),
             Text(
               'Your dislikes:',
               style: TextStyle(
-                fontSize: 13.sp,
+                fontSize: 11.sp,
                 fontWeight: FontWeight.w700,
                 color: const Color(0xFF0D1B3E),
                 fontFamily: 'SF Pro',
@@ -246,8 +245,8 @@ class _DislikesStepState extends State<DislikesStep> {
                         d,
                         style: TextStyle(
                           color: Colors.white,
-                          fontSize: 12.sp,
-                          fontWeight: FontWeight.w600,
+                          fontSize: 11.sp,
+                          fontWeight: FontWeight.w700,
                           fontFamily: 'SF Pro',
                         ),
                       ),
@@ -257,7 +256,7 @@ class _DislikesStepState extends State<DislikesStep> {
                         child: Icon(
                           Icons.close,
                           color: Colors.white,
-                          size: 16.sp,
+                          size: 14.sp,
                         ),
                       ),
                     ],
@@ -266,7 +265,7 @@ class _DislikesStepState extends State<DislikesStep> {
               }).toList(),
             ),
           ],
-          SizedBox(height: 32.h),
+          SizedBox(height: 24.h),
         ],
       ),
     );

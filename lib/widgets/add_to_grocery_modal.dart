@@ -120,7 +120,7 @@ class _AddToGroceryModalState extends State<AddToGroceryModal> {
                     style: TextStyle(
                       fontFamily: 'SF Pro',
                       fontWeight: FontWeight.w800,
-                      fontSize: 20.sp,
+                      fontSize: 18.sp,
                       color: Colors.white,
                     ),
                   ),
@@ -144,7 +144,7 @@ class _AddToGroceryModalState extends State<AddToGroceryModal> {
                     style: TextStyle(
                       fontFamily: 'SF Pro',
                       fontWeight: FontWeight.w700,
-                      fontSize: 14.sp,
+                      fontSize: 12.sp,
                       color: Colors.white70,
                     ),
                   ),
@@ -179,7 +179,7 @@ class _AddToGroceryModalState extends State<AddToGroceryModal> {
                             style: TextStyle(
                               fontFamily: 'SF Pro',
                               fontWeight: FontWeight.w600,
-                              fontSize: 15.sp,
+                              fontSize: 13.sp,
                               color: Colors.white,
                             ),
                           ),
@@ -187,7 +187,7 @@ class _AddToGroceryModalState extends State<AddToGroceryModal> {
                             ing.quantity,
                             style: TextStyle(
                               fontFamily: 'SF Pro',
-                              fontSize: 13.sp,
+                              fontSize: 11.sp,
                               color: Colors.white70,
                             ),
                           ),
@@ -209,7 +209,7 @@ class _AddToGroceryModalState extends State<AddToGroceryModal> {
                         style: TextStyle(
                           fontFamily: 'SF Pro',
                           fontWeight: FontWeight.w700,
-                          fontSize: 14.sp,
+                          fontSize: 12.sp,
                           color: Colors.white70,
                         ),
                       ),
@@ -346,7 +346,7 @@ class _LocationOption extends StatelessWidget {
               style: TextStyle(
                 fontFamily: 'SF Pro',
                 fontWeight: FontWeight.w700,
-                fontSize: 14.sp,
+                fontSize: 12.sp,
                 color: selected ? Colors.white : Colors.white70,
               ),
             ),

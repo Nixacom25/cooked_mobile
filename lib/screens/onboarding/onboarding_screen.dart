@@ -853,7 +853,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       children: [
                         SizedBox(
                           width: double.infinity,
-                          height: 56.h,
+                          height: 52.h,
                           child: ElevatedButton(
                             onPressed:
                                 (_isLoading ||
@@ -868,8 +868,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                         (_email.isEmpty ||
                                             _password.isEmpty ||
                                             !_acceptedTerms)))
-                                ? null
-                                : _onContinue,
+                                  ? null
+                                  : _onContinue,
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFFC83A2D),
                               foregroundColor: Colors.white,
@@ -895,8 +895,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                         ? 'Start My 3-Day Free Trial'
                                         : 'Continue',
                                     style: TextStyle(
-                                      fontSize: 18.sp,
-                                      fontWeight: FontWeight.w700,
+                                      fontSize: 16.sp,
+                                      fontWeight: FontWeight.w800,
                                       fontFamily: 'SF Pro',
                                     ),
                                   ),
@@ -904,11 +904,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         ),
                         if (_currentPage == 20) ...[
                           // TrialStep
-                          SizedBox(height: 12.h),
+                          SizedBox(height: 10.h),
                           Text(
                             '3 days free',
                             style: TextStyle(
-                              fontSize: 14.sp,
+                              fontSize: 12.sp,
                               color: const Color(0xFF7B8190),
                               fontFamily: 'SF Pro',
                             ),
@@ -923,7 +923,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                               Text(
                                 'Already have an account? ',
                                 style: TextStyle(
-                                  fontSize: 14.sp,
+                                  fontSize: 12.sp,
                                   color: const Color(0xFF7B8190),
                                   fontFamily: 'SF Pro',
                                 ),
@@ -936,8 +936,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                 child: Text(
                                   'Sign In',
                                   style: TextStyle(
-                                    fontSize: 14.sp,
-                                    fontWeight: FontWeight.w700,
+                                    fontSize: 12.sp,
+                                    fontWeight: FontWeight.w800,
                                     color: const Color(0xFFC83A2D),
                                     fontFamily: 'SF Pro',
                                   ),

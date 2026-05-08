@@ -85,31 +85,31 @@ class _FlavorSpiceStepState extends State<FlavorSpiceStep> {
           Text(
             'Your flavor DNA',
             style: TextStyle(
-              fontSize: 20.sp,
-              fontWeight: FontWeight.w700,
+              fontSize: 18.sp,
+              fontWeight: FontWeight.w800,
               color: const Color(0xFF0D1B3E),
               fontFamily: 'SF Pro',
               height: 1.2,
               letterSpacing: -0.5,
             ),
           ),
-          SizedBox(height: 8.h),
+          SizedBox(height: 6.h),
           Text(
             'Move the sliders to match your taste',
             style: TextStyle(
-              fontSize: 13.sp,
+              fontSize: 11.sp,
               color: const Color(0xFF9CA3AF),
               fontFamily: 'SF Pro',
             ),
           ),
-          SizedBox(height: 20.h),
+          SizedBox(height: 16.h),
 
           // Spice Tolerance Section
           Text(
             'Spice Tolerance',
             style: TextStyle(
-              fontSize: 16.sp,
-              fontWeight: FontWeight.w700,
+              fontSize: 14.sp,
+              fontWeight: FontWeight.w800,
               color: const Color(0xFF0D1B3E),
               fontFamily: 'SF Pro',
             ),
@@ -156,7 +156,7 @@ class _FlavorSpiceStepState extends State<FlavorSpiceStep> {
                       Text(
                         currentLevel['title']!,
                         style: TextStyle(
-                          fontSize: 13.sp,
+                          fontSize: 12.sp,
                           fontWeight: FontWeight.w700,
                           color: const Color(0xFF0D1B3E),
                           fontFamily: 'SF Pro',
@@ -167,7 +167,7 @@ class _FlavorSpiceStepState extends State<FlavorSpiceStep> {
                         child: Text(
                           currentLevel['desc']!,
                           style: TextStyle(
-                            fontSize: 11.sp,
+                            fontSize: 10.sp,
                             color: const Color(0xFF9CA3AF),
                             fontFamily: 'SF Pro',
                           ),
@@ -209,8 +209,8 @@ class _FlavorSpiceStepState extends State<FlavorSpiceStep> {
                           Text(
                             scale['left']!,
                             style: TextStyle(
-                              fontSize: 12.sp,
-                              fontWeight: FontWeight.w600,
+                              fontSize: 11.sp,
+                              fontWeight: FontWeight.w700,
                               color: const Color(0xFF0D1B3E),
                               fontFamily: 'SF Pro',
                             ),
@@ -222,8 +222,8 @@ class _FlavorSpiceStepState extends State<FlavorSpiceStep> {
                           Text(
                             scale['right']!,
                             style: TextStyle(
-                              fontSize: 12.sp,
-                              fontWeight: FontWeight.w600,
+                              fontSize: 11.sp,
+                              fontWeight: FontWeight.w700,
                               color: const Color(0xFF0D1B3E),
                               fontFamily: 'SF Pro',
                             ),
@@ -278,8 +278,8 @@ class _FlavorSpiceStepState extends State<FlavorSpiceStep> {
                 Text(
                   'Your Flavor DNA:',
                   style: TextStyle(
-                    fontSize: 14.sp,
-                    fontWeight: FontWeight.w700,
+                    fontSize: 13.sp,
+                    fontWeight: FontWeight.w800,
                     color: const Color(0xFF111827),
                     fontFamily: 'SF Pro',
                   ),
@@ -316,8 +316,8 @@ class _FlavorSpiceStepState extends State<FlavorSpiceStep> {
       child: Text(
         label,
         style: TextStyle(
-          fontSize: 12.sp,
-          fontWeight: FontWeight.w600,
+          fontSize: 11.sp,
+          fontWeight: FontWeight.w700,
           color: const Color(0xFF111827),
           fontFamily: 'SF Pro',
         ),

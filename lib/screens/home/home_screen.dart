@@ -113,22 +113,6 @@ class _HomeScreenState extends State<HomeScreen>
     if (CookbookService.instance.myCookbooksNotifier.value == null) {
       CookbookService.instance.getMyCookbooks();
     }
-
-    _isImportLoading.addListener(() {
-      if (_isImportLoading.value) {
-        _navCtrl.forward();
-      } else if (_currentTab != 2) {
-        _navCtrl.reverse();
-      }
-    });
-
-    _isScanInResultsMode.addListener(() {
-      if (_isScanInResultsMode.value) {
-        _navCtrl.forward();
-      } else if (_currentTab != 2) {
-        _navCtrl.reverse();
-      }
-    });
   }
 
   void _tutorialDataListener() {
@@ -264,6 +248,7 @@ class _HomeScreenState extends State<HomeScreen>
 
   @override
   Widget build(BuildContext context) {
+    final isKeyboardOpen = MediaQuery.of(context).viewInsets.bottom > 0;
     return Scaffold(
       backgroundColor: AppColors.background,
       resizeToAvoidBottomInset: false,
@@ -274,28 +259,107 @@ class _HomeScreenState extends State<HomeScreen>
           children: [
             IndexedStack(index: _currentTab, children: _tabWidgets),
 
-            // Custom Bottom Navigation Bar overlaid entirely on top
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 0,
-              child: SlideTransition(
-                position: _navSlide,
-                child: _GlassBottomNav(
-                  currentIndex: _currentTab,
-                  onTap: _switchTab,
-                  onCameraTap: () {
-                    if (_currentTab == 2) {
-                      _toggleNav();
-                    } else {
-                      _switchTab(2);
-                    }
+            ValueListenableBuilder<bool>(
+              valueListenable: _isScanInResultsMode,
+              builder: (context, inResultsMode, _) {
+                return ValueListenableBuilder<bool>(
+                  valueListenable: _isImportLoading,
+                  builder: (context, isImportLoading, _) {
+                    // Hide ONLY while actively scanning (Scan Tab + NOT in results mode) OR while importing
+                    // We also want to hide it in results mode as requested
+                    final isScanningTab = (_currentTab == 2);
+                    // Hide nav entirely on Scan tab as requested
+                    final hideNav = isScanningTab || isImportLoading;
+
+                    return Stack(
+                      children: [
+                        // Peek handle – only shown when nav is hidden AND not in results mode
+                        /* 
+                        AnimatedPositioned(
+                          duration: const Duration(milliseconds: 320),
+                          curve: Curves.easeInOut,
+                          bottom: (isScanningTab && !inResultsMode && !_navVisible)
+                              ? 12.h
+                              : -60.h,
+                          left: 0,
+                          right: 0,
+                          child: Center(
+                            child: GestureDetector(
+                              onTap: _toggleNav,
+                              child: Container(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 18.w,
+                                  vertical: 8.h,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFCC3333),
+                                  borderRadius: BorderRadius.circular(30.r),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: const Color(
+                                        0xFFCC3333,
+                                      ).withValues(alpha: 0.4),
+                                      blurRadius: 14.r,
+                                      offset: Offset(0, 4.h),
+                                    ),
+                                  ],
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.keyboard_arrow_up_rounded,
+                                      color: Colors.white,
+                                      size: 18.sp,
+                                    ),
+                                    SizedBox(width: 4.w),
+                                    Text(
+                                      'Menu',
+                                      style: TextStyle(
+                                        fontFamily: 'SF Pro',
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: 13.sp,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        */
+
+                        // Custom Bottom Navigation Bar overlaid entirely on top
+                        Positioned(
+                          left: 0,
+                          right: 0,
+                          bottom: 0,
+                          child: SlideTransition(
+                            position: _navSlide,
+                            child: hideNav || isKeyboardOpen
+                                ? const SizedBox.shrink()
+                                : _GlassBottomNav(
+                                    currentIndex: _currentTab,
+                                    onTap: _switchTab,
+                                    onCameraTap: () {
+                                      if (_currentTab == 2) {
+                                        _toggleNav();
+                                      } else {
+                                        _switchTab(2);
+                                      }
+                                    },
+                                    scanTabKey: _scanTabKey,
+                                    groceryTabKey: _groceryTabKey,
+                                    importTabKey: _importTabKey,
+                                  ),
+                          ),
+                        ),
+                      ],
+                    );
                   },
-                  scanTabKey: _scanTabKey,
-                  groceryTabKey: _groceryTabKey,
-                  importTabKey: _importTabKey,
-                ),
-              ),
+                );
+              },
             ),
           ],
         ),
@@ -303,7 +367,6 @@ class _HomeScreenState extends State<HomeScreen>
     );
   }
 }
-
 
 // ── Glassmorphic bottom nav ───────────────────────────────────────────────────
 class _GlassBottomNav extends StatelessWidget {
@@ -327,7 +390,7 @@ class _GlassBottomNav extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       color: Colors.transparent,
-      padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 24.h),
+      padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 10.h),
       child: Stack(
         clipBehavior: Clip.none,
         alignment: Alignment.topCenter,
@@ -338,7 +401,7 @@ class _GlassBottomNav extends StatelessWidget {
             child: BackdropFilter(
               filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
               child: Container(
-                height: 72.h,
+                height: 60.h,
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.7),
                   borderRadius: BorderRadius.circular(40.r),
@@ -354,51 +417,57 @@ class _GlassBottomNav extends StatelessWidget {
                     ),
                   ],
                 ),
-                child: Stack(
-                  children: [
-                    // Fluid animated indicator
-                    _FluidIndicator(currentIndex: currentIndex),
-                    
-                    Row(
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    return Stack(
                       children: [
-                        _NavItem(
-                          icon: Icons.home_outlined,
-                          activeIcon: Icons.home_rounded,
-                          label: 'Home',
-                          index: 0,
-                          current: currentIndex,
-                          onTap: onTap,
+                        // Fluid animated indicator
+                        _FluidIndicator(
+                          currentIndex: currentIndex,
+                          maxWidth: constraints.maxWidth,
                         ),
-                        _NavItem(
-                          icon: Icons.search_rounded,
-                          activeIcon: Icons.search_rounded,
-                          label: 'Explore',
-                          index: 1,
-                          current: currentIndex,
-                          onTap: onTap,
-                        ),
-                        const Expanded(child: SizedBox()),
-                        _NavItem(
-                          iconKey: groceryTabKey,
-                          icon: Icons.shopping_bag_outlined,
-                          activeIcon: Icons.shopping_bag_rounded,
-                          label: 'Grocery',
-                          index: 3,
-                          current: currentIndex,
-                          onTap: onTap,
-                        ),
-                        _NavItem(
-                          iconKey: importTabKey,
-                          icon: Icons.file_download_outlined,
-                          activeIcon: Icons.file_download_rounded,
-                          label: 'Import',
-                          index: 4,
-                          current: currentIndex,
-                          onTap: onTap,
+                        Row(
+                          children: [
+                            _NavItem(
+                              icon: Icons.home_outlined,
+                              activeIcon: Icons.home_rounded,
+                              label: 'Home',
+                              index: 0,
+                              current: currentIndex,
+                              onTap: onTap,
+                            ),
+                            _NavItem(
+                              icon: Icons.search_rounded,
+                              activeIcon: Icons.search_rounded,
+                              label: 'Explore',
+                              index: 1,
+                              current: currentIndex,
+                              onTap: onTap,
+                            ),
+                            const Expanded(child: SizedBox()),
+                            _NavItem(
+                              iconKey: groceryTabKey,
+                              icon: Icons.shopping_bag_outlined,
+                              activeIcon: Icons.shopping_bag_rounded,
+                              label: 'Grocery',
+                              index: 3,
+                              current: currentIndex,
+                              onTap: onTap,
+                            ),
+                            _NavItem(
+                              iconKey: importTabKey,
+                              icon: Icons.file_download_outlined,
+                              activeIcon: Icons.file_download_rounded,
+                              label: 'Import',
+                              index: 4,
+                              current: currentIndex,
+                              onTap: onTap,
+                            ),
+                          ],
                         ),
                       ],
-                    ),
-                  ],
+                    );
+                  },
                 ),
               ),
             ),
@@ -447,40 +516,34 @@ class _GlassBottomNav extends StatelessWidget {
 
 class _FluidIndicator extends StatelessWidget {
   final int currentIndex;
-  const _FluidIndicator({required this.currentIndex});
+  final double maxWidth;
+  const _FluidIndicator({
+    required this.currentIndex,
+    required this.maxWidth,
+  });
 
   @override
   Widget build(BuildContext context) {
-    // Hidden on Scan tab (center)
-    final bool isHidden = currentIndex == 2;
+    final slotWidth = maxWidth / 5;
+    final targetSlot = currentIndex;
     
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final slotWidth = constraints.maxWidth / 5;
-        final targetSlot = isHidden ? 2 : currentIndex;
-        final targetLeft = targetSlot * slotWidth;
+    // We adjust padding to make it feel like it wraps the content
+    final horizontalPadding = 4.w;
+    final verticalPadding = 4.h;
 
-        return AnimatedPositioned(
-          duration: const Duration(milliseconds: 350),
-          curve: Curves.fastOutSlowIn,
-          left: targetLeft + 6.w,
-          top: 10.h,
-          child: AnimatedOpacity(
-            duration: const Duration(milliseconds: 250),
-            opacity: isHidden ? 0.0 : 1.0,
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 350),
-              curve: Curves.easeOutCubic,
-              width: slotWidth - 12.w,
-              height: 52.h,
-              decoration: BoxDecoration(
-                color: const Color(0xFFCC3333).withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(20.r),
-              ),
-            ),
-          ),
-        );
-      },
+    return AnimatedPositioned(
+      duration: const Duration(milliseconds: 350),
+      curve: Curves.fastOutSlowIn,
+      left: (targetSlot * slotWidth) + horizontalPadding,
+      top: verticalPadding,
+      child: Container(
+        width: slotWidth - (horizontalPadding * 2),
+        height: 56.h - (verticalPadding * 2), // Total header height is around 60h
+        decoration: BoxDecoration(
+          color: const Color(0xFFCC3333).withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(20.r),
+        ),
+      ),
     );
   }
 }
@@ -900,7 +963,7 @@ class _SectionRow extends StatelessWidget {
                 style: TextStyle(
                   fontFamily: 'SF Pro',
                   fontWeight: FontWeight.w700,
-                  fontSize: 15.sp,
+                  fontSize: 14.sp,
                   color: const Color(0xFF1A1A1A),
                   letterSpacing: -0.3,
                 ),
@@ -915,7 +978,7 @@ class _SectionRow extends StatelessWidget {
                 style: TextStyle(
                   fontFamily: 'SF Pro',
                   fontWeight: FontWeight.w600, // Increased from w500
-                  fontSize: 13.sp,
+                  fontSize: 12.sp,
                   color: const Color(0xFFC83A2D),
                 ),
               ),
@@ -1210,7 +1273,7 @@ class _RecentlyViewedRow extends StatelessWidget {
                             style: TextStyle(
                               fontFamily: 'SF Pro',
                               fontWeight: FontWeight.w600,
-                              fontSize: 13.sp,
+                              fontSize: 12.sp,
                               color: const Color(0xFF1A1A1A),
                               letterSpacing: -0.3,
                             ),

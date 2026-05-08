@@ -115,24 +115,24 @@ class _AllergiesStepState extends State<AllergiesStep> {
           Text(
             'Any allergies or intolerances?',
             style: TextStyle(
-              fontSize: 20.sp,
-              fontWeight: FontWeight.w700,
+              fontSize: 18.sp,
+              fontWeight: FontWeight.w800,
               color: const Color(0xFF0D1B3E),
               fontFamily: 'SF Pro',
               height: 1.2,
               letterSpacing: -0.5,
             ),
           ),
-          SizedBox(height: 8.h),
+          SizedBox(height: 6.h),
           Text(
             'Your safety is our top priority',
             style: TextStyle(
-              fontSize: 13.sp,
+              fontSize: 11.sp,
               color: const Color(0xFF9CA3AF),
               fontFamily: 'SF Pro',
             ),
           ),
-          SizedBox(height: 32.h),
+          SizedBox(height: 24.h),
           GridView.count(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
@@ -237,7 +237,7 @@ class _AllergiesStepState extends State<AllergiesStep> {
                         a,
                         style: TextStyle(
                           fontFamily: 'SF Pro',
-                          fontSize: 15.sp,
+                          fontSize: 13.sp,
                           fontWeight: FontWeight.w600,
                           color: const Color(0xFF0D1B3E),
                         ),
@@ -285,8 +285,8 @@ class _AllergiesStepState extends State<AllergiesStep> {
                     'No allergies',
                     style: TextStyle(
                       fontFamily: 'SF Pro',
-                      fontSize: 16.sp,
-                      fontWeight: FontWeight.w600,
+                      fontSize: 14.sp,
+                      fontWeight: FontWeight.w700,
                       color: const Color(0xFF22C55E),
                     ),
                   ),
@@ -313,7 +313,7 @@ class _AllergiesStepState extends State<AllergiesStep> {
                   child: Text(
                     'Recipes containing these ingredients will NEVER appear in your feed',
                     style: TextStyle(
-                      fontSize: 12.sp,
+                      fontSize: 11.sp,
                       fontWeight: FontWeight.w500,
                       fontFamily: 'SF Pro',
                       color: const Color(0xFF4B5563),
@@ -387,8 +387,8 @@ class _AllergyCard extends StatelessWidget {
               title,
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: 13.sp,
-                fontWeight: FontWeight.w600,
+                fontSize: 12.sp,
+                fontWeight: FontWeight.w700,
                 fontFamily: 'SF Pro',
                 color: isSelected
                     ? const Color(0xFF0D1B3E)

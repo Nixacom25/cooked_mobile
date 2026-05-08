@@ -9,7 +9,6 @@ import '../models/grocery_item.dart';
 import '../models/recipe.dart';
 import '../core/widgets/ios_toast.dart';
 import '../core/utils/error_helper.dart';
-import '../services/notification_service.dart';
 import '../core/extensions/string_extensions.dart';
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -23,7 +22,7 @@ class GroceryScreen extends StatefulWidget {
 
 class _GroceryScreenState extends State<GroceryScreen> {
   DateTime? _selectedDate = DateTime.now();
-  // We'll use the notifier from GroceryService
+  DateTime _lastScheduledDate = DateTime.now();
 
   @override
   void initState() {
@@ -32,7 +31,6 @@ class _GroceryScreenState extends State<GroceryScreen> {
   }
 
   Future<void> _loadGroceries() async {
-    // Initial fetch if null
     if (GroceryService.instance.myGroceriesNotifier.value == null) {
       try {
         await GroceryService.instance.getMyGroceries();
@@ -43,7 +41,6 @@ class _GroceryScreenState extends State<GroceryScreen> {
     }
   }
 
-  // Filtered by selected date
   List<GroceryItem> _getFilteredItems(List<GroceryItem> allItems) {
     if (_selectedDate == null) {
       return allItems.where((item) => item.plannedDate == null).toList();
@@ -57,7 +54,6 @@ class _GroceryScreenState extends State<GroceryScreen> {
         .toList();
   }
 
-  // Grouped by recipe name
   Map<String, List<GroceryItem>> _getGrouped(List<GroceryItem> filteredItems) {
     final groups = <String, List<GroceryItem>>{};
     for (final item in filteredItems) {
@@ -71,297 +67,376 @@ class _GroceryScreenState extends State<GroceryScreen> {
   bool _sameDay(DateTime a, DateTime b) =>
       a.year == b.year && a.month == b.month && a.day == b.day;
 
-  Future<void> _pickDate() async {
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: _selectedDate,
-      firstDate: DateTime(2020),
-      lastDate: DateTime(2030),
-      builder: (ctx, child) => Theme(
-        data: Theme.of(ctx).copyWith(
-          colorScheme: const ColorScheme.light(
-            primary: Color(0xFFCC3333),
-            onPrimary: Colors.white,
-            onSurface: Color(0xFF1A1A1A),
-          ),
-        ),
-        child: child!,
-      ),
-    );
-    if (picked != null) {
-      setState(() => _selectedDate = picked);
-      // Schedule reminder for the new date
-      NotificationService.instance.scheduleShoppingReminder(picked);
-    }
+  String _formatHeaderDate() {
+    if (_selectedDate == null) return 'General items';
+    final months = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+    return '${months[_selectedDate!.month - 1]} ${_selectedDate!.day}, ${_selectedDate!.year}';
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Colors.white,
       resizeToAvoidBottomInset: false,
-      body: SafeArea(
-        bottom: false,
-        child: Stack(
-          children: [
-            // ── Main content column ────────────────────────────────────────
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // ── Red Banner Header (Explore Style) ───────────────────────
+          Container(
+            width: double.infinity,
+            padding: EdgeInsets.fromLTRB(22.w, 60.h, 22.w, 25.h),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Color(0xFFC83A2D).withValues(alpha: 0.2),
+                  Color(0xFFC83A2D).withValues(alpha: 0.1),
+                ],
+              ),
+              borderRadius: BorderRadius.vertical(bottom: Radius.circular(20.r)),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                // ... header ...
-                Padding(
-                  padding: EdgeInsets.fromLTRB(18.w, 30.h, 24.w, 4.h),
-                  child: Row(
+                // Title + subtitle
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Grocery List',
-                              style: TextStyle(
-                                fontFamily: 'SF Pro',
-                                fontWeight: FontWeight.w700,
-                                fontSize: 18.sp,
-                                color: const Color(0xFF1A1A1A),
-                                height: 1.3,
-                                letterSpacing: -0.5,
-                              ),
-                            ),
-                            Text(
-                              _selectedDate == null 
-                                  ? 'General items' 
-                                  : '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}',
-                              style: TextStyle(
-                                fontFamily: 'SF Pro',
-                                fontSize: 13.sp,
-                                color: const Color(0xFF666666),
-                              ),
-                            ),
-                          ],
+                      Text(
+                        'Grocery List',
+                        style: TextStyle(
+                          fontFamily: 'SF Pro',
+                          fontWeight: FontWeight.w800,
+                          fontSize: 20.sp,
+                          color: Colors.black,
+                          height: 1.1,
+                          letterSpacing: -1.0,
                         ),
                       ),
-                      // Calendar icon with selected date label
-                      GestureDetector(
-                        onTap: () => setState(() => _selectedDate = null),
-                        child: Container(
-                          padding: EdgeInsets.all(8.r),
-                          child: Icon(
-                            Icons.all_inclusive_rounded,
-                            size: 20.sp,
-                            color: _selectedDate == null ? const Color(0xFFCC3333) : Colors.grey,
-                          ),
-                        ),
-                      ),
-                      GestureDetector(
-                        onTap: _pickDate,
-                        child: Container(
-                          padding: EdgeInsets.all(8.r),
-                          child: Icon(
-                            Icons.calendar_today_outlined,
-                            size: 20.sp,
-                            color: _selectedDate != null ? const Color(0xFFCC3333) : Colors.grey,
-                          ),
+                      SizedBox(height: 6.h),
+                      Text(
+                        _formatHeaderDate(),
+                        style: TextStyle(
+                          fontFamily: 'SF Pro',
+                          fontWeight: FontWeight.w500,
+                          fontSize: 10.sp,
+                          color: Colors.black.withValues(alpha: 0.5),
                         ),
                       ),
                     ],
                   ),
                 ),
-                Expanded(
-                  child: ValueListenableBuilder<List<GroceryItem>?>(
-                    valueListenable: GroceryService.instance.myGroceriesNotifier,
-                    builder: (context, allItems, _) {
-                      if (allItems == null) {
-                        return const Center(
-                          child: CircularProgressIndicator(
-                            color: Color(0xFFCC3333),
+                // ── Mode buttons (∞ and calendar) ──────────────────
+                Row(
+                  children: [
+                    _buildHeaderIconButton(
+                      isActive: _selectedDate == null,
+                      onTap: () {
+                        setState(() {
+                          if (_selectedDate != null) _lastScheduledDate = _selectedDate!;
+                          _selectedDate = null;
+                        });
+                      },
+                      child: Icon(
+                        Icons.all_inclusive_rounded,
+                        size: 18.sp,
+                        color: _selectedDate == null
+                            ? const Color(0xFFCC3333)
+                            : const Color(0xFFCCCCCC),
+                      ),
+                    ),
+                    SizedBox(width: 12.w),
+                    _buildHeaderIconButton(
+                      isActive: _selectedDate != null,
+                      onTap: () async {
+                        final picked = await showDatePicker(
+                          context: context,
+                          initialDate: _selectedDate ?? _lastScheduledDate,
+                          firstDate: DateTime(2020),
+                          lastDate: DateTime(2030),
+                          builder: (ctx, child) => Theme(
+                            data: Theme.of(ctx).copyWith(
+                              colorScheme: const ColorScheme.light(
+                                primary: Color(0xFFCC3333),
+                                onPrimary: Colors.white,
+                                onSurface: Color(0xFF1A1A1A),
+                              ),
+                            ),
+                            child: child!,
                           ),
                         );
-                      }
-
-                      final filtered = _getFilteredItems(allItems);
-                      if (filtered.isEmpty) return _buildEmpty(allItems);
-
-                      final grouped = _getGrouped(filtered);
-
-                      return ListView.builder(
-                        padding: EdgeInsets.only(bottom: 120.h),
-                        itemCount: grouped.length,
-                        itemBuilder: (_, gi) {
-                          final recipeName = grouped.keys.elementAt(gi);
-                          final items = grouped[recipeName]!;
-
-                          return Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Padding(
-                                padding: EdgeInsets.fromLTRB(
-                                  18,
-                                  gi == 0 ? 14 : 28,
-                                  18,
-                                  4,
-                                ),
-                                child: Text(
-                                  recipeName,
-                                  style: TextStyle(
-                                    fontFamily: 'SF Pro',
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 15.sp,
-                                    color: const Color(0xFF1A1A1A),
-                                    height: 1.3,
-                                    letterSpacing: -0.3,
-                                  ),
-                                ),
-                              ),
-                              ...items.map((item) {
-                                return Column(
-                                  children: [
-                                    _ItemRow(
-                                      item: item,
-                                      onToggle: () async {
-                                        try {
-                                          await GroceryService.instance
-                                              .toggleBought(item.id);
-                                        } catch (e) {
-                                          IosToast.show(context, message: ErrorHelper.getFriendlyMessage(e), type: ToastType.error);
-                                        }
-                                      },
-                                      onDelete: () async {
-                                        try {
-                                          await GroceryService.instance
-                                              .deleteGroceryItem(item.id);
-                                        } catch (e) {
-                                          IosToast.show(context, message: ErrorHelper.getFriendlyMessage(e), type: ToastType.error);
-                                        }
-                                      },
-                                    ),
-                                    const Divider(
-                                      height: 0,
-                                      thickness: 1,
-                                      color: Color(0xFFF2F2F2),
-                                      indent: 18,
-                                      endIndent: 18,
-                                    ),
-                                  ],
-                                );
-                              }),
-                            ],
-                          );
-                        },
-                      );
-                    },
-                  ),
+                        if (picked != null) {
+                          setState(() {
+                            _selectedDate = picked;
+                            _lastScheduledDate = picked;
+                          });
+                        }
+                      },
+                      child: Icon(
+                        Icons.calendar_month_rounded,
+                        size: 18.sp,
+                        color: _selectedDate != null
+                            ? const Color(0xFFCC3333)
+                            : const Color(0xFFCCCCCC),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
+          ),
 
-            // ── Floating Add button (above the transparent nav bar) ────────
-            ValueListenableBuilder<List<GroceryItem>?>(
+          // ── Content Area ──────────────────────────────────────────
+          Expanded(
+            child: ValueListenableBuilder<List<GroceryItem>?>(
               valueListenable: GroceryService.instance.myGroceriesNotifier,
               builder: (context, allItems, _) {
-                final filtered = _getFilteredItems(allItems ?? []);
-                if (filtered.isEmpty) return const SizedBox.shrink();
-                
-                return Positioned(
-                  bottom: 100.h,
-                  right: 20.w,
-                  child: GestureDetector(
-                    onTap: () => _showAddGrocerySheet(context, allItems ?? []),
-                    child: Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 20.w,
-                        vertical: 12.h,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFCC3333),
-                        borderRadius: BorderRadius.circular(30.r),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xFFCC3333).withValues(alpha: 0.3),
-                            blurRadius: 20.r,
-                            offset: Offset(0, 6.h),
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.add_rounded, color: Colors.white, size: 18.sp),
-                          SizedBox(width: 6.w),
-                          Text(
-                            'Add',
-                            style: TextStyle(
-                              fontFamily: 'SF Pro',
-                              fontWeight: FontWeight.w700,
-                              fontSize: 14.sp,
-                              color: Colors.white,
+                if (allItems == null) {
+                  return const Center(
+                    child: CircularProgressIndicator(
+                      color: Color(0xFFCC3333),
+                    ),
+                  );
+                }
+
+                final filtered = _getFilteredItems(allItems);
+
+                if (filtered.isEmpty) {
+                  return _buildEmpty(allItems);
+                }
+
+                final grouped = _getGrouped(filtered);
+
+                return Stack(
+                  children: [
+                    ListView.builder(
+                      padding: EdgeInsets.fromLTRB(0, 10.h, 0, 120.h),
+                      itemCount: grouped.length,
+                      itemBuilder: (_, gi) {
+                        final recipeName = grouped.keys.elementAt(gi);
+                        final items = grouped[recipeName]!;
+
+                        String? recipeId;
+                        for (var item in items) {
+                          if (item.recipeId != null) {
+                            recipeId = item.recipeId;
+                            break;
+                          }
+                        }
+
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _RecipeGroupHeader(
+                              recipeName: recipeName,
+                              itemCount: items.length,
+                              recipeId: recipeId,
                             ),
+                            ...items.map((item) {
+                              return _ItemRow(
+                                item: item,
+                                onToggle: () async {
+                                  try {
+                                    await GroceryService.instance.toggleBought(item.id);
+                                  } catch (e) {
+                                    IosToast.show(context, message: ErrorHelper.getFriendlyMessage(e), type: ToastType.error);
+                                  }
+                                },
+                                onDelete: () async {
+                                  try {
+                                    await GroceryService.instance.deleteGroceryItem(item.id);
+                                  } catch (e) {
+                                    IosToast.show(context, message: ErrorHelper.getFriendlyMessage(e), type: ToastType.error);
+                                  }
+                                },
+                              );
+                            }),
+                            SizedBox(height: 16.h),
+                          ],
+                        );
+                      },
+                    ),
+                    // Floating Add button
+                    Positioned(
+                      bottom: 100.h,
+                      right: 20.w,
+                      child: GestureDetector(
+                        onTap: () => _showAddGrocerySheet(context, allItems),
+                        child: Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 20.w,
+                            vertical: 12.h,
                           ),
-                        ],
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFCC3333),
+                            borderRadius: BorderRadius.circular(30.r),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFFCC3333).withValues(alpha: 0.3),
+                                blurRadius: 20.r,
+                                offset: Offset(0, 6.h),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.add_rounded, color: Colors.white, size: 18.sp),
+                              SizedBox(width: 6.w),
+                              Text(
+                                'Add',
+                                style: TextStyle(
+                                  fontFamily: 'SF Pro',
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 14.sp,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
                     ),
-                  ),
+                  ],
                 );
               },
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeaderIconButton({
+    required bool isActive,
+    required VoidCallback onTap,
+    required Widget child,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 35.w,
+        height: 35.h,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
           ],
         ),
+        child: Center(child: child),
       ),
     );
   }
 
   Widget _buildEmpty(List<GroceryItem> allItems) {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            Icons.shopping_basket_outlined,
-            size: 56.sp,
-            color: Colors.grey[300],
+    return Padding(
+      padding: EdgeInsets.fromLTRB(22.w, 30, 22.w, 110.h),
+      child: Container(
+        width: double.infinity,
+        height: double.infinity,
+        padding: EdgeInsets.symmetric(horizontal: 28.w),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20.r),
+          border: Border.all(
+            color: Colors.grey.shade200,
+            width: 1.w,
           ),
-          SizedBox(height: 14.h),
-          Text(
-            _selectedDate == null 
-                ? 'No general items' 
-                : 'No groceries planned\nfor this day',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontFamily: 'SF Pro',
-              fontSize: 15.sp,
-              color: Colors.grey[400],
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 30,
+              offset: const Offset(0, 10),
             ),
-          ),
-          SizedBox(height: 8.h),
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 40.w),
-            child: Text(
-              'You can enter your shopping list manually OR use ingredients from your recipes and cookbooks.',
+          ],
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            // Basket icon with refined halo
+            SizedBox(
+              width: 120.w,
+              height: 120.w,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Container(
+                    width: 90.w,
+                    height: 90.w,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: const Color(0xFFCC3333).withValues(alpha: 0.05),
+                    ),
+                  ),
+                  Icon(
+                    Icons.shopping_basket_outlined,
+                    size: 50.sp,
+                    color: const Color(0xFFCC3333).withValues(alpha: 0.4),
+                  ),
+                ],
+              ),
+            ),
+            Text(
+              _selectedDate == null
+                  ? 'No general items'
+                  : 'No groceries planned\nfor this day',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontFamily: 'SF Pro',
-                fontSize: 12.sp,
-                color: Colors.grey[400],
-                fontStyle: FontStyle.italic,
+                fontWeight: FontWeight.w700,
+                fontSize: 14.sp,
+                color: const Color(0xFF1A1A1A),
+                height: 1.3,
+                letterSpacing: -0.5,
               ),
             ),
-          ),
-          SizedBox(height: 30.h),
-          // Grand bouton "+ Ajouter des ingrédients"
-          ElevatedButton.icon(
-            onPressed: () => _showAddGrocerySheet(context, allItems),
-            icon: const Icon(Icons.add_rounded, color: Colors.white),
-            label: const Text('Add ingredients'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFCC3333),
-              padding: EdgeInsets.symmetric(horizontal: 32.w, vertical: 16.h),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(30.r),
+            SizedBox(height: 10.h),
+            Text(
+              'You can enter your shopping list manually\nor use ingredients from your recipes\nand cookbooks.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontFamily: 'SF Pro',
+                fontSize: 11.sp,
+                color: const Color(0xFFADADAD),
+                height: 1.5,
               ),
-              elevation: 0,
             ),
-          ),
-        ],
+            SizedBox(height: 40.h),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () => _showAddGrocerySheet(context, allItems),
+                icon: Icon(Icons.add_rounded, color: Colors.white, size: 18.sp),
+                label: Text(
+                  'Add Ingredients',
+                  style: TextStyle(
+                    fontFamily: 'SF Pro',
+                    fontWeight: FontWeight.w700,
+                    fontSize: 14.sp,
+                    color: Colors.white,
+                  ),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFCC3333),
+                  padding: EdgeInsets.symmetric(vertical: 15.h),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(40.r),
+                  ),
+                  elevation: 0,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -383,7 +458,6 @@ class _GroceryScreenState extends State<GroceryScreen> {
               icon: icon,
               recipeId: recipeId,
             );
-            // If it was a manual add (recipeId is null), switch to General Items to show it
             if (recipeId == null && mounted) {
               setState(() => _selectedDate = null);
             }
@@ -396,15 +470,106 @@ class _GroceryScreenState extends State<GroceryScreen> {
   }
 }
 
+// ── Recipe Group Header ───────────────────────────────────────────────────────
 
+class _RecipeGroupHeader extends StatelessWidget {
+  final String recipeName;
+  final int itemCount;
+  final String? recipeId;
 
-// ── Empty-state widget ────────────────────────────────────────────────────────
+  const _RecipeGroupHeader({
+    required this.recipeName,
+    required this.itemCount,
+    this.recipeId,
+  });
 
-// ── Item row ──────────────────────────────────────────────────────────────────
+  @override
+  Widget build(BuildContext context) {
+    final recipe = recipeId != null
+        ? RecipeService.instance.myRecipesNotifier.value?.firstWhere(
+            (r) => r.id == recipeId,
+            orElse: () => Recipe(
+              id: '',
+              name: '',
+              ingredients: [],
+              cookTime: 0,
+              kcal: 0,
+              steps: [],
+              equipment: [],
+              isPublic: false,
+              isFavorite: false,
+              createdAt: DateTime.now(),
+              updatedAt: DateTime.now(),
+            ))
+        : null;
+
+    final hasValidRecipe = recipe != null && recipe.id.isNotEmpty;
+
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal: 18.w, vertical: 8.h),
+      padding: EdgeInsets.all(12.r),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF7F7F7),
+        borderRadius: BorderRadius.circular(32.r),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 48.w,
+            height: 48.h,
+            decoration: const BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.white,
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(100.r),
+              child: hasValidRecipe && recipe.image != null
+                  ? (recipe.image!.startsWith('http')
+                      ? Image.network(recipe.image!, fit: BoxFit.cover)
+                      : Image.asset(recipe.image!, fit: BoxFit.cover))
+                  : Image.asset('assets/images/recipes.png', fit: BoxFit.cover),
+            ),
+          ),
+          SizedBox(width: 14.w),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  recipeName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontFamily: 'SF Pro',
+                    fontWeight: FontWeight.w700,
+                    fontSize: 11.sp,
+                    color: const Color(0xFF1A1A1A),
+                  ),
+                ),
+                Text(
+                  '$itemCount items',
+                  style: TextStyle(
+                    fontFamily: 'SF Pro',
+                    fontSize: 10.sp,
+                    color: const Color(0xFF999999),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Item Row ──────────────────────────────────────────────────────────────────
+
 class _ItemRow extends StatelessWidget {
   final GroceryItem item;
   final VoidCallback onToggle;
   final VoidCallback onDelete;
+
   const _ItemRow({
     required this.item,
     required this.onToggle,
@@ -429,7 +594,6 @@ class _ItemRow extends StatelessWidget {
           padding: EdgeInsets.symmetric(horizontal: 18.w, vertical: 16.h),
           child: Row(
             children: [
-              // Circle checkbox
               Container(
                 width: 20.w,
                 height: 20.h,
@@ -446,18 +610,11 @@ class _ItemRow extends StatelessWidget {
                       : Colors.transparent,
                 ),
                 child: item.isBought
-                    ? Icon(
-                        Icons.check_rounded,
-                        size: 13.sp,
-                        color: Colors.white,
-                      )
+                    ? Icon(Icons.check_rounded, size: 13.sp, color: Colors.white)
                     : null,
               ),
               SizedBox(width: 14.w),
-              Text(
-                item.ingredientIcon ?? '🛒',
-                style: TextStyle(fontSize: 18.sp),
-              ),
+              Text(item.ingredientIcon ?? '🛒', style: TextStyle(fontSize: 18.sp)),
               SizedBox(width: 5.w),
               Expanded(
                 child: Text(
@@ -465,15 +622,13 @@ class _ItemRow extends StatelessWidget {
                   style: TextStyle(
                     fontFamily: 'SF Pro',
                     fontWeight: FontWeight.w500,
-                    fontSize: 15.sp,
+                    fontSize: 11.sp,
                     color: item.isBought
                         ? const Color(0xFFAAAAAA)
                         : const Color(0xFF1A1A1A),
                     height: 1.4,
                     letterSpacing: -0.2,
-                    decoration: item.isBought
-                        ? TextDecoration.lineThrough
-                        : null,
+                    decoration: item.isBought ? TextDecoration.lineThrough : null,
                   ),
                 ),
               ),
@@ -481,7 +636,7 @@ class _ItemRow extends StatelessWidget {
                 item.quantity,
                 style: TextStyle(
                   fontFamily: 'SF Pro',
-                  fontSize: 14.sp,
+                  fontSize: 10.sp,
                   color: const Color(0xFFAAAAAA),
                 ),
               ),
@@ -493,7 +648,8 @@ class _ItemRow extends StatelessWidget {
   }
 }
 
-// ── Add Grocery bottom sheet ──────────────────────────────────────────────────
+// ── Add Grocery Bottom Sheet ──────────────────────────────────────────────────
+
 class _AddGrocerySheet extends StatefulWidget {
   final DateTime selectedDate;
   final List<GroceryItem> allItems;
@@ -503,8 +659,7 @@ class _AddGrocerySheet extends StatefulWidget {
     DateTime? date,
     String? icon,
     String? recipeId,
-  )
-  onSave;
+  ) onSave;
 
   const _AddGrocerySheet({
     required this.selectedDate,
@@ -546,7 +701,7 @@ class _AddGrocerySheetState extends State<_AddGrocerySheet> {
       setState(() => _suggestedIngredients = []);
       return;
     }
-    
+
     _lastSelectedName = '';
 
     _searchDebounce = Timer(const Duration(milliseconds: 300), () async {
@@ -555,9 +710,7 @@ class _AddGrocerySheetState extends State<_AddGrocerySheet> {
     });
   }
 
-  String _capitalize(String s) {
-    return s.toTitleCase();
-  }
+  String _capitalize(String s) => s.toTitleCase();
 
   @override
   void dispose() {
@@ -625,7 +778,6 @@ class _AddGrocerySheetState extends State<_AddGrocerySheet> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Handle
             Container(
               width: 40.w,
               height: 4.h,
@@ -635,8 +787,6 @@ class _AddGrocerySheetState extends State<_AddGrocerySheet> {
                 borderRadius: BorderRadius.circular(2.r),
               ),
             ),
-  
-            // Header
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 20.w),
               child: Row(
@@ -658,15 +808,12 @@ class _AddGrocerySheetState extends State<_AddGrocerySheet> {
                 ],
               ),
             ),
-  
             Divider(height: 1, color: Colors.white.withOpacity(0.2)),
-
             Flexible(
               child: ListView(
                 shrinkWrap: true,
                 padding: EdgeInsets.fromLTRB(20.w, 20.h, 20.w, 10.h + bottom + bottomPad),
                 children: [
-                  // ── Mode Toggle ───────────────────────────────────────
                   Container(
                     padding: EdgeInsets.all(4.r),
                     decoration: BoxDecoration(
@@ -688,10 +835,7 @@ class _AddGrocerySheetState extends State<_AddGrocerySheet> {
                       ],
                     ),
                   ),
-
                   SizedBox(height: 24.h),
-
-                  // ── Recipe Selector ──────────────────────────────────────────
                   if (_isRecipeMode) ...[
                     Text(
                       'Attach to Recipe',
@@ -707,7 +851,6 @@ class _AddGrocerySheetState extends State<_AddGrocerySheet> {
                       valueListenable: RecipeService.instance.myRecipesNotifier,
                       builder: (context, recipes, _) {
                         final hasRecipes = recipes != null && recipes.isNotEmpty;
-
                         return Container(
                           decoration: BoxDecoration(
                             color: Colors.white.withOpacity(0.1),
@@ -723,34 +866,32 @@ class _AddGrocerySheetState extends State<_AddGrocerySheet> {
                                 padding: EdgeInsets.symmetric(horizontal: 16.w),
                                 child: Text(
                                   hasRecipes ? 'Pick a recipe' : 'No recipes found.',
-                                  style: TextStyle(color: Colors.white60, fontSize: 14.sp)
+                                  style: TextStyle(color: Colors.white60, fontSize: 14.sp),
                                 ),
                               ),
                               icon: Padding(
                                 padding: EdgeInsets.only(right: 12.w),
                                 child: const Icon(Icons.keyboard_arrow_down_rounded, color: Colors.white70),
                               ),
-                              items: !hasRecipes ? null : recipes.map((r) {
-                                return DropdownMenuItem(
-                                  value: r,
-                                  child: Padding(
-                                    padding: EdgeInsets.symmetric(horizontal: 16.w),
-                                    child: Text(
-                                      r.name,
-                                      style: TextStyle(
-                                        fontFamily: 'SF Pro',
-                                        fontSize: 14.sp,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                  ),
-                                );
-                              }).toList(),
-                              onChanged: !hasRecipes ? null : (val) {
-                                setState(() {
-                                  _selectedRecipe = val;
-                                });
-                              },
+                              items: !hasRecipes
+                                  ? null
+                                  : recipes.map((r) {
+                                      return DropdownMenuItem(
+                                        value: r,
+                                        child: Padding(
+                                          padding: EdgeInsets.symmetric(horizontal: 16.w),
+                                          child: Text(
+                                            r.name,
+                                            style: TextStyle(
+                                              fontFamily: 'SF Pro',
+                                              fontSize: 14.sp,
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                        ),
+                                      );
+                                    }).toList(),
+                              onChanged: !hasRecipes ? null : (val) => setState(() => _selectedRecipe = val),
                             ),
                           ),
                         );
@@ -758,9 +899,7 @@ class _AddGrocerySheetState extends State<_AddGrocerySheet> {
                     ),
                     SizedBox(height: 20.h),
                   ],
-
                   if (!_isRecipeMode) ...[
-                    // ── Ingredient Name Field ─────────────────────────────
                     Text(
                       'Ingredient Name',
                       style: TextStyle(
@@ -780,11 +919,7 @@ class _AddGrocerySheetState extends State<_AddGrocerySheet> {
                       child: TextField(
                         controller: _nameController,
                         textCapitalization: TextCapitalization.words,
-                        style: TextStyle(
-                          fontFamily: 'SF Pro',
-                          fontSize: 14.sp,
-                          color: Colors.black,
-                        ),
+                        style: TextStyle(fontFamily: 'SF Pro', fontSize: 14.sp, color: Colors.black),
                         decoration: InputDecoration(
                           hintText: 'e.g. Garlic',
                           hintStyle: TextStyle(color: Colors.white38),
@@ -793,7 +928,6 @@ class _AddGrocerySheetState extends State<_AddGrocerySheet> {
                         ),
                       ),
                     ),
-
                     if (_suggestedIngredients.isNotEmpty)
                       Padding(
                         padding: EdgeInsets.only(top: 8.h),
@@ -817,10 +951,7 @@ class _AddGrocerySheetState extends State<_AddGrocerySheet> {
                                 final item = _suggestedIngredients[i];
                                 return ListTile(
                                   dense: true,
-                                  title: Text(
-                                    _capitalize(item['name'] ?? ''),
-                                    style: const TextStyle(color: Colors.white),
-                                  ),
+                                  title: Text(_capitalize(item['name'] ?? ''), style: const TextStyle(color: Colors.white)),
                                   onTap: () {
                                     final selected = _capitalize(item['name'] ?? '');
                                     _lastSelectedName = selected;
@@ -835,10 +966,7 @@ class _AddGrocerySheetState extends State<_AddGrocerySheet> {
                           ),
                         ),
                       ),
-
                     SizedBox(height: 20.h),
-
-                    // ── Quantity Field ─────────────────────────────
                     Text(
                       'Quantity',
                       style: TextStyle(
@@ -858,11 +986,7 @@ class _AddGrocerySheetState extends State<_AddGrocerySheet> {
                       child: TextField(
                         controller: _qtyController,
                         textCapitalization: TextCapitalization.words,
-                        style: TextStyle(
-                          fontFamily: 'SF Pro',
-                          fontSize: 14.sp,
-                          color: Colors.black,
-                        ),
+                        style: TextStyle(fontFamily: 'SF Pro', fontSize: 14.sp, color: Colors.black),
                         decoration: InputDecoration(
                           hintText: 'e.g. 2 cloves',
                           hintStyle: TextStyle(color: Colors.white38),
@@ -872,8 +996,6 @@ class _AddGrocerySheetState extends State<_AddGrocerySheet> {
                       ),
                     ),
                   ],
-
-                  // ── Date label + field (Only for Whole Recipe) ─────────
                   if (_isRecipeMode) ...[
                     Text(
                       'Scheduled Date',
@@ -899,26 +1021,16 @@ class _AddGrocerySheetState extends State<_AddGrocerySheet> {
                             Expanded(
                               child: Text(
                                 _fmt(_date),
-                                style: TextStyle(
-                                  fontFamily: 'SF Pro',
-                                  fontSize: 14.sp,
-                                  color: Colors.white,
-                                ),
+                                style: TextStyle(fontFamily: 'SF Pro', fontSize: 14.sp, color: Colors.white),
                               ),
                             ),
-                            Icon(
-                              Icons.calendar_month_rounded,
-                              color: Colors.white70,
-                              size: 22.sp,
-                            ),
+                            Icon(Icons.calendar_month_rounded, color: Colors.white70, size: 22.sp),
                           ],
                         ),
                       ),
                     ),
                   ],
                   SizedBox(height: 20.h),
-
-                  // ── Save button ──────────────────────────────────────────
                   SizedBox(
                     width: double.infinity,
                     height: 50.h,
@@ -935,34 +1047,21 @@ class _AddGrocerySheetState extends State<_AddGrocerySheet> {
                                     return;
                                   }
                                   final fullRecipe = await RecipeService.instance.getRecipe(_selectedRecipe!.id);
-
                                   for (var ing in fullRecipe.ingredients) {
-                                    widget.onSave(
-                                      ing.name,
-                                      ing.quantity,
-                                      _date,
-                                      ing.icon,
-                                      fullRecipe.id,
-                                    );
+                                    widget.onSave(ing.name, ing.quantity, _date, ing.icon, fullRecipe.id);
                                   }
                                 } else {
                                   final name = _nameController.text.trim();
                                   final qty = _qtyController.text.trim();
                                   if (name.isNotEmpty) {
-                                    widget.onSave(
-                                      name,
-                                      qty,
-                                      null, // Manual adds always go to General Items
-                                      null,
-                                      null,
-                                    );
+                                    widget.onSave(name, qty, null, null, null);
                                   }
                                 }
                                 if (!mounted) return;
                                 IosToast.show(
                                   context,
-                                  message: _isRecipeMode 
-                                      ? 'Recipe ingredients added successfully' 
+                                  message: _isRecipeMode
+                                      ? 'Recipe ingredients added successfully'
                                       : 'Item added successfully',
                                   type: ToastType.success,
                                 );

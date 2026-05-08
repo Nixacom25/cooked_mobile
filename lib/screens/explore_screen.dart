@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../core/theme/app_theme.dart';
@@ -5,6 +7,7 @@ import '../widgets/app_search_field.dart';
 import '../routes/app_routes.dart';
 import '../services/recipe_service.dart';
 import '../models/recipe.dart';
+import '../widgets/recipe_card.dart';
 import '../models/view_all_type.dart';
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -113,10 +116,10 @@ class _ExploreScreenState extends State<ExploreScreen> {
         padding: EdgeInsets.only(bottom: 120.h),
         children: [
           _buildHeader(),
-          SizedBox(height: 20.h),
+          SizedBox(height: 16.h),
           if (_searchCtrl.text.isEmpty) ...[
             _buildBrowseByCuisine(),
-            SizedBox(height: 20.h),
+            SizedBox(height: 16.h),
             _buildPopularCategories(),
           ],
           _buildPopularNow(),
@@ -154,7 +157,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
               style: TextStyle(
                 fontFamily: 'SF Pro',
                 fontWeight: FontWeight.w700,
-                fontSize: 20.sp, 
+                fontSize: 18.sp,
                 color: Colors.white,
                 height: 1.2,
                 letterSpacing: -0.5,
@@ -165,59 +168,6 @@ class _ExploreScreenState extends State<ExploreScreen> {
               controller: _searchCtrl,
               hintText: 'Search recipes, ingredients....',
             ),
-            // SizedBox(height: 16.h),
-            // SingleChildScrollView(
-            //   scrollDirection: Axis.horizontal,
-            //   child: Row(
-            //     children: List.generate(_categories.length, (i) {
-            //       final (emoji, label) = _categories[i];
-            //       final active = _selectedCategory == i;
-            //       return GestureDetector(
-            //         onTap: () {
-            //           setState(() => _selectedCategory = i);
-            //           // _loadPopularRecipes(label); // Note: Removed in recent cleanup
-            //         },
-            //         child: AnimatedContainer(
-            //           duration: const Duration(milliseconds: 200),
-            //           margin: EdgeInsets.only(right: 8.w),
-            //           padding:
-            //               EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
-            //           decoration: BoxDecoration(
-            //             color:
-            //                 active
-            //                     ? const Color(0xFFFFF6D6)
-            //                     : Colors.white.withOpacity(0.18),
-            //             borderRadius: BorderRadius.circular(30.r),
-            //             border: Border.all(
-            //               color:
-            //                   active
-            //                       ? const Color(0xFFF2C94C)
-            //                       : Colors.white.withOpacity(0.35),
-            //             ),
-            //           ),
-            //           child: Row(
-            //             children: [
-            //               Text(emoji, style: TextStyle(fontSize: 13.sp)),
-            //               SizedBox(width: 6.w),
-            //               Text(
-            //                 label,
-            //                 style: TextStyle(
-            //                   fontFamily: 'SF Pro',
-            //                   fontWeight: FontWeight.w600,
-            //                   fontSize: 13.sp,
-            //                   color:
-            //                       active
-            //                           ? const Color(0xFFCC3333)
-            //                           : Colors.white,
-            //                 ),
-            //               ),
-            //             ],
-            //           ),
-            //         ),
-            //       );
-            //     }),
-            //   ),
-            // ),
           ],
         ),
       ),
@@ -259,7 +209,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                 );
               },
             ),
-            SizedBox(height: 8.h),
+            SizedBox(height: 6.h),
             SizedBox(
               height: 90.h,
               child: ListView.builder(
@@ -291,8 +241,8 @@ class _ExploreScreenState extends State<ExploreScreen> {
                       child: Column(
                         children: [
                           Container(
-                            width: 65.w,
-                            height: 65.h,
+                            width: 60.w,
+                            height: 60.h,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               boxShadow: [
@@ -314,8 +264,8 @@ class _ExploreScreenState extends State<ExploreScreen> {
                             style: TextStyle(
                               fontFamily: 'SF Pro',
                               fontWeight: FontWeight.w600, // Medium bold
-                              fontSize: 12.sp,
-                              color: const Color(0xFF191C1E),
+                              fontSize: 18.sp,
+                              color: Colors.black,
                             ),
                           ),
                         ],
@@ -366,7 +316,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                 );
               },
             ),
-            SizedBox(height: 8.h),
+            SizedBox(height: 6.h),
             SizedBox(
               height: 200.h,
               child: ListView.builder(
@@ -393,31 +343,47 @@ class _ExploreScreenState extends State<ExploreScreen> {
                       );
                     },
                     child: Container(
-                      width: 160.w,
+                      width: 130.w,
                       margin: EdgeInsets.only(
                         left: i == 0 ? 20.w : 0,
-                        right: 16.w,
+                        right: 10.w,
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(30.r),
-                            child: Image.asset(
-                              imgPath,
-                              width: 160.w,
-                              height: 130.h,
-                              fit: BoxFit.cover,
+                          Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(32.r),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.5),
+                                  blurRadius: 15.r,
+                                  offset: Offset(0, 8.h),
+                                ),
+                              ],
+                            ),
+                            child: Stack(
+                              children: [
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(15.r),
+                                  child: Image.asset(
+                                    imgPath,
+                                    width: 130.w,
+                                    height: 120.h,
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                          SizedBox(height: 10.h),
+                          SizedBox(height: 12.h),
                           Text(
                             name,
                             maxLines: 2,
                             style: TextStyle(
                               fontFamily: 'SF Pro',
-                              fontWeight: FontWeight.w700, // Reduced from w800
-                              fontSize: 13.sp, // Reduced from 14
+                              fontWeight: FontWeight.w700,
+                              fontSize: 11.sp,
                               color: const Color(0xFF222222),
                               height: 1.3,
                             ),
@@ -427,7 +393,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                             children: [
                               Icon(
                                 Icons.restaurant_menu,
-                                size: 13.sp,
+                                size: 12.sp,
                                 color: const Color(0xFF9CA3AF),
                               ),
                               SizedBox(width: 4.w),
@@ -435,8 +401,8 @@ class _ExploreScreenState extends State<ExploreScreen> {
                                 '$count Recipes',
                                 style: TextStyle(
                                   fontFamily: 'SF Pro',
-                                  fontSize: 11.sp,
-                                  color: const Color(0xFF9CA3AF),
+                                  fontSize: 13.sp,
+                                  color: const Color(0xFF1F2937),
                                 ),
                               ),
                             ],
@@ -495,14 +461,14 @@ class _ExploreScreenState extends State<ExploreScreen> {
                 style: TextStyle(
                   fontFamily: 'SF Pro',
                   fontWeight: FontWeight.w700,
-                  fontSize: 15.sp,
-                  color: const Color(0xFF111827),
+                  fontSize: 11.sp,
+                  color: const Color(0xFF1A1A1A),
                   height: 1.3,
                   letterSpacing: -0.3,
                 ),
               ),
             ),
-            SizedBox(height: 8.h),
+            SizedBox(height: 6.h),
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 20.w),
               child: GridView.builder(
@@ -526,100 +492,19 @@ class _ExploreScreenState extends State<ExploreScreen> {
                         arguments: {'recipe': recipe},
                       );
                     },
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFF7F7F7),
-                              borderRadius: BorderRadius.circular(10.r),
-                            ),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(16.r),
-                              child:
-                                  recipe.image != null &&
-                                      recipe.image!.startsWith('http')
-                                  ? Image.network(
-                                      recipe.image!,
-                                      width: double.infinity,
-                                      fit: BoxFit.contain,
-                                      errorBuilder: (_, __, ___) => Image.asset(
-                                        'assets/images/recipes.png',
-                                        width: double.infinity,
-                                        fit: BoxFit.contain,
-                                      ),
-                                    )
-                                  : Image.asset(
-                                      recipe.image ?? 'assets/images/recipes.png',
-                                      width: double.infinity,
-                                      fit: BoxFit.contain,
-                                    ),
-                            ),
-                          ),
-                        ),
-                        SizedBox(height: 8.h),
-                        Row(
-                          children: [
-                            Text(
-                              '${i + 1}',
-                              style: TextStyle(
-                                fontFamily: 'SF Pro',
-                                fontWeight: FontWeight.w900,
-                                fontSize: 18.sp,
-                                color: const Color(0xFFD8D8D8),
-                              ),
-                            ),
-                            SizedBox(width: 8.w),
-                            Expanded(
-                              child: Text(
-                                recipe.name,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  fontFamily: 'SF Pro',
-                                  fontWeight: FontWeight.w700, // Reduced from w800
-                                  fontSize: 13.sp, // Reduced from 14
-                                  color: const Color(0xFF222222),
-                                  height: 1.3,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        Row(
-                          children: [
-                            SizedBox(width: 20.w), // Offset for number
-                            Icon(
-                              Icons.timer,
-                              size: 12.sp,
-                              color: const Color(0xFF9CA3AF),
-                            ),
-                            Text(
-                              '${recipe.cookTime} min',
-                              style: TextStyle(
-                                fontFamily: 'SF Pro',
-                                fontSize: 11.sp,
-                                color: const Color(0xFF9CA3AF),
-                              ),
-                            ),
-                            SizedBox(width: 5.w),
-                            Icon(
-                              Icons.local_fire_department,
-                              size: 12.sp,
-                              color: const Color(0xFF9CA3AF),
-                            ),
-                            Text(
-                              '${recipe.kcal} kcal',
-                              style: TextStyle(
-                                fontFamily: 'SF Pro',
-                                fontSize: 11.sp,
-                                color: const Color(0xFF9CA3AF),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
+                    child: RecipeCard(
+                      recipe: recipe,
+                      rank: i + 1,
+                      onHeartTap: () {
+                        // Toggle logic if needed
+                      },
+                      onTap: () {
+                        Navigator.pushNamed(
+                          context,
+                          AppRoutes.recipeDetail,
+                          arguments: {'recipe': recipe},
+                        );
+                      },
                     ),
                   );
                 },
@@ -651,7 +536,7 @@ class _SectionHeader extends StatelessWidget {
             style: TextStyle(
               fontFamily: 'SF Pro',
               fontWeight: FontWeight.w700,
-              fontSize: 15.sp,
+              fontSize: 12.sp,
               color: const Color(0xFF111827),
               height: 1.3,
               letterSpacing: -0.3,
@@ -662,9 +547,7 @@ class _SectionHeader extends StatelessWidget {
             child: Text(
               'View All',
               style: TextStyle(
-                fontFamily: 'SF Pro',
-                fontWeight: FontWeight.w600,
-                fontSize: 13.sp,
+                fontSize: 11.sp,
                 color: const Color(0xFFC83A2D),
               ),
             ),

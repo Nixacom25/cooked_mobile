@@ -128,24 +128,24 @@ class _DietaryPreferencesStepState extends State<DietaryPreferencesStep> {
           Text(
             "What's your dietary profile?",
             style: TextStyle(
-              fontSize: 20.sp,
-              fontWeight: FontWeight.w700,
+              fontSize: 18.sp,
+              fontWeight: FontWeight.w800,
               color: const Color(0xFF0D1B36),
               fontFamily: 'SF Pro',
               height: 1.2,
               letterSpacing: -0.5,
             ),
           ),
-          SizedBox(height: 8.h),
+          SizedBox(height: 6.h),
           Text(
             'Select all that apply',
             style: TextStyle(
-              fontSize: 13.sp,
+              fontSize: 11.sp,
               color: const Color(0xFF7B8190),
               fontFamily: 'SF Pro',
             ),
           ),
-          SizedBox(height: 32.h),
+          SizedBox(height: 24.h),
           GridView.count(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
@@ -198,7 +198,7 @@ class _DietaryPreferencesStepState extends State<DietaryPreferencesStep> {
                         option.title,
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          fontSize: 13.sp,
+                          fontSize: 12.sp,
                           fontWeight: FontWeight.w700,
                           fontFamily: 'SF Pro',
                           color: isSelected
@@ -211,7 +211,7 @@ class _DietaryPreferencesStepState extends State<DietaryPreferencesStep> {
                         option.description,
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          fontSize: 11.sp,
+                          fontSize: 10.sp,
                           fontWeight: FontWeight.w500,
                           fontFamily: 'SF Pro',
                           color: const Color(0xFF9CA3AF),

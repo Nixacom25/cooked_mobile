@@ -1007,7 +1007,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                 "Enter ingredients one by one",
                 style: TextStyle(
                   color: const Color(0xFF64748B),
-                  fontSize: 13.sp,
+                  fontSize: 10.sp,
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -1028,10 +1028,10 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                 child: TextField(
                   controller: _ingCtrl,
                   textCapitalization: TextCapitalization.words,
-                  style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.w500),
+                  style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w500),
                   decoration: InputDecoration(
                     hintText: 'e.g., Tomato, Cheese...',
-                    hintStyle: TextStyle(color: const Color(0xFF94A3B8), fontSize: 14.sp),
+                    hintStyle: TextStyle(color: const Color(0xFF94A3B8), fontSize: 12.sp),
                     border: InputBorder.none,
                     contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
                     suffixIcon: IconButton(
@@ -1094,7 +1094,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                   "Add ingredients to find recipes you can make",
                   style: TextStyle(
                     color: const Color(0xFF94A3B8),
-                    fontSize: 12.sp,
+                    fontSize: 11.sp,
                     fontStyle: FontStyle.italic,
                   ),
                 ),
@@ -1104,7 +1104,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                     "Recently Used",
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
-                      fontSize: 14.sp,
+                      fontSize: 11.sp,
                       color: const Color(0xFF64748B),
                     ),
                   ),
@@ -1129,7 +1129,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                           child: Text(
                             name,
                             style: TextStyle(
-                              fontSize: 12.sp,
+                              fontSize: 9.sp,
                               color: const Color(0xFF475569),
                               fontWeight: FontWeight.w500,
                             ),
@@ -1194,7 +1194,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                       "Use all",
                       style: TextStyle(
                         fontFamily: 'SF Pro',
-                        fontSize: 14.sp,
+                        fontSize: 12.sp,
                         fontWeight: FontWeight.w700,
                         color: const Color(0xFF1A1A1A),
                         letterSpacing: -0.3,
@@ -1213,7 +1213,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                     "Clear selection",
                     style: TextStyle(
                       color: const Color(0xFF64748B),
-                      fontSize: 13.sp,
+                      fontSize: 10.sp,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -1245,7 +1245,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
               padding: EdgeInsets.only(top: 40.h),
               child: Text(
                 "No saved ingredients yet.",
-                style: TextStyle(color: const Color(0xFF6B7280), fontSize: 14.sp),
+                style: TextStyle(color: const Color(0xFF6B7280), fontSize: 12.sp),
               ),
             ),
           ),
@@ -1294,8 +1294,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
               child: Text(
                 name,
                 style: TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 16.sp,
+                  fontSize: 12.sp,
                   color: const Color(0xFF1E293B),
                 ),
               ),
@@ -1349,7 +1348,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
           "Recipes You Can Cook Now",
           style: TextStyle(
             fontWeight: FontWeight.w800,
-            fontSize: 20.sp,
+            fontSize: 16.sp,
             color: const Color(0xFF1E293B),
           ),
         ),
@@ -1362,9 +1361,9 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
               : 4,
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 2,
-            mainAxisSpacing: 14.h,
-            crossAxisSpacing: 14.w,
-            childAspectRatio: 0.82,
+            mainAxisSpacing: 12.h,
+            crossAxisSpacing: 12.w,
+            childAspectRatio: 0.85,
           ),
           itemBuilder: (_, i) {
             if (_recipes.isEmpty) return _buildMockResultCard(i);
@@ -1393,7 +1392,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
           style: TextStyle(
             fontFamily: 'SF Pro',
             fontWeight: FontWeight.w700,
-            fontSize: 18.sp,
+            fontSize: 14.sp,
             color: const Color(0xFF1A1A1A),
             letterSpacing: -0.5,
           ),
@@ -1403,7 +1402,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
           style: TextStyle(
             fontFamily: 'SF Pro',
             color: const Color(0xFF6B7280),
-            fontSize: 13.sp,
+            fontSize: 10.sp,
             letterSpacing: -0.2,
           ),
         ),
@@ -1425,7 +1424,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
             },
             decoration: InputDecoration(
               hintText: "Add missing ingredient...",
-              hintStyle: TextStyle(fontSize: 13.sp, color: const Color(0xFF94A3B8)),
+              hintStyle: TextStyle(fontSize: 10.sp, color: const Color(0xFF94A3B8)),
               border: InputBorder.none,
               prefixIcon: Icon(Icons.add_rounded, color: const Color(0xFFCC3333), size: 20.sp),
               contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
@@ -1466,7 +1465,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
           ),
         SizedBox(height: 16.h),
         if (_ingredients.isEmpty && _restrictedIngredients.isEmpty)
-          Text("No items detected.", style: TextStyle(color: Colors.grey, fontSize: 13.sp))
+          Text("No items detected.", style: TextStyle(color: Colors.grey, fontSize: 11.sp))
         else
           Wrap(
             spacing: 8.w,
@@ -1497,7 +1496,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                     "Some ingredients may not match your dietary preferences.",
                     style: TextStyle(
                       color: Colors.red[600],
-                      fontSize: 12.sp,
+                      fontSize: 10.sp,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -1550,7 +1549,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
             _capitalize(label),
             style: TextStyle(
               fontWeight: FontWeight.w600,
-              fontSize: 12.sp,
+              fontSize: 10.sp,
               color: Colors.black,
             ),
           ),

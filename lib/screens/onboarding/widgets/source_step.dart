@@ -75,24 +75,24 @@ class _SourceStepState extends State<SourceStep> {
           Text(
             'Welcome, ${widget.userName}!\nHow did you find us?',
             style: TextStyle(
-              fontSize: 20.sp,
-              fontWeight: FontWeight.w700,
+              fontSize: 18.sp,
+              fontWeight: FontWeight.w800,
               color: const Color(0xFF0D1B3E),
               fontFamily: 'SF Pro',
               height: 1.2,
               letterSpacing: -0.5,
             ),
           ),
-          SizedBox(height: 8.h),
+          SizedBox(height: 6.h),
           Text(
             "This helps us improve our reach",
             style: TextStyle(
-              fontSize: 13.sp,
+              fontSize: 11.sp,
               color: const Color(0xFF7B8190),
               fontFamily: 'SF Pro',
             ),
           ),
-          SizedBox(height: 32.h),
+          SizedBox(height: 24.h),
 
           GridView.count(
             shrinkWrap: true,
@@ -145,8 +145,8 @@ class _SourceStepState extends State<SourceStep> {
                         source.label,
                         style: TextStyle(
                           fontFamily: 'SF Pro',
-                          fontSize: 13.sp,
-                          fontWeight: FontWeight.w600,
+                          fontSize: 11.sp,
+                          fontWeight: FontWeight.w700,
                           color: isSelected
                               ? const Color(0xFFC83A2D)
                               : const Color(0xFF1A1A1A),
@@ -195,12 +195,12 @@ class _SourceStepState extends State<SourceStep> {
               ),
               style: TextStyle(
                 fontFamily: 'SF Pro',
-                fontSize: 16.sp,
+                fontSize: 14.sp,
                 color: const Color(0xFF1A1A1A),
               ),
             ),
           ],
-          SizedBox(height: MediaQuery.of(context).viewInsets.bottom + 32.h),
+          SizedBox(height: MediaQuery.of(context).viewInsets.bottom + 24.h),
         ],
       ),
     );

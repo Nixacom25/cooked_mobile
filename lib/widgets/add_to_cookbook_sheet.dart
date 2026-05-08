@@ -61,7 +61,7 @@ class _AddToCookbookSheetState extends State<AddToCookbookSheet> {
                   style: TextStyle(
                     fontFamily: 'SF Pro',
                     fontWeight: FontWeight.w800,
-                    fontSize: 20.sp,
+                    fontSize: 18.sp,
                     color: const Color(0xFF1A1A1A),
                   ),
                 ),
@@ -102,7 +102,7 @@ class _AddToCookbookSheetState extends State<AddToCookbookSheet> {
                   style: TextStyle(
                     fontFamily: 'SF Pro',
                     fontWeight: FontWeight.w700,
-                    fontSize: 14.sp,
+                    fontSize: 12.sp,
                     color: const Color(0xFF64748B),
                   ),
                 ),
@@ -127,8 +127,7 @@ class _AddToCookbookSheetState extends State<AddToCookbookSheet> {
                             "No recipe books found.",
                             style: TextStyle(
                               color: const Color(0xFF64748B),
-                              fontSize: 14.sp,
-                              fontFamily: 'SF Pro',
+                              fontSize: 13.sp,
                             ),
                           ),
                         ),
@@ -165,7 +164,7 @@ class _AddToCookbookSheetState extends State<AddToCookbookSheet> {
                               style: TextStyle(
                                 fontFamily: 'SF Pro',
                                 fontWeight: FontWeight.w600,
-                                fontSize: 15.sp,
+                                fontSize: 12.sp,
                                 color: const Color(0xFF1F2937),
                               ),
                             ),
@@ -210,7 +209,7 @@ class _AddToCookbookSheetState extends State<AddToCookbookSheet> {
                         style: TextStyle(
                           fontFamily: 'SF Pro',
                           fontWeight: FontWeight.w700,
-                          fontSize: 16.sp,
+                          fontSize: 14.sp,
                         ),
                       ),
               ),
@@ -240,7 +239,7 @@ class _AddToCookbookSheetState extends State<AddToCookbookSheet> {
               style: TextStyle(
                 fontFamily: 'SF Pro',
                 fontWeight: FontWeight.w700,
-                fontSize: 15.sp,
+                fontSize: 12.sp,
                 color: const Color(0xFFCC3333),
               ),
             ),

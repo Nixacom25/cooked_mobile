@@ -125,8 +125,8 @@ class _RecipeGenerationLoadingStepState
           Text(
             '${_progressAnimation.value.toInt()}%',
             style: TextStyle(
-              fontSize: 36.sp,
-              fontWeight: FontWeight.w700,
+              fontSize: 28.sp,
+              fontWeight: FontWeight.w800,
               color: const Color(0xFF0D1B3E),
               fontFamily: 'SF Pro',
               letterSpacing: -1.0,
@@ -137,8 +137,8 @@ class _RecipeGenerationLoadingStepState
             'Getting everything ready for you',
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: 18.sp,
-              fontWeight: FontWeight.w700,
+              fontSize: 16.sp,
+              fontWeight: FontWeight.w800,
               color: const Color(0xFF0D1B3E),
               fontFamily: 'SF Pro',
               height: 1.2,
@@ -151,7 +151,7 @@ class _RecipeGenerationLoadingStepState
                 : 'We’re preparing your personalized recipes\nand setting up your experience',
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: 13.sp,
+              fontSize: 11.sp,
               color: const Color(0xFF7B8190),
               fontFamily: 'SF Pro',
             ),
@@ -188,8 +188,8 @@ class _RecipeGenerationLoadingStepState
             child: Text(
               _isDataReady ? "Sync completed" : "Progress Steps",
               style: TextStyle(
-                fontSize: 15.sp,
-                fontWeight: FontWeight.w700,
+                fontSize: 14.sp,
+                fontWeight: FontWeight.w800,
                 color: const Color(0xFF1A1A1A),
                 fontFamily: 'SF Pro',
               ),
@@ -219,8 +219,8 @@ class _RecipeGenerationLoadingStepState
                   Text(
                     step['text']!,
                     style: TextStyle(
-                      fontSize: 14.sp,
-                      fontWeight: FontWeight.w500,
+                      fontSize: 12.sp,
+                      fontWeight: FontWeight.w700,
                       color: const Color(0xFF1A1A1A),
                       fontFamily: 'SF Pro',
                     ),

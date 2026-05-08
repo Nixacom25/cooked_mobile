@@ -29,15 +29,15 @@ class ProfileSummaryStep extends StatelessWidget {
           Text(
             '${firstName.toTitleCase()}, your profile is ready!',
             style: TextStyle(
-              fontSize: 20.sp,
-              fontWeight: FontWeight.w700,
-              color: const Color(0xFF0D1B36),
+              fontSize: 18.sp,
+              fontWeight: FontWeight.w800,
+              color: const Color(0xFF0D1B3E),
               fontFamily: 'SF Pro',
               height: 1.2,
               letterSpacing: -0.5,
             ),
           ),
-          SizedBox(height: 10.h),
+          SizedBox(height: 16.h),
           
           // Stats Card
           Container(
@@ -63,8 +63,8 @@ class ProfileSummaryStep extends StatelessWidget {
                     (Match m) => '${m[1]},',
                   ),
                   style: TextStyle(
-                    fontSize: 28.sp,
-                    fontWeight: FontWeight.w700,
+                    fontSize: 24.sp,
+                    fontWeight: FontWeight.w800,
                     color: const Color(0xFFC83A2D),
                     fontFamily: 'SF Pro',
                     letterSpacing: -1.0,
@@ -73,9 +73,9 @@ class ProfileSummaryStep extends StatelessWidget {
                 Text(
                   'recipes personalized just for you',
                   style: TextStyle(
-                    fontSize: 14.sp,
+                    fontSize: 11.sp,
                     color: const Color(0xFF111827),
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w700,
                     fontFamily: 'SF Pro',
                   ),
                 ),
@@ -108,8 +108,8 @@ class ProfileSummaryStep extends StatelessWidget {
           Text(
             "You'll Be Able To",
             style: TextStyle(
-              fontSize: 16.sp,
-              fontWeight: FontWeight.w700,
+              fontSize: 14.sp,
+              fontWeight: FontWeight.w800,
               color: const Color(0xFF0D1B3E),
               fontFamily: 'SF Pro',
             ),
@@ -197,7 +197,7 @@ class ProfileSummaryStep extends StatelessWidget {
                 Text(
                   title,
                   style: TextStyle(
-                    fontSize: 14.sp,
+                    fontSize: 12.sp,
                     fontWeight: FontWeight.w700,
                     color: const Color(0xFF0D1B3E),
                     fontFamily: 'SF Pro',
@@ -207,7 +207,7 @@ class ProfileSummaryStep extends StatelessWidget {
                 Text(
                   desc,
                   style: TextStyle(
-                    fontSize: 12.sp,
+                    fontSize: 11.sp,
                     color: const Color(0xFF7B8190),
                     fontFamily: 'SF Pro',
                     height: 1.4,

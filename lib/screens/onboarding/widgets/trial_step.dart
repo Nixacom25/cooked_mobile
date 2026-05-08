@@ -60,15 +60,15 @@ class _TrialStepState extends State<TrialStep> {
           Text(
             'Start your 3-day FREE\ntrial to continue.',
             style: TextStyle(
-              fontSize: 20.sp,
-              fontWeight: FontWeight.w700,
+              fontSize: 18.sp,
+              fontWeight: FontWeight.w800,
               color: const Color(0xFF0D1B3E),
               fontFamily: 'SF Pro',
               height: 1.2,
               letterSpacing: -0.5,
             ),
           ),
-          SizedBox(height: 28.h),
+          SizedBox(height: 20.h),
 
           // Timeline
           _buildTimelineItem(
@@ -132,8 +132,8 @@ class _TrialStepState extends State<TrialStep> {
                 Text(
                   'No Payment Due Now',
                   style: TextStyle(
-                    fontSize: 15.sp,
-                    fontWeight: FontWeight.w700,
+                    fontSize: 14.sp,
+                    fontWeight: FontWeight.w800,
                     color: const Color(0xFF0D1B3E),
                     fontFamily: 'SF Pro',
                   ),
@@ -196,7 +196,7 @@ class _TrialStepState extends State<TrialStep> {
                 Text(
                   title,
                   style: TextStyle(
-                    fontSize: 16.sp,
+                    fontSize: 14.sp,
                     fontWeight: FontWeight.w900,
                     color: const Color(0xFF0D1B3E),
                     fontFamily: 'SF Pro',
@@ -206,7 +206,7 @@ class _TrialStepState extends State<TrialStep> {
                 Text(
                   description,
                   style: TextStyle(
-                    fontSize: 14.sp,
+                    fontSize: 11.sp,
                     color: const Color(0xFF7B8190),
                     fontFamily: 'SF Pro',
                     height: 1.4,
@@ -257,7 +257,7 @@ class _TrialStepState extends State<TrialStep> {
                     Text(
                       title,
                       style: TextStyle(
-                        fontSize: 14.sp,
+                        fontSize: 12.sp,
                         color: isSelected
                             ? const Color(0xFF0D1B3E)
                             : const Color(0xFF7B8190),
@@ -309,8 +309,8 @@ class _TrialStepState extends State<TrialStep> {
                 child: Text(
                   badge,
                   style: TextStyle(
-                    fontSize: 12.sp,
-                    fontWeight: FontWeight.w700,
+                    fontSize: 10.sp,
+                    fontWeight: FontWeight.w800,
                     color: Colors.white,
                     fontFamily: 'SF Pro',
                   ),

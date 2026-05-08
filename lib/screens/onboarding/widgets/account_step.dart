@@ -76,24 +76,24 @@ class _AccountStepState extends State<AccountStep> {
             Text(
               'Create your account',
               style: TextStyle(
-                fontSize: 20.sp,
-                fontWeight: FontWeight.w700,
+                fontSize: 18.sp,
+                fontWeight: FontWeight.w800,
                 color: const Color(0xFF0D1B3E),
                 fontFamily: 'SF Pro',
                 height: 1.2,
                 letterSpacing: -0.5,
               ),
             ),
-            SizedBox(height: 10.h),
+            SizedBox(height: 6.h),
             Text(
               'Secure your recipes and preferences',
               style: TextStyle(
-                fontSize: 13.sp,
+                fontSize: 11.sp,
                 color: const Color(0xFF7B8190),
                 fontFamily: 'SF Pro',
               ),
             ),
-            SizedBox(height: 32.h),
+            SizedBox(height: 24.h),
 
             _buildLabel('Password'),
             const SizedBox(height: 8),
@@ -208,8 +208,8 @@ class _AccountStepState extends State<AccountStep> {
     return Text(
       label,
       style: TextStyle(
-        fontSize: 13.sp,
-        fontWeight: FontWeight.w600,
+        fontSize: 11.sp,
+        fontWeight: FontWeight.w700,
         color: const Color(0xFF7B8190),
         fontFamily: 'SF Pro',
       ),
@@ -231,7 +231,7 @@ class _AccountStepState extends State<AccountStep> {
       onChanged: (_) => _notifyChange(),
       style: TextStyle(
         fontFamily: 'SF Pro',
-        fontSize: 16.sp,
+        fontSize: 14.sp,
         fontWeight: FontWeight.w600,
         color: const Color(0xFF1A1A1A),
       ),
@@ -240,7 +240,7 @@ class _AccountStepState extends State<AccountStep> {
         hintStyle: TextStyle(
           color: const Color(0xFFBDC3C7),
           fontWeight: FontWeight.w400,
-          fontSize: 16.sp,
+          fontSize: 14.sp,
         ),
         prefixIcon: Icon(icon, color: const Color(0xFFBDC3C7), size: 22.sp),
         suffixIcon: suffix,

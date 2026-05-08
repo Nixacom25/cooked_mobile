@@ -29,24 +29,24 @@ class ProfileSignupStep extends StatelessWidget {
           Text(
             'Save your profile,',
             style: TextStyle(
-              fontSize: 20.sp,
-              fontWeight: FontWeight.w700,
-              color: const Color(0xFF0D1B36),
+              fontSize: 18.sp,
+              fontWeight: FontWeight.w800,
+              color: const Color(0xFF0D1B3E),
               fontFamily: 'SF Pro',
               height: 1.2,
               letterSpacing: -0.5,
             ),
           ),
-          SizedBox(height: 8.h),
+          SizedBox(height: 6.h),
           Text(
             'Your 22-step profile is ready to save',
             style: TextStyle(
-              fontSize: 13.sp,
+              fontSize: 11.sp,
               color: const Color(0xFF7B8190),
               fontFamily: 'SF Pro',
             ),
           ),
-          SizedBox(height: 32.h),
+          SizedBox(height: 24.h),
           Container(
             padding: EdgeInsets.all(12.r),
             decoration: BoxDecoration(
@@ -60,7 +60,7 @@ class ProfileSignupStep extends StatelessWidget {
                   child: Text(
                     'Pick up exactly where you left off on any device',
                     style: TextStyle(
-                      fontSize: 13.sp,
+                      fontSize: 11.sp,
                       color: const Color(0xFF6B7280),
                       fontFamily: 'SF Pro',
                     ),
@@ -134,8 +134,8 @@ class ProfileSignupStep extends StatelessWidget {
               Text(
                 isEnabled ? label : '$label (Soon)',
                 style: TextStyle(
-                  fontSize: 15.sp,
-                  fontWeight: FontWeight.w700,
+                  fontSize: 14.sp,
+                  fontWeight: FontWeight.w800,
                   fontFamily: 'SF Pro',
                   color: isEnabled ? Colors.black : Colors.grey,
                 ),
