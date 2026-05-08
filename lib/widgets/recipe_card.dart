@@ -138,15 +138,15 @@ class RecipeCard extends StatelessWidget {
             style: TextStyle(
               fontFamily: 'SF Pro',
               fontWeight: FontWeight.w700,
-              fontSize: 15.sp,
-              color: const Color(0xFF1A1A1A),
+              fontSize: 14.sp,
+              color: const Color(0xFF222222),
             ),
           ),
-          SizedBox(height: 4.h),
+          SizedBox(height: 2.h),
           Row(
             children: [
               Icon(
-                Icons.access_time_rounded,
+                Icons.timer,
                 size: 12.sp,
                 color: const Color(0xFF9CA3AF),
               ),
@@ -163,7 +163,7 @@ class RecipeCard extends StatelessWidget {
               ),
               SizedBox(width: 8.w),
               Icon(
-                Icons.local_fire_department_rounded,
+                Icons.local_fire_department,
                 size: 12.sp,
                 color: const Color(0xFF9CA3AF),
               ),

@@ -29,7 +29,9 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (!_isInitialized) {
-      final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>? ?? {};
+      final args =
+          ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>? ??
+          {};
       final Recipe? r = args['recipe'] as Recipe?;
       _isPreview = args['isPreview'] ?? false;
 
@@ -37,7 +39,9 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
       if (_isPreview && r != null) {
         final savedRecipes = RecipeService.instance.myRecipesNotifier.value;
         if (savedRecipes != null) {
-          final isAlreadySaved = savedRecipes.any((sr) => sr.name.toLowerCase() == r.name.toLowerCase());
+          final isAlreadySaved = savedRecipes.any(
+            (sr) => sr.name.toLowerCase() == r.name.toLowerCase(),
+          );
           if (isAlreadySaved) {
             _isPreview = false;
           }
@@ -81,23 +85,24 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
     final double topPadding = MediaQuery.of(context).padding.top;
     final double maxImg = 350.h;
     final double minImg = topPadding + 60.h;
-    
+
     // The Name section disappears at offset 200.
     // The Image header finishes collapsing at (maxImg - minImg).
     // Let's assume the name section is approx 100px.
     // The Tags are 30.h, Buttons are 80.h.
-    
-    // A robust way to find the "content start" is to sum the scroll needed 
+
+    // A robust way to find the "content start" is to sum the scroll needed
     // to collapse everything above the tab bar.
     double collapseOffset = (maxImg - minImg);
-    // Since NameSection returns shrink at 200, it basically stops contributing 
+    // Since NameSection returns shrink at 200, it basically stops contributing
     // to the total height at that point.
-    
+
     // Let's use a value that ensures the TabBar is pinned.
     // Roughly 400-500 depending on screen.
-    double targetOffset = collapseOffset + 150.h; 
+    double targetOffset = collapseOffset + 150.h;
 
-    if (_scrollController.hasClients && _scrollController.offset > targetOffset) {
+    if (_scrollController.hasClients &&
+        _scrollController.offset > targetOffset) {
       _scrollController.animateTo(
         targetOffset,
         duration: const Duration(milliseconds: 250),
@@ -107,20 +112,23 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
   }
 
   // ── Add-to-Cookbook modal ─────────────────────────────────────────────────
-  void _showAddToCookbookModal(BuildContext ctx, Recipe recipe, {VoidCallback? onSuccess}) {
+  void _showAddToCookbookModal(
+    BuildContext ctx,
+    Recipe recipe, {
+    VoidCallback? onSuccess,
+  }) {
     showModalBottomSheet(
       context: ctx,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      builder: (_) => AddToCookbookSheet(
-        recipe: recipe,
-        onSuccess: onSuccess,
-      ),
+      builder: (_) => AddToCookbookSheet(recipe: recipe, onSuccess: onSuccess),
     );
   }
 
   Future<void> _handleShare() async {
-    final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>? ?? {};
+    final args =
+        ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>? ??
+        {};
     final Recipe? r = args['recipe'] as Recipe?;
     if (r == null) return;
 
@@ -129,10 +137,11 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
       final name = r.name;
       final time = '${r.cookTime} min';
       final kcal = '${r.kcal} kcal';
-      
+
       // Emojis mapping to requested mockup icons
-      final template = "Discover this recipe: $name\nReady in 🕒 $time, 🔥 $kcal.\n\nSee on Cooked: $link";
-      
+      final template =
+          "Discover this recipe: $name\nReady in 🕒 $time, 🔥 $kcal.\n\nSee on Cooked: $link";
+
       Share.share(template);
     } catch (e) {
       if (!mounted) return;
@@ -145,11 +154,15 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
   }
 
   Future<void> _saveRecipe(Recipe r) async {
-    _showAddToCookbookModal(context, r, onSuccess: () {
-      setState(() {
-        _isPreview = false;
-      });
-    });
+    _showAddToCookbookModal(
+      context,
+      r,
+      onSuccess: () {
+        setState(() {
+          _isPreview = false;
+        });
+      },
+    );
   }
 
   @override
@@ -214,6 +227,8 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                         }
                       }
                     },
+                    recipeId: r?.id,
+                    recipe: r,
                     topPadding: MediaQuery.of(context).padding.top,
                   ),
                 ),
@@ -230,17 +245,16 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                           valueListenable: _scrollOffset,
                           builder: (context, offset, child) {
                             double threshold = 150.0;
-                            double opacity =
-                                (1.0 - (offset / threshold)).clamp(0.0, 1.0);
+                            double opacity = (1.0 - (offset / threshold)).clamp(
+                              0.0,
+                              1.0,
+                            );
                             if (opacity == 0) return const SizedBox.shrink();
                             return Column(
                               mainAxisSize: MainAxisSize.min,
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Opacity(
-                                  opacity: opacity,
-                                  child: child!,
-                                ),
+                                Opacity(opacity: opacity, child: child!),
                               ],
                             );
                           },
@@ -250,12 +264,12 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                               Expanded(
                                 child: Text(
                                   name,
-                                  maxLines: 2,
+                                  maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: const TextStyle(
                                     fontFamily: 'Poppins',
                                     fontWeight: FontWeight.w800,
-                                    fontSize: 24,
+                                    fontSize: 20,
                                     color: Color(0xFF1A1A1A),
                                   ),
                                 ),
@@ -263,14 +277,16 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                               if (!_isPreview) ...[
                                 SizedBox(width: 10.w),
                                 ValueListenableBuilder<List<Recipe>?>(
-                                  valueListenable: RecipeService.instance
+                                  valueListenable: RecipeService
+                                      .instance
                                       .favoriteRecipesNotifier,
                                   builder: (context, favorites, _) {
                                     bool isFav = false;
                                     if (r != null) {
                                       if (favorites != null) {
-                                        isFav = favorites
-                                            .any((fav) => fav.id == r.id);
+                                        isFav = favorites.any(
+                                          (fav) => fav.id == r.id,
+                                        );
                                       } else {
                                         isFav = r.isFavorite;
                                       }
@@ -284,8 +300,10 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                                           } catch (e) {
                                             IosToast.show(
                                               context,
-                                              message: ErrorHelper
-                                                  .getFriendlyMessage(e),
+                                              message:
+                                                  ErrorHelper.getFriendlyMessage(
+                                                    e,
+                                                  ),
                                               type: ToastType.error,
                                             );
                                           }
@@ -295,8 +313,9 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                                         padding: const EdgeInsets.all(8),
                                         decoration: BoxDecoration(
                                           color: isFav
-                                              ? const Color(0xFFCC3333)
-                                                  .withOpacity(0.1)
+                                              ? const Color(
+                                                  0xFFCC3333,
+                                                ).withOpacity(0.1)
                                               : const Color(0xFFF9FAFB),
                                           shape: BoxShape.circle,
                                         ),
@@ -325,18 +344,15 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                 // ── Tags Section ───────────────────────────────────────
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 10, 20, 10),
+                    padding: const EdgeInsets.fromLTRB(20, 10, 20, 5),
                     child: Wrap(
-                      spacing: 8,
+                      spacing: 5,
                       runSpacing: 8,
                       alignment: WrapAlignment.start,
                       crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
                         if (prep.isNotEmpty)
-                          _TagPill(
-                            icon: Icons.timer_outlined,
-                            label: prep,
-                          ),
+                          _TagPill(icon: Icons.timer, label: prep),
                         if (time.isNotEmpty)
                           _TagPill(
                             icon: Icons.access_time_rounded,
@@ -363,7 +379,9 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                   SliverToBoxAdapter(
                     child: Padding(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 15),
+                        horizontal: 20,
+                        vertical: 15,
+                      ),
                       child: Row(
                         children: [
                           Expanded(
@@ -417,7 +435,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                 SliverPersistentHeader(
                   pinned: true,
                   delegate: _SimplePinnedHeaderDelegate(
-                    height: 60.h,
+                    height: 50.h,
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 20),
                       child: Center(
@@ -443,7 +461,8 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                               _TabPill(
                                 label: 'Ingredients',
                                 active: _activeTab == DetailTab.ingredients,
-                                onTap: () => _onTabChanged(DetailTab.ingredients),
+                                onTap: () =>
+                                    _onTabChanged(DetailTab.ingredients),
                               ),
                             ],
                           ),
@@ -495,8 +514,11 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Icon(Icons.info_outline_rounded,
-                                      size: 14.sp, color: const Color(0xFF64748B)),
+                                  Icon(
+                                    Icons.info_outline_rounded,
+                                    size: 14.sp,
+                                    color: const Color(0xFF64748B),
+                                  ),
                                   SizedBox(width: 6.w),
                                   Text(
                                     "Please verify if this matches the source",
@@ -509,7 +531,8 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                                 ],
                               ),
                             ),
-                            if (r?.sourceUrl != null && r!.sourceUrl!.isNotEmpty)
+                            if (r?.sourceUrl != null &&
+                                r!.sourceUrl!.isNotEmpty)
                               Padding(
                                 padding: EdgeInsets.only(bottom: 12.h),
                                 child: GestureDetector(
@@ -548,7 +571,9 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                                 borderRadius: BorderRadius.circular(16.r),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: const Color(0xFFC83A2D).withOpacity(0.2),
+                                    color: const Color(
+                                      0xFFC83A2D,
+                                    ).withOpacity(0.2),
                                     blurRadius: 12,
                                     offset: const Offset(0, 4),
                                   ),
@@ -561,8 +586,9 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                                     isTrend
                                         ? Icons.cloud_download_rounded
                                         : (_isPreview
-                                            ? Icons.check_circle_outline_rounded
-                                            : Icons.bookmark_add_rounded),
+                                              ? Icons
+                                                    .check_circle_outline_rounded
+                                              : Icons.bookmark_add_rounded),
                                     color: Colors.white,
                                     size: 20,
                                   ),
@@ -571,8 +597,8 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                                     isTrend
                                         ? 'Import this recipe'
                                         : (_isPreview
-                                            ? 'Confirm and Save Recipe'
-                                            : 'Add to recipe book'),
+                                              ? 'Confirm and Save Recipe'
+                                              : 'Add to recipe book'),
                                     style: TextStyle(
                                       fontFamily: 'SF Pro',
                                       fontWeight: FontWeight.w700,
@@ -623,10 +649,7 @@ class _SimplePinnedHeaderDelegate extends SliverPersistentHeaderDelegate {
   final Widget child;
   final double height;
 
-  _SimplePinnedHeaderDelegate({
-    required this.child,
-    required this.height,
-  });
+  _SimplePinnedHeaderDelegate({required this.child, required this.height});
 
   @override
   double get minExtent => height;
@@ -635,7 +658,10 @@ class _SimplePinnedHeaderDelegate extends SliverPersistentHeaderDelegate {
 
   @override
   Widget build(
-      BuildContext context, double shrinkOffset, bool overlapsContent) {
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
     return SizedBox(height: height, child: child);
   }
 
@@ -656,6 +682,8 @@ class _RecipeDetailHeaderDelegate extends SliverPersistentHeaderDelegate {
   final VoidCallback onShare;
   final bool isFavorite;
   final VoidCallback onToggleFavorite;
+  final String? recipeId;
+  final Recipe? recipe;
   final double topPadding;
 
   const _RecipeDetailHeaderDelegate({
@@ -668,6 +696,8 @@ class _RecipeDetailHeaderDelegate extends SliverPersistentHeaderDelegate {
     required this.onShare,
     required this.isFavorite,
     required this.onToggleFavorite,
+    this.recipeId,
+    this.recipe,
     required this.topPadding,
   });
 
@@ -687,31 +717,46 @@ class _RecipeDetailHeaderDelegate extends SliverPersistentHeaderDelegate {
   }
 
   @override
-  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
     final double maxShrinkOffset = maxExtent - minExtent;
     final double progress = (shrinkOffset / maxShrinkOffset).clamp(0.0, 1.0);
 
-    final Color bgColor = Color.lerp(Colors.transparent, Colors.white, progress)!;
+    final Color bgColor = Color.lerp(
+      Colors.transparent,
+      Colors.white,
+      progress,
+    )!;
 
     final double expandedImageHeight = 350.h;
     final double collapsedImageSize = 38.h;
-    final double currentImageHeight = expandedImageHeight - (expandedImageHeight - collapsedImageSize) * progress;
-    
+    final double currentImageHeight =
+        expandedImageHeight -
+        (expandedImageHeight - collapsedImageSize) * progress;
+
     // FULL WIDTH: No horizontal margins, but keep vertical offset
     final double expandedWidth = MediaQuery.of(context).size.width;
-    final double currentImageWidth = expandedWidth - (expandedWidth - collapsedImageSize) * progress;
+    final double currentImageWidth =
+        expandedWidth - (expandedWidth - collapsedImageSize) * progress;
 
     final double expandedTop = 0.0; // Start at the very top of the screen
-    final double collapsedTop = topPadding + (minExtent - topPadding - collapsedImageSize) / 2;
-    final double currentTop = expandedTop - (expandedTop - collapsedTop) * progress;
+    final double collapsedTop =
+        topPadding + (minExtent - topPadding - collapsedImageSize) / 2;
+    final double currentTop =
+        expandedTop - (expandedTop - collapsedTop) * progress;
 
     final double expandedLeft = 0.0;
-    final double collapsedLeft = 48.w; 
-    final double currentLeft = expandedLeft - (expandedLeft - collapsedLeft) * progress;
+    final double collapsedLeft = 48.w;
+    final double currentLeft =
+        expandedLeft - (expandedLeft - collapsedLeft) * progress;
 
     final double expandedRadius = 0.0; // Sharp edges for full width look
     final double collapsedRadius = 8.r;
-    final double currentRadius = expandedRadius - (expandedRadius - collapsedRadius) * progress;
+    final double currentRadius =
+        expandedRadius - (expandedRadius - collapsedRadius) * progress;
 
     final double titleOpacity = progress > 0.8 ? (progress - 0.8) / 0.2 : 0.0;
 
@@ -728,7 +773,12 @@ class _RecipeDetailHeaderDelegate extends SliverPersistentHeaderDelegate {
             height: currentImageHeight,
             child: ClipRRect(
               borderRadius: BorderRadius.circular(currentRadius),
-              child: _buildImage(img, currentImageWidth, currentImageHeight, progress),
+              child: _buildImage(
+                img,
+                currentImageWidth,
+                currentImageHeight,
+                progress,
+              ),
             ),
           ),
 
@@ -776,16 +826,18 @@ class _RecipeDetailHeaderDelegate extends SliverPersistentHeaderDelegate {
                       width: 32.w,
                       height: 32.w,
                       decoration: BoxDecoration(
-                        color: progress > 0.2 
-                          ? const Color(0xFFF9FAFB).withOpacity(progress)
-                          : Colors.black12,
+                        color: progress > 0.2
+                            ? const Color(0xFFF9FAFB).withOpacity(progress)
+                            : Colors.black12,
                         shape: BoxShape.circle,
                       ),
                       alignment: Alignment.center,
                       child: Icon(
                         Icons.arrow_back_rounded,
                         size: 20,
-                        color: progress > 0.5 ? const Color(0xFF1A1A1A) : Colors.white,
+                        color: progress > 0.5
+                            ? const Color(0xFF1A1A1A)
+                            : Colors.white,
                       ),
                     ),
                   ),
@@ -794,6 +846,38 @@ class _RecipeDetailHeaderDelegate extends SliverPersistentHeaderDelegate {
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
+                      // Heart button (only after scroll)
+                      if (!isPreview && progress > 0.5 && recipeId != null) ...[
+                        ValueListenableBuilder<List<Recipe>?>(
+                          valueListenable: RecipeService.instance.favoriteRecipesNotifier,
+                          builder: (context, favorites, _) {
+                            bool isFav = false;
+                            if (favorites != null) {
+                              isFav = favorites.any((fav) => fav.id == recipeId);
+                            } else {
+                              isFav = isFavorite;
+                            }
+                            return GestureDetector(
+                              onTap: onToggleFavorite,
+                              child: Container(
+                                width: 32.w,
+                                height: 32.w,
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFF9FAFB).withOpacity(progress),
+                                  shape: BoxShape.circle,
+                                ),
+                                alignment: Alignment.center,
+                                child: Icon(
+                                  isFav ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+                                  size: 18,
+                                  color: isFav ? const Color(0xFFCC3333) : const Color(0xFF1A1A1A),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                        const SizedBox(width: 8),
+                      ],
                       // Share button (or validate if preview)
                       GestureDetector(
                         onTap: isPreview ? onValidate : onShare,
@@ -801,18 +885,22 @@ class _RecipeDetailHeaderDelegate extends SliverPersistentHeaderDelegate {
                           width: 32.w,
                           height: 32.w,
                           decoration: BoxDecoration(
-                            color: progress > 0.2 
-                              ? const Color(0xFFF9FAFB).withOpacity(progress)
-                              : Colors.black12,
+                            color: progress > 0.2
+                                ? const Color(0xFFF9FAFB).withOpacity(progress)
+                                : Colors.black12,
                             shape: BoxShape.circle,
                           ),
                           alignment: Alignment.center,
                           child: Icon(
-                            isPreview ? Icons.check_circle_rounded : Icons.share_outlined,
+                            isPreview
+                                ? Icons.check_circle_rounded
+                                : Icons.share_outlined,
                             size: 18,
-                            color: isPreview 
-                              ? const Color(0xFF27AE60) 
-                              : (progress > 0.5 ? const Color(0xFF1A1A1A) : Colors.white),
+                            color: isPreview
+                                ? const Color(0xFF27AE60)
+                                : (progress > 0.5
+                                      ? const Color(0xFF1A1A1A)
+                                      : Colors.white),
                           ),
                         ),
                       ),
@@ -827,9 +915,14 @@ class _RecipeDetailHeaderDelegate extends SliverPersistentHeaderDelegate {
     );
   }
 
-  Widget _buildImage(String path, double width, double height, double progress) {
+  Widget _buildImage(
+    String path,
+    double width,
+    double height,
+    double progress,
+  ) {
     final fit = BoxFit.cover;
-    
+
     if (path.isEmpty) {
       return Image.asset(
         'assets/images/recipes.png',
@@ -884,7 +977,7 @@ class _TagPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
         color: const Color(0xFFF2C94C),
         borderRadius: BorderRadius.circular(20),
@@ -892,14 +985,14 @@ class _TagPill extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 14, color: const Color(0xFF111827)),
-          const SizedBox(width: 4),
+          Icon(icon, size: 13, color: const Color(0xFF111827)),
+          const SizedBox(width: 2),
           Text(
             label,
             style: const TextStyle(
               fontFamily: 'Poppins',
               fontWeight: FontWeight.w600,
-              fontSize: 12,
+              fontSize: 11,
               color: Color(0xFF111827),
             ),
           ),
@@ -927,7 +1020,7 @@ class _TabPill extends StatelessWidget {
         onTap: onTap,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(vertical: 8),
+          padding: const EdgeInsets.symmetric(vertical: 6),
           decoration: BoxDecoration(
             color: active ? const Color(0xFFCC3333) : Colors.transparent,
             borderRadius: BorderRadius.circular(26),
@@ -939,11 +1032,66 @@ class _TabPill extends StatelessWidget {
                 fontFamily: 'SF Pro',
                 fontWeight: FontWeight.w700,
                 fontSize: 14,
-                color: active ? Colors.white : const Color(0xFF888888),
+                color: active ? Colors.white : const Color(0xFF5B7C85),
               ),
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _EmptyState extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+
+  const _EmptyState({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.symmetric(vertical: 40.h, horizontal: 20.w),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF9FAFB),
+        borderRadius: BorderRadius.circular(20.r),
+        border: Border.all(color: const Color(0xFFF1F5F9)),
+      ),
+      child: Column(
+        children: [
+          Icon(
+            icon,
+            size: 48.sp,
+            color: const Color(0xFFCBD5E1),
+          ),
+          SizedBox(height: 16.h),
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontFamily: 'SF Pro',
+              fontSize: 15.sp,
+              fontWeight: FontWeight.w600,
+              color: const Color(0xFF64748B),
+            ),
+          ),
+          SizedBox(height: 8.h),
+          Text(
+            subtitle,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontFamily: 'SF Pro',
+              fontSize: 13.sp,
+              color: const Color(0xFF94A3B8),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -957,9 +1105,10 @@ class _IngredientsList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (ingredients.isEmpty) {
-      return const Padding(
-        padding: EdgeInsets.symmetric(vertical: 20),
-        child: Text("No ingredients listed."),
+      return _EmptyState(
+        icon: Icons.shopping_basket_outlined,
+        title: "No ingredients listed",
+        subtitle: "Check the recipe description for details.",
       );
     }
     return Column(
@@ -973,38 +1122,48 @@ class _IngredientsList extends StatelessWidget {
                 children: [
                   if (ing.icon != null && ing.icon!.isNotEmpty) ...[
                     Container(
-                      width: 32,
-                      height: 32,
+                      width: 30,
+                      height: 30,
                       margin: const EdgeInsets.only(right: 10),
                       decoration: BoxDecoration(
                         color: const Color(0xFFFEF9C3), // Light yellow
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(8),
                       ),
                       alignment: Alignment.center,
                       child: Text(
                         ing.icon!,
-                        style: const TextStyle(fontSize: 16),
+                        style: const TextStyle(fontSize: 15),
                       ),
                     ),
                   ],
                   Expanded(
+                    flex: 3,
                     child: Text(
                       ing.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                         fontFamily: 'SF Pro',
-                        fontSize: 14,
+                        fontSize: 13,
                         fontWeight: FontWeight.w400,
-                        color: Color(0xFF1E293B),
+                        color: Color(0xFF111827),
                       ),
                     ),
                   ),
-                  Text(
-                    ing.quantity,
-                    style: const TextStyle(
-                      fontFamily: 'SF Pro',
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFF64748B),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    flex: 2,
+                    child: Text(
+                      ing.quantity,
+                      textAlign: TextAlign.right,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontFamily: 'SF Pro',
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF6B7280),
+                      ),
                     ),
                   ),
                 ],
@@ -1027,40 +1186,10 @@ class _EquipmentList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (equipment.isEmpty) {
-      return Container(
-        width: double.infinity,
-        padding: EdgeInsets.symmetric(vertical: 40.h, horizontal: 20.w),
-        decoration: BoxDecoration(
-          color: const Color(0xFFF9FAFB),
-          borderRadius: BorderRadius.circular(20.r),
-          border: Border.all(color: const Color(0xFFF1F5F9)),
-        ),
-        child: Column(
-          children: [
-            Icon(Icons.soup_kitchen_outlined, size: 48.sp, color: const Color(0xFFCBD5E1)),
-            SizedBox(height: 16.h),
-            Text(
-              "No specific equipment listed",
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontFamily: 'SF Pro',
-                fontSize: 15.sp,
-                fontWeight: FontWeight.w600,
-                color: const Color(0xFF64748B),
-              ),
-            ),
-            SizedBox(height: 8.h),
-            Text(
-              "Standard kitchen tools should be enough.",
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontFamily: 'SF Pro',
-                fontSize: 13.sp,
-                color: const Color(0xFF94A3B8),
-              ),
-            ),
-          ],
-        ),
+      return _EmptyState(
+        icon: Icons.soup_kitchen_outlined,
+        title: "No specific equipment listed",
+        subtitle: "Standard kitchen tools should be enough.",
       );
     }
 
@@ -1084,29 +1213,14 @@ class _EquipmentList extends StatelessWidget {
           ),
           child: Row(
             children: [
-              Container(
-                width: 36.w,
-                height: 36.h,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFEF9C3), // Light yellow matching ingredients
-                  borderRadius: BorderRadius.circular(10.r),
-                ),
-                alignment: Alignment.center,
-                child: Icon(
-                  _getEquipmentIcon(item),
-                  size: 18.sp,
-                  color: const Color(0xFFD97706),
-                ),
-              ),
-              SizedBox(width: 14.w),
               Expanded(
                 child: Text(
                   item,
                   style: TextStyle(
                     fontFamily: 'SF Pro',
-                    fontSize: 15.sp,
+                    fontSize: 13.sp,
                     fontWeight: FontWeight.w600,
-                    color: const Color(0xFF1E293B),
+                    color: const Color(0xFF111827),
                   ),
                 ),
               ),
@@ -1121,17 +1235,6 @@ class _EquipmentList extends StatelessWidget {
       }),
     );
   }
-
-  IconData _getEquipmentIcon(String name) {
-    final n = name.toLowerCase();
-    if (n.contains('pan') || n.contains('skillet')) return Icons.soup_kitchen_rounded;
-    if (n.contains('pot')) return Icons.soup_kitchen_rounded;
-    if (n.contains('oven')) return Icons.microwave_rounded;
-    if (n.contains('knife')) return Icons.flatware_rounded;
-    if (n.contains('bowl')) return Icons.soup_kitchen_outlined;
-    if (n.contains('mixer') || n.contains('blender')) return Icons.blender_rounded;
-    return Icons.handyman_outlined;
-  }
 }
 
 // ── Steps list ────────────────────────────────────────────────────────────────
@@ -1143,9 +1246,10 @@ class _StepsList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (steps.isEmpty) {
-      return const Padding(
-        padding: EdgeInsets.symmetric(vertical: 20),
-        child: Text("No steps listed."),
+      return _EmptyState(
+        icon: Icons.format_list_numbered_rtl,
+        title: "No steps listed",
+        subtitle: "Follow your intuition or check the source.",
       );
     }
     return Column(
@@ -1170,17 +1274,35 @@ class _StepsList extends StatelessWidget {
                     style: const TextStyle(
                       fontFamily: 'SF Pro',
                       fontWeight: FontWeight.w800,
-                      fontSize: 14,
+                      fontSize: 13,
                       color: Color(0xFFCC3333),
                     ),
                   ),
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: 10),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _StepContent(step: steps[i], index: i),
+                      Builder(
+                        builder: (context) {
+                          String content = steps[i];
+                          // Remove "Step X:" or "Step X." or "Step X - " from the start
+                          final stepPrefixRegex = RegExp(r'^Step\s*\d+\s*[:.-]?\s*', caseSensitive: false);
+                          content = content.replaceFirst(stepPrefixRegex, '');
+                          
+                          return Text(
+                            content,
+                            style: const TextStyle(
+                              fontFamily: 'SF Pro',
+                              fontSize: 14,
+                              height: 1.6,
+                              color: Color(0xFF111827),
+                              fontWeight: FontWeight.w500,
+                            ),
+                          );
+                        },
+                      ),
                     ],
                   ),
                 ),
@@ -1202,7 +1324,11 @@ class _StepsList extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.lightbulb_outline_rounded, color: Color(0xFFD97706), size: 20),
+                    const Icon(
+                      Icons.lightbulb_outline_rounded,
+                      color: Color(0xFFD97706),
+                      size: 20,
+                    ),
                     const SizedBox(width: 8),
                     Text(
                       'Notes / Tips',
@@ -1229,68 +1355,6 @@ class _StepsList extends StatelessWidget {
             ),
           ),
         ],
-      ],
-    );
-  }
-}
-
-// ══════════════════════════════════════════════════════════════════════════════
-// ADD-TO-COOKBOOK BOTTOM SHEET
-// ══════════════════════════════════════════════════════════════════════════════
-class _StepContent extends StatelessWidget {
-  final String step;
-  final int index;
-
-  const _StepContent({required this.step, required this.index});
-
-  @override
-  Widget build(BuildContext context) {
-    String title = 'Step ${index + 1}';
-    String content = step;
-
-    // Detect if the string already contains a title like "Step 1: Prepare..." or just "Prepare..."
-    // Look for first colon within first 60 chars
-    final colonIndex = step.indexOf(':');
-    if (colonIndex != -1 && colonIndex < 60) {
-      final prefix = step.substring(0, colonIndex).trim();
-      // If prefix contains "Step" or is just a short title
-      if (prefix.toLowerCase().contains('step') || prefix.split(' ').length <= 4) {
-        title = prefix;
-        content = step.substring(colonIndex + 1).trim();
-      }
-    } else {
-      // Check if there's a newline separating a title
-      final newlineIndex = step.indexOf('\n');
-      if (newlineIndex != -1 && newlineIndex < 60) {
-        title = step.substring(0, newlineIndex).trim();
-        content = step.substring(newlineIndex + 1).trim();
-      }
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: TextStyle(
-            fontFamily: 'SF Pro',
-            fontWeight: FontWeight.w700,
-            fontSize: 13,
-            color: Colors.grey[500],
-            letterSpacing: 0.5,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          content,
-          style: const TextStyle(
-            fontFamily: 'SF Pro',
-            fontSize: 15,
-            height: 1.6,
-            color: Color(0xFF1A1A1A),
-            fontWeight: FontWeight.w500,
-          ),
-        ),
       ],
     );
   }

@@ -640,7 +640,7 @@ class _AddGrocerySheetState extends State<_AddGrocerySheet> {
                     style: TextStyle(
                       fontFamily: 'SF Pro',
                       fontWeight: FontWeight.w800,
-                      fontSize: 20.sp,
+                      fontSize: 18.sp,
                       color: Colors.white,
                     ),
                   ),
@@ -691,7 +691,7 @@ class _AddGrocerySheetState extends State<_AddGrocerySheet> {
                       style: TextStyle(
                         fontFamily: 'SF Pro',
                         fontWeight: FontWeight.w700,
-                        fontSize: 14.sp,
+                        fontSize: 13.sp,
                         color: Colors.white70,
                       ),
                     ),
@@ -759,7 +759,7 @@ class _AddGrocerySheetState extends State<_AddGrocerySheet> {
                       style: TextStyle(
                         fontFamily: 'SF Pro',
                         fontWeight: FontWeight.w700,
-                        fontSize: 14.sp,
+                        fontSize: 13.sp,
                         color: Colors.white70,
                       ),
                     ),
@@ -781,7 +781,7 @@ class _AddGrocerySheetState extends State<_AddGrocerySheet> {
                         decoration: InputDecoration(
                           hintText: 'e.g. Garlic',
                           hintStyle: TextStyle(color: Colors.white38),
-                          contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
+                          contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
                           border: InputBorder.none,
                         ),
                       ),
@@ -837,7 +837,7 @@ class _AddGrocerySheetState extends State<_AddGrocerySheet> {
                       style: TextStyle(
                         fontFamily: 'SF Pro',
                         fontWeight: FontWeight.w700,
-                        fontSize: 14.sp,
+                        fontSize: 13.sp,
                         color: Colors.white70,
                       ),
                     ),
@@ -859,7 +859,7 @@ class _AddGrocerySheetState extends State<_AddGrocerySheet> {
                         decoration: InputDecoration(
                           hintText: 'e.g. 2 cloves',
                           hintStyle: TextStyle(color: Colors.white38),
-                          contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
+                          contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
                           border: InputBorder.none,
                         ),
                       ),
@@ -873,7 +873,7 @@ class _AddGrocerySheetState extends State<_AddGrocerySheet> {
                       style: TextStyle(
                         fontFamily: 'SF Pro',
                         fontWeight: FontWeight.w700,
-                        fontSize: 14.sp,
+                        fontSize: 13.sp,
                         color: Colors.white70,
                       ),
                     ),
@@ -881,7 +881,7 @@ class _AddGrocerySheetState extends State<_AddGrocerySheet> {
                     GestureDetector(
                       onTap: _pickDate,
                       child: Container(
-                        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
+                        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
                         decoration: BoxDecoration(
                           color: Colors.white.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(14.r),
@@ -909,12 +909,12 @@ class _AddGrocerySheetState extends State<_AddGrocerySheet> {
                       ),
                     ),
                   ],
-                  SizedBox(height: 24.h),
+                  SizedBox(height: 20.h),
 
                   // ── Save button ──────────────────────────────────────────
                   SizedBox(
                     width: double.infinity,
-                    height: 54.h,
+                    height: 50.h,
                     child: ElevatedButton(
                       onPressed: _isSaving
                           ? null
@@ -952,6 +952,13 @@ class _AddGrocerySheetState extends State<_AddGrocerySheet> {
                                   }
                                 }
                                 if (!mounted) return;
+                                IosToast.show(
+                                  context,
+                                  message: _isRecipeMode 
+                                      ? 'Recipe ingredients added successfully' 
+                                      : 'Item added successfully',
+                                  type: ToastType.success,
+                                );
                                 Navigator.pop(context);
                               } catch (e) {
                                 if (!mounted) return;
@@ -974,7 +981,7 @@ class _AddGrocerySheetState extends State<_AddGrocerySheet> {
                               style: TextStyle(
                                 fontFamily: 'SF Pro',
                                 fontWeight: FontWeight.w700,
-                                fontSize: 16.sp,
+                                fontSize: 15.sp,
                               ),
                             ),
                     ),
@@ -1008,7 +1015,7 @@ class _AddGrocerySheetState extends State<_AddGrocerySheet> {
               style: TextStyle(
                 fontFamily: 'SF Pro',
                 fontWeight: isActive ? FontWeight.w700 : FontWeight.w600,
-                fontSize: 14.sp,
+                fontSize: 13.sp,
                 color: isActive ? const Color(0xFFC83A2D) : Colors.white70,
               ),
             ),

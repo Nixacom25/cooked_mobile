@@ -17,6 +17,13 @@ class RecipeService {
     null,
   );
   final ValueNotifier<List<Recipe>?> recentImportsNotifier = ValueNotifier(null);
+  
+  // Cache for explore data
+  final Map<String, dynamic> _cache = {};
+
+  void clearCache() {
+    _cache.clear();
+  }
 
   Future<Map<String, String>> _getHeaders() async {
     final token = await AuthService.instance.getToken();
@@ -186,7 +193,12 @@ class RecipeService {
     CookbookService.instance.getMyCookbooks(forceRefresh: true).then((_) => null).catchError((_) => null);
   }
 
-  Future<List<Recipe>> getExploreRecipes({String? cuisine, String? category, int page = 0, int size = 10}) async {
+  Future<List<Recipe>> getExploreRecipes({String? cuisine, String? category, int page = 0, int size = 10, bool forceRefresh = false}) async {
+    final cacheKey = 'explore_recipes_${cuisine ?? ''}_${category ?? ''}_${page}_${size}';
+    if (!forceRefresh && _cache.containsKey(cacheKey)) {
+      return _cache[cacheKey] as List<Recipe>;
+    }
+
     final cuisineParam = cuisine != null ? '&cuisine=$cuisine' : '';
     final categoryParam = category != null ? '&category=$category' : '';
     final url = Uri.parse(
@@ -197,31 +209,47 @@ class RecipeService {
     if (response.statusCode == 200) {
       final Map<String, dynamic> data = jsonDecode(response.body);
       final List<dynamic> content = data['content'];
-      return content.map((json) => Recipe.fromJson(json)).toList();
+      final results = content.map((json) => Recipe.fromJson(json)).toList();
+      _cache[cacheKey] = results;
+      return results;
     } else {
       throw Exception('Unable to load explore recipes.');
     }
   }
 
-  Future<Map<String, int>> getExploreCuisines() async {
+  Future<Map<String, int>> getExploreCuisines({bool forceRefresh = false}) async {
+    const cacheKey = 'explore_cuisines';
+    if (!forceRefresh && _cache.containsKey(cacheKey)) {
+      return _cache[cacheKey] as Map<String, int>;
+    }
+
     final url = Uri.parse('${ApiConfig.baseUrl}/recipes/explore/cuisines');
     final response = await http.get(url, headers: await _getHeaders());
 
     if (response.statusCode == 200) {
       final Map<String, dynamic> data = jsonDecode(response.body);
-      return data.cast<String, int>();
+      final results = data.cast<String, int>();
+      _cache[cacheKey] = results;
+      return results;
     } else {
       throw Exception('Unable to load cuisines.');
     }
   }
 
-  Future<Map<String, int>> getExploreCategories() async {
+  Future<Map<String, int>> getExploreCategories({bool forceRefresh = false}) async {
+    const cacheKey = 'explore_categories';
+    if (!forceRefresh && _cache.containsKey(cacheKey)) {
+      return _cache[cacheKey] as Map<String, int>;
+    }
+
     final url = Uri.parse('${ApiConfig.baseUrl}/recipes/explore/categories');
     final response = await http.get(url, headers: await _getHeaders());
 
     if (response.statusCode == 200) {
       final Map<String, dynamic> data = jsonDecode(response.body);
-      return data.cast<String, int>();
+      final results = data.cast<String, int>();
+      _cache[cacheKey] = results;
+      return results;
     } else {
       throw Exception('Unable to load categories.');
     }
@@ -272,7 +300,13 @@ class RecipeService {
     String? cuisine,
     int page = 0,
     int size = 10,
+    bool forceRefresh = false,
   }) async {
+    final cacheKey = 'popular_recipes_${category ?? ''}_${cuisine ?? ''}_${page}_${size}';
+    if (!forceRefresh && _cache.containsKey(cacheKey)) {
+      return _cache[cacheKey] as List<Recipe>;
+    }
+
     final categoryParam = category != null ? '&category=$category' : '';
     final cuisineParam = cuisine != null ? '&cuisine=$cuisine' : '';
     final url = Uri.parse(
@@ -283,7 +317,9 @@ class RecipeService {
     if (response.statusCode == 200) {
       final Map<String, dynamic> data = jsonDecode(response.body);
       final List<dynamic> content = data['content'];
-      return content.map((json) => Recipe.fromJson(json)).toList();
+      final results = content.map((json) => Recipe.fromJson(json)).toList();
+      _cache[cacheKey] = results;
+      return results;
     } else {
       throw Exception('Unable to load popular recipes.');
     }

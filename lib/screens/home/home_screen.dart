@@ -390,7 +390,7 @@ class _FloatingBottomNav extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       color: Colors.transparent,
-      padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 40.h),
+      padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 20.h),
       child: Stack(
         clipBehavior: Clip.none,
         alignment: Alignment.topCenter,
@@ -985,8 +985,8 @@ class _SectionRow extends StatelessWidget {
                 style: TextStyle(
                   fontFamily: 'SF Pro',
                   fontWeight: FontWeight.w800,
-                  fontSize: 20.sp,
-                  color: const Color(0xFF1A1A1A),
+                  fontSize: 18.sp,
+                  color: const Color(0xFF111827),
                 ),
               ),
             ],
@@ -998,9 +998,9 @@ class _SectionRow extends StatelessWidget {
                 'View All',
                 style: TextStyle(
                   fontFamily: 'SF Pro',
-                  fontWeight: FontWeight.w600,
-                  fontSize: 14.sp,
-                  color: const Color(0xFFCC3333),
+                  fontWeight: FontWeight.w500,
+                  fontSize: 13.sp,
+                  color: const Color(0xFFC83A2D),
                 ),
               ),
             ),
@@ -1171,7 +1171,7 @@ class _CookbooksRowState extends State<_CookbooksRow> {
                           style: TextStyle(
                             fontFamily: 'SF Pro',
                             fontWeight: FontWeight.w700,
-                            fontSize: 16.sp,
+                            fontSize: 14.sp,
                             color: const Color(0xFF1A1A1A),
                           ),
                         ),
@@ -1188,7 +1188,7 @@ class _CookbooksRowState extends State<_CookbooksRow> {
                               '${cb.recipes.length} Recipes',
                               style: TextStyle(
                                 fontFamily: 'SF Pro',
-                                fontSize: 12.sp,
+                                fontSize: 11.sp,
                                 color: const Color(0xFF999999),
                               ),
                             ),

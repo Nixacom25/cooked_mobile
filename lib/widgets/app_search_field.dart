@@ -31,10 +31,10 @@ class AppSearchField extends StatelessWidget {
         borderRadius: BorderRadius.circular(50.r),
         border: Border.all(color: borderColor ?? const Color(0xFFE0E0E0)),
       ),
-      padding: EdgeInsets.symmetric(horizontal: 18.w),
+      padding: EdgeInsets.symmetric(horizontal: 10.w),
       child: Row(
         children: [
-          Icon(Icons.search_rounded, size: 20.sp, color: const Color(0xFFAAAAAA)),
+          Icon(Icons.search_rounded, size: 30.sp, color: const Color(0xFFAAAAAA)),
           SizedBox(width: 10.w),
           Expanded(
             child: TextField(
@@ -61,7 +61,7 @@ class AppSearchField extends StatelessWidget {
                 enabledBorder: InputBorder.none,
                 focusedBorder: InputBorder.none,
                 isDense: true,
-                contentPadding: EdgeInsets.symmetric(vertical: 16.h),
+                contentPadding: EdgeInsets.symmetric(vertical: 12.h),
               ),
             ),
           ),

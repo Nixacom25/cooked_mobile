@@ -22,23 +22,20 @@ class ExploreScreen extends StatefulWidget {
     'Korean': 'assets/images/korean.png',
     'Mediterranean': 'assets/images/mediterranean.png',
     'Middle Eastern': 'assets/images/east.png',
-    'French': 'assets/images/french.png',
+    'French': 'assets/images/french1.png',
     'Spanish': 'assets/images/mexican.png',
-    'Greek': 'assets/images/greek.png',
-    'Caribbean': 'assets/images/caribbean.png',
-    'West African': 'assets/images/west.png',
+    'Greek': 'assets/images/greek1.png',
+    'Caribbean': 'assets/images/caribbean1.png',
+    'West African': 'assets/images/west-african.png',
   };
 
   static const Map<String, String> nicheImages = {
-    'High Protein, Low Calorie': 'assets/images/explore_autumn.png',
-    'Easy Desserts': 'assets/images/cookbook_healthy.png',
-    '30-Minute Meals': 'assets/images/explore_spring.png',
-    'Meal Prep Favorites': 'assets/images/explore_winter.png',
-    'Comfort Food': 'assets/images/cookbook_dessert.png',
+    'High Protein, Low Calorie': 'assets/images/higth-proteins.png',
+    'Easy Desserts': 'assets/images/easy-desserts.png',
+    '30-Minute Meals': 'assets/images/30-Minutes.png',
     'Healthy Breakfasts': 'assets/images/explore_summer.png',
-    'Quick Lunches': 'assets/images/cookbook_lunch.png',
-    'Vegan Essentials': 'assets/images/cookbook_veggie.png',
-    'Low-Carb Meals': 'assets/images/cookbook_meat.png',
+    'Plant-Based Essentials': 'assets/images/Plant-Based.png',
+    'Low-Carb Meals': 'assets/images/low-cards.png',
   };
 
   @override
@@ -58,9 +55,17 @@ class _ExploreScreenState extends State<ExploreScreen> {
   //   ('🥐', 'Bakery'),
   // ];
 
+  late Future<Map<String, int>> _cuisinesFuture;
+  late Future<Map<String, int>> _categoriesFuture;
+  late Future<List<Recipe>> _popularFuture;
+
   @override
   void initState() {
     super.initState();
+    _cuisinesFuture = RecipeService.instance.getExploreCuisines();
+    _categoriesFuture = RecipeService.instance.getExploreCategories();
+    _popularFuture = RecipeService.instance.getPopularRecipes(size: 10);
+    
     _searchCtrl.addListener(() {
       if (mounted) setState(() {});
     });
@@ -93,11 +98,8 @@ class _ExploreScreenState extends State<ExploreScreen> {
     'High Protein, Low Calorie',
     'Easy Desserts',
     '30-Minute Meals',
-    'Meal Prep Favorites',
-    'Comfort Food',
     'Healthy Breakfasts',
-    'Quick Lunches',
-    'Vegan Essentials',
+    'Plant-Based Essentials',
     'Low-Carb Meals',
   ];
 
@@ -106,23 +108,17 @@ class _ExploreScreenState extends State<ExploreScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       resizeToAvoidBottomInset: false,
-      body: Column(
+      body: ListView(
+        padding: EdgeInsets.only(bottom: 120.h),
         children: [
           _buildHeader(),
-          Expanded(
-            child: ListView(
-              padding: EdgeInsets.only(top: 24.h, bottom: 120.h),
-              children: [
-                if (_searchCtrl.text.isEmpty) ...[
-                  _buildBrowseByCuisine(),
-                  SizedBox(height: 32.h),
-                  _buildPopularCategories(),
-                  SizedBox(height: 32.h),
-                ],
-                _buildPopularNow(),
-              ],
-            ),
-          ),
+          SizedBox(height: 20.h),
+          if (_searchCtrl.text.isEmpty) ...[
+            _buildBrowseByCuisine(),
+            SizedBox(height: 20.h),
+            _buildPopularCategories(),
+          ],
+          _buildPopularNow(),
         ],
       ),
     );
@@ -141,8 +137,8 @@ class _ExploreScreenState extends State<ExploreScreen> {
       ),
       child: Container(
         padding: EdgeInsets.only(
-          top: 50.h,
-          bottom: 24.h,
+          top: 60.h,
+          bottom: 20.h,
           left: 20.w,
           right: 20.w,
         ),
@@ -157,7 +153,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
               style: TextStyle(
                 fontFamily: 'SF Pro',
                 fontWeight: FontWeight.w800,
-                fontSize: 28.sp,
+                fontSize: 24.sp,
                 color: Colors.white,
               ),
             ),
@@ -166,7 +162,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
               controller: _searchCtrl,
               hintText: 'Search recipes, ingredients....',
             ),
-            SizedBox(height: 16.h),
+            // SizedBox(height: 16.h),
             // SingleChildScrollView(
             //   scrollDirection: Axis.horizontal,
             //   child: Row(
@@ -228,7 +224,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
   // ── Browse by Cuisine ───────────────────────────────────────────────────────
   Widget _buildBrowseByCuisine() {
     return FutureBuilder<Map<String, int>>(
-      future: RecipeService.instance.getExploreCuisines(),
+      future: _cuisinesFuture,
       builder: (context, snapshot) {
         if (!snapshot.hasData || snapshot.data!.isEmpty) {
           return const SizedBox.shrink();
@@ -262,7 +258,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
             ),
             SizedBox(height: 8.h),
             SizedBox(
-              height: 110.h,
+              height: 90.h,
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
                 padding: EdgeInsets.symmetric(horizontal: 20.w),
@@ -292,8 +288,8 @@ class _ExploreScreenState extends State<ExploreScreen> {
                       child: Column(
                         children: [
                           Container(
-                            width: 76.w,
-                            height: 76.h,
+                            width: 65.w,
+                            height: 65.h,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               boxShadow: [
@@ -309,14 +305,14 @@ class _ExploreScreenState extends State<ExploreScreen> {
                               ),
                             ),
                           ),
-                          SizedBox(height: 8.h),
+                          SizedBox(height: 5.h),
                           Text(
                             name,
                             style: TextStyle(
                               fontFamily: 'SF Pro',
                               fontWeight: FontWeight.w700,
-                              fontSize: 13.sp,
-                              color: const Color(0xFF1A1A1A),
+                              fontSize: 12.sp,
+                              color: const Color(0xFF191C1E),
                             ),
                           ),
                         ],
@@ -335,7 +331,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
   // ── Popular Categories ──────────────────────────────────────────────────────
   Widget _buildPopularCategories() {
     return FutureBuilder<Map<String, int>>(
-      future: RecipeService.instance.getExploreCategories(),
+      future: _categoriesFuture,
       builder: (context, snapshot) {
         if (!snapshot.hasData || snapshot.data!.isEmpty) {
           return const SizedBox.shrink();
@@ -394,7 +390,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                       );
                     },
                     child: Container(
-                      width: 180.w,
+                      width: 160.w,
                       margin: EdgeInsets.only(
                         left: i == 0 ? 20.w : 0,
                         right: 16.w,
@@ -406,8 +402,8 @@ class _ExploreScreenState extends State<ExploreScreen> {
                             borderRadius: BorderRadius.circular(16.r),
                             child: Image.asset(
                               imgPath,
-                              width: 180.w,
-                              height: 150.h,
+                              width: 160.w,
+                              height: 130.h,
                               fit: BoxFit.cover,
                             ),
                           ),
@@ -418,26 +414,26 @@ class _ExploreScreenState extends State<ExploreScreen> {
                             style: TextStyle(
                               fontFamily: 'SF Pro',
                               fontWeight: FontWeight.w800,
-                              fontSize: 15.sp,
-                              color: const Color(0xFF1A1A1A),
+                              fontSize: 14.sp,
+                              color: const Color(0xFF222222),
                               height: 1.2,
                             ),
                           ),
-                          SizedBox(height: 4.h),
+                          SizedBox(height: 2.h),
                           Row(
                             children: [
                               Icon(
                                 Icons.restaurant_menu,
-                                size: 14.sp,
-                                color: const Color(0xFFBBBBBB),
+                                size: 13.sp,
+                                color: const Color(0xFF9CA3AF),
                               ),
                               SizedBox(width: 4.w),
                               Text(
                                 '$count Recipes',
                                 style: TextStyle(
                                   fontFamily: 'SF Pro',
-                                  fontSize: 12.sp,
-                                  color: const Color(0xFF999999),
+                                  fontSize: 11.sp,
+                                  color: const Color(0xFF9CA3AF),
                                 ),
                               ),
                             ],
@@ -458,11 +454,11 @@ class _ExploreScreenState extends State<ExploreScreen> {
   // ── Popular Now ─────────────────────────────────────────────────────────────
   Widget _buildPopularNow() {
     return FutureBuilder<List<Recipe>>(
-      future: RecipeService.instance.getPopularRecipes(size: 10),
+      future: _popularFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Padding(
-            padding: EdgeInsets.symmetric(vertical: 40.h),
+            padding: EdgeInsets.symmetric(vertical: 0.h),
             child: const Center(
               child: CircularProgressIndicator(color: Color(0xFFC83A2D)),
             ),
@@ -471,6 +467,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
 
         final query = _searchCtrl.text.trim().toLowerCase();
         var popular = snapshot.data ?? [];
+        if (popular.length > 10) popular = popular.sublist(0, 10);
 
         if (query.isNotEmpty) {
           popular = popular
@@ -495,8 +492,8 @@ class _ExploreScreenState extends State<ExploreScreen> {
                 style: TextStyle(
                   fontFamily: 'SF Pro',
                   fontWeight: FontWeight.w800,
-                  fontSize: 20.sp,
-                  color: const Color(0xFF1A1A1A),
+                  fontSize: 18.sp,
+                  color: const Color(0xFF111827),
                 ),
               ),
             ),
@@ -528,26 +525,32 @@ class _ExploreScreenState extends State<ExploreScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Expanded(
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(16.r),
-                            child:
-                                recipe.image != null &&
-                                    recipe.image!.startsWith('http')
-                                ? Image.network(
-                                    recipe.image!,
-                                    width: double.infinity,
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (_, __, ___) => Image.asset(
-                                      'assets/images/recipes.png',
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF7F7F7),
+                              borderRadius: BorderRadius.circular(10.r),
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(16.r),
+                              child:
+                                  recipe.image != null &&
+                                      recipe.image!.startsWith('http')
+                                  ? Image.network(
+                                      recipe.image!,
                                       width: double.infinity,
-                                      fit: BoxFit.cover,
+                                      fit: BoxFit.contain,
+                                      errorBuilder: (_, __, ___) => Image.asset(
+                                        'assets/images/recipes.png',
+                                        width: double.infinity,
+                                        fit: BoxFit.contain,
+                                      ),
+                                    )
+                                  : Image.asset(
+                                      recipe.image ?? 'assets/images/recipes.png',
+                                      width: double.infinity,
+                                      fit: BoxFit.contain,
                                     ),
-                                  )
-                                : Image.asset(
-                                    recipe.image ?? 'assets/images/recipes.png',
-                                    width: double.infinity,
-                                    fit: BoxFit.cover,
-                                  ),
+                            ),
                           ),
                         ),
                         SizedBox(height: 8.h),
@@ -558,8 +561,8 @@ class _ExploreScreenState extends State<ExploreScreen> {
                               style: TextStyle(
                                 fontFamily: 'SF Pro',
                                 fontWeight: FontWeight.w900,
-                                fontSize: 20.sp,
-                                color: const Color(0xFFEDEDED),
+                                fontSize: 18.sp,
+                                color: const Color(0xFFD8D8D8),
                               ),
                             ),
                             SizedBox(width: 8.w),
@@ -572,43 +575,40 @@ class _ExploreScreenState extends State<ExploreScreen> {
                                   fontFamily: 'SF Pro',
                                   fontWeight: FontWeight.w800,
                                   fontSize: 14.sp,
-                                  color: const Color(0xFF1A1A1A),
+                                  color: const Color(0xFF222222),
                                 ),
                               ),
                             ),
                           ],
                         ),
-                        SizedBox(height: 4.h),
                         Row(
                           children: [
-                            SizedBox(width: 24.w), // Offset for number
+                            SizedBox(width: 20.w), // Offset for number
                             Icon(
-                              Icons.access_time,
+                              Icons.timer,
                               size: 12.sp,
-                              color: const Color(0xFF999999),
+                              color: const Color(0xFF9CA3AF),
                             ),
-                            SizedBox(width: 4.w),
                             Text(
                               '${recipe.cookTime} min',
                               style: TextStyle(
                                 fontFamily: 'SF Pro',
                                 fontSize: 11.sp,
-                                color: const Color(0xFF999999),
+                                color: const Color(0xFF9CA3AF),
                               ),
                             ),
-                            SizedBox(width: 10.w),
+                            SizedBox(width: 5.w),
                             Icon(
-                              Icons.local_fire_department_outlined,
+                              Icons.local_fire_department,
                               size: 12.sp,
-                              color: const Color(0xFF999999),
+                              color: const Color(0xFF9CA3AF),
                             ),
-                            SizedBox(width: 4.w),
                             Text(
                               '${recipe.kcal} kcal',
                               style: TextStyle(
                                 fontFamily: 'SF Pro',
                                 fontSize: 11.sp,
-                                color: const Color(0xFF999999),
+                                color: const Color(0xFF9CA3AF),
                               ),
                             ),
                           ],
@@ -645,8 +645,8 @@ class _SectionHeader extends StatelessWidget {
             style: TextStyle(
               fontFamily: 'SF Pro',
               fontWeight: FontWeight.w800,
-              fontSize: 20.sp,
-              color: const Color(0xFF1A1A1A),
+              fontSize: 18.sp,
+              color: const Color(0xFF111827),
             ),
           ),
           GestureDetector(
@@ -656,8 +656,8 @@ class _SectionHeader extends StatelessWidget {
               style: TextStyle(
                 fontFamily: 'SF Pro',
                 fontWeight: FontWeight.w600,
-                fontSize: 14.sp,
-                color: const Color(0xFFCC3333),
+                fontSize: 13.sp,
+                color: const Color(0xFFC83A2D),
               ),
             ),
           ),

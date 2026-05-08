@@ -464,8 +464,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               isManualBackendCall: false, // Don't login yet, just get identity
             );
           } else {
-            // Apple - would handle similarly
-            throw Exception('Apple Registration not implemented yet');
+            socialRes = await AuthService.instance.signInWithApple(
+              isSignup: true,
+              isManualBackendCall: false, // Don't login yet, just get identity
+            );
           }
 
           if (socialRes['success'] != true) {

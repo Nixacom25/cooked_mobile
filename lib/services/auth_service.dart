@@ -275,37 +275,56 @@ class AuthService {
   // Support for min function
   int min(int a, int b) => a < b ? a : b;
 
-  Future<Map<String, dynamic>> signInWithApple() async {
+  Future<Map<String, dynamic>> signInWithApple({
+    bool isSignup = false,
+    bool isManualBackendCall = true,
+    String? firstname,
+    String? lastname,
+    String? phone,
+  }) async {
     try {
       final credential = await SignInWithApple.getAppleIDCredential(
         scopes: [
           AppleIDAuthorizationScopes.email,
           AppleIDAuthorizationScopes.fullName,
         ],
-        // Required for Android to open a modal-like Chrome Custom Tab 
-        // instead of redirecting to the external browser app.
         webAuthenticationOptions: WebAuthenticationOptions(
-          clientId: 'com.cookedapp.app.service', // Replace with your Service ID
-          redirectUri: Uri.parse('https://cooked-backend-latest.onrender.com/api/auth/apple/callback'),
+          clientId: 'com.cookedapp.app.service',
+          redirectUri: Uri.parse(
+            'https://cooked-backend-latest.onrender.com/api/auth/apple/callback',
+          ),
         ),
       );
 
       final identityToken = credential.identityToken;
       if (identityToken == null) throw Exception('Missing ID Token from Apple');
 
-      // Prepare backend call (currently backend restricted as requested)
-      final url = Uri.parse('${ApiConfig.baseUrl}/auth/login');
-    
-    // Clear any previous session data before starting fresh
-    _clearAllServiceData();
+      if (!isManualBackendCall) {
+        return {
+          'success': true,
+          'email': credential.email ?? '',
+          'idToken': identityToken,
+          'firstname': credential.givenName ?? '',
+          'lastname': credential.familyName ?? '',
+        };
+      }
 
-    final response = await http.post(
+      final url = Uri.parse('${ApiConfig.baseUrl}/auth/login');
+
+      // Clear any previous session data before starting fresh
+      _clearAllServiceData();
+
+      final response = await http.post(
         url,
         headers: ApiConfig.defaultHeaders,
         body: jsonEncode({
           'identifier': credential.email ?? 'apple_user',
           'password': identityToken,
           'provider': 'APPLE',
+          'isSignup': isSignup,
+          'firstname': firstname ?? credential.givenName,
+          'lastname': lastname ?? credential.familyName,
+          'phone': phone,
         }),
       );
 
@@ -316,11 +335,21 @@ class AuthService {
         }
         return data;
       } else {
-        throw Exception(_extractErrorMessage(response.body, 'Incorrect credentials, please try again'));
+        throw Exception(
+          _extractErrorMessage(
+            response.body,
+            'Incorrect credentials, please try again',
+          ),
+        );
       }
     } catch (e) {
       developer.log('Apple Sign-In Error: $e', name: 'AuthService');
-      throw Exception(_extractErrorMessage(e.toString(), 'Incorrect credentials, please try again'));
+      throw Exception(
+        _extractErrorMessage(
+          e.toString(),
+          'Incorrect credentials, please try again',
+        ),
+      );
     }
   }
 

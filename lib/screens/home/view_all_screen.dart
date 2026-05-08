@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../routes/app_routes.dart';
@@ -226,7 +225,9 @@ class _CookbooksGridState extends State<_CookbooksGrid> {
         List<Cookbook> displayList = cookbooks;
         if (widget.searchQuery.trim().isNotEmpty) {
           final query = widget.searchQuery.trim().toLowerCase();
-          displayList = displayList.where((cb) => cb.name.toLowerCase().contains(query)).toList();
+          displayList = displayList
+              .where((cb) => cb.name.toLowerCase().contains(query))
+              .toList();
         }
 
         if (displayList.isEmpty) {
@@ -255,9 +256,7 @@ class _CookbooksGridState extends State<_CookbooksGrid> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
-                    child: CookbookCover(cookbook: cb),
-                  ),
+                  Expanded(child: CookbookCover(cookbook: cb)),
                   const SizedBox(height: 7),
                   Text(
                     cb.name.toTitleCase(),
@@ -266,8 +265,8 @@ class _CookbooksGridState extends State<_CookbooksGrid> {
                     style: const TextStyle(
                       fontFamily: 'SF Pro',
                       fontWeight: FontWeight.w700,
-                      fontSize: 16,
-                      color: Color(0xFF1A1A1A),
+                      fontSize: 14,
+                      color: Color(0xFF222222),
                     ),
                   ),
                   const SizedBox(height: 2),
@@ -275,16 +274,16 @@ class _CookbooksGridState extends State<_CookbooksGrid> {
                     children: [
                       const Icon(
                         Icons.restaurant_outlined,
-                        size: 14,
-                        color: Color(0xFF999999),
+                        size: 13,
+                        color: Color(0xFF9CA3AF),
                       ),
                       const SizedBox(width: 4),
                       Text(
                         '${cb.recipes.length} Recipes',
                         style: const TextStyle(
                           fontFamily: 'SF Pro',
-                          fontSize: 12,
-                          color: Color(0xFF999999),
+                          fontSize: 11,
+                          color: Color(0xFF9CA3AF),
                         ),
                       ),
                     ],
@@ -317,11 +316,16 @@ class _RecipesGridState extends State<_RecipesGrid> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    if (_future != null) return; // Already loading/loaded
+
     final args =
         ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
     _type = args['type'] as ViewAllType;
     // Removed _load() call as we rely on notifiers for my recipes/favorites/imports/history
-    if (_type == ViewAllType.explore || _type == ViewAllType.exploreRecipesByCuisine || _type == ViewAllType.exploreRecipesByCategory || _type == ViewAllType.groceryHistory) {
+    if (_type == ViewAllType.explore ||
+        _type == ViewAllType.exploreRecipesByCuisine ||
+        _type == ViewAllType.exploreRecipesByCategory ||
+        _type == ViewAllType.groceryHistory) {
       _load();
     }
   }
@@ -346,14 +350,22 @@ class _RecipesGridState extends State<_RecipesGrid> {
         _future = RecipeService.instance.getExploreRecipes(size: 50);
         break;
       case ViewAllType.exploreRecipesByCuisine:
-        final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+        final args =
+            ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
         final cuisine = args['cuisine'] as String?;
-        _future = RecipeService.instance.getExploreRecipes(cuisine: cuisine, size: 50);
+        _future = RecipeService.instance.getExploreRecipes(
+          cuisine: cuisine,
+          size: 50,
+        );
         break;
       case ViewAllType.exploreRecipesByCategory:
-        final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+        final args =
+            ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
         final category = args['category'] as String?;
-        _future = RecipeService.instance.getExploreRecipes(category: category, size: 50);
+        _future = RecipeService.instance.getExploreRecipes(
+          category: category,
+          size: 50,
+        );
         break;
       case ViewAllType.groceryHistory:
         _future = _fetchGroceryHistory();
@@ -386,7 +398,9 @@ class _RecipesGridState extends State<_RecipesGrid> {
     List<Recipe> displayList = recipes;
     if (widget.searchQuery.trim().isNotEmpty) {
       final query = widget.searchQuery.trim().toLowerCase();
-      displayList = displayList.where((r) => r.name.toLowerCase().contains(query)).toList();
+      displayList = displayList
+          .where((r) => r.name.toLowerCase().contains(query))
+          .toList();
     }
 
     if (displayList.isEmpty) {
@@ -411,7 +425,11 @@ class _RecipesGridState extends State<_RecipesGrid> {
               await RecipeService.instance.toggleFavorite(r.id);
             } catch (e) {
               if (ctx.mounted) {
-                IosToast.show(ctx, message: ErrorHelper.getFriendlyMessage(e), type: ToastType.error);
+                IosToast.show(
+                  ctx,
+                  message: ErrorHelper.getFriendlyMessage(e),
+                  type: ToastType.error,
+                );
               }
             }
           },
@@ -432,14 +450,17 @@ class _RecipesGridState extends State<_RecipesGrid> {
 
   @override
   Widget build(BuildContext context) {
-    if (_type == ViewAllType.savedRecipes || _type == ViewAllType.favorites || _type == ViewAllType.imports || _type == ViewAllType.recentlyViewed) {
+    if (_type == ViewAllType.savedRecipes ||
+        _type == ViewAllType.favorites ||
+        _type == ViewAllType.imports ||
+        _type == ViewAllType.recentlyViewed) {
       final notifier = _type == ViewAllType.savedRecipes
           ? RecipeService.instance.myRecipesNotifier
-          : _type == ViewAllType.favorites 
-              ? RecipeService.instance.favoriteRecipesNotifier
-              : _type == ViewAllType.imports
-                  ? RecipeService.instance.recentImportsNotifier
-                  : HistoryService.instance.recentlyViewedNotifier;
+          : _type == ViewAllType.favorites
+          ? RecipeService.instance.favoriteRecipesNotifier
+          : _type == ViewAllType.imports
+          ? RecipeService.instance.recentImportsNotifier
+          : HistoryService.instance.recentlyViewedNotifier;
 
       return ValueListenableBuilder<List<Recipe>?>(
         valueListenable: notifier,
@@ -506,7 +527,9 @@ class _CreatorsGridState extends State<_CreatorsGrid> {
         List<Creator> displayList = creators;
         if (widget.searchQuery.trim().isNotEmpty) {
           final query = widget.searchQuery.trim().toLowerCase();
-          displayList = displayList.where((c) => c.displayName.toLowerCase().contains(query)).toList();
+          displayList = displayList
+              .where((c) => c.displayName.toLowerCase().contains(query))
+              .toList();
         }
 
         if (displayList.isEmpty) {
@@ -556,16 +579,27 @@ class _CreatorsGridState extends State<_CreatorsGrid> {
                     fontFamily: 'SF Pro',
                     fontWeight: FontWeight.w700,
                     fontSize: 14,
-                    color: Color(0xFF1B1B1B),
+                    color: Color(0xFF222222),
                   ),
                 ),
-                Text(
-                  '${c.publicRecipeCount} Recipes',
-                  style: const TextStyle(
-                    fontFamily: 'SF Pro',
-                    fontSize: 12,
-                    color: Color(0xFF999999),
-                  ),
+                SizedBox(height: 2.h),
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.restaurant_outlined,
+                      size: 13,
+                      color: Color(0xFF9CA3AF),
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      '${c.publicRecipeCount} Recipes',
+                      style: const TextStyle(
+                        fontFamily: 'SF Pro',
+                        fontSize: 11,
+                        color: Color(0xFF9CA3AF),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             );
@@ -579,9 +613,28 @@ class _CreatorsGridState extends State<_CreatorsGrid> {
 // ══════════════════════════════════════════════════════════════════════════════
 // DYNAMIC EXPLORE GRID (Cuisines & Categories from Backend)
 // ══════════════════════════════════════════════════════════════════════════════
-class _StaticCookbooksGrid extends StatelessWidget {
+class _StaticCookbooksGrid extends StatefulWidget {
   final ViewAllType type;
   final String searchQuery;
+
+  const _StaticCookbooksGrid({required this.type, this.searchQuery = ''});
+
+  @override
+  State<_StaticCookbooksGrid> createState() => _StaticCookbooksGridState();
+}
+
+class _StaticCookbooksGridState extends State<_StaticCookbooksGrid> {
+  Future<Map<String, int>>? _future;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.type == ViewAllType.exploreCategories) {
+      _future = RecipeService.instance.getExploreCategories();
+    } else {
+      _future = RecipeService.instance.getExploreCuisines();
+    }
+  }
 
   static const List<String> _allowedCuisines = [
     'Italian',
@@ -604,69 +657,68 @@ class _StaticCookbooksGrid extends StatelessWidget {
     'High Protein, Low Calorie',
     'Easy Desserts',
     '30-Minute Meals',
-    'Meal Prep Favorites',
-    'Comfort Food',
     'Healthy Breakfasts',
-    'Quick Lunches',
-    'Vegan Essentials',
+    'Plant-Based Essentials',
     'Low-Carb Meals',
   ];
 
-  const _StaticCookbooksGrid({required this.type, this.searchQuery = ''});
-
   @override
   Widget build(BuildContext context) {
-    if (type == ViewAllType.exploreCategories) {
-      return FutureBuilder<Map<String, int>>(
-        future: RecipeService.instance.getExploreCategories(),
-        builder: (context, snapshot) {
-          if (!snapshot.hasData) return const Center(child: CircularProgressIndicator(color: Color(0xFFCC3333)));
-          final categoriesMap = snapshot.data!;
-          var names = categoriesMap.keys
-              .where((name) => _allowedNiches.any((an) => an.toLowerCase() == name.toLowerCase()))
-              .toList();
-
-          if (searchQuery.trim().isNotEmpty) {
-            final query = searchQuery.trim().toLowerCase();
-            names = names.where((n) => n.toLowerCase().contains(query)).toList();
-          }
-
-          return _buildGrid(names, (name) {
-            return ExploreScreen.nicheImages[name] ?? 'assets/images/explore_autumn.png';
-          }, (name) => categoriesMap[name] ?? 0);
-        },
-      );
-    }
-
     return FutureBuilder<Map<String, int>>(
-      future: RecipeService.instance.getExploreCuisines(),
+      future: _future,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator(color: Color(0xFFCC3333)));
+          return const Center(
+            child: CircularProgressIndicator(color: Color(0xFFCC3333)),
+          );
         }
 
-        final Map<String, int> itemsMap = snapshot.data ?? {};
-        var names = itemsMap.keys.where((name) {
-          return _allowedCuisines.any((ac) => ac.toLowerCase() == name.toLowerCase());
-        }).toList();
-
-        if (searchQuery.trim().isNotEmpty) {
-          final query = searchQuery.trim().toLowerCase();
-          names = names.where((name) => name.toLowerCase().contains(query)).toList();
-        }
-
-        if (names.isEmpty) {
+        if (!snapshot.hasData) {
           return const Center(child: Text("No items found."));
         }
 
+        final Map<String, int> itemsMap = snapshot.data!;
+        final allowedList = widget.type == ViewAllType.exploreCategories
+            ? _allowedNiches
+            : _allowedCuisines;
+
+        var names = itemsMap.keys
+            .where(
+              (name) => allowedList.any(
+                (an) => an.toLowerCase() == name.toLowerCase(),
+              ),
+            )
+            .toList();
+
+        if (widget.searchQuery.trim().isNotEmpty) {
+          final query = widget.searchQuery.trim().toLowerCase();
+          names = names
+              .where((n) => n.toLowerCase().contains(query))
+              .toList();
+        }
+
+        if (names.isEmpty) {
+          return const Center(child: Text("No items match your search."));
+        }
+
         return _buildGrid(names, (name) {
-          return ExploreScreen.cuisineImages[name] ?? 'assets/images/others.png';
+          if (widget.type == ViewAllType.exploreCategories) {
+            return ExploreScreen.nicheImages[name] ??
+                'assets/images/explore_autumn.png';
+          } else {
+            return ExploreScreen.cuisineImages[name] ??
+                'assets/images/others.png';
+          }
         }, (name) => itemsMap[name] ?? 0);
       },
     );
   }
 
-  Widget _buildGrid(List<String> names, String Function(String) getImg, int Function(String) getCount) {
+  Widget _buildGrid(
+    List<String> names,
+    String Function(String) getImg,
+    int Function(String) getCount,
+  ) {
     return GridView.builder(
       padding: const EdgeInsets.fromLTRB(16, 4, 16, 20),
       itemCount: names.length,
@@ -692,11 +744,14 @@ class _StaticCookbooksGrid extends StatelessWidget {
           ctx,
           AppRoutes.viewAll,
           arguments: {
-            'type': type == ViewAllType.exploreCuisines 
-                ? ViewAllType.exploreRecipesByCuisine 
+            'type': widget.type == ViewAllType.exploreCuisines
+                ? ViewAllType.exploreRecipesByCuisine
                 : ViewAllType.exploreRecipesByCategory,
             'title': name,
-            if (type == ViewAllType.exploreCuisines) 'cuisine': name else 'category': name,
+            if (widget.type == ViewAllType.exploreCuisines)
+              'cuisine': name
+            else
+              'category': name,
           },
         );
       },
@@ -721,18 +776,28 @@ class _StaticCookbooksGrid extends StatelessWidget {
             style: const TextStyle(
               fontFamily: 'SF Pro',
               fontWeight: FontWeight.w700,
-              fontSize: 16,
-              color: Color(0xFF1A1A1A),
+              fontSize: 14,
+              color: Color(0xFF222222),
             ),
           ),
-          const SizedBox(height: 2),
-          Text(
-            '$count Recipes',
-            style: const TextStyle(
-              fontFamily: 'SF Pro',
-              fontSize: 12,
-              color: Color(0xFF999999),
-            ),
+          SizedBox(height: 2.h),
+          Row(
+            children: [
+              Icon(
+                Icons.restaurant_menu,
+                size: 13.sp,
+                color: const Color(0xFF9CA3AF),
+              ),
+              SizedBox(width: 4.w),
+              Text(
+                '$count Recipes',
+                style: TextStyle(
+                  fontFamily: 'SF Pro',
+                  fontSize: 11.sp,
+                  color: const Color(0xFF9CA3AF),
+                ),
+              ),
+            ],
           ),
         ],
       ),

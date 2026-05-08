@@ -13,6 +13,12 @@ class CookbookService {
     null,
   );
 
+  final Map<String, Cookbook> _cache = {};
+
+  void clearCache() {
+    _cache.clear();
+  }
+
   Future<Map<String, String>> _getHeaders() async {
     final token = await AuthService.instance.getToken();
     return {
@@ -38,12 +44,17 @@ class CookbookService {
     }
   }
 
-  Future<Cookbook> getCookbook(String id) async {
+  Future<Cookbook> getCookbook(String id, {bool forceRefresh = false}) async {
+    if (!forceRefresh && _cache.containsKey(id)) {
+      return _cache[id]!;
+    }
     final url = Uri.parse('${ApiConfig.baseUrl}/cookbooks/$id');
     final response = await http.get(url, headers: await _getHeaders());
 
     if (response.statusCode == 200) {
-      return Cookbook.fromJson(jsonDecode(response.body));
+      final cookbook = Cookbook.fromJson(jsonDecode(response.body));
+      _cache[id] = cookbook;
+      return cookbook;
     } else {
       throw Exception('Unable to load the cookbook.');
     }
@@ -59,7 +70,9 @@ class CookbookService {
 
     if (response.statusCode == 200) {
       getMyCookbooks(forceRefresh: true).then((_) => null).catchError((_) => null);
-      return Cookbook.fromJson(jsonDecode(response.body));
+      final cookbook = Cookbook.fromJson(jsonDecode(response.body));
+      _cache[cookbook.id] = cookbook;
+      return cookbook;
     } else {
       final data = jsonDecode(response.body);
       throw Exception(data['message'] ?? 'Unable to create cookbook.');
@@ -80,7 +93,9 @@ class CookbookService {
 
     if (response.statusCode == 200) {
       getMyCookbooks(forceRefresh: true).then((_) => null).catchError((_) => null);
-      return Cookbook.fromJson(jsonDecode(response.body));
+      final cookbook = Cookbook.fromJson(jsonDecode(response.body));
+      _cache[id] = cookbook;
+      return cookbook;
     } else {
       final data = jsonDecode(response.body);
       throw Exception(data['message'] ?? 'Unable to update cookbook.');
@@ -94,6 +109,7 @@ class CookbookService {
     if (response.statusCode != 200) {
       throw Exception('Unable to delete cookbook.');
     }
+    _cache.remove(id);
     getMyCookbooks(forceRefresh: true).catchError((_) => <Cookbook>[]);
   }
 
