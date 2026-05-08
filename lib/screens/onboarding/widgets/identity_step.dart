@@ -67,18 +67,19 @@ class _IdentityStepState extends State<IdentityStep> {
           Text(
             'Just a few details to get started.',
             style: TextStyle(
-              fontSize: 24.sp,
-              fontWeight: FontWeight.w900,
+              fontSize: 20.sp,
+              fontWeight: FontWeight.w700,
               color: const Color(0xFF0D1B3E),
               fontFamily: 'SF Pro',
               height: 1.2,
+              letterSpacing: -0.5,
             ),
           ),
           SizedBox(height: 8.h),
           Text(
             'We\'ll use this to personalize your experience',
             style: TextStyle(
-              fontSize: 14.sp,
+              fontSize: 13.sp,
               color: const Color(0xFF7B8190),
               fontFamily: 'SF Pro',
             ),
@@ -213,7 +214,7 @@ class _IdentityStepState extends State<IdentityStep> {
       text: TextSpan(
         text: label,
         style: TextStyle(
-          fontSize: 14.sp,
+          fontSize: 13.sp,
           fontWeight: FontWeight.w600,
           color: const Color(0xFF7B8190),
           fontFamily: 'SF Pro',

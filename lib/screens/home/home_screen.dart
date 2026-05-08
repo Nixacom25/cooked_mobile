@@ -1,7 +1,9 @@
 import 'dart:async';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import '../../core/theme/app_theme.dart';
 import '../../services/auth_service.dart';
 import '../../services/user_service.dart';
 import '../../routes/app_routes.dart';
@@ -111,6 +113,22 @@ class _HomeScreenState extends State<HomeScreen>
     if (CookbookService.instance.myCookbooksNotifier.value == null) {
       CookbookService.instance.getMyCookbooks();
     }
+
+    _isImportLoading.addListener(() {
+      if (_isImportLoading.value) {
+        _navCtrl.forward();
+      } else if (_currentTab != 2) {
+        _navCtrl.reverse();
+      }
+    });
+
+    _isScanInResultsMode.addListener(() {
+      if (_isScanInResultsMode.value) {
+        _navCtrl.forward();
+      } else if (_currentTab != 2) {
+        _navCtrl.reverse();
+      }
+    });
   }
 
   void _tutorialDataListener() {
@@ -246,9 +264,8 @@ class _HomeScreenState extends State<HomeScreen>
 
   @override
   Widget build(BuildContext context) {
-    final isKeyboardOpen = MediaQuery.of(context).viewInsets.bottom > 0;
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.background,
       resizeToAvoidBottomInset: false,
       extendBody: true,
       body: NotificationListener<ScrollNotification>(
@@ -257,108 +274,28 @@ class _HomeScreenState extends State<HomeScreen>
           children: [
             IndexedStack(index: _currentTab, children: _tabWidgets),
 
-            ValueListenableBuilder<bool>(
-              valueListenable: _isScanInResultsMode,
-              builder: (context, inResultsMode, _) {
-                return ValueListenableBuilder<bool>(
-                  valueListenable: _isImportLoading,
-                  builder: (context, isImportLoading, _) {
-                    // Hide ONLY while actively scanning (Scan Tab + NOT in results mode) OR while importing
-                    // We also want to hide it in results mode as requested
-                    final isScanningTab = (_currentTab == 2);
-                    // Hide nav entirely on Scan tab as requested
-                    final hideNav = isScanningTab || isImportLoading;
-
-                    return Stack(
-                      children: [
-                        // Peek handle – only shown when nav is hidden AND not in results mode
-                        /* 
-                        AnimatedPositioned(
-                          duration: const Duration(milliseconds: 320),
-                          curve: Curves.easeInOut,
-                          bottom: (isScanningTab && !inResultsMode && !_navVisible)
-                              ? 12.h
-                              : -60.h,
-                          left: 0,
-                          right: 0,
-                          child: Center(
-                            child: GestureDetector(
-                              onTap: _toggleNav,
-                              child: Container(
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: 18.w,
-                                  vertical: 8.h,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFCC3333),
-                                  borderRadius: BorderRadius.circular(30.r),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: const Color(
-                                        0xFFCC3333,
-                                      ).withValues(alpha: 0.4),
-                                      blurRadius: 14.r,
-                                      offset: Offset(0, 4.h),
-                                    ),
-                                  ],
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(
-                                      Icons.keyboard_arrow_up_rounded,
-                                      color: Colors.white,
-                                      size: 18.sp,
-                                    ),
-                                    SizedBox(width: 4.w),
-                                    Text(
-                                      'Menu',
-                                      style: TextStyle(
-                                        fontFamily: 'SF Pro',
-                                        fontWeight: FontWeight.w700,
-                                        fontSize: 13.sp,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                        */
-
-                        // Custom Bottom Navigation Bar overlaid entirely on top
-                        Positioned(
-                          left: 0,
-                          right: 0,
-                          bottom: 0,
-                          child: SlideTransition(
-                            position: _navSlide,
-                            child: hideNav || isKeyboardOpen
-                                ? const SizedBox.shrink()
-                                : _FloatingBottomNav(
-                                    currentIndex: _currentTab,
-                                    navVisible: _navVisible,
-                                    onTap: _switchTab,
-                                    onCameraTap: () {
-                                      if (_currentTab == 2) {
-                                        _toggleNav(); // hide nav if already on scan tab
-                                      } else {
-                                        _switchTab(2); // go to scan tab
-                                      }
-                                    },
-                                    scanTabKey: _scanTabKey,
-                                    groceryTabKey: _groceryTabKey,
-                                    importTabKey: _importTabKey,
-                                  ),
-                          ),
-                        ),
-                      ],
-                    );
+            // Custom Bottom Navigation Bar overlaid entirely on top
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: SlideTransition(
+                position: _navSlide,
+                child: _GlassBottomNav(
+                  currentIndex: _currentTab,
+                  onTap: _switchTab,
+                  onCameraTap: () {
+                    if (_currentTab == 2) {
+                      _toggleNav();
+                    } else {
+                      _switchTab(2);
+                    }
                   },
-                );
-              },
+                  scanTabKey: _scanTabKey,
+                  groceryTabKey: _groceryTabKey,
+                  importTabKey: _importTabKey,
+                ),
+              ),
             ),
           ],
         ),
@@ -367,18 +304,18 @@ class _HomeScreenState extends State<HomeScreen>
   }
 }
 
-// ── Floating pill bottom nav ───────────────────────────────────────────────────
-class _FloatingBottomNav extends StatelessWidget {
+
+// ── Glassmorphic bottom nav ───────────────────────────────────────────────────
+class _GlassBottomNav extends StatelessWidget {
   final int currentIndex;
-  final bool navVisible;
   final void Function(int) onTap;
   final VoidCallback onCameraTap;
   final GlobalKey scanTabKey;
   final GlobalKey groceryTabKey;
   final GlobalKey importTabKey;
-  const _FloatingBottomNav({
+
+  const _GlassBottomNav({
     required this.currentIndex,
-    required this.navVisible,
     required this.onTap,
     required this.onCameraTap,
     required this.scanTabKey,
@@ -390,79 +327,92 @@ class _FloatingBottomNav extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       color: Colors.transparent,
-      padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 20.h),
+      padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 24.h),
       child: Stack(
         clipBehavior: Clip.none,
         alignment: Alignment.topCenter,
         children: [
-          // White pill
-          Container(
-            height: 68.h,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(40.r),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.12),
-                  blurRadius: 24.r,
-                  offset: Offset(0, 4.h),
+          // Glass background
+          ClipRRect(
+            borderRadius: BorderRadius.circular(40.r),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+              child: Container(
+                height: 72.h,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.7),
+                  borderRadius: BorderRadius.circular(40.r),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.5),
+                    width: 1.5,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.05),
+                      blurRadius: 30.r,
+                      offset: Offset(0, 10.h),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-            child: Row(
-              children: [
-                _NavItem(
-                  icon: Icons.home_outlined,
-                  activeIcon: Icons.home_rounded,
-                  label: 'Home',
-                  index: 0,
-                  current: currentIndex,
-                  onTap: onTap,
+                child: Stack(
+                  children: [
+                    // Fluid animated indicator
+                    _FluidIndicator(currentIndex: currentIndex),
+                    
+                    Row(
+                      children: [
+                        _NavItem(
+                          icon: Icons.home_outlined,
+                          activeIcon: Icons.home_rounded,
+                          label: 'Home',
+                          index: 0,
+                          current: currentIndex,
+                          onTap: onTap,
+                        ),
+                        _NavItem(
+                          icon: Icons.search_rounded,
+                          activeIcon: Icons.search_rounded,
+                          label: 'Explore',
+                          index: 1,
+                          current: currentIndex,
+                          onTap: onTap,
+                        ),
+                        const Expanded(child: SizedBox()),
+                        _NavItem(
+                          iconKey: groceryTabKey,
+                          icon: Icons.shopping_bag_outlined,
+                          activeIcon: Icons.shopping_bag_rounded,
+                          label: 'Grocery',
+                          index: 3,
+                          current: currentIndex,
+                          onTap: onTap,
+                        ),
+                        _NavItem(
+                          iconKey: importTabKey,
+                          icon: Icons.file_download_outlined,
+                          activeIcon: Icons.file_download_rounded,
+                          label: 'Import',
+                          index: 4,
+                          current: currentIndex,
+                          onTap: onTap,
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
-                _NavItem(
-                  icon: Icons.search_rounded,
-                  activeIcon: Icons.search_rounded,
-                  label: 'Explore',
-                  index: 1,
-                  current: currentIndex,
-                  onTap: onTap,
-                ),
-                const Expanded(child: SizedBox()),
-                _NavItem(
-                  iconKey: groceryTabKey,
-                  icon: Icons.shopping_bag_outlined,
-                  activeIcon: Icons.shopping_bag_rounded,
-                  label: 'Grocery',
-                  index: 3,
-                  current: currentIndex,
-                  onTap: (idx) {
-                    onTap(idx);
-                  },
-                ),
-                _NavItem(
-                  iconKey: importTabKey,
-                  icon: Icons.file_download_outlined,
-                  activeIcon: Icons.file_download_rounded,
-                  label: 'Import',
-                  index: 4,
-                  current: currentIndex,
-                  onTap: (idx) {
-                    onTap(idx);
-                  },
-                ),
-              ],
+              ),
             ),
           ),
 
           // Camera FAB elevated
           Positioned(
-            top: -18.h,
+            top: -20.h,
             child: GestureDetector(
               onTap: onCameraTap,
               child: Container(
                 key: scanTabKey,
-                width: 58.w,
-                height: 58.h,
+                width: 60.w,
+                height: 60.h,
                 decoration: BoxDecoration(
                   color: currentIndex == 2
                       ? Colors.black87
@@ -470,13 +420,12 @@ class _FloatingBottomNav extends StatelessWidget {
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color:
-                          (currentIndex == 2
-                                  ? Colors.black87
-                                  : const Color(0xFFCC3333))
-                              .withValues(alpha: 0.4),
-                      blurRadius: 16.r,
-                      offset: Offset(0, 4.h),
+                      color: (currentIndex == 2
+                              ? Colors.black87
+                              : const Color(0xFFCC3333))
+                          .withValues(alpha: 0.3),
+                      blurRadius: 20.r,
+                      offset: Offset(0, 8.h),
                     ),
                   ],
                 ),
@@ -485,13 +434,53 @@ class _FloatingBottomNav extends StatelessWidget {
                       ? Icons.keyboard_arrow_down_rounded
                       : Icons.camera_alt_rounded,
                   color: Colors.white,
-                  size: currentIndex == 2 ? 32.sp : 26.sp,
+                  size: currentIndex == 2 ? 32.sp : 24.sp,
                 ),
               ),
             ),
           ),
         ],
       ),
+    );
+  }
+}
+
+class _FluidIndicator extends StatelessWidget {
+  final int currentIndex;
+  const _FluidIndicator({required this.currentIndex});
+
+  @override
+  Widget build(BuildContext context) {
+    // Hidden on Scan tab (center)
+    final bool isHidden = currentIndex == 2;
+    
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final slotWidth = constraints.maxWidth / 5;
+        final targetSlot = isHidden ? 2 : currentIndex;
+        final targetLeft = targetSlot * slotWidth;
+
+        return AnimatedPositioned(
+          duration: const Duration(milliseconds: 350),
+          curve: Curves.fastOutSlowIn,
+          left: targetLeft + 6.w,
+          top: 10.h,
+          child: AnimatedOpacity(
+            duration: const Duration(milliseconds: 250),
+            opacity: isHidden ? 0.0 : 1.0,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 350),
+              curve: Curves.easeOutCubic,
+              width: slotWidth - 12.w,
+              height: 52.h,
+              decoration: BoxDecoration(
+                color: const Color(0xFFCC3333).withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(20.r),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }
@@ -527,18 +516,17 @@ class _NavItem extends StatelessWidget {
           children: [
             Icon(
               active ? activeIcon : icon,
-              key:
-                  iconKey, // Use iconKey here to avoid duplicate GlobalKey on _NavItem itself
-              size: 24.sp,
+              key: iconKey,
+              size: 22.sp, // Slightly reduced
               color: active ? const Color(0xFFCC3333) : const Color(0xFF8E8E8E),
             ),
-            SizedBox(height: 3.h),
+            SizedBox(height: 2.h),
             Text(
               label,
               style: TextStyle(
                 fontFamily: 'SF Pro',
-                fontSize: 12.sp,
-                fontWeight: active ? FontWeight.w700 : FontWeight.w500,
+                fontSize: 11.sp, // Slightly reduced
+                fontWeight: active ? FontWeight.w600 : FontWeight.w500, // Medium bold
                 color: active
                     ? const Color(0xFFCC3333)
                     : const Color(0xFF8E8E8E),
@@ -597,7 +585,7 @@ class _HomeTabState extends State<_HomeTab> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Colors.white,
+      color: Colors.transparent,
       child: SafeArea(
         bottom: false,
         child: Column(
@@ -706,80 +694,7 @@ class _HomeTabState extends State<_HomeTab> {
                       );
                     },
                   ),
-                  SizedBox(height: 30.h),
-
-                  // Bottom Scan CTA
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 18.w),
-                    child: GestureDetector(
-                      onTap: widget.onScanTap,
-                      child: Container(
-                        padding: EdgeInsets.all(16.r),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFFFF9F9), // Very light red
-                          borderRadius: BorderRadius.circular(16.r),
-                          border: Border.all(color: const Color(0xFFFFEBEB)),
-                        ),
-                        child: Row(
-                          children: [
-                            Container(
-                              padding: EdgeInsets.all(12.r),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                shape: BoxShape.circle,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.05),
-                                    blurRadius: 8.r,
-                                    offset: const Offset(0, 2),
-                                  ),
-                                ],
-                              ),
-                              child: Icon(
-                                Icons.qr_code_scanner_rounded,
-                                color: const Color(0xFFCC3333),
-                                size: 22.sp,
-                              ),
-                            ),
-                            SizedBox(width: 14.w),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    "Scan your refrigerator",
-                                    style: TextStyle(
-                                      fontFamily: 'SF Pro',
-                                      fontWeight: FontWeight.w700,
-                                      fontSize: 15.sp,
-                                      color: const Color(0xFF1A1A1A),
-                                    ),
-                                  ),
-                                  SizedBox(height: 4.h),
-                                  Text(
-                                    "Let our AI find the best recipes for you",
-                                    style: TextStyle(
-                                      fontFamily: 'SF Pro',
-                                      fontSize: 13.sp,
-                                      color: const Color(0xFF7A8499),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Icon(
-                              Icons.arrow_forward_ios_rounded,
-                              size: 14.sp,
-                              color: const Color(0xFFCCCCCC),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  SizedBox(height: 100.h), // Extra space for nav
-                  // Dynamic bottom spacer for keyboard
+                  SizedBox(height: 50.h), 
                 ],
               );
              },
@@ -984,9 +899,10 @@ class _SectionRow extends StatelessWidget {
                 title,
                 style: TextStyle(
                   fontFamily: 'SF Pro',
-                  fontWeight: FontWeight.w800,
-                  fontSize: 18.sp,
-                  color: const Color(0xFF111827),
+                  fontWeight: FontWeight.w700,
+                  fontSize: 15.sp,
+                  color: const Color(0xFF1A1A1A),
+                  letterSpacing: -0.3,
                 ),
               ),
             ],
@@ -998,7 +914,7 @@ class _SectionRow extends StatelessWidget {
                 'View All',
                 style: TextStyle(
                   fontFamily: 'SF Pro',
-                  fontWeight: FontWeight.w500,
+                  fontWeight: FontWeight.w600, // Increased from w500
                   fontSize: 13.sp,
                   color: const Color(0xFFC83A2D),
                 ),
@@ -1087,20 +1003,18 @@ class _CookbooksRowState extends State<_CookbooksRow> {
                           Expanded(
                             child: Container(
                               decoration: BoxDecoration(
-                                color: const Color(0xFFF9FAFB),
-                                borderRadius: BorderRadius.circular(16.r),
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(15.r),
                                 border: Border.all(
-                                  color: const Color(
-                                    0xFFC83A2D,
-                                  ).withValues(alpha: 0.4),
-                                  width: 1,
+                                  color: const Color(0xFFCC3333).withValues(alpha: 0.3),
+                                  width: 0.8, // Thinner border
                                 ),
                               ),
                               child: Center(
                                 child: Icon(
                                   Icons.add_rounded,
-                                  size: 40.sp,
-                                  color: const Color(0xFFC83A2D),
+                                  size: 28.sp, // Even smaller and thinner
+                                  color: const Color(0xFFCC3333),
                                 ),
                               ),
                             ),
@@ -1113,7 +1027,7 @@ class _CookbooksRowState extends State<_CookbooksRow> {
                             style: TextStyle(
                               fontFamily: 'SF Pro',
                               fontWeight: FontWeight.w700,
-                              fontSize: 16.sp,
+                              fontSize: 14.sp, // Reduced from 16
                               color: const Color(0xFF1A1A1A),
                             ),
                           ),
@@ -1159,7 +1073,20 @@ class _CookbooksRowState extends State<_CookbooksRow> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Expanded(child: CookbookCover(cookbook: cb)),
+                        Expanded(
+                          child: Container(
+                            decoration: BoxDecoration(
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.04),
+                                  blurRadius: 12.r,
+                                  offset: Offset(0, 6.h),
+                                ),
+                              ],
+                            ),
+                            child: CookbookCover(cookbook: cb),
+                          ),
+                        ),
                         SizedBox(height: 7.h),
                         Text(
                           cb.name.isEmpty
@@ -1180,7 +1107,7 @@ class _CookbooksRowState extends State<_CookbooksRow> {
                           children: [
                             Icon(
                               Icons.restaurant_outlined,
-                              size: 13.sp,
+                              size: 11.sp,
                               color: const Color(0xFF999999),
                             ),
                             SizedBox(width: 4.w),
@@ -1217,7 +1144,7 @@ class _RecentlyViewedRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 62.h,
+      height: 50.h,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         padding: EdgeInsets.symmetric(horizontal: 18.w),
@@ -1232,57 +1159,67 @@ class _RecentlyViewedRow extends StatelessWidget {
                 AppRoutes.recipeDetail,
                 arguments: {'recipe': r},
               ),
-              child: Container(
-                constraints: BoxConstraints(maxWidth: 180.w),
-                padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF2F1EF),
-                  borderRadius: BorderRadius.circular(10.r),
-                  border: Border.all(
-                    color: const Color(0xFFEDEDED),
-                    width: 1.2,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.04),
-                      blurRadius: 8,
-                    ),
-                  ],
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 38.w,
-                      height: 38.h,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFE1E0DD),
-                        borderRadius: BorderRadius.circular(5.r),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(15.r),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                  child: Container(
+                    constraints: BoxConstraints(maxWidth: 250.w),
+                    padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.7),
+                      borderRadius: BorderRadius.circular(10.r),
+                      border: Border.all(
+                        color: Colors.white,
+                        width: 1.5,
                       ),
-                      alignment: Alignment.center,
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(5.r),
-                        child: _buildThumbnail(r.image),
-                      ),
-                    ),
-                    SizedBox(width: 10.w),
-                    Flexible(
-                      child: Text(
-                        r.name.isEmpty
-                            ? r.name
-                            : r.name[0].toUpperCase() +
-                                  r.name.substring(1).toLowerCase(),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontFamily: 'Open Sans',
-                          fontWeight: FontWeight.w800,
-                          fontSize: 14.sp,
-                          color: const Color(0xFF1A1A1A),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.04),
+                          blurRadius: 10.r,
+                          offset: Offset(0, 4.h),
                         ),
-                      ),
+                      ],
                     ),
-                  ],
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 40.w,
+                          height: 40.h,
+                          padding: EdgeInsets.all(2.r),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12.r),
+                          ),
+                          alignment: Alignment.center,
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(10.r),
+                            child: _buildThumbnail(r.image),
+                          ),
+                        ),
+                        SizedBox(width: 10.w),
+                        Flexible(
+                          child: Text(
+                            r.name.isEmpty
+                                ? r.name
+                                : r.name[0].toUpperCase() +
+                                      r.name.substring(1).toLowerCase(),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontFamily: 'SF Pro',
+                              fontWeight: FontWeight.w600,
+                              fontSize: 13.sp,
+                              color: const Color(0xFF1A1A1A),
+                              letterSpacing: -0.3,
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: 8.w),
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -1295,24 +1232,24 @@ class _RecentlyViewedRow extends StatelessWidget {
   Widget _buildThumbnail(String? image) {
     const fallback = 'assets/images/recipes.png';
     if (image == null || image.isEmpty) {
-      return Image.asset(fallback, fit: BoxFit.cover);
+      return Image.asset(fallback, fit: BoxFit.contain);
     }
     if (image.startsWith('http')) {
       return CachedNetworkImage(
         imageUrl: image,
-        width: 38.w,
-        height: 38.h,
-        fit: BoxFit.cover,
+        width: 40.w,
+        height: 40.h,
+        fit: BoxFit.contain,
         placeholder: (_, __) => Container(color: const Color(0xFFEEEEEE)),
-        errorWidget: (_, __, ___) => Image.asset(fallback, fit: BoxFit.cover),
+        errorWidget: (_, __, ___) => Image.asset(fallback, fit: BoxFit.contain),
       );
     }
     return Image.asset(
       image,
-      width: 38.w,
-      height: 38.h,
-      fit: BoxFit.cover,
-      errorBuilder: (_, __, ___) => Image.asset(fallback, fit: BoxFit.cover),
+      width: 40.w,
+      height: 40.h,
+      fit: BoxFit.contain,
+      errorBuilder: (_, __, ___) => Image.asset(fallback, fit: BoxFit.contain),
     );
   }
 }

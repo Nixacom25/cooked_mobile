@@ -55,11 +55,11 @@ class RecipeCard extends StatelessWidget {
               children: [
                 Positioned.fill(
                   child: ClipRRect(
-                    borderRadius: BorderRadius.all(Radius.circular(12.r)),
+                    borderRadius: BorderRadius.all(Radius.circular(16.r)),
                     child: Container(
                       width: double.infinity,
                       height: double.infinity,
-                      color: const Color(0xFFF2F1EF),
+                      color: Colors.white,
                       child: _buildImage(displayImg),
                     ),
                   ),
@@ -138,8 +138,10 @@ class RecipeCard extends StatelessWidget {
             style: TextStyle(
               fontFamily: 'SF Pro',
               fontWeight: FontWeight.w700,
-              fontSize: 14.sp,
-              color: const Color(0xFF222222),
+              fontSize: 13.sp,
+              color: const Color(0xFF1A1A1A),
+              height: 1.3,
+              letterSpacing: -0.3,
             ),
           ),
           SizedBox(height: 2.h),

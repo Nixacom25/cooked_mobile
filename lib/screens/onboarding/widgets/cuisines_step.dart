@@ -94,18 +94,19 @@ class _CuisinesStepState extends State<CuisinesStep> {
           Text(
             'Which cuisines do you love?',
             style: TextStyle(
-              fontSize: 24.sp,
-              fontWeight: FontWeight.w900,
-              color: const Color(0xFF0D1B3E),
+              fontSize: 20.sp,
+              fontWeight: FontWeight.w700,
+              color: const Color(0xFF0D1B36),
               fontFamily: 'SF Pro',
               height: 1.2,
+              letterSpacing: -0.5,
             ),
           ),
           SizedBox(height: 8.h),
           Text(
             'Select your favorites',
             style: TextStyle(
-              fontSize: 14.sp,
+              fontSize: 13.sp,
               color: const Color(0xFF7B8190),
               fontFamily: 'SF Pro',
             ),
@@ -252,7 +253,7 @@ class _CuisinesStepState extends State<CuisinesStep> {
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontFamily: 'SF Pro',
-                  fontSize: 12.sp,
+                  fontSize: 11.sp,
                   fontWeight: FontWeight.w700,
                   color: const Color(0xFF0D1B3E),
                 ),

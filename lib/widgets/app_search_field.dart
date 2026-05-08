@@ -27,15 +27,28 @@ class AppSearchField extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: backgroundColor ?? Colors.white,
+        color: backgroundColor ?? Colors.white.withValues(alpha: 0.8),
         borderRadius: BorderRadius.circular(50.r),
-        border: Border.all(color: borderColor ?? const Color(0xFFE0E0E0)),
+        border: Border.all(
+          color: borderColor ?? const Color(0xFFE0E0E0).withValues(alpha: 0.5),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 10.r,
+            offset: Offset(0, 4.h),
+          ),
+        ],
       ),
-      padding: EdgeInsets.symmetric(horizontal: 10.w),
+      padding: EdgeInsets.symmetric(horizontal: 16.w),
       child: Row(
         children: [
-          Icon(Icons.search_rounded, size: 30.sp, color: const Color(0xFFAAAAAA)),
-          SizedBox(width: 10.w),
+          Icon(
+            Icons.search_rounded,
+            size: 22.sp, // Reduced from 30
+            color: const Color(0xFF9CA3AF),
+          ),
+          SizedBox(width: 12.w),
           Expanded(
             child: TextField(
               controller: controller,
@@ -61,7 +74,7 @@ class AppSearchField extends StatelessWidget {
                 enabledBorder: InputBorder.none,
                 focusedBorder: InputBorder.none,
                 isDense: true,
-                contentPadding: EdgeInsets.symmetric(vertical: 12.h),
+                contentPadding: EdgeInsets.symmetric(vertical: 14.h),
               ),
             ),
           ),
@@ -72,7 +85,7 @@ class AppSearchField extends StatelessWidget {
                 padding: EdgeInsets.only(left: 8.w),
                 child: Icon(
                   suffixIcon,
-                  size: 22.sp,
+                  size: 20.sp, // Reduced from 22
                   color: const Color(0xFFCC3333),
                 ),
               ),

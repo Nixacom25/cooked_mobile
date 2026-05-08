@@ -29,11 +29,12 @@ class ProfileSummaryStep extends StatelessWidget {
           Text(
             '${firstName.toTitleCase()}, your profile is ready!',
             style: TextStyle(
-              fontSize: 24.sp,
-              fontWeight: FontWeight.w900,
+              fontSize: 20.sp,
+              fontWeight: FontWeight.w700,
               color: const Color(0xFF0D1B36),
               fontFamily: 'SF Pro',
               height: 1.2,
+              letterSpacing: -0.5,
             ),
           ),
           SizedBox(height: 10.h),
@@ -62,10 +63,11 @@ class ProfileSummaryStep extends StatelessWidget {
                     (Match m) => '${m[1]},',
                   ),
                   style: TextStyle(
-                    fontSize: 32.sp,
-                    fontWeight: FontWeight.w900,
+                    fontSize: 28.sp,
+                    fontWeight: FontWeight.w700,
                     color: const Color(0xFFC83A2D),
                     fontFamily: 'SF Pro',
+                    letterSpacing: -1.0,
                   ),
                 ),
                 Text(
@@ -106,7 +108,7 @@ class ProfileSummaryStep extends StatelessWidget {
           Text(
             "You'll Be Able To",
             style: TextStyle(
-              fontSize: 18.sp,
+              fontSize: 16.sp,
               fontWeight: FontWeight.w700,
               color: const Color(0xFF0D1B3E),
               fontFamily: 'SF Pro',

@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:cooked/services/cookbook_service.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
+import '../core/exceptions/subscription_exception.dart';
 import '../core/api_config.dart';
 import '../models/recipe.dart';
 import '../models/creator.dart';
@@ -52,6 +53,8 @@ class RecipeService {
 
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
+    } else if (response.statusCode == 402) {
+      throw SubscriptionRequiredException();
     } else {
       String errorMessage = 'Scan failed. Please try again.';
       try {
@@ -76,6 +79,8 @@ class RecipeService {
 
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
+    } else if (response.statusCode == 402) {
+      throw SubscriptionRequiredException();
     } else {
       String errorMessage = 'Generation failed. Please try again.';
       try {
@@ -338,6 +343,8 @@ class RecipeService {
       getRecentImports(forceRefresh: true).then((_) => null).catchError((_) => null);
       CookbookService.instance.getMyCookbooks(forceRefresh: true).then((_) => null).catchError((_) => null);
       return Recipe.fromJson(jsonDecode(response.body));
+    } else if (response.statusCode == 402) {
+      throw SubscriptionRequiredException();
     } else {
       final error = jsonDecode(response.body)['message'] ?? 'Import failed';
       throw Exception(error);
@@ -376,6 +383,8 @@ class RecipeService {
     if (response.statusCode == 200) {
       final List<dynamic> data = jsonDecode(response.body);
       return data.map((item) => Map<String, dynamic>.from(item)).toList();
+    } else if (response.statusCode == 402) {
+      throw SubscriptionRequiredException();
     } else {
       throw Exception('Web search failed');
     }

@@ -118,11 +118,12 @@ class _CookbookDetailScreenState extends State<CookbookDetailScreen> {
                       Expanded(
                         child: Text(
                           name.toTitleCase(),
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontFamily: 'SF Pro',
-                            fontWeight: FontWeight.w800,
-                            fontSize: 20,
-                            color: Color(0xFF1A1A1A),
+                            fontWeight: FontWeight.w700,
+                            fontSize: 18.sp,
+                            color: const Color(0xFF1A1A1A),
+                            letterSpacing: -0.5,
                           ),
                         ),
                       ),

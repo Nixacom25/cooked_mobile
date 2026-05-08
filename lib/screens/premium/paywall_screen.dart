@@ -1,9 +1,12 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 import '../../services/paywall_service.dart';
+import '../../services/iap_service.dart';
+import '../../core/theme/app_theme.dart';
 
 class PaywallScreen extends StatefulWidget {
   final PaywallService paywallService;
@@ -19,48 +22,33 @@ class _PaywallScreenState extends State<PaywallScreen> {
   bool isLoading = true;
   List<ProductDetails> _products = [];
   String _selectedPlanId = 'yearly_sub';
-  late StreamSubscription<List<PurchaseDetails>> _subscription;
 
   @override
   void initState() {
     super.initState();
-    final Stream<List<PurchaseDetails>> purchaseUpdated = InAppPurchase.instance.purchaseStream;
-    _subscription = purchaseUpdated.listen((purchaseDetailsList) {
-      _listenToPurchaseUpdated(purchaseDetailsList);
-    }, onDone: () {
-      _subscription.cancel();
-    }, onError: (error) {
-      // Handle error here.
-    });
+    IapService.instance.onPurchaseSuccess = () {
+      if (mounted) {
+        setState(() => isLoading = false);
+        _completePurchase();
+      }
+    };
+    IapService.instance.onPurchaseError = (error) {
+      if (mounted) {
+        setState(() => isLoading = false);
+        _showErrorSnackBar("Erreur: $error");
+      }
+    };
     _loadConfigAndProducts();
   }
 
   @override
   void dispose() {
-    _subscription.cancel();
+    IapService.instance.onPurchaseSuccess = null;
+    IapService.instance.onPurchaseError = null;
     super.dispose();
   }
 
-  void _listenToPurchaseUpdated(List<PurchaseDetails> purchaseDetailsList) {
-    for (var purchaseDetails in purchaseDetailsList) {
-      if (purchaseDetails.status == PurchaseStatus.pending) {
-        // Show pending UI if needed
-      } else {
-        if (purchaseDetails.status == PurchaseStatus.error) {
-          _showErrorSnackBar("Erreur lors de l'achat");
-        } else if (purchaseDetails.status == PurchaseStatus.purchased ||
-                   purchaseDetails.status == PurchaseStatus.restored) {
-          // Deliver product and complete purchase
-          _completePurchase(purchaseDetails);
-        }
-        if (purchaseDetails.pendingCompletePurchase) {
-          InAppPurchase.instance.completePurchase(purchaseDetails);
-        }
-      }
-    }
-  }
-
-  Future<void> _completePurchase(PurchaseDetails purchaseDetails) async {
+  Future<void> _completePurchase() async {
     // Propose notification and close
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -85,13 +73,13 @@ class _PaywallScreenState extends State<PaywallScreen> {
             isLoading = false;
             // Provide a minimal local config if backend fails or store unavailable
             config = {
-              'title': 'Passez au Premium',
-              'subtitle': 'Débloquez toutes les fonctionnalités de Cooked',
+              'title': 'Go Premium',
+              'subtitle': 'Unlock all Cooked features',
               'variantKey': 'default',
-              'featuresJson': '["Recettes illimitées", "Scan intelligent", "Planification de repas", "Sans publicité"]',
-              'yearlyPriceLabel': '29.99€ / an',
-              'monthlyPriceLabel': '9.99€ / mois',
-              'ctaText': 'S\'abonner maintenant'
+              'featuresJson': '["Unlimited Recipes", "Smart Scan", "Meal Planning", "No Ads"]',
+              'yearlyPriceLabel': '29.99€ / year',
+              'monthlyPriceLabel': '9.99€ / month',
+              'ctaText': 'Subscribe Now'
             };
           });
         }
@@ -99,7 +87,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
       }
 
       final data = await widget.paywallService.getRemoteConfig();
-      final ProductDetailsResponse response = await InAppPurchase.instance.queryProductDetails({
+      final List<ProductDetails> products = await IapService.instance.getProducts({
         'monthly_sub',
         'yearly_sub',
       });
@@ -107,7 +95,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
       if (mounted) {
         setState(() {
           config = data;
-          _products = response.productDetails;
+          _products = products;
           isLoading = false;
         });
         widget.paywallService.trackEvent('paywall_view', data['variantKey']);
@@ -127,87 +115,131 @@ class _PaywallScreenState extends State<PaywallScreen> {
     }
 
     if (config == null) {
-      return const Scaffold(backgroundColor: Color(0xFF0F0F0F), body: Center(child: Text("Indisponible", style: TextStyle(color: Colors.white))));
+      return Scaffold(backgroundColor: AppColors.background, body: const Center(child: Text("Unavailable", style: TextStyle(color: AppColors.textDark))));
     }
 
-    return Scaffold(
-      backgroundColor: const Color(0xFF0F0F0F),
-      body: Stack(
-        children: [
-          Positioned.fill(
-            child: Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [Color(0xFF1A1A1A), Color(0xFF0F0F0F)],
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.9,
+      decoration: const BoxDecoration(
+        color: AppColors.background,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        body: Stack(
+          children: [
+            // Background Gradient
+            Positioned.fill(
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      AppColors.primary.withOpacity(0.05),
+                      AppColors.background,
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-          SafeArea(
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 24.w),
-              child: Column(
-                children: [
-                  Align(
-                    alignment: Alignment.topRight,
-                    child: IconButton(
-                      icon: const Icon(Icons.close, color: Colors.white54),
-                      onPressed: () => Navigator.pop(context),
-                    ),
-                  ),
-                  SizedBox(height: 10.h),
-                  Text(
-                    config!['title'] ?? 'Passez au Premium',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.white, fontSize: 26.sp, fontWeight: FontWeight.bold),
-                  ),
-                  SizedBox(height: 10.h),
-                  Text(
-                    config!['subtitle'] ?? 'Débloquez toutes les fonctionnalités',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.white70, fontSize: 14.sp),
-                  ),
-                  SizedBox(height: 30.h),
-                  
-                  ..._buildFeatures(),
-                  
-                  const Spacer(),
-
-                  _buildPlanCard('yearly_sub', config!['yearlyPriceLabel'] ?? '29.99€ / an', "ÉCONOMISEZ 50%"),
-                  SizedBox(height: 12.h),
-                  _buildPlanCard('monthly_sub', config!['monthlyPriceLabel'] ?? '9.99€ / mois', ""),
-
-                  SizedBox(height: 30.h),
-
-                  Container(
-                    width: double.infinity,
-                    height: 56.h,
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(colors: [Color(0xFFFFD700), Color(0xFFFFA500)]),
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [BoxShadow(color: Colors.orange.withOpacity(0.3), blurRadius: 20, spreadRadius: 2)],
-                    ),
-                    child: ElevatedButton(
-                      onPressed: () => _handlePurchase(),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.transparent,
-                        shadowColor: Colors.transparent,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                      ),
-                      child: Text(
-                        (config!['ctaText'] ?? 'S\'abonner').toUpperCase(),
-                        style: TextStyle(color: Colors.black, fontSize: 16.sp, fontWeight: FontWeight.bold),
+            SafeArea(
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 24.w),
+                child: Column(
+                  children: [
+                    SizedBox(height: 12.h),
+                    Center(
+                      child: Container(
+                        width: 40.w,
+                        height: 4.h,
+                        decoration: BoxDecoration(
+                          color: AppColors.textMuted.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(2),
+                        ),
                       ),
                     ),
-                  ),
-                  SizedBox(height: 20.h),
-                ],
+                    Align(
+                      alignment: Alignment.topRight,
+                      child: IconButton(
+                        icon: const Icon(Icons.close_rounded, color: AppColors.textMuted),
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                    ),
+                    SizedBox(height: 5.h),
+                    // App Logo or Icon could go here
+                    Container(
+                      padding: EdgeInsets.all(16.w),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withOpacity(0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(Icons.star_rounded, color: AppColors.primary, size: 40.sp),
+                    ),
+                    SizedBox(height: 20.h),
+                    Text(
+                      config!['title'] ?? 'Go Premium',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: AppColors.textDark, fontSize: 24.sp, fontWeight: FontWeight.bold),
+                    ),
+                    SizedBox(height: 10.h),
+                    Text(
+                      config!['subtitle'] ?? 'Unlock all features',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: AppColors.textMuted, fontSize: 14.sp),
+                    ),
+                    SizedBox(height: 30.h),
+                    
+                    ..._buildFeatures(),
+                    
+                    const Spacer(),
+
+                    _buildPlanCard('yearly_sub', config!['yearlyPriceLabel'] ?? '29.99€ / an', "ÉCONOMISEZ 50%"),
+                    SizedBox(height: 12.h),
+                    _buildPlanCard('monthly_sub', config!['monthlyPriceLabel'] ?? '9.99€ / mois', ""),
+
+                    SizedBox(height: 30.h),
+
+                    Container(
+                      width: double.infinity,
+                      height: 56.h,
+                      child: ElevatedButton(
+                        onPressed: () => _handlePurchase(),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: Colors.white,
+                          elevation: 4,
+                          shadowColor: AppColors.primary.withOpacity(0.4),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        ),
+                        child: Text(
+                          (config!['ctaText'] ?? 'Subscribe').toUpperCase(),
+                          style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 20.h),
+                    
+                    if (Platform.isIOS)
+                      TextButton(
+                        onPressed: () {
+                          setState(() => isLoading = true);
+                          IapService.instance.restorePurchases();
+                        },
+                        child: Text(
+                          "Restore Purchases",
+                          style: TextStyle(color: AppColors.textMuted, fontSize: 13.sp),
+                        ),
+                      ),
+                    
+                    SizedBox(height: 10.h),
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        )
       ),
     );
   }
@@ -219,27 +251,60 @@ class _PaywallScreenState extends State<PaywallScreen> {
       child: Container(
         padding: EdgeInsets.all(16.w),
         decoration: BoxDecoration(
-          color: isSelected ? Colors.white.withOpacity(0.1) : Colors.white.withOpacity(0.03),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: isSelected ? const Color(0xFFFFD700) : Colors.white10, width: 2),
+          color: isSelected ? AppColors.primary.withOpacity(0.05) : Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isSelected ? AppColors.primary : const Color(0xFFEEEEEE),
+            width: 2,
+          ),
+          boxShadow: isSelected ? [
+            BoxShadow(
+              color: AppColors.primary.withOpacity(0.1),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            )
+          ] : [],
         ),
         child: Row(
           children: [
-            Icon(isSelected ? Icons.radio_button_checked : Icons.radio_button_off, color: isSelected ? const Color(0xFFFFD700) : Colors.white30),
+            Icon(
+              isSelected ? Icons.check_circle : Icons.circle_outlined,
+              color: isSelected ? AppColors.primary : AppColors.textMuted.withOpacity(0.5),
+            ),
             SizedBox(width: 12.w),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(id == 'yearly_sub' ? "Plan Annuel" : "Plan Mensuel", style: TextStyle(color: Colors.white, fontSize: 16.sp, fontWeight: FontWeight.bold)),
-                Text(price, style: TextStyle(color: Colors.white70, fontSize: 14.sp)),
+                Text(
+                  id == 'yearly_sub' ? "Yearly Plan" : "Monthly Plan",
+                  style: TextStyle(
+                    color: AppColors.textDark,
+                    fontSize: 16.sp,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  price,
+                  style: TextStyle(color: AppColors.textMuted, fontSize: 14.sp),
+                ),
               ],
             ),
             const Spacer(),
             if (badge.isNotEmpty)
               Container(
-                padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-                decoration: BoxDecoration(color: const Color(0xFFFFD700), borderRadius: BorderRadius.circular(4)),
-                child: Text(badge, style: TextStyle(color: Colors.black, fontSize: 10.sp, fontWeight: FontWeight.bold)),
+                padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+                decoration: BoxDecoration(
+                  color: AppColors.primary,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  badge,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 10.sp,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
           ],
         ),
@@ -254,14 +319,19 @@ class _PaywallScreenState extends State<PaywallScreen> {
         padding: EdgeInsets.only(bottom: 12.h),
         child: Row(
           children: [
-            const Icon(Icons.check_circle, color: Color(0xFFFFD700), size: 20),
+            const Icon(Icons.check_circle_outline, color: AppColors.primary, size: 20),
             SizedBox(width: 12.w),
-            Expanded(child: Text(f, style: TextStyle(color: Colors.white, fontSize: 14.sp))),
+            Expanded(
+              child: Text(
+                f,
+                style: TextStyle(color: AppColors.textDark, fontSize: 14.sp),
+              ),
+            ),
           ],
         ),
       )).toList();
     } catch (e) {
-      return [const Text("Fonctionnalités Premium débloquées", style: TextStyle(color: Colors.white))];
+      return [const Text("Premium Features Unlocked", style: TextStyle(color: AppColors.textDark))];
     }
   }
 
@@ -269,16 +339,17 @@ class _PaywallScreenState extends State<PaywallScreen> {
     widget.paywallService.trackEvent('paywall_click', config!['variantKey'] ?? 'default', metadata: _selectedPlanId);
     
     if (_products.isEmpty) {
-      _showErrorSnackBar("Produits du store indisponibles. Réessayez plus tard.");
+      _showErrorSnackBar("Store products unavailable. Try again later.");
       return;
     }
 
     try {
       final product = _products.firstWhere((p) => p.id == _selectedPlanId);
-      final PurchaseParam purchaseParam = PurchaseParam(productDetails: product);
-      await InAppPurchase.instance.buyNonConsumable(purchaseParam: purchaseParam);
+      setState(() => isLoading = true);
+      await IapService.instance.buyProduct(product);
     } catch (e) {
-      _showErrorSnackBar("L'achat n'a pas pu être initié.");
+      setState(() => isLoading = false);
+      _showErrorSnackBar("Purchase could not be initiated.");
     }
   }
 }

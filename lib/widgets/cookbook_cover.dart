@@ -25,8 +25,9 @@ class CookbookCover extends StatelessWidget {
       width: width ?? double.infinity,
       height: height ?? double.infinity,
       decoration: BoxDecoration(
-        color: const Color(0xFFF3F4F6),
-        borderRadius: BorderRadius.circular(16.r),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(15.r),
+        border: Border.all(color: Colors.white),
       ),
       clipBehavior: Clip.antiAlias,
       child: _buildCoverContent(recipes),
@@ -67,7 +68,7 @@ class CookbookCover extends StatelessWidget {
           flex: 3,
           child: _buildImage(count > 0 ? recipesWithImages[0].image : null),
         ),
-        Container(width: 1.5, color: Colors.white),
+        Container(width: 1, color: Colors.white),
         // Right - Two small images stacked
         Expanded(
           flex: 2,
@@ -76,7 +77,7 @@ class CookbookCover extends StatelessWidget {
               Expanded(
                 child: _buildImage(count > 1 ? recipesWithImages[1].image : null),
               ),
-              Container(height: 1.5, color: Colors.white),
+              Container(height: 1, color: Colors.white),
               Expanded(
                 child: _buildImage(count > 2 ? recipesWithImages[2].image : null),
               ),
@@ -90,7 +91,7 @@ class CookbookCover extends StatelessWidget {
   Widget _buildImage(String? imageUrl) {
     if (imageUrl == null || imageUrl.isEmpty) {
       return Container(
-        color: const Color(0xFFF2EFED),
+        color: const Color(0xFFF3F3F3),
       );
     }
 

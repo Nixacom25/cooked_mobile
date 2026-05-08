@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../core/theme/app_theme.dart';
 import '../services/grocery_service.dart';
 import '../services/recipe_service.dart';
 import '../services/ingredient_service.dart';
@@ -97,7 +98,7 @@ class _GroceryScreenState extends State<GroceryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.background,
       resizeToAvoidBottomInset: false,
       body: SafeArea(
         bottom: false,
@@ -120,9 +121,11 @@ class _GroceryScreenState extends State<GroceryScreen> {
                               'Grocery List',
                               style: TextStyle(
                                 fontFamily: 'SF Pro',
-                                fontWeight: FontWeight.w800,
-                                fontSize: 24.sp,
+                                fontWeight: FontWeight.w700,
+                                fontSize: 18.sp,
                                 color: const Color(0xFF1A1A1A),
+                                height: 1.3,
+                                letterSpacing: -0.5,
                               ),
                             ),
                             Text(
@@ -202,9 +205,11 @@ class _GroceryScreenState extends State<GroceryScreen> {
                                   recipeName,
                                   style: TextStyle(
                                     fontFamily: 'SF Pro',
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 20.sp,
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 15.sp,
                                     color: const Color(0xFF1A1A1A),
+                                    height: 1.3,
+                                    letterSpacing: -0.3,
                                   ),
                                 ),
                               ),
@@ -272,8 +277,8 @@ class _GroceryScreenState extends State<GroceryScreen> {
                         borderRadius: BorderRadius.circular(30.r),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFFCC3333).withOpacity(0.4),
-                            blurRadius: 16.r,
+                            color: const Color(0xFFCC3333).withValues(alpha: 0.3),
+                            blurRadius: 20.r,
                             offset: Offset(0, 6.h),
                           ),
                         ],
@@ -460,10 +465,12 @@ class _ItemRow extends StatelessWidget {
                   style: TextStyle(
                     fontFamily: 'SF Pro',
                     fontWeight: FontWeight.w500,
-                    fontSize: 16.sp,
+                    fontSize: 15.sp,
                     color: item.isBought
                         ? const Color(0xFFAAAAAA)
                         : const Color(0xFF1A1A1A),
+                    height: 1.4,
+                    letterSpacing: -0.2,
                     decoration: item.isBought
                         ? TextDecoration.lineThrough
                         : null,
@@ -595,8 +602,8 @@ class _AddGrocerySheetState extends State<_AddGrocerySheet> {
     return Container(
       padding: EdgeInsets.zero,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
-        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(30.r)),
+        color: AppColors.background,
         image: const DecorationImage(
           image: AssetImage('assets/images/fond1.png'),
           fit: BoxFit.cover,
@@ -604,7 +611,7 @@ class _AddGrocerySheetState extends State<_AddGrocerySheet> {
       ),
       child: Container(
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(30.r)),
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,

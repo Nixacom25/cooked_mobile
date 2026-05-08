@@ -18,6 +18,11 @@ import '../core/widgets/ios_toast.dart';
 import '../core/services/tutorial_service.dart';
 import '../core/utils/tutorial_helper.dart';
 import '../core/extensions/string_extensions.dart';
+import '../core/exceptions/subscription_exception.dart';
+import '../utils/paywall_helper.dart';
+import '../services/paywall_service.dart';
+import '../services/auth_service.dart';
+import '../core/api_config.dart';
 
 enum ScanState { scan, type, saved, results }
 
@@ -254,6 +259,17 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
           _typedIngredients.clear();
           _updateState(ScanState.results);
         });
+      }
+    } on SubscriptionRequiredException {
+      if (mounted) {
+        setState(() => _stopAnalysisLoading());
+        final token = await AuthService.instance.getToken() ?? "";
+        if (mounted) {
+          PaywallHelper.show(context, PaywallService(
+            baseUrl: ApiConfig.baseUrl,
+            authToken: token,
+          ));
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -781,9 +797,10 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
             title,
             style: TextStyle(
               fontFamily: 'SF Pro',
-              fontWeight: FontWeight.w800,
-              fontSize: 24.sp,
-              color: const Color(0xFF1E293B),
+              fontWeight: FontWeight.w700,
+              fontSize: 18.sp,
+              color: const Color(0xFF1A1A1A),
+              letterSpacing: -0.5,
             ),
           ),
           GestureDetector(
@@ -1176,9 +1193,11 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                     Text(
                       "Use all",
                       style: TextStyle(
+                        fontFamily: 'SF Pro',
                         fontSize: 14.sp,
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFF475569),
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF1A1A1A),
+                        letterSpacing: -0.3,
                       ),
                     ),
                   ],
@@ -1371,11 +1390,22 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
         ),
         Text(
           "Your Ingredients",
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20.sp),
+          style: TextStyle(
+            fontFamily: 'SF Pro',
+            fontWeight: FontWeight.w700,
+            fontSize: 18.sp,
+            color: const Color(0xFF1A1A1A),
+            letterSpacing: -0.5,
+          ),
         ),
         Text(
           "We found ${(_ingredients.length + _restrictedIngredients.length) > 0 ? (_ingredients.length + _restrictedIngredients.length) : 0} items in your kitchen",
-          style: TextStyle(color: Color(0xFF6B7280), fontSize: 14.sp),
+          style: TextStyle(
+            fontFamily: 'SF Pro',
+            color: const Color(0xFF6B7280),
+            fontSize: 13.sp,
+            letterSpacing: -0.2,
+          ),
         ),
         SizedBox(height: 12.h),
         // Add Ingredient Input
@@ -1624,6 +1654,20 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
         _capturedImagePath = null;
         _updateState(ScanState.results);
       });
+    } on SubscriptionRequiredException {
+      if (mounted) {
+        setState(() {
+          _stopAnalysisLoading();
+          _capturedImagePath = null;
+        });
+        final token = await AuthService.instance.getToken() ?? "";
+        if (mounted) {
+          PaywallHelper.show(context, PaywallService(
+            baseUrl: ApiConfig.baseUrl,
+            authToken: token,
+          ));
+        }
+      }
     } catch (e) {
       setState(() {
         _stopAnalysisLoading();

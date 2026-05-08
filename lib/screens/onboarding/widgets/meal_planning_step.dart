@@ -58,18 +58,19 @@ class _MealPlanningStepState extends State<MealPlanningStep> {
           Text(
             'How do you like to plan meals?',
             style: TextStyle(
-              fontSize: 24.sp,
-              fontWeight: FontWeight.w900,
+              fontSize: 20.sp,
+              fontWeight: FontWeight.w700,
               color: const Color(0xFF0D1B3E),
               fontFamily: 'SF Pro',
               height: 1.2,
+              letterSpacing: -0.5,
             ),
           ),
           SizedBox(height: 8.h),
           Text(
             'We\'ll customize the experience for you',
             style: TextStyle(
-              fontSize: 14.sp,
+              fontSize: 13.sp,
               color: const Color(0xFF7B8190),
               fontFamily: 'SF Pro',
             ),
@@ -135,7 +136,7 @@ class _MealPlanningStepState extends State<MealPlanningStep> {
                       opt['title']!,
                       style: TextStyle(
                         fontFamily: 'SF Pro',
-                        fontSize: 14.sp,
+                        fontSize: 13.sp,
                         fontWeight: FontWeight.w700,
                         color: const Color(0xFF1A1A1A),
                       ),

@@ -1,4 +1,5 @@
 import 'package:cooked/services/auth_service.dart';
+import 'package:cooked/services/iap_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart';
@@ -39,6 +40,10 @@ void main() async {
   await TutorialService.instance.init();
   await NotificationService.instance.init();
   await HistoryService.instance.init();
+  
+  // Initialize In-App Purchases
+  final iapService = IapService.instance;
+  iapService.initialize();
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(

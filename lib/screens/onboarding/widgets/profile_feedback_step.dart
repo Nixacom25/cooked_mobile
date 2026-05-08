@@ -40,18 +40,19 @@ class _ProfileFeedbackStepState extends State<ProfileFeedbackStep> {
           Text(
             'Thanks for your honesty!',
             style: TextStyle(
-              fontSize: 28.sp,
-              fontWeight: FontWeight.w900,
+              fontSize: 24.sp,
+              fontWeight: FontWeight.w700,
               color: const Color(0xFF0D1B3E),
               fontFamily: 'SF Pro',
               height: 1.2,
+              letterSpacing: -0.5,
             ),
           ),
           SizedBox(height: 8.h),
           Text(
             'What could we improve?',
             style: TextStyle(
-              fontSize: 15.sp,
+              fontSize: 13.sp,
               color: const Color(0xFF7B8190),
               fontFamily: 'SF Pro',
             ),

@@ -8,11 +8,14 @@ class IapService {
 
   final InAppPurchase _inAppPurchase = InAppPurchase.instance;
   StreamSubscription<List<PurchaseDetails>>? _subscription;
+  bool _isInitialized = false;
 
   Function()? onPurchaseSuccess;
   Function(String)? onPurchaseError;
 
   void initialize() {
+    if (_isInitialized) return;
+    
     final Stream<List<PurchaseDetails>> purchaseUpdated =
         _inAppPurchase.purchaseStream;
     _subscription = purchaseUpdated.listen(
@@ -21,15 +24,21 @@ class IapService {
       },
       onDone: () {
         _subscription?.cancel();
+        _isInitialized = false;
       },
       onError: (error) {
         onPurchaseError?.call(error.toString());
       },
     );
+    _isInitialized = true;
   }
 
   void dispose() {
-    _subscription?.cancel();
+    // We don't want individual screens to dispose the global singleton subscription
+    // If we really need to dispose, we'd need another method or check.
+    // For now, let's just nullify callbacks.
+    onPurchaseSuccess = null;
+    onPurchaseError = null;
   }
 
   Future<List<ProductDetails>> getProducts(Set<String> productIds) async {
@@ -47,6 +56,10 @@ class IapService {
       productDetails: productDetails,
     );
     return await _inAppPurchase.buyNonConsumable(purchaseParam: purchaseParam);
+  }
+
+  Future<void> restorePurchases() async {
+    await _inAppPurchase.restorePurchases();
   }
 
   void _listenToPurchaseUpdated(

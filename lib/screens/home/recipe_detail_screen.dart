@@ -266,11 +266,12 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                                   name,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
-                                    fontFamily: 'Poppins',
-                                    fontWeight: FontWeight.w800,
-                                    fontSize: 20,
-                                    color: Color(0xFF1A1A1A),
+                                  style: TextStyle(
+                                    fontFamily: 'SF Pro',
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 18.sp,
+                                    color: const Color(0xFF1A1A1A),
+                                    letterSpacing: -0.5,
                                   ),
                                 ),
                               ),
@@ -798,10 +799,11 @@ class _RecipeDetailHeaderDelegate extends SliverPersistentHeaderDelegate {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      fontFamily: 'Poppins',
+                      fontFamily: 'SF Pro',
                       fontWeight: FontWeight.w700,
-                      fontSize: 16.sp,
+                      fontSize: 15.sp,
                       color: const Color(0xFF1A1A1A),
+                      letterSpacing: -0.3,
                     ),
                   ),
                 ),
@@ -990,7 +992,7 @@ class _TagPill extends StatelessWidget {
           Text(
             label,
             style: const TextStyle(
-              fontFamily: 'Poppins',
+              fontFamily: 'SF Pro',
               fontWeight: FontWeight.w600,
               fontSize: 11,
               color: Color(0xFF111827),
@@ -1147,6 +1149,7 @@ class _IngredientsList extends StatelessWidget {
                         fontSize: 13,
                         fontWeight: FontWeight.w400,
                         color: Color(0xFF111827),
+                        letterSpacing: -0.2,
                       ),
                     ),
                   ),

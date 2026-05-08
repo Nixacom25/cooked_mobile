@@ -60,11 +60,12 @@ class _TrialStepState extends State<TrialStep> {
           Text(
             'Start your 3-day FREE\ntrial to continue.',
             style: TextStyle(
-              fontSize: 24.sp,
-              fontWeight: FontWeight.w900,
+              fontSize: 20.sp,
+              fontWeight: FontWeight.w700,
               color: const Color(0xFF0D1B3E),
               fontFamily: 'SF Pro',
               height: 1.2,
+              letterSpacing: -0.5,
             ),
           ),
           SizedBox(height: 28.h),
@@ -131,7 +132,7 @@ class _TrialStepState extends State<TrialStep> {
                 Text(
                   'No Payment Due Now',
                   style: TextStyle(
-                    fontSize: 16.sp,
+                    fontSize: 15.sp,
                     fontWeight: FontWeight.w700,
                     color: const Color(0xFF0D1B3E),
                     fontFamily: 'SF Pro',

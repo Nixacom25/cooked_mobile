@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../core/theme/app_theme.dart';
 import '../widgets/app_search_field.dart';
 import '../routes/app_routes.dart';
 import '../services/recipe_service.dart';
@@ -106,7 +107,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.background,
       resizeToAvoidBottomInset: false,
       body: ListView(
         padding: EdgeInsets.only(bottom: 120.h),
@@ -129,7 +130,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.vertical(bottom: Radius.circular(20.r)),
+        borderRadius: BorderRadius.vertical(bottom: Radius.circular(30.r)),
         image: const DecorationImage(
           image: AssetImage('assets/images/explore.png'),
           fit: BoxFit.cover,
@@ -143,7 +144,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
           right: 20.w,
         ),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.vertical(bottom: Radius.circular(20.r)),
+          borderRadius: BorderRadius.vertical(bottom: Radius.circular(30.r)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -152,9 +153,11 @@ class _ExploreScreenState extends State<ExploreScreen> {
               'Explore',
               style: TextStyle(
                 fontFamily: 'SF Pro',
-                fontWeight: FontWeight.w800,
-                fontSize: 24.sp,
+                fontWeight: FontWeight.w700,
+                fontSize: 20.sp, 
                 color: Colors.white,
+                height: 1.2,
+                letterSpacing: -0.5,
               ),
             ),
             SizedBox(height: 20.h),
@@ -294,9 +297,9 @@ class _ExploreScreenState extends State<ExploreScreen> {
                               shape: BoxShape.circle,
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.1),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 4),
+                                  color: Colors.black.withValues(alpha: 0.08),
+                                  blurRadius: 12,
+                                  offset: const Offset(0, 6),
                                 ),
                               ],
                               image: DecorationImage(
@@ -310,7 +313,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                             name,
                             style: TextStyle(
                               fontFamily: 'SF Pro',
-                              fontWeight: FontWeight.w700,
+                              fontWeight: FontWeight.w600, // Medium bold
                               fontSize: 12.sp,
                               color: const Color(0xFF191C1E),
                             ),
@@ -399,7 +402,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           ClipRRect(
-                            borderRadius: BorderRadius.circular(16.r),
+                            borderRadius: BorderRadius.circular(30.r),
                             child: Image.asset(
                               imgPath,
                               width: 160.w,
@@ -413,10 +416,10 @@ class _ExploreScreenState extends State<ExploreScreen> {
                             maxLines: 2,
                             style: TextStyle(
                               fontFamily: 'SF Pro',
-                              fontWeight: FontWeight.w800,
-                              fontSize: 14.sp,
+                              fontWeight: FontWeight.w700, // Reduced from w800
+                              fontSize: 13.sp, // Reduced from 14
                               color: const Color(0xFF222222),
-                              height: 1.2,
+                              height: 1.3,
                             ),
                           ),
                           SizedBox(height: 2.h),
@@ -491,9 +494,11 @@ class _ExploreScreenState extends State<ExploreScreen> {
                 'Popular Now',
                 style: TextStyle(
                   fontFamily: 'SF Pro',
-                  fontWeight: FontWeight.w800,
-                  fontSize: 18.sp,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 15.sp,
                   color: const Color(0xFF111827),
+                  height: 1.3,
+                  letterSpacing: -0.3,
                 ),
               ),
             ),
@@ -573,9 +578,10 @@ class _ExploreScreenState extends State<ExploreScreen> {
                                 overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
                                   fontFamily: 'SF Pro',
-                                  fontWeight: FontWeight.w800,
-                                  fontSize: 14.sp,
+                                  fontWeight: FontWeight.w700, // Reduced from w800
+                                  fontSize: 13.sp, // Reduced from 14
                                   color: const Color(0xFF222222),
+                                  height: 1.3,
                                 ),
                               ),
                             ),
@@ -644,9 +650,11 @@ class _SectionHeader extends StatelessWidget {
             title,
             style: TextStyle(
               fontFamily: 'SF Pro',
-              fontWeight: FontWeight.w800,
-              fontSize: 18.sp,
+              fontWeight: FontWeight.w700,
+              fontSize: 15.sp,
               color: const Color(0xFF111827),
+              height: 1.3,
+              letterSpacing: -0.3,
             ),
           ),
           GestureDetector(

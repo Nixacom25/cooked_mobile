@@ -44,18 +44,19 @@ class _GoalsStepState extends State<GoalsStep> {
           Text(
             'What brings you here?',
             style: TextStyle(
-              fontSize: 24.sp,
-              fontWeight: FontWeight.w900,
+              fontSize: 20.sp,
+              fontWeight: FontWeight.w700,
               color: const Color(0xFF0D1B3E),
               fontFamily: 'SF Pro',
               height: 1.2,
+              letterSpacing: -0.5,
             ),
           ),
           SizedBox(height: 8.h),
           Text(
             'Select up to 2 primary goals',
             style: TextStyle(
-              fontSize: 14.sp,
+              fontSize: 13.sp,
               color: const Color(0xFF7B8190),
               fontFamily: 'SF Pro',
             ),
@@ -136,7 +137,7 @@ class _GoalsStepState extends State<GoalsStep> {
                   goal['title']!,
                   style: TextStyle(
                     fontFamily: 'SF Pro',
-                    fontSize: 14.sp,
+                    fontSize: 13.sp,
                     fontWeight: FontWeight.w700,
                     color: const Color(0xFF1A1A1A),
                   ),

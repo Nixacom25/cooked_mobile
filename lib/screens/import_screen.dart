@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
+import '../core/theme/app_theme.dart';
 import '../widgets/app_search_field.dart';
 import '../services/recipe_service.dart';
 import '../models/recipe.dart';
@@ -14,6 +15,11 @@ import '../core/utils/error_helper.dart';
 import '../core/utils/tutorial_helper.dart';
 import '../core/services/tutorial_service.dart';
 import '../core/extensions/string_extensions.dart';
+import '../core/exceptions/subscription_exception.dart';
+import '../utils/paywall_helper.dart';
+import '../services/paywall_service.dart';
+import '../core/api_config.dart';
+import '../services/auth_service.dart';
 import '../services/ingredient_service.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -138,6 +144,18 @@ class _ImportScreenState extends State<ImportScreen> {
         AppRoutes.recipeDetail,
         arguments: {'recipe': recipe, 'isPreview': true},
       );
+    } on SubscriptionRequiredException {
+      if (mounted) {
+        setState(() => _isImporting = false);
+        widget.isImportingNotifier?.value = false;
+        final token = await AuthService.instance.getToken() ?? "";
+        if (mounted) {
+          PaywallHelper.show(context, PaywallService(
+            baseUrl: ApiConfig.baseUrl,
+            authToken: token,
+          ));
+        }
+      }
     } catch (e) {
       if (!mounted) return;
       IosToast.show(
@@ -168,6 +186,17 @@ class _ImportScreenState extends State<ImportScreen> {
           _searchResults = res;
           _isSearching = false;
         });
+      }
+    } on SubscriptionRequiredException {
+      if (mounted) {
+        setState(() => _isSearching = false);
+        final token = await AuthService.instance.getToken() ?? "";
+        if (mounted) {
+          PaywallHelper.show(context, PaywallService(
+            baseUrl: ApiConfig.baseUrl,
+            authToken: token,
+          ));
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -225,7 +254,7 @@ class _ImportScreenState extends State<ImportScreen> {
 
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.background,
       resizeToAvoidBottomInset: false,
       body: SafeArea(
         bottom: false,
@@ -237,9 +266,11 @@ class _ImportScreenState extends State<ImportScreen> {
               'Import',
               style: TextStyle(
                 fontFamily: 'SF Pro',
-                fontWeight: FontWeight.w800,
-                fontSize: 24.sp,
+                fontWeight: FontWeight.w700,
+                fontSize: 18.sp,
                 color: const Color(0xFF1A1A1A),
+                height: 1.3,
+                letterSpacing: -0.5,
               ),
             ),
 
@@ -251,9 +282,10 @@ class _ImportScreenState extends State<ImportScreen> {
                 'Recipe Link',
                 style: TextStyle(
                   fontFamily: 'SF Pro',
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w600, // Reduced from bold
                   fontSize: 13.sp,
                   color: const Color(0xFF888888),
+                  height: 1.3,
                 ),
               ),
             ),
@@ -358,7 +390,7 @@ class _ImportScreenState extends State<ImportScreen> {
                     'Import Recipes',
                     style: TextStyle(
                       fontFamily: 'SF Pro',
-                      fontWeight: FontWeight.w700,
+                      fontWeight: FontWeight.w600, // Reduced from w700
                       fontSize: 15.sp,
                       color: Colors.white,
                     ),
@@ -475,9 +507,11 @@ class _ImportScreenState extends State<ImportScreen> {
                 'Trending',
                 style: TextStyle(
                   fontFamily: 'SF Pro',
-                  fontWeight: FontWeight.w800,
-                  fontSize: 16.sp,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 14.sp,
                   color: const Color(0xFF1A1A1A),
+                  height: 1.3,
+                  letterSpacing: -0.3,
                 ),
               ),
               SizedBox(height: 12.h),
@@ -511,9 +545,11 @@ class _ImportScreenState extends State<ImportScreen> {
                           'Recent Imports',
                           style: TextStyle(
                             fontFamily: 'SF Pro',
-                            fontWeight: FontWeight.w800,
-                            fontSize: 18.sp,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 15.sp,
                             color: const Color(0xFF1A1A1A),
+                            height: 1.3,
+                            letterSpacing: -0.3,
                           ),
                         ),
                         if (list.length > 3)
@@ -676,7 +712,8 @@ class _TrendingChip extends StatelessWidget {
               name,
               style: TextStyle(
                 fontFamily: 'SF Pro',
-                fontSize: 13.sp,
+                fontSize: 12.sp,
+                fontWeight: FontWeight.w500,
                 color: const Color(0xFF111827),
               ),
             ),
@@ -753,8 +790,9 @@ class _RecentImportTile extends StatelessWidget {
       margin: EdgeInsets.only(bottom: 12.h),
       padding: EdgeInsets.all(12.r),
       decoration: BoxDecoration(
-        color: const Color(0xFFF9F8F6),
-        borderRadius: BorderRadius.circular(16.r),
+        color: Colors.white.withValues(alpha: 0.6),
+        borderRadius: BorderRadius.circular(24.r), // Increased from 16
+        border: Border.all(color: Colors.white.withValues(alpha: 0.8)),
       ),
       child: Row(
         children: [
