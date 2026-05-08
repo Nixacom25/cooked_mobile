@@ -40,16 +40,18 @@ class TutorialHelper {
       onTabSwitch: onTabSwitch,
     );
 
-    // Filter out targets whose keys are not yet in the widget tree
-    final validTargets = targets.where((target) {
+    final allContextsReady = targets.every((target) {
       final key = target.keyTarget;
       return (key is GlobalKey && key.currentContext != null);
-    }).toList();
+    });
 
-    if (validTargets.isEmpty) return;
+    if (!allContextsReady) {
+      debugPrint("TutorialHelper: Not all target contexts are ready yet.");
+      return;
+    }
 
     _activeCoachMark = TutorialCoachMark(
-      targets: validTargets,
+      targets: targets,
       colorShadow: Colors.black,
       opacityShadow: 0.6,
       textSkip: "SKIP",

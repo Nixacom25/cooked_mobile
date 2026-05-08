@@ -14,7 +14,7 @@ class ProfileSignupStep extends StatelessWidget {
     required this.onSignupGoogle,
     required this.onSignupApple,
     required this.onGuest,
-    this.isAppleEnabled = false,
+    this.isAppleEnabled = true,
   });
 
   final bool isAppleEnabled;

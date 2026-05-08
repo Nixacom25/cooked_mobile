@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:cooked/services/cookbook_service.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import '../core/api_config.dart';
@@ -162,6 +163,7 @@ class RecipeService {
     if (response.statusCode == 200 || response.statusCode == 201) {
       // Trigger background refresh of recipes list
       getMyRecipes(forceRefresh: true).then((_) => null).catchError((_) => null);
+      CookbookService.instance.getMyCookbooks(forceRefresh: true).then((_) => null).catchError((_) => null);
       return Recipe.fromJson(jsonDecode(response.body));
     } else {
       print('Failed to save recipe: ${response.statusCode}');
@@ -181,6 +183,7 @@ class RecipeService {
     // Refresh local state in background
     getMyRecipes(forceRefresh: true).then((_) => null).catchError((_) => null);
     getFavoriteRecipes(size: 100, forceRefresh: true).then((_) => null).catchError((_) => null);
+    CookbookService.instance.getMyCookbooks(forceRefresh: true).then((_) => null).catchError((_) => null);
   }
 
   Future<List<Recipe>> getExploreRecipes({String? cuisine, String? category, int page = 0, int size = 10}) async {
@@ -297,6 +300,7 @@ class RecipeService {
     if (response.statusCode == 200) {
       getMyRecipes(forceRefresh: true).then((_) => null).catchError((_) => null);
       getRecentImports(forceRefresh: true).then((_) => null).catchError((_) => null);
+      CookbookService.instance.getMyCookbooks(forceRefresh: true).then((_) => null).catchError((_) => null);
       return Recipe.fromJson(jsonDecode(response.body));
     } else {
       final error = jsonDecode(response.body)['message'] ?? 'Import failed';
@@ -368,6 +372,7 @@ class RecipeService {
     if (response.statusCode == 200) {
       // Trigger background refresh 
       getMyRecipes(forceRefresh: true).then((_) => null).catchError((_) => null);
+      CookbookService.instance.getMyCookbooks(forceRefresh: true).then((_) => null).catchError((_) => null);
       return Recipe.fromJson(jsonDecode(response.body));
     } else {
       throw Exception('Failed to validate recipe.');

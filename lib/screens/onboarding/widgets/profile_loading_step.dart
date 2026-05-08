@@ -113,7 +113,7 @@ class _ProfileLoadingStepState extends State<ProfileLoadingStep>
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
+                SizedBox(
                   child: Text(
                     'Building your recipe profile',
                     textAlign: TextAlign.center,

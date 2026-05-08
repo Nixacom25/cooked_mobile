@@ -124,26 +124,36 @@ class _HomeScreenState extends State<HomeScreen>
 
   Timer? _tutorialTimer;
 
-  void _startTutorial({int delayMs = 500}) {
+  void _startTutorial({int delayMs = 500, int retries = 0}) {
     // Only show Home tutorial if on Home tab
     if (_currentTab != 0) return;
 
     _tutorialTimer?.cancel();
     _tutorialTimer = Timer(Duration(milliseconds: delayMs), () {
-      if (mounted && _currentTab == 0) {
-        if (TutorialHelper.isShowing) return;
-        
-        final firstCb =
-            CookbookService.instance.myCookbooksNotifier.value?.firstOrNull;
-        TutorialHelper.showTutorial(
-          context,
-          cookbookKey: _firstCookbookKey,
-          scanKey: _scanTabKey,
-          importKey: _importTabKey,
-          firstCookbook: firstCb,
-          onTabSwitch: (idx) => _switchTab(idx),
-        );
+      if (!mounted || _currentTab != 0) return;
+      if (TutorialHelper.isShowing) return;
+
+      // Ensure all keys are ready before showing
+      final hasCookbook = _firstCookbookKey.currentContext != null;
+      final hasScan = _scanTabKey.currentContext != null;
+      final hasImport = _importTabKey.currentContext != null;
+
+      if (!hasCookbook || !hasScan || !hasImport) {
+        if (retries < 10) {
+          _startTutorial(delayMs: 300, retries: retries + 1);
+        }
+        return;
       }
+
+      final firstCb = CookbookService.instance.myCookbooksNotifier.value?.firstOrNull;
+      TutorialHelper.showTutorial(
+        context,
+        cookbookKey: _firstCookbookKey,
+        scanKey: _scanTabKey,
+        importKey: _importTabKey,
+        firstCookbook: firstCb,
+        onTabSwitch: (idx) => _switchTab(idx),
+      );
     });
   }
 

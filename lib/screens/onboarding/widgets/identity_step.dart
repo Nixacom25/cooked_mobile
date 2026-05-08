@@ -130,7 +130,7 @@ class _IdentityStepState extends State<IdentityStep> {
               ],
             ),
           ),
-          SizedBox(height: 32.h),
+          SizedBox(height: MediaQuery.of(context).viewInsets.bottom + 32.h),
         ],
       ),
     );
@@ -187,6 +187,20 @@ class _IdentityStepState extends State<IdentityStep> {
               ],
             ),
           ),
+          suffixIcon: () {
+            final digits = _phone.replaceAll(' ', '');
+            if (digits.length >= 6 && digits.length <= 15) {
+              return IconButton(
+                icon: Icon(
+                  Icons.check_circle_rounded,
+                  color: const Color(0xFF2ECC71),
+                  size: 20.sp,
+                ),
+                onPressed: () => FocusScope.of(context).unfocus(),
+              );
+            }
+            return null;
+          }(),
           border: InputBorder.none,
           contentPadding: EdgeInsets.all(16.r),
         ),

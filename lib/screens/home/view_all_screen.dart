@@ -89,7 +89,6 @@ class _ViewAllScreenState extends State<ViewAllScreen> {
                           AppRoutes.cookbookForm,
                           arguments: {'mode': 'add'},
                         );
-                        setState(() {});
                       },
                       child: Container(
                         width: 30,
@@ -252,8 +251,6 @@ class _CookbooksGridState extends State<_CookbooksGrid> {
                   AppRoutes.cookbookDetail,
                   arguments: {'cookbook': cb},
                 );
-                // If we return from detail, we might have edited it
-                if (mounted) setState(() {});
               },
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -323,7 +320,10 @@ class _RecipesGridState extends State<_RecipesGrid> {
     final args =
         ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
     _type = args['type'] as ViewAllType;
-    _load();
+    // Removed _load() call as we rely on notifiers for my recipes/favorites/imports/history
+    if (_type == ViewAllType.explore || _type == ViewAllType.exploreRecipesByCuisine || _type == ViewAllType.exploreRecipesByCategory || _type == ViewAllType.groceryHistory) {
+      _load();
+    }
   }
 
   void _load() {
@@ -409,7 +409,6 @@ class _RecipesGridState extends State<_RecipesGrid> {
           onHeartTap: () async {
             try {
               await RecipeService.instance.toggleFavorite(r.id);
-              if (mounted) setState(() => _load());
             } catch (e) {
               if (ctx.mounted) {
                 IosToast.show(ctx, message: ErrorHelper.getFriendlyMessage(e), type: ToastType.error);
@@ -417,7 +416,7 @@ class _RecipesGridState extends State<_RecipesGrid> {
             }
           },
           onTap: () async {
-            final changed = await Navigator.pushNamed(
+            await Navigator.pushNamed(
               ctx,
               AppRoutes.recipeDetail,
               arguments: {
@@ -425,9 +424,6 @@ class _RecipesGridState extends State<_RecipesGrid> {
                 'isMyRecipe': _type == ViewAllType.savedRecipes,
               },
             );
-            if (changed == true) {
-              if (mounted) setState(() => _load());
-            }
           },
         );
       },

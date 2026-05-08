@@ -1655,8 +1655,11 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
       builder: (context) => AddToCookbookSheet(
         recipe: recipe,
         onSuccess: () {
-          // No need to manually add to _savedRecipeNames here 
-          // because our listener on myRecipesNotifier will handle it.
+          if (mounted) {
+            setState(() {
+              _savedRecipeNames.add(recipe.name);
+            });
+          }
         },
       ),
     );

@@ -58,7 +58,7 @@ class CookbookService {
     );
 
     if (response.statusCode == 200) {
-      getMyCookbooks().then((_) => null).catchError((_) => null);
+      getMyCookbooks(forceRefresh: true).then((_) => null).catchError((_) => null);
       return Cookbook.fromJson(jsonDecode(response.body));
     } else {
       final data = jsonDecode(response.body);
@@ -79,7 +79,7 @@ class CookbookService {
     );
 
     if (response.statusCode == 200) {
-      getMyCookbooks().then((_) => null).catchError((_) => null);
+      getMyCookbooks(forceRefresh: true).then((_) => null).catchError((_) => null);
       return Cookbook.fromJson(jsonDecode(response.body));
     } else {
       final data = jsonDecode(response.body);
@@ -94,7 +94,7 @@ class CookbookService {
     if (response.statusCode != 200) {
       throw Exception('Unable to delete cookbook.');
     }
-    getMyCookbooks().catchError((_) => <Cookbook>[]);
+    getMyCookbooks(forceRefresh: true).catchError((_) => <Cookbook>[]);
   }
 
   Future<Cookbook> addRecipeToCookbook(

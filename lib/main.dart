@@ -96,7 +96,18 @@ class _CookedAppState extends State<CookedApp> {
             debugShowCheckedModeBanner: false,
             theme: AppTheme.light,
             locale: DevicePreview.locale(context),
-            builder: DevicePreview.appBuilder,
+            builder: (context, child) {
+              final content = DevicePreview.appBuilder(context, child);
+              return GestureDetector(
+                onTap: () {
+                  final currentFocus = FocusScope.of(context);
+                  if (!currentFocus.hasPrimaryFocus && currentFocus.focusedChild != null) {
+                    FocusManager.instance.primaryFocus?.unfocus();
+                  }
+                },
+                child: content,
+              );
+            },
             navigatorObservers: [routeObserver],
             onGenerateRoute: (settings) {
               final isLoggedIn = AuthService.instance.isLoggedIn;

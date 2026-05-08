@@ -147,9 +147,9 @@ class _LanguageRegionStepState extends State<LanguageRegionStep> {
               children: [
                 Expanded(
                   child: Text(
-                    'Measurement system : ${_selectedMeasurementSystem == 'Metric'
-              ? 'Metric (grams, ml, °C)'
-              : 'Imperial (cups, oz, °F)'} ',
+                    'Measurement system : ${_selectedMeasurementSystem == 'Imperial'
+              ? 'Imperial (cups, oz, °F)'
+              : 'Metric (grams, ml, °C)'} ',
                     style: TextStyle(
                       fontSize: 12.sp,
                       color: const Color(0xFF7B8190),
@@ -182,14 +182,14 @@ class _LanguageRegionStepState extends State<LanguageRegionStep> {
         children: [
           Expanded(
             child: _buildToggleOption(
-              'Metric',
-              _selectedMeasurementSystem == 'Metric',
+              'Imperial',
+              _selectedMeasurementSystem == 'Imperial',
             ),
           ),
           Expanded(
             child: _buildToggleOption(
-              'Imperial',
-              _selectedMeasurementSystem == 'Imperial',
+              'Metric',
+              _selectedMeasurementSystem == 'Metric',
             ),
           ),
         ],
@@ -210,9 +210,9 @@ class _LanguageRegionStepState extends State<LanguageRegionStep> {
           borderRadius: BorderRadius.circular(50.r),
         ),
         child: Text(
-          label == 'Metric'
-              ? 'Metric (grams, ml, °C)'
-              : 'Imperial (cups, oz, °F)',
+          label == 'Imperial'
+              ? 'Imperial (cups, oz, °F)'
+              : 'Metric (grams, ml, °C)',
           textAlign: TextAlign.center,
           style: TextStyle(
             fontFamily: 'SF Pro',

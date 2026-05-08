@@ -85,6 +85,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
+      resizeToAvoidBottomInset: false,
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
@@ -198,7 +199,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
             SizedBox(height: 50.h),
 
             _buildActiveSessions(),
-            SizedBox(height: 40.h),
+            SizedBox(height: MediaQuery.of(context).viewInsets.bottom + 40.h),
           ],
         ),
       ),

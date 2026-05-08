@@ -108,12 +108,11 @@ class _AddToCookbookSheetState extends State<AddToCookbookSheet> {
                 ),
                 SizedBox(height: 12.h),
 
-                FutureBuilder<List<Cookbook>>(
-                  future: CookbookService.instance.getMyCookbooks(),
-                  builder: (ctx, snapshot) {
-                    final cookbooks = snapshot.data ?? [];
-                    
-                    if (snapshot.connectionState == ConnectionState.waiting && cookbooks.isEmpty) {
+                ValueListenableBuilder<List<Cookbook>?>(
+                  valueListenable: CookbookService.instance.myCookbooksNotifier,
+                  builder: (ctx, cookbooks, _) {
+                    if (cookbooks == null) {
+                      CookbookService.instance.getMyCookbooks();
                       return SizedBox(
                         height: 100.h,
                         child: const Center(child: CircularProgressIndicator(color: Color(0xFFCC3333))),

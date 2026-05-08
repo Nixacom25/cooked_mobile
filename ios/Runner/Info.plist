@@ -64,6 +64,22 @@
 		<string>Nous avons besoin d'accéder à votre caméra pour scanner vos ingrédients et vous proposer des recettes.</string>
 		<key>NSPhotoLibraryUsageDescription</key>
 		<string>Nous avons besoin d'accéder à votre galerie pour que vous puissiez importer des photos de vos ingrédients.</string>
+		<key>NSMicrophoneUsageDescription</key>
+		<string>L'accès au micro est requis par le module caméra, bien qu'aucune vidéo ne soit enregistrée.</string>
+		<key>NSPhotoLibraryAddUsageDescription</key>
+		<string>Nous avons besoin d'accéder à votre galerie pour enregistrer vos photos de recettes.</string>
+		<key>NSAppTransportSecurity</key>
+		<dict>
+			<key>NSAllowsArbitraryLoads</key>
+			<true/>
+		</dict>
+		<key>LSApplicationQueriesSchemes</key>
+		<array>
+			<string>http</string>
+			<string>https</string>
+			<string>mailto</string>
+			<string>tel</string>
+		</array>
 		<key>ITSAppUsesNonExemptEncryption</key>
 		<false/>
 	</dict>

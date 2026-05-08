@@ -370,9 +370,7 @@ class _MyAccountScreenState extends State<MyAccountScreen> {
                       ),
                     ),
                   ),
-                  SizedBox(height: 40.h),
-                  
-                  // Keyboard spacer
+                  SizedBox(height: MediaQuery.of(context).viewInsets.bottom + 40.h),
                 ],
               ),
             ),

@@ -205,9 +205,6 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                       if (r != null) {
                         try {
                           await RecipeService.instance.toggleFavorite(r.id);
-                          setState(() {
-                            r.isFavorite = !r.isFavorite;
-                          });
                         } catch (e) {
                           IosToast.show(
                             context,
@@ -284,9 +281,6 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                                           try {
                                             await RecipeService.instance
                                                 .toggleFavorite(r.id);
-                                            setState(() {
-                                              r.isFavorite = !r.isFavorite;
-                                            });
                                           } catch (e) {
                                             IosToast.show(
                                               context,

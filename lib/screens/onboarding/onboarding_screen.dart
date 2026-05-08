@@ -419,9 +419,18 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       if (!isGuest) {
         if (!isSocial) {
           // Standard Email Signup
+          // Split name if it contains a space and lastname is empty
+          String finalFirst = _firstName;
+          String finalLast = _lastName;
+          if (_lastName.isEmpty && _firstName.contains(' ')) {
+            final parts = _firstName.trim().split(' ');
+            finalFirst = parts.first;
+            finalLast = parts.sublist(1).join(' ');
+          }
+
           await AuthService.instance.register(
-            firstname: _firstName,
-            lastname: _lastName,
+            firstname: finalFirst,
+            lastname: finalLast,
             email: _email,
             password: _password,
             phone: _phone,
@@ -463,10 +472,20 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             throw Exception('Social authentication failed');
           }
 
+          // Split name if it contains a space and lastname is empty
+          String finalFirst = _firstName.isNotEmpty ? _firstName : socialRes['firstname'];
+          String finalLast = _lastName.isNotEmpty ? _lastName : socialRes['lastname'];
+          
+          if (finalLast.isEmpty && finalFirst.contains(' ')) {
+            final parts = finalFirst.trim().split(' ');
+            finalFirst = parts.first;
+            finalLast = parts.sublist(1).join(' ');
+          }
+
           // Now call register with ALL preferences + social identity
           await AuthService.instance.register(
-            firstname: _firstName.isNotEmpty ? _firstName : socialRes['firstname'],
-            lastname: _lastName.isNotEmpty ? _lastName : socialRes['lastname'],
+            firstname: finalFirst,
+            lastname: finalLast,
             email: socialRes['email'],
             password: socialRes['idToken'], // Send token as password for verification
             provider: provider,

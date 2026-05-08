@@ -54,7 +54,7 @@ class ErrorHelper {
       return 'No internet connection. Please check your network and try again.';
     }
     if (lower.contains('already exists') || lower.contains('duplicate') || lower.contains('existe déjà')) {
-      if (lower.contains('email') || lower.contains('compte')) {
+      if (lower.contains('email') || lower.contains('compte') || lower.contains('user') || lower.contains('utilisateur')) {
         return 'This account already exists. Please log in.';
       }
       return 'This item already exists.';

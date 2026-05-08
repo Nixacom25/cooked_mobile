@@ -3,10 +3,13 @@ import 'package:http/http.dart' as http;
 import '../core/api_config.dart';
 import '../models/grocery_item.dart';
 import 'auth_service.dart';
+import 'package:flutter/foundation.dart';
 
 class GroceryService {
   GroceryService._privateConstructor();
   static final GroceryService instance = GroceryService._privateConstructor();
+  
+  final ValueNotifier<List<GroceryItem>?> myGroceriesNotifier = ValueNotifier(null);
 
   Future<Map<String, String>> _getHeaders() async {
     final token = await AuthService.instance.getToken();
@@ -16,13 +19,18 @@ class GroceryService {
     };
   }
 
-  Future<List<GroceryItem>> getMyGroceries() async {
+  Future<List<GroceryItem>> getMyGroceries({bool forceRefresh = false}) async {
+    if (!forceRefresh && myGroceriesNotifier.value != null) {
+      return myGroceriesNotifier.value!;
+    }
     final url = Uri.parse('${ApiConfig.baseUrl}/grocery-items');
     final response = await http.get(url, headers: await _getHeaders());
 
     if (response.statusCode == 200) {
       final List<dynamic> data = jsonDecode(response.body);
-      return data.map((json) => GroceryItem.fromJson(json)).toList();
+      final items = data.map((json) => GroceryItem.fromJson(json)).toList();
+      myGroceriesNotifier.value = items;
+      return items;
     } else {
       throw Exception('Failed to load grocery list.');
     }
@@ -49,6 +57,7 @@ class GroceryService {
     );
 
     if (response.statusCode == 200) {
+      await getMyGroceries(forceRefresh: true);
       return GroceryItem.fromJson(jsonDecode(response.body));
     } else {
       throw Exception('Failed to add item to grocery list.');
@@ -60,6 +69,7 @@ class GroceryService {
     final response = await http.put(url, headers: await _getHeaders());
 
     if (response.statusCode == 200) {
+      await getMyGroceries(forceRefresh: true);
       return GroceryItem.fromJson(jsonDecode(response.body));
     } else {
       throw Exception('Failed to toggle item status.');
@@ -73,5 +83,10 @@ class GroceryService {
     if (response.statusCode != 200) {
       throw Exception('Failed to delete grocery item.');
     }
+    await getMyGroceries(forceRefresh: true);
+  }
+
+  void clearData() {
+    myGroceriesNotifier.value = null;
   }
 }

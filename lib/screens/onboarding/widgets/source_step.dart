@@ -199,6 +199,7 @@ class _SourceStepState extends State<SourceStep> {
               ),
             ),
           ],
+          SizedBox(height: MediaQuery.of(context).viewInsets.bottom + 32.h),
         ],
       ),
     );
