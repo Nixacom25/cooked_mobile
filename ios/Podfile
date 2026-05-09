@@ -1,54 +1,10 @@
-# Uncomment this line to define a global platform for your project
 platform :ios, '13.0'
 
-# CocoaPods analytics sends network stats synchronously affecting flutter build latency.
-ENV['COCOAPODS_DISABLE_STATS'] = '1'
-
-project 'Runner', {
-  'Debug' => :debug,
-  'Release' => :release,
-  'Profile' => :profile,
-}
-
-def flutter_root
-  # 1. First priority: Environment variable (standard in CI/CD like GitHub Actions)
-  return ENV['FLUTTER_ROOT'] if ENV['FLUTTER_ROOT'] && !ENV['FLUTTER_ROOT'].empty?
-
-  # 2. Second priority: Parse Generated.xcconfig
-  generated_xcode_build_settings_path = File.expand_path(File.join('..', 'Flutter', 'Generated.xcconfig'), __FILE__)
-  
-  if File.exist?(generated_xcode_build_settings_path)
-    File.foreach(generated_xcode_build_settings_path) do |line|
-      # Match FLUTTER_ROOT with or without spaces
-      if matches = line.match(/^\s*FLUTTER_ROOT\s*=\s*(.*)\s*$/)
-        return matches[1].strip
-      end
-    end
-  end
-
-  # 3. Fallback for common local paths if everything else fails
-  ["/opt/flutter", "/usr/local/share/flutter", "#{ENV['HOME']}/flutter"].each do |path|
-    return path if Dir.exist?(path)
-  end
-
-  raise "FLUTTER_ROOT not found. Environment variable is missing and #{generated_xcode_build_settings_path} is invalid. Try running \"flutter pub get\" first."
-end
-
-# Load podhelper.rb
-podhelper_path = File.expand_path(File.join('packages', 'flutter_tools', 'bin', 'podhelper.rb'), flutter_root)
-if File.exist?(podhelper_path)
-  load podhelper_path
-else
-  # Last ditch effort: use the local copy we restored earlier
-  local_podhelper = File.join(File.dirname(File.realpath(__FILE__)), 'Flutter', 'podhelper.rb')
-  if File.exist?(local_podhelper)
-    load local_podhelper
-  else
-    raise "podhelper.rb not found in Flutter SDK (#{podhelper_path}) or locally (#{local_podhelper})."
-  end
-end
+# CocoaPods analytics sends network stats. If you want to disable this, uncomment the following line.
+# disable_cocoapods_analytics!
 
 target 'Runner' do
+  use_frameworks!
   use_modular_headers!
 
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
@@ -58,13 +14,20 @@ post_install do |installer|
   installer.pods_project.targets.each do |target|
     flutter_additional_ios_build_settings(target)
     
-    # Permission Handler Macros
     target.build_configurations.each do |config|
       config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] ||= [
         '$(inherited)',
+        
+        ## dart: [PermissionGroup.camera]
         'PERMISSION_CAMERA=1',
+        
+        ## dart: [PermissionGroup.photos]
         'PERMISSION_PHOTOS=1',
+        
+        ## dart: [PermissionGroup.microphone]
         'PERMISSION_MICROPHONE=1',
+        
+        ## dart: [PermissionGroup.notification]
         'PERMISSION_NOTIFICATIONS=1',
       ]
     end

@@ -350,13 +350,18 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
     });
 
     // On some Androids/iOS, camera init fails without both permissions
+    debugPrint("CAMERA_LOG: Checking permissions...");
     PermissionStatus camStat = await Permission.camera.status;
+    debugPrint("CAMERA_LOG: Camera status: $camStat");
     
     if (camStat.isDenied) {
+      debugPrint("CAMERA_LOG: Requesting camera permission...");
       camStat = await Permission.camera.request();
+      debugPrint("CAMERA_LOG: New camera status: $camStat");
     }
 
     if (camStat.isPermanentlyDenied) {
+      debugPrint("CAMERA_LOG: Camera permanently denied.");
       if (mounted) {
         setState(() {
           _cameraStatus = "Camera permission permanently denied. Please enable it in Settings.";
@@ -368,6 +373,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
     }
 
     if (!camStat.isGranted) {
+      debugPrint("CAMERA_LOG: Camera not granted.");
       if (mounted) {
         setState(() {
           _cameraStatus = "Camera permission denied";
@@ -378,11 +384,13 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
       return;
     }
 
+    debugPrint("CAMERA_LOG: Finding cameras...");
     setState(() => _cameraStatus = "Finding cameras...");
     await Future.delayed(const Duration(milliseconds: 200)); // Hardware stabilization
     
     try {
       final cameras = await availableCameras();
+      debugPrint("CAMERA_LOG: Found ${cameras.length} cameras.");
       if (cameras.isEmpty) {
         if (mounted) {
           setState(() {
