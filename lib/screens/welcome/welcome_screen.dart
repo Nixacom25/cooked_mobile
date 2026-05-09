@@ -32,7 +32,7 @@ class WelcomeScreen extends StatelessWidget {
                           const Spacer(flex: 3),
                           Image.asset(
                             'assets/images/logo.png',
-                            width: 100.w,
+                            width: 130.w,
                             fit: BoxFit.contain,
                           ),
                           const Spacer(flex: 3),

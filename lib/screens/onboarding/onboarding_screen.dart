@@ -1,3 +1,4 @@
+import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../routes/app_routes.dart';
@@ -461,22 +462,28 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           if (provider == 'GOOGLE') {
             socialRes = await AuthService.instance.signInWithGoogle(
               isSignup: true,
-              isManualBackendCall: false, // Don't login yet, just get identity
+              isManualBackendCall: false,
             );
           } else {
             socialRes = await AuthService.instance.signInWithApple(
               isSignup: true,
-              isManualBackendCall: false, // Don't login yet, just get identity
+              isManualBackendCall: false,
             );
           }
+
+          developer.log('Social Auth Result: $socialRes', name: 'OnboardingScreen');
 
           if (socialRes['success'] != true) {
             throw Exception('Social authentication failed');
           }
 
-          // Split name if it contains a space and lastname is empty
-          String finalFirst = _firstName.isNotEmpty ? _firstName : socialRes['firstname'];
-          String finalLast = _lastName.isNotEmpty ? _lastName : socialRes['lastname'];
+          // Fallback logic for missing social info (common with Apple)
+          String finalEmail = (socialRes['email'] != null && socialRes['email'].toString().isNotEmpty)
+              ? socialRes['email']
+              : _email;
+
+          String finalFirst = _firstName.isNotEmpty ? _firstName : (socialRes['firstname'] ?? '');
+          String finalLast = _lastName.isNotEmpty ? _lastName : (socialRes['lastname'] ?? '');
           
           if (finalLast.isEmpty && finalFirst.contains(' ')) {
             final parts = finalFirst.trim().split(' ');
@@ -484,11 +491,17 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             finalLast = parts.sublist(1).join(' ');
           }
 
+          if (finalEmail.isEmpty) {
+             throw Exception('Email is required for registration. Please provide your email in the previous step.');
+          }
+
+          developer.log('Final Registration Info: $finalEmail, $finalFirst $finalLast', name: 'OnboardingScreen');
+
           // Now call register with ALL preferences + social identity
           await AuthService.instance.register(
             firstname: finalFirst,
             lastname: finalLast,
-            email: socialRes['email'],
+            email: finalEmail,
             password: socialRes['idToken'], // Send token as password for verification
             provider: provider,
             phone: _phone,

@@ -135,7 +135,11 @@ class _CookbookDetailScreenState extends State<CookbookDetailScreen> {
                               AppRoutes.cookbookForm,
                               arguments: {'mode': 'edit', 'cookbook': _cookbook},
                             );
-                            if (result == true) _load();
+                            if (result == 'deleted') {
+                              if (mounted) Navigator.pop(context, true);
+                            } else if (result == true) {
+                              _load();
+                            }
                           },
                           child: Container(
                             width: 30,
@@ -181,20 +185,44 @@ class _CookbookDetailScreenState extends State<CookbookDetailScreen> {
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Image.asset(
-                                'assets/images/cookbook.png',
-                                width: 140,
-                                height: 140,
-                                fit: BoxFit.contain,
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(20.r),
+                                child: Container(
+                                  width: 200.w,
+                                  height: 200.h,
+                                  decoration: BoxDecoration(
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withValues(alpha: 0.1),
+                                        blurRadius: 10,
+                                        offset: const Offset(0, 5),
+                                      ),
+                                    ],
+                                  ),
+                                  child: _buildThemedEmptyImage(name),
+                                ),
                               ),
-                              const SizedBox(height: 24),
+                              const SizedBox(height: 30),
                               Text(
                                 "No recipes yet",
                                 style: TextStyle(
                                   fontFamily: 'SF Pro',
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.grey[600],
-                                  fontSize: 18,
+                                  fontWeight: FontWeight.w800,
+                                  color: const Color(0xFF1A1A1A),
+                                  fontSize: 22.sp,
+                                ),
+                              ),
+                              SizedBox(height: 8.h),
+                              Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 40.w),
+                                child: Text(
+                                  "Tap the + button above to add recipes to this cookbook.",
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontFamily: 'SF Pro',
+                                    color: Colors.grey[500],
+                                    fontSize: 14.sp,
+                                  ),
                                 ),
                               ),
                             ],
@@ -207,7 +235,7 @@ class _CookbookDetailScreenState extends State<CookbookDetailScreen> {
                             crossAxisCount: 2,
                             mainAxisSpacing: 14.h,
                             crossAxisSpacing: 14.w,
-                            mainAxisExtent: 240.h,
+                            childAspectRatio: 0.82,
                           ),
                           itemBuilder: (ctx, i) {
                             final r = recipes[i];
@@ -237,6 +265,38 @@ class _CookbookDetailScreenState extends State<CookbookDetailScreen> {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildThemedEmptyImage(String name) {
+    final lowerName = name.toLowerCase();
+    String assetPath = 'assets/images/cookbook_everyday.png';
+
+    if (lowerName.contains('protein')) {
+      assetPath = 'assets/images/higth-proteins.png';
+    } else if (lowerName.contains('dessert')) {
+      assetPath = 'assets/images/cookbook_dessert.png';
+    } else if (lowerName.contains('healthy')) {
+      assetPath = 'assets/images/cookbook_healthy.png';
+    } else if (lowerName.contains('italian')) {
+      assetPath = 'assets/images/cookbook_italian.png';
+    } else if (lowerName.contains('lunch')) {
+      assetPath = 'assets/images/cookbook_lunch.png';
+    } else if (lowerName.contains('meat')) {
+      assetPath = 'assets/images/cookbook_meat.png';
+    } else if (lowerName.contains('veggie')) {
+      assetPath = 'assets/images/cookbook_veggie.png';
+    }
+
+    return Image.asset(
+      assetPath,
+      fit: BoxFit.cover,
+      errorBuilder: (_, __, ___) => Container(
+        color: const Color(0xFFF5F5F5),
+        child: const Center(
+          child: Icon(Icons.menu_book_rounded, size: 60, color: Color(0xFFCCCCCC)),
+        ),
+      ),
     );
   }
 }

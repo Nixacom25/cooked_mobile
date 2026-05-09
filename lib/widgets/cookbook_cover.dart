@@ -20,6 +20,7 @@ class CookbookCover extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final recipes = cookbook.recipes;
+    final recipesWithImages = recipes.where((r) => r.image != null && r.image!.isNotEmpty).toList();
 
     return Container(
       width: width ?? double.infinity,
@@ -29,43 +30,67 @@ class CookbookCover extends StatelessWidget {
         borderRadius: BorderRadius.circular(16.r),
       ),
       clipBehavior: Clip.antiAlias,
-      child: _buildCoverContent(recipes),
+      child: recipesWithImages.isEmpty 
+          ? _buildEmptyState() 
+          : _buildCollage(recipesWithImages),
     );
   }
 
-  Widget _buildCoverContent(List<Recipe> recipes) {
-    // Prioritize recipes that actually have images for the collage
-    final recipesWithImages = recipes.where((r) => r.image != null && r.image!.isNotEmpty).toList();
-    final int count = recipesWithImages.length;
-    
-    if (count == 0) {
-      // Premium placeholder for empty cookbook
-      return Container(
-        color: const Color(0xFFF9FAFB),
-        child: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Image.asset(
-                'assets/images/cookbook.png',
-                width: 60.w,
-                height: 60.h,
-                fit: BoxFit.contain,
-                color: const Color(0xFFCC3333).withValues(alpha: 0.1),
-                colorBlendMode: BlendMode.srcIn,
-              ),
-            ],
+  Widget _buildEmptyState() {
+    String assetPath = 'assets/images/cookbook.png';
+
+    return Image.asset(
+      assetPath,
+      fit: BoxFit.cover,
+      errorBuilder: (_, __, ___) => _buildPlaceholder(),
+    );
+  }
+
+  Widget _buildPlaceholder() {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            const Color(0xFFF9FAFB),
+            const Color(0xFFF3F4F6),
+          ],
+        ),
+      ),
+      child: Center(
+        child: Container(
+          padding: EdgeInsets.all(12.w),
+          decoration: BoxDecoration(
+            color: const Color(0xFFCC3333).withValues(alpha: 0.05),
+            shape: BoxShape.circle,
+          ),
+          child: Image.asset(
+            'assets/images/cookbook.png',
+            width: 45.w,
+            height: 45.h,
+            fit: BoxFit.contain,
+            color: const Color(0xFFCC3333).withValues(alpha: 0.3),
+            colorBlendMode: BlendMode.srcIn,
           ),
         ),
-      );
-    }
-    
+      ),
+    );
+  }
+
+  Widget _buildCollage(List<Recipe> recipes) {
+    // Always use 3 slots (1 large left, 2 small right)
+    // Repeat images if we have less than 3
+    final String? img1 = recipes.isNotEmpty ? recipes[0].image : null;
+    final String? img2 = recipes.length > 1 ? recipes[1].image : null;
+    final String? img3 = recipes.length > 2 ? recipes[2].image : null;
+
     return Row(
       children: [
         // Left - Large image
         Expanded(
           flex: 3,
-          child: _buildImage(count > 0 ? recipesWithImages[0].image : null),
+          child: _buildImage(img1),
         ),
         Container(width: 1.5, color: Colors.white),
         // Right - Two small images stacked
@@ -74,11 +99,11 @@ class CookbookCover extends StatelessWidget {
           child: Column(
             children: [
               Expanded(
-                child: _buildImage(count > 1 ? recipesWithImages[1].image : null),
+                child: _buildImage(img2),
               ),
               Container(height: 1.5, color: Colors.white),
               Expanded(
-                child: _buildImage(count > 2 ? recipesWithImages[2].image : null),
+                child: _buildImage(img3),
               ),
             ],
           ),

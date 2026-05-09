@@ -118,7 +118,7 @@ class _CookbookFormScreenState extends State<CookbookFormScreen> {
                                       await CookbookService.instance.deleteCookbook(
                                         _cookbook!.id,
                                       );
-                                      if (mounted) Navigator.pop(context, true);
+                                      if (mounted) Navigator.pop(context, 'deleted');
                                     } catch (e) {
                                       if (mounted) {
                                         IosToast.show(context, message: ErrorHelper.getFriendlyMessage(e), type: ToastType.error);
@@ -611,10 +611,10 @@ class _RecipePickerState extends State<_RecipePicker> {
                             color: Color(0xFFF5F5F5),
                             shape: BoxShape.circle,
                           ),
-                          child: const Icon(
+                          child: Icon(
                             Icons.menu_book_rounded,
-                            size: 40,
-                            color: Color(0xFFCCCCCC),
+                            size: 40.sp,
+                            color: const Color(0xFFCC3333).withValues(alpha: 0.4),
                           ),
                         ),
                         const SizedBox(height: 16),

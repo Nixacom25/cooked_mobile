@@ -25,7 +25,6 @@ import '../../core/services/tutorial_service.dart';
 import '../../main.dart';
 import '../../services/history_service.dart';
 import '../../models/view_all_type.dart';
-import '../../utils/paywall_helper.dart';
 
 class HomeScreen extends StatefulWidget {
   final int initialTab;
@@ -362,16 +361,6 @@ class _HomeScreenState extends State<HomeScreen>
                   },
                 );
               },
-            ),
-          if (kDebugMode)
-            Positioned(
-              top: 100.h,
-              right: 20.w,
-              child: FloatingActionButton(
-                backgroundColor: Colors.red,
-                child: const Icon(Icons.payment, color: Colors.white),
-                onPressed: () => PaywallHelper.show(context),
-              ),
             ),
         ],
         ),
