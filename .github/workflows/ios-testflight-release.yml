@@ -10,17 +10,18 @@ jobs:
     runs-on: macos-15
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
       - name: Select Latest Xcode Version
         run: |
-          echo "Recherche des versions de Xcode disponibles..."
+          echo "Recherche des versions de Xcode..."
           ls -d /Applications/Xcode*.app
 
           XCODE_PATH=$(ls -d /Applications/Xcode_26*.app 2>/dev/null | tail -n 1)
 
           if [ -z "$XCODE_PATH" ]; then
-            echo "Xcode 26 non trouvé. Recherche de la version la plus récente..."
+            echo "Xcode 26 non trouvé. Utilisation de la version la plus récente."
             XCODE_PATH=$(ls -d /Applications/Xcode*.app | sort -V | tail -n 1)
           fi
 
@@ -59,7 +60,7 @@ jobs:
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles
 
-      - name: Set up Flutter
+      - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: stable
@@ -67,7 +68,7 @@ jobs:
       - name: Flutter Doctor
         run: flutter doctor -v
 
-      - name: Install Dependencies
+      - name: Install Flutter Dependencies
         run: flutter pub get
 
       - name: Restore GoogleService-Info.plist
@@ -76,14 +77,29 @@ jobs:
         run: |
           echo "$IOS_GOOGLE_SERVICE_INFO_BASE64" | base64 --decode > ios/Runner/GoogleService-Info.plist
 
-      - name: Clean Flutter & iOS
+      - name: Clean Flutter and iOS
         run: |
           flutter clean
           rm -rf ios/Pods
           rm -rf ios/Podfile.lock
+          rm -rf ios/Flutter/Flutter.podspec
 
-      - name: Reinstall Flutter Dependencies
+      - name: Regenerate Flutter iOS Files
         run: flutter pub get
+
+      - name: Verify Generated.xcconfig
+        run: |
+          echo "📂 Vérification dossier ios/Flutter"
+          ls -la ios/Flutter
+
+          echo "📄 Vérification Generated.xcconfig"
+
+          if [ ! -f ios/Flutter/Generated.xcconfig ]; then
+            echo "❌ Generated.xcconfig introuvable"
+            exit 1
+          fi
+
+          cat ios/Flutter/Generated.xcconfig
 
       - name: Install CocoaPods
         run: |
