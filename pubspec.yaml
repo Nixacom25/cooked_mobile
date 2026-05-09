@@ -1,7 +1,7 @@
 name: cooked
 description: "A new Flutter project."
 publish_to: 'none' 
-version: 1.0.0+13
+version: 1.0.0+14
 
 environment:
   sdk: ^3.8.1
@@ -43,12 +43,11 @@ dev_dependencies:
 
   flutter_lints: ^5.0.0
   flutter_launcher_icons: ^0.13.1
-  flutter_native_splash: ^2.4.3
 
 flutter_icons:
   android: true
   ios: true
-  image_path: "assets/favicon/android.png"
+  image_path: "assets/favicon/android2.png"
   min_sdk_android: 21
   remove_alpha_ios: true
 
@@ -58,10 +57,3 @@ flutter:
     - assets/images/
     - assets/icones/
     - assets/favicon/
-
-flutter_native_splash:
-  color: "#FFFFFF"
-  image: "assets/images/logo3_padded.png"
-  android_12:
-    color: "#FFFFFF"
-    image: "assets/images/logo3_padded.png"

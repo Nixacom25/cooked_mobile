@@ -69,12 +69,11 @@ class _ViewAllScreenState extends State<ViewAllScreen> {
                       children: [
                         Text(
                           title.toTitleCase(),
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontFamily: 'SF Pro',
-                            fontWeight: FontWeight.w700,
-                            fontSize: 18.sp,
-                            color: const Color(0xFF1A1A1A),
-                            letterSpacing: -0.5,
+                            fontWeight: FontWeight.w800,
+                            fontSize: 20,
+                            color: Color(0xFF1A1A1A),
                           ),
                         ),
                         _buildSubtitleBadge(type),
@@ -178,9 +177,9 @@ class _ViewAllScreenState extends State<ViewAllScreen> {
           '$count Recipes',
           style: TextStyle(
             fontFamily: 'SF Pro',
-            fontSize: 11.sp,
+            fontSize: 12,
             color: Colors.grey[500],
-            fontWeight: FontWeight.w600,
+            fontWeight: FontWeight.w500,
           ),
         );
       },
@@ -242,7 +241,7 @@ class _CookbooksGridState extends State<_CookbooksGrid> {
             crossAxisCount: 2,
             crossAxisSpacing: 12,
             mainAxisSpacing: 16,
-            childAspectRatio: 0.95,
+            childAspectRatio: 0.82,
           ),
           itemBuilder: (ctx, i) {
             final cb = displayList[i];
@@ -263,11 +262,11 @@ class _CookbooksGridState extends State<_CookbooksGrid> {
                     cb.name.toTitleCase(),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontFamily: 'SF Pro',
                       fontWeight: FontWeight.w700,
-                      fontSize: 12.sp,
-                      color: const Color(0xFF222222),
+                      fontSize: 14,
+                      color: Color(0xFF222222),
                     ),
                   ),
                   const SizedBox(height: 2),
@@ -281,10 +280,10 @@ class _CookbooksGridState extends State<_CookbooksGrid> {
                       const SizedBox(width: 4),
                       Text(
                         '${cb.recipes.length} Recipes',
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontFamily: 'SF Pro',
-                          fontSize: 10.sp,
-                          color: const Color(0xFF9CA3AF),
+                          fontSize: 11,
+                          color: Color(0xFF9CA3AF),
                         ),
                       ),
                     ],
@@ -413,9 +412,9 @@ class _RecipesGridState extends State<_RecipesGrid> {
       itemCount: displayList.length,
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
-        mainAxisSpacing: 12.h,
-        crossAxisSpacing: 12.w,
-        childAspectRatio: 0.95,
+        mainAxisSpacing: 14.h,
+        crossAxisSpacing: 14.w,
+        childAspectRatio: 0.82,
       ),
       itemBuilder: (ctx, i) {
         final r = displayList[i];
@@ -544,7 +543,7 @@ class _CreatorsGridState extends State<_CreatorsGrid> {
             crossAxisCount: 3,
             crossAxisSpacing: 12,
             mainAxisSpacing: 20,
-            childAspectRatio: 0.85,
+            childAspectRatio: 0.75,
           ),
           itemBuilder: (ctx, i) {
             final c = displayList[i];
@@ -576,11 +575,11 @@ class _CreatorsGridState extends State<_CreatorsGrid> {
                   textAlign: TextAlign.center,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontFamily: 'SF Pro',
                     fontWeight: FontWeight.w700,
-                    fontSize: 12.sp,
-                    color: const Color(0xFF222222),
+                    fontSize: 14,
+                    color: Color(0xFF222222),
                   ),
                 ),
                 SizedBox(height: 2.h),
@@ -594,10 +593,10 @@ class _CreatorsGridState extends State<_CreatorsGrid> {
                     const SizedBox(width: 4),
                     Text(
                       '${c.publicRecipeCount} Recipes',
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontFamily: 'SF Pro',
-                        fontSize: 10.sp,
-                        color: const Color(0xFF9CA3AF),
+                        fontSize: 11,
+                        color: Color(0xFF9CA3AF),
                       ),
                     ),
                   ],
@@ -655,7 +654,7 @@ class _StaticCookbooksGridState extends State<_StaticCookbooksGrid> {
   ];
 
   static const List<String> _allowedNiches = [
-    'High Protein, Low Calorie',
+    'High Protein Picks',
     'Easy Desserts',
     '30-Minute Meals',
     'Healthy Breakfasts',
@@ -727,7 +726,7 @@ class _StaticCookbooksGridState extends State<_StaticCookbooksGrid> {
         crossAxisCount: 2,
         crossAxisSpacing: 12,
         mainAxisSpacing: 16,
-        childAspectRatio: 0.95,
+        childAspectRatio: 0.82,
       ),
       itemBuilder: (ctx, i) {
         final name = names[i];
@@ -774,11 +773,11 @@ class _StaticCookbooksGridState extends State<_StaticCookbooksGrid> {
             name.toTitleCase(),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(
+            style: const TextStyle(
               fontFamily: 'SF Pro',
               fontWeight: FontWeight.w700,
-              fontSize: 12.sp,
-              color: const Color(0xFF222222),
+              fontSize: 14,
+              color: Color(0xFF222222),
             ),
           ),
           SizedBox(height: 2.h),
@@ -794,7 +793,7 @@ class _StaticCookbooksGridState extends State<_StaticCookbooksGrid> {
                 '$count Recipes',
                 style: TextStyle(
                   fontFamily: 'SF Pro',
-                  fontSize: 10.sp,
+                  fontSize: 11.sp,
                   color: const Color(0xFF9CA3AF),
                 ),
               ),

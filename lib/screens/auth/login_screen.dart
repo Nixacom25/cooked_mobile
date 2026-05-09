@@ -130,11 +130,11 @@ class _LoginScreenState extends State<LoginScreen> {
                 GestureDetector(
                   onTap: () => Navigator.pushReplacementNamed(context, AppRoutes.welcome),
                   child: Container(
-                    width: 34.w,
-                    height: 34.h,
+                    width: 44.w,
+                    height: 44.w,
                     decoration: BoxDecoration(
                       color: const Color(0xffF8F5EF),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(12.r),
                       boxShadow: [
                         BoxShadow(
                           color: Colors.black.withOpacity(0.1),
@@ -145,7 +145,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     child: Icon(
                       Icons.arrow_back_rounded,
-                      size: 18.sp,
+                      size: 24.sp,
                       color: const Color(0xFF0D1B36),
                     ),
                   ),
@@ -155,7 +155,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   style: TextStyle(
                     fontFamily: 'SF Pro',
                     fontWeight: FontWeight.w800,
-                    fontSize: 13.sp,
+                    fontSize: 16.sp,
                     letterSpacing: 0.5,
                     color: const Color(0xFF0D1B36),
                   ),
@@ -172,7 +172,7 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Center(
               child: Image.asset(
                 'assets/images/logo.png',
-                width: 80.w,
+                width: 100.w,
                 fit: BoxFit.contain,
               ),
             ),
@@ -185,13 +185,14 @@ class _LoginScreenState extends State<LoginScreen> {
             right: 0,
             bottom: 0,
             child: Container(
+              height: 620.h,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [Color(0xFFC83A2D), Color(0x63C83A2D)],
                 ),
-                borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(30.r)),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withOpacity(0.2),
@@ -224,7 +225,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           child: Text(
                             'Sign To Your Account',
                             style: TextStyle(
-                              fontSize: 18.sp,
+                              fontSize: 26.sp,
                               fontWeight: FontWeight.w700,
                               color: Colors.white,
                               fontFamily: 'SF Pro',
@@ -271,7 +272,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 color: Colors.white,
                                 fontFamily: 'SF Pro',
                                 fontWeight: FontWeight.w600,
-                                fontSize: 13.sp,
+                                fontSize: 15.sp,
                               ),
                             ),
                           ),
@@ -281,7 +282,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         // Login Button
                         SizedBox(
                           width: double.infinity,
-                        height: 42.h,
+                          height: 50.h,
                           child: ElevatedButton(
                             onPressed: _isLoading ? null : _handleLogin,
                             style: ElevatedButton.styleFrom(
@@ -302,7 +303,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 : Text(
                                     'Login',
                                     style: TextStyle(
-                                      fontSize: 13.sp,
+                                      fontSize: 18.sp,
                                       fontWeight: FontWeight.w700,
                                       fontFamily: 'SF Pro',
                                     ),
@@ -319,7 +320,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 style: TextStyle(
                                   color: Colors.black.withOpacity(0.7),
                                   fontFamily: 'SF Pro',
-                                  fontSize: 13.sp,
+                                  fontSize: 16.sp,
                                 ),
                                 children: [
                                   const TextSpan(text: "Don't have an account? "),
@@ -347,7 +348,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                  style: TextStyle(
                                    color: Colors.black.withOpacity(0.5),
                                    fontWeight: FontWeight.w800,
-                                   fontSize: 12.sp,
+                                   fontSize: 14.sp,
                                  ),
                                ),
                              ),
@@ -358,13 +359,13 @@ class _LoginScreenState extends State<LoginScreen> {
 
                         _SocialBtn(
                           label: 'Sign in with Google',
-                          icon: Image.asset('assets/images/google.png', width: 18.w, fit: BoxFit.contain),
+                          icon: Image.asset('assets/images/google.png', width: 20.w, fit: BoxFit.contain),
                           onTap: _isLoading ? null : () => _handleSocialLogin('GOOGLE'),
                         ),
                         SizedBox(height: 12.h),
                         _SocialBtn(
                           label: 'Sign in with Apple',
-                          icon: Image.asset('assets/images/apple.png', width: 18.w, fit: BoxFit.contain),
+                          icon: Image.asset('assets/images/apple.png', width: 20.w, fit: BoxFit.contain),
                           onTap: _isLoading ? null : () => _handleSocialLogin('APPLE'),
                         ),
 
@@ -394,7 +395,7 @@ class _Label extends StatelessWidget {
     style: TextStyle(
       color: Colors.white,
       fontFamily: 'SF Pro',
-      fontSize: 11.sp,
+      fontSize: 14.sp,
     ),
   );
 }
@@ -419,43 +420,43 @@ class _Field extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ClipRRect(
-      borderRadius: BorderRadius.circular(10),
+      borderRadius: BorderRadius.circular(10.r),
       child: TextField(
         controller: controller,
         keyboardType: type,
         obscureText: obscure,
-        style: TextStyle(fontFamily: 'SF Pro', fontSize: 11.sp),
+        style: TextStyle(fontFamily: 'SF Pro', fontSize: 14.sp),
         decoration: InputDecoration(
           hintText: hint,
           hintStyle: TextStyle(
             color: AppColors.textMuted,
             fontFamily: 'SF Pro',
-            fontSize: 11.sp,
+            fontSize: 14.sp,
           ),
           filled: true,
           fillColor: Colors.white,
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(10.r),
             borderSide: BorderSide.none,
           ),
           enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(10.r),
             borderSide: BorderSide.none,
           ),
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(10.r),
             borderSide: BorderSide.none,
           ),
           suffixIcon: suffix,
           errorText: errorText,
           errorStyle: TextStyle(
             color: const Color.fromARGB(255, 126, 1, 1),
-            fontSize: 10.sp,
+            fontSize: 12.sp,
             fontFamily: 'SF Pro',
           ),
           contentPadding: EdgeInsets.symmetric(
             horizontal: 10.w,
-            vertical: 8.h,
+            vertical: 10.h,
           ),
         ),
       ),
@@ -475,10 +476,10 @@ class _SocialBtn extends StatelessWidget {
       onTap: onTap,
       child: Container(
         width: double.infinity,
-        height: 42.h,
+        height: 52.h,
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(30),
+          borderRadius: BorderRadius.circular(30.r),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -490,7 +491,7 @@ class _SocialBtn extends StatelessWidget {
               style: TextStyle(
                 fontFamily: 'Circular Std',
                 fontWeight: FontWeight.w500,
-                fontSize: 13.sp,
+                fontSize: 16.sp,
                 color: AppColors.textDark,
               ),
             ),

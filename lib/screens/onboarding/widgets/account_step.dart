@@ -76,24 +76,23 @@ class _AccountStepState extends State<AccountStep> {
             Text(
               'Create your account',
               style: TextStyle(
-                fontSize: 16.sp,
-                fontWeight: FontWeight.w800,
+                fontSize: 24.sp,
+                fontWeight: FontWeight.w900,
                 color: const Color(0xFF0D1B3E),
                 fontFamily: 'SF Pro',
                 height: 1.2,
-                letterSpacing: -0.5,
               ),
             ),
-            SizedBox(height: 6.h),
+            SizedBox(height: 10.h),
             Text(
               'Secure your recipes and preferences',
               style: TextStyle(
-                fontSize: 10.sp,
-                color: const Color(0xFF9CA3AF),
+                fontSize: 14.sp,
+                color: const Color(0xFF7B8190),
                 fontFamily: 'SF Pro',
               ),
             ),
-            SizedBox(height: 24.h),
+            SizedBox(height: 32.h),
 
             _buildLabel('Password'),
             const SizedBox(height: 8),
@@ -170,7 +169,7 @@ class _AccountStepState extends State<AccountStep> {
                         'I agree to the ',
                         style: TextStyle(
                           fontFamily: 'SF Pro',
-                          fontSize: 12.sp,
+                          fontSize: 14.sp,
                           color: const Color(0xFF7B8190),
                         ),
                       ),
@@ -179,7 +178,7 @@ class _AccountStepState extends State<AccountStep> {
                         ' and the ',
                         style: TextStyle(
                           fontFamily: 'SF Pro',
-                          fontSize: 12.sp,
+                          fontSize: 14.sp,
                           color: const Color(0xFF7B8190),
                         ),
                       ),
@@ -188,7 +187,7 @@ class _AccountStepState extends State<AccountStep> {
                         '.',
                         style: TextStyle(
                           fontFamily: 'SF Pro',
-                          fontSize: 12.sp,
+                          fontSize: 14.sp,
                           color: const Color(0xFF7B8190),
                         ),
                       ),
@@ -208,9 +207,9 @@ class _AccountStepState extends State<AccountStep> {
     return Text(
       label,
       style: TextStyle(
-        fontSize: 10.sp,
-        fontWeight: FontWeight.w700,
-        color: const Color(0xFF111827),
+        fontSize: 14.sp,
+        fontWeight: FontWeight.w600,
+        color: const Color(0xFF7B8190),
         fontFamily: 'SF Pro',
       ),
     );
@@ -231,7 +230,7 @@ class _AccountStepState extends State<AccountStep> {
       onChanged: (_) => _notifyChange(),
       style: TextStyle(
         fontFamily: 'SF Pro',
-        fontSize: 12.sp,
+        fontSize: 16.sp,
         fontWeight: FontWeight.w600,
         color: const Color(0xFF1A1A1A),
       ),
@@ -240,13 +239,13 @@ class _AccountStepState extends State<AccountStep> {
         hintStyle: TextStyle(
           color: const Color(0xFFBDC3C7),
           fontWeight: FontWeight.w400,
-          fontSize: 12.sp,
+          fontSize: 16.sp,
         ),
         prefixIcon: Icon(icon, color: const Color(0xFFBDC3C7), size: 22.sp),
         suffixIcon: suffix,
         filled: true,
         fillColor: Colors.white,
-        contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+        contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12.r),
           borderSide: const BorderSide(color: Color(0xFFE5E7EB)),

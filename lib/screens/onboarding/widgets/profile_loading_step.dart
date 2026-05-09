@@ -118,8 +118,8 @@ class _ProfileLoadingStepState extends State<ProfileLoadingStep>
                     'Building your recipe profile',
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      fontSize: 16.sp,
-                      fontWeight: FontWeight.w800,
+                      fontSize: 20.sp,
+                      fontWeight: FontWeight.w900,
                       color: const Color(0xFF0D1B3E),
                       fontFamily: 'SF Pro',
                     ),
@@ -130,8 +130,8 @@ class _ProfileLoadingStepState extends State<ProfileLoadingStep>
                   child: Text(
                     '.' * _dotCount,
                     style: TextStyle(
-                      fontSize: 16.sp,
-                      fontWeight: FontWeight.w800,
+                      fontSize: 20.sp,
+                      fontWeight: FontWeight.w900,
                       color: const Color(0xFF0D1B3E),
                       fontFamily: 'SF Pro',
                     ),
@@ -144,7 +144,7 @@ class _ProfileLoadingStepState extends State<ProfileLoadingStep>
           Text(
             'This won\'t take long',
             style: TextStyle(
-              fontSize: 10.sp,
+              fontSize: 14.sp,
               color: const Color(0xFF7B8190),
               fontFamily: 'SF Pro',
             ),

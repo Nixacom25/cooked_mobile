@@ -1,9 +1,8 @@
 import 'dart:async';
-import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import '../../core/theme/app_theme.dart';
 import '../../services/auth_service.dart';
 import '../../services/user_service.dart';
 import '../../routes/app_routes.dart';
@@ -26,6 +25,7 @@ import '../../core/services/tutorial_service.dart';
 import '../../main.dart';
 import '../../services/history_service.dart';
 import '../../models/view_all_type.dart';
+import '../../utils/paywall_helper.dart';
 
 class HomeScreen extends StatefulWidget {
   final int initialTab;
@@ -147,7 +147,8 @@ class _HomeScreenState extends State<HomeScreen>
         return;
       }
 
-      final firstCb = CookbookService.instance.myCookbooksNotifier.value?.firstOrNull;
+      final firstCb =
+          CookbookService.instance.myCookbooksNotifier.value?.firstOrNull;
       TutorialHelper.showTutorial(
         context,
         cookbookKey: _firstCookbookKey,
@@ -250,7 +251,7 @@ class _HomeScreenState extends State<HomeScreen>
   Widget build(BuildContext context) {
     final isKeyboardOpen = MediaQuery.of(context).viewInsets.bottom > 0;
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Colors.white,
       resizeToAvoidBottomInset: false,
       extendBody: true,
       body: NotificationListener<ScrollNotification>(
@@ -339,14 +340,15 @@ class _HomeScreenState extends State<HomeScreen>
                             position: _navSlide,
                             child: hideNav || isKeyboardOpen
                                 ? const SizedBox.shrink()
-                                : _GlassBottomNav(
+                                : _FloatingBottomNav(
                                     currentIndex: _currentTab,
+                                    navVisible: _navVisible,
                                     onTap: _switchTab,
                                     onCameraTap: () {
                                       if (_currentTab == 2) {
-                                        _toggleNav();
+                                        _toggleNav(); // hide nav if already on scan tab
                                       } else {
-                                        _switchTab(2);
+                                        _switchTab(2); // go to scan tab
                                       }
                                     },
                                     scanTabKey: _scanTabKey,
@@ -361,24 +363,35 @@ class _HomeScreenState extends State<HomeScreen>
                 );
               },
             ),
-          ],
+          if (kDebugMode)
+            Positioned(
+              top: 100.h,
+              right: 20.w,
+              child: FloatingActionButton(
+                backgroundColor: Colors.red,
+                child: const Icon(Icons.payment, color: Colors.white),
+                onPressed: () => PaywallHelper.show(context),
+              ),
+            ),
+        ],
         ),
       ),
     );
   }
 }
 
-// ── Glassmorphic bottom nav ───────────────────────────────────────────────────
-class _GlassBottomNav extends StatelessWidget {
+// ── Floating pill bottom nav ───────────────────────────────────────────────────
+class _FloatingBottomNav extends StatelessWidget {
   final int currentIndex;
+  final bool navVisible;
   final void Function(int) onTap;
   final VoidCallback onCameraTap;
   final GlobalKey scanTabKey;
   final GlobalKey groceryTabKey;
   final GlobalKey importTabKey;
-
-  const _GlassBottomNav({
+  const _FloatingBottomNav({
     required this.currentIndex,
+    required this.navVisible,
     required this.onTap,
     required this.onCameraTap,
     required this.scanTabKey,
@@ -388,122 +401,114 @@ class _GlassBottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: Colors.transparent,
-      padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 10.h),
-      child: Stack(
-        clipBehavior: Clip.none,
-        alignment: Alignment.topCenter,
-        children: [
-          // Glass background
-          ClipRRect(
-            borderRadius: BorderRadius.circular(40.r),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
-              child: Container(
-                height: 60.h,
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.95),
-                  borderRadius: BorderRadius.circular(40.r),
-                  border: Border.all(
-                    color: Colors.black.withValues(alpha: 0.05),
-                    width: 1,
+    return SafeArea(
+      top: false,
+      left: false,
+      right: false,
+      child: Container(
+        color: Colors.transparent,
+        padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 10.h),
+        child: Stack(
+          clipBehavior: Clip.none,
+          alignment: Alignment.topCenter,
+          children: [
+            // White pill
+            Container(
+              height: 68.h,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(40.r),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.12),
+                    blurRadius: 24.r,
+                    offset: Offset(0, 4.h),
                   ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.12),
-                      blurRadius: 25.r,
-                      offset: Offset(0, 8.h),
-                    ),
-                  ],
-                ),
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    return Stack(
-                      children: [
-                        Row(
-                          children: [
-                            _NavItem(
-                              icon: Icons.home_outlined,
-                              activeIcon: Icons.home_rounded,
-                              label: 'Home',
-                              index: 0,
-                              current: currentIndex,
-                              onTap: onTap,
-                            ),
-                            _NavItem(
-                              icon: Icons.search_rounded,
-                              activeIcon: Icons.search_rounded,
-                              label: 'Explore',
-                              index: 1,
-                              current: currentIndex,
-                              onTap: onTap,
-                            ),
-                            const Expanded(child: SizedBox()),
-                            _NavItem(
-                              iconKey: groceryTabKey,
-                              icon: Icons.shopping_bag_outlined,
-                              activeIcon: Icons.shopping_bag_rounded,
-                              label: 'Grocery',
-                              index: 3,
-                              current: currentIndex,
-                              onTap: onTap,
-                            ),
-                            _NavItem(
-                              iconKey: importTabKey,
-                              icon: Icons.file_download_outlined,
-                              activeIcon: Icons.file_download_rounded,
-                              label: 'Import',
-                              index: 4,
-                              current: currentIndex,
-                              onTap: onTap,
-                            ),
-                          ],
-                        ),
-                      ],
-                    );
-                  },
-                ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  _NavItem(
+                    icon: Icons.home_outlined,
+                    activeIcon: Icons.home_rounded,
+                    label: 'Home',
+                    index: 0,
+                    current: currentIndex,
+                    onTap: onTap,
+                  ),
+                  _NavItem(
+                    icon: Icons.search_rounded,
+                    activeIcon: Icons.search_rounded,
+                    label: 'Explore',
+                    index: 1,
+                    current: currentIndex,
+                    onTap: onTap,
+                  ),
+                  const Expanded(child: SizedBox()),
+                  _NavItem(
+                    iconKey: groceryTabKey,
+                    icon: Icons.shopping_bag_outlined,
+                    activeIcon: Icons.shopping_bag_rounded,
+                    label: 'Grocery',
+                    index: 3,
+                    current: currentIndex,
+                    onTap: (idx) {
+                      onTap(idx);
+                    },
+                  ),
+                  _NavItem(
+                    iconKey: importTabKey,
+                    icon: Icons.file_download_outlined,
+                    activeIcon: Icons.file_download_rounded,
+                    label: 'Import',
+                    index: 4,
+                    current: currentIndex,
+                    onTap: (idx) {
+                      onTap(idx);
+                    },
+                  ),
+                ],
               ),
             ),
-          ),
 
-          // Camera FAB elevated
-          Positioned(
-            top: -18.h,
-            child: GestureDetector(
-              onTap: onCameraTap,
-              child: Container(
-                key: scanTabKey,
-                width: 50.w,
-                height: 50.h,
-                decoration: BoxDecoration(
-                  color: currentIndex == 2
-                      ? Colors.black87
-                      : const Color(0xFFCC3333),
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: (currentIndex == 2
-                              ? Colors.black87
-                              : const Color(0xFFCC3333))
-                          .withValues(alpha: 0.4),
-                      blurRadius: 15.r,
-                      offset: Offset(0, 6.h),
-                    ),
-                  ],
-                ),
-                child: Icon(
-                  currentIndex == 2
-                      ? Icons.keyboard_arrow_down_rounded
-                      : Icons.camera_alt_rounded,
-                  color: Colors.white,
-                  size: currentIndex == 2 ? 30.sp : 24.sp,
+            // Camera FAB elevated
+            Positioned(
+              top: -18.h,
+              child: GestureDetector(
+                onTap: onCameraTap,
+                child: Container(
+                  key: scanTabKey,
+                  width: 58.w,
+                  height: 58.h,
+                  decoration: BoxDecoration(
+                    color: currentIndex == 2
+                        ? Colors.black87
+                        : const Color(0xFFCC3333),
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color:
+                            (currentIndex == 2
+                                    ? Colors.black87
+                                    : const Color(0xFFCC3333))
+                                .withValues(alpha: 0.4),
+                        blurRadius: 16.r,
+                        offset: Offset(0, 4.h),
+                      ),
+                    ],
+                  ),
+                  child: Icon(
+                    currentIndex == 2
+                        ? Icons.keyboard_arrow_down_rounded
+                        : Icons.camera_alt_rounded,
+                    color: Colors.white,
+                    size: currentIndex == 2 ? 32.sp : 26.sp,
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -540,16 +545,17 @@ class _NavItem extends StatelessWidget {
           children: [
             Icon(
               active ? activeIcon : icon,
-              key: iconKey,
-              size: 20.sp, 
+              key:
+                  iconKey, // Use iconKey here to avoid duplicate GlobalKey on _NavItem itself
+              size: 24.sp,
               color: active ? const Color(0xFFCC3333) : const Color(0xFF8E8E8E),
             ),
-            SizedBox(height: 1.h),
+            SizedBox(height: 3.h),
             Text(
               label,
               style: TextStyle(
                 fontFamily: 'SF Pro',
-                fontSize: 9.sp, 
+                fontSize: 12.sp,
                 fontWeight: active ? FontWeight.w700 : FontWeight.w500,
                 color: active
                     ? const Color(0xFFCC3333)
@@ -582,13 +588,17 @@ class _HomeTabState extends State<_HomeTab> {
   @override
   void initState() {
     super.initState();
-    HistoryService.instance.recentlyViewedNotifier.addListener(_onHistoryChanged);
+    HistoryService.instance.recentlyViewedNotifier.addListener(
+      _onHistoryChanged,
+    );
   }
 
   @override
   void dispose() {
     _searchQueryNotifier.dispose();
-    HistoryService.instance.recentlyViewedNotifier.removeListener(_onHistoryChanged);
+    HistoryService.instance.recentlyViewedNotifier.removeListener(
+      _onHistoryChanged,
+    );
     super.dispose();
   }
 
@@ -609,7 +619,7 @@ class _HomeTabState extends State<_HomeTab> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Colors.transparent,
+      color: Colors.white,
       child: SafeArea(
         bottom: false,
         child: Column(
@@ -630,105 +640,194 @@ class _HomeTabState extends State<_HomeTab> {
                     padding: EdgeInsets.only(bottom: 40.h, top: 15.h),
                     children: [
                       if (searchQuery.isEmpty) ...[
-                    ValueListenableBuilder<List<Cookbook>?>(
-                      valueListenable:
-                          CookbookService.instance.myCookbooksNotifier,
-                      builder: (context, cookbooks, _) {
-                        final countBadge =
-                            (cookbooks != null && cookbooks.isNotEmpty)
-                            ? ' (${cookbooks.length})'
-                            : '';
-                        return _SectionRow(
-                          title: 'Your cookbooks$countBadge',
-                          onViewAll: (cookbooks != null && cookbooks.length > 5)
-                              ? () {
-                                  _goViewAll(
-                                    context,
-                                    ViewAllType.cookbooks,
-                                    'Cookbooks',
-                                  );
-                                }
-                              : null,
-                        );
-                      },
-                    ),
-                    SizedBox(height: 12.h),
-                    _CookbooksRow(
-                      onRefresh: widget.onRefresh,
-                      firstCookbookKey: widget.firstCookbookKey,
-                    ),
-                  ],
-                  if (searchQuery.isEmpty) ...[
-                    ValueListenableBuilder<List<Recipe>>(
-                      valueListenable: HistoryService.instance.recentlyViewedNotifier,
-                      builder: (context, recent, _) {
-                        if (recent.isEmpty) return const SizedBox.shrink();
-                        return Column(
-                          children: [
-                            SizedBox(height: 30.h),
-                            _SectionRow(
-                              title: 'Recently Viewed',
-                              onViewAll: recent.length > 5
-                                  ? () => _goViewAll(
+                        ValueListenableBuilder<List<Cookbook>?>(
+                          valueListenable:
+                              CookbookService.instance.myCookbooksNotifier,
+                          builder: (context, cookbooks, _) {
+                            final countBadge =
+                                (cookbooks != null && cookbooks.isNotEmpty)
+                                ? ' (${cookbooks.length})'
+                                : '';
+                            return _SectionRow(
+                              title: 'Your cookbooks$countBadge',
+                              onViewAll:
+                                  (cookbooks != null && cookbooks.length > 5)
+                                  ? () {
+                                      _goViewAll(
                                         context,
-                                        ViewAllType.recentlyViewed,
-                                        'Recently Viewed',
-                                      )
+                                        ViewAllType.cookbooks,
+                                        'Cookbooks',
+                                      );
+                                    }
                                   : null,
-                            ),
-                            SizedBox(height: 12.h),
-                            _RecentlyViewedRow(
-                              key: ValueKey(recent.first.id),
-                              recipes: recent,
-                            ),
-                          ],
-                        );
-                      },
-                    ),
-                  ],
-                  ValueListenableBuilder<List<Recipe>?>(
-                    valueListenable: RecipeService.instance.myRecipesNotifier,
-                    builder: (context, recipes, _) {
-                      final allRecipes = recipes ?? [];
-                      final savedRecipes = allRecipes.where((r) => r.origin != 'SUGGESTED').toList();
-                      final hasSaved = savedRecipes.isNotEmpty;
+                            );
+                          },
+                        ),
+                        SizedBox(height: 12.h),
+                        _CookbooksRow(
+                          onRefresh: widget.onRefresh,
+                          firstCookbookKey: widget.firstCookbookKey,
+                        ),
+                      ],
+                      if (searchQuery.isEmpty) ...[
+                        ValueListenableBuilder<List<Recipe>>(
+                          valueListenable:
+                              HistoryService.instance.recentlyViewedNotifier,
+                          builder: (context, recent, _) {
+                            if (recent.isEmpty) return const SizedBox.shrink();
+                            return Column(
+                              children: [
+                                SizedBox(height: 30.h),
+                                _SectionRow(
+                                  title: 'Recently Viewed',
+                                  onViewAll: recent.length > 5
+                                      ? () => _goViewAll(
+                                          context,
+                                          ViewAllType.recentlyViewed,
+                                          'Recently Viewed',
+                                        )
+                                      : null,
+                                ),
+                                SizedBox(height: 12.h),
+                                _RecentlyViewedRow(
+                                  key: ValueKey(recent.first.id),
+                                  recipes: recent,
+                                ),
+                              ],
+                            );
+                          },
+                        ),
+                      ],
+                      ValueListenableBuilder<List<Recipe>?>(
+                        valueListenable:
+                            RecipeService.instance.myRecipesNotifier,
+                        builder: (context, recipes, _) {
+                          final allRecipes = recipes ?? [];
+                          final savedRecipes = allRecipes
+                              .where((r) => r.origin != 'SUGGESTED')
+                              .toList();
+                          final hasSaved = savedRecipes.isNotEmpty;
 
-                      return Column(
-                        children: [
-                          if (hasSaved) ...[
-                            SizedBox(height: 30.h),
-                            _SectionRow(
-                              title: 'Saved Recipes',
-                              onViewAll: savedRecipes.length > 6 ? () {
-                                _goViewAll(context, ViewAllType.savedRecipes, 'Saved Recipes');
-                              } : null,
+                          return Column(
+                            children: [
+                              if (hasSaved) ...[
+                                SizedBox(height: 30.h),
+                                _SectionRow(
+                                  title: 'Saved Recipes',
+                                  onViewAll: savedRecipes.length > 6
+                                      ? () {
+                                          _goViewAll(
+                                            context,
+                                            ViewAllType.savedRecipes,
+                                            'Saved Recipes',
+                                          );
+                                        }
+                                      : null,
+                                ),
+                                SizedBox(height: 12.h),
+                                _SavedRecipesGrid(
+                                  searchQuery: searchQuery,
+                                  recipes: savedRecipes,
+                                ),
+                              ],
+
+                              _SuggestedRecipesSection(
+                                searchQuery: searchQuery,
+                                isCompact: hasSaved,
+                              ),
+                            ],
+                          );
+                        },
+                      ),
+                      SizedBox(height: 30.h),
+
+                      // Bottom Scan CTA
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 18.w),
+                        child: GestureDetector(
+                          onTap: widget.onScanTap,
+                          child: Container(
+                            padding: EdgeInsets.all(16.r),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFFFF9F9), // Very light red
+                              borderRadius: BorderRadius.circular(16.r),
+                              border: Border.all(
+                                color: const Color(0xFFFFEBEB),
+                              ),
                             ),
-                            SizedBox(height: 12.h),
-                            _SavedRecipesGrid(
-                              searchQuery: searchQuery,
-                              recipes: savedRecipes,
+                            child: Row(
+                              children: [
+                                Container(
+                                  padding: EdgeInsets.all(12.r),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    shape: BoxShape.circle,
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withValues(
+                                          alpha: 0.05,
+                                        ),
+                                        blurRadius: 8.r,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Icon(
+                                    Icons.qr_code_scanner_rounded,
+                                    color: const Color(0xFFCC3333),
+                                    size: 22.sp,
+                                  ),
+                                ),
+                                SizedBox(width: 14.w),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        "Scan your refrigerator",
+                                        style: TextStyle(
+                                          fontFamily: 'SF Pro',
+                                          fontWeight: FontWeight.w700,
+                                          fontSize: 15.sp,
+                                          color: const Color(0xFF1A1A1A),
+                                        ),
+                                      ),
+                                      SizedBox(height: 4.h),
+                                      Text(
+                                        "Let our AI find the best recipes for you",
+                                        style: TextStyle(
+                                          fontFamily: 'SF Pro',
+                                          fontSize: 13.sp,
+                                          color: const Color(0xFF7A8499),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Icon(
+                                  Icons.arrow_forward_ios_rounded,
+                                  size: 14.sp,
+                                  color: const Color(0xFFCCCCCC),
+                                ),
+                              ],
                             ),
-                          ],
-                          
-                          _SuggestedRecipesSection(
-                            searchQuery: searchQuery,
-                            isCompact: hasSaved,
                           ),
-                        ],
-                      );
-                    },
-                  ),
-                  SizedBox(height: 50.h), 
-                ],
-              );
-             },
+                        ),
+                      ),
+
+                      SizedBox(height: 100.h), // Extra space for nav
+                      // Dynamic bottom spacer for keyboard
+                    ],
+                  );
+                },
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
-    ),
-  );
-}
+    );
+  }
 }
 
 // ── Header ─────────────────────────────────────────────────────────────────────
@@ -923,10 +1022,9 @@ class _SectionRow extends StatelessWidget {
                 title,
                 style: TextStyle(
                   fontFamily: 'SF Pro',
-                  fontWeight: FontWeight.w700,
-                  fontSize: 14.sp,
-                  color: const Color(0xFF1A1A1A),
-                  letterSpacing: -0.3,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 18.sp,
+                  color: const Color(0xFF111827),
                 ),
               ),
             ],
@@ -938,8 +1036,8 @@ class _SectionRow extends StatelessWidget {
                 'View All',
                 style: TextStyle(
                   fontFamily: 'SF Pro',
-                  fontWeight: FontWeight.w700, // Increased from w500
-                  fontSize: 12.sp,
+                  fontWeight: FontWeight.w500,
+                  fontSize: 13.sp,
                   color: const Color(0xFFC83A2D),
                 ),
               ),
@@ -1027,18 +1125,20 @@ class _CookbooksRowState extends State<_CookbooksRow> {
                           Expanded(
                             child: Container(
                               decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(15.r),
+                                color: const Color(0xFFF9FAFB),
+                                borderRadius: BorderRadius.circular(16.r),
                                 border: Border.all(
-                                  color: const Color(0xFFCC3333).withValues(alpha: 0.3),
-                                  width: 0.8, // Thinner border
+                                  color: const Color(
+                                    0xFFC83A2D,
+                                  ).withValues(alpha: 0.4),
+                                  width: 1,
                                 ),
                               ),
                               child: Center(
                                 child: Icon(
                                   Icons.add_rounded,
-                                  size: 28.sp, // Even smaller and thinner
-                                  color: const Color(0xFFCC3333),
+                                  size: 40.sp,
+                                  color: const Color(0xFFC83A2D),
                                 ),
                               ),
                             ),
@@ -1051,7 +1151,7 @@ class _CookbooksRowState extends State<_CookbooksRow> {
                             style: TextStyle(
                               fontFamily: 'SF Pro',
                               fontWeight: FontWeight.w700,
-                              fontSize: 14.sp, // Reduced from 16
+                              fontSize: 16.sp,
                               color: const Color(0xFF1A1A1A),
                             ),
                           ),
@@ -1097,20 +1197,7 @@ class _CookbooksRowState extends State<_CookbooksRow> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Expanded(
-                          child: Container(
-                            decoration: BoxDecoration(
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.04),
-                                  blurRadius: 12.r,
-                                  offset: Offset(0, 6.h),
-                                ),
-                              ],
-                            ),
-                            child: CookbookCover(cookbook: cb),
-                          ),
-                        ),
+                        Expanded(child: CookbookCover(cookbook: cb)),
                         SizedBox(height: 7.h),
                         Text(
                           cb.name.isEmpty
@@ -1131,7 +1218,7 @@ class _CookbooksRowState extends State<_CookbooksRow> {
                           children: [
                             Icon(
                               Icons.restaurant_outlined,
-                              size: 11.sp,
+                              size: 13.sp,
                               color: const Color(0xFF999999),
                             ),
                             SizedBox(width: 4.w),
@@ -1168,7 +1255,7 @@ class _RecentlyViewedRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 50.h,
+      height: 62.h,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         padding: EdgeInsets.symmetric(horizontal: 18.w),
@@ -1183,67 +1270,57 @@ class _RecentlyViewedRow extends StatelessWidget {
                 AppRoutes.recipeDetail,
                 arguments: {'recipe': r},
               ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(15.r),
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                  child: Container(
-                    constraints: BoxConstraints(maxWidth: 250.w),
-                    padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.7),
-                      borderRadius: BorderRadius.circular(10.r),
-                      border: Border.all(
-                        color: Colors.white,
-                        width: 1.5,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.04),
-                          blurRadius: 10.r,
-                          offset: Offset(0, 4.h),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          width: 40.w,
-                          height: 40.h,
-                          padding: EdgeInsets.all(2.r),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(12.r),
-                          ),
-                          alignment: Alignment.center,
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(10.r),
-                            child: _buildThumbnail(r.image),
-                          ),
-                        ),
-                        SizedBox(width: 10.w),
-                        Flexible(
-                          child: Text(
-                            r.name.isEmpty
-                                ? r.name
-                                : r.name[0].toUpperCase() +
-                                      r.name.substring(1).toLowerCase(),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontFamily: 'SF Pro',
-                              fontWeight: FontWeight.w600,
-                              fontSize: 12.sp,
-                              color: const Color(0xFF1A1A1A),
-                              letterSpacing: -0.3,
-                            ),
-                          ),
-                        ),
-                        SizedBox(width: 8.w),
-                      ],
-                    ),
+              child: Container(
+                constraints: BoxConstraints(maxWidth: 180.w),
+                padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF2F1EF),
+                  borderRadius: BorderRadius.circular(10.r),
+                  border: Border.all(
+                    color: const Color(0xFFEDEDED),
+                    width: 1.2,
                   ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.04),
+                      blurRadius: 8,
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 38.w,
+                      height: 38.h,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFE1E0DD),
+                        borderRadius: BorderRadius.circular(5.r),
+                      ),
+                      alignment: Alignment.center,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(5.r),
+                        child: _buildThumbnail(r.image),
+                      ),
+                    ),
+                    SizedBox(width: 10.w),
+                    Flexible(
+                      child: Text(
+                        r.name.isEmpty
+                            ? r.name
+                            : r.name[0].toUpperCase() +
+                                  r.name.substring(1).toLowerCase(),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontFamily: 'Open Sans',
+                          fontWeight: FontWeight.w800,
+                          fontSize: 14.sp,
+                          color: const Color(0xFF1A1A1A),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -1256,24 +1333,24 @@ class _RecentlyViewedRow extends StatelessWidget {
   Widget _buildThumbnail(String? image) {
     const fallback = 'assets/images/recipes.png';
     if (image == null || image.isEmpty) {
-      return Image.asset(fallback, fit: BoxFit.contain);
+      return Image.asset(fallback, fit: BoxFit.cover);
     }
     if (image.startsWith('http')) {
       return CachedNetworkImage(
         imageUrl: image,
-        width: 40.w,
-        height: 40.h,
-        fit: BoxFit.contain,
+        width: 38.w,
+        height: 38.h,
+        fit: BoxFit.cover,
         placeholder: (_, __) => Container(color: const Color(0xFFEEEEEE)),
-        errorWidget: (_, __, ___) => Image.asset(fallback, fit: BoxFit.contain),
+        errorWidget: (_, __, ___) => Image.asset(fallback, fit: BoxFit.cover),
       );
     }
     return Image.asset(
       image,
-      width: 40.w,
-      height: 40.h,
-      fit: BoxFit.contain,
-      errorBuilder: (_, __, ___) => Image.asset(fallback, fit: BoxFit.contain),
+      width: 38.w,
+      height: 38.h,
+      fit: BoxFit.cover,
+      errorBuilder: (_, __, ___) => Image.asset(fallback, fit: BoxFit.cover),
     );
   }
 }
@@ -1285,17 +1362,16 @@ class _SavedRecipesGrid extends StatelessWidget {
   final String searchQuery;
   final List<Recipe> recipes;
 
-  const _SavedRecipesGrid({
-    required this.searchQuery,
-    required this.recipes,
-  });
+  const _SavedRecipesGrid({required this.searchQuery, required this.recipes});
 
   @override
   Widget build(BuildContext context) {
     List<Recipe> displayList = recipes;
     if (searchQuery.trim().isNotEmpty) {
       final query = searchQuery.trim().toLowerCase();
-      displayList = recipes.where((r) => r.name.toLowerCase().contains(query)).toList();
+      displayList = recipes
+          .where((r) => r.name.toLowerCase().contains(query))
+          .toList();
     }
 
     if (displayList.isEmpty) return const SizedBox.shrink();
@@ -1354,7 +1430,8 @@ class _SuggestedRecipesSection extends StatefulWidget {
   });
 
   @override
-  State<_SuggestedRecipesSection> createState() => _SuggestedRecipesSectionState();
+  State<_SuggestedRecipesSection> createState() =>
+      _SuggestedRecipesSectionState();
 }
 
 class _SuggestedRecipesSectionState extends State<_SuggestedRecipesSection> {
@@ -1381,12 +1458,19 @@ class _SuggestedRecipesSectionState extends State<_SuggestedRecipesSection> {
   Future<void> _fetchSuggestions() async {
     setState(() => _isLoading = true);
     try {
-      final daysSinceEpoch = DateTime.now().difference(DateTime(2024, 1, 1)).inDays;
+      final daysSinceEpoch = DateTime.now()
+          .difference(DateTime(2024, 1, 1))
+          .inDays;
       final page = daysSinceEpoch ~/ 3;
-      final results = await RecipeService.instance.getExploreRecipes(page: page, size: 8);
+      final results = await RecipeService.instance.getExploreRecipes(
+        page: page,
+        size: 8,
+      );
       if (mounted) {
         setState(() {
-          _suggestions = results.map((r) => r.copyWith(origin: 'SUGGESTED')).toList();
+          _suggestions = results
+              .map((r) => r.copyWith(origin: 'SUGGESTED'))
+              .toList();
           _isLoading = false;
         });
       }
@@ -1400,7 +1484,9 @@ class _SuggestedRecipesSectionState extends State<_SuggestedRecipesSection> {
     if (_isLoading && _suggestions == null) {
       return SizedBox(
         height: 150.h,
-        child: const Center(child: CircularProgressIndicator(color: Color(0xFFCC3333))),
+        child: const Center(
+          child: CircularProgressIndicator(color: Color(0xFFCC3333)),
+        ),
       );
     }
 
@@ -1410,7 +1496,9 @@ class _SuggestedRecipesSectionState extends State<_SuggestedRecipesSection> {
     List<Recipe> displayList = _suggestions ?? [];
     if (widget.searchQuery.trim().isNotEmpty) {
       final query = widget.searchQuery.trim().toLowerCase();
-      displayList = displayList.where((r) => r.name.toLowerCase().contains(query)).toList();
+      displayList = displayList
+          .where((r) => r.name.toLowerCase().contains(query))
+          .toList();
     }
 
     if (displayList.isEmpty) return const SizedBox.shrink();

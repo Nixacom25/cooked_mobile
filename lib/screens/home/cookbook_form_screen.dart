@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import '../../models/recipe.dart';
 import '../../models/cookbook.dart';
 import '../../services/cookbook_service.dart';
@@ -83,7 +82,7 @@ class _CookbookFormScreenState extends State<CookbookFormScreen> {
                                 style: TextStyle(
                                   fontFamily: 'SF Pro',
                                   fontWeight: FontWeight.w800,
-                                  fontSize: 18.sp,
+                                  fontSize: 24.sp,
                                   color: const Color(0xFF1A1A1A),
                                 ),
                               ),
@@ -170,7 +169,7 @@ class _CookbookFormScreenState extends State<CookbookFormScreen> {
                         style: TextStyle(
                           fontFamily: 'SF Pro',
                           fontWeight: FontWeight.w600,
-                          fontSize: 11.sp,
+                          fontSize: 14.sp,
                           color: const Color(0xFF999999),
                         ),
                       ),
@@ -180,32 +179,32 @@ class _CookbookFormScreenState extends State<CookbookFormScreen> {
                         textCapitalization: TextCapitalization.words,
                         style: TextStyle(
                           fontFamily: 'SF Pro',
-                          fontSize: 13.sp,
+                          fontSize: 15.sp,
                           color: const Color(0xFF1A1A1A),
                         ),
                         decoration: InputDecoration(
                           hintText: 'Everyday meal',
                           hintStyle: TextStyle(
                             fontFamily: 'SF Pro',
-                            fontSize: 13.sp,
+                            fontSize: 15.sp,
                             color: Colors.grey[400],
                           ),
                           filled: true,
                           fillColor: const Color(0xFFF5F5F5),
                           contentPadding: EdgeInsets.symmetric(
-                            horizontal: 12.w,
-                            vertical: 10.h,
+                            horizontal: 16.w,
+                            vertical: 14.h,
                           ),
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius: BorderRadius.circular(12.r),
                             borderSide: BorderSide.none,
                           ),
                           enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius: BorderRadius.circular(12.r),
                             borderSide: BorderSide.none,
                           ),
                           focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius: BorderRadius.circular(12.r),
                             borderSide: const BorderSide(
                               color: Color(0xFFCC3333),
                               width: 1.5,
@@ -222,7 +221,7 @@ class _CookbookFormScreenState extends State<CookbookFormScreen> {
                         style: TextStyle(
                           fontFamily: 'SF Pro',
                           fontWeight: FontWeight.w800,
-                          fontSize: 15.sp,
+                          fontSize: 18.sp,
                           color: const Color(0xFF1A1A1A),
                         ),
                       ),
@@ -326,7 +325,7 @@ class _CookbookFormScreenState extends State<CookbookFormScreen> {
                         }
                       },
                 child: Container(
-                  height: 42.h,
+                  height: 52.h,
                   decoration: BoxDecoration(
                     color: const Color(0xFFCC3333),
                     borderRadius: BorderRadius.circular(30.r),
@@ -339,7 +338,7 @@ class _CookbookFormScreenState extends State<CookbookFormScreen> {
                             style: TextStyle(
                               fontFamily: 'SF Pro',
                               fontWeight: FontWeight.w700,
-                              fontSize: 13.sp,
+                              fontSize: 16.sp,
                               color: Colors.white,
                             ),
                           ),
@@ -406,36 +405,79 @@ class _FormRecipeCard extends StatelessWidget {
           recipe.name,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: TextStyle(
+          style: const TextStyle(
             fontFamily: 'SF Pro',
             fontWeight: FontWeight.w700,
-            fontSize: 11.sp,
+            fontSize: 13,
             color: Color(0xFF1A1A1A),
           ),
+        ),
+        const SizedBox(height: 3),
+        Row(
+          children: [
+            const Icon(
+              Icons.access_time_rounded,
+              size: 12,
+              color: Color(0xFF999999),
+            ),
+            const SizedBox(width: 3),
+            Text(
+              '${recipe.cookTime} min',
+              style: const TextStyle(
+                fontFamily: 'SF Pro',
+                fontSize: 11,
+                color: Color(0xFF999999),
+              ),
+            ),
+            const SizedBox(width: 6),
+            const Icon(
+              Icons.local_fire_department_rounded,
+              size: 12,
+              color: Color(0xFF999999),
+            ),
+            const SizedBox(width: 3),
+            Expanded(
+              child: Text(
+                '${recipe.kcal} kcal',
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontFamily: 'SF Pro',
+                  fontSize: 11,
+                  color: Color(0xFF999999),
+                ),
+              ),
+            ),
+          ],
         ),
       ],
     );
   }
 
   Widget _buildImage(String? path) {
-    const fallback = 'assets/images/recipes.png';
     if (path == null || path.isEmpty) {
-      return Image.asset(fallback, fit: BoxFit.cover);
+      return const Center(
+        child: Icon(Icons.fastfood_rounded, size: 40, color: Color(0xFFCCCCCC)),
+      );
     }
     if (path.startsWith('http')) {
-      return CachedNetworkImage(
-        imageUrl: path,
+      return Image.network(
+        path,
         fit: BoxFit.cover,
-        placeholder: (_, __) => const Center(
-          child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFFCC3333)),
+        errorBuilder: (_, __, ___) => const Center(
+          child: Icon(
+            Icons.broken_image_rounded,
+            size: 40,
+            color: Color(0xFFCCCCCC),
+          ),
         ),
-        errorWidget: (_, __, ___) => Image.asset(fallback, fit: BoxFit.cover),
       );
     }
     return Image.asset(
       path,
       fit: BoxFit.cover,
-      errorBuilder: (_, __, ___) => Image.asset(fallback, fit: BoxFit.cover),
+      errorBuilder: (_, __, ___) => const Center(
+        child: Icon(Icons.fastfood_rounded, size: 40, color: Color(0xFFCCCCCC)),
+      ),
     );
   }
 }
@@ -531,17 +573,17 @@ class _RecipePickerState extends State<_RecipePicker> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
+                const Text(
                   'Select Recipes',
                   style: TextStyle(
                     fontFamily: 'SF Pro',
                     fontWeight: FontWeight.w800,
-                    fontSize: 15.sp,
+                    fontSize: 20,
                   ),
                 ),
                 TextButton(
                   onPressed: () => Navigator.pop(context, _selected),
-                  child: Text(
+                  child: const Text(
                     'Done',
                     style: TextStyle(
                       fontFamily: 'SF Pro',
@@ -576,7 +618,7 @@ class _RecipePickerState extends State<_RecipePicker> {
                           ),
                         ),
                         const SizedBox(height: 16),
-                        Text(
+                        const Text(
                           'No recipes found',
                           style: TextStyle(
                             fontFamily: 'SF Pro',
@@ -586,12 +628,12 @@ class _RecipePickerState extends State<_RecipePicker> {
                           ),
                         ),
                         const SizedBox(height: 8),
-                        Text(
+                        const Text(
                           'Add recipes to your cookbook by scanning,\nimporting, or exploring.',
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontFamily: 'SF Pro',
-                            fontSize: 11.sp,
+                            fontSize: 14,
                             color: Color(0xFF999999),
                           ),
                         ),
@@ -653,25 +695,31 @@ class _RecipePickerState extends State<_RecipePicker> {
 
                       return ListTile(
                         leading: Container(
-                          width: 40,
-                          height: 40,
+                          width: 48,
+                          height: 48,
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(8),
                             color: const Color(0xFFF5F5F5),
+                            image: r.image != null
+                                ? DecorationImage(
+                                    image: r.image!.startsWith('http')
+                                        ? NetworkImage(r.image!)
+                                        : AssetImage(r.image!) as ImageProvider,
+                                    fit: BoxFit.cover,
+                                  )
+                                : null,
                           ),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(8),
-                            child: _buildThumbnail(r.image),
-                          ),
+                          child: r.image == null
+                              ? const Icon(
+                                  Icons.fastfood_rounded,
+                                  size: 20,
+                                  color: Color(0xFFCCCCCC),
+                                )
+                              : null,
                         ),
                         title: Text(
                           r.name,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 12.sp,
-                            fontWeight: FontWeight.w600
-                            ),
+                          style: const TextStyle(fontWeight: FontWeight.w600),
                         ),
                         subtitle: Text('${r.cookTime} min • ${r.kcal} kcal'),
                         trailing: isAlready
@@ -700,26 +748,6 @@ class _RecipePickerState extends State<_RecipePicker> {
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildThumbnail(String? image) {
-    const fallback = 'assets/images/recipes.png';
-    if (image == null || image.isEmpty) {
-      return Image.asset(fallback, fit: BoxFit.cover);
-    }
-    if (image.startsWith('http')) {
-      return CachedNetworkImage(
-        imageUrl: image,
-        fit: BoxFit.cover,
-        placeholder: (_, __) => Container(color: const Color(0xFFEEEEEE)),
-        errorWidget: (_, __, ___) => Image.asset(fallback, fit: BoxFit.cover),
-      );
-    }
-    return Image.asset(
-      image,
-      fit: BoxFit.cover,
-      errorBuilder: (_, __, ___) => Image.asset(fallback, fit: BoxFit.cover),
     );
   }
 }
@@ -753,10 +781,10 @@ class _EmptyStateButton extends StatelessWidget {
             const SizedBox(width: 6),
             Text(
               label,
-              style: TextStyle(
+              style: const TextStyle(
                 fontFamily: 'SF Pro',
                 fontWeight: FontWeight.w600,
-                fontSize: 11.sp,
+                fontSize: 13,
                 color: Color(0xFFCC3333),
               ),
             ),

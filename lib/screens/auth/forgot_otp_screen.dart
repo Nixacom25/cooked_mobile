@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter/services.dart';
 import '../../core/theme/app_theme.dart';
 import '../../routes/app_routes.dart';
@@ -126,7 +125,7 @@ class _ForgotOtpScreenState extends State<ForgotOtpScreen> {
                 children: [
                   Image.asset(
                     'assets/images/logo.png',
-                    width: 80.w,
+                    width: 100,
                     fit: BoxFit.contain,
                   ),
                 ],
@@ -173,8 +172,8 @@ class _ForgotOtpScreenState extends State<ForgotOtpScreen> {
                           Text(
                             'Please enter the code we just sent to\n${identifier ?? 'your contact details'}',
                             textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 13.sp,
+                            style: const TextStyle(
+                              fontSize: 17,
                               fontWeight: FontWeight.w600,
                               color: Colors.white,
                               fontFamily: 'SF Pro',
@@ -231,13 +230,13 @@ class _ForgotOtpScreenState extends State<ForgotOtpScreen> {
                                       strokeWidth: 1.5,
                                     ),
                                   )
-                                : Text(
+                                : const Text(
                                     'Resend code',
                                     style: TextStyle(
                                       color: Color(0xFFFFF6D6),
                                       fontFamily: 'SF Pro',
                                       fontWeight: FontWeight.w500,
-                                      fontSize: 11.sp,
+                                      fontSize: 14,
                                     ),
                                   ),
                           ),
@@ -245,7 +244,7 @@ class _ForgotOtpScreenState extends State<ForgotOtpScreen> {
 
                           SizedBox(
                             width: double.infinity,
-                            height: 42.h,
+                            height: 50,
                             child: ElevatedButton(
                               onPressed: _isLoading
                                   ? null
@@ -278,10 +277,10 @@ class _ForgotOtpScreenState extends State<ForgotOtpScreen> {
                                         strokeWidth: 2,
                                       ),
                                     )
-                                  : Text(
+                                  : const Text(
                                       'Continue',
                                       style: TextStyle(
-                                        fontSize: 13.sp,
+                                        fontSize: 16,
                                         fontWeight: FontWeight.w600,
                                         fontFamily: 'SF Pro',
                                       ),
@@ -311,8 +310,8 @@ class _ForgotOtpScreenState extends State<ForgotOtpScreen> {
                 GestureDetector(
                   onTap: () => Navigator.pop(context),
                   child: Container(
-                    width: 34.w,
-                    height: 34.h,
+                    width: 42,
+                    height: 42,
                     decoration: BoxDecoration(
                       color: Color(0xffF8F5EF),
                       borderRadius: BorderRadius.circular(12),
@@ -323,19 +322,19 @@ class _ForgotOtpScreenState extends State<ForgotOtpScreen> {
                         ),
                       ],
                     ),
-                    child: Icon(
+                    child: const Icon(
                       Icons.arrow_back_rounded,
-                      size: 18.sp,
+                      size: 24,
                       color: AppColors.textDark,
                     ),
                   ),
                 ),
-                Text(
+                const Text(
                   'VERIFICATION CODE',
                   style: TextStyle(
                     fontFamily: 'SF Pro',
                     fontWeight: FontWeight.w800,
-                    fontSize: 13.sp,
+                    fontSize: 14,
                     letterSpacing: 0.8,
                     color: AppColors.textDark,
                   ),
@@ -352,8 +351,8 @@ class _ForgotOtpScreenState extends State<ForgotOtpScreen> {
     return List.generate(to - from, (i) {
       final idx = from + i;
       return Container(
-        width: 34.w,
-        height: 36.h,
+        width: 40,
+        height: 43,
         margin: const EdgeInsets.symmetric(horizontal: 4),
         decoration: BoxDecoration(
           color: Colors.white,
@@ -369,8 +368,8 @@ class _ForgotOtpScreenState extends State<ForgotOtpScreen> {
             maxLength: 1,
             onChanged: (v) => _onChanged(v, idx),
             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-            style: TextStyle(
-              fontSize: 16.sp,
+            style: const TextStyle(
+              fontSize: 20,
               fontWeight: FontWeight.w800,
               fontFamily: 'SF Pro',
               color: AppColors.textDark,

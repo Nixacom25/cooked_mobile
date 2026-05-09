@@ -41,7 +41,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
           style: TextStyle(
             fontFamily: 'SF Pro',
             fontWeight: FontWeight.w600,
-            fontSize: 18.sp,
+            fontSize: 22.sp,
             color: const Color(0xFF1A1A1A),
           ),
         ),
@@ -77,13 +77,13 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                 child: Padding(
                   padding: EdgeInsets.symmetric(
                     horizontal: 20.w,
-                    vertical: 10.h,
+                    vertical: 16.h,
                   ),
                   child: Row(
                     children: [
                       Container(
-                        width: 50.w,
-                        height: 50.h,
+                        width: 60.w,
+                        height: 60.h,
                         decoration: BoxDecoration(
                           color: const Color(0xFFF5F5F5),
                           borderRadius: BorderRadius.circular(16.r),
@@ -128,7 +128,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                               style: TextStyle(
                                 fontFamily: 'SF Pro',
                                 fontWeight: FontWeight.w600,
-                                fontSize: 13.sp,
+                                fontSize: 16.sp,
                                 color: const Color(0xFF1A1A1A),
                               ),
                             ),
@@ -145,7 +145,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                                   '${r.cookTime} min',
                                   style: TextStyle(
                                     fontFamily: 'SF Pro',
-                                    fontSize: 11.sp,
+                                    fontSize: 13.sp,
                                     color: const Color(0xFFAAAAAA),
                                   ),
                                 ),
@@ -160,7 +160,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                                   '${r.kcal} kcal',
                                   style: TextStyle(
                                     fontFamily: 'SF Pro',
-                                    fontSize: 11.sp,
+                                    fontSize: 13.sp,
                                     color: const Color(0xFFAAAAAA),
                                   ),
                                 ),
@@ -172,7 +172,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                       Icon(
                         Icons.favorite,
                         color: const Color(0xFFC83A2D),
-                        size: 20.sp,
+                        size: 24.sp,
                       ),
                     ],
                   ),

@@ -27,28 +27,15 @@ class AppSearchField extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: backgroundColor ?? Colors.white.withValues(alpha: 0.8),
+        color: backgroundColor ?? Colors.white,
         borderRadius: BorderRadius.circular(50.r),
-        border: Border.all(
-          color: borderColor ?? const Color(0xFFE0E0E0).withValues(alpha: 0.5),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10.r,
-            offset: Offset(0, 2.h),
-          ),
-        ],
+        border: Border.all(color: borderColor ?? const Color(0xFFE0E0E0)),
       ),
-      padding: EdgeInsets.symmetric(horizontal: 16.w),
+      padding: EdgeInsets.symmetric(horizontal: 10.w),
       child: Row(
         children: [
-          Icon(
-            Icons.search_rounded,
-            size: 18.sp, 
-            color: const Color(0xFF9CA3AF),
-          ),
-          SizedBox(width: 8.w),
+          Icon(Icons.search_rounded, size: 30.sp, color: const Color(0xFFAAAAAA)),
+          SizedBox(width: 10.w),
           Expanded(
             child: TextField(
               controller: controller,
@@ -57,14 +44,14 @@ class AppSearchField extends StatelessWidget {
               textCapitalization: TextCapitalization.words,
               style: TextStyle(
                 fontFamily: 'SF Pro',
-                fontSize: 12.sp,
+                fontSize: 14.sp,
                 color: const Color(0xFF1A1A1A),
               ),
               decoration: InputDecoration(
                 hintText: hintText,
                 hintStyle: TextStyle(
                   fontFamily: 'SF Pro',
-                  fontSize: 12.sp,
+                  fontSize: 14.sp,
                   color: Colors.grey[400],
                 ),
                 filled: true,
@@ -85,7 +72,7 @@ class AppSearchField extends StatelessWidget {
                 padding: EdgeInsets.only(left: 8.w),
                 child: Icon(
                   suffixIcon,
-                  size: 18.sp, 
+                  size: 22.sp,
                   color: const Color(0xFFCC3333),
                 ),
               ),

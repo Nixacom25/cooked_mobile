@@ -128,31 +128,30 @@ class _DietaryPreferencesStepState extends State<DietaryPreferencesStep> {
           Text(
             "What's your dietary profile?",
             style: TextStyle(
-              fontSize: 16.sp,
-              fontWeight: FontWeight.w800,
+              fontSize: 24.sp,
+              fontWeight: FontWeight.w900,
               color: const Color(0xFF0D1B3E),
               fontFamily: 'SF Pro',
               height: 1.2,
-              letterSpacing: -0.5,
             ),
           ),
-          SizedBox(height: 6.h),
+          SizedBox(height: 8.h),
           Text(
             'Select all that apply',
             style: TextStyle(
-              fontSize: 10.sp,
+              fontSize: 14.sp,
               color: const Color(0xFF7B8190),
               fontFamily: 'SF Pro',
             ),
           ),
-          SizedBox(height: 24.h),
+          SizedBox(height: 32.h),
           GridView.count(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             crossAxisCount: 2,
-            crossAxisSpacing: 12.w,
-            mainAxisSpacing: 12.h,
-            childAspectRatio: 1.6,
+            crossAxisSpacing: 16.w,
+            mainAxisSpacing: 16.h,
+            childAspectRatio: 1.3,
             children: _options.map((option) {
               final isSelected = _selectedDiet.contains(option.title);
 
@@ -160,20 +159,20 @@ class _DietaryPreferencesStepState extends State<DietaryPreferencesStep> {
                 onTap: () => _toggleOption(option.title),
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
-                  padding: EdgeInsets.all(12.r),
+                  padding: EdgeInsets.all(16.r),
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(12.r),
+                    borderRadius: BorderRadius.circular(20.r),
                     border: Border.all(
                       color: isSelected
                           ? const Color(0xFFC83A2D)
                           : const Color(0xFFE5E7EB).withOpacity(0.5),
-                      width: isSelected ? 1.5 : 1,
+                      width: isSelected ? 2 : 1.5,
                     ),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withOpacity(0.04),
-                        blurRadius: 10.r,
+                        blurRadius: 12.r,
                         offset: Offset(0, 4.h),
                       ),
                     ],
@@ -183,8 +182,8 @@ class _DietaryPreferencesStepState extends State<DietaryPreferencesStep> {
                     children: [
                       SvgPicture.asset(
                         'assets/icones/${option.icon}',
-                        height: 20.h,
-                        width: 20.w,
+                        height: 32.h,
+                        width: 32.w,
                         placeholderBuilder: (context) => SizedBox(
                           height: 32.h,
                           width: 32.w,
@@ -198,8 +197,8 @@ class _DietaryPreferencesStepState extends State<DietaryPreferencesStep> {
                         option.title,
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          fontSize: 10.sp,
-                          fontWeight: FontWeight.w700,
+                          fontSize: 14.sp,
+                          fontWeight: FontWeight.w800,
                           fontFamily: 'SF Pro',
                           color: isSelected
                               ? const Color(0xFF0D1B3E)
@@ -211,7 +210,7 @@ class _DietaryPreferencesStepState extends State<DietaryPreferencesStep> {
                         option.description,
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          fontSize: 10.sp,
+                          fontSize: 11.sp,
                           fontWeight: FontWeight.w500,
                           fontFamily: 'SF Pro',
                           color: const Color(0xFF9CA3AF),

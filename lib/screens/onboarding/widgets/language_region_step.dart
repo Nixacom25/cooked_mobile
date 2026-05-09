@@ -80,25 +80,24 @@ class _LanguageRegionStepState extends State<LanguageRegionStep> {
           Text(
             'Language & Region',
             style: TextStyle(
-              fontSize: 16.sp,
-              fontWeight: FontWeight.w800,
-              color: const Color(0xFF0D1B3E),
+              fontSize: 24.sp,
+              fontWeight: FontWeight.w900,
+              color: const Color(0xFF0D1B36),
               fontFamily: 'SF Pro',
               height: 1.2,
-              letterSpacing: -0.5,
             ),
           ),
-          SizedBox(height: 6.h),
+          SizedBox(height: 8.h),
           Text(
             "We'll use this to suggest local recipes and ingredients available near you",
             style: TextStyle(
-              fontSize: 10.sp,
+              fontSize: 14.sp,
               color: const Color(0xFF7B8190),
               fontFamily: 'SF Pro',
               height: 1.5,
             ),
           ),
-          SizedBox(height: 32.h),
+          SizedBox(height: 40.h),
 
           _buildLabel('Language'),
           SizedBox(height: 8.h),
@@ -137,9 +136,9 @@ class _LanguageRegionStepState extends State<LanguageRegionStep> {
             },
           ),
 
-          SizedBox(height: 24.h),
+          SizedBox(height: 32.h),
           Container(
-            padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 8.h),
+            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
             decoration: BoxDecoration(
               color: const Color(0xFFF8F5EF),
               borderRadius: BorderRadius.circular(12.r),
@@ -152,7 +151,7 @@ class _LanguageRegionStepState extends State<LanguageRegionStep> {
               ? 'Imperial (cups, oz, °F)'
               : 'Metric (grams, ml, °C)'} ',
                     style: TextStyle(
-                      fontSize: 10.sp,
+                      fontSize: 12.sp,
                       color: const Color(0xFF7B8190),
                       fontFamily: 'SF Pro',
                     ),
@@ -163,7 +162,7 @@ class _LanguageRegionStepState extends State<LanguageRegionStep> {
           ),
           SizedBox(height: 8.h),
           _buildMeasurementSelector(),
-          SizedBox(height: 32.h),
+          SizedBox(height: 48.h),
         ],
       ),
     );
@@ -172,8 +171,8 @@ class _LanguageRegionStepState extends State<LanguageRegionStep> {
   Widget _buildMeasurementSelector() {
     return Container(
       width: double.infinity,
-      height: 44.h,
-      padding: EdgeInsets.all(5.r),
+      height: 56.h,
+      padding: EdgeInsets.all(7.r),
       decoration: BoxDecoration(
         color: const Color(0xFFF9F7F2),
         borderRadius: BorderRadius.circular(50.r),
@@ -217,7 +216,7 @@ class _LanguageRegionStepState extends State<LanguageRegionStep> {
           textAlign: TextAlign.center,
           style: TextStyle(
             fontFamily: 'SF Pro',
-            fontSize: 9.sp,
+            fontSize: 12.sp,
             fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
             color: isSelected ? Colors.white : const Color(0xFF7B8190),
           ),
@@ -230,9 +229,9 @@ class _LanguageRegionStepState extends State<LanguageRegionStep> {
     return Text(
       text,
       style: TextStyle(
-        fontSize: 10.sp,
-        fontWeight: FontWeight.w700,
-        color: const Color(0xFF111827),
+        fontSize: 14.sp,
+        fontWeight: FontWeight.w600,
+        color: const Color(0xFF7B8190),
         fontFamily: 'SF Pro',
       ),
     );
@@ -263,10 +262,10 @@ class _LanguageRegionStepState extends State<LanguageRegionStep> {
               return PopupMenuItem<String>(
                 value: item,
                 padding: EdgeInsets.zero,
-                height: 48.h,
+                height: 56.h,
                 child: Container(
                   width: double.infinity,
-                  height: 48.h,
+                  height: 56.h,
                   padding: EdgeInsets.symmetric(horizontal: 16.w),
                   alignment: Alignment.centerLeft,
                   decoration: BoxDecoration(
@@ -276,7 +275,7 @@ class _LanguageRegionStepState extends State<LanguageRegionStep> {
                     item,
                     style: TextStyle(
                       fontFamily: 'SF Pro',
-                      fontSize: 10.sp,
+                      fontSize: 14.sp,
                       fontWeight: isSelected
                           ? FontWeight.w700
                           : FontWeight.w500,
@@ -288,7 +287,7 @@ class _LanguageRegionStepState extends State<LanguageRegionStep> {
             }).toList();
           },
           child: Container(
-            height: 48.h,
+            height: 56.h,
             padding: EdgeInsets.symmetric(horizontal: 16.w),
             decoration: BoxDecoration(
               color: Colors.white,
@@ -301,8 +300,9 @@ class _LanguageRegionStepState extends State<LanguageRegionStep> {
                   child: Text(
                     value,
                     style: TextStyle(
-                      fontSize: 10.sp,
-                      fontWeight: FontWeight.w700,
+                      fontFamily: 'SF Pro',
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.w600,
                       color: const Color(0xFF1A1A1A),
                     ),
                   ),
@@ -310,7 +310,7 @@ class _LanguageRegionStepState extends State<LanguageRegionStep> {
                 Icon(
                   Icons.keyboard_arrow_down_rounded,
                   color: const Color(0xFF1A1A1A),
-                  size: 20.sp,
+                  size: 24.sp,
                 ),
               ],
             ),

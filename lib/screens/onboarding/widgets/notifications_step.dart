@@ -42,24 +42,23 @@ class _NotificationsStepState extends State<NotificationsStep> {
           Text(
             'Stay inspired with notifications',
             style: TextStyle(
-              fontSize: 16.sp,
-              fontWeight: FontWeight.w800,
+              fontSize: 24.sp,
+              fontWeight: FontWeight.w900,
               color: const Color(0xFF0D1B3E),
               fontFamily: 'SF Pro',
               height: 1.2,
-              letterSpacing: -0.5,
             ),
           ),
-          SizedBox(height: 6.h),
+          SizedBox(height: 8.h),
           Text(
             'Choose what you\'d like to hear about',
             style: TextStyle(
-              fontSize: 10.sp,
+              fontSize: 14.sp,
               color: const Color(0xFF7B8190),
               fontFamily: 'SF Pro',
             ),
           ),
-          SizedBox(height: 24.h),
+          SizedBox(height: 32.h),
           ..._options.map((opt) => _buildToggleItem(opt)),
           SizedBox(height: 16.h),
           SizedBox(
@@ -91,8 +90,8 @@ class _NotificationsStepState extends State<NotificationsStep> {
                 _selected.isEmpty ? 'Turn on all' : 'Turn off all',
                 style: TextStyle(
                   fontFamily: 'SF Pro',
-                  fontSize: 14.sp,
-                  fontWeight: FontWeight.w800,
+                  fontSize: 15.sp,
+                  fontWeight: FontWeight.w700,
                   color: _selected.isEmpty
                       ? const Color(0xFF1A1A1A)
                       : const Color(0xFFC83A2D),
@@ -117,7 +116,7 @@ class _NotificationsStepState extends State<NotificationsStep> {
                     'You can adjust these anytime in your settings',
                     style: TextStyle(
                       fontFamily: 'SF Pro',
-                      fontSize: 11.sp,
+                      fontSize: 12.sp,
                       color: const Color(0xFF854D0E),
                     ),
                   ),
@@ -169,7 +168,7 @@ class _NotificationsStepState extends State<NotificationsStep> {
                       opt['title']!,
                       style: TextStyle(
                         fontFamily: 'SF Pro',
-                        fontSize: 12.sp,
+                        fontSize: 14.sp,
                         fontWeight: FontWeight.w700,
                         color: const Color(0xFF1A1A1A),
                       ),
@@ -179,7 +178,7 @@ class _NotificationsStepState extends State<NotificationsStep> {
                       opt['subtitle']!,
                       style: TextStyle(
                         fontFamily: 'SF Pro',
-                        fontSize: 11.sp,
+                        fontSize: 12.sp,
                         color: const Color(0xFF7B8190),
                       ),
                     ),

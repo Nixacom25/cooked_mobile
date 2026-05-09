@@ -94,32 +94,31 @@ class _CuisinesStepState extends State<CuisinesStep> {
           Text(
             'Which cuisines do you love?',
             style: TextStyle(
-              fontSize: 16.sp,
-              fontWeight: FontWeight.w800,
+              fontSize: 24.sp,
+              fontWeight: FontWeight.w900,
               color: const Color(0xFF0D1B3E),
               fontFamily: 'SF Pro',
               height: 1.2,
-              letterSpacing: -0.5,
             ),
           ),
-          SizedBox(height: 6.h),
+          SizedBox(height: 8.h),
           Text(
             'Select your favorites',
             style: TextStyle(
-              fontSize: 10.sp,
+              fontSize: 14.sp,
               color: const Color(0xFF7B8190),
               fontFamily: 'SF Pro',
             ),
           ),
-          SizedBox(height: 16.h),
+          SizedBox(height: 25.h),
           GridView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
-              crossAxisSpacing: 12.w,
-              mainAxisSpacing: 12.h,
-              childAspectRatio: 1.5,
+              crossAxisSpacing: 16.w,
+              mainAxisSpacing: 16.h,
+              childAspectRatio: 1.15,
             ),
             itemCount: _cuisines.length,
             itemBuilder: (context, index) {
@@ -132,9 +131,10 @@ class _CuisinesStepState extends State<CuisinesStep> {
           Text(
             'Specify other cuisines',
             style: TextStyle(
-              fontSize: 10.sp,
-              fontWeight: FontWeight.w700,
-              color: const Color(0xFF111827),
+              fontFamily: 'SF Pro',
+              fontSize: 14.sp,
+              fontWeight: FontWeight.w600,
+              color: const Color(0xFF7B8190),
             ),
           ),
           SizedBox(height: 8.h),
@@ -151,20 +151,18 @@ class _CuisinesStepState extends State<CuisinesStep> {
               textCapitalization: TextCapitalization.words,
               style: TextStyle(
                 fontFamily: 'SF Pro',
-                fontSize: 12.sp,
-                fontWeight: FontWeight.w600,
+                fontSize: 14.sp,
                 color: const Color(0xFF1A1A1A),
               ),
               decoration: InputDecoration(
                 hintText: 'Enter a cuisine and press Enter',
                 hintStyle: TextStyle(
                   fontFamily: 'SF Pro',
-                  fontSize: 12.sp,
-                  fontWeight: FontWeight.w400,
+                  fontSize: 14.sp,
                   color: Colors.grey[400],
                 ),
                 border: InputBorder.none,
-                contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+                contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
                 suffixIcon: IconButton(
                   icon: const Icon(Icons.add_rounded, color: Color(0xFFC83A2D)),
                   onPressed: _addCustomCuisine,
@@ -177,23 +175,12 @@ class _CuisinesStepState extends State<CuisinesStep> {
             Wrap(
               spacing: 8.w,
               runSpacing: 8.h,
-              children: customCuisines.map((c) => Container(
-                padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 5.h),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFC83A2D),
-                  borderRadius: BorderRadius.circular(20.r),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(c, style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 9.sp)),
-                    SizedBox(width: 4.w),
-                    GestureDetector(
-                      onTap: () => _removeCuisine(c),
-                      child: Icon(Icons.close, size: 12.sp, color: Colors.white),
-                    ),
-                  ],
-                ),
+              children: customCuisines.map((c) => Chip(
+                label: Text(c, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                backgroundColor: const Color(0xFFC83A2D),
+                deleteIcon: const Icon(Icons.close, size: 14, color: Colors.white),
+                onDeleted: () => _removeCuisine(c),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.r)),
               )).toList(),
             ),
           ],
@@ -259,12 +246,13 @@ class _CuisinesStepState extends State<CuisinesStep> {
               ),
             ),
             Container(
-              padding: EdgeInsets.symmetric(vertical: 6.h),
+              padding: EdgeInsets.symmetric(vertical: 8.h),
               child: Text(
                 cuisine['title']!,
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontSize: 9.sp,
+                  fontFamily: 'SF Pro',
+                  fontSize: 12.sp,
                   fontWeight: FontWeight.w700,
                   color: const Color(0xFF0D1B3E),
                 ),

@@ -25,9 +25,8 @@ class CookbookCover extends StatelessWidget {
       width: width ?? double.infinity,
       height: height ?? double.infinity,
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(15.r),
-        border: Border.all(color: const Color(0xFFF2F1EF)),
+        color: const Color(0xFFF3F4F6),
+        borderRadius: BorderRadius.circular(16.r),
       ),
       clipBehavior: Clip.antiAlias,
       child: _buildCoverContent(recipes),
@@ -40,9 +39,24 @@ class CookbookCover extends StatelessWidget {
     final int count = recipesWithImages.length;
     
     if (count == 0) {
-      return Image.asset(
-        'assets/images/recipes.png',
-        fit: BoxFit.contain,
+      // Premium placeholder for empty cookbook
+      return Container(
+        color: const Color(0xFFF9FAFB),
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Image.asset(
+                'assets/images/cookbook.png',
+                width: 60.w,
+                height: 60.h,
+                fit: BoxFit.contain,
+                color: const Color(0xFFCC3333).withValues(alpha: 0.1),
+                colorBlendMode: BlendMode.srcIn,
+              ),
+            ],
+          ),
+        ),
       );
     }
     
@@ -53,7 +67,7 @@ class CookbookCover extends StatelessWidget {
           flex: 3,
           child: _buildImage(count > 0 ? recipesWithImages[0].image : null),
         ),
-        Container(width: 1, color: Colors.white),
+        Container(width: 1.5, color: Colors.white),
         // Right - Two small images stacked
         Expanded(
           flex: 2,
@@ -62,7 +76,7 @@ class CookbookCover extends StatelessWidget {
               Expanded(
                 child: _buildImage(count > 1 ? recipesWithImages[1].image : null),
               ),
-              Container(height: 1, color: Colors.white),
+              Container(height: 1.5, color: Colors.white),
               Expanded(
                 child: _buildImage(count > 2 ? recipesWithImages[2].image : null),
               ),
@@ -75,15 +89,14 @@ class CookbookCover extends StatelessWidget {
 
   Widget _buildImage(String? imageUrl) {
     if (imageUrl == null || imageUrl.isEmpty) {
-      return Image.asset(
-        'assets/images/recipes.png',
-        fit: BoxFit.contain,
+      return Container(
+        color: const Color(0xFFF2EFED),
       );
     }
 
     return CachedNetworkImage(
       imageUrl: imageUrl,
-      fit: BoxFit.contain,
+      fit: BoxFit.cover,
       errorWidget: (_, __, ___) =>
           Image.asset('assets/images/recipes.png', fit: BoxFit.contain),
       placeholder: (_, __) => Container(

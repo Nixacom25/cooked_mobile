@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
 import '../../core/theme/app_theme.dart';
 import '../../routes/app_routes.dart';
@@ -90,7 +89,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             child: Center(
               child: Image.asset(
                 'assets/images/logo.png',
-                width: 80.w,
+                width: 100,
                 fit: BoxFit.contain,
               ),
             ),
@@ -164,8 +163,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     }
                   },
                   child: Container(
-                    width: 34.w,
-                    height: 34.h,
+                    width: 42,
+                    height: 42,
                     decoration: BoxDecoration(
                       color: Color(0xffF8F5EF),
                       borderRadius: BorderRadius.circular(12),
@@ -176,19 +175,19 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                         ),
                       ],
                     ),
-                    child: Icon(
+                    child: const Icon(
                       Icons.arrow_back_rounded,
-                      size: 18.sp,
+                      size: 24,
                       color: AppColors.textDark,
                     ),
                   ),
                 ),
-                Text(
+                const Text(
                   'FORGOT PASSWORD',
                   style: TextStyle(
                     fontFamily: 'SF Pro',
                     fontWeight: FontWeight.w800,
-                    fontSize: 13.sp,
+                    fontSize: 16,
                     letterSpacing: 0.8,
                     color: AppColors.textDark,
                   ),
@@ -209,11 +208,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
+          const Text(
             'Select which contact details should\nwe use to reset your password',
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: 11.sp,
+              fontSize: 18,
               fontWeight: FontWeight.w700,
               color: Colors.white,
               fontFamily: 'SF Pro',
@@ -253,7 +252,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           // Continue btn
           SizedBox(
             width: double.infinity,
-            height: 42.h,
+            height: 50,
             child: ElevatedButton(
               onPressed: _onContinue,
               style: ElevatedButton.styleFrom(
@@ -264,10 +263,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 ),
                 elevation: 0,
               ),
-              child: Text(
+              child: const Text(
                 'Continue',
                 style: TextStyle(
-                  fontSize: 13.sp,
+                  fontSize: 16,
                   fontWeight: FontWeight.w600,
                   fontFamily: 'SF Pro',
                 ),
@@ -295,8 +294,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   ? 'Please enter the email, we  will send a\nverification code to your email'
                   : 'Please enter the phone number,\n we  will send a verification\ncode to your phone number',
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 11.sp,
+              style: const TextStyle(
+                fontSize: 17,
                 fontWeight: FontWeight.w700,
                 color: Colors.white,
                 fontFamily: 'SF Pro',
@@ -308,11 +307,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
           Text(
             isEmail ? 'Email' : 'Phone Number',
-            style: TextStyle(
+            style: const TextStyle(
               color: Colors.white,
               fontFamily: 'SF Pro',
               fontWeight: FontWeight.w600,
-              fontSize: 11.sp,
+              fontSize: 14,
             ),
           ),
           const SizedBox(height: 8),
@@ -330,7 +329,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
           SizedBox(
             width: double.infinity,
-            height: 42.h,
+            height: 50,
             child: ElevatedButton(
               onPressed: _isLoading ? null : _onContinue,
               style: ElevatedButton.styleFrom(
@@ -350,10 +349,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                         strokeWidth: 2,
                       ),
                     )
-                  : Text(
+                  : const Text(
                       'Send',
                       style: TextStyle(
-                        fontSize: 13.sp,
+                        fontSize: 16,
                         fontWeight: FontWeight.w600,
                         fontFamily: 'SF Pro',
                       ),
@@ -390,7 +389,7 @@ class _ContactCard extends StatelessWidget {
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 12.h),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
@@ -402,14 +401,14 @@ class _ContactCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(icon, color: iconColor, size: 22.sp),
+            Icon(icon, color: iconColor, size: 28),
             const SizedBox(height: 12),
             Text(
               title,
-              style: TextStyle(
+              style: const TextStyle(
                 fontFamily: 'SF Pro',
                 fontWeight: FontWeight.w700,
-                fontSize: 12.sp,
+                fontSize: 14,
                 color: AppColors.textDark,
               ),
             ),
@@ -418,7 +417,7 @@ class _ContactCard extends StatelessWidget {
               subtitle,
               style: TextStyle(
                 fontFamily: 'SF Pro',
-                fontSize: 10.sp,
+                fontSize: 12,
                 color: AppColors.textMuted,
               ),
             ),
@@ -443,13 +442,13 @@ class _EmailField extends StatelessWidget {
       child: TextField(
         controller: controller,
         keyboardType: TextInputType.emailAddress,
-        style: TextStyle(fontFamily: 'SF Pro', fontSize: 13.sp),
+        style: const TextStyle(fontFamily: 'SF Pro', fontSize: 14),
         decoration: InputDecoration(
           hintText: 'Full Email',
-          hintStyle: TextStyle(
+          hintStyle: const TextStyle(
             color: AppColors.textMuted,
             fontFamily: 'SF Pro',
-            fontSize: 13.sp,
+            fontSize: 14,
           ),
           filled: true,
           fillColor: Colors.white,
@@ -471,9 +470,9 @@ class _EmailField extends StatelessWidget {
             fontSize: 12,
             fontFamily: 'SF Pro',
           ),
-          contentPadding: EdgeInsets.symmetric(
-            horizontal: 10.w,
-            vertical: 8.h,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 10,
+            vertical: 10,
           ),
         ),
       ),
@@ -499,16 +498,16 @@ class _PhoneField extends StatelessWidget {
       controller: controller,
       decoration: InputDecoration(
         hintText: 'XX XXX XX XX',
-        hintStyle: TextStyle(
+        hintStyle: const TextStyle(
           color: AppColors.textMuted,
           fontFamily: 'SF Pro',
-          fontSize: 13.sp,
+          fontSize: 14,
         ),
         filled: true,
         fillColor: Colors.white,
-        contentPadding: EdgeInsets.symmetric(
-          horizontal: 16.w,
-          vertical: 10.h,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 16,
         ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
@@ -533,15 +532,15 @@ class _PhoneField extends StatelessWidget {
       onChanged: (phone) {
         onChanged(phone.completeNumber);
       },
-      style: TextStyle(
+      style: const TextStyle(
         fontFamily: 'SF Pro',
-        fontSize: 13.sp,
+        fontSize: 14,
         color: Colors.black,
       ),
-      dropdownIcon: Icon(
+      dropdownIcon: const Icon(
         Icons.keyboard_arrow_down_rounded,
         color: AppColors.textMuted,
-        size: 18.sp,
+        size: 20,
       ),
       flagsButtonPadding: const EdgeInsets.only(left: 8),
       flagsButtonMargin: const EdgeInsets.only(right: 8),

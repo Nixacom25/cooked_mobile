@@ -38,20 +38,19 @@ class _ProfileRatingStepState extends State<ProfileRatingStep> {
           Text(
             'You\'re almost ready, ${widget.firstName.isNotEmpty ? widget.firstName[0].toLowerCase() : 'r'}!',
             style: TextStyle(
-              fontSize: 16.sp,
-              fontWeight: FontWeight.w800,
+              fontSize: 28.sp,
+              fontWeight: FontWeight.w900,
               color: const Color(0xFF0D1B3E),
               fontFamily: 'SF Pro',
               height: 1.2,
-              letterSpacing: -0.5,
             ),
           ),
-          SizedBox(height: 6.h),
+          SizedBox(height: 8.h),
           Text(
             'Quick question before we begin..',
             style: TextStyle(
-              fontSize: 10.sp,
-              color: const Color(0xFF9CA3AF),
+              fontSize: 15.sp,
+              color: const Color(0xFF7B8190),
               fontFamily: 'SF Pro',
             ),
           ),
@@ -59,7 +58,7 @@ class _ProfileRatingStepState extends State<ProfileRatingStep> {
           Text(
             'How are you feeling about Cooked so far?',
             style: TextStyle(
-              fontSize: 16.sp,
+              fontSize: 18.sp,
               fontWeight: FontWeight.w700,
               color: const Color(0xFF1A1A1A),
               fontFamily: 'SF Pro',
@@ -100,7 +99,7 @@ class _ProfileRatingStepState extends State<ProfileRatingStep> {
               child: Text(
                 'Skip for now',
                 style: TextStyle(
-                  fontSize: 15.sp,
+                  fontSize: 16.sp,
                   fontWeight: FontWeight.w700,
                   color: const Color(0xFF1A1A1A),
                   fontFamily: 'SF Pro',

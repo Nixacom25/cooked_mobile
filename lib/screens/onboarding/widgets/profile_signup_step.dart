@@ -29,24 +29,23 @@ class ProfileSignupStep extends StatelessWidget {
           Text(
             'Save your profile,',
             style: TextStyle(
-              fontSize: 15.sp,
-              fontWeight: FontWeight.w800,
+              fontSize: 24.sp,
+              fontWeight: FontWeight.w900,
               color: const Color(0xFF0D1B3E),
               fontFamily: 'SF Pro',
               height: 1.2,
-              letterSpacing: -0.5,
             ),
           ),
-          SizedBox(height: 6.h),
+          SizedBox(height: 8.h),
           Text(
             'Your 22-step profile is ready to save',
             style: TextStyle(
-              fontSize: 10.sp,
+              fontSize: 14.sp,
               color: const Color(0xFF7B8190),
               fontFamily: 'SF Pro',
             ),
           ),
-          SizedBox(height: 24.h),
+          SizedBox(height: 32.h),
           Container(
             padding: EdgeInsets.all(12.r),
             decoration: BoxDecoration(
@@ -60,7 +59,7 @@ class ProfileSignupStep extends StatelessWidget {
                   child: Text(
                     'Pick up exactly where you left off on any device',
                     style: TextStyle(
-                      fontSize: 11.sp,
+                      fontSize: 13.sp,
                       color: const Color(0xFF6B7280),
                       fontFamily: 'SF Pro',
                     ),
@@ -108,9 +107,9 @@ class ProfileSignupStep extends StatelessWidget {
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.white,
             foregroundColor: Colors.black,
-            padding: EdgeInsets.symmetric(vertical: 10.h),
+            padding: EdgeInsets.symmetric(vertical: 18.h),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(50),
+              borderRadius: BorderRadius.circular(50.r),
               side: BorderSide(
                 color: isEnabled ? const Color(0xFFC83A2D) : Colors.grey,
               ),
@@ -122,11 +121,11 @@ class ProfileSignupStep extends StatelessWidget {
             children: [
               SvgPicture.asset(
                 'assets/icones/$icon',
-                height: 18.sp,
-                width: 18.sp,
+                height: 24.sp,
+                width: 24.sp,
                 placeholderBuilder: (context) => SizedBox(
-                  height: 18.sp,
-                  width: 18.sp,
+                  height: 24.sp,
+                  width: 24.sp,
                   child: const CircularProgressIndicator(strokeWidth: 2),
                 ),
               ),
@@ -134,8 +133,8 @@ class ProfileSignupStep extends StatelessWidget {
               Text(
                 isEnabled ? label : '$label (Soon)',
                 style: TextStyle(
-                  fontSize: 13.sp,
-                  fontWeight: FontWeight.w800,
+                  fontSize: 16.sp,
+                  fontWeight: FontWeight.w700,
                   fontFamily: 'SF Pro',
                   color: isEnabled ? Colors.black : Colors.grey,
                 ),

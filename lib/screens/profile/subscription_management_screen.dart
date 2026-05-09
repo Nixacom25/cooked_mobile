@@ -179,7 +179,7 @@ class _SubscriptionManagementScreenState
                               : 'Renew Monthly - $_monthlyPrice',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
-                            fontSize: 13.sp,
+                            fontSize: 18.sp,
                           ),
                         ),
                       ),
@@ -239,7 +239,7 @@ class _SubscriptionManagementScreenState
       appBar: AppBar(
         title: Text(
           'My Subscription',
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15.sp),
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18.sp),
         ),
         backgroundColor: Colors.white,
         elevation: 0,
@@ -250,7 +250,7 @@ class _SubscriptionManagementScreenState
               child: CircularProgressIndicator(color: Color(0xFFC83A2D)),
             )
           : SingleChildScrollView(
-              padding: EdgeInsets.all(16.h),
+              padding: EdgeInsets.all(24.r),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -258,7 +258,7 @@ class _SubscriptionManagementScreenState
                   SizedBox(height: 32.h),
                   Text(
                     'Subscription Details',
-                    style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.bold),
+                    style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
                   ),
                   SizedBox(height: 16.h),
                   _buildDetailRow(
@@ -280,7 +280,7 @@ class _SubscriptionManagementScreenState
                   SizedBox(height: 32.h),
                   SizedBox(
                     width: double.infinity,
-                    height: 42.h,
+                    height: 56.h,
                     child: ElevatedButton(
                       onPressed: _showRenewalSheet,
                       style: ElevatedButton.styleFrom(
@@ -294,7 +294,7 @@ class _SubscriptionManagementScreenState
                         'Renew or Upgrade',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          fontSize: 13.sp,
+                          fontSize: 18.sp,
                         ),
                       ),
                     ),
@@ -302,7 +302,7 @@ class _SubscriptionManagementScreenState
                   SizedBox(height: 48.h),
                   Text(
                     'Payment History',
-                    style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.bold),
+                    style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
                   ),
                   SizedBox(height: 16.h),
                   if (_history.isEmpty)
@@ -324,10 +324,10 @@ class _SubscriptionManagementScreenState
     final isExpired = status == 'EXPIRED';
 
     return Container(
-      padding: EdgeInsets.all(16.h),
+      padding: EdgeInsets.all(24.r),
       decoration: BoxDecoration(
         color: const Color(0xFFF9FAFB),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20.r),
         border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Column(
@@ -339,7 +339,7 @@ class _SubscriptionManagementScreenState
               Text(
                 isTrial ? 'Free Trial' : 'Premium Plan',
                 style: TextStyle(
-                  fontSize: 15.sp,
+                  fontSize: 20.sp,
                   fontWeight: FontWeight.w900,
                   color: const Color(0xFF0D1B36),
                 ),
@@ -360,7 +360,7 @@ class _SubscriptionManagementScreenState
                   style: TextStyle(
                     color: isExpired ? Colors.red : Colors.green,
                     fontWeight: FontWeight.bold,
-                    fontSize: 10.sp,
+                    fontSize: 12.sp,
                   ),
                 ),
               ),
@@ -383,7 +383,7 @@ class _SubscriptionManagementScreenState
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   color: const Color(0xFF4B5563),
-                  fontSize: 11.sp,
+                  fontSize: 14.sp,
                 ),
               ),
             ],
@@ -411,11 +411,11 @@ class _SubscriptionManagementScreenState
         children: [
           Text(
             label,
-            style: TextStyle(color: const Color(0xFF6B7280), fontSize: 13.sp),
+            style: TextStyle(color: const Color(0xFF6B7280), fontSize: 16.sp),
           ),
           Text(
             value,
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.sp),
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16.sp),
           ),
         ],
       ),
@@ -437,10 +437,10 @@ class _SubscriptionManagementScreenState
     
     return Container(
       margin: EdgeInsets.only(bottom: 16.h),
-      padding: EdgeInsets.all(12),
+      padding: EdgeInsets.all(20.r),
       decoration: BoxDecoration(
         color: const Color(0xFF161616),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20.r),
         border: Border.all(color: const Color(0xFF222222)),
         boxShadow: [
           BoxShadow(
@@ -478,7 +478,7 @@ class _SubscriptionManagementScreenState
                         style: TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.w800,
-                          fontSize: 13.sp,
+                          fontSize: 15.sp,
                           letterSpacing: 0.5,
                         ),
                       ),
@@ -486,7 +486,7 @@ class _SubscriptionManagementScreenState
                         _formatDate(payment.createdAt.toIso8601String()),
                         style: TextStyle(
                           color: Colors.white38,
-                          fontSize: 10.sp,
+                          fontSize: 12.sp,
                         ),
                       ),
                     ],
@@ -518,14 +518,14 @@ class _SubscriptionManagementScreenState
             children: [
               Text(
                 'Revenue',
-                style: TextStyle(color: Colors.white38, fontSize: 11.sp),
+                style: TextStyle(color: Colors.white38, fontSize: 13.sp),
               ),
               Text(
                 '\$${payment.amount.toStringAsFixed(2)}',
                 style: TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.w900,
-                  fontSize: 13.sp,
+                  fontSize: 16.sp,
                 ),
               ),
             ],

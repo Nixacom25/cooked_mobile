@@ -32,7 +32,7 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
           style: TextStyle(
             fontFamily: 'SF Pro',
             fontWeight: FontWeight.w600,
-            fontSize: 18.sp,
+            fontSize: 22.sp,
             color: const Color(0xFF1A1A1A),
           ),
         ),
@@ -93,21 +93,21 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
               return Container(
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(16.r),
                   border: Border.all(color: const Color(0xFFEEEEEE), width: 1.w),
                 ),
-                padding: EdgeInsets.all(12),
+                padding: EdgeInsets.all(16.r),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Container(
-                      width: 40.w,
-                      height: 40.h,
+                      width: 50.w,
+                      height: 50.h,
                       decoration: BoxDecoration(
                         color: iconColor.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(12.r),
                       ),
-                      child: Icon(icon, color: iconColor, size: 20.sp),
+                      child: Icon(icon, color: iconColor, size: 24.sp),
                     ),
                     SizedBox(width: 16.w),
                     Expanded(
@@ -119,7 +119,7 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
                             style: TextStyle(
                               fontFamily: 'SF Pro',
                               fontWeight: FontWeight.w600,
-                              fontSize: 13.sp,
+                              fontSize: 16.sp,
                               color: const Color(0xFF1A1A1A),
                             ),
                           ),
@@ -128,7 +128,7 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
                             log.message,
                             style: TextStyle(
                               fontFamily: 'SF Pro',
-                              fontSize: 11.sp,
+                              fontSize: 14.sp,
                               color: const Color(0xFF6B7280),
                             ),
                           ),
@@ -137,7 +137,7 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
                             dateStr,
                             style: TextStyle(
                               fontFamily: 'SF Pro',
-                              fontSize: 10.sp,
+                              fontSize: 12.sp,
                               color: const Color(0xFFCCCCCC),
                             ),
                           ),

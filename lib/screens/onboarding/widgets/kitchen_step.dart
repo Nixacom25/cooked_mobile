@@ -96,32 +96,31 @@ class _KitchenStepState extends State<KitchenStep> {
           Text(
             'What\'s in your kitchen?',
             style: TextStyle(
-              fontSize: 16.sp,
-              fontWeight: FontWeight.w800,
+              fontSize: 24.sp,
+              fontWeight: FontWeight.w900,
               color: const Color(0xFF0D1B3E),
               fontFamily: 'SF Pro',
               height: 1.2,
-              letterSpacing: -0.5,
             ),
           ),
-          SizedBox(height: 6.h),
+          SizedBox(height: 8.h),
           Text(
             'Select your equipment',
             style: TextStyle(
-              fontSize: 10.sp,
+              fontSize: 14.sp,
               color: const Color(0xFF7B8190),
               fontFamily: 'SF Pro',
             ),
           ),
-          SizedBox(height: 24.h),
+          SizedBox(height: 32.h),
           GridView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
-              crossAxisSpacing: 12.w,
-              mainAxisSpacing: 12.h,
-              childAspectRatio: 1.8,
+              crossAxisSpacing: 16.w,
+              mainAxisSpacing: 16.h,
+              childAspectRatio: 1.5,
             ),
             itemCount: _appliances.length,
             itemBuilder: (context, index) {
@@ -136,9 +135,9 @@ class _KitchenStepState extends State<KitchenStep> {
               'Specify other equipment',
               style: TextStyle(
                 fontFamily: 'SF Pro',
-                fontSize: 10.sp,
-                fontWeight: FontWeight.w700,
-                color: const Color(0xFF111827),
+                fontSize: 14.sp,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF7B8190),
               ),
             ),
             SizedBox(height: 8.h),
@@ -155,20 +154,18 @@ class _KitchenStepState extends State<KitchenStep> {
                 textCapitalization: TextCapitalization.words,
                 style: TextStyle(
                   fontFamily: 'SF Pro',
-                  fontSize: 12.sp,
-                  fontWeight: FontWeight.w600,
+                  fontSize: 14.sp,
                   color: const Color(0xFF1A1A1A),
                 ),
                 decoration: InputDecoration(
                   hintText: 'Enter equipment and press Enter',
                   hintStyle: TextStyle(
                     fontFamily: 'SF Pro',
-                    fontSize: 12.sp,
-                    fontWeight: FontWeight.w400,
+                    fontSize: 14.sp,
                     color: Colors.grey[400],
                   ),
                   border: InputBorder.none,
-                  contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+                  contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
                   suffixIcon: IconButton(
                     icon: const Icon(Icons.add_rounded, color: Color(0xFFC83A2D)),
                     onPressed: _addCustomEquipment,
@@ -181,23 +178,12 @@ class _KitchenStepState extends State<KitchenStep> {
               Wrap(
                 spacing: 8.w,
                 runSpacing: 8.h,
-                children: customEquipment.map((e) => Container(
-                  padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 5.h),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFC83A2D),
-                    borderRadius: BorderRadius.circular(20.r),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(e, style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 9.sp)),
-                      SizedBox(width: 4.w),
-                      GestureDetector(
-                        onTap: () => _removeEquipment(e),
-                        child: Icon(Icons.close, size: 12.sp, color: Colors.white),
-                      ),
-                    ],
-                  ),
+                children: customEquipment.map((e) => Chip(
+                  label: Text(e, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  backgroundColor: const Color(0xFFC83A2D),
+                  deleteIcon: const Icon(Icons.close, size: 14, color: Colors.white),
+                  onDeleted: () => _removeEquipment(e),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.r)),
                 )).toList(),
               ),
             ],
@@ -225,12 +211,12 @@ class _KitchenStepState extends State<KitchenStep> {
         });
         widget.onChanged(_selected.toList());
       },
-      borderRadius: BorderRadius.circular(12.r),
+      borderRadius: BorderRadius.circular(16.r),
       child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 6.h),
+        padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(12.r),
+          borderRadius: BorderRadius.circular(16.r),
           border: Border.all(
             color: isSelected
                 ? const Color(0xFFC83A2D)
@@ -253,23 +239,23 @@ class _KitchenStepState extends State<KitchenStep> {
             if (app['icon']!.isNotEmpty)
               SvgPicture.asset(
                 'assets/icones/${app['icon']}',
-                height: 18.sp,
-                width: 18.sp,
+                height: 28.sp,
+                width: 28.sp,
                 placeholderBuilder: (context) => SizedBox(
-                  height: 18.sp,
-                  width: 18.sp,
+                  height: 28.sp,
+                  width: 28.sp,
                   child: const CircularProgressIndicator(strokeWidth: 2),
                 ),
               )
             else
-              Icon(Icons.add_circle_outline, size: 18.sp, color: isSelected ? const Color(0xFFC83A2D) : const Color(0xFF9CA3AF)),
-            SizedBox(height: 6.h),
+              Icon(Icons.add_circle_outline, size: 28.sp, color: isSelected ? const Color(0xFFC83A2D) : const Color(0xFF9CA3AF)),
+            SizedBox(height: 8.h),
             Text(
               app['title']!,
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontFamily: 'SF Pro',
-                fontSize: 8.sp,
+                fontSize: 14.sp,
                 fontWeight: FontWeight.w700,
                 color: const Color(0xFF1A1A1A),
                 height: 1.1,

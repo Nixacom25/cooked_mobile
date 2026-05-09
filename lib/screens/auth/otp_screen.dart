@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../core/theme/app_theme.dart';
 import '../../routes/app_routes.dart';
 import '../../services/auth_service.dart';
@@ -125,7 +124,7 @@ class _OtpScreenState extends State<OtpScreen> {
                 children: [
                   Image.asset(
                     'assets/images/logo.png',
-                    width: 80.w,
+                    width: 100,
                     fit: BoxFit.contain,
                   ),
                 ],
@@ -174,8 +173,8 @@ class _OtpScreenState extends State<OtpScreen> {
                           Text(
                             'Please enter the code\nwe just sent to ${identifier ?? 'your email'}',
                             textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 11.sp,
+                            style: const TextStyle(
+                              fontSize: 18,
                               fontWeight: FontWeight.w600,
                               color: Colors.white,
                               fontFamily: 'SF Pro',
@@ -206,12 +205,12 @@ class _OtpScreenState extends State<OtpScreen> {
 
                           const SizedBox(height: 24),
 
-                          Text(
+                          const Text(
                             "If you didn't receive a code ?",
                             style: TextStyle(
                               color: Colors.white70,
                               fontFamily: 'SF Pro',
-                              fontSize: 11.sp,
+                              fontSize: 14,
                             ),
                           ),
                           const SizedBox(height: 3),
@@ -232,13 +231,13 @@ class _OtpScreenState extends State<OtpScreen> {
                                       strokeWidth: 1.5,
                                     ),
                                   )
-                                : Text(
+                                : const Text(
                                     'Resend Code',
                                     style: TextStyle(
                                       color: Color(0xFFFFF6D6),
                                       fontFamily: 'SF Pro',
                                       fontWeight: FontWeight.w500,
-                                      fontSize: 11.sp,
+                                      fontSize: 14,
                                     ),
                                   ),
                           ),
@@ -247,7 +246,7 @@ class _OtpScreenState extends State<OtpScreen> {
 
                           SizedBox(
                             width: double.infinity,
-                            height: 42.h,
+                            height: 54,
                             child: ElevatedButton(
                               onPressed: _isLoading
                                   ? null
@@ -280,10 +279,10 @@ class _OtpScreenState extends State<OtpScreen> {
                                         strokeWidth: 2,
                                       ),
                                     )
-                                  : Text(
+                                  : const Text(
                                       'Confirm',
                                       style: TextStyle(
-                                        fontSize: 13.sp,
+                                        fontSize: 16,
                                         fontWeight: FontWeight.w600,
                                         fontFamily: 'SF Pro',
                                       ),
@@ -313,8 +312,8 @@ class _OtpScreenState extends State<OtpScreen> {
                 GestureDetector(
                   onTap: () => Navigator.pop(context),
                   child: Container(
-                    width: 34.w,
-                    height: 34.h,
+                    width: 42,
+                    height: 42,
                     decoration: BoxDecoration(
                       color: Color(0xffF8F5EF),
                       borderRadius: BorderRadius.circular(12),
@@ -325,19 +324,19 @@ class _OtpScreenState extends State<OtpScreen> {
                         ),
                       ],
                     ),
-                    child: Icon(
+                    child: const Icon(
                       Icons.arrow_back_rounded,
-                      size: 18.sp,
+                      size: 24,
                       color: AppColors.textDark,
                     ),
                   ),
                 ),
-                Text(
+                const Text(
                   'VERIFICATION CODE',
                   style: TextStyle(
                     fontFamily: 'SF Pro',
                     fontWeight: FontWeight.w800,
-                    fontSize: 13.sp,
+                    fontSize: 14,
                     letterSpacing: 0.8,
                     color: AppColors.textDark,
                   ),
@@ -354,8 +353,8 @@ class _OtpScreenState extends State<OtpScreen> {
     return List.generate(to - from, (i) {
       final idx = from + i;
       return Container(
-        width: 34.w,
-        height: 36.h,
+        width: 46,
+        height: 52,
         margin: const EdgeInsets.symmetric(horizontal: 4),
         decoration: BoxDecoration(
           color: Colors.white,
@@ -371,8 +370,8 @@ class _OtpScreenState extends State<OtpScreen> {
             maxLength: 1,
             onChanged: (v) => _onChanged(v, idx),
             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-            style: TextStyle(
-              fontSize: 16.sp,
+            style: const TextStyle(
+              fontSize: 20,
               fontWeight: FontWeight.w800,
               fontFamily: 'SF Pro',
               color: AppColors.textDark,

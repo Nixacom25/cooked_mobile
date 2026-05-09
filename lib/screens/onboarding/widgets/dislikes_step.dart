@@ -93,48 +93,37 @@ class _DislikesStepState extends State<DislikesStep> {
           Text(
             'Foods you dislike',
             style: TextStyle(
-              fontSize: 16.sp,
-              fontWeight: FontWeight.w800,
+              fontSize: 24.sp,
+              fontWeight: FontWeight.w900,
               color: const Color(0xFF0D1B3E),
               fontFamily: 'SF Pro',
               height: 1.2,
-              letterSpacing: -0.5,
             ),
           ),
-          SizedBox(height: 6.h),
+          SizedBox(height: 8.h),
           Text(
             "We'll avoid these in your recipes",
             style: TextStyle(
-              fontSize: 10.sp,
-              color: const Color(0xFF7B8190),
+              fontSize: 14.sp,
+              color: const Color(0xFF9CA3AF),
               fontFamily: 'SF Pro',
             ),
           ),
-          SizedBox(height: 24.h),
+          SizedBox(height: 30.h),
 
           Row(
             children: [
               Expanded(
                 child: TextField(
                   controller: _dislikeController,
-                  style: TextStyle(
-                    fontFamily: 'SF Pro',
-                    fontSize: 12.sp,
-                    fontWeight: FontWeight.w600,
-                    color: const Color(0xFF1A1A1A),
-                  ),
                   decoration: InputDecoration(
                     hintText: 'Type an ingredient...',
-                    hintStyle: TextStyle(
-                      color: const Color(0xFFBDC3C7),
-                      fontWeight: FontWeight.w400,
-                      fontSize: 12.sp,
-                    ),
+                    hintStyle: const TextStyle(color: Color(0xFFBDC3C7)),
                     filled: true,
                     fillColor: Colors.white,
                     contentPadding: EdgeInsets.symmetric(
                       horizontal: 16.w,
-                      vertical: 14.h,
+                      vertical: 12.h,
                     ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12.r),
@@ -158,7 +147,7 @@ class _DislikesStepState extends State<DislikesStep> {
               ),
               SizedBox(width: 12.w),
               SizedBox(
-                height: 40.h,
+                height: 48.h,
                 child: ElevatedButton(
                   onPressed: () => _addDislike(_dislikeController.text),
                   style: ElevatedButton.styleFrom(
@@ -174,7 +163,7 @@ class _DislikesStepState extends State<DislikesStep> {
                     style: TextStyle(
                       fontWeight: FontWeight.w700,
                       fontFamily: 'SF Pro',
-                      fontSize: 10.sp,
+                      fontSize: 14.sp,
                     ),
                   ),
                 ),
@@ -214,8 +203,8 @@ class _DislikesStepState extends State<DislikesStep> {
                       color: isSelected
                           ? Colors.white
                           : const Color(0xFF4B5563),
-                    fontSize: 9.sp,
-                      fontWeight: FontWeight.w700,
+                      fontSize: 12.sp,
+                      fontWeight: FontWeight.w600,
                       fontFamily: 'SF Pro',
                     ),
                   ),
@@ -223,25 +212,22 @@ class _DislikesStepState extends State<DislikesStep> {
               );
             }).toList(),
           ),
+
           if (_selectedDislikes.isNotEmpty) ...[
-            SizedBox(height: 16.h),
+            SizedBox(height: 20.h),
             Text(
               'Your dislikes:',
               style: TextStyle(
-                fontSize: 10.sp,
+                fontSize: 14.sp,
                 fontWeight: FontWeight.w700,
                 color: const Color(0xFF0D1B3E),
                 fontFamily: 'SF Pro',
               ),
             ),
             SizedBox(height: 12.h),
-            GridView.count(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              crossAxisCount: 3,
-              crossAxisSpacing: 10.w,
-              mainAxisSpacing: 10.h,
-              childAspectRatio: 2.5,
+            Wrap(
+              spacing: 6.w,
+              runSpacing: 8.h,
               children: _selectedDislikes.map((d) {
                 return Container(
                   padding: EdgeInsets.symmetric(
@@ -259,8 +245,8 @@ class _DislikesStepState extends State<DislikesStep> {
                         d,
                         style: TextStyle(
                           color: Colors.white,
-                          fontSize: 9.sp,
-                          fontWeight: FontWeight.w700,
+                          fontSize: 12.sp,
+                          fontWeight: FontWeight.w600,
                           fontFamily: 'SF Pro',
                         ),
                       ),
@@ -270,7 +256,7 @@ class _DislikesStepState extends State<DislikesStep> {
                         child: Icon(
                           Icons.close,
                           color: Colors.white,
-                          size: 14.sp,
+                          size: 16.sp,
                         ),
                       ),
                     ],
@@ -279,7 +265,7 @@ class _DislikesStepState extends State<DislikesStep> {
               }).toList(),
             ),
           ],
-          SizedBox(height: 24.h),
+          SizedBox(height: 32.h),
         ],
       ),
     );

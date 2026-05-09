@@ -141,7 +141,7 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
                     style: TextStyle(
                       fontFamily: 'SF Pro',
                       fontWeight: FontWeight.w800,
-                      fontSize: 15.sp,
+                      fontSize: 18.sp,
                       color: const Color(0xFF1A1A1A),
                     ),
                   ),
@@ -192,7 +192,7 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
                     style: TextStyle(
                       fontFamily: 'SF Pro',
                       fontWeight: FontWeight.w800,
-                      fontSize: 15.sp,
+                      fontSize: 18.sp,
                       color: const Color(0xFF1A1A1A),
                     ),
                   ),
@@ -293,7 +293,7 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
                           style: TextStyle(
                             fontFamily: 'SF Pro',
                             fontWeight: FontWeight.w800,
-                            fontSize: 18.sp,
+                            fontSize: 24.sp,
                             color: _collapseFraction >= 0.98
                                 ? const Color(0xFF1A1A1A)
                                 : Colors.white,
@@ -327,7 +327,7 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
                         style: TextStyle(
                           fontFamily: 'SF Pro',
                           fontWeight: FontWeight.w200,
-                          fontSize: 13.sp,
+                          fontSize: 16.sp,
                           color: Colors.white,
                           height: 1.4,
                         ),
@@ -363,7 +363,7 @@ class _PolicyButton extends StatelessWidget {
         padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
         decoration: BoxDecoration(
           color: const Color(0xFFF5F5F5),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(14.r),
           border: Border.all(color: const Color(0xFFEEEEEE)),
         ),
         child: Row(
@@ -375,7 +375,7 @@ class _PolicyButton extends StatelessWidget {
                 color: const Color(0xFFFFEEEE),
                 borderRadius: BorderRadius.circular(10.r),
               ),
-              child: Icon(icon, size: 16.sp, color: const Color(0xFFCC3333)),
+              child: Icon(icon, size: 18.sp, color: const Color(0xFFCC3333)),
             ),
             SizedBox(width: 10.w),
             Expanded(
@@ -384,7 +384,7 @@ class _PolicyButton extends StatelessWidget {
                 style: TextStyle(
                   fontFamily: 'SF Pro',
                   fontWeight: FontWeight.w600,
-                  fontSize: 11.sp,
+                  fontSize: 12.sp,
                   color: const Color(0xFF1A1A1A),
                 ),
               ),
@@ -420,7 +420,7 @@ class _FaqItemState extends State<_FaqItem> {
         padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
         decoration: BoxDecoration(
           color: _expanded ? const Color(0xFFFFF5F5) : const Color(0xFFF5F5F5),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(14.r),
           border: Border.all(
             color: _expanded
                 ? const Color(0xFFCC3333).withValues(alpha: 0.3)
@@ -438,7 +438,7 @@ class _FaqItemState extends State<_FaqItem> {
                     style: TextStyle(
                       fontFamily: 'SF Pro',
                       fontWeight: FontWeight.w700,
-                      fontSize: 11.sp,
+                      fontSize: 14.sp,
                       color: _expanded
                           ? const Color(0xFFCC3333)
                           : const Color(0xFF1A1A1A),
@@ -449,7 +449,7 @@ class _FaqItemState extends State<_FaqItem> {
                   _expanded
                       ? Icons.keyboard_arrow_up_rounded
                       : Icons.keyboard_arrow_down_rounded,
-                  size: 18.sp,
+                  size: 20.sp,
                   color: _expanded
                       ? const Color(0xFFCC3333)
                       : const Color(0xFF888888),
@@ -462,7 +462,7 @@ class _FaqItemState extends State<_FaqItem> {
                 widget.answer,
                 style: TextStyle(
                   fontFamily: 'SF Pro',
-                  fontSize: 10.sp,
+                  fontSize: 13.sp,
                   color: const Color(0xFF555555),
                   height: 1.5,
                 ),
@@ -493,23 +493,23 @@ class _ContactCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: EdgeInsets.symmetric(vertical: 16.h, horizontal: 16.w),
+        padding: EdgeInsets.symmetric(vertical: 24.h, horizontal: 20.w),
         decoration: BoxDecoration(
           color: Colors.white,
           border: Border.all(color: const Color(0xFFEEEEEE)),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(16.r),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(icon, size: 28.sp, color: const Color(0xFFC83A2D)),
-            SizedBox(height: 16.h),
+            Icon(icon, size: 36.sp, color: const Color(0xFFC83A2D)),
+            SizedBox(height: 24.h),
             Text(
               label,
               style: TextStyle(
                 fontFamily: 'SF Pro',
                 fontWeight: FontWeight.w700,
-                fontSize: 13.sp,
+                fontSize: 16.sp,
                 color: const Color(0xFF1A1A1A),
               ),
             ),
@@ -518,7 +518,7 @@ class _ContactCard extends StatelessWidget {
               subtitle,
               style: TextStyle(
                 fontFamily: 'SF Pro',
-                fontSize: 11.sp,
+                fontSize: 13.sp,
                 color: const Color(0xFFAAAAAA),
               ),
             ),

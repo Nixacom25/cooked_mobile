@@ -846,107 +846,110 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     _currentPage != 17 &&
                     _currentPage != 19 &&
                     _currentPage != 21)
-                  Padding(
-                    padding: EdgeInsets.fromLTRB(24.w, 10.h, 24.w, 20.h),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        SizedBox(
-                          width: double.infinity,
-                          height: 52.h,
-                          child: ElevatedButton(
-                            onPressed:
-                                (_isLoading ||
-                                    (_currentPage == 0 &&
-                                        (_firstName.isEmpty ||
-                                            _email.isEmpty)) ||
-                                    (_currentPage == 2 &&
-                                        _source == null) || // SourceStep
-                                    (_currentPage == 4 && // AllergiesStep
-                                        _selectedAllergy.isEmpty) ||
-                                    (_currentPage == 18 && // AccountStep
-                                        (_email.isEmpty ||
-                                            _password.isEmpty ||
-                                            !_acceptedTerms)))
+                  SafeArea(
+                    top: false,
+                    child: Padding(
+                      padding: EdgeInsets.fromLTRB(24.w, 10.h, 24.w, 20.h),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          SizedBox(
+                            width: double.infinity,
+                            height: 56.h,
+                            child: ElevatedButton(
+                              onPressed:
+                                  (_isLoading ||
+                                      (_currentPage == 0 &&
+                                          (_firstName.isEmpty ||
+                                              _email.isEmpty)) ||
+                                      (_currentPage == 2 &&
+                                          _source == null) || // SourceStep
+                                      (_currentPage == 4 && // AllergiesStep
+                                          _selectedAllergy.isEmpty) ||
+                                      (_currentPage == 18 && // AccountStep
+                                          (_email.isEmpty ||
+                                              _password.isEmpty ||
+                                              !_acceptedTerms)))
                                   ? null
                                   : _onContinue,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFFC83A2D),
-                              foregroundColor: Colors.white,
-                              disabledBackgroundColor: const Color(0xFFE5E7EB),
-                              disabledForegroundColor: const Color(0xFF9CA3AF),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(30.r),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFFC83A2D),
+                                foregroundColor: Colors.white,
+                                disabledBackgroundColor: const Color(0xFFE5E7EB),
+                                disabledForegroundColor: const Color(0xFF9CA3AF),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(30.r),
+                                ),
+                                elevation: 0,
                               ),
-                              elevation: 0,
-                            ),
-                            child: _isLoading
-                                ? SizedBox(
-                                    height: 24.r,
-                                    width: 24.r,
-                                    child: const CircularProgressIndicator(
-                                      color: Colors.white,
-                                      strokeWidth: 2.5,
+                              child: _isLoading
+                                  ? SizedBox(
+                                      height: 24.r,
+                                      width: 24.r,
+                                      child: const CircularProgressIndicator(
+                                        color: Colors.white,
+                                        strokeWidth: 2.5,
+                                      ),
+                                    )
+                                  : Text(
+                                      _currentPage ==
+                                              20 // TrialStep
+                                          ? 'Start My 3-Day Free Trial'
+                                          : 'Continue',
+                                      style: TextStyle(
+                                        fontSize: 18.sp,
+                                        fontWeight: FontWeight.w700,
+                                        fontFamily: 'SF Pro',
+                                      ),
                                     ),
-                                  )
-                                : Text(
-                                    _currentPage ==
-                                            20 // TrialStep
-                                        ? 'Start My 3-Day Free Trial'
-                                        : 'Continue',
-                                    style: TextStyle(
-                                      fontSize: 16.sp,
-                                      fontWeight: FontWeight.w800,
-                                      fontFamily: 'SF Pro',
-                                    ),
-                                  ),
-                          ),
-                        ),
-                        if (_currentPage == 20) ...[
-                          // TrialStep
-                          SizedBox(height: 10.h),
-                          Text(
-                            '3 days free',
-                            style: TextStyle(
-                              fontSize: 12.sp,
-                              color: const Color(0xFF7B8190),
-                              fontFamily: 'SF Pro',
                             ),
                           ),
-                        ],
-                        // "Sign In" link only for the first onboarding step
-                        if (_currentPage == 0) ...[
-                          SizedBox(height: 16.h),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                'Already have an account? ',
-                                style: TextStyle(
-                                  fontSize: 12.sp,
-                                  color: const Color(0xFF7B8190),
-                                  fontFamily: 'SF Pro',
-                                ),
+                          if (_currentPage == 20) ...[
+                            // TrialStep
+                            SizedBox(height: 12.h),
+                            Text(
+                              '3 days free',
+                              style: TextStyle(
+                                fontSize: 14.sp,
+                                color: const Color(0xFF7B8190),
+                                fontFamily: 'SF Pro',
                               ),
-                              GestureDetector(
-                                onTap: () => Navigator.pushNamed(
-                                  context,
-                                  AppRoutes.login,
-                                ),
-                                child: Text(
-                                  'Sign In',
+                            ),
+                          ],
+                          // "Sign In" link only for the first onboarding step
+                          if (_currentPage == 0) ...[
+                            SizedBox(height: 16.h),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  'Already have an account? ',
                                   style: TextStyle(
-                                    fontSize: 12.sp,
-                                    fontWeight: FontWeight.w800,
-                                    color: const Color(0xFFC83A2D),
+                                    fontSize: 14.sp,
+                                    color: const Color(0xFF7B8190),
                                     fontFamily: 'SF Pro',
                                   ),
                                 ),
-                              ),
-                            ],
-                          ),
+                                GestureDetector(
+                                  onTap: () => Navigator.pushNamed(
+                                    context,
+                                    AppRoutes.login,
+                                  ),
+                                  child: Text(
+                                    'Sign In',
+                                    style: TextStyle(
+                                      fontSize: 14.sp,
+                                      fontWeight: FontWeight.w700,
+                                      color: const Color(0xFFC83A2D),
+                                      fontFamily: 'SF Pro',
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ],
-                      ],
+                      ),
                     ),
                   ),
               ],

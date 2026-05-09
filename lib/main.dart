@@ -1,9 +1,7 @@
 import 'package:cooked/services/auth_service.dart';
-import 'package:cooked/services/iap_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart';
-import 'package:device_preview/device_preview.dart';
 import 'core/theme/app_theme.dart';
 import 'routes/app_routes.dart';
 import 'screens/splash/splash_screen.dart';
@@ -35,15 +33,9 @@ import 'package:cooked/services/notification_service.dart';
 import 'package:cooked/services/history_service.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-void main() async {
+void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  await TutorialService.instance.init();
-  await NotificationService.instance.init();
-  await HistoryService.instance.init();
   
-  // Initialize In-App Purchases
-  final iapService = IapService.instance;
-  iapService.initialize();
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
@@ -54,12 +46,8 @@ void main() async {
     ),
   );
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-  runApp(
-    DevicePreview(
-      enabled: !kReleaseMode,
-      builder: (context) => const CookedApp(),
-    ),
-  );
+
+  runApp(const CookedApp());
 }
 
 final RouteObserver<ModalRoute<void>> routeObserver = RouteObserver<ModalRoute<void>>();
@@ -77,13 +65,21 @@ class _CookedAppState extends State<CookedApp> {
   @override
   void initState() {
     super.initState();
+    // Non-blocking initialization
+    _initApp();
   }
 
- 
-
-  @override
-  void dispose() {
-    super.dispose();
+  Future<void> _initApp() async {
+    try {
+      await Future.wait([
+        AuthService.instance.getToken(),
+        TutorialService.instance.init(),
+        NotificationService.instance.init(),
+        HistoryService.instance.init(),
+      ]);
+    } catch (e) {
+      debugPrint('Initialization error: $e');
+    }
   }
 
   @override
@@ -100,9 +96,7 @@ class _CookedAppState extends State<CookedApp> {
             title: 'Cooked',
             debugShowCheckedModeBanner: false,
             theme: AppTheme.light,
-            locale: DevicePreview.locale(context),
             builder: (context, child) {
-              final content = DevicePreview.appBuilder(context, child);
               return GestureDetector(
                 onTap: () {
                   final currentFocus = FocusScope.of(context);
@@ -110,24 +104,19 @@ class _CookedAppState extends State<CookedApp> {
                     FocusManager.instance.primaryFocus?.unfocus();
                   }
                 },
-                child: content,
+                child: child!,
               );
             },
             navigatorObservers: [routeObserver],
+            initialRoute: AppRoutes.splash,
             onGenerateRoute: (settings) {
               final isLoggedIn = AuthService.instance.isLoggedIn;
               final name = settings.name;
 
               // 🛡️ Navigation Guard
               if (isLoggedIn) {
-                // If logged in, don't allow going back to auth screens
                 if (name == AppRoutes.welcome || name == AppRoutes.login) {
                   return MaterialPageRoute(builder: (_) => const HomeScreen());
-                }
-              } else {
-                // If NOT logged in, don't allow going to protected screens
-                if (name == AppRoutes.home || name == AppRoutes.profile) {
-                  return MaterialPageRoute(builder: (_) => const WelcomeScreen());
                 }
               }
 

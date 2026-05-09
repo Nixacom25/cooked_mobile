@@ -118,12 +118,11 @@ class _CookbookDetailScreenState extends State<CookbookDetailScreen> {
                       Expanded(
                         child: Text(
                           name.toTitleCase(),
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontFamily: 'SF Pro',
-                            fontWeight: FontWeight.w700,
-                            fontSize: 18.sp,
-                            color: const Color(0xFF1A1A1A),
-                            letterSpacing: -0.5,
+                            fontWeight: FontWeight.w800,
+                            fontSize: 20,
+                            color: Color(0xFF1A1A1A),
                           ),
                         ),
                       ),
@@ -195,7 +194,7 @@ class _CookbookDetailScreenState extends State<CookbookDetailScreen> {
                                   fontFamily: 'SF Pro',
                                   fontWeight: FontWeight.w600,
                                   color: Colors.grey[600],
-                                  fontSize: 16.sp,
+                                  fontSize: 18,
                                 ),
                               ),
                             ],
@@ -206,9 +205,9 @@ class _CookbookDetailScreenState extends State<CookbookDetailScreen> {
                           itemCount: recipes.length,
                           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                             crossAxisCount: 2,
-                            mainAxisSpacing: 12.h,
-                            crossAxisSpacing: 12.w,
-                            childAspectRatio: 0.85,
+                            mainAxisSpacing: 14.h,
+                            crossAxisSpacing: 14.w,
+                            mainAxisExtent: 240.h,
                           ),
                           itemBuilder: (ctx, i) {
                             final r = recipes[i];

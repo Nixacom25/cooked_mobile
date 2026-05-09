@@ -18,11 +18,7 @@ import '../core/widgets/ios_toast.dart';
 import '../core/services/tutorial_service.dart';
 import '../core/utils/tutorial_helper.dart';
 import '../core/extensions/string_extensions.dart';
-import '../core/exceptions/subscription_exception.dart';
 import '../utils/paywall_helper.dart';
-import '../services/paywall_service.dart';
-import '../services/auth_service.dart';
-import '../core/api_config.dart';
 
 enum ScanState { scan, type, saved, results }
 
@@ -260,21 +256,12 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
           _updateState(ScanState.results);
         });
       }
-    } on SubscriptionRequiredException {
-      if (mounted) {
-        setState(() => _stopAnalysisLoading());
-        final token = await AuthService.instance.getToken() ?? "";
-        if (mounted) {
-          PaywallHelper.show(context, PaywallService(
-            baseUrl: ApiConfig.baseUrl,
-            authToken: token,
-          ));
-        }
-      }
     } catch (e) {
       if (mounted) {
         setState(() => _stopAnalysisLoading());
-        IosToast.show(context, message: e.toString(), type: ToastType.error);
+        if (!PaywallHelper.handleError(context, e)) {
+          IosToast.show(context, message: e.toString(), type: ToastType.error);
+        }
       }
     }
   }
@@ -349,31 +336,9 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
       _cameraStatus = "Direct Access...";
     });
 
-    // On some Androids/iOS, camera init fails without both permissions
-    debugPrint("CAMERA_LOG: Checking permissions...");
-    PermissionStatus camStat = await Permission.camera.status;
-    debugPrint("CAMERA_LOG: Camera status: $camStat");
-    
-    if (camStat.isDenied) {
-      debugPrint("CAMERA_LOG: Requesting camera permission...");
-      camStat = await Permission.camera.request();
-      debugPrint("CAMERA_LOG: New camera status: $camStat");
-    }
-
-    if (camStat.isPermanentlyDenied) {
-      debugPrint("CAMERA_LOG: Camera permanently denied.");
-      if (mounted) {
-        setState(() {
-          _cameraStatus = "Camera permission permanently denied. Please enable it in Settings.";
-          _hasCameraError = true;
-          _isInitializing = false;
-        });
-      }
-      return;
-    }
-
-    if (!camStat.isGranted) {
-      debugPrint("CAMERA_LOG: Camera not granted.");
+    // On some Androids, camera init fails without both permissions
+    final camStat = await Permission.camera.request();
+    if (camStat != PermissionStatus.granted) {
       if (mounted) {
         setState(() {
           _cameraStatus = "Camera permission denied";
@@ -384,13 +349,11 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
       return;
     }
 
-    debugPrint("CAMERA_LOG: Finding cameras...");
     setState(() => _cameraStatus = "Finding cameras...");
     await Future.delayed(const Duration(milliseconds: 200)); // Hardware stabilization
     
     try {
       final cameras = await availableCameras();
-      debugPrint("CAMERA_LOG: Found ${cameras.length} cameras.");
       if (cameras.isEmpty) {
         if (mounted) {
           setState(() {
@@ -585,10 +548,13 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
           // 6. Bottom Pill Navigation
           if (showPill)
             Positioned(
-              bottom: 30.h,
+              bottom: 20.h,
               left: 22.w,
               right: 22.w,
-              child: _buildBottomPillNav(),
+              child: SafeArea(
+                top: false,
+                child: _buildBottomPillNav(),
+              ),
             ),
         ],
       ),
@@ -706,24 +672,8 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                         fontSize: 12.sp,
                         fontWeight: FontWeight.bold,
                       ),
-                      textAlign: TextAlign.center,
                     ),
                   ),
-                  if (_hasCameraError && _cameraStatus.toLowerCase().contains("permission"))
-                    Padding(
-                      padding: EdgeInsets.only(top: 16.h),
-                      child: TextButton(
-                        onPressed: () => openAppSettings(),
-                        style: TextButton.styleFrom(
-                          backgroundColor: Colors.white24,
-                          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-                        ),
-                        child: Text(
-                          "Open Settings",
-                          style: TextStyle(color: Colors.white, fontSize: 13.sp),
-                        ),
-                      ),
-                    ),
                 ],
               ),
             ),
@@ -837,10 +787,9 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
             title,
             style: TextStyle(
               fontFamily: 'SF Pro',
-              fontWeight: FontWeight.w700,
-              fontSize: 18.sp,
-              color: const Color(0xFF1A1A1A),
-              letterSpacing: -0.5,
+              fontWeight: FontWeight.w800,
+              fontSize: 24.sp,
+              color: const Color(0xFF1E293B),
             ),
           ),
           GestureDetector(
@@ -895,14 +844,17 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
         bottom: 90.h,
         left: 0,
         right: 0,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            _buildGalleryBtn(),
-            SizedBox(width: 60.w),
-            _buildShutterBtn(),
-            SizedBox(width: 85.w),
-          ],
+        child: SafeArea(
+          top: false,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _buildGalleryBtn(),
+              SizedBox(width: 60.w),
+              _buildShutterBtn(),
+              SizedBox(width: 85.w),
+            ],
+          ),
         ),
       );
     }
@@ -919,10 +871,13 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
     }
 
     return Positioned(
-      bottom: _state == ScanState.results ? 30.h : 90.h,
+      bottom: _state == ScanState.results ? 15.h : 90.h,
       left: 22.w,
       right: 22.w,
-      child: actionBtn,
+      child: SafeArea(
+        top: false,
+        child: actionBtn,
+      ),
     );
   }
 
@@ -982,7 +937,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
       },
       child: Container(
         width: double.infinity,
-        height: 44.h,
+        height: 50.h,
         decoration: BoxDecoration(
           color: const Color(0xFFCC3333),
           borderRadius: BorderRadius.circular(30.r),
@@ -993,7 +948,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
           style: TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.bold,
-            fontSize: 13.sp,
+            fontSize: 15.sp,
           ),
         ),
       ),
@@ -1047,7 +1002,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                 "Enter ingredients one by one",
                 style: TextStyle(
                   color: const Color(0xFF64748B),
-                  fontSize: 10.sp,
+                  fontSize: 13.sp,
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -1068,12 +1023,12 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                 child: TextField(
                   controller: _ingCtrl,
                   textCapitalization: TextCapitalization.words,
-                  style: TextStyle(fontSize: 12.sp, fontWeight: FontWeight.w500),
+                  style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.w500),
                   decoration: InputDecoration(
                     hintText: 'e.g., Tomato, Cheese...',
-                    hintStyle: TextStyle(color: const Color(0xFF94A3B8), fontSize: 12.sp),
+                    hintStyle: TextStyle(color: const Color(0xFF94A3B8), fontSize: 14.sp),
                     border: InputBorder.none,
-                    contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
+                    contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
                     suffixIcon: IconButton(
                       onPressed: _addTypedIngredient,
                       icon: Icon(
@@ -1134,7 +1089,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                   "Add ingredients to find recipes you can make",
                   style: TextStyle(
                     color: const Color(0xFF94A3B8),
-                    fontSize: 11.sp,
+                    fontSize: 12.sp,
                     fontStyle: FontStyle.italic,
                   ),
                 ),
@@ -1144,7 +1099,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                     "Recently Used",
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
-                      fontSize: 11.sp,
+                      fontSize: 14.sp,
                       color: const Color(0xFF64748B),
                     ),
                   ),
@@ -1169,7 +1124,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                           child: Text(
                             name,
                             style: TextStyle(
-                              fontSize: 9.sp,
+                              fontSize: 12.sp,
                               color: const Color(0xFF475569),
                               fontWeight: FontWeight.w500,
                             ),
@@ -1233,11 +1188,9 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                     Text(
                       "Use all",
                       style: TextStyle(
-                        fontFamily: 'SF Pro',
-                        fontSize: 12.sp,
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFF1A1A1A),
-                        letterSpacing: -0.3,
+                        fontSize: 14.sp,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF475569),
                       ),
                     ),
                   ],
@@ -1253,7 +1206,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                     "Clear selection",
                     style: TextStyle(
                       color: const Color(0xFF64748B),
-                      fontSize: 10.sp,
+                      fontSize: 13.sp,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -1285,7 +1238,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
               padding: EdgeInsets.only(top: 40.h),
               child: Text(
                 "No saved ingredients yet.",
-                style: TextStyle(color: const Color(0xFF6B7280), fontSize: 12.sp),
+                style: TextStyle(color: const Color(0xFF6B7280), fontSize: 14.sp),
               ),
             ),
           ),
@@ -1308,7 +1261,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
       onTap: onContainerTap,
       child: Container(
         margin: EdgeInsets.only(bottom: 16.h),
-        padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
+        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
         decoration: BoxDecoration(
           color: const Color(0xFFF9FAFB),
           borderRadius: BorderRadius.circular(16.r),
@@ -1334,7 +1287,8 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
               child: Text(
                 name,
                 style: TextStyle(
-                  fontSize: 12.sp,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 16.sp,
                   color: const Color(0xFF1E293B),
                 ),
               ),
@@ -1388,7 +1342,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
           "Recipes You Can Cook Now",
           style: TextStyle(
             fontWeight: FontWeight.w800,
-            fontSize: 16.sp,
+            fontSize: 20.sp,
             color: const Color(0xFF1E293B),
           ),
         ),
@@ -1401,9 +1355,9 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
               : 4,
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 2,
-            mainAxisSpacing: 12.h,
-            crossAxisSpacing: 12.w,
-            childAspectRatio: 0.85,
+            mainAxisSpacing: 14.h,
+            crossAxisSpacing: 14.w,
+            childAspectRatio: 0.82,
           ),
           itemBuilder: (_, i) {
             if (_recipes.isEmpty) return _buildMockResultCard(i);
@@ -1429,22 +1383,11 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
         ),
         Text(
           "Your Ingredients",
-          style: TextStyle(
-            fontFamily: 'SF Pro',
-            fontWeight: FontWeight.w700,
-            fontSize: 14.sp,
-            color: const Color(0xFF1A1A1A),
-            letterSpacing: -0.5,
-          ),
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20.sp),
         ),
         Text(
           "We found ${(_ingredients.length + _restrictedIngredients.length) > 0 ? (_ingredients.length + _restrictedIngredients.length) : 0} items in your kitchen",
-          style: TextStyle(
-            fontFamily: 'SF Pro',
-            color: const Color(0xFF6B7280),
-            fontSize: 10.sp,
-            letterSpacing: -0.2,
-          ),
+          style: TextStyle(color: Color(0xFF6B7280), fontSize: 14.sp),
         ),
         SizedBox(height: 12.h),
         // Add Ingredient Input
@@ -1464,10 +1407,10 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
             },
             decoration: InputDecoration(
               hintText: "Add missing ingredient...",
-              hintStyle: TextStyle(fontSize: 9.sp, color: const Color(0xFF94A3B8)),
+              hintStyle: TextStyle(fontSize: 13.sp, color: const Color(0xFF94A3B8)),
               border: InputBorder.none,
               prefixIcon: Icon(Icons.add_rounded, color: const Color(0xFFCC3333), size: 20.sp),
-              contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+              contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
             ),
           ),
         ),
@@ -1505,7 +1448,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
           ),
         SizedBox(height: 16.h),
         if (_ingredients.isEmpty && _restrictedIngredients.isEmpty)
-          Text("No items detected.", style: TextStyle(color: Colors.grey, fontSize: 11.sp))
+          Text("No items detected.", style: TextStyle(color: Colors.grey, fontSize: 13.sp))
         else
           Wrap(
             spacing: 8.w,
@@ -1536,7 +1479,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                     "Some ingredients may not match your dietary preferences.",
                     style: TextStyle(
                       color: Colors.red[600],
-                      fontSize: 10.sp,
+                      fontSize: 12.sp,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -1589,7 +1532,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
             _capitalize(label),
             style: TextStyle(
               fontWeight: FontWeight.w600,
-              fontSize: 10.sp,
+              fontSize: 12.sp,
               color: Colors.black,
             ),
           ),
@@ -1693,30 +1636,18 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
         _capturedImagePath = null;
         _updateState(ScanState.results);
       });
-    } on SubscriptionRequiredException {
-      if (mounted) {
-        setState(() {
-          _stopAnalysisLoading();
-          _capturedImagePath = null;
-        });
-        final token = await AuthService.instance.getToken() ?? "";
-        if (mounted) {
-          PaywallHelper.show(context, PaywallService(
-            baseUrl: ApiConfig.baseUrl,
-            authToken: token,
-          ));
-        }
-      }
     } catch (e) {
       setState(() {
         _stopAnalysisLoading();
         _capturedImagePath = null;
       });
-      IosToast.show(
-        context,
-        message: ErrorHelper.getFriendlyMessage(e),
-        type: ToastType.error,
-      );
+      if (!PaywallHelper.handleError(context, e)) {
+        IosToast.show(
+          context,
+          message: ErrorHelper.getFriendlyMessage(e),
+          type: ToastType.error,
+        );
+      }
     }
   }
 

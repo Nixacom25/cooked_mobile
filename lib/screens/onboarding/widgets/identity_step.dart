@@ -67,43 +67,42 @@ class _IdentityStepState extends State<IdentityStep> {
           Text(
             'Just a few details to get started.',
             style: TextStyle(
-            fontSize: 16.sp,
-            fontWeight: FontWeight.w800,
-            color: const Color(0xFF0D1B3E),
-            fontFamily: 'SF Pro',
-            height: 1.2,
-            letterSpacing: -0.5,
+              fontSize: 24.sp,
+              fontWeight: FontWeight.w900,
+              color: const Color(0xFF0D1B3E),
+              fontFamily: 'SF Pro',
+              height: 1.2,
+            ),
           ),
-          ),
-          SizedBox(height: 6.h),
+          SizedBox(height: 8.h),
           Text(
             'We\'ll use this to personalize your experience',
             style: TextStyle(
-              fontSize: 10.sp,
-              color: const Color(0xFF9CA3AF),
+              fontSize: 14.sp,
+              color: const Color(0xFF7B8190),
               fontFamily: 'SF Pro',
             ),
           ),
-          SizedBox(height: 24.h),
+          SizedBox(height: 32.h),
           _buildLabel('Full Name', isRequired: true),
-          SizedBox(height: 6.h),
+          SizedBox(height: 8.h),
           _buildField(
             controller: _nameController,
             hint: 'Enter your full name',
           ),
-          SizedBox(height: 16.h),
+          SizedBox(height: 20.h),
           _buildLabel('Email', isRequired: true),
-          SizedBox(height: 6.h),
+          SizedBox(height: 8.h),
           _buildField(
             controller: _emailController,
             hint: 'Your email address',
             keyboardType: TextInputType.emailAddress,
           ),
-          SizedBox(height: 16.h),
-          _buildLabel('Phone Number'),
-          SizedBox(height: 6.h),
-          _buildPhoneField(),
           SizedBox(height: 20.h),
+          _buildLabel('Phone Number'),
+          SizedBox(height: 8.h),
+          _buildPhoneField(),
+          SizedBox(height: 24.h),
           Container(
             padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
             decoration: BoxDecoration(
@@ -115,16 +114,15 @@ class _IdentityStepState extends State<IdentityStep> {
                 Icon(
                   Icons.lock_rounded,
                   color: Colors.orange.shade400,
-                  size: 16.sp,
+                  size: 18.sp,
                 ),
                 SizedBox(width: 12.w),
                 Expanded(
                   child: Text(
                     'We won\'t share this with anyone',
                     style: TextStyle(
-                      fontSize: 11.sp,
-                      fontWeight: FontWeight.w700,
-                      color: const Color(0xFF0D1B3E),
+                      fontSize: 12.sp,
+                      color: const Color(0xFF7B8190),
                       fontFamily: 'SF Pro',
                     ),
                   ),
@@ -132,7 +130,7 @@ class _IdentityStepState extends State<IdentityStep> {
               ],
             ),
           ),
-          SizedBox(height: MediaQuery.of(context).viewInsets.bottom + 24.h),
+          SizedBox(height: MediaQuery.of(context).viewInsets.bottom + 32.h),
         ],
       ),
     );
@@ -153,16 +151,15 @@ class _IdentityStepState extends State<IdentityStep> {
         keyboardType: TextInputType.phone,
         style: TextStyle(
           fontFamily: 'SF Pro',
-          fontSize: 14.sp,
+          fontSize: 16.sp,
           fontWeight: FontWeight.w600,
           color: const Color(0xFF1A1A1A),
         ),
         decoration: InputDecoration(
           hintText: '00000000',
-          hintStyle: TextStyle(
-            color: const Color(0xFFBDC3C7),
+          hintStyle: const TextStyle(
+            color: Color(0xFFBDC3C7),
             fontWeight: FontWeight.w400,
-            fontSize: 12.sp,
           ),
           prefixIcon: Padding(
             padding: EdgeInsets.symmetric(horizontal: 12.w),
@@ -179,7 +176,7 @@ class _IdentityStepState extends State<IdentityStep> {
                 Icon(
                   Icons.arrow_drop_down,
                   color: const Color(0xFF7B8190),
-                  size: 20.sp,
+                  size: 24.sp,
                 ),
                 SizedBox(width: 8.w),
                 Container(
@@ -197,7 +194,7 @@ class _IdentityStepState extends State<IdentityStep> {
                 icon: Icon(
                   Icons.check_circle_rounded,
                   color: const Color(0xFF2ECC71),
-                  size: 18.sp,
+                  size: 20.sp,
                 ),
                 onPressed: () => FocusScope.of(context).unfocus(),
               );
@@ -205,7 +202,7 @@ class _IdentityStepState extends State<IdentityStep> {
             return null;
           }(),
           border: InputBorder.none,
-          contentPadding: EdgeInsets.all(14.r),
+          contentPadding: EdgeInsets.all(16.r),
         ),
       ),
     );
@@ -216,9 +213,9 @@ class _IdentityStepState extends State<IdentityStep> {
       text: TextSpan(
         text: label,
         style: TextStyle(
-          fontSize: 10.sp,
-          fontWeight: FontWeight.w700,
-          color: const Color(0xFF111827),
+          fontSize: 14.sp,
+          fontWeight: FontWeight.w600,
+          color: const Color(0xFF7B8190),
           fontFamily: 'SF Pro',
         ),
         children: isRequired ? [
@@ -226,7 +223,7 @@ class _IdentityStepState extends State<IdentityStep> {
             text: ' *',
             style: TextStyle(
               color: const Color(0xFFC83A2D),
-              fontSize: 12.sp,
+              fontSize: 14.sp,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -248,23 +245,22 @@ class _IdentityStepState extends State<IdentityStep> {
       textCapitalization: keyboardType == TextInputType.emailAddress ? TextCapitalization.none : TextCapitalization.words,
       style: TextStyle(
         fontFamily: 'SF Pro',
-        fontSize: 12.sp,
+        fontSize: 16.sp,
         fontWeight: FontWeight.w600,
         color: const Color(0xFF1A1A1A),
       ),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: TextStyle(
-          color: const Color(0xFFBDC3C7),
+        hintStyle: const TextStyle(
+          color: Color(0xFFBDC3C7),
           fontWeight: FontWeight.w400,
-          fontSize: 14.sp,
         ),
         prefixIcon: icon != null
-            ? Icon(icon, color: const Color(0xFFBDC3C7), size: 20.sp)
+            ? Icon(icon, color: const Color(0xFFBDC3C7), size: 22.sp)
             : null,
         filled: true,
         fillColor: Colors.white,
-        contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+        contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12.r),
           borderSide: const BorderSide(color: Color(0xFFE5E7EB)),

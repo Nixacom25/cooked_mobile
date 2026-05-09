@@ -75,31 +75,30 @@ class _SourceStepState extends State<SourceStep> {
           Text(
             'Welcome, ${widget.userName}!\nHow did you find us?',
             style: TextStyle(
-              fontSize: 16.sp,
-              fontWeight: FontWeight.w800,
+              fontSize: 24.sp,
+              fontWeight: FontWeight.w900,
               color: const Color(0xFF0D1B3E),
               fontFamily: 'SF Pro',
               height: 1.2,
-              letterSpacing: -0.5,
             ),
           ),
-          SizedBox(height: 6.h),
+          SizedBox(height: 8.h),
           Text(
             "This helps us improve our reach",
             style: TextStyle(
-              fontSize: 10.sp,
+              fontSize: 14.sp,
               color: const Color(0xFF7B8190),
               fontFamily: 'SF Pro',
             ),
           ),
-          SizedBox(height: 24.h),
+          SizedBox(height: 32.h),
 
           GridView.count(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             crossAxisCount: 2,
-            crossAxisSpacing: 12.w,
-            mainAxisSpacing: 12.h,
+            crossAxisSpacing: 16.w,
+            mainAxisSpacing: 16.h,
             childAspectRatio: 1.6,
             children: _sources.map((source) {
               final isSelected = _selectedSource == source.value;
@@ -110,12 +109,12 @@ class _SourceStepState extends State<SourceStep> {
                   duration: const Duration(milliseconds: 200),
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(12.r),
+                    borderRadius: BorderRadius.circular(16.r),
                     border: Border.all(
                       color: isSelected
                           ? const Color(0xFFC83A2D)
                           : const Color(0xFFE5E7EB),
-                      width: isSelected ? 1.5.w : 1.w,
+                      width: isSelected ? 2.w : 1.w,
                     ),
                     boxShadow: [
                       BoxShadow(
@@ -131,8 +130,8 @@ class _SourceStepState extends State<SourceStep> {
                       if (source.iconAsset.isNotEmpty) ...[
                         SvgPicture.asset(
                           'assets/icones/${source.iconAsset}',
-                          height: 20.h,
-                          width: 20.w,
+                          height: 26.h,
+                          width: 26.w,
                           placeholderBuilder: (BuildContext context) =>
                               Container(
                                 padding: EdgeInsets.all(8.r),
@@ -145,8 +144,8 @@ class _SourceStepState extends State<SourceStep> {
                         source.label,
                         style: TextStyle(
                           fontFamily: 'SF Pro',
-                          fontSize: 10.sp,
-                          fontWeight: FontWeight.w700,
+                          fontSize: 14.sp,
+                          fontWeight: FontWeight.w600,
                           color: isSelected
                               ? const Color(0xFFC83A2D)
                               : const Color(0xFF1A1A1A),
@@ -195,12 +194,12 @@ class _SourceStepState extends State<SourceStep> {
               ),
               style: TextStyle(
                 fontFamily: 'SF Pro',
-                fontSize: 14.sp,
+                fontSize: 16.sp,
                 color: const Color(0xFF1A1A1A),
               ),
             ),
           ],
-          SizedBox(height: MediaQuery.of(context).viewInsets.bottom + 24.h),
+          SizedBox(height: MediaQuery.of(context).viewInsets.bottom + 32.h),
         ],
       ),
     );

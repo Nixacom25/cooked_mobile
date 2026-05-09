@@ -31,7 +31,7 @@ class _AddToCookbookSheetState extends State<AddToCookbookSheet> {
     final bottomPad = MediaQuery.of(context).padding.bottom;
 
     return Container(
-      constraints: BoxConstraints(maxHeight: 0.60.sh),
+      constraints: BoxConstraints(maxHeight: 0.85.sh),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
@@ -61,13 +61,13 @@ class _AddToCookbookSheetState extends State<AddToCookbookSheet> {
                   style: TextStyle(
                     fontFamily: 'SF Pro',
                     fontWeight: FontWeight.w800,
-                    fontSize: 13.sp,
+                    fontSize: 20.sp,
                     color: const Color(0xFF1A1A1A),
                   ),
                 ),
                 IconButton(
                   onPressed: () => Navigator.pop(context),
-                  icon: Icon(Icons.close_rounded, size: 18.sp, color: const Color(0xFF64748B)),
+                  icon: Icon(Icons.close_rounded, size: 24.sp, color: const Color(0xFF64748B)),
                 ),
               ],
             ),
@@ -102,7 +102,7 @@ class _AddToCookbookSheetState extends State<AddToCookbookSheet> {
                   style: TextStyle(
                     fontFamily: 'SF Pro',
                     fontWeight: FontWeight.w700,
-                    fontSize: 9.sp,
+                    fontSize: 14.sp,
                     color: const Color(0xFF64748B),
                   ),
                 ),
@@ -127,7 +127,8 @@ class _AddToCookbookSheetState extends State<AddToCookbookSheet> {
                             "No recipe books found.",
                             style: TextStyle(
                               color: const Color(0xFF64748B),
-                              fontSize: 13.sp,
+                              fontSize: 14.sp,
+                              fontFamily: 'SF Pro',
                             ),
                           ),
                         ),
@@ -137,7 +138,7 @@ class _AddToCookbookSheetState extends State<AddToCookbookSheet> {
                     return Container(
                       decoration: BoxDecoration(
                         color: const Color(0xFFF9FAFB),
-                        borderRadius: BorderRadius.circular(8.r),
+                        borderRadius: BorderRadius.circular(16.r),
                         border: Border.all(color: const Color(0xFFF3F4F6)),
                       ),
                       child: ListView.separated(
@@ -158,16 +159,13 @@ class _AddToCookbookSheetState extends State<AddToCookbookSheet> {
                                 }
                               });
                             },
-                            contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 0),
-                            visualDensity: const VisualDensity(horizontal: -4, vertical: -4),
+                            contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
                             title: Text(
                               cb.name,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
                               style: TextStyle(
                                 fontFamily: 'SF Pro',
                                 fontWeight: FontWeight.w600,
-                                fontSize: 10.sp,
+                                fontSize: 15.sp,
                                 color: const Color(0xFF1F2937),
                               ),
                             ),
@@ -176,7 +174,7 @@ class _AddToCookbookSheetState extends State<AddToCookbookSheet> {
                                   ? Icons.check_circle_rounded 
                                   : Icons.radio_button_unchecked_rounded,
                               color: isSelected ? const Color(0xFFCC3333) : const Color(0xFFD1D5DB),
-                              size: 16.sp,
+                              size: 24.sp,
                             ),
                           );
                         },
@@ -193,14 +191,14 @@ class _AddToCookbookSheetState extends State<AddToCookbookSheet> {
             padding: EdgeInsets.fromLTRB(20.w, 10.h, 20.w, 10.h + bottomPad),
             child: SizedBox(
               width: double.infinity,
-              height: 40.h,
+              height: 54.h,
               child: ElevatedButton(
                 onPressed: (_isSaving || _selectedIds.isEmpty) ? null : _handleConfirm,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFFCC3333),
                   foregroundColor: Colors.white,
                   disabledBackgroundColor: const Color(0xFFE5E7EB),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
                   elevation: 0,
                 ),
                 child: _isSaving
@@ -212,7 +210,7 @@ class _AddToCookbookSheetState extends State<AddToCookbookSheet> {
                         style: TextStyle(
                           fontFamily: 'SF Pro',
                           fontWeight: FontWeight.w700,
-                          fontSize: 11.sp,
+                          fontSize: 16.sp,
                         ),
                       ),
               ),
@@ -227,27 +225,27 @@ class _AddToCookbookSheetState extends State<AddToCookbookSheet> {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 6.h),
+        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
         decoration: BoxDecoration(
           color: const Color(0xFFCC3333).withOpacity(0.05),
-          borderRadius: BorderRadius.circular(8.r),
+          borderRadius: BorderRadius.circular(16.r),
           border: Border.all(color: const Color(0xFFCC3333).withOpacity(0.2)),
         ),
         child: Row(
           children: [
-            Icon(icon, color: const Color(0xFFCC3333), size: 16.sp),
+            Icon(icon, color: const Color(0xFFCC3333), size: 22.sp),
             SizedBox(width: 12.w),
             Text(
               label,
               style: TextStyle(
                 fontFamily: 'SF Pro',
                 fontWeight: FontWeight.w700,
-                fontSize: 10.sp,
+                fontSize: 15.sp,
                 color: const Color(0xFFCC3333),
               ),
             ),
             const Spacer(),
-            Icon(Icons.chevron_right_rounded, color: const Color(0xFFCC3333), size: 16.sp),
+            Icon(Icons.chevron_right_rounded, color: const Color(0xFFCC3333), size: 20.sp),
           ],
         ),
       ),
