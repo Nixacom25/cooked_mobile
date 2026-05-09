@@ -138,11 +138,11 @@ class _MyAccountScreenState extends State<MyAccountScreen> {
               children: [
                 // ── Red Header Background ────────────────────────────────────
                 SizedBox(
-                  height: 180.h,
+                  height: 130.h,
                   width: double.infinity,
                   child: ClipRRect(
                     borderRadius: BorderRadius.vertical(
-                      bottom: Radius.circular(15.r),
+                      bottom: Radius.circular(15),
                     ), // Match Profile Screen
                     child: Stack(
                       fit: StackFit.expand,
@@ -185,7 +185,7 @@ class _MyAccountScreenState extends State<MyAccountScreen> {
                         style: TextStyle(
                           fontFamily: 'SF Pro',
                           fontWeight: FontWeight.w600,
-                          fontSize: 22.sp,
+                          fontSize: 18.sp,
                           color: Colors.white,
                         ),
                       ),
@@ -198,16 +198,16 @@ class _MyAccountScreenState extends State<MyAccountScreen> {
                   child: GestureDetector(
                     onTap: _pickImage,
                     child: Container(
-                      width: 100.w,
-                      height: 100.h,
+                      width: 80.w,
+                      height: 80.h,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: Colors.white,
-                        border: Border.all(color: Colors.white, width: 4.r),
+                        border: Border.all(color: Colors.white, width: 4),
                         boxShadow: [
                           BoxShadow(
                             color: Colors.black.withOpacity(0.1),
-                            blurRadius: 10.r,
+                            blurRadius: 10,
                             offset: Offset(0, 4.h),
                           ),
                         ],
@@ -241,7 +241,7 @@ class _MyAccountScreenState extends State<MyAccountScreen> {
                 style: TextStyle(
                   fontFamily: 'SF Pro',
                   fontWeight: FontWeight.w600,
-                  fontSize: 16.sp,
+                  fontSize: 13.sp,
                   color: const Color(0xFFC83A2D),
                 ),
               ),
@@ -288,24 +288,24 @@ class _MyAccountScreenState extends State<MyAccountScreen> {
                       hintStyle: TextStyle(
                         color: const Color(0xFFBBBBBB),
                         fontFamily: 'SF Pro',
-                        fontSize: 14.sp,
+                        fontSize: 11.sp,
                       ),
                       filled: true,
                       fillColor: Colors.white,
                       contentPadding: EdgeInsets.symmetric(
-                        horizontal: 16.w,
-                        vertical: 16.h,
+                        horizontal: 12.w,
+                        vertical: 10.h,
                       ),
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12.r),
+                        borderRadius: BorderRadius.circular(10),
                         borderSide: const BorderSide(color: Color(0xFFE8E8E8)),
                       ),
                       enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12.r),
+                        borderRadius: BorderRadius.circular(10),
                         borderSide: const BorderSide(color: Color(0xFFE8E8E8)),
                       ),
                       focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12.r),
+                        borderRadius: BorderRadius.circular(10),
                         borderSide: const BorderSide(
                           color: Color(0xFFC83A2D),
                           width: 1.5,
@@ -347,7 +347,7 @@ class _MyAccountScreenState extends State<MyAccountScreen> {
                   // Logout Button
                   SizedBox(
                     width: double.infinity,
-                    height: 52.h,
+                    height: 42.h,
                     child: OutlinedButton(
                       onPressed: _logout,
                       style: OutlinedButton.styleFrom(
@@ -357,14 +357,14 @@ class _MyAccountScreenState extends State<MyAccountScreen> {
                           width: 1.5,
                         ),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12.r),
+                          borderRadius: BorderRadius.circular(12),
                         ),
                       ),
                       child: Text(
                         'Logout',
                         style: TextStyle(
                           fontFamily: 'SF Pro',
-                          fontSize: 16.sp,
+                          fontSize: 13.sp,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -384,7 +384,7 @@ class _MyAccountScreenState extends State<MyAccountScreen> {
 // ── Helpers ───────────────────────────────────────────────────────────────────
 TextStyle _textStyle() => TextStyle(
   fontFamily: 'SF Pro',
-  fontSize: 15.sp,
+  fontSize: 13.sp,
   color: const Color(0xFF1A1A1A),
 );
 
@@ -393,7 +393,7 @@ Widget _label(String t) => Text(
   style: TextStyle(
     fontFamily: 'SF Pro',
     fontWeight: FontWeight.w500,
-    fontSize: 14.sp,
+    fontSize: 11.sp,
     color: const Color(0xFF333333),
   ),
 );
@@ -401,7 +401,7 @@ Widget _label(String t) => Text(
 Widget _field({required Widget child}) => Container(
   decoration: BoxDecoration(
     color: Colors.white,
-    borderRadius: BorderRadius.circular(12.r),
+    borderRadius: BorderRadius.circular(10),
     border: Border.all(color: const Color(0xFFE8E8E8)),
   ),
   child: child,
@@ -409,9 +409,9 @@ Widget _field({required Widget child}) => Container(
 
 InputDecoration _dec(String hint) => InputDecoration(
   hintText: hint,
-  hintStyle: TextStyle(color: const Color(0xFFBBBBBB), fontFamily: 'SF Pro', fontSize: 13.sp),
+  hintStyle: TextStyle(color: const Color(0xFFBBBBBB), fontFamily: 'SF Pro', fontSize: 11.sp),
   border: InputBorder.none,
-  contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
+  contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
 );
 
 Widget _defaultAvatar() {

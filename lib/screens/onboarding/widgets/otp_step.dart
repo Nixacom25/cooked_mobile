@@ -117,7 +117,7 @@ class _OtpStepState extends State<OtpStep> {
           Text(
             'Verify your account',
             style: TextStyle(
-              fontSize: 18.sp,
+              fontSize: 16.sp,
               fontWeight: FontWeight.w800,
               color: const Color(0xFF0D1B3E),
               fontFamily: 'SF Pro',
@@ -129,7 +129,7 @@ class _OtpStepState extends State<OtpStep> {
           Text(
             'Please enter the 6-digit code we sent to\n${widget.email}',
             style: TextStyle(
-              fontSize: 11.sp,
+              fontSize: 10.sp,
               color: const Color(0xFF7B8190),
               fontFamily: 'SF Pro',
               height: 1.4,

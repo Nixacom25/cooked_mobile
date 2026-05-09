@@ -38,20 +38,20 @@ class _ProfileRatingStepState extends State<ProfileRatingStep> {
           Text(
             'You\'re almost ready, ${widget.firstName.isNotEmpty ? widget.firstName[0].toLowerCase() : 'r'}!',
             style: TextStyle(
-              fontSize: 24.sp,
-              fontWeight: FontWeight.w700,
+              fontSize: 16.sp,
+              fontWeight: FontWeight.w800,
               color: const Color(0xFF0D1B3E),
               fontFamily: 'SF Pro',
               height: 1.2,
               letterSpacing: -0.5,
             ),
           ),
-          SizedBox(height: 8.h),
+          SizedBox(height: 6.h),
           Text(
             'Quick question before we begin..',
             style: TextStyle(
-              fontSize: 13.sp,
-              color: const Color(0xFF7B8190),
+              fontSize: 10.sp,
+              color: const Color(0xFF9CA3AF),
               fontFamily: 'SF Pro',
             ),
           ),

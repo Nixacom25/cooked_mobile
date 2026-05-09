@@ -32,7 +32,7 @@ class WelcomeScreen extends StatelessWidget {
                           const Spacer(flex: 3),
                           Image.asset(
                             'assets/images/logo.png',
-                            width: 100.w,
+                            width: 80.w,
                             fit: BoxFit.contain,
                           ),
                           const Spacer(flex: 3),
@@ -46,7 +46,7 @@ class WelcomeScreen extends StatelessWidget {
                                   'Welcome to Cooked',
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
-                                    fontSize: 28.sp,
+                                    fontSize: 24.sp,
                                     fontWeight: FontWeight.w800,
                                     color: AppColors.textDark,
                                     fontFamily: 'SF Pro',
@@ -58,7 +58,7 @@ class WelcomeScreen extends StatelessWidget {
                                   'Scan ingredients. Save recipes.Plan effortlessly.',
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
-                                    fontSize: 15.sp,
+                                    fontSize: 13.sp,
                                     color: AppColors.textMuted,
                                     fontFamily: 'SF Pro',
                                     height: 1.2,
@@ -69,7 +69,7 @@ class WelcomeScreen extends StatelessWidget {
                                 // Get Started → navigates to GetStarted (replaces Welcome so no back)
                                 SizedBox(
                                   width: double.infinity,
-                                  height: 54.h,
+                                  height: 42.h,
                                   child: ElevatedButton(
                                     onPressed: () => Navigator.pushReplacementNamed(
                                       context,
@@ -86,7 +86,7 @@ class WelcomeScreen extends StatelessWidget {
                                     child: Text(
                                       'Get Started',
                                       style: TextStyle(
-                                        fontSize: 16.sp,
+                                        fontSize: 13.sp,
                                         fontWeight: FontWeight.w700,
                                         fontFamily: 'SF Pro',
                                       ),
@@ -104,7 +104,7 @@ class WelcomeScreen extends StatelessWidget {
                                       style: TextStyle(
                                         color: AppColors.textMuted,
                                         fontFamily: 'SF Pro',
-                                        fontSize: 14.sp,
+                                        fontSize: 13.sp,
                                       ),
                                     ),
                                     GestureDetector(
@@ -116,7 +116,7 @@ class WelcomeScreen extends StatelessWidget {
                                           color: const Color(0xFFCC3333),
                                           fontWeight: FontWeight.w700,
                                           fontFamily: 'SF Pro',
-                                          fontSize: 14.sp,
+                                          fontSize: 13.sp,
                                         ),
                                       ),
                                     ),

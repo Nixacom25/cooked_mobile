@@ -242,7 +242,7 @@ class _CookbooksGridState extends State<_CookbooksGrid> {
             crossAxisCount: 2,
             crossAxisSpacing: 12,
             mainAxisSpacing: 16,
-            childAspectRatio: 0.82,
+            childAspectRatio: 0.95,
           ),
           itemBuilder: (ctx, i) {
             final cb = displayList[i];
@@ -415,7 +415,7 @@ class _RecipesGridState extends State<_RecipesGrid> {
         crossAxisCount: 2,
         mainAxisSpacing: 12.h,
         crossAxisSpacing: 12.w,
-        childAspectRatio: 0.85,
+        childAspectRatio: 0.95,
       ),
       itemBuilder: (ctx, i) {
         final r = displayList[i];
@@ -544,7 +544,7 @@ class _CreatorsGridState extends State<_CreatorsGrid> {
             crossAxisCount: 3,
             crossAxisSpacing: 12,
             mainAxisSpacing: 20,
-            childAspectRatio: 0.75,
+            childAspectRatio: 0.85,
           ),
           itemBuilder: (ctx, i) {
             final c = displayList[i];
@@ -727,7 +727,7 @@ class _StaticCookbooksGridState extends State<_StaticCookbooksGrid> {
         crossAxisCount: 2,
         crossAxisSpacing: 12,
         mainAxisSpacing: 16,
-        childAspectRatio: 0.82,
+        childAspectRatio: 0.95,
       ),
       itemBuilder: (ctx, i) {
         final name = names[i];

@@ -29,7 +29,7 @@ class ProfileSummaryStep extends StatelessWidget {
           Text(
             '${firstName.toTitleCase()}, your profile is ready!',
             style: TextStyle(
-              fontSize: 18.sp,
+              fontSize: 16.sp,
               fontWeight: FontWeight.w800,
               color: const Color(0xFF0D1B3E),
               fontFamily: 'SF Pro',
@@ -42,7 +42,7 @@ class ProfileSummaryStep extends StatelessWidget {
           // Stats Card
           Container(
             width: double.infinity,
-            padding: EdgeInsets.all(24.r),
+            padding: EdgeInsets.all(16.r),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(16.r),
@@ -63,7 +63,7 @@ class ProfileSummaryStep extends StatelessWidget {
                     (Match m) => '${m[1]},',
                   ),
                   style: TextStyle(
-                    fontSize: 24.sp,
+                    fontSize: 20.sp,
                     fontWeight: FontWeight.w800,
                     color: const Color(0xFFC83A2D),
                     fontFamily: 'SF Pro',
@@ -73,20 +73,20 @@ class ProfileSummaryStep extends StatelessWidget {
                 Text(
                   'recipes personalized just for you',
                   style: TextStyle(
-                    fontSize: 11.sp,
+                    fontSize: 10.sp,
                     color: const Color(0xFF111827),
                     fontWeight: FontWeight.w700,
                     fontFamily: 'SF Pro',
                   ),
                 ),
-                SizedBox(height: 24.h),
+                SizedBox(height: 16.h),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       'Your favorite cuisines:',
                       style: TextStyle(
-                        fontSize: 12.sp,
+                        fontSize: 10.sp,
                         fontWeight: FontWeight.w600,
                         color: const Color(0xFF111827),
                         fontFamily: 'SF Pro',
@@ -108,7 +108,7 @@ class ProfileSummaryStep extends StatelessWidget {
           Text(
             "You'll Be Able To",
             style: TextStyle(
-              fontSize: 14.sp,
+              fontSize: 12.sp,
               fontWeight: FontWeight.w800,
               color: const Color(0xFF0D1B3E),
               fontFamily: 'SF Pro',
@@ -150,7 +150,7 @@ class ProfileSummaryStep extends StatelessWidget {
       child: Text(
         label,
         style: TextStyle(
-          fontSize: 12.sp,
+          fontSize: 10.sp,
           color: const Color(0xFF111827),
           fontWeight: FontWeight.w600,
           fontFamily: 'SF Pro',
@@ -166,30 +166,28 @@ class ProfileSummaryStep extends StatelessWidget {
     required Color iconColor,
   }) {
     return Container(
-      margin: EdgeInsets.only(bottom: 16.h),
-      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
+      margin: EdgeInsets.only(bottom: 12.h),
+      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16.r),
+        borderRadius: BorderRadius.circular(12.r),
         border: Border.all(color: const Color(0xFFEEEEEE)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            child: SvgPicture.asset(
+          SvgPicture.asset(
               'assets/icones/$icon',
-              height: 24.sp,
-              width: 24.sp,
+              height: 20.sp,
+              width: 20.sp,
               colorFilter: ColorFilter.mode(iconColor, BlendMode.srcIn),
               placeholderBuilder: (context) => SizedBox(
-                height: 24.sp,
-                width: 24.sp,
+                height: 20.sp,
+                width: 20.sp,
                 child: const CircularProgressIndicator(strokeWidth: 2),
               ),
             ),
-          ),
-          SizedBox(width: 16.w),
+          SizedBox(width: 12.w),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -197,7 +195,7 @@ class ProfileSummaryStep extends StatelessWidget {
                 Text(
                   title,
                   style: TextStyle(
-                    fontSize: 12.sp,
+                    fontSize: 10.sp,
                     fontWeight: FontWeight.w700,
                     color: const Color(0xFF0D1B3E),
                     fontFamily: 'SF Pro',
@@ -207,7 +205,7 @@ class ProfileSummaryStep extends StatelessWidget {
                 Text(
                   desc,
                   style: TextStyle(
-                    fontSize: 11.sp,
+                    fontSize: 9.sp,
                     color: const Color(0xFF7B8190),
                     fontFamily: 'SF Pro',
                     height: 1.4,

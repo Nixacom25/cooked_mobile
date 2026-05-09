@@ -34,9 +34,9 @@ class AppSearchField extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10.r,
-            offset: Offset(0, 4.h),
+            offset: Offset(0, 2.h),
           ),
         ],
       ),
@@ -45,10 +45,10 @@ class AppSearchField extends StatelessWidget {
         children: [
           Icon(
             Icons.search_rounded,
-            size: 22.sp, // Reduced from 30
+            size: 18.sp, 
             color: const Color(0xFF9CA3AF),
           ),
-          SizedBox(width: 12.w),
+          SizedBox(width: 8.w),
           Expanded(
             child: TextField(
               controller: controller,
@@ -57,14 +57,14 @@ class AppSearchField extends StatelessWidget {
               textCapitalization: TextCapitalization.words,
               style: TextStyle(
                 fontFamily: 'SF Pro',
-                fontSize: 14.sp,
+                fontSize: 12.sp,
                 color: const Color(0xFF1A1A1A),
               ),
               decoration: InputDecoration(
                 hintText: hintText,
                 hintStyle: TextStyle(
                   fontFamily: 'SF Pro',
-                  fontSize: 14.sp,
+                  fontSize: 12.sp,
                   color: Colors.grey[400],
                 ),
                 filled: true,
@@ -74,7 +74,7 @@ class AppSearchField extends StatelessWidget {
                 enabledBorder: InputBorder.none,
                 focusedBorder: InputBorder.none,
                 isDense: true,
-                contentPadding: EdgeInsets.symmetric(vertical: 14.h),
+                contentPadding: EdgeInsets.symmetric(vertical: 12.h),
               ),
             ),
           ),
@@ -85,7 +85,7 @@ class AppSearchField extends StatelessWidget {
                 padding: EdgeInsets.only(left: 8.w),
                 child: Icon(
                   suffixIcon,
-                  size: 20.sp, // Reduced from 22
+                  size: 18.sp, 
                   color: const Color(0xFFCC3333),
                 ),
               ),

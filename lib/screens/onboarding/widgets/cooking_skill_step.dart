@@ -58,7 +58,7 @@ class _CookingSkillStepState extends State<CookingSkillStep> {
           Text(
             "What's your cooking skill level?",
             style: TextStyle(
-              fontSize: 18.sp,
+              fontSize: 16.sp,
               fontWeight: FontWeight.w800,
               color: const Color(0xFF0D1B3E),
               fontFamily: 'SF Pro',
@@ -70,7 +70,7 @@ class _CookingSkillStepState extends State<CookingSkillStep> {
           Text(
             "We'll match recipes to your experience",
             style: TextStyle(
-              fontSize: 11.sp,
+              fontSize: 10.sp,
               color: const Color(0xFF7B8190),
               fontFamily: 'SF Pro',
             ),
@@ -78,9 +78,8 @@ class _CookingSkillStepState extends State<CookingSkillStep> {
           SizedBox(height: 24.h),
           ..._levels.map((level) {
             final isSelected = _selectedLevel == level['title'];
-
             return Padding(
-              padding: EdgeInsets.only(bottom: 15.h),
+              padding: EdgeInsets.only(bottom: 12.h),
               child: GestureDetector(
                 onTap: () {
                   setState(() => _selectedLevel = level['title']);
@@ -88,15 +87,15 @@ class _CookingSkillStepState extends State<CookingSkillStep> {
                 },
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
-                  padding: EdgeInsets.symmetric(horizontal: 14.r, vertical: 10.h),
+                  padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(16.r),
+                    borderRadius: BorderRadius.circular(12.r),
                     border: Border.all(
                       color: isSelected
                           ? const Color(0xFFC83A2D)
                           : const Color(0xFFE5E7EB).withOpacity(0.5),
-                      width: isSelected ? 2.w : 1.5.w,
+                      width: isSelected ? 1.5.w : 1.w,
                     ),
                     boxShadow: [
                       BoxShadow(
@@ -108,19 +107,10 @@ class _CookingSkillStepState extends State<CookingSkillStep> {
                   ),
                   child: Row(
                     children: [
-                      Container(
-                        child: SvgPicture.asset(
-                          'assets/icones/${level['icon']}',
-                          height: 32.sp,
-                          width: 32.sp,
-                          placeholderBuilder: (context) => SizedBox(
-                            height: 32.sp,
-                            width: 32.sp,
-                            child: const CircularProgressIndicator(
-                              strokeWidth: 2,
-                            ),
-                          ),
-                        ),
+                      SvgPicture.asset(
+                        'assets/icones/${level['icon']}',
+                        height: 24.sp,
+                        width: 24.sp,
                       ),
                       SizedBox(width: 16.w),
                       Expanded(
@@ -140,7 +130,7 @@ class _CookingSkillStepState extends State<CookingSkillStep> {
                             Text(
                               level['desc']!,
                               style: TextStyle(
-                                fontSize: 11.sp,
+                                fontSize: 10.sp,
                                 fontWeight: FontWeight.w500,
                                 color: const Color(0xFF9CA3AF),
                                 fontFamily: 'SF Pro',

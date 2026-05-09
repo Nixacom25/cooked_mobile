@@ -29,7 +29,7 @@ class ProfileSignupStep extends StatelessWidget {
           Text(
             'Save your profile,',
             style: TextStyle(
-              fontSize: 18.sp,
+              fontSize: 15.sp,
               fontWeight: FontWeight.w800,
               color: const Color(0xFF0D1B3E),
               fontFamily: 'SF Pro',
@@ -41,7 +41,7 @@ class ProfileSignupStep extends StatelessWidget {
           Text(
             'Your 22-step profile is ready to save',
             style: TextStyle(
-              fontSize: 11.sp,
+              fontSize: 10.sp,
               color: const Color(0xFF7B8190),
               fontFamily: 'SF Pro',
             ),
@@ -108,9 +108,9 @@ class ProfileSignupStep extends StatelessWidget {
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.white,
             foregroundColor: Colors.black,
-            padding: EdgeInsets.symmetric(vertical: 18.h),
+            padding: EdgeInsets.symmetric(vertical: 10.h),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(50.r),
+              borderRadius: BorderRadius.circular(50),
               side: BorderSide(
                 color: isEnabled ? const Color(0xFFC83A2D) : Colors.grey,
               ),
@@ -122,11 +122,11 @@ class ProfileSignupStep extends StatelessWidget {
             children: [
               SvgPicture.asset(
                 'assets/icones/$icon',
-                height: 24.sp,
-                width: 24.sp,
+                height: 18.sp,
+                width: 18.sp,
                 placeholderBuilder: (context) => SizedBox(
-                  height: 24.sp,
-                  width: 24.sp,
+                  height: 18.sp,
+                  width: 18.sp,
                   child: const CircularProgressIndicator(strokeWidth: 2),
                 ),
               ),
@@ -134,7 +134,7 @@ class ProfileSignupStep extends StatelessWidget {
               Text(
                 isEnabled ? label : '$label (Soon)',
                 style: TextStyle(
-                  fontSize: 14.sp,
+                  fontSize: 13.sp,
                   fontWeight: FontWeight.w800,
                   fontFamily: 'SF Pro',
                   color: isEnabled ? Colors.black : Colors.grey,

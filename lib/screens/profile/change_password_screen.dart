@@ -101,7 +101,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
           style: TextStyle(
             fontFamily: 'SF Pro',
             fontWeight: FontWeight.w600,
-            fontSize: 22.sp,
+            fontSize: 18.sp,
             color: const Color(0xFF1A1A1A),
           ),
         ),
@@ -116,7 +116,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
               style: TextStyle(
                 fontFamily: 'SF Pro',
                 fontWeight: FontWeight.w700,
-                fontSize: 18.sp,
+                fontSize: 15.sp,
                 color: const Color(0xFF1A1A1A),
               ),
             ),
@@ -226,7 +226,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
               style: TextStyle(
                 fontFamily: 'SF Pro',
                 fontWeight: FontWeight.w700,
-                fontSize: 18.sp,
+                fontSize: 15.sp,
                 color: const Color(0xFF1A1A1A),
               ),
             ),
@@ -235,7 +235,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
               'Here are all the devices that are currently logged in to your account.',
               style: TextStyle(
                 fontFamily: 'SF Pro',
-                fontSize: 14.sp,
+                fontSize: 11.sp,
                 height: 1.4,
                 color: const Color(0xFF888888),
               ),
@@ -247,14 +247,14 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                 style: TextStyle(
                   fontFamily: 'SF Pro',
                   color: const Color(0xFF888888),
-                  fontSize: 14.sp,
+                  fontSize: 11.sp,
                 ),
               )
             else
               Container(
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(16.r),
+                  borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: const Color(0xFFEEEEEE), width: 1.w),
                 ),
                 child: Column(
@@ -295,11 +295,11 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     final subtitle = "${session.location} • $date";
 
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
       child: Row(
         children: [
           Container(
-            padding: EdgeInsets.all(12.r),
+            padding: EdgeInsets.all(8),
             decoration: BoxDecoration(
               color: session.isCurrentSession
                   ? const Color(0xFFE8F7F0)
@@ -308,7 +308,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
             ),
             child: Icon(
               icon,
-              size: 22.sp,
+              size: 18.sp,
               color: session.isCurrentSession
                   ? const Color(0xFF00B251)
                   : const Color(0xFF888888),
@@ -326,7 +326,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                       style: TextStyle(
                         fontFamily: 'SF Pro',
                         fontWeight: FontWeight.w600,
-                        fontSize: 15.sp,
+                        fontSize: 13.sp,
                         color: const Color(0xFF1A1A1A),
                       ),
                     ),
@@ -359,7 +359,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                   subtitle,
                   style: TextStyle(
                     fontFamily: 'SF Pro',
-                    fontSize: 13.sp,
+                    fontSize: 11.sp,
                     color: const Color(0xFF888888),
                   ),
                 ),
@@ -382,7 +382,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                   }
                 }
               },
-              icon: Icon(Icons.logout_rounded, color: const Color(0xFFCC3333), size: 24.sp),
+              icon: Icon(Icons.logout_rounded, color: const Color(0xFFCC3333), size: 20.sp),
             ),
         ],
       ),
@@ -393,7 +393,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
 // ── Helpers ───────────────────────────────────────────────────────────────────
 TextStyle _textStyle() => TextStyle(
   fontFamily: 'SF Pro',
-  fontSize: 15.sp,
+  fontSize: 13.sp,
   color: const Color(0xFF1A1A1A),
 );
 
@@ -402,7 +402,7 @@ Widget _label(String t) => Text(
   style: TextStyle(
     fontFamily: 'SF Pro',
     fontWeight: FontWeight.w500,
-    fontSize: 14.sp,
+    fontSize: 11.sp,
     color: const Color(0xFF333333),
   ),
 );
@@ -410,7 +410,7 @@ Widget _label(String t) => Text(
 Widget _field({required Widget child}) => Container(
   decoration: BoxDecoration(
     color: Colors.white,
-    borderRadius: BorderRadius.circular(12.r),
+    borderRadius: BorderRadius.circular(10),
     border: Border.all(color: const Color(0xFFE8E8E8)),
   ),
   child: child,
@@ -418,7 +418,7 @@ Widget _field({required Widget child}) => Container(
 
 InputDecoration _dec(String hint) => InputDecoration(
   hintText: hint,
-  hintStyle: TextStyle(color: const Color(0xFFBBBBBB), fontFamily: 'SF Pro', fontSize: 13.sp),
+  hintStyle: TextStyle(color: const Color(0xFFBBBBBB), fontFamily: 'SF Pro', fontSize: 11.sp),
   border: InputBorder.none,
-  contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
+  contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
 );

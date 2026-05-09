@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../core/theme/app_theme.dart';
 import '../../routes/app_routes.dart';
 import '../../services/auth_service.dart';
@@ -103,7 +104,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                 children: [
                   Image.asset(
                     'assets/images/logo.png',
-                    width: 100,
+                    width: 80.w,
                     fit: BoxFit.contain,
                   ),
                 ],
@@ -148,11 +149,11 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                         mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Center(
+                          Center(
                             child: Text(
                               'Create New Password',
                               style: TextStyle(
-                                fontSize: 24,
+                                fontSize: 15.sp,
                                 fontWeight: FontWeight.w800,
                                 color: Colors.white,
                                 fontFamily: 'SF Pro',
@@ -189,7 +190,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                           // Send button
                           SizedBox(
                             width: double.infinity,
-                            height: 50,
+                            height: 42.h,
                             child: ElevatedButton(
                               onPressed: _isLoading
                                   ? null
@@ -222,10 +223,10 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                                         strokeWidth: 2,
                                       ),
                                     )
-                                  : const Text(
+                                  : Text(
                                       'Send',
                                       style: TextStyle(
-                                        fontSize: 16,
+                                        fontSize: 13.sp,
                                         fontWeight: FontWeight.w600,
                                         fontFamily: 'SF Pro',
                                       ),
@@ -255,8 +256,8 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                 GestureDetector(
                   onTap: () => Navigator.pop(context),
                   child: Container(
-                    width: 42,
-                    height: 42,
+                    width: 34.w,
+                    height: 34.h,
                     decoration: BoxDecoration(
                       color: Color(0xffF8F5EF),
                       borderRadius: BorderRadius.circular(12),
@@ -267,19 +268,19 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                         ),
                       ],
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.arrow_back_rounded,
-                      size: 24,
+                      size: 18.sp,
                       color: AppColors.textDark,
                     ),
                   ),
                 ),
-                const Text(
+                Text(
                   'RESET PASSWORD',
                   style: TextStyle(
                     fontFamily: 'SF Pro',
                     fontWeight: FontWeight.w800,
-                    fontSize: 14,
+                    fontSize: 13.sp,
                     letterSpacing: 0.8,
                     color: AppColors.textDark,
                   ),
@@ -299,10 +300,10 @@ class _Label extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Text(
     text,
-    style: const TextStyle(
+    style: TextStyle(
       color: Colors.white,
       fontFamily: 'SF Pro',
-      fontSize: 14,
+      fontSize: 11.sp,
     ),
   );
 }
@@ -327,18 +328,18 @@ class _PasswordField extends StatelessWidget {
       child: TextField(
         controller: controller,
         obscureText: obscure,
-        style: const TextStyle(fontFamily: 'SF Pro', fontSize: 14),
+        style: TextStyle(fontFamily: 'SF Pro', fontSize: 13.sp),
         decoration: InputDecoration(
           hintText: '• • • • • • • •',
-          hintStyle: const TextStyle(
+          hintStyle: TextStyle(
             color: AppColors.textMuted,
             fontFamily: 'SF Pro',
-            fontSize: 14,
+            fontSize: 13.sp,
           ),
-          prefixIcon: const Icon(
+          prefixIcon: Icon(
             Icons.lock_outline_rounded,
             color: AppColors.textMuted,
-            size: 20,
+            size: 18.sp,
           ),
           suffixIcon: IconButton(
             icon: Icon(
@@ -346,7 +347,7 @@ class _PasswordField extends StatelessWidget {
                   ? Icons.visibility_off_outlined
                   : Icons.visibility_outlined,
               color: AppColors.textMuted,
-              size: 20,
+              size: 18.sp,
             ),
             onPressed: onToggle,
           ),
@@ -370,9 +371,9 @@ class _PasswordField extends StatelessWidget {
             fontSize: 12,
             fontFamily: 'SF Pro',
           ),
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 10,
-            vertical: 10,
+          contentPadding: EdgeInsets.symmetric(
+            horizontal: 10.w,
+            vertical: 8.h,
           ),
         ),
       ),

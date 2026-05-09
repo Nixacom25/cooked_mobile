@@ -85,7 +85,7 @@ class _FlavorSpiceStepState extends State<FlavorSpiceStep> {
           Text(
             'Your flavor DNA',
             style: TextStyle(
-              fontSize: 18.sp,
+              fontSize: 16.sp,
               fontWeight: FontWeight.w800,
               color: const Color(0xFF0D1B3E),
               fontFamily: 'SF Pro',
@@ -97,7 +97,7 @@ class _FlavorSpiceStepState extends State<FlavorSpiceStep> {
           Text(
             'Move the sliders to match your taste',
             style: TextStyle(
-              fontSize: 11.sp,
+              fontSize: 10.sp,
               color: const Color(0xFF9CA3AF),
               fontFamily: 'SF Pro',
             ),
@@ -116,7 +116,7 @@ class _FlavorSpiceStepState extends State<FlavorSpiceStep> {
           ),
           SizedBox(height: 15.h),
           Container(
-            padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
+            padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 8.h),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(16.r),
@@ -140,8 +140,8 @@ class _FlavorSpiceStepState extends State<FlavorSpiceStep> {
                           active
                               ? 'assets/icones/spice1.svg'
                               : 'assets/icones/spice2.svg',
-                          width: 25.sp,
-                          height: 25.sp,
+                          width: 20.sp,
+                          height: 20.sp,
                         ),
                       ),
                     );
@@ -156,8 +156,8 @@ class _FlavorSpiceStepState extends State<FlavorSpiceStep> {
                       Text(
                         currentLevel['title']!,
                         style: TextStyle(
-                          fontSize: 12.sp,
-                          fontWeight: FontWeight.w700,
+                          fontSize: 9.sp,
+                          fontWeight: FontWeight.w500,
                           color: const Color(0xFF0D1B3E),
                           fontFamily: 'SF Pro',
                         ),
@@ -268,17 +268,17 @@ class _FlavorSpiceStepState extends State<FlavorSpiceStep> {
           // Summary Box
           Container(
             width: double.infinity,
-            padding: EdgeInsets.all(16.r),
+            padding: EdgeInsets.all(12.r),
             decoration: BoxDecoration(
               color: const Color(0xFFF9F7F2),
-              borderRadius: BorderRadius.circular(16.r),
+              borderRadius: BorderRadius.circular(12.r),
             ),
             child: Column(
               children: [
                 Text(
                   'Your Flavor DNA:',
                   style: TextStyle(
-                    fontSize: 13.sp,
+                    fontSize: 11.sp,
                     fontWeight: FontWeight.w800,
                     color: const Color(0xFF111827),
                     fontFamily: 'SF Pro',
@@ -308,7 +308,7 @@ class _FlavorSpiceStepState extends State<FlavorSpiceStep> {
 
   Widget _buildSummaryCapsule(String label) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 6.h),
+      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
       decoration: BoxDecoration(
         color: const Color(0xFFEAEAEA),
         borderRadius: BorderRadius.circular(50.r),
@@ -316,7 +316,7 @@ class _FlavorSpiceStepState extends State<FlavorSpiceStep> {
       child: Text(
         label,
         style: TextStyle(
-          fontSize: 11.sp,
+          fontSize: 10.sp,
           fontWeight: FontWeight.w700,
           color: const Color(0xFF111827),
           fontFamily: 'SF Pro',

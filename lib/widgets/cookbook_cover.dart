@@ -27,7 +27,7 @@ class CookbookCover extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(15.r),
-        border: Border.all(color: Colors.white),
+        border: Border.all(color: const Color(0xFFF2F1EF)),
       ),
       clipBehavior: Clip.antiAlias,
       child: _buildCoverContent(recipes),
@@ -40,24 +40,9 @@ class CookbookCover extends StatelessWidget {
     final int count = recipesWithImages.length;
     
     if (count == 0) {
-      // Premium placeholder for empty cookbook
-      return Container(
-        color: const Color(0xFFF9FAFB),
-        child: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Image.asset(
-                'assets/images/cookbook.png',
-                width: 60.w,
-                height: 60.h,
-                fit: BoxFit.contain,
-                color: const Color(0xFFCC3333).withValues(alpha: 0.1),
-                colorBlendMode: BlendMode.srcIn,
-              ),
-            ],
-          ),
-        ),
+      return Image.asset(
+        'assets/images/recipes.png',
+        fit: BoxFit.contain,
       );
     }
     
@@ -90,14 +75,15 @@ class CookbookCover extends StatelessWidget {
 
   Widget _buildImage(String? imageUrl) {
     if (imageUrl == null || imageUrl.isEmpty) {
-      return Container(
-        color: const Color(0xFFF3F3F3),
+      return Image.asset(
+        'assets/images/recipes.png',
+        fit: BoxFit.contain,
       );
     }
 
     return CachedNetworkImage(
       imageUrl: imageUrl,
-      fit: BoxFit.cover,
+      fit: BoxFit.contain,
       errorWidget: (_, __, ___) =>
           Image.asset('assets/images/recipes.png', fit: BoxFit.contain),
       placeholder: (_, __) => Container(

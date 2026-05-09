@@ -69,7 +69,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
     _cuisinesFuture = RecipeService.instance.getExploreCuisines();
     _categoriesFuture = RecipeService.instance.getExploreCategories();
     _popularFuture = RecipeService.instance.getPopularRecipes(size: 10);
-    
+
     _searchCtrl.addListener(() {
       if (mounted) setState(() {});
     });
@@ -167,6 +167,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
             AppSearchField(
               controller: _searchCtrl,
               hintText: 'Search recipes, ingredients....',
+              backgroundColor: Colors.white,
             ),
           ],
         ),
@@ -264,7 +265,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                             style: TextStyle(
                               fontFamily: 'SF Pro',
                               fontWeight: FontWeight.w600, // Medium bold
-                              fontSize: 18.sp,
+                              fontSize: 10.sp,
                               color: Colors.black,
                             ),
                           ),
@@ -354,13 +355,6 @@ class _ExploreScreenState extends State<ExploreScreen> {
                           Container(
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(32.r),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.5),
-                                  blurRadius: 15.r,
-                                  offset: Offset(0, 8.h),
-                                ),
-                              ],
                             ),
                             child: Stack(
                               children: [
@@ -461,7 +455,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                 style: TextStyle(
                   fontFamily: 'SF Pro',
                   fontWeight: FontWeight.w700,
-                  fontSize: 11.sp,
+                  fontSize: 14.sp,
                   color: const Color(0xFF1A1A1A),
                   height: 1.3,
                   letterSpacing: -0.3,
@@ -536,7 +530,7 @@ class _SectionHeader extends StatelessWidget {
             style: TextStyle(
               fontFamily: 'SF Pro',
               fontWeight: FontWeight.w700,
-              fontSize: 12.sp,
+              fontSize: 14.sp,
               color: const Color(0xFF111827),
               height: 1.3,
               letterSpacing: -0.3,
@@ -547,7 +541,9 @@ class _SectionHeader extends StatelessWidget {
             child: Text(
               'View All',
               style: TextStyle(
-                fontSize: 11.sp,
+                fontFamily: 'SF Pro',
+                fontWeight: FontWeight.w700,
+                fontSize: 12.sp,
                 color: const Color(0xFFC83A2D),
               ),
             ),

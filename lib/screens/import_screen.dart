@@ -351,7 +351,7 @@ class _ImportScreenState extends State<ImportScreen> {
                         focusedBorder: InputBorder.none,
                         contentPadding: EdgeInsets.symmetric(
                           horizontal: 18.w,
-                          vertical: 12.h,
+                          vertical: 10.h,
                         ),
                       ),
                     ),
@@ -392,21 +392,30 @@ class _ImportScreenState extends State<ImportScreen> {
             GestureDetector(
               onTap: () => _importFromUrl(_linkCtrl.text.trim()),
               child: Container(
-                height: 50.h,
+                height: 44.h,
                 decoration: BoxDecoration(
                   color: const Color(0xFFCC3333),
                   borderRadius: BorderRadius.circular(30.r),
                 ),
-                child: Center(
-                  child: Text(
-                    'Import Recipes',
-                    style: TextStyle(
-                      fontFamily: 'SF Pro',
-                      fontWeight: FontWeight.w600,
-                      fontSize: 13.sp,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.file_download_outlined,
                       color: Colors.white,
+                      size: 18.sp,
                     ),
-                  ),
+                    SizedBox(width: 8.w),
+                    Text(
+                      'Import Recipe',
+                      style: TextStyle(
+                        fontFamily: 'SF Pro',
+                        fontWeight: FontWeight.w700,
+                        fontSize: 12.sp,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),

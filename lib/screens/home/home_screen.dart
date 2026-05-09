@@ -403,17 +403,17 @@ class _GlassBottomNav extends StatelessWidget {
               child: Container(
                 height: 60.h,
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.7),
+                  color: Colors.white.withValues(alpha: 0.95),
                   borderRadius: BorderRadius.circular(40.r),
                   border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.5),
-                    width: 1.5,
+                    color: Colors.black.withValues(alpha: 0.05),
+                    width: 1,
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.05),
-                      blurRadius: 30.r,
-                      offset: Offset(0, 10.h),
+                      color: Colors.black.withValues(alpha: 0.12),
+                      blurRadius: 25.r,
+                      offset: Offset(0, 8.h),
                     ),
                   ],
                 ),
@@ -421,11 +421,6 @@ class _GlassBottomNav extends StatelessWidget {
                   builder: (context, constraints) {
                     return Stack(
                       children: [
-                        // Fluid animated indicator
-                        _FluidIndicator(
-                          currentIndex: currentIndex,
-                          maxWidth: constraints.maxWidth,
-                        ),
                         Row(
                           children: [
                             _NavItem(
@@ -475,13 +470,13 @@ class _GlassBottomNav extends StatelessWidget {
 
           // Camera FAB elevated
           Positioned(
-            top: -20.h,
+            top: -18.h,
             child: GestureDetector(
               onTap: onCameraTap,
               child: Container(
                 key: scanTabKey,
-                width: 60.w,
-                height: 60.h,
+                width: 50.w,
+                height: 50.h,
                 decoration: BoxDecoration(
                   color: currentIndex == 2
                       ? Colors.black87
@@ -492,9 +487,9 @@ class _GlassBottomNav extends StatelessWidget {
                       color: (currentIndex == 2
                               ? Colors.black87
                               : const Color(0xFFCC3333))
-                          .withValues(alpha: 0.3),
-                      blurRadius: 20.r,
-                      offset: Offset(0, 8.h),
+                          .withValues(alpha: 0.4),
+                      blurRadius: 15.r,
+                      offset: Offset(0, 6.h),
                     ),
                   ],
                 ),
@@ -503,46 +498,12 @@ class _GlassBottomNav extends StatelessWidget {
                       ? Icons.keyboard_arrow_down_rounded
                       : Icons.camera_alt_rounded,
                   color: Colors.white,
-                  size: currentIndex == 2 ? 32.sp : 24.sp,
+                  size: currentIndex == 2 ? 30.sp : 24.sp,
                 ),
               ),
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _FluidIndicator extends StatelessWidget {
-  final int currentIndex;
-  final double maxWidth;
-  const _FluidIndicator({
-    required this.currentIndex,
-    required this.maxWidth,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final slotWidth = maxWidth / 5;
-    final targetSlot = currentIndex;
-    
-    // We adjust padding to make it feel like it wraps the content
-    final horizontalPadding = 4.w;
-    final verticalPadding = 4.h;
-
-    return AnimatedPositioned(
-      duration: const Duration(milliseconds: 350),
-      curve: Curves.fastOutSlowIn,
-      left: (targetSlot * slotWidth) + horizontalPadding,
-      top: verticalPadding,
-      child: Container(
-        width: slotWidth - (horizontalPadding * 2),
-        height: 56.h - (verticalPadding * 2), // Total header height is around 60h
-        decoration: BoxDecoration(
-          color: const Color(0xFFCC3333).withValues(alpha: 0.12),
-          borderRadius: BorderRadius.circular(20.r),
-        ),
       ),
     );
   }
@@ -580,16 +541,16 @@ class _NavItem extends StatelessWidget {
             Icon(
               active ? activeIcon : icon,
               key: iconKey,
-              size: 22.sp, // Slightly reduced
+              size: 20.sp, 
               color: active ? const Color(0xFFCC3333) : const Color(0xFF8E8E8E),
             ),
-            SizedBox(height: 2.h),
+            SizedBox(height: 1.h),
             Text(
               label,
               style: TextStyle(
                 fontFamily: 'SF Pro',
-                fontSize: 11.sp, // Slightly reduced
-                fontWeight: active ? FontWeight.w600 : FontWeight.w500, // Medium bold
+                fontSize: 9.sp, 
+                fontWeight: active ? FontWeight.w700 : FontWeight.w500,
                 color: active
                     ? const Color(0xFFCC3333)
                     : const Color(0xFF8E8E8E),
@@ -977,7 +938,7 @@ class _SectionRow extends StatelessWidget {
                 'View All',
                 style: TextStyle(
                   fontFamily: 'SF Pro',
-                  fontWeight: FontWeight.w600, // Increased from w500
+                  fontWeight: FontWeight.w700, // Increased from w500
                   fontSize: 12.sp,
                   color: const Color(0xFFC83A2D),
                 ),

@@ -93,7 +93,7 @@ class _DislikesStepState extends State<DislikesStep> {
           Text(
             'Foods you dislike',
             style: TextStyle(
-              fontSize: 18.sp,
+              fontSize: 16.sp,
               fontWeight: FontWeight.w800,
               color: const Color(0xFF0D1B3E),
               fontFamily: 'SF Pro',
@@ -105,8 +105,8 @@ class _DislikesStepState extends State<DislikesStep> {
           Text(
             "We'll avoid these in your recipes",
             style: TextStyle(
-              fontSize: 11.sp,
-              color: const Color(0xFF9CA3AF),
+              fontSize: 10.sp,
+              color: const Color(0xFF7B8190),
               fontFamily: 'SF Pro',
             ),
           ),
@@ -117,14 +117,24 @@ class _DislikesStepState extends State<DislikesStep> {
               Expanded(
                 child: TextField(
                   controller: _dislikeController,
+                  style: TextStyle(
+                    fontFamily: 'SF Pro',
+                    fontSize: 12.sp,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF1A1A1A),
+                  ),
                   decoration: InputDecoration(
                     hintText: 'Type an ingredient...',
-                    hintStyle: const TextStyle(color: Color(0xFFBDC3C7)),
+                    hintStyle: TextStyle(
+                      color: const Color(0xFFBDC3C7),
+                      fontWeight: FontWeight.w400,
+                      fontSize: 12.sp,
+                    ),
                     filled: true,
                     fillColor: Colors.white,
                     contentPadding: EdgeInsets.symmetric(
                       horizontal: 16.w,
-                      vertical: 12.h,
+                      vertical: 14.h,
                     ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12.r),
@@ -148,7 +158,7 @@ class _DislikesStepState extends State<DislikesStep> {
               ),
               SizedBox(width: 12.w),
               SizedBox(
-                height: 48.h,
+                height: 40.h,
                 child: ElevatedButton(
                   onPressed: () => _addDislike(_dislikeController.text),
                   style: ElevatedButton.styleFrom(
@@ -164,7 +174,7 @@ class _DislikesStepState extends State<DislikesStep> {
                     style: TextStyle(
                       fontWeight: FontWeight.w700,
                       fontFamily: 'SF Pro',
-                      fontSize: 14.sp,
+                      fontSize: 10.sp,
                     ),
                   ),
                 ),
@@ -204,7 +214,7 @@ class _DislikesStepState extends State<DislikesStep> {
                       color: isSelected
                           ? Colors.white
                           : const Color(0xFF4B5563),
-                    fontSize: 11.sp,
+                    fontSize: 9.sp,
                       fontWeight: FontWeight.w700,
                       fontFamily: 'SF Pro',
                     ),
@@ -218,16 +228,20 @@ class _DislikesStepState extends State<DislikesStep> {
             Text(
               'Your dislikes:',
               style: TextStyle(
-                fontSize: 11.sp,
+                fontSize: 10.sp,
                 fontWeight: FontWeight.w700,
                 color: const Color(0xFF0D1B3E),
                 fontFamily: 'SF Pro',
               ),
             ),
             SizedBox(height: 12.h),
-            Wrap(
-              spacing: 6.w,
-              runSpacing: 8.h,
+            GridView.count(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              crossAxisCount: 3,
+              crossAxisSpacing: 10.w,
+              mainAxisSpacing: 10.h,
+              childAspectRatio: 2.5,
               children: _selectedDislikes.map((d) {
                 return Container(
                   padding: EdgeInsets.symmetric(
@@ -245,7 +259,7 @@ class _DislikesStepState extends State<DislikesStep> {
                         d,
                         style: TextStyle(
                           color: Colors.white,
-                          fontSize: 11.sp,
+                          fontSize: 9.sp,
                           fontWeight: FontWeight.w700,
                           fontFamily: 'SF Pro',
                         ),

@@ -269,7 +269,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                                   style: TextStyle(
                                     fontFamily: 'SF Pro',
                                     fontWeight: FontWeight.w700,
-                                    fontSize: 18.sp,
+                                    fontSize: 15.sp,
                                     color: const Color(0xFF1A1A1A),
                                     letterSpacing: -0.5,
                                   ),
@@ -399,7 +399,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                                 }
                               },
                               child: Container(
-                                height: 50,
+                                height: 44,
                                 decoration: BoxDecoration(
                                   color: const Color(0xFFCC3333),
                                   borderRadius: BorderRadius.circular(30),
@@ -418,7 +418,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                                       style: TextStyle(
                                         fontFamily: 'SF Pro',
                                         fontWeight: FontWeight.w700,
-                                        fontSize: 14,
+                                        fontSize: 12,
                                         color: Colors.white,
                                       ),
                                     ),
@@ -436,7 +436,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                 SliverPersistentHeader(
                   pinned: true,
                   delegate: _SimplePinnedHeaderDelegate(
-                    height: 50.h,
+                    height: 44.h,
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 20),
                       child: Center(
@@ -603,7 +603,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                                     style: TextStyle(
                                       fontFamily: 'SF Pro',
                                       fontWeight: FontWeight.w700,
-                                      fontSize: 16.sp,
+                                      fontSize: 14.sp,
                                       color: Colors.white,
                                     ),
                                   ),
@@ -619,7 +619,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                           _saveRecipe(r);
                         },
                         child: Container(
-                          height: 50.h,
+                          height: 44.h,
                           decoration: BoxDecoration(
                             color: const Color(0xFFF0F0F0),
                             borderRadius: BorderRadius.circular(30.r),
@@ -801,7 +801,7 @@ class _RecipeDetailHeaderDelegate extends SliverPersistentHeaderDelegate {
                     style: TextStyle(
                       fontFamily: 'SF Pro',
                       fontWeight: FontWeight.w700,
-                      fontSize: 14.sp,
+                      fontSize: 12.sp,
                       color: const Color(0xFF1A1A1A),
                       letterSpacing: -0.3,
                     ),
@@ -994,7 +994,7 @@ class _TagPill extends StatelessWidget {
             style: TextStyle(
               fontFamily: 'SF Pro',
               fontWeight: FontWeight.w600,
-              fontSize: 10.sp,
+              fontSize: 9.sp,
               color: const Color(0xFF111827),
             ),
           ),
@@ -1033,7 +1033,7 @@ class _TabPill extends StatelessWidget {
               style: TextStyle(
                 fontFamily: 'SF Pro',
                 fontWeight: FontWeight.w700,
-                fontSize: 12.sp,
+                fontSize: 11.sp,
                 color: active ? Colors.white : const Color(0xFF5B7C85),
               ),
             ),
@@ -1146,7 +1146,7 @@ class _IngredientsList extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         fontFamily: 'SF Pro',
-                        fontSize: 12.sp,
+                        fontSize: 11.sp,
                         fontWeight: FontWeight.w400,
                         color: const Color(0xFF111827),
                         letterSpacing: -0.2,
@@ -1163,7 +1163,7 @@ class _IngredientsList extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         fontFamily: 'SF Pro',
-                        fontSize: 12.sp,
+                        fontSize: 11.sp,
                         fontWeight: FontWeight.w700,
                         color: const Color(0xFF6B7280),
                       ),
@@ -1221,7 +1221,7 @@ class _EquipmentList extends StatelessWidget {
                   item,
                   style: TextStyle(
                     fontFamily: 'SF Pro',
-                    fontSize: 12.sp,
+                    fontSize: 11.sp,
                     fontWeight: FontWeight.w600,
                     color: const Color(0xFF111827),
                   ),
@@ -1277,7 +1277,7 @@ class _StepsList extends StatelessWidget {
                     style: TextStyle(
                       fontFamily: 'SF Pro',
                       fontWeight: FontWeight.w800,
-                      fontSize: 12.sp,
+                      fontSize: 11.sp,
                       color: const Color(0xFFCC3333),
                     ),
                   ),
@@ -1298,7 +1298,7 @@ class _StepsList extends StatelessWidget {
                             content,
                             style: TextStyle(
                               fontFamily: 'SF Pro',
-                              fontSize: 12.sp,
+                              fontSize: 11.sp,
                               height: 1.6,
                               color: const Color(0xFF111827),
                               fontWeight: FontWeight.w500,
@@ -1338,7 +1338,7 @@ class _StepsList extends StatelessWidget {
                       style: TextStyle(
                         fontFamily: 'SF Pro',
                         fontWeight: FontWeight.w700,
-                        fontSize: 12.sp,
+                        fontSize: 11.sp,
                         color: const Color(0xFF1F2937),
                       ),
                     ),
@@ -1349,7 +1349,7 @@ class _StepsList extends StatelessWidget {
                   tips!,
                   style: TextStyle(
                     fontFamily: 'SF Pro',
-                    fontSize: 12.sp,
+                    fontSize: 11.sp,
                     height: 1.5,
                     color: Color(0xFF4B5563),
                   ),

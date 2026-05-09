@@ -63,7 +63,7 @@ class _TimePreferenceStepState extends State<TimePreferenceStep> {
           Text(
             'How much time do you have to cook?',
             style: TextStyle(
-              fontSize: 18.sp,
+              fontSize: 16.sp,
               fontWeight: FontWeight.w800,
               color: const Color(0xFF0D1B3E),
               fontFamily: 'SF Pro',
@@ -75,8 +75,8 @@ class _TimePreferenceStepState extends State<TimePreferenceStep> {
           Text(
             'This sets your default time filter',
             style: TextStyle(
-              fontSize: 11.sp,
-              color: const Color(0xFF7B8190),
+              fontSize: 10.sp,
+              color: const Color(0xFF9CA3AF),
               fontFamily: 'SF Pro',
             ),
           ),
@@ -93,15 +93,15 @@ class _TimePreferenceStepState extends State<TimePreferenceStep> {
                 },
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
-                  padding: EdgeInsets.symmetric(horizontal: 14.r, vertical: 10.h),
+                  padding: EdgeInsets.symmetric(horizontal: 14.r, vertical: 8.h),
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(16.r),
+                    borderRadius: BorderRadius.circular(12.r),
                     border: Border.all(
                       color: isSelected
                           ? const Color(0xFFC83A2D)
                           : const Color(0xFFE5E7EB).withOpacity(0.5),
-                      width: isSelected ? 2.w : 1.5.w,
+                      width: isSelected ? 1.5.w : 1.w,
                     ),
                     boxShadow: [
                       BoxShadow(
@@ -118,8 +118,8 @@ class _TimePreferenceStepState extends State<TimePreferenceStep> {
                         height: 32.sp,
                         width: 32.sp,
                         placeholderBuilder: (context) => SizedBox(
-                          height: 32.sp,
-                          width: 32.sp,
+                          height: 24.sp,
+                          width: 24.sp,
                           child: const CircularProgressIndicator(
                             strokeWidth: 2,
                           ),
@@ -143,7 +143,7 @@ class _TimePreferenceStepState extends State<TimePreferenceStep> {
                             Text(
                               option['desc']!,
                               style: TextStyle(
-                                fontSize: 11.sp,
+                                fontSize: 10.sp,
                                 fontWeight: FontWeight.w500,
                                 color: const Color(0xFF9CA3AF),
                                 fontFamily: 'SF Pro',

@@ -151,7 +151,7 @@ class _RecipeGenerationLoadingStepState
                 : 'We’re preparing your personalized recipes\nand setting up your experience',
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: 11.sp,
+              fontSize: 10.sp,
               color: const Color(0xFF7B8190),
               fontFamily: 'SF Pro',
             ),

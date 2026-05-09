@@ -60,7 +60,7 @@ class _TrialStepState extends State<TrialStep> {
           Text(
             'Start your 3-day FREE\ntrial to continue.',
             style: TextStyle(
-              fontSize: 18.sp,
+              fontSize: 16.sp,
               fontWeight: FontWeight.w800,
               color: const Color(0xFF0D1B3E),
               fontFamily: 'SF Pro',
@@ -206,7 +206,7 @@ class _TrialStepState extends State<TrialStep> {
                 Text(
                   description,
                   style: TextStyle(
-                    fontSize: 11.sp,
+                    fontSize: 10.sp,
                     color: const Color(0xFF7B8190),
                     fontFamily: 'SF Pro',
                     height: 1.4,
@@ -237,10 +237,10 @@ class _TrialStepState extends State<TrialStep> {
         clipBehavior: Clip.none,
         children: [
           Container(
-            padding: EdgeInsets.all(16.r),
+            padding: EdgeInsets.all(12.r),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(16.r),
+              borderRadius: BorderRadius.circular(12.r),
               border: Border.all(
                 color: isSelected
                     ? const Color(0xFFC83A2D)
@@ -284,7 +284,7 @@ class _TrialStepState extends State<TrialStep> {
                 Text(
                   price,
                   style: TextStyle(
-                    fontSize: 16.sp,
+                    fontSize: 14.sp,
                     fontWeight: FontWeight.w900,
                     color: const Color(0xFF0D1B3E),
                     fontFamily: 'SF Pro',

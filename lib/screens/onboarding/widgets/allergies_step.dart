@@ -115,7 +115,7 @@ class _AllergiesStepState extends State<AllergiesStep> {
           Text(
             'Any allergies or intolerances?',
             style: TextStyle(
-              fontSize: 18.sp,
+              fontSize: 16.sp,
               fontWeight: FontWeight.w800,
               color: const Color(0xFF0D1B3E),
               fontFamily: 'SF Pro',
@@ -127,7 +127,7 @@ class _AllergiesStepState extends State<AllergiesStep> {
           Text(
             'Your safety is our top priority',
             style: TextStyle(
-              fontSize: 11.sp,
+              fontSize: 10.sp,
               color: const Color(0xFF9CA3AF),
               fontFamily: 'SF Pro',
             ),
@@ -137,8 +137,8 @@ class _AllergiesStepState extends State<AllergiesStep> {
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             crossAxisCount: 2,
-            crossAxisSpacing: 16.w,
-            mainAxisSpacing: 16.h,
+            crossAxisSpacing: 12.w,
+            mainAxisSpacing: 12.h,
             childAspectRatio: 1.6,
             children: [
               ..._options.map((option) {
@@ -165,14 +165,24 @@ class _AllergiesStepState extends State<AllergiesStep> {
             TextField(
               controller: _otherController,
               autofocus: false,
+              style: TextStyle(
+                fontFamily: 'SF Pro',
+                fontSize: 12.sp,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF1A1A1A),
+              ),
               decoration: InputDecoration(
                 hintText: 'Type your allergy..',
-                hintStyle: const TextStyle(color: Color(0xFFBDC3C7)),
+                hintStyle: TextStyle(
+                  color: const Color(0xFFBDC3C7),
+                  fontWeight: FontWeight.w400,
+                  fontSize: 12.sp,
+                ),
                 filled: true,
                 fillColor: Colors.white,
                 contentPadding: EdgeInsets.symmetric(
                   horizontal: 16.w,
-                  vertical: 16.h,
+                  vertical: 14.h,
                 ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12.r),
@@ -211,7 +221,7 @@ class _AllergiesStepState extends State<AllergiesStep> {
                     '+ Other allergy not listed',
                     style: TextStyle(
                       fontFamily: 'SF Pro',
-                      fontSize: 15.sp,
+                      fontSize: 12.sp,
                       fontWeight: FontWeight.w600,
                       color: const Color(0xFF0D1B3E),
                     ),
@@ -224,7 +234,7 @@ class _AllergiesStepState extends State<AllergiesStep> {
               (a) => Container(
                 width: double.infinity,
                 margin: EdgeInsets.only(bottom: 12.h),
-                padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
+                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(12.r),
@@ -237,7 +247,7 @@ class _AllergiesStepState extends State<AllergiesStep> {
                         a,
                         style: TextStyle(
                           fontFamily: 'SF Pro',
-                          fontSize: 13.sp,
+                          fontSize: 10.sp,
                           fontWeight: FontWeight.w600,
                           color: const Color(0xFF0D1B3E),
                         ),
@@ -261,13 +271,13 @@ class _AllergiesStepState extends State<AllergiesStep> {
             onTap: () => _toggleOption('No allergies'),
             child: Container(
               width: double.infinity,
-              padding: EdgeInsets.symmetric(vertical: 16.h),
+              padding: EdgeInsets.symmetric(vertical: 12.h),
               decoration: BoxDecoration(
                 color: isNoAllergies ? const Color(0xFFF1FDF5) : Colors.white,
-                borderRadius: BorderRadius.circular(50.r),
+                borderRadius: BorderRadius.circular(12.r),
                 border: Border.all(
                   color: const Color(0xFF22C55E),
-                  width: isNoAllergies ? 2 : 1.5,
+                  width: isNoAllergies ? 1.5.w : 1.w,
                 ),
               ),
               child: Row(
@@ -277,7 +287,7 @@ class _AllergiesStepState extends State<AllergiesStep> {
                     Icon(
                       Icons.check,
                       color: const Color(0xFF22C55E),
-                      size: 20.sp,
+                      size: 16.sp,
                     ),
                     SizedBox(width: 8.w),
                   ],
@@ -285,43 +295,13 @@ class _AllergiesStepState extends State<AllergiesStep> {
                     'No allergies',
                     style: TextStyle(
                       fontFamily: 'SF Pro',
-                      fontSize: 14.sp,
+                      fontSize: 12.sp,
                       fontWeight: FontWeight.w700,
                       color: const Color(0xFF22C55E),
                     ),
                   ),
                 ],
               ),
-            ),
-          ),
-          SizedBox(height: 24.h),
-          Container(
-            padding: EdgeInsets.all(16.r),
-            decoration: BoxDecoration(
-              color: const Color(0xFFFAF9F6),
-              borderRadius: BorderRadius.circular(16.r),
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.warning_amber_rounded,
-                  size: 24.sp,
-                  color: const Color(0xFFFBBF24),
-                ),
-                SizedBox(width: 12.w),
-                Expanded(
-                  child: Text(
-                    'Recipes containing these ingredients will NEVER appear in your feed',
-                    style: TextStyle(
-                      fontSize: 11.sp,
-                      fontWeight: FontWeight.w500,
-                      fontFamily: 'SF Pro',
-                      color: const Color(0xFF4B5563),
-                      height: 1.4,
-                    ),
-                  ),
-                ),
-              ],
             ),
           ),
           SizedBox(height: 32.h),
@@ -352,12 +332,12 @@ class _AllergyCard extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(20.r),
+          borderRadius: BorderRadius.circular(12.r),
           border: Border.all(
             color: isSelected
                 ? const Color(0xFFC83A2D)
                 : const Color(0xFFE5E7EB).withOpacity(0.5),
-            width: isSelected ? 1.5 : 1,
+            width: isSelected ? 1.5.w : 1.w,
           ),
           boxShadow: [
             BoxShadow(
@@ -373,11 +353,11 @@ class _AllergyCard extends StatelessWidget {
             if (icon.isNotEmpty) ...[
               SvgPicture.asset(
                 'assets/icones/$icon',
-                height: 28.h,
-                width: 28.w,
+                height: 20.h,
+                width: 20.w,
                 placeholderBuilder: (context) => SizedBox(
-                  height: 28.h,
-                  width: 28.w,
+                  height: 20.h,
+                  width: 20.w,
                   child: const CircularProgressIndicator(strokeWidth: 2),
                 ),
               ),
@@ -387,7 +367,7 @@ class _AllergyCard extends StatelessWidget {
               title,
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: 12.sp,
+                fontSize: 10.sp,
                 fontWeight: FontWeight.w700,
                 fontFamily: 'SF Pro',
                 color: isSelected

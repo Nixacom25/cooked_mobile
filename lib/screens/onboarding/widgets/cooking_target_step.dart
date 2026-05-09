@@ -56,7 +56,7 @@ class _CookingTargetStepState extends State<CookingTargetStep> {
           Text(
             'Who are you cooking for?',
             style: TextStyle(
-              fontSize: 18.sp,
+              fontSize: 16.sp,
               fontWeight: FontWeight.w800,
               color: const Color(0xFF0D1B3E),
               fontFamily: 'SF Pro',
@@ -68,13 +68,16 @@ class _CookingTargetStepState extends State<CookingTargetStep> {
           Text(
             "We'll auto-adjust serving sizes",
             style: TextStyle(
-              fontSize: 11.sp,
+              fontSize: 10.sp,
               color: const Color(0xFF7B8190),
               fontFamily: 'SF Pro',
             ),
           ),
           SizedBox(height: 24.h),
-          ..._options.map((opt) => _buildOption(opt)),
+          ..._options.map((opt) => Padding(
+            padding: EdgeInsets.only(bottom: 12.h),
+            child: _buildOption(opt),
+          )),
         ],
       ),
     );
@@ -82,77 +85,51 @@ class _CookingTargetStepState extends State<CookingTargetStep> {
 
   Widget _buildOption(Map<String, String> opt) {
     final bool isSelected = _selected == opt['title'];
-    return Padding(
-      padding: EdgeInsets.only(bottom: 16.h),
-      child: InkWell(
-        onTap: () {
-          setState(() => _selected = opt['title']!);
-          widget.onChanged(_selected);
-        },
-        borderRadius: BorderRadius.circular(16.r),
-        child: Container(
-          padding: EdgeInsets.symmetric(horizontal: 14.r, vertical: 10.h),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16.r),
-            border: Border.all(
-              color: isSelected
-                  ? const Color(0xFFC83A2D)
-                  : const Color(0xFFE5E7EB),
-              width: isSelected ? 1.5.w : 1.w,
-            ),
-            boxShadow: isSelected
-                ? [
-                    BoxShadow(
-                      color: const Color(0xFFC83A2D).withOpacity(0.05),
-                      blurRadius: 10.r,
-                      offset: Offset(0, 4.h),
-                    ),
-                  ]
-                : null,
+    return InkWell(
+      onTap: () {
+        setState(() => _selected = opt['title']!);
+        widget.onChanged(_selected);
+      },
+      borderRadius: BorderRadius.circular(12.r),
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12.r),
+          border: Border.all(
+            color: isSelected ? const Color(0xFFC83A2D) : const Color(0xFFE5E7EB),
+            width: isSelected ? 1.5.w : 1.w,
           ),
-          child: Row(
-            children: [
-              Container(
-                child: SvgPicture.asset(
-                  'assets/icones/${opt['icon']}',
-                  height: 32.sp,
-                  width: 32.sp,
-                  placeholderBuilder: (context) => SizedBox(
-                    height: 32.sp,
-                    width: 32.sp,
-                    child: const CircularProgressIndicator(strokeWidth: 2),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: const Color(0xFFC83A2D).withOpacity(0.05),
+                    blurRadius: 10.r,
+                    offset: Offset(0, 4.h),
                   ),
+                ]
+              : null,
+        ),
+        child: Row(
+          children: [
+            SvgPicture.asset(
+              'assets/icones/${opt['icon']}',
+              height: 24.sp,
+              width: 24.sp,
+            ),
+            SizedBox(width: 16.w),
+            Expanded(
+              child: Text(
+                opt['title']!,
+                style: TextStyle(
+                  fontFamily: 'SF Pro',
+                  fontSize: 12.sp,
+                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+                  color: const Color(0xFF1A1A1A),
                 ),
               ),
-              SizedBox(width: 16.w),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      opt['title']!,
-                      style: TextStyle(
-                        fontFamily: 'SF Pro',
-                        fontSize: 12.sp,
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFF1A1A1A),
-                      ),
-                    ),
-                    SizedBox(height: 2.h),
-                    Text(
-                      opt['subtitle']!,
-                      style: TextStyle(
-                        fontFamily: 'SF Pro',
-                        fontSize: 11.sp,
-                        color: const Color(0xFF7B8190),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

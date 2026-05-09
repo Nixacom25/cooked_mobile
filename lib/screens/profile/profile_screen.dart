@@ -88,16 +88,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
         children: [
           // ── Top Header & Avatar ──
           SizedBox(
-            height: 230.h,
+            height: 180.h,
             child: Stack(
               children: [
                 // Red background with pattern overlay
                 SizedBox(
-                  height: 170.h,
+                  height: 130.h,
                   width: double.infinity,
                   child: ClipRRect(
                     borderRadius: BorderRadius.vertical(
-                      bottom: Radius.circular(15.r),
+                      bottom: Radius.circular(15),
                     ),
                     child: Stack(
                       children: [
@@ -140,7 +140,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           child: Icon(
                             Icons.arrow_back,
                             color: Colors.white,
-                            size: 24.sp,
+                            size: 20.sp,
                           ),
                         ),
                         SizedBox(width: 12.w),
@@ -149,7 +149,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           style: TextStyle(
                             fontFamily: 'SF Pro',
                             fontWeight: FontWeight.w600,
-                            fontSize: 22.sp,
+                            fontSize: 18.sp,
                             color: Colors.white,
                           ),
                         ),
@@ -159,14 +159,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 // Avatar
                 Positioned(
-                  top: 100.h,
+                  top: 85.h,
                   left: 0,
                   right: 0,
                   child: Align(
                     alignment: Alignment.center,
                     child: Container(
-                      width: 130.w,
-                      height: 130.h,
+                      width: 90.w,
+                      height: 90.h,
                       decoration: const BoxDecoration(
                         color: Colors.white,
                         shape: BoxShape.circle,
@@ -201,7 +201,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       style: TextStyle(
                         fontFamily: 'SF Pro',
                         fontWeight: FontWeight.w700,
-                        fontSize: 24.sp,
+                        fontSize: 18.sp,
                         color: const Color(0xFF1A1A1A),
                       ),
                     ),
@@ -210,13 +210,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       _phone.isNotEmpty ? _phone : '...',
                       style: TextStyle(
                         fontFamily: 'SF Pro',
-                        fontSize: 14.sp,
+                        fontSize: 12.sp,
                         color: const Color(0xFF888888),
                       ),
                     ),
                   ],
                 ),
-          SizedBox(height: 30.h),
+          SizedBox(height: 20.h),
 
           // ── Menu items ──
           Expanded(
@@ -292,7 +292,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         Icon(
                           Icons.logout_rounded,
                           color: const Color(0xFFC83A2D),
-                          size: 24.sp,
+                          size: 20.sp,
                         ),
                         SizedBox(width: 16.w),
                         Text(
@@ -300,7 +300,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           style: TextStyle(
                             fontFamily: 'SF Pro',
                             fontWeight: FontWeight.w500,
-                            fontSize: 16.sp,
+                            fontSize: 13.sp,
                             color: const Color(0xFFC83A2D),
                           ),
                         ),
@@ -334,10 +334,10 @@ class _MenuItem extends StatelessWidget {
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
       child: Padding(
-        padding: EdgeInsets.symmetric(vertical: 14.h),
+        padding: EdgeInsets.symmetric(vertical: 10.h),
         child: Row(
           children: [
-            Icon(icon, color: const Color(0xFF333333), size: 24.sp),
+            Icon(icon, color: const Color(0xFF333333), size: 20.sp),
             SizedBox(width: 16.w),
             Expanded(
               child: Text(
@@ -345,7 +345,7 @@ class _MenuItem extends StatelessWidget {
                 style: TextStyle(
                   fontFamily: 'SF Pro',
                   fontWeight: FontWeight.w400,
-                  fontSize: 16.sp,
+                  fontSize: 13.sp,
                   color: const Color(0xFF1A1A1A),
                 ),
               ),
@@ -368,7 +368,7 @@ class _LogoutSheet extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -380,7 +380,7 @@ class _LogoutSheet extends StatelessWidget {
             margin: EdgeInsets.symmetric(vertical: 12.h),
             decoration: BoxDecoration(
               color: const Color(0xFFE5E7EB),
-              borderRadius: BorderRadius.circular(2.r),
+              borderRadius: BorderRadius.circular(2),
             ),
           ),
 
@@ -395,13 +395,13 @@ class _LogoutSheet extends StatelessWidget {
                   style: TextStyle(
                     fontFamily: 'SF Pro',
                     fontWeight: FontWeight.w800,
-                    fontSize: 20.sp,
+                    fontSize: 18.sp,
                     color: const Color(0xFF1A1A1A),
                   ),
                 ),
                 IconButton(
                   onPressed: () => Navigator.pop(context),
-                  icon: Icon(Icons.close_rounded, size: 24.sp, color: const Color(0xFF64748B)),
+                  icon: Icon(Icons.close_rounded, size: 20.sp, color: const Color(0xFF64748B)),
                 ),
               ],
             ),
@@ -418,7 +418,7 @@ class _LogoutSheet extends StatelessWidget {
                   'Are you sure you want to log out of your account? You will need to enter your credentials to log back in.',
                   style: TextStyle(
                     fontFamily: 'SF Pro',
-                    fontSize: 14.sp,
+                    fontSize: 13.sp,
                     color: const Color(0xFF64748B),
                     height: 1.6,
                   ),
@@ -439,10 +439,10 @@ class _LogoutSheet extends StatelessWidget {
                   },
                   child: Container(
                     width: double.infinity,
-                    height: 54.h,
+                    height: 42.h,
                     decoration: BoxDecoration(
                       color: const Color(0xFFCC3333),
-                      borderRadius: BorderRadius.circular(16.r),
+                      borderRadius: BorderRadius.circular(16),
                     ),
                     child: Center(
                       child: Text(
@@ -450,7 +450,7 @@ class _LogoutSheet extends StatelessWidget {
                         style: TextStyle(
                           fontFamily: 'SF Pro',
                           fontWeight: FontWeight.w700,
-                          fontSize: 16.sp,
+                          fontSize: 13.sp,
                           color: Colors.white,
                         ),
                       ),

@@ -75,7 +75,7 @@ class _SourceStepState extends State<SourceStep> {
           Text(
             'Welcome, ${widget.userName}!\nHow did you find us?',
             style: TextStyle(
-              fontSize: 18.sp,
+              fontSize: 16.sp,
               fontWeight: FontWeight.w800,
               color: const Color(0xFF0D1B3E),
               fontFamily: 'SF Pro',
@@ -87,7 +87,7 @@ class _SourceStepState extends State<SourceStep> {
           Text(
             "This helps us improve our reach",
             style: TextStyle(
-              fontSize: 11.sp,
+              fontSize: 10.sp,
               color: const Color(0xFF7B8190),
               fontFamily: 'SF Pro',
             ),
@@ -98,8 +98,8 @@ class _SourceStepState extends State<SourceStep> {
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             crossAxisCount: 2,
-            crossAxisSpacing: 16.w,
-            mainAxisSpacing: 16.h,
+            crossAxisSpacing: 12.w,
+            mainAxisSpacing: 12.h,
             childAspectRatio: 1.6,
             children: _sources.map((source) {
               final isSelected = _selectedSource == source.value;
@@ -110,12 +110,12 @@ class _SourceStepState extends State<SourceStep> {
                   duration: const Duration(milliseconds: 200),
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(16.r),
+                    borderRadius: BorderRadius.circular(12.r),
                     border: Border.all(
                       color: isSelected
                           ? const Color(0xFFC83A2D)
                           : const Color(0xFFE5E7EB),
-                      width: isSelected ? 2.w : 1.w,
+                      width: isSelected ? 1.5.w : 1.w,
                     ),
                     boxShadow: [
                       BoxShadow(
@@ -131,8 +131,8 @@ class _SourceStepState extends State<SourceStep> {
                       if (source.iconAsset.isNotEmpty) ...[
                         SvgPicture.asset(
                           'assets/icones/${source.iconAsset}',
-                          height: 26.h,
-                          width: 26.w,
+                          height: 20.h,
+                          width: 20.w,
                           placeholderBuilder: (BuildContext context) =>
                               Container(
                                 padding: EdgeInsets.all(8.r),
@@ -145,7 +145,7 @@ class _SourceStepState extends State<SourceStep> {
                         source.label,
                         style: TextStyle(
                           fontFamily: 'SF Pro',
-                          fontSize: 11.sp,
+                          fontSize: 10.sp,
                           fontWeight: FontWeight.w700,
                           color: isSelected
                               ? const Color(0xFFC83A2D)

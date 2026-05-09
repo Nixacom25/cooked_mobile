@@ -73,7 +73,7 @@ class _AddToGroceryModalState extends State<AddToGroceryModal> {
     final bottomPad = MediaQuery.of(context).padding.bottom;
 
     return Container(
-      constraints: BoxConstraints(maxHeight: 0.85.sh),
+      constraints: BoxConstraints(maxHeight: 0.60.sh),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
         color: Colors.white,
@@ -120,13 +120,13 @@ class _AddToGroceryModalState extends State<AddToGroceryModal> {
                     style: TextStyle(
                       fontFamily: 'SF Pro',
                       fontWeight: FontWeight.w800,
-                      fontSize: 18.sp,
+                      fontSize: 15.sp,
                       color: Colors.white,
                     ),
                   ),
                   IconButton(
                     onPressed: () => Navigator.pop(context),
-                    icon: Icon(Icons.close_rounded, size: 24.sp, color: Colors.white70),
+                    icon: Icon(Icons.close_rounded, size: 20.sp, color: Colors.white70),
                   ),
                 ],
               ),
@@ -144,7 +144,7 @@ class _AddToGroceryModalState extends State<AddToGroceryModal> {
                     style: TextStyle(
                       fontFamily: 'SF Pro',
                       fontWeight: FontWeight.w700,
-                      fontSize: 12.sp,
+                      fontSize: 10.sp,
                       color: Colors.white70,
                     ),
                   ),
@@ -173,13 +173,14 @@ class _AddToGroceryModalState extends State<AddToGroceryModal> {
                           checkColor: const Color(0xFFC83A2D),
                           checkboxShape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4.r)),
                           side: const BorderSide(color: Colors.white70),
-                          contentPadding: EdgeInsets.symmetric(horizontal: 16.w),
+                          contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 0),
+                          visualDensity: const VisualDensity(horizontal: -4, vertical: -4),
                           title: Text(
                             ing.name,
                             style: TextStyle(
                               fontFamily: 'SF Pro',
                               fontWeight: FontWeight.w600,
-                              fontSize: 13.sp,
+                              fontSize: 12.sp,
                               color: Colors.white,
                             ),
                           ),
@@ -187,19 +188,19 @@ class _AddToGroceryModalState extends State<AddToGroceryModal> {
                             ing.quantity,
                             style: TextStyle(
                               fontFamily: 'SF Pro',
-                              fontSize: 11.sp,
+                              fontSize: 10.sp,
                               color: Colors.white70,
                             ),
                           ),
                           secondary: ing.icon != null && ing.icon!.isNotEmpty
-                              ? Text(ing.icon!, style: TextStyle(fontSize: 18.sp))
+                              ? Text(ing.icon!, style: TextStyle(fontSize: 15.sp))
                               : null,
                         );
                       },
                     ),
                   ),
                   
-                  SizedBox(height: 24.h),
+                  SizedBox(height: 20.h),
                   
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -209,7 +210,7 @@ class _AddToGroceryModalState extends State<AddToGroceryModal> {
                         style: TextStyle(
                           fontFamily: 'SF Pro',
                           fontWeight: FontWeight.w700,
-                          fontSize: 12.sp,
+                          fontSize: 10.sp,
                           color: Colors.white70,
                         ),
                       ),
@@ -219,7 +220,7 @@ class _AddToGroceryModalState extends State<AddToGroceryModal> {
                           style: TextStyle(
                             fontFamily: 'SF Pro',
                             fontWeight: FontWeight.w700,
-                            fontSize: 14.sp,
+                            fontSize: 12.sp,
                             color: Colors.white,
                           ),
                         ),
@@ -271,7 +272,7 @@ class _AddToGroceryModalState extends State<AddToGroceryModal> {
               padding: EdgeInsets.fromLTRB(20.w, 10.h, 20.w, 10.h + bottomPad),
               child: SizedBox(
                 width: double.infinity,
-                height: 54.h,
+                height: 46.h,
                 child: ElevatedButton(
                   onPressed: _canSubmit ? _handleSave : null,
                   style: ElevatedButton.styleFrom(
@@ -288,7 +289,7 @@ class _AddToGroceryModalState extends State<AddToGroceryModal> {
                           style: TextStyle(
                             fontFamily: 'SF Pro',
                             fontWeight: FontWeight.w700,
-                            fontSize: 16.sp,
+                            fontSize: 14.sp,
                           ),
                         ),
                 ),
@@ -324,7 +325,7 @@ class _LocationOption extends StatelessWidget {
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: EdgeInsets.symmetric(vertical: 14.h),
+        padding: EdgeInsets.symmetric(vertical: 8.h),
         decoration: BoxDecoration(
           color: selected ? Colors.white.withOpacity(0.2) : Colors.white.withOpacity(0.05),
           borderRadius: BorderRadius.circular(16.r),
@@ -333,21 +334,25 @@ class _LocationOption extends StatelessWidget {
             width: 1.5,
           ),
         ),
-        child: Column(
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Icon(
               icon,
               color: selected ? Colors.white : Colors.white70,
-              size: 24.sp,
+              size: 16.sp,
             ),
-            SizedBox(height: 8.h),
-            Text(
-              label,
-              style: TextStyle(
-                fontFamily: 'SF Pro',
-                fontWeight: FontWeight.w700,
-                fontSize: 12.sp,
-                color: selected ? Colors.white : Colors.white70,
+            SizedBox(width: 8.w),
+            Flexible(
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontFamily: 'SF Pro',
+                  fontWeight: FontWeight.w700,
+                  fontSize: 11.sp,
+                  color: selected ? Colors.white : Colors.white70,
+                ),
               ),
             ),
           ],

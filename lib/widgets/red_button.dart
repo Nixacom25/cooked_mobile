@@ -13,7 +13,7 @@ class RedButton extends StatelessWidget {
       onTap: onTap,
       child: Container(
         width: double.infinity,
-        height: 54.h,
+        height: 42.h,
         decoration: BoxDecoration(
           color: const Color(0xFFCC3333),
           borderRadius: BorderRadius.circular(30.r),
@@ -24,7 +24,7 @@ class RedButton extends StatelessWidget {
             style: TextStyle(
               fontFamily: 'SF Pro',
               fontWeight: FontWeight.w700,
-              fontSize: 16.sp,
+              fontSize: 13.sp,
               color: Colors.white,
             ),
           ),
