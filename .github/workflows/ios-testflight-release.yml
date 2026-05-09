@@ -62,6 +62,9 @@ jobs:
       run: |
         echo "$IOS_GOOGLE_SERVICE_INFO_BASE64" | base64 --decode > ios/Runner/GoogleService-Info.plist
 
+    - name: Flutter Precache iOS
+      run: flutter precache --ios
+
     - name: Build IPA
       run: flutter build ipa --release --export-options-plist=ios/ExportOptions.plist
 
