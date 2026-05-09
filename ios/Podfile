@@ -11,19 +11,42 @@ project 'Runner', {
 }
 
 def flutter_root
+  # 1. First priority: Environment variable (standard in CI/CD like GitHub Actions)
+  return ENV['FLUTTER_ROOT'] if ENV['FLUTTER_ROOT'] && !ENV['FLUTTER_ROOT'].empty?
+
+  # 2. Second priority: Parse Generated.xcconfig
   generated_xcode_build_settings_path = File.expand_path(File.join('..', 'Flutter', 'Generated.xcconfig'), __FILE__)
-  unless File.exist?(generated_xcode_build_settings_path)
-    raise "#{generated_xcode_build_settings_path} must exist. If you're running pod install manually, make sure \"flutter pub get\" is executed first"
+  
+  if File.exist?(generated_xcode_build_settings_path)
+    File.foreach(generated_xcode_build_settings_path) do |line|
+      # Match FLUTTER_ROOT with or without spaces
+      if matches = line.match(/^\s*FLUTTER_ROOT\s*=\s*(.*)\s*$/)
+        return matches[1].strip
+      end
+    end
   end
 
-  File.foreach(generated_xcode_build_settings_path) do |line|
-    matches = line.match(/\AFLUTTER_ROOT=(.*)\z/)
-    return matches[1].strip if matches
+  # 3. Fallback for common local paths if everything else fails
+  ["/opt/flutter", "/usr/local/share/flutter", "#{ENV['HOME']}/flutter"].each do |path|
+    return path if Dir.exist?(path)
   end
-  raise "FLUTTER_ROOT not found in #{generated_xcode_build_settings_path}. Try deleting Generated.xcconfig, then run \"flutter pub get\""
+
+  raise "FLUTTER_ROOT not found. Environment variable is missing and #{generated_xcode_build_settings_path} is invalid. Try running \"flutter pub get\" first."
 end
 
-load File.expand_path(File.join('packages', 'flutter_tools', 'bin', 'podhelper.rb'), flutter_root)
+# Load podhelper.rb
+podhelper_path = File.expand_path(File.join('packages', 'flutter_tools', 'bin', 'podhelper.rb'), flutter_root)
+if File.exist?(podhelper_path)
+  load podhelper_path
+else
+  # Last ditch effort: use the local copy we restored earlier
+  local_podhelper = File.join(File.dirname(File.realpath(__FILE__)), 'Flutter', 'podhelper.rb')
+  if File.exist?(local_podhelper)
+    load local_podhelper
+  else
+    raise "podhelper.rb not found in Flutter SDK (#{podhelper_path}) or locally (#{local_podhelper})."
+  end
+end
 
 target 'Runner' do
   use_modular_headers!
