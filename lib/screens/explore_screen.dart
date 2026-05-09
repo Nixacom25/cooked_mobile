@@ -395,8 +395,8 @@ class _ExploreScreenState extends State<ExploreScreen> {
                                 '$count Recipes',
                                 style: TextStyle(
                                   fontFamily: 'SF Pro',
-                                  fontSize: 13.sp,
-                                  color: const Color(0xFF1F2937),
+                                  fontSize: 11.sp,
+                                  color: const Color(0xFF9CA3AF),
                                 ),
                               ),
                             ],
