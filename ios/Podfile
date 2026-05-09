@@ -1,4 +1,3 @@
-# Uncomment this line to define a global platform for your project
 platform :ios, '13.0'
 
 # CocoaPods analytics sends network stats synchronously affecting flutter build latency.
@@ -10,39 +9,28 @@ project 'Runner', {
   'Profile' => :profile,
 }
 
-def flutter_install_all_ios_pods(installer)
-  extension_targets = [
-    'Runner',
-  ]
+# The standard Flutter podhelper location in Flutter projects
+podhelper_path = File.join(File.dirname(File.realpath(__FILE__)), 'Flutter', 'podhelper.rb')
 
-  installer.pods_project.targets.each do |target|
-    flutter_additional_ios_build_settings(target)
-    
-    # Permission Handler Macros
-    target.build_configurations.each do |config|
-      config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] ||= [
-        '$(inherited)',
-        'PERMISSION_CAMERA=1',
-        'PERMISSION_PHOTOS=1',
-        'PERMISSION_MICROPHONE=1',
-        'PERMISSION_NOTIFICATIONS=1',
-      ]
-    end
-  end
+if File.exist?(podhelper_path)
+  load podhelper_path
+else
+  # Fallback if the above fails for some reason
+  puts "Warning: podhelper.rb not found at #{podhelper_path}"
 end
 
 target 'Runner' do
   use_frameworks!
   use_modular_headers!
 
-  flutter_install_all_ios_pods(File.dirname(File.realpath(__FILE__)))
+  flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
 end
 
 post_install do |installer|
   installer.pods_project.targets.each do |target|
     flutter_additional_ios_build_settings(target)
     
-    # Permission Handler Macros (Ensuring they are applied in post_install too)
+    # Permission Handler Macros
     target.build_configurations.each do |config|
       config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] ||= [
         '$(inherited)',
