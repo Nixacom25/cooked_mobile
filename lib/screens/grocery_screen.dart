@@ -258,7 +258,7 @@ class _GroceryScreenState extends State<GroceryScreen> {
                 if (filtered.isEmpty) return const SizedBox.shrink();
                 
                 return Positioned(
-                  bottom: 100.h,
+                  bottom: 130.h,
                   right: 20.w,
                   child: GestureDetector(
                     onTap: () => _showAddGrocerySheet(context, allItems ?? []),
@@ -529,7 +529,7 @@ class _AddGrocerySheetState extends State<_AddGrocerySheet> {
       RecipeService.instance.getMyRecipes();
     }
     _nameController.addListener(_onNameChanged);
-  }
+  } 
 
   void _onNameChanged() {
     final query = _nameController.text.trim();

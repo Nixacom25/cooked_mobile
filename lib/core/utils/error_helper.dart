@@ -39,6 +39,9 @@ class ErrorHelper {
 
     // Backend standardizations
     final lower = str.toLowerCase();
+    if (str.startsWith('402:') || lower.contains('payment required')) {
+      return 'Premium access required. Please check your subscription.';
+    }
     if (lower.contains('notfound') || lower.contains('not found')) {
       return 'The requested item was not found.';
     }

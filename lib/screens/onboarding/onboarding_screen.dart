@@ -5,7 +5,7 @@ import '../../routes/app_routes.dart';
 import '../../services/user_service.dart';
 import '../../core/widgets/ios_toast.dart';
 import 'widgets/language_region_step.dart';
-import 'widgets/identity_step.dart';
+
 import 'widgets/source_step.dart';
 import 'widgets/dietary_preferences_step.dart';
 import 'widgets/allergies_step.dart';
@@ -60,7 +60,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   String _firstName = '';
   String _lastName = '';
   String _phone = '';
-  String _alternativeRegion = 'US United States';
   String _measurementSystem = 'Imperial';
   String? _source;
   String? _otherSource;
@@ -98,7 +97,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   void _initIap() async {
     IapService.instance.initialize();
     IapService.instance.onPurchaseSuccess = () {
-      if (mounted && _currentPage == 22) {
+      if (mounted && _currentPage == 20) {
         setState(() => _isLoading = false);
         _pageController.nextPage(
           duration: const Duration(milliseconds: 400),
@@ -188,7 +187,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       'firstName': _firstName,
       'lastName': _lastName,
       'phone': _phone,
-      'alternativeRegion': _alternativeRegion,
       'measurementSystem': _measurementSystem,
       'source': _source,
       'otherSource': _otherSource,
@@ -225,7 +223,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       _firstName = progress['firstName'] ?? '';
       _lastName = progress['lastName'] ?? '';
       _phone = progress['phone'] ?? '';
-      _alternativeRegion = progress['alternativeRegion'] ?? 'US United States';
       _measurementSystem = progress['measurementSystem'] ?? 'Imperial';
       _source = progress['source'];
       _otherSource = progress['otherSource'];
@@ -277,10 +274,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   int _getEffectiveStep() {
-    if (_currentPage < 15) return _currentPage + 1;
-    if (_currentPage == 15) return 15; // Freeze during ProfileLoadingStep
-    if (_currentPage > 15 && _currentPage < 21) return _currentPage;
-    return 20; // Freeze during RecipeGenerationLoadingStep (Step 20/20)
+    if (_currentPage < 14) return _currentPage + 1;
+    if (_currentPage == 14) return 14; // Freeze during ProfileLoadingStep
+    if (_currentPage > 14 && _currentPage < 20) return _currentPage;
+    return 19;
   }
 
   int _calculateRecipeCount() {
@@ -295,30 +292,24 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   Future<void> _onContinue() async {
+    FocusScope.of(context).unfocus();
     if (_currentPage == 0) {
-      if (_firstName.isEmpty || _email.isEmpty) {
-        IosToast.show(
-          context,
-          message: 'Please complete all fields',
-          type: ToastType.warning,
-        );
-        return;
-      }
+      // LanguageRegionStep - No mandatory fields for now, or check country
     }
 
-    if (_currentPage < 17) {
+    if (_currentPage < 16) {
       _pageController.nextPage(
         duration: const Duration(milliseconds: 400),
         curve: Curves.easeInOut,
       );
-    } else if (_currentPage == 17) {
+    } else if (_currentPage == 16) {
       // ProfileSignupStep handles its own navigation via callbacks
-    } else if (_currentPage == 18) {
+    } else if (_currentPage == 17) {
       // AccountStep -> Submit and potentially OTP
       _submitPreferences(isGuest: false);
-    } else if (_currentPage == 19) {
+    } else if (_currentPage == 18) {
       // OtpStep handles its own navigation via onComplete
-    } else if (_currentPage == 20) {
+    } else if (_currentPage == 19) {
       // TrialStep Payment Trigger
       if (!_isIapAvailable || _products.isEmpty) {
         // Fallback or dev: skip billing if store is unavailable
@@ -355,11 +346,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   void _onBack() {
-    if (_currentPage == 21) return; // Prevent going back during final loading
-    if (_currentPage == 16) {
-      // Skip ProfileLoadingStep (15) when going back from ProfileSummaryStep
+    FocusScope.of(context).unfocus();
+    if (_currentPage == 20) return; // Prevent going back during final loading
+    if (_currentPage == 15) {
+      // Skip ProfileLoadingStep (14) when going back from ProfileSummaryStep
       _pageController.animateToPage(
-        14,
+        13,
         duration: const Duration(milliseconds: 400),
         curve: Curves.easeInOut,
       );
@@ -379,16 +371,16 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     bool isGuest = false,
     String provider = 'LOCAL',
   }) async {
-    // Security/Compliance Gate: For social login, show Terms Validation first
-    bool isSocial = provider == 'GOOGLE' || provider == 'APPLE';
-    if (isSocial && !isGuest) {
-      TermsValidationModal.show(context, onAccepted: () {
-        _submitPreferencesActual(provider: provider, isGuest: isGuest);
-      });
+
+    if (_acceptedTerms) {
+      _submitPreferencesActual(provider: provider, isGuest: isGuest);
       return;
     }
 
-    _submitPreferencesActual(provider: provider, isGuest: isGuest);
+    TermsValidationModal.show(context, onAccepted: () {
+      setState(() => _acceptedTerms = true);
+      _submitPreferencesActual(provider: provider, isGuest: isGuest);
+    });
   }
 
   Future<void> _submitPreferencesActual({
@@ -402,7 +394,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         !isSocial &&
         (_email.isEmpty || _password.isEmpty || !_acceptedTerms)) {
       _pageController.animateToPage(
-        18, // AccountStep directly if email signup
+        17, // AccountStep directly if email signup
         duration: const Duration(milliseconds: 400),
         curve: Curves.easeInOut,
       );
@@ -543,13 +535,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       // Navigation logic ONLY after success
       if (isGuest || isSocial) {
         _pageController.animateToPage(
-          20, // Jump to TrialStep
+          19, // Jump to TrialStep
           duration: const Duration(milliseconds: 400),
           curve: Curves.easeInOut,
         );
       } else {
         _pageController.animateToPage(
-          19, // Jump to OtpStep
+          18, // Jump to OtpStep
           duration: const Duration(milliseconds: 400),
           curve: Curves.easeInOut,
         );
@@ -580,6 +572,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       backgroundColor: Colors.transparent,
       resizeToAvoidBottomInset: false,
       body: GestureDetector(
+        behavior: HitTestBehavior.translucent,
         onTap: () => FocusScope.of(context).unfocus(),
         child: Stack(
           fit: StackFit.expand,
@@ -594,11 +587,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   child: Row(
                     children: [
                       Opacity(
-                        opacity: (_currentPage == 21)
+                        opacity: (_currentPage == 20)
                             ? 0.0
                             : 1.0,
                         child: GestureDetector(
-                          onTap: (_currentPage == 21)
+                          onTap: (_currentPage == 20)
                               ? null
                               : _onBack,
                           child: Container(
@@ -637,16 +630,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           ),
                         ),
                       ),
-                      // SizedBox(width: 8.w),
-                      // Text(
-                      //   '${_getEffectiveStep()}/20',
-                      //   style: TextStyle(
-                      //     fontSize: 14.sp,
-                      //     fontWeight: FontWeight.w700,
-                      //     color: const Color(0xFF374151),
-                      //     fontFamily: 'SF Pro',
-                      //   ),
-                      // ),
                       SizedBox(width: 8.w),
                     ],
                   ),
@@ -659,42 +642,20 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     physics: const NeverScrollableScrollPhysics(),
                     onPageChanged: _onStepChanged,
                     children: [
-                      IdentityStep(
-                        initialFirstName: _firstName,
-                        initialLastName: _lastName,
-                        initialEmail: _email,
-                        initialPhone: _phone,
-                        onChanged:
-                            ({
-                              required fullName,
-                              required lastName,
-                              required email,
-                              required phone,
-                            }) {
-                              setState(() {
-                                _firstName = fullName;
-                                _lastName = lastName;
-                                _email = email;
-                                _phone = phone;
-                              });
-                            },
-                      ),
+
                       LanguageRegionStep(
                         initialLanguage: _language,
                         initialCountry: _country,
-                        initialAlternativeRegion: _alternativeRegion,
                         initialMeasurementSystem: _measurementSystem,
                         onChanged:
                             ({
                               required language,
                               required country,
-                              required alternativeRegion,
                               required measurementSystem,
                             }) {
                               setState(() {
                                 _language = language;
                                 _country = country;
-                                _alternativeRegion = alternativeRegion;
                                 _measurementSystem = measurementSystem;
                               });
                             },
@@ -786,10 +747,16 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       ),
                       ProfileSignupStep(
                         onSignupEmail: () {
-                          _pageController.animateToPage(
-                            18, // AccountStep
-                            duration: const Duration(milliseconds: 400),
-                            curve: Curves.easeInOut,
+                          TermsValidationModal.show(
+                            context,
+                            onAccepted: () {
+                              setState(() => _acceptedTerms = true);
+                              _pageController.animateToPage(
+                                17, // AccountStep
+                                duration: const Duration(milliseconds: 400),
+                                curve: Curves.easeInOut,
+                              );
+                            },
                           );
                         },
                         onSignupGoogle: () =>
@@ -799,18 +766,21 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         onGuest: () => _submitPreferences(isGuest: true),
                       ),
                       AccountStep(
+                        initialFullName: _firstName,
                         initialEmail: _email,
                         initialPassword: _password,
                         initialPhone: _phone,
                         initialAcceptedTerms: _acceptedTerms,
                         onChanged:
                             ({
+                              required fullName,
                               required email,
                               required password,
                               required phone,
                               required acceptedTerms,
                             }) {
                               setState(() {
+                                _firstName = fullName;
                                 _email = email;
                                 _password = password;
                                 _phone = phone;
@@ -822,7 +792,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         email: _email,
                         onComplete: () {
                           _pageController.animateToPage(
-                            20, // TrialStep
+                            19, // TrialStep
                             duration: const Duration(milliseconds: 400),
                             curve: Curves.easeInOut,
                           );
@@ -855,10 +825,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 ),
 
                 // Footer: Continue Button
-                if (_currentPage != 15 &&
-                    _currentPage != 17 &&
-                    _currentPage != 19 &&
-                    _currentPage != 21)
+                if (_currentPage != 14 && // ProfileLoading
+                    _currentPage != 16 && // ProfileSignup
+                    _currentPage != 18 && // Otp
+                    _currentPage != 20)  // RecipeGenerationLoading
                   SafeArea(
                     top: false,
                     child: Padding(
@@ -872,14 +842,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             child: ElevatedButton(
                               onPressed:
                                   (_isLoading ||
-                                      (_currentPage == 0 &&
-                                          (_firstName.isEmpty ||
-                                              _email.isEmpty)) ||
-                                      (_currentPage == 2 &&
-                                          _source == null) || // SourceStep
-                                      (_currentPage == 4 && // AllergiesStep
-                                          _selectedAllergy.isEmpty) ||
-                                      (_currentPage == 18 && // AccountStep
+                                      (_currentPage == 1 && // SourceStep
+                                          _source == null) ||
+                                      (_currentPage == 17 && // AccountStep
                                           (_email.isEmpty ||
                                               _password.isEmpty ||
                                               !_acceptedTerms)))
@@ -905,8 +870,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                       ),
                                     )
                                   : Text(
-                                      _currentPage ==
-                                              20 // TrialStep
+                                      _currentPage == 19 // TrialStep
                                           ? 'Start My 3-Day Free Trial'
                                           : 'Continue',
                                       style: TextStyle(
@@ -917,7 +881,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                     ),
                             ),
                           ),
-                          if (_currentPage == 20) ...[
+                           if (_currentPage == 19) ...[
                             // TrialStep
                             SizedBox(height: 12.h),
                             Text(

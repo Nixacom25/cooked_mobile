@@ -44,7 +44,6 @@ class _UserPreferencesScreenState extends State<UserPreferencesScreen> {
   List<String> _onboardingGoals = [];
   String _language = 'GB English';
   String _country = 'US United States';
-  String _alternativeRegion = 'US United States';
   String _measurementSystem = 'Metric';
 
   @override
@@ -76,7 +75,6 @@ class _UserPreferencesScreenState extends State<UserPreferencesScreen> {
         _onboardingGoals = List<String>.from(user['onboardingGoals'] ?? []);
         _language = user['language'] ?? 'GB English';
         _country = user['country'] ?? 'US United States';
-        _alternativeRegion = user['alternativeRegion'] ?? 'US United States';
         _measurementSystem = user['measurementSystem'] ?? 'Metric';
         _isLoading = false;
       });
@@ -111,7 +109,6 @@ class _UserPreferencesScreenState extends State<UserPreferencesScreen> {
         onboardingGoals: _onboardingGoals.toList(),
         language: _language,
         country: _country,
-        alternativeRegion: _alternativeRegion,
         measurementSystem: _measurementSystem,
       );
       if (!mounted) return;
@@ -215,18 +212,15 @@ class _UserPreferencesScreenState extends State<UserPreferencesScreen> {
                     LanguageRegionStep(
                       initialLanguage: _language,
                       initialCountry: _country,
-                      initialAlternativeRegion: _alternativeRegion,
                       initialMeasurementSystem: _measurementSystem,
                       onChanged: ({
                         required String language,
                         required String country,
-                        required String alternativeRegion,
                         required String measurementSystem,
                       }) {
                         setState(() {
                           _language = language;
                           _country = country;
-                          _alternativeRegion = alternativeRegion;
                           _measurementSystem = measurementSystem;
                         });
                       },

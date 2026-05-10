@@ -76,7 +76,6 @@ class AuthService {
     String? onboardingFeedback,
     String? language,
     String? country,
-    String? alternativeRegion,
     String? measurementSystem,
   }) async {
     final url = Uri.parse('${ApiConfig.baseUrl}/auth/register');
@@ -119,7 +118,6 @@ class AuthService {
         'onboardingFeedback': onboardingFeedback,
         'language': language,
         'country': country,
-        'alternativeRegion': alternativeRegion,
         'measurementSystem': measurementSystem,
       }),
     );
@@ -300,9 +298,25 @@ class AuthService {
       if (identityToken == null) throw Exception('Missing ID Token from Apple');
 
       if (!isManualBackendCall) {
+        String? email = credential.email;
+        if (email == null || email.isEmpty) {
+          // Fallback: Decode JWT to get email if not provided by SDK (common on 2nd login)
+          try {
+            final parts = identityToken.split('.');
+            if (parts.length > 1) {
+              final payload = jsonDecode(
+                utf8.decode(base64Url.decode(base64Url.normalize(parts[1]))),
+              );
+              email = payload['email'];
+            }
+          } catch (e) {
+            developer.log('JWT Decode Error: $e');
+          }
+        }
+
         return {
           'success': true,
-          'email': credential.email ?? '',
+          'email': email ?? '',
           'idToken': identityToken,
           'firstname': credential.givenName ?? '',
           'lastname': credential.familyName ?? '',

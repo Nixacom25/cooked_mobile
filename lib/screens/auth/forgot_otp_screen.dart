@@ -35,12 +35,28 @@ class _ForgotOtpScreenState extends State<ForgotOtpScreen> {
   }
 
   void _onChanged(String val, int idx) {
+    if (val.length > 1) {
+      // Robust Paste Handling
+      final digits = val.replaceAll(RegExp(r'[^0-9]'), '');
+      final toFill = digits.length > _otpLength ? digits.substring(0, _otpLength) : digits;
+      
+      for (int i = 0; i < toFill.length; i++) {
+        _ctrls[i].text = toFill[i];
+        _ctrls[i].selection = TextSelection.fromPosition(TextPosition(offset: 1));
+      }
+      
+      // Move focus to the last filled box
+      int lastIdx = toFill.length - 1;
+      if (lastIdx < 0) lastIdx = 0;
+      _nodes[lastIdx].requestFocus();
+      return;
+    }
+
     if (val.length == 1 && idx < _otpLength - 1) {
       _nodes[idx + 1].requestFocus();
     } else if (val.isEmpty && idx > 0) {
       _nodes[idx - 1].requestFocus();
     }
-    setState(() {});
   }
 
   String _getOtpCode() {
@@ -66,6 +82,7 @@ class _ForgotOtpScreenState extends State<ForgotOtpScreen> {
         code: code,
       );
       if (!mounted) return;
+      FocusManager.instance.primaryFocus?.unfocus();
       nav.pushReplacementNamed(
         AppRoutes.resetPassword,
         arguments: identifier, // passed to ResetPasswordScreen
@@ -165,7 +182,12 @@ class _ForgotOtpScreenState extends State<ForgotOtpScreen> {
                   ),
                   SingleChildScrollView(
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(24, 30, 24, 24),
+                      padding: EdgeInsets.fromLTRB(
+                        24,
+                        30,
+                        24,
+                        24 + MediaQuery.of(context).padding.bottom,
+                      ),
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -365,9 +387,11 @@ class _ForgotOtpScreenState extends State<ForgotOtpScreen> {
             focusNode: _nodes[idx],
             textAlign: TextAlign.center,
             keyboardType: TextInputType.number,
-            maxLength: 1,
+            maxLength: null, // Allow more than 1 char for paste detection
             onChanged: (v) => _onChanged(v, idx),
-            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            inputFormatters: [
+              FilteringTextInputFormatter.digitsOnly,
+            ],
             style: const TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w800,

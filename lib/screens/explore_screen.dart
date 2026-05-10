@@ -119,6 +119,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
             _buildPopularCategories(),
           ],
           _buildPopularNow(),
+            SizedBox(height: 50.h),
         ],
       ),
     );
@@ -456,9 +457,33 @@ class _ExploreScreenState extends State<ExploreScreen> {
     return FutureBuilder<List<Recipe>>(
       future: _popularFuture,
       builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return Padding(
+            padding: EdgeInsets.symmetric(vertical: 20.h, horizontal: 20.w),
+            child: Column(
+              children: [
+                const Icon(Icons.error_outline, color: Colors.grey),
+                SizedBox(height: 8.h),
+                Text(
+                  'Could not load popular recipes.',
+                  style: TextStyle(color: Colors.grey, fontSize: 13.sp),
+                ),
+                TextButton(
+                  onPressed: () {
+                    setState(() {
+                      _popularFuture = RecipeService.instance.getPopularRecipes(size: 10, forceRefresh: true);
+                    });
+                  },
+                  child: const Text('Retry'),
+                ),
+              ],
+            ),
+          );
+        }
+
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Padding(
-            padding: EdgeInsets.symmetric(vertical: 0.h),
+            padding: EdgeInsets.symmetric(vertical: 40.h),
             child: const Center(
               child: CircularProgressIndicator(color: Color(0xFFC83A2D)),
             ),

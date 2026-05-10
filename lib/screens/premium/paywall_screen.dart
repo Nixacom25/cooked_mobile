@@ -1,15 +1,23 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
-import 'package:intl/intl.dart';
 import '../../services/paywall_service.dart';
+import '../../services/iap_service.dart';
+import '../../core/utils/error_helper.dart';
+import '../../services/user_service.dart';
+
+enum PaywallFlowType { standard, offer }
 
 class PaywallScreen extends StatefulWidget {
   final PaywallService paywallService;
+  final PaywallFlowType flowType;
 
-  const PaywallScreen({super.key, required this.paywallService});
+  const PaywallScreen({
+    super.key,
+    required this.paywallService,
+    this.flowType = PaywallFlowType.standard,
+  });
 
   @override
   State<PaywallScreen> createState() => _PaywallScreenState();
@@ -20,76 +28,60 @@ class _PaywallScreenState extends State<PaywallScreen> {
   bool isLoading = true;
   List<ProductDetails> _products = [];
   String _selectedPlanId = 'yearly_sub';
-  late StreamSubscription<List<PurchaseDetails>> _subscription;
+
+  bool get isOffer => widget.flowType == PaywallFlowType.offer;
 
   @override
   void initState() {
     super.initState();
-    final Stream<List<PurchaseDetails>> purchaseUpdated = InAppPurchase.instance.purchaseStream;
-    _subscription = purchaseUpdated.listen((purchaseDetailsList) {
-      _listenToPurchaseUpdated(purchaseDetailsList);
-    }, onDone: () {
-      _subscription.cancel();
-    }, onError: (error) {
-      // Handle error here.
-    });
+    FocusManager.instance.primaryFocus?.unfocus();
+    _selectedPlanId = 'yearly_sub';
+    _initIap();
     _loadConfigAndProducts();
+    // Refresh user data in background to ensure latest premium status
+    UserService.instance.getCurrentUser().catchError((_) => {});
+  }
+
+  void _initIap() {
+    IapService.instance.initialize();
+    IapService.instance.onPurchaseSuccess = () {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Premium Activated! Welcome to the Chef Club."),
+            backgroundColor: Colors.green,
+          ),
+        );
+        Navigator.pop(context, true);
+      }
+    };
+    IapService.instance.onPurchaseError = (error) {
+      _showErrorSnackBar(ErrorHelper.getFriendlyMessage(error));
+    };
   }
 
   @override
   void dispose() {
-    _subscription.cancel();
+    IapService.instance.onPurchaseSuccess = null;
+    IapService.instance.onPurchaseError = null;
     super.dispose();
-  }
-
-  void _listenToPurchaseUpdated(List<PurchaseDetails> purchaseDetailsList) {
-    for (var purchaseDetails in purchaseDetailsList) {
-      if (purchaseDetails.status == PurchaseStatus.pending) {
-        // Show pending UI if needed
-      } else {
-        if (purchaseDetails.status == PurchaseStatus.error) {
-          _showErrorSnackBar("Purchase error");
-        } else if (purchaseDetails.status == PurchaseStatus.purchased ||
-                   purchaseDetails.status == PurchaseStatus.restored) {
-          _completePurchase(purchaseDetails);
-        }
-        if (purchaseDetails.pendingCompletePurchase) {
-          InAppPurchase.instance.completePurchase(purchaseDetails);
-        }
-      }
-    }
-  }
-
-  Future<void> _completePurchase(PurchaseDetails purchaseDetails) async {
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Welcome to Cooked Premium!")),
-      );
-      Navigator.pop(context);
-    }
   }
 
   void _showErrorSnackBar(String message) {
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message), backgroundColor: Colors.red),
+      );
     }
   }
 
   Future<void> _loadConfigAndProducts() async {
     try {
-      final bool available = await InAppPurchase.instance.isAvailable();
-      if (!available) {
-        if (mounted) {
-          setState(() {
-            isLoading = false;
-            config = _getDefaultConfig();
-          });
-        }
-        return;
-      }
+      final data = await widget.paywallService.getRemoteConfig(
+        flow: widget.flowType == PaywallFlowType.offer ? 'OFFER' : null,
+      );
 
-      final data = await widget.paywallService.getRemoteConfig();
-      final ProductDetailsResponse response = await InAppPurchase.instance.queryProductDetails({
+      final products = await IapService.instance.getProducts({
         'monthly_sub',
         'yearly_sub',
       });
@@ -97,10 +89,13 @@ class _PaywallScreenState extends State<PaywallScreen> {
       if (mounted) {
         setState(() {
           config = data;
-          _products = response.productDetails;
+          _products = products;
           isLoading = false;
         });
-        widget.paywallService.trackEvent('paywall_view', data['variantKey']);
+        widget.paywallService.trackEvent(
+          'paywall_view',
+          data['variantKey'] ?? widget.flowType.toString(),
+        );
       }
     } catch (e) {
       if (mounted) {
@@ -113,13 +108,19 @@ class _PaywallScreenState extends State<PaywallScreen> {
   }
 
   Map<String, dynamic> _getDefaultConfig() {
+    if (widget.flowType == PaywallFlowType.offer) {
+      return {
+        'title': 'Special comeback offer',
+        'yearlyPriceLabel': '\$19.99 / year',
+        'monthlyPriceLabel': '\$9.99 / month',
+        'ctaText': 'Unlock Premium for \$19.99',
+      };
+    }
     return {
-      'title': 'Start your 3-day FREE\ntrial to continue.',
-      'subtitle': 'Unlock all Cooked features',
-      'variantKey': 'default',
-      'yearlyPriceLabel': '\$29.99',
-      'monthlyPriceLabel': '\$9.99',
-      'ctaText': 'Start My 3-Day Free Trial'
+      'title': 'Unlock Cooked to keep \ncreating recipes.',
+      'yearlyPriceLabel': '\$2.49 / mo',
+      'monthlyPriceLabel': '\$9.99 / month',
+      'ctaText': 'Unlock Premium',
     };
   }
 
@@ -128,94 +129,153 @@ class _PaywallScreenState extends State<PaywallScreen> {
     if (isLoading) {
       return const Scaffold(
         backgroundColor: Colors.white,
-        body: Center(child: CircularProgressIndicator(color: Color(0xFFC83A2D))),
+        body: Center(
+          child: CircularProgressIndicator(color: Color(0xFFC83A2D)),
+        ),
       );
     }
+
+    final bool isOffer = widget.flowType == PaywallFlowType.offer;
+    final primaryColor = const Color(0xFFC83A2D);
 
     return Scaffold(
       backgroundColor: Colors.white,
       body: Stack(
         children: [
           SingleChildScrollView(
-            padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 30.h),
+            padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 40.h),
             child: SafeArea(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Align(
-                    alignment: Alignment.topRight,
-                    child: IconButton(
-                      icon: const Icon(Icons.close, color: Color(0xFF7B8190)),
-                      onPressed: () => Navigator.pop(context),
-                    ),
-                  ),
-                  Text(
-                    config!['title'] ?? 'Start your 3-day FREE\ntrial to continue.',
-                    style: TextStyle(
-                      fontSize: 24.sp,
-                      fontWeight: FontWeight.w900,
-                      color: const Color(0xFF0D1B3E),
-                      fontFamily: 'SF Pro',
-                      height: 1.2,
-                    ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          config!['title'] ?? '',
+                          style: TextStyle(
+                            fontSize: 24.sp,
+                            fontWeight: FontWeight.w900,
+                            color: const Color(0xFF0D1B3E),
+                            fontFamily: 'SF Pro',
+                            height: 1.1,
+                            letterSpacing: -0.5,
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close, color: Color(0xFF7B8190), size: 28),
+                        onPressed: () => Navigator.pop(context, false),
+                      ),
+                    ],
                   ),
                   SizedBox(height: 28.h),
 
-                  _buildTimelineItem(
-                    icon: 'unlock.svg',
-                    title: 'Today',
-                    description: "Unlock all features: Unlimited AI Scan, exclusive recipes, and more.",
-                    isFirst: true,
-                  ),
-                  _buildTimelineItem(
-                    icon: 'bell-part.svg',
-                    title: 'In 2 Days - Reminder',
-                    description: "We'll send you a reminder before your trial ends.",
-                  ),
-                  _buildTimelineItem(
-                    icon: 'crown.svg',
-                    title: 'In 3 Days - Billing Starts',
-                    description: "Your subscription starts on ${DateFormat('MMM d, yyyy').format(DateTime.now().add(const Duration(days: 3)))} (Cancel anytime).",
-                    isLast: true,
-                  ),
+                  if (isOffer) ...[
+                    _buildTimelineItem(
+                      icon: 'crown.svg',
+                      title: 'Special Offer',
+                      description:
+                          "Unlock all features forever with this limited discount.",
+                      color: primaryColor,
+                      isFirst: true,
+                    ),
+                    _buildTimelineItem(
+                      icon: 'unlock.svg',
+                      title: 'Unlimited Access',
+                      description:
+                          "Scan your fridge and import recipes without any limits.",
+                      color: primaryColor,
+                    ),
+                    _buildTimelineItem(
+                      icon: 'star.svg',
+                      title: 'Exclusive Recipes',
+                      description:
+                          "Access premium recipes and themed cookbooks.",
+                      color: primaryColor,
+                      isLast: true,
+                    ),
+                  ] else ...[
+                    _buildTimelineItem(
+                      icon: 'unlock.svg',
+                      title: 'Immediate Access',
+                      description:
+                          "Scan your ingredients and import recipes from any link.",
+                      color: const Color(0xFFF97316),
+                      isFirst: true,
+                    ),
+                    _buildTimelineItem(
+                      icon: 'star.svg',
+                      title: 'Exclusive Content',
+                      description:
+                          "Access premium generated recipes and themed cookbooks.",
+                      color: const Color(0xFFEAB308),
+                    ),
+                    _buildTimelineItem(
+                      icon: 'crown.svg',
+                      title: 'Master Chef Status',
+                      description:
+                          "Enjoy a complete ad-free experience with priority AI processing.",
+                      color: const Color(0xFFEAB308),
+                      isLast: true,
+                    ),
+                  ],
 
                   SizedBox(height: 32.h),
 
                   Row(
                     children: [
-                      Expanded(
-                        child: _buildPlanCard(
-                          id: 'monthly_sub',
-                          title: 'Monthly',
-                          price: _getProductPrice('monthly_sub', config!['monthlyPriceLabel']),
-                          isSelected: _selectedPlanId == 'monthly_sub',
+                      if (!isOffer) ...[
+                        Expanded(
+                          child: _buildPlanCard(
+                            id: 'monthly_sub',
+                            title: 'Monthly',
+                            price: _getProductPrice(
+                              'monthly_sub',
+                              config!['monthlyPriceLabel'],
+                            ),
+                            isSelected: _selectedPlanId == 'monthly_sub',
+                            color: primaryColor,
+                          ),
                         ),
-                      ),
-                      SizedBox(width: 16.w),
+                        SizedBox(width: 16.w),
+                      ],
                       Expanded(
                         child: _buildPlanCard(
                           id: 'yearly_sub',
                           title: 'Yearly',
-                          price: _getProductPrice('yearly_sub', config!['yearlyPriceLabel']),
+                          price: _getProductPrice(
+                            'yearly_sub',
+                            config!['yearlyPriceLabel'],
+                          ),
+                          subPrice: !isOffer ? '(\$29.99 / year)' : null,
                           isSelected: _selectedPlanId == 'yearly_sub',
+                          badge: isOffer ? '33% OFF' : 'BEST VALUE',
+                          color: primaryColor,
                         ),
                       ),
                     ],
                   ),
-
-                  SizedBox(height: 120.h),
+                  SizedBox(height: 160.h), 
                 ],
               ),
             ),
           ),
 
-          // Sticky Bottom Button with SafeArea
+          // Sticky Bottom Button
           Positioned(
             bottom: 0,
             left: 0,
             right: 0,
             child: Container(
-              padding: EdgeInsets.fromLTRB(24.w, 10.h, 24.w, 10.h),
+              padding: EdgeInsets.fromLTRB(
+                24.w, 
+                10.h, 
+                24.w, 
+                10.h + MediaQuery.of(context).padding.bottom
+              ),
               decoration: BoxDecoration(
                 color: Colors.white,
                 boxShadow: [
@@ -226,36 +286,85 @@ class _PaywallScreenState extends State<PaywallScreen> {
                   ),
                 ],
               ),
-              child: SafeArea(
-                top: false,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    SizedBox(
-                      width: double.infinity,
-                      height: 56.h,
-                      child: ElevatedButton(
-                        onPressed: _handlePurchase,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFC83A2D),
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(30.r),
-                          ),
-                          elevation: 0,
+              child: ValueListenableBuilder<Map<String, dynamic>?>(
+                valueListenable: UserService.instance.currentUserNotifier,
+                builder: (context, user, _) {
+                  final bool isUserPremium = UserService.instance.isPremium;
+                  
+                  return Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (!isOffer) ...[
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            if (isUserPremium)
+                              Container(
+                                padding: EdgeInsets.all(2.r),
+                                decoration: const BoxDecoration(
+                                  color: Colors.green,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(Icons.check, color: Colors.white, size: 14.sp),
+                              )
+                            else
+                              Icon(Icons.check, color: Colors.black, size: 18.sp),
+                            SizedBox(width: 8.w),
+                            Text(
+                              isUserPremium 
+                                  ? "You are already a Premium member!" 
+                                  : "Immediate Premium Access",
+                              style: TextStyle(
+                                fontSize: 16.sp,
+                                fontWeight: FontWeight.w800,
+                                color: isUserPremium ? Colors.green : Colors.black,
+                                fontFamily: 'SF Pro',
+                              ),
+                            ),
+                          ],
                         ),
-                        child: Text(
-                          'Subscribe now',
-                          style: TextStyle(
-                            fontSize: 18.sp,
-                            fontWeight: FontWeight.w700,
-                            fontFamily: 'SF Pro',
+                        SizedBox(height: 16.h),
+                      ],
+                      SizedBox(
+                        width: double.infinity,
+                        height: 50.h,
+                        child: ElevatedButton(
+                          onPressed: isUserPremium ? null : _handlePurchase,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: isUserPremium ? const Color(0xFFE5E7EB) : primaryColor,
+                            disabledBackgroundColor: const Color(0xFFE5E7EB),
+                            foregroundColor: Colors.white,
+                            disabledForegroundColor: const Color(0xFF9CA3AF),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(50.r),
+                            ),
+                            elevation: 0,
+                          ),
+                          child: Text(
+                            isUserPremium ? 'Active Subscription' : (config!['ctaText'] ?? 'Subscribe now'),
+                            style: TextStyle(
+                              fontSize: 15.sp,
+                              fontWeight: FontWeight.w700,
+                              fontFamily: 'SF Pro',
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
+                      if (!isOffer) ...[
+                        SizedBox(height: 12.h),
+                        Text(
+                          "\$29.99 per year (\$2.49/mo)",
+                          style: TextStyle(
+                            fontSize: 13.sp,
+                            color: const Color(0xFF7B8190),
+                            fontFamily: 'SF Pro',
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ],
+                  );
+                }
               ),
             ),
           ),
@@ -277,6 +386,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
     required String icon,
     required String title,
     required String description,
+    required Color color,
     bool isFirst = false,
     bool isLast = false,
   }) {
@@ -292,24 +402,19 @@ class _PaywallScreenState extends State<PaywallScreen> {
                 padding: EdgeInsets.all(6.r),
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  border: Border.all(
-                    color: const Color(0xFFC83A2D),
-                    width: 1.5.w,
-                  ),
+                  border: Border.all(color: color, width: 1.5.w),
                   color: Colors.white,
                 ),
                 child: SvgPicture.asset(
                   'assets/icones/$icon',
                   width: double.infinity,
                   height: double.infinity,
+                  colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
                 ),
               ),
               if (!isLast)
                 Expanded(
-                  child: Container(
-                    width: 4.w,
-                    color: const Color(0xFFC83A2D).withOpacity(0.2),
-                  ),
+                  child: Container(width: 5.w, color: color.withOpacity(0.2)),
                 ),
             ],
           ),
@@ -350,7 +455,9 @@ class _PaywallScreenState extends State<PaywallScreen> {
     required String id,
     required String title,
     required String price,
+    String? subPrice,
     required bool isSelected,
+    required Color color,
     String? badge,
   }) {
     return GestureDetector(
@@ -364,7 +471,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
               color: Colors.white,
               borderRadius: BorderRadius.circular(16.r),
               border: Border.all(
-                color: isSelected ? const Color(0xFFC83A2D) : const Color(0xFFE5E7EB),
+                color: isSelected ? color : const Color(0xFFE5E7EB),
                 width: isSelected ? 2.w : 1.w,
               ),
             ),
@@ -378,9 +485,13 @@ class _PaywallScreenState extends State<PaywallScreen> {
                       title,
                       style: TextStyle(
                         fontSize: 14.sp,
-                        color: isSelected ? const Color(0xFF0D1B3E) : const Color(0xFF7B8190),
+                        color: isSelected
+                            ? const Color(0xFF0D1B3E)
+                            : const Color(0xFF7B8190),
                         fontFamily: 'SF Pro',
-                        fontWeight: isSelected ? FontWeight.w700 : FontWeight.w400,
+                        fontWeight: isSelected
+                            ? FontWeight.w700
+                            : FontWeight.w400,
                       ),
                     ),
                     Container(
@@ -389,7 +500,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         border: Border.all(
-                          color: isSelected ? const Color(0xFFC83A2D) : const Color(0xFFE5E7EB),
+                          color: isSelected ? color : const Color(0xFFE5E7EB),
                           width: isSelected ? 6.sp : 1.sp,
                         ),
                         color: isSelected ? Colors.white : Colors.transparent,
@@ -407,6 +518,15 @@ class _PaywallScreenState extends State<PaywallScreen> {
                     fontFamily: 'SF Pro',
                   ),
                 ),
+                if (subPrice != null)
+                  Text(
+                    subPrice,
+                    style: TextStyle(
+                      fontSize: 10.sp,
+                      color: const Color(0xFF7B8190),
+                      fontFamily: 'SF Pro',
+                    ),
+                  ),
               ],
             ),
           ),
@@ -417,7 +537,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
               child: Container(
                 padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFC83A2D),
+                  color: color,
                   borderRadius: BorderRadius.circular(12.r),
                 ),
                 child: Text(
@@ -437,19 +557,54 @@ class _PaywallScreenState extends State<PaywallScreen> {
   }
 
   Future<void> _handlePurchase() async {
-    widget.paywallService.trackEvent('paywall_click', config!['variantKey'] ?? 'default', metadata: _selectedPlanId);
-    
+    widget.paywallService.trackEvent(
+      'paywall_click',
+      config!['variantKey'] ?? widget.flowType.toString(),
+      metadata: _selectedPlanId,
+    );
+
     if (_products.isEmpty) {
-      _showErrorSnackBar("Payment services unavailable.");
-      return;
+      setState(() => isLoading = true);
+      try {
+        final products = await IapService.instance.getProducts({
+          'monthly_sub',
+          'yearly_sub',
+        });
+        if (mounted) {
+          setState(() {
+            _products = products;
+            isLoading = false;
+          });
+        }
+        if (products.isEmpty) {
+          _showErrorSnackBar("Store unavailable. Please check your connection or try again later.");
+          return;
+        }
+      } catch (e) {
+        if (mounted) setState(() => isLoading = false);
+        _showErrorSnackBar("Could not connect to the Store.");
+        return;
+      }
     }
 
     try {
-      final product = _products.firstWhere((p) => p.id == _selectedPlanId);
-      final PurchaseParam purchaseParam = PurchaseParam(productDetails: product);
-      await InAppPurchase.instance.buyNonConsumable(purchaseParam: purchaseParam);
+      ProductDetails? product;
+      for (var p in _products) {
+        if (p.id == _selectedPlanId) {
+          product = p;
+          break;
+        }
+      }
+      
+      // Fallback if ID doesn't match
+      product ??= _products.first;
+
+      final success = await IapService.instance.buyProduct(product);
+      if (!success) {
+        _showErrorSnackBar("Could not initiate purchase with the Store.");
+      }
     } catch (e) {
-      _showErrorSnackBar("Purchase failed.");
+      _showErrorSnackBar("Purchase failed: ${e.toString()}");
     }
   }
 }

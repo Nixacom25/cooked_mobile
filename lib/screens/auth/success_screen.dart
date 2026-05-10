@@ -74,7 +74,7 @@ class _SuccessScreenState extends State<SuccessScreen>
                             opacity: _fade,
                             child: const Center(
                               child: Text(
-                                'Congratulation!',
+                                'Congratulations!',
                                 style: TextStyle(
                                   fontSize: 28,
                                   fontWeight: FontWeight.w900,

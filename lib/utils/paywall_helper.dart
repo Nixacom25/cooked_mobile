@@ -5,7 +5,7 @@ import '../services/auth_service.dart';
 import '../core/api_config.dart';
 
 class PaywallHelper {
-  static Future<void> show(BuildContext context) async {
+  static Future<void> show(BuildContext context, {PaywallFlowType flowType = PaywallFlowType.standard}) async {
     final token = await AuthService.instance.getToken();
     if (token == null) return;
 
@@ -16,20 +16,27 @@ class PaywallHelper {
 
     if (!context.mounted) return;
 
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        height: MediaQuery.of(context).size.height * 0.9,
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+    final result = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PaywallScreen(
+          paywallService: paywallService,
+          flowType: flowType,
         ),
-        clipBehavior: Clip.antiAliasWithSaveLayer,
-        child: PaywallScreen(paywallService: paywallService),
+        fullscreenDialog: true,
       ),
     );
+
+    // If dismissed without purchase and was standard flow, show the offer flow
+    if (result != true && flowType == PaywallFlowType.standard) {
+      if (context.mounted) {
+        // Short delay for smoother transition
+        await Future.delayed(const Duration(milliseconds: 300));
+        if (context.mounted) {
+          show(context, flowType: PaywallFlowType.offer);
+        }
+      }
+    }
   }
 
   // Vérifie si l'erreur nécessite l'affichage du paywall

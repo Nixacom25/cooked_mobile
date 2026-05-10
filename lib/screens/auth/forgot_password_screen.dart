@@ -31,6 +31,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   }
 
   Future<void> _onContinue() async {
+    FocusScope.of(context).unfocus();
     if (_step == _ForgotStep.select) {
       setState(() => _step = _ForgotStep.input);
     } else {
@@ -77,9 +78,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       resizeToAvoidBottomInset: false,
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
+      body: GestureDetector(
+        behavior: HitTestBehavior.translucent,
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
           // Background
           Image.asset('assets/images/fond.png', fit: BoxFit.cover),
 
@@ -197,14 +201,16 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           ),
         ],
       ),
+      ),
     );
   }
 
   // ── Step 1: Select Email or Phone ──────────────────────────────────────────
   Widget _buildSelectStep() {
+    final bottomPadding = 24 + MediaQuery.of(context).padding.bottom;
     return Padding(
       key: const ValueKey('select'),
-      padding: const EdgeInsets.fromLTRB(22, 28, 22, 24),
+      padding: EdgeInsets.fromLTRB(22, 28, 22, bottomPadding),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -281,9 +287,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   // ── Step 2: Input (Email or Phone) ─────────────────────────────────────────
   Widget _buildInputStep() {
     final isEmail = _method == _ContactMethod.email;
+    final bottomPadding = 24 + MediaQuery.of(context).padding.bottom;
     return Padding(
       key: const ValueKey('input'),
-      padding: EdgeInsets.fromLTRB(22, 28, 22, 24),
+      padding: EdgeInsets.fromLTRB(22, 28, 22, bottomPadding),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,

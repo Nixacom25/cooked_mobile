@@ -163,7 +163,7 @@ class _IosToastWidgetState extends State<_IosToastWidget> {
                         mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          Icon(_iconData, color: _iconColor, size: 24),
+                          Icon(_iconData, color: _iconColor, size: 20),
                           AnimatedSize(
                             duration: const Duration(milliseconds: 300),
                             curve: Curves.easeInOutCubic,
@@ -191,14 +191,14 @@ class _IosToastWidgetState extends State<_IosToastWidget> {
                                             color: _iconColor.withOpacity(0.9),
                                             fontWeight: FontWeight.w700,
                                             fontFamily: 'SF Pro',
-                                            fontSize: 15,
+                                            fontSize: 13,
                                             height: 1.2,
                                           ),
                                         ),
                                       ),
                                     ),
                                   )
-                                : const SizedBox(width: 0, height: 24),
+                                : const SizedBox(width: 0, height: 20),
                           ),
                         ],
                       ),

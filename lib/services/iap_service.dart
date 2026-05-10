@@ -13,6 +13,7 @@ class IapService {
   Function(String)? onPurchaseError;
 
   void initialize() {
+    if (_subscription != null) return;
     final Stream<List<PurchaseDetails>> purchaseUpdated =
         _inAppPurchase.purchaseStream;
     _subscription = purchaseUpdated.listen(
@@ -21,6 +22,7 @@ class IapService {
       },
       onDone: () {
         _subscription?.cancel();
+        _subscription = null;
       },
       onError: (error) {
         onPurchaseError?.call(error.toString());

@@ -15,6 +15,25 @@ class UserService {
   final ValueNotifier<Map<String, dynamic>?> currentUserNotifier =
       ValueNotifier(null);
 
+  bool get isPremium {
+    final user = currentUserNotifier.value;
+    if (user == null) return false;
+
+    final status = user['subscriptionStatus'];
+    final expiresAtStr = user['subscriptionExpiresAt'];
+
+    if (status == 'ACTIVE' || status == 'TRIAL') {
+      if (expiresAtStr == null || expiresAtStr.isEmpty) return true;
+      try {
+        final expiresAt = DateTime.parse(expiresAtStr);
+        return expiresAt.isAfter(DateTime.now());
+      } catch (_) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   Future<Map<String, String>> _getHeaders() async {
     final token = await AuthService.instance.getToken();
     return {
@@ -46,7 +65,6 @@ class UserService {
     String? otherDiscoverySource,
     String? language,
     String? country,
-    String? alternativeRegion,
     String? measurementSystem,
   }) async {
     final url = Uri.parse('${ApiConfig.baseUrl}/user/me');
@@ -61,7 +79,6 @@ class UserService {
         'otherDiscoverySource': otherDiscoverySource,
         'language': language,
         'country': country,
-        'alternativeRegion': alternativeRegion,
         'measurementSystem': measurementSystem,
       }),
     );
@@ -96,7 +113,6 @@ class UserService {
     String? onboardingFeedback,
     String? language,
     String? country,
-    String? alternativeRegion,
     String? measurementSystem,
   }) async {
     final url = Uri.parse('${ApiConfig.baseUrl}/user/me/preferences');
@@ -122,7 +138,6 @@ class UserService {
         'onboardingFeedback': onboardingFeedback,
         'language': language,
         'country': country,
-        'alternativeRegion': alternativeRegion,
         'measurementSystem': measurementSystem,
       }),
     );

@@ -190,9 +190,9 @@ class TutorialHelper {
             align: ContentAlign.top,
             builder: (context, controller) {
               return _TutorialContent(
-                title: "Scan",
+                title: "Scan Ingredients",
                 description:
-                    "Scan your ingredients or your recipe and our AI will take care of the rest.",
+                    "Snap a photo of your fridge, pantry, or ingredients and instantly discover recipes you can make with what you already have.",
                 step: 1,
                 totalSteps: 3,
                 onNext: () {
@@ -223,9 +223,9 @@ class TutorialHelper {
             align: ContentAlign.top,
             builder: (context, controller) {
               return _TutorialContent(
-                title: "Import",
+                title: "Import Recipes",
                 description:
-                    "Import yours recipes from TikTok, Instagram, or any site link.",
+                    "Import recipes directly from TikTok, Instagram, YouTube, or any recipe website and save them instantly inside your app.",
                 step: 2,
                 totalSteps: 3,
                 onNext: () {
@@ -255,9 +255,9 @@ class TutorialHelper {
             align: ContentAlign.bottom,
             builder: (context, controller) {
               return _TutorialContent(
-                title: "Create your first Book",
+                title: "Create Cookbooks",
                 description:
-                    "Organize your recipes by creating your own cookbooks here.",
+                    "Organize your favorite recipes into custom cookbooks here",
                 step: 3,
                 totalSteps: 3,
                 isLast: true,
@@ -699,7 +699,7 @@ class _ImportOnboardingModalState extends State<ImportOnboardingModal> {
                             SizedBox(height: 20.h),
                             _BulletItem(
                               text:
-                                  'Paste a link from TikTok, Instagram, or any site',
+                                  'Paste a link from TikTok, Instagram, or any website',
                             ),
                             _BulletItem(
                               text:
@@ -1307,7 +1307,11 @@ class _IngredientsDetectedCard extends StatelessWidget {
                     color: const Color(0xFFFFCC00),
                     borderRadius: BorderRadius.circular(8.r),
                   ),
-                  child: Icon(Icons.auto_awesome_rounded, size: 16.sp, color: Colors.white),
+                  child: Icon(
+                    Icons.auto_awesome_rounded,
+                    size: 16.sp,
+                    color: Colors.white,
+                  ),
                 ),
                 SizedBox(width: 12.w),
                 Expanded(
@@ -1341,7 +1345,10 @@ class _IngredientsDetectedCard extends StatelessWidget {
               children: [
                 _IngredientItem(icon: Icons.apple_rounded, name: 'Tomatoes'),
                 SizedBox(height: 12.h),
-                _IngredientItem(icon: Icons.egg_rounded, name: 'Chicken breast'),
+                _IngredientItem(
+                  icon: Icons.egg_rounded,
+                  name: 'Chicken breast',
+                ),
                 SizedBox(height: 12.h),
                 _IngredientItem(icon: Icons.grass_rounded, name: 'Garlic'),
               ],

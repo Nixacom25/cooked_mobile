@@ -38,7 +38,18 @@ class _OtpStepState extends State<OtpStep> {
   }
 
   void _onChanged(String val, int idx) {
-    if (val.length == 1 && idx < _otpLength - 1) {
+    if (val.length > 1) {
+      final text = val.replaceAll(RegExp(r'[^0-9]'), '');
+      for (int i = 0; i < text.length && i < _otpLength; i++) {
+        _ctrls[i].text = text[i];
+      }
+      final nextIdx = text.length < _otpLength ? text.length : _otpLength - 1;
+      _nodes[nextIdx].requestFocus();
+      setState(() {});
+      return;
+    }
+
+    if (val.isNotEmpty && idx < _otpLength - 1) {
       _nodes[idx + 1].requestFocus();
     } else if (val.isEmpty && idx > 0) {
       _nodes[idx - 1].requestFocus();
@@ -51,6 +62,7 @@ class _OtpStepState extends State<OtpStep> {
   }
 
   Future<void> _verifyCode() async {
+    FocusScope.of(context).unfocus();
     final code = _getOtpCode();
     if (code.length < _otpLength) {
       IosToast.show(
@@ -139,30 +151,40 @@ class _OtpStepState extends State<OtpStep> {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: List.generate(_otpLength, (idx) {
-              return Container(
-                width: 44.w,
-                height: 54.h,
-                margin: EdgeInsets.symmetric(horizontal: 4.w),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12.r),
+              return Expanded(
+                child: Container(
+                  height: 60.h,
+                  margin: EdgeInsets.symmetric(horizontal: 4.w),
+                  decoration: BoxDecoration(
+                  color: const Color(0xFFF9FAFB),
+                  borderRadius: BorderRadius.circular(16.r),
                   border: Border.all(
-                    color: _nodes[idx].hasFocus
+                    color: _nodes[idx].hasFocus || _ctrls[idx].text.isNotEmpty
                         ? const Color(0xFFC83A2D)
                         : const Color(0xFFE5E7EB),
                     width: _nodes[idx].hasFocus ? 2.w : 1.5.w,
                   ),
+                  boxShadow: _nodes[idx].hasFocus
+                      ? [
+                          BoxShadow(
+                            color: const Color(0xFFC83A2D).withOpacity(0.1),
+                            blurRadius: 8,
+                            offset: const Offset(0, 4),
+                          )
+                        ]
+                      : [],
                 ),
                 child: TextField(
                   controller: _ctrls[idx],
                   focusNode: _nodes[idx],
                   textAlign: TextAlign.center,
                   keyboardType: TextInputType.number,
-                  maxLength: 1,
                   onChanged: (v) => _onChanged(v, idx),
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                  ],
                   style: TextStyle(
-                    fontSize: 22.sp,
+                    fontSize: 24.sp,
                     fontWeight: FontWeight.w800,
                     fontFamily: 'SF Pro',
                     color: const Color(0xFF0D1B3E),
@@ -172,6 +194,7 @@ class _OtpStepState extends State<OtpStep> {
                     border: InputBorder.none,
                     contentPadding: EdgeInsets.zero,
                   ),
+                ),
                 ),
               );
             }),

@@ -69,7 +69,7 @@ class CookbookCover extends StatelessWidget {
             'assets/images/cookbook.png',
             width: 45.w,
             height: 45.h,
-            fit: BoxFit.contain,
+            fit: BoxFit.cover,
             color: const Color(0xFFCC3333).withValues(alpha: 0.3),
             colorBlendMode: BlendMode.srcIn,
           ),
@@ -121,10 +121,18 @@ class CookbookCover extends StatelessWidget {
 
     return CachedNetworkImage(
       imageUrl: imageUrl,
+      width: double.infinity,
+      height: double.infinity,
       fit: BoxFit.cover,
-      errorWidget: (_, __, ___) =>
-          Image.asset('assets/images/recipes.png', fit: BoxFit.contain),
+      errorWidget: (_, __, ___) => Image.asset(
+        'assets/images/recipes.png',
+        width: double.infinity,
+        height: double.infinity,
+        fit: BoxFit.contain,
+      ),
       placeholder: (_, __) => Container(
+        width: double.infinity,
+        height: double.infinity,
         color: const Color(0xFFE5E7EB),
         child: const Center(
           child: CircularProgressIndicator(

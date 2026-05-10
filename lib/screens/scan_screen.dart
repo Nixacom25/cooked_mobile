@@ -957,11 +957,11 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
 
   Widget _buildBottomPillNav() {
     return Container(
-      height: 40.h,
-      padding: EdgeInsets.all(4.r),
+      height: 50.h,
+      padding: EdgeInsets.all(6.r),
       decoration: BoxDecoration(
         color: const Color(0xFFFFF6D6),
-        borderRadius: BorderRadius.circular(30.r),
+        borderRadius: BorderRadius.circular(35.r),
       ),
       child: Row(
         children: [
@@ -1822,6 +1822,7 @@ class _PillTab extends StatelessWidget {
         onTap: onTap,
         child: Container(
           height: double.infinity,
+          margin: EdgeInsets.symmetric(horizontal: 2.w),
           alignment: Alignment.center,
           decoration: BoxDecoration(
             color: active ? const Color(0xFFCC3333) : Colors.transparent,
@@ -1829,10 +1830,13 @@ class _PillTab extends StatelessWidget {
           ),
           child: Text(
             label,
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
               color: active ? Colors.white : const Color(0xFF6B7280),
-              fontWeight: FontWeight.bold,
-              fontSize: 12.sp,
+              fontWeight: FontWeight.w800,
+              fontSize: 11.sp,
             ),
           ),
         ),

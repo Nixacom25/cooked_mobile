@@ -271,6 +271,11 @@ class _AddToCookbookSheetState extends State<AddToCookbookSheet> {
             widget.recipe.id,
           );
         }
+        
+        // If it was a suggestion, validate it so it becomes a permanent part of "My Recipes"
+        if (widget.recipe.origin == 'SUGGESTED') {
+          await RecipeService.instance.validateRecipe(widget.recipe.id);
+        }
       }
 
       if (!mounted) return;

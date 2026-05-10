@@ -74,20 +74,20 @@ class _TrialStepState extends State<TrialStep> {
             icon: 'unlock.svg',
             title: 'Today',
             description:
-                "Unlock all the app's features like AI calorie scanning and more.",
+                "Unlock all features: Unlimited Scan, exclusive recipes, and more.",
             isFirst: true,
           ),
           _buildTimelineItem(
             icon: 'bell-part.svg',
             title: 'In 2 Days - Reminder',
             description:
-                "We'll send you a reminder that your trial is ending soon.",
+                "We'll send you a reminder before your trial ends.",
           ),
           _buildTimelineItem(
             icon: 'crown.svg',
             title: 'In 3 Days - Billing Starts',
             description:
-                "You'll be charged on ${DateFormat('MMM d, yyyy').format(DateTime.now().plusDays(3))} unless you cancel anytime before.",
+                "Your subscription starts on ${DateFormat('MMM d, yyyy').format(DateTime.now().plusDays(3))}. Cancel anytime before in your App Store settings.",
             isLast: true,
           ),
 

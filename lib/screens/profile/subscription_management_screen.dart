@@ -3,11 +3,12 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 import '../../services/subscription_service.dart';
 import '../../models/subscription_payment.dart';
-import 'package:in_app_purchase/in_app_purchase.dart';
-import '../../services/iap_service.dart';
 import '../../core/widgets/ios_toast.dart';
-import '../onboarding/widgets/trial_step.dart';
-import '../../core/utils/error_helper.dart';
+import '../../services/auth_service.dart';
+import '../../services/paywall_service.dart';
+import '../premium/paywall_screen.dart';
+import '../../core/api_config.dart';
+import '../../services/user_service.dart';
 
 class SubscriptionManagementScreen extends StatefulWidget {
   const SubscriptionManagementScreen({super.key});
@@ -22,54 +23,17 @@ class _SubscriptionManagementScreenState
   bool _isLoading = true;
   Map<String, dynamic>? _subscription;
   List<SubscriptionPayment> _history = [];
-  String _selectedPlanId = 'yearly';
-
-  List<ProductDetails> _products = [];
-  String _monthlyPrice = '\$9.99';
-  String _yearlyPrice = '\$29.99';
 
   @override
   void initState() {
     super.initState();
     _loadSubscription();
-    _initIap();
   }
 
-  void _initIap() async {
-    IapService.instance.initialize();
-    IapService.instance.onPurchaseSuccess = () async {
-      Navigator.of(context, rootNavigator: true).pop(); // if bottom sheet open
-      await _loadSubscription();
-      if (!mounted) return;
-      IosToast.show(
-        context,
-        message: 'Subscription activated!',
-        type: ToastType.success,
-      );
-    };
-    IapService.instance.onPurchaseError = (error) {
-      if (!mounted) return;
-      IosToast.show(context, message: ErrorHelper.getFriendlyMessage(error), type: ToastType.error);
-    };
 
-    final products = await IapService.instance.getProducts({
-      'monthly_sub',
-      'yearly_sub',
-    });
-    if (mounted) {
-      setState(() {
-        _products = products;
-        for (var p in products) {
-          if (p.id == 'monthly_sub') _monthlyPrice = p.price;
-          if (p.id == 'yearly_sub') _yearlyPrice = p.price;
-        }
-      });
-    }
-  }
 
   @override
   void dispose() {
-    IapService.instance.dispose();
     super.dispose();
   }
 
@@ -130,107 +94,33 @@ class _SubscriptionManagementScreenState
     return (elapsed / total).clamp(0.0, 1.0);
   }
 
-  void _showRenewalSheet() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
-      ),
-      builder: (context) => StatefulBuilder(
-        builder: (context, setModalState) {
-          return Padding(
-            padding: EdgeInsets.only(
-              bottom: MediaQuery.of(context).viewInsets.bottom,
-            ),
-            child: SizedBox(
-              height: MediaQuery.of(context).size.height * 0.85,
-              child: Stack(
-                children: [
-                  TrialStep(
-                    showTrialBadge: false,
-                    onPlanSelected: (plan) {
-                      setModalState(() => _selectedPlanId = plan);
-                    },
-                    onSkip: () {
-                      Navigator.pop(context);
-                    },
-                  ),
-                  Positioned(
-                    bottom: 24.h,
-                    left: 24.w,
-                    right: 24.w,
-                    child: SizedBox(
-                      width: double.infinity,
-                      height: 56.h,
-                      child: ElevatedButton(
-                        onPressed: () => _handlePayment(context),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFC83A2D),
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(30.r),
-                          ),
-                        ),
-                        child: Text(
-                          _selectedPlanId == 'yearly'
-                              ? 'Renew Yearly - $_yearlyPrice'
-                              : 'Renew Monthly - $_monthlyPrice',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18.sp,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
+  void _showRenewalScreen() async {
+    final token = await AuthService.instance.getToken();
+    if (token == null) return;
+    
+    final paywallService = PaywallService(
+      baseUrl: ApiConfig.baseUrl,
+      authToken: token,
+    );
+
+    if (!mounted) return;
+
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PaywallScreen(
+          paywallService: paywallService,
+          flowType: PaywallFlowType.standard,
+        ),
       ),
     );
-  }
 
-  Future<void> _handlePayment(BuildContext context) async {
-    if (_products.isEmpty) {
-      IosToast.show(
-        context,
-        message: 'Store not available right now. Please try again later.',
-        type: ToastType.error,
-      );
-      return;
-    }
-
-    final targetId = _selectedPlanId == 'yearly'
-        ? 'yearly_sub'
-        : 'monthly_sub';
-    ProductDetails product = _products.first;
-    for (var p in _products) {
-      if (p.id == targetId) {
-        product = p;
-        break;
-      }
-    }
-
-    try {
-      print('Initiating purchase for: ${product.id}');
-      final success = await IapService.instance.buyProduct(product);
-      print('Purchase initiation result: $success');
-      if (!success) {
-         IosToast.show(context, message: 'Could not contact Google Play Store', type: ToastType.error);
-      }
-    } catch (e) {
-      if (!mounted) return;
-      IosToast.show(
-        context,
-        message: 'Could not initiate purchase',
-        type: ToastType.error,
-      );
+    if (result == true) {
+      _loadSubscription();
     }
   }
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -278,27 +168,66 @@ class _SubscriptionManagementScreenState
                     _subscription?['status'] ?? 'UNKNOWN',
                   ),
                   SizedBox(height: 32.h),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 56.h,
-                    child: ElevatedButton(
-                      onPressed: _showRenewalSheet,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFC83A2D),
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30.r),
-                        ),
-                      ),
-                      child: Text(
-                        'Renew or Upgrade',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18.sp,
-                        ),
-                      ),
-                    ),
+                  
+                  ValueListenableBuilder<Map<String, dynamic>?>(
+                    valueListenable: UserService.instance.currentUserNotifier,
+                    builder: (context, user, _) {
+                      final bool isPremium = _subscription?['status'] == 'ACTIVE' || _subscription?['status'] == 'TRIAL';
+                      
+                      return Column(
+                        children: [
+                          if (isPremium) ...[
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Container(
+                                  padding: EdgeInsets.all(2.r),
+                                  decoration: const BoxDecoration(
+                                    color: Colors.green,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Icon(Icons.check, color: Colors.white, size: 14.sp),
+                                ),
+                                SizedBox(width: 8.w),
+                                Text(
+                                  "You are already a Premium member!",
+                                  style: TextStyle(
+                                    fontSize: 14.sp,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.green,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: 16.h),
+                          ],
+                          SizedBox(
+                            width: double.infinity,
+                            height: 56.h,
+                            child: ElevatedButton(
+                              onPressed: isPremium ? null : _showRenewalScreen,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFFC83A2D),
+                                disabledBackgroundColor: const Color(0xFFE5E7EB),
+                                foregroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(30.r),
+                                ),
+                              ),
+                              child: Text(
+                                isPremium ? 'Active Subscription' : 'Renew or Upgrade',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 18.sp,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      );
+                    },
                   ),
+                  
                   SizedBox(height: 48.h),
                   Text(
                     'Payment History',
@@ -439,12 +368,12 @@ class _SubscriptionManagementScreenState
       margin: EdgeInsets.only(bottom: 16.h),
       padding: EdgeInsets.all(20.r),
       decoration: BoxDecoration(
-        color: const Color(0xFF161616),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(20.r),
-        border: Border.all(color: const Color(0xFF222222)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.2),
+            color: Colors.black.withOpacity(0.02),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -460,7 +389,7 @@ class _SubscriptionManagementScreenState
                   Container(
                     padding: EdgeInsets.all(8.r),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.05),
+                      color: const Color(0xFFC83A2D).withOpacity(0.05),
                       borderRadius: BorderRadius.circular(10.r),
                     ),
                     child: Icon(
@@ -476,16 +405,15 @@ class _SubscriptionManagementScreenState
                       Text(
                         payment.planType,
                         style: TextStyle(
-                          color: Colors.white,
+                          color: const Color(0xFF0D1B36),
                           fontWeight: FontWeight.w800,
                           fontSize: 15.sp,
-                          letterSpacing: 0.5,
                         ),
                       ),
                       Text(
                         _formatDate(payment.createdAt.toIso8601String()),
                         style: TextStyle(
-                          color: Colors.white38,
+                          color: const Color(0xFF6B7280),
                           fontSize: 12.sp,
                         ),
                       ),
@@ -511,19 +439,19 @@ class _SubscriptionManagementScreenState
             ],
           ),
           SizedBox(height: 16.h),
-          Divider(color: Colors.white.withOpacity(0.05), height: 1),
+          Divider(color: const Color(0xFFF3F4F6), height: 1),
           SizedBox(height: 16.h),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Revenue',
-                style: TextStyle(color: Colors.white38, fontSize: 13.sp),
+                'Amount',
+                style: TextStyle(color: const Color(0xFF6B7280), fontSize: 13.sp),
               ),
               Text(
                 '\$${payment.amount.toStringAsFixed(2)}',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: const Color(0xFF0D1B36),
                   fontWeight: FontWeight.w900,
                   fontSize: 16.sp,
                 ),

@@ -4,12 +4,10 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 class LanguageRegionStep extends StatefulWidget {
   final String initialLanguage;
   final String initialCountry;
-  final String initialAlternativeRegion;
   final String initialMeasurementSystem;
   final Function({
     required String language,
     required String country,
-    required String alternativeRegion,
     required String measurementSystem,
   })
   onChanged;
@@ -18,7 +16,6 @@ class LanguageRegionStep extends StatefulWidget {
     super.key,
     required this.initialLanguage,
     required this.initialCountry,
-    required this.initialAlternativeRegion,
     required this.initialMeasurementSystem,
     required this.onChanged,
   });
@@ -30,7 +27,6 @@ class LanguageRegionStep extends StatefulWidget {
 class _LanguageRegionStepState extends State<LanguageRegionStep> {
   late String _selectedLanguage;
   late String _selectedCountry;
-  late String _selectedAlternativeRegion;
   late String _selectedMeasurementSystem;
 
   @override
@@ -38,7 +34,6 @@ class _LanguageRegionStepState extends State<LanguageRegionStep> {
     super.initState();
     _selectedLanguage = widget.initialLanguage;
     _selectedCountry = widget.initialCountry;
-    _selectedAlternativeRegion = widget.initialAlternativeRegion;
     _selectedMeasurementSystem = widget.initialMeasurementSystem;
   }
 
@@ -46,7 +41,6 @@ class _LanguageRegionStepState extends State<LanguageRegionStep> {
     widget.onChanged(
       language: _selectedLanguage,
       country: _selectedCountry,
-      alternativeRegion: _selectedAlternativeRegion,
       measurementSystem: _selectedMeasurementSystem,
     );
   }
@@ -123,19 +117,6 @@ class _LanguageRegionStepState extends State<LanguageRegionStep> {
             },
           ),
 
-          SizedBox(height: 24.h),
-
-          _buildLabel('Alternative Region'),
-          SizedBox(height: 8.h),
-          _buildDropdown(
-            value: _selectedAlternativeRegion,
-            items: _countries,
-            onChanged: (val) {
-              setState(() => _selectedAlternativeRegion = val!);
-              _notifyChange();
-            },
-          ),
-
           SizedBox(height: 32.h),
           Container(
             padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
@@ -162,6 +143,34 @@ class _LanguageRegionStepState extends State<LanguageRegionStep> {
           ),
           SizedBox(height: 8.h),
           _buildMeasurementSelector(),
+          SizedBox(height: 32.h),
+          
+          Center(
+            child: GestureDetector(
+              onTap: () => Navigator.pushNamed(context, '/login'),
+              child: RichText(
+                text: TextSpan(
+                  text: 'Already have an account? ',
+                  style: TextStyle(
+                    fontSize: 14.sp,
+                    color: const Color(0xFF7B8190),
+                    fontFamily: 'SF Pro',
+                  ),
+                  children: [
+                    TextSpan(
+                      text: 'Login',
+                      style: TextStyle(
+                        fontSize: 14.sp,
+                        color: const Color(0xFFC83A2D),
+                        fontWeight: FontWeight.w700,
+                        fontFamily: 'SF Pro',
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
           SizedBox(height: 48.h),
         ],
       ),

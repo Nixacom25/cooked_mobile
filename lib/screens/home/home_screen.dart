@@ -728,7 +728,7 @@ class _HomeTabState extends State<_HomeTab> {
                           );
                         },
                       ),
-                      SizedBox(height: 50.h),
+                      SizedBox(height: 100.h),
                     ],
                   );
                 },
@@ -1166,7 +1166,7 @@ class _RecentlyViewedRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 62.h,
+      height: 55.h,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         padding: EdgeInsets.symmetric(horizontal: 18.w),
@@ -1176,14 +1176,17 @@ class _RecentlyViewedRow extends StatelessWidget {
           return Padding(
             padding: EdgeInsets.only(right: i < recipes.length - 1 ? 12 : 0),
             child: GestureDetector(
-              onTap: () => Navigator.pushNamed(
-                context,
-                AppRoutes.recipeDetail,
-                arguments: {'recipe': r},
-              ),
+              onTap: () {
+                HistoryService.instance.addToHistory(r);
+                Navigator.pushNamed(
+                  context,
+                  AppRoutes.recipeDetail,
+                  arguments: {'recipe': r},
+                );
+              },
               child: Container(
                 constraints: BoxConstraints(maxWidth: 180.w),
-                padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
+                padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
                 decoration: BoxDecoration(
                   color: const Color(0xFFF2F1EF),
                   borderRadius: BorderRadius.circular(10.r),
@@ -1205,7 +1208,7 @@ class _RecentlyViewedRow extends StatelessWidget {
                       width: 38.w,
                       height: 38.h,
                       decoration: BoxDecoration(
-                        color: const Color(0xFFE1E0DD),
+                        color: const Color(0xFFFFFFFF),
                         borderRadius: BorderRadius.circular(5.r),
                       ),
                       alignment: Alignment.center,
@@ -1314,8 +1317,9 @@ class _SavedRecipesGrid extends StatelessWidget {
                 );
               }
             },
-            onTap: () async {
-              await Navigator.pushNamed(
+            onTap: () {
+              HistoryService.instance.addToHistory(r);
+              Navigator.pushNamed(
                 ctx,
                 AppRoutes.recipeDetail,
                 arguments: {'recipe': r},
@@ -1369,10 +1373,7 @@ class _SuggestedRecipesSectionState extends State<_SuggestedRecipesSection> {
   Future<void> _fetchSuggestions() async {
     setState(() => _isLoading = true);
     try {
-      final daysSinceEpoch = DateTime.now()
-          .difference(DateTime(2024, 1, 1))
-          .inDays;
-      final page = daysSinceEpoch ~/ 3;
+      const page = 0; // Always start with fresh content (new user suggestions are here)
       final results = await RecipeService.instance.getExploreRecipes(
         page: page,
         size: 8,
@@ -1416,20 +1417,56 @@ class _SuggestedRecipesSectionState extends State<_SuggestedRecipesSection> {
 
     return Column(
       children: [
-        SizedBox(height: 30.h),
         _SectionRow(title: 'Suggested Recipes'),
         SizedBox(height: 12.h),
-        if (widget.isCompact)
-          _buildHorizontalList(displayList, savedNames)
-        else
-          _buildGrid(displayList, savedNames),
+        widget.isCompact
+            ? _buildHorizontalList(displayList, savedNames)
+            : _buildGridList(displayList, savedNames),
       ],
+    );
+  }
+
+  Widget _buildGridList(List<Recipe> items, Set<String> savedNames) {
+    // Show only first 4 in grid as requested
+    final gridItems = items.take(4).toList();
+    
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 18.w),
+      child: GridView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          crossAxisSpacing: 14.w,
+          mainAxisSpacing: 14.h,
+          mainAxisExtent: 220.h,
+        ),
+        itemCount: gridItems.length,
+        itemBuilder: (ctx, i) {
+          final r = gridItems[i];
+          final isSaved = savedNames.contains(r.name.toLowerCase());
+          return RecipeCard(
+            recipe: r,
+            useValidationIcon: true,
+            isValidated: isSaved,
+            onValidateTap: () => _handleValidation(r, isSaved),
+            onTap: () {
+              HistoryService.instance.addToHistory(r);
+              Navigator.pushNamed(
+                context,
+                AppRoutes.recipeDetail,
+                arguments: {'recipe': r, 'isPreview': !isSaved},
+              );
+            },
+          );
+        },
+      ),
     );
   }
 
   Widget _buildHorizontalList(List<Recipe> items, Set<String> savedNames) {
     return SizedBox(
-      height: 240.h,
+      height: 190.h,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         padding: EdgeInsets.symmetric(horizontal: 18.w),
@@ -1445,11 +1482,14 @@ class _SuggestedRecipesSectionState extends State<_SuggestedRecipesSection> {
               useValidationIcon: true,
               isValidated: isSaved,
               onValidateTap: () => _handleValidation(r, isSaved),
-              onTap: () => Navigator.pushNamed(
-                context,
-                AppRoutes.recipeDetail,
-                arguments: {'recipe': r, 'isPreview': !isSaved},
-              ),
+              onTap: () {
+                HistoryService.instance.addToHistory(r);
+                Navigator.pushNamed(
+                  context,
+                  AppRoutes.recipeDetail,
+                  arguments: {'recipe': r, 'isPreview': !isSaved},
+                );
+              },
             ),
           );
         },
@@ -1457,37 +1497,7 @@ class _SuggestedRecipesSectionState extends State<_SuggestedRecipesSection> {
     );
   }
 
-  Widget _buildGrid(List<Recipe> items, Set<String> savedNames) {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 18.w),
-      child: GridView.builder(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        itemCount: items.length,
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          mainAxisSpacing: 14.h,
-          crossAxisSpacing: 14.w,
-          childAspectRatio: 0.82,
-        ),
-        itemBuilder: (ctx, i) {
-          final r = items[i];
-          final isSaved = savedNames.contains(r.name.toLowerCase());
-          return RecipeCard(
-            recipe: r,
-            useValidationIcon: true,
-            isValidated: isSaved,
-            onValidateTap: () => _handleValidation(r, isSaved),
-            onTap: () => Navigator.pushNamed(
-              context,
-              AppRoutes.recipeDetail,
-              arguments: {'recipe': r, 'isPreview': !isSaved},
-            ),
-          );
-        },
-      ),
-    );
-  }
+
 
   void _handleValidation(Recipe r, bool isSaved) {
     if (isSaved) {
@@ -1506,7 +1516,30 @@ class _SuggestedRecipesSectionState extends State<_SuggestedRecipesSection> {
       builder: (context) => AddToCookbookSheet(
         recipe: r,
         onSuccess: () {
-          // Success! myRecipesNotifier will refresh and sync state.
+          // LIVE UPDATE: Optimistically update the UI state 'In Direct'
+          if (mounted) {
+            final validatedRecipe = r.copyWith(origin: 'MANUAL');
+            
+            setState(() {
+              // 1. Update local suggestions: Mark as MANUAL and MOVE to the end
+              if (_suggestions != null) {
+                final idx = _suggestions!.indexWhere((item) => item.id == r.id);
+                if (idx != -1) {
+                  _suggestions!.removeAt(idx);
+                  _suggestions!.add(validatedRecipe);
+                }
+              }
+            });
+
+            // 2. Inject directly into the global notifier so it appears in "Saved" lists instantly
+            final currentSaved = RecipeService.instance.myRecipesNotifier.value ?? [];
+            if (!currentSaved.any((item) => item.id == r.id)) {
+              RecipeService.instance.myRecipesNotifier.value = [validatedRecipe, ...currentSaved];
+            }
+
+            // 3. Background sync to ensure server consistency
+            RecipeService.instance.getMyRecipes(forceRefresh: true);
+          }
         },
       ),
     );

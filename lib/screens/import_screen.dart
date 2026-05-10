@@ -20,6 +20,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
+import '../utils/paywall_helper.dart';
 
 // ══════════════════════════════════════════════════════════════════════════════
 // IMPORT SCREEN  –  matches mockup image 2
@@ -140,6 +141,9 @@ class _ImportScreenState extends State<ImportScreen> {
       );
     } catch (e) {
       if (!mounted) return;
+      
+      if (PaywallHelper.handleError(context, e)) return;
+
       IosToast.show(
         context,
         message: ErrorHelper.getFriendlyMessage(e),
@@ -172,6 +176,9 @@ class _ImportScreenState extends State<ImportScreen> {
     } catch (e) {
       if (mounted) {
         setState(() => _isSearching = false);
+        
+        if (PaywallHelper.handleError(context, e)) return;
+
         IosToast.show(
           context,
           message: ErrorHelper.getFriendlyMessage(e),
@@ -180,6 +187,7 @@ class _ImportScreenState extends State<ImportScreen> {
       }
     }
   }
+
 
   void _onSearchChanged(String val) {
     if (_searchDebounce?.isActive ?? false) _searchDebounce!.cancel();

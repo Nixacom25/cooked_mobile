@@ -8,9 +8,10 @@ class PaywallService {
   PaywallService({required this.baseUrl, required this.authToken});
 
   // Récupère la configuration dynamique (A/B Testing)
-  Future<Map<String, dynamic>> getRemoteConfig() async {
+  Future<Map<String, dynamic>> getRemoteConfig({String? flow}) async {
+    final queryParams = flow != null ? '?flow=$flow' : '';
     final response = await http.get(
-      Uri.parse('$baseUrl/api/subscription/paywall-config'),
+      Uri.parse('$baseUrl/api/subscription/paywall-config$queryParams'),
       headers: {'Authorization': 'Bearer $authToken'},
     );
 

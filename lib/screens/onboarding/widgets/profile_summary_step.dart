@@ -27,7 +27,7 @@ class ProfileSummaryStep extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '${firstName.toTitleCase()}, your profile is ready!',
+            'Your profile is ready!',
             style: TextStyle(
               fontSize: 24.sp,
               fontWeight: FontWeight.w900,

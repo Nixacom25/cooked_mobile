@@ -73,7 +73,7 @@ class _SourceStepState extends State<SourceStep> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Welcome, ${widget.userName}!\nHow did you find us?',
+            'Welcome! How did you find us?',
             style: TextStyle(
               fontSize: 24.sp,
               fontWeight: FontWeight.w900,

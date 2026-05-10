@@ -143,7 +143,12 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                   ),
                   SingleChildScrollView(
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(22, 28, 22, 24),
+                      padding: EdgeInsets.fromLTRB(
+                        22,
+                        28,
+                        22,
+                        24 + MediaQuery.of(context).padding.bottom,
+                      ),
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.start,

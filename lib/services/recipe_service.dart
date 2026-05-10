@@ -110,7 +110,18 @@ class RecipeService {
       final List<dynamic> data = jsonDecode(response.body);
       return data.map((json) => Recipe.fromJson(json)).toList();
     } else {
-      throw Exception('Failed to generate recipes. Please try again.');
+      String errorMessage = 'Failed to generate recipes. Please try again.';
+      try {
+        final errorData = jsonDecode(response.body);
+        if (errorData['message'] != null) {
+          errorMessage = errorData['message'];
+        }
+      } catch (_) {}
+
+      if (response.statusCode == 402) {
+        throw Exception('402: $errorMessage');
+      }
+      throw Exception(errorMessage);
     }
   }
 
@@ -347,8 +358,18 @@ class RecipeService {
       CookbookService.instance.getMyCookbooks(forceRefresh: true).then((_) => null).catchError((_) => null);
       return Recipe.fromJson(jsonDecode(response.body));
     } else {
-      final error = jsonDecode(response.body)['message'] ?? 'Import failed';
-      throw Exception(error);
+      String errorMessage = 'Import failed';
+      try {
+        final errorData = jsonDecode(response.body);
+        if (errorData['message'] != null) {
+          errorMessage = errorData['message'];
+        }
+      } catch (_) {}
+
+      if (response.statusCode == 402) {
+        throw Exception('402: $errorMessage');
+      }
+      throw Exception(errorMessage);
     }
   }
 
@@ -385,7 +406,18 @@ class RecipeService {
       final List<dynamic> data = jsonDecode(response.body);
       return data.map((item) => Map<String, dynamic>.from(item)).toList();
     } else {
-      throw Exception('Web search failed');
+      String errorMessage = 'Web search failed';
+      try {
+        final errorData = jsonDecode(response.body);
+        if (errorData['message'] != null) {
+          errorMessage = errorData['message'];
+        }
+      } catch (_) {}
+
+      if (response.statusCode == 402) {
+        throw Exception('402: $errorMessage');
+      }
+      throw Exception(errorMessage);
     }
   }
 

@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import '../../../core/widgets/legal_content_modal.dart';
-import '../../../core/widgets/terms_validation_modal.dart';
 
 class AccountStep extends StatefulWidget {
+  final String initialFullName;
   final String initialEmail;
   final String initialPassword;
   final String initialPhone;
   final bool initialAcceptedTerms;
   final Function({
+    required String fullName,
     required String email,
     required String password,
     required String phone,
@@ -18,6 +18,7 @@ class AccountStep extends StatefulWidget {
 
   const AccountStep({
     super.key,
+    required this.initialFullName,
     required this.initialEmail,
     required this.initialPassword,
     required this.initialPhone,
@@ -30,6 +31,7 @@ class AccountStep extends StatefulWidget {
 }
 
 class _AccountStepState extends State<AccountStep> {
+  late TextEditingController _nameController;
   late TextEditingController _emailController;
   late TextEditingController _passwordController;
   late TextEditingController _confirmController;
@@ -41,6 +43,7 @@ class _AccountStepState extends State<AccountStep> {
   @override
   void initState() {
     super.initState();
+    _nameController = TextEditingController(text: widget.initialFullName);
     _emailController = TextEditingController(text: widget.initialEmail);
     _passwordController = TextEditingController(text: widget.initialPassword);
     _confirmController = TextEditingController(text: widget.initialPassword);
@@ -50,6 +53,7 @@ class _AccountStepState extends State<AccountStep> {
 
   @override
   void dispose() {
+    _nameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     _confirmController.dispose();
@@ -58,6 +62,7 @@ class _AccountStepState extends State<AccountStep> {
 
   void _notifyChange() {
     widget.onChanged(
+      fullName: _nameController.text,
       email: _emailController.text,
       password: _passwordController.text,
       phone: _phone,
@@ -93,6 +98,27 @@ class _AccountStepState extends State<AccountStep> {
               ),
             ),
             SizedBox(height: 32.h),
+
+            _buildLabel('Full Name'),
+            const SizedBox(height: 8),
+            _buildField(
+              controller: _nameController,
+              hint: 'John Doe',
+              icon: Icons.person_outline_rounded,
+            ),
+
+            const SizedBox(height: 20),
+
+            _buildLabel('Email'),
+            const SizedBox(height: 8),
+            _buildField(
+              controller: _emailController,
+              hint: 'john@example.com',
+              icon: Icons.email_outlined,
+              keyboardType: TextInputType.emailAddress,
+            ),
+
+            const SizedBox(height: 20),
 
             _buildLabel('Password'),
             const SizedBox(height: 8),
@@ -138,64 +164,6 @@ class _AccountStepState extends State<AccountStep> {
 
             const SizedBox(height: 30),
 
-            // Terms & Conditions
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SizedBox(
-                  height: 24.r,
-                  width: 24.r,
-                  child: Checkbox(
-                    value: _acceptedTerms,
-                    activeColor: const Color(0xFFC83A2D),
-                    side: BorderSide(
-                      color: const Color(0xFFE5E7EB),
-                      width: 1.5.w,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(4.r),
-                    ),
-                    onChanged: (val) {
-                      setState(() => _acceptedTerms = val ?? false);
-                      _notifyChange();
-                    },
-                  ),
-                ),
-                SizedBox(width: 12.w),
-                Expanded(
-                  child: Wrap(
-                    children: [
-                      Text(
-                        'I agree to the ',
-                        style: TextStyle(
-                          fontFamily: 'SF Pro',
-                          fontSize: 14.sp,
-                          color: const Color(0xFF7B8190),
-                        ),
-                      ),
-                      _linkText('Terms of Use', false),
-                      Text(
-                        ' and the ',
-                        style: TextStyle(
-                          fontFamily: 'SF Pro',
-                          fontSize: 14.sp,
-                          color: const Color(0xFF7B8190),
-                        ),
-                      ),
-                      _linkText('Privacy Policy', true),
-                      Text(
-                        '.',
-                        style: TextStyle(
-                          fontFamily: 'SF Pro',
-                          fontSize: 14.sp,
-                          color: const Color(0xFF7B8190),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
             SizedBox(height: MediaQuery.of(context).viewInsets.bottom + 32.h),
           ],
         ),
@@ -262,25 +230,5 @@ class _AccountStepState extends State<AccountStep> {
     );
   }
 
-  Widget _linkText(String text, bool isPrivacy) {
-    return GestureDetector(
-      onTap: () {
-        LegalContentModal.show(
-          context,
-          title: isPrivacy ? 'Privacy Policy' : 'Terms of Use',
-          content: isPrivacy ? dummyPrivacy : dummyTerms,
-        );
-      },
-      child: Text(
-        text,
-        style: TextStyle(
-          fontFamily: 'SF Pro',
-          fontSize: 14.sp,
-          color: const Color(0xFFC83A2D),
-          fontWeight: FontWeight.w600,
-          decoration: TextDecoration.underline,
-        ),
-      ),
-    );
-  }
+
 }
