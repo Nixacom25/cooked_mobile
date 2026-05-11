@@ -11,7 +11,7 @@ class PaywallService {
   Future<Map<String, dynamic>> getRemoteConfig({String? flow}) async {
     final queryParams = flow != null ? '?flow=$flow' : '';
     final response = await http.get(
-      Uri.parse('$baseUrl/api/subscription/paywall-config$queryParams'),
+      Uri.parse('$baseUrl/subscriptions/paywall-config$queryParams'),
       headers: {'Authorization': 'Bearer $authToken'},
     );
 
