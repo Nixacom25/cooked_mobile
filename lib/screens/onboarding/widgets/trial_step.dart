@@ -47,7 +47,6 @@ class _TrialStepState extends State<TrialStep> {
             _monthlyPrice = p.price;
           }
           if (p.id == 'yearly_sub') {
-            // Keep the format requested: $2.49 / mo
             _yearlyPrice = '\$2.49 / mo';
           }
         }

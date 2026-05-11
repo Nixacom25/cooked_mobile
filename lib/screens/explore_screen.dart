@@ -205,7 +205,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
             //                   fontSize: 13.sp,
             //                   color:
             //                       active
-            //                           ? const Color(0xFFCC3333)
+            //                           ? const Color(0xFFC83A2D)
             //                           : Colors.white,
             //                 ),
             //               ),

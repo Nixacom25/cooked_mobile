@@ -28,7 +28,13 @@ import '../utils/paywall_helper.dart';
 class ImportScreen extends StatefulWidget {
   final ValueNotifier<bool>? isActiveNotifier;
   final ValueNotifier<bool>? isImportingNotifier;
-  const ImportScreen({super.key, this.isActiveNotifier, this.isImportingNotifier});
+  final String? initialUrl;
+  const ImportScreen({
+    super.key,
+    this.isActiveNotifier,
+    this.isImportingNotifier,
+    this.initialUrl,
+  });
   @override
   State<ImportScreen> createState() => _ImportScreenState();
 }
@@ -39,14 +45,22 @@ class _ImportScreenState extends State<ImportScreen> {
     super.initState();
     _loadRecentImports();
     _loadTrending();
-    
+
     // Trigger onboarding modal if in tutorial mode
     widget.isActiveNotifier?.addListener(_onActiveStateChanged);
-    
+
     // Check initially (in case we start on this tab)
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      debugPrint("ImportScreen: PostFrameCallback triggered. isActive: ${widget.isActiveNotifier?.value}, initialUrl: ${widget.initialUrl}");
       if (widget.isActiveNotifier?.value ?? false) {
         _onActiveStateChanged();
+      }
+      
+      // Auto-trigger if initialUrl is provided
+      if (widget.initialUrl != null && widget.initialUrl!.isNotEmpty) {
+        debugPrint("ImportScreen: Auto-triggering import for URL: ${widget.initialUrl}");
+        _linkCtrl.text = widget.initialUrl!;
+        _importFromUrl(widget.initialUrl!);
       }
     });
   }
@@ -61,18 +75,6 @@ class _ImportScreenState extends State<ImportScreen> {
   }
 
   Future<void> _loadRecentImports() async {
-    // Check for initialUrl in arguments
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final args =
-          ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
-      if (args != null && args.containsKey('initialUrl')) {
-        final url = args['initialUrl'] as String;
-        if (url.isNotEmpty && _linkCtrl.text.isEmpty) {
-          _linkCtrl.text = url;
-        }
-      }
-    });
-
     try {
       await RecipeService.instance.getRecentImports(size: 6);
     } catch (_) {}
@@ -94,7 +96,7 @@ class _ImportScreenState extends State<ImportScreen> {
   bool _isImporting = false;
   bool _isSearching = false;
   List<Map<String, dynamic>> _searchResults = [];
-  
+
   Timer? _searchDebounce;
   List<Map<String, dynamic>> _suggestedWebRecipes = [];
 
@@ -126,7 +128,7 @@ class _ImportScreenState extends State<ImportScreen> {
 
   Future<void> _importFromUrl(String url) async {
     if (url.isEmpty) return;
-
+    HapticFeedback.lightImpact();
     setState(() => _isImporting = true);
     widget.isImportingNotifier?.value = true;
 
@@ -141,7 +143,7 @@ class _ImportScreenState extends State<ImportScreen> {
       );
     } catch (e) {
       if (!mounted) return;
-      
+
       if (PaywallHelper.handleError(context, e)) return;
 
       IosToast.show(
@@ -159,14 +161,13 @@ class _ImportScreenState extends State<ImportScreen> {
 
   Future<void> _handleWebSearch(String val) async {
     if (val.trim().isEmpty) return;
+    HapticFeedback.selectionClick();
     setState(() {
       _isSearching = true;
       _searchResults = [];
     });
     try {
-      final res = await RecipeService.instance.searchWeb(
-        val.trim(),
-      );
+      final res = await RecipeService.instance.searchWeb(val.trim());
       if (mounted) {
         setState(() {
           _searchResults = res;
@@ -176,7 +177,7 @@ class _ImportScreenState extends State<ImportScreen> {
     } catch (e) {
       if (mounted) {
         setState(() => _isSearching = false);
-        
+
         if (PaywallHelper.handleError(context, e)) return;
 
         IosToast.show(
@@ -188,7 +189,6 @@ class _ImportScreenState extends State<ImportScreen> {
     }
   }
 
-
   void _onSearchChanged(String val) {
     if (_searchDebounce?.isActive ?? false) _searchDebounce!.cancel();
 
@@ -199,7 +199,9 @@ class _ImportScreenState extends State<ImportScreen> {
 
     _searchDebounce = Timer(const Duration(milliseconds: 300), () async {
       try {
-        final res = await IngredientService.instance.searchIngredients(val.trim());
+        final res = await IngredientService.instance.searchIngredients(
+          val.trim(),
+        );
         if (mounted) {
           setState(() {
             _suggestedWebRecipes = res.take(5).toList();
@@ -309,7 +311,7 @@ class _ImportScreenState extends State<ImportScreen> {
                           color: Colors.grey[400],
                         ),
                         filled: true,
-                        fillColor: Colors.transparent, 
+                        fillColor: Colors.transparent,
                         border: InputBorder.none,
                         enabledBorder: InputBorder.none,
                         focusedBorder: InputBorder.none,
@@ -358,7 +360,7 @@ class _ImportScreenState extends State<ImportScreen> {
               child: Container(
                 height: 50.h,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFCC3333),
+                  color: const Color(0xFFC83A2D),
                   borderRadius: BorderRadius.circular(30.r),
                 ),
                 child: Center(
@@ -431,7 +433,7 @@ class _ImportScreenState extends State<ImportScreen> {
                       color: Colors.black.withOpacity(0.05),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
-                    )
+                    ),
                   ],
                 ),
                 child: ListView.builder(
@@ -466,7 +468,7 @@ class _ImportScreenState extends State<ImportScreen> {
                   padding: EdgeInsets.symmetric(vertical: 40),
                   child: CircularProgressIndicator(
                     valueColor: AlwaysStoppedAnimation<Color>(
-                      Color(0xFFCC3333),
+                      Color(0xFFC83A2D),
                     ),
                   ),
                 ),
@@ -493,13 +495,15 @@ class _ImportScreenState extends State<ImportScreen> {
                 spacing: 8.w,
                 runSpacing: 8.h,
                 children: _trendingRecipes
-                    .map((name) => _TrendingChip(
-                          name: name,
-                          onImport: () {
-                            _searchCtrl.text = name;
-                            _handleWebSearch(name);
-                          },
-                        ))
+                    .map(
+                      (name) => _TrendingChip(
+                        name: name,
+                        onImport: () {
+                          _searchCtrl.text = name;
+                          _handleWebSearch(name);
+                        },
+                      ),
+                    )
                     .toList(),
               ),
               SizedBox(height: 25.h),
@@ -569,15 +573,18 @@ class _ImportScreenState extends State<ImportScreen> {
                           source = 'Instagram';
                           icon = Icons.camera_alt_rounded;
                           iconColor = const Color(0xFFe6683c);
-                        } else if (r.sourceUrl?.contains('tiktok.com') ?? false) {
+                        } else if (r.sourceUrl?.contains('tiktok.com') ??
+                            false) {
                           source = 'TikTok';
                           icon = Icons.music_note_rounded;
                           iconColor = Colors.black;
-                        } else if (r.sourceUrl?.contains('youtube.com') ?? false) {
+                        } else if (r.sourceUrl?.contains('youtube.com') ??
+                            false) {
                           source = 'YouTube';
                           icon = Icons.play_arrow_rounded;
                           iconColor = Colors.red;
-                        } else if (r.sourceUrl?.contains('facebook.com') ?? false) {
+                        } else if (r.sourceUrl?.contains('facebook.com') ??
+                            false) {
                           source = 'Facebook';
                           icon = Icons.facebook_rounded;
                           iconColor = Colors.blue;
@@ -724,10 +731,7 @@ class _RecentImportTile extends StatelessWidget {
 
   Widget _buildImage(String path) {
     if (path.isEmpty) {
-      return Image.asset(
-        'assets/images/recipes.png',
-        fit: BoxFit.cover,
-      );
+      return Image.asset('assets/images/recipes.png', fit: BoxFit.cover);
     }
     if (path.startsWith('http')) {
       return CachedNetworkImage(
@@ -736,22 +740,21 @@ class _RecentImportTile extends StatelessWidget {
         placeholder: (_, __) => Container(
           color: const Color(0xFFF2F1EF),
           child: const Center(
-            child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFFCC3333)),
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              color: Color(0xFFC83A2D),
+            ),
           ),
         ),
-        errorWidget: (_, __, ___) => Image.asset(
-          'assets/images/recipes.png',
-          fit: BoxFit.cover,
-        ),
+        errorWidget: (_, __, ___) =>
+            Image.asset('assets/images/recipes.png', fit: BoxFit.cover),
       );
     }
     return Image.asset(
       path,
       fit: BoxFit.cover,
-      errorBuilder: (_, __, ___) => Image.asset(
-        'assets/images/recipes.png',
-        fit: BoxFit.cover,
-      ),
+      errorBuilder: (_, __, ___) =>
+          Image.asset('assets/images/recipes.png', fit: BoxFit.cover),
     );
   }
 
@@ -769,11 +772,7 @@ class _RecentImportTile extends StatelessWidget {
           // Rounded square thumbnail
           ClipRRect(
             borderRadius: BorderRadius.circular(12.r),
-            child: SizedBox(
-              width: 56.w,
-              height: 56.h,
-              child: _buildImage(img),
-            ),
+            child: SizedBox(width: 56.w, height: 56.h, child: _buildImage(img)),
           ),
           SizedBox(width: 14.w),
           Expanded(
@@ -800,11 +799,18 @@ class _RecentImportTile extends StatelessWidget {
                       Container(
                         padding: EdgeInsets.all(3.r),
                         decoration: BoxDecoration(
-                          color: srcAsset != null ? Colors.transparent : const Color(0xFF757A84),
+                          color: srcAsset != null
+                              ? Colors.transparent
+                              : const Color(0xFF757A84),
                           borderRadius: BorderRadius.circular(5.r),
                         ),
                         child: srcAsset != null
-                            ? Image.asset(srcAsset!, width: 14.w, height: 14.h, fit: BoxFit.contain)
+                            ? Image.asset(
+                                srcAsset!,
+                                width: 14.w,
+                                height: 14.h,
+                                fit: BoxFit.contain,
+                              )
                             : Icon(srcIcon, size: 10.sp, color: Colors.white),
                       ),
                       SizedBox(width: 6.w),
@@ -870,7 +876,7 @@ class _WebSearchResults extends StatelessWidget {
                   fontFamily: 'SF Pro',
                   fontSize: 13.sp,
                   fontWeight: FontWeight.w600,
-                  color: const Color(0xFFCC3333),
+                  color: const Color(0xFFC83A2D),
                 ),
               ),
             ),
@@ -882,7 +888,10 @@ class _WebSearchResults extends StatelessWidget {
             title: res['title'] ?? '',
             url: res['url'] ?? res['link'] ?? '',
             snippet: res['snippet'] ?? '',
-            onView: () => onView(res['url'] ?? res['link'] ?? '', res['title'] ?? 'Recipe Preview'),
+            onView: () => onView(
+              res['url'] ?? res['link'] ?? '',
+              res['title'] ?? 'Recipe Preview',
+            ),
           ),
         ),
         SizedBox(height: 20.h),
@@ -946,7 +955,7 @@ class _SearchResultTile extends StatelessWidget {
             child: Container(
               padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
               decoration: BoxDecoration(
-                color: const Color(0xFFCC3333),
+                color: const Color(0xFFC83A2D),
                 borderRadius: BorderRadius.circular(20.r),
               ),
               child: Text(
@@ -1015,7 +1024,7 @@ class _RecipeWebPreviewModalState extends State<_RecipeWebPreviewModal> {
       height: double.infinity,
       color: Colors.white,
       child: SafeArea(
-        bottom: true,
+        bottom: false,
         child: Column(
           children: [
             // Header
@@ -1024,7 +1033,10 @@ class _RecipeWebPreviewModalState extends State<_RecipeWebPreviewModal> {
               child: Row(
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.keyboard_arrow_left_rounded, size: 28),
+                    icon: const Icon(
+                      Icons.keyboard_arrow_left_rounded,
+                      size: 28,
+                    ),
                     onPressed: () => Navigator.pop(context),
                   ),
                   Expanded(
@@ -1044,7 +1056,7 @@ class _RecipeWebPreviewModalState extends State<_RecipeWebPreviewModal> {
               ),
             ),
             const Divider(height: 1),
-            
+
             // WebView
             Expanded(
               child: Stack(
@@ -1059,22 +1071,24 @@ class _RecipeWebPreviewModalState extends State<_RecipeWebPreviewModal> {
                   ),
                   if (_isLoading)
                     const Center(
-                      child: CircularProgressIndicator(color: Color(0xFFCC3333)),
+                      child: CircularProgressIndicator(
+                        color: Color(0xFFC83A2D),
+                      ),
                     ),
                 ],
               ),
             ),
-            
+
             // Actions
             Padding(
-              padding: EdgeInsets.fromLTRB(20.w, 15.h, 20.w, 15.h),
+              padding: EdgeInsets.fromLTRB(20.w, 15.h, 20.w, 35.h),
               child: SizedBox(
                 width: double.infinity,
                 height: 52.h,
                 child: ElevatedButton(
                   onPressed: widget.onImport,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFCC3333),
+                    backgroundColor: const Color(0xFFC83A2D),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16.r),
                     ),

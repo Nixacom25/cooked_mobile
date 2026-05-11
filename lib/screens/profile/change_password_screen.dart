@@ -382,7 +382,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                   }
                 }
               },
-              icon: Icon(Icons.logout_rounded, color: const Color(0xFFCC3333), size: 24.sp),
+              icon: Icon(Icons.logout_rounded, color: const Color(0xFFC83A2D), size: 24.sp),
             ),
         ],
       ),

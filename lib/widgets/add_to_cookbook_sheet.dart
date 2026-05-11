@@ -115,7 +115,7 @@ class _AddToCookbookSheetState extends State<AddToCookbookSheet> {
                       CookbookService.instance.getMyCookbooks();
                       return SizedBox(
                         height: 100.h,
-                        child: const Center(child: CircularProgressIndicator(color: Color(0xFFCC3333))),
+                        child: const Center(child: CircularProgressIndicator(color: Color(0xFFC83A2D))),
                       );
                     }
                     
@@ -173,7 +173,7 @@ class _AddToCookbookSheetState extends State<AddToCookbookSheet> {
                               isSelected 
                                   ? Icons.check_circle_rounded 
                                   : Icons.radio_button_unchecked_rounded,
-                              color: isSelected ? const Color(0xFFCC3333) : const Color(0xFFD1D5DB),
+                              color: isSelected ? const Color(0xFFC83A2D) : const Color(0xFFD1D5DB),
                               size: 24.sp,
                             ),
                           );
@@ -195,7 +195,7 @@ class _AddToCookbookSheetState extends State<AddToCookbookSheet> {
               child: ElevatedButton(
                 onPressed: (_isSaving || _selectedIds.isEmpty) ? null : _handleConfirm,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFCC3333),
+                  backgroundColor: const Color(0xFFC83A2D),
                   foregroundColor: Colors.white,
                   disabledBackgroundColor: const Color(0xFFE5E7EB),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
@@ -227,13 +227,13 @@ class _AddToCookbookSheetState extends State<AddToCookbookSheet> {
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
         decoration: BoxDecoration(
-          color: const Color(0xFFCC3333).withOpacity(0.05),
+          color: const Color(0xFFC83A2D).withOpacity(0.05),
           borderRadius: BorderRadius.circular(16.r),
-          border: Border.all(color: const Color(0xFFCC3333).withOpacity(0.2)),
+          border: Border.all(color: const Color(0xFFC83A2D).withOpacity(0.2)),
         ),
         child: Row(
           children: [
-            Icon(icon, color: const Color(0xFFCC3333), size: 22.sp),
+            Icon(icon, color: const Color(0xFFC83A2D), size: 22.sp),
             SizedBox(width: 12.w),
             Text(
               label,
@@ -241,11 +241,11 @@ class _AddToCookbookSheetState extends State<AddToCookbookSheet> {
                 fontFamily: 'SF Pro',
                 fontWeight: FontWeight.w700,
                 fontSize: 15.sp,
-                color: const Color(0xFFCC3333),
+                color: const Color(0xFFC83A2D),
               ),
             ),
             const Spacer(),
-            Icon(Icons.chevron_right_rounded, color: const Color(0xFFCC3333), size: 20.sp),
+            Icon(Icons.chevron_right_rounded, color: const Color(0xFFC83A2D), size: 20.sp),
           ],
         ),
       ),

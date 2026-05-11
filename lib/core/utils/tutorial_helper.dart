@@ -442,7 +442,7 @@ class _ScanOnboardingModalState extends State<ScanOnboardingModal> {
                             Icon(
                               Icons.check_circle_rounded,
                               size: 20.sp,
-                              color: const Color(0xFFCC3333),
+                              color: const Color(0xFFC83A2D),
                             ),
                             SizedBox(width: 12.w),
                             Expanded(
@@ -470,7 +470,7 @@ class _ScanOnboardingModalState extends State<ScanOnboardingModal> {
                       child: ElevatedButton(
                         onPressed: _onNext,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFCC3333),
+                          backgroundColor: const Color(0xFFC83A2D),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(20.r),
                           ),
@@ -515,7 +515,7 @@ class _ScanOnboardingModalState extends State<ScanOnboardingModal> {
                           height: 4.h,
                           decoration: BoxDecoration(
                             color: _currentPage == i
-                                ? const Color(0xFFCC3333)
+                                ? const Color(0xFFC83A2D)
                                 : const Color(0xFFFFD1D1),
                             borderRadius: BorderRadius.circular(2.r),
                           ),
@@ -655,7 +655,7 @@ class _ImportOnboardingModalState extends State<ImportOnboardingModal> {
                             Icon(
                               Icons.content_paste_rounded,
                               size: 18.sp,
-                              color: const Color(0xFFCC3333),
+                              color: const Color(0xFFC83A2D),
                             ),
                           ],
                         ),
@@ -665,7 +665,7 @@ class _ImportOnboardingModalState extends State<ImportOnboardingModal> {
                         width: double.infinity,
                         height: 50.h,
                         decoration: BoxDecoration(
-                          color: const Color(0xFFCC3333),
+                          color: const Color(0xFFC83A2D),
                           borderRadius: BorderRadius.circular(30.r),
                         ),
                         child: Center(
@@ -792,7 +792,7 @@ class _ImportOnboardingModalState extends State<ImportOnboardingModal> {
                       height: 8.h,
                       decoration: BoxDecoration(
                         color: _currentPage == i
-                            ? const Color(0xFFCC3333)
+                            ? const Color(0xFFC83A2D)
                             : const Color(0xFFFFDADA),
                         borderRadius: BorderRadius.circular(4),
                       ),
@@ -897,7 +897,7 @@ class _DiagramIcon extends StatelessWidget {
                 : Icon(
                     icon!,
                     size: isImported ? 25.sp : 27.sp,
-                    color: isImported ? const Color(0xFFCC3333) : Colors.black,
+                    color: isImported ? const Color(0xFFC83A2D) : Colors.black,
                   ),
           ),
         ),
@@ -1018,7 +1018,7 @@ class _TutorialContent extends StatelessWidget {
               ElevatedButton(
                 onPressed: onNext,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFCC3333),
+                  backgroundColor: const Color(0xFFC83A2D),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(25.r),
                   ),
@@ -1197,7 +1197,7 @@ class _CookbookOnboardingModalState extends State<CookbookOnboardingModal> {
                             Icon(
                               Icons.check_circle_rounded,
                               size: 18.sp,
-                              color: const Color(0xFFCC3333),
+                              color: const Color(0xFFC83A2D),
                             ),
                             SizedBox(width: 12.w),
                             Expanded(
@@ -1232,7 +1232,7 @@ class _CookbookOnboardingModalState extends State<CookbookOnboardingModal> {
                               height: 6.h,
                               decoration: BoxDecoration(
                                 color: _currentPage == i
-                                    ? const Color(0xFFCC3333)
+                                    ? const Color(0xFFC83A2D)
                                     : const Color(0xFFFFD1D1),
                                 borderRadius: BorderRadius.circular(3.r),
                               ),
@@ -1242,7 +1242,7 @@ class _CookbookOnboardingModalState extends State<CookbookOnboardingModal> {
                         ElevatedButton(
                           onPressed: _onNext,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFFCC3333),
+                            backgroundColor: const Color(0xFFC83A2D),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(26.r),
                             ),

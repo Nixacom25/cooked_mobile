@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -28,7 +29,8 @@ import '../../models/view_all_type.dart';
 
 class HomeScreen extends StatefulWidget {
   final int initialTab;
-  const HomeScreen({super.key, this.initialTab = 0});
+  final String? initialUrl;
+  const HomeScreen({super.key, this.initialTab = 0, this.initialUrl});
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
@@ -82,6 +84,7 @@ class _HomeScreenState extends State<HomeScreen>
       ImportScreen(
         isActiveNotifier: _importActiveNotifier,
         isImportingNotifier: _isImportLoading,
+        initialUrl: widget.initialUrl,
       ),
     ];
 
@@ -190,6 +193,9 @@ class _HomeScreenState extends State<HomeScreen>
   void _switchTab(int i) {
     if (_scrollBusy) return;
 
+    // Haptic feedback for tab change
+    HapticFeedback.selectionClick();
+
     // Support for hiding nav during tutorial completion (-1)
     if (i == -1) {
       setState(() {
@@ -292,12 +298,12 @@ class _HomeScreenState extends State<HomeScreen>
                                   vertical: 8.h,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFFCC3333),
+                                  color: const Color(0xFFC83A2D),
                                   borderRadius: BorderRadius.circular(30.r),
                                   boxShadow: [
                                     BoxShadow(
                                       color: const Color(
-                                        0xFFCC3333,
+                                        0xFFC83A2D,
                                       ).withValues(alpha: 0.4),
                                       blurRadius: 14.r,
                                       offset: Offset(0, 4.h),
@@ -472,14 +478,14 @@ class _FloatingBottomNav extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: currentIndex == 2
                         ? Colors.black87
-                        : const Color(0xFFCC3333),
+                        : const Color(0xFFC83A2D),
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
                         color:
                             (currentIndex == 2
                                     ? Colors.black87
-                                    : const Color(0xFFCC3333))
+                                    : const Color(0xFFC83A2D))
                                 .withValues(alpha: 0.4),
                         blurRadius: 16.r,
                         offset: Offset(0, 4.h),
@@ -537,7 +543,7 @@ class _NavItem extends StatelessWidget {
               key:
                   iconKey, // Use iconKey here to avoid duplicate GlobalKey on _NavItem itself
               size: 24.sp,
-              color: active ? const Color(0xFFCC3333) : const Color(0xFF8E8E8E),
+              color: active ? const Color(0xFFC83A2D) : const Color(0xFF8E8E8E),
             ),
             SizedBox(height: 3.h),
             Text(
@@ -547,7 +553,7 @@ class _NavItem extends StatelessWidget {
                 fontSize: 12.sp,
                 fontWeight: active ? FontWeight.w700 : FontWeight.w500,
                 color: active
-                    ? const Color(0xFFCC3333)
+                    ? const Color(0xFFC83A2D)
                     : const Color(0xFF8E8E8E),
               ),
             ),
@@ -828,7 +834,7 @@ class _HeaderState extends State<_Header> {
                               style: TextStyle(
                                 fontFamily: 'SF Pro',
                                 fontWeight: FontWeight.w700,
-                                color: Color(0xFFCC3333),
+                                color: Color(0xFFC83A2D),
                               ),
                             ),
                           ),
@@ -877,7 +883,7 @@ class _HeaderState extends State<_Header> {
                         Icon(
                           Icons.logout_rounded,
                           size: 20.sp,
-                          color: const Color(0xFFCC3333),
+                          color: const Color(0xFFC83A2D),
                         ),
                         SizedBox(width: 12.w),
                         Text(
@@ -885,7 +891,7 @@ class _HeaderState extends State<_Header> {
                           style: TextStyle(
                             fontFamily: 'SF Pro',
                             fontWeight: FontWeight.w600,
-                            color: const Color(0xFFCC3333),
+                            color: const Color(0xFFC83A2D),
                             fontSize: 14.sp,
                           ),
                         ),
@@ -999,7 +1005,7 @@ class _CookbooksRowState extends State<_CookbooksRow> {
           return SizedBox(
             height: 188.h,
             child: const Center(
-              child: CircularProgressIndicator(color: Color(0xFFCC3333)),
+              child: CircularProgressIndicator(color: Color(0xFFC83A2D)),
             ),
           );
         }
@@ -1350,74 +1356,87 @@ class _SuggestedRecipesSection extends StatefulWidget {
 }
 
 class _SuggestedRecipesSectionState extends State<_SuggestedRecipesSection> {
-  List<Recipe>? _suggestions;
-  bool _isLoading = false;
+  Timer? _pollingTimer;
 
   @override
   void initState() {
     super.initState();
     _fetchSuggestions();
-    RecipeService.instance.myRecipesNotifier.addListener(_syncSuggestions);
+    
+    // Polling: If suggestions are empty, check every 10 seconds for 2 minutes
+    _startPolling();
   }
 
   @override
   void dispose() {
-    RecipeService.instance.myRecipesNotifier.removeListener(_syncSuggestions);
+    _pollingTimer?.cancel();
     super.dispose();
   }
 
-  void _syncSuggestions() {
-    if (mounted) setState(() {});
+  void _startPolling() {
+    _pollingTimer?.cancel();
+    int attempts = 0;
+    _pollingTimer = Timer.periodic(const Duration(seconds: 10), (timer) async {
+      attempts++;
+      final current = RecipeService.instance.homeSuggestionsNotifier.value;
+      if (current != null && current.isNotEmpty) {
+        timer.cancel();
+        return;
+      }
+      
+      if (attempts > 12) { // Stop after 2 minutes
+        timer.cancel();
+        return;
+      }
+
+      await _fetchSuggestions(force: true);
+    });
   }
 
-  Future<void> _fetchSuggestions() async {
-    setState(() => _isLoading = true);
+  Future<void> _fetchSuggestions({bool force = false}) async {
     try {
-      final results = await RecipeService.instance.getHomeSuggestions();
-      if (mounted) {
-        setState(() {
-          _suggestions = results;
-          _isLoading = false;
-        });
-      }
-    } catch (e) {
-      if (mounted) setState(() => _isLoading = false);
-    }
+      await RecipeService.instance.getHomeSuggestions(forceRefresh: force);
+    } catch (_) {}
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading && _suggestions == null) {
-      return SizedBox(
-        height: 150.h,
-        child: const Center(
-          child: CircularProgressIndicator(color: Color(0xFFCC3333)),
-        ),
-      );
-    }
+    return ValueListenableBuilder<List<Recipe>?>(
+      valueListenable: RecipeService.instance.homeSuggestionsNotifier,
+      builder: (context, suggestions, _) {
+        if (suggestions == null) {
+          return SizedBox(
+            height: 150.h,
+            child: const Center(
+              child: CircularProgressIndicator(color: Color(0xFFC83A2D)),
+            ),
+          );
+        }
 
-    final allSaved = RecipeService.instance.myRecipesNotifier.value ?? [];
-    final savedNames = allSaved.map((r) => r.name.toLowerCase()).toSet();
+        final allSaved = RecipeService.instance.myRecipesNotifier.value ?? [];
+        final savedNames = allSaved.map((r) => r.name.toLowerCase()).toSet();
 
-    List<Recipe> displayList = _suggestions ?? [];
-    if (widget.searchQuery.trim().isNotEmpty) {
-      final query = widget.searchQuery.trim().toLowerCase();
-      displayList = displayList
-          .where((r) => r.name.toLowerCase().contains(query))
-          .toList();
-    }
+        List<Recipe> displayList = suggestions;
+        if (widget.searchQuery.trim().isNotEmpty) {
+          final query = widget.searchQuery.trim().toLowerCase();
+          displayList = displayList
+              .where((r) => r.name.toLowerCase().contains(query))
+              .toList();
+        }
 
-    if (displayList.isEmpty) return const SizedBox.shrink();
+        if (displayList.isEmpty) return const SizedBox.shrink();
 
-    return Column(
-      children: [
-        SizedBox(height: 22.h),
-        _SectionRow(title: 'Suggested Recipes'),
-        SizedBox(height: 12.h),
-        widget.isCompact
-            ? _buildHorizontalList(displayList, savedNames)
-            : _buildGridList(displayList, savedNames),
-      ],
+        return Column(
+          children: [
+            SizedBox(height: 22.h),
+            _SectionRow(title: 'Suggested Recipes'),
+            SizedBox(height: 12.h),
+            widget.isCompact
+                ? _buildHorizontalList(displayList, savedNames)
+                : _buildGridList(displayList, savedNames),
+          ],
+        );
+      },
     );
   }
 
@@ -1515,16 +1534,17 @@ class _SuggestedRecipesSectionState extends State<_SuggestedRecipesSection> {
           if (mounted) {
             final validatedRecipe = r.copyWith(origin: 'MANUAL');
             
-            setState(() {
-              // 1. Update local suggestions: Mark as MANUAL and MOVE to the end
-              if (_suggestions != null) {
-                final idx = _suggestions!.indexWhere((item) => item.id == r.id);
-                if (idx != -1) {
-                  _suggestions!.removeAt(idx);
-                  _suggestions!.add(validatedRecipe);
-                }
+            // 1. Update global suggestions: Mark as MANUAL and MOVE to the end
+            final suggestions = RecipeService.instance.homeSuggestionsNotifier.value;
+            if (suggestions != null) {
+              final idx = suggestions.indexWhere((item) => item.id == r.id);
+              if (idx != -1) {
+                final newList = List<Recipe>.from(suggestions);
+                newList.removeAt(idx);
+                newList.add(validatedRecipe);
+                RecipeService.instance.homeSuggestionsNotifier.value = newList;
               }
-            });
+            }
 
             // 2. Inject directly into the global notifier so it appears in "Saved" lists instantly
             final currentSaved = RecipeService.instance.myRecipesNotifier.value ?? [];
@@ -1534,6 +1554,7 @@ class _SuggestedRecipesSectionState extends State<_SuggestedRecipesSection> {
 
             // 3. Background sync to ensure server consistency
             RecipeService.instance.getMyRecipes(forceRefresh: true);
+            RecipeService.instance.getHomeSuggestions(forceRefresh: true);
           }
         },
       ),

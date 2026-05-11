@@ -51,6 +51,7 @@
 				<key>CFBundleURLSchemes</key>
 				<array>
 					<string>com.googleusercontent.apps.560042995570-hgkusq0803t4lo1u9o0b3co6kfjncc1g</string>
+					<string>Cooked</string>
 				</array>
 			</dict>
 		</array>
@@ -82,5 +83,7 @@
 		</array>
 		<key>ITSAppUsesNonExemptEncryption</key>
 		<false/>
+		<key>AppGroupId</key>
+		<string>group.com.cookedapp.app</string>
 	</dict>
 </plist>

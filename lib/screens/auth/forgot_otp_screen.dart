@@ -413,7 +413,7 @@ class _ForgotOtpScreenState extends State<ForgotOtpScreen> {
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(14),
                 borderSide: const BorderSide(
-                  color: Color(0xFFCC3333),
+                  color: Color(0xFFC83A2D),
                   width: 1.5,
                 ),
               ),

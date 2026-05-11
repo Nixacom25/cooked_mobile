@@ -314,7 +314,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                                         decoration: BoxDecoration(
                                           color: isFav
                                               ? const Color(
-                                                  0xFFCC3333,
+                                                  0xFFC83A2D,
                                                 ).withOpacity(0.1)
                                               : const Color(0xFFF9FAFB),
                                           shape: BoxShape.circle,
@@ -324,7 +324,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                                               ? Icons.favorite_rounded
                                               : Icons.favorite_border_rounded,
                                           color: isFav
-                                              ? const Color(0xFFCC3333)
+                                              ? const Color(0xFFC83A2D)
                                               : const Color(0xFF1A1A1A),
                                           size: 24,
                                         ),
@@ -400,7 +400,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                               child: Container(
                                 height: 50,
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFFCC3333),
+                                  color: const Color(0xFFC83A2D),
                                   borderRadius: BorderRadius.circular(30),
                                 ),
                                 child: const Row(
@@ -619,9 +619,16 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                         },
                         child: Container(
                           height: 50.h,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFF0F0F0),
+                           decoration: BoxDecoration(
+                            color: const Color(0xFFC83A2D),
                             borderRadius: BorderRadius.circular(30.r),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFFC83A2D).withOpacity(0.2),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
                           ),
                           child: const Center(
                             child: Text(
@@ -630,7 +637,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                                 fontFamily: 'SF Pro',
                                 fontWeight: FontWeight.w700,
                                 fontSize: 15,
-                                color: Color(0xFF333333),
+                                color: Colors.white,
                               ),
                             ),
                           ),
@@ -870,7 +877,7 @@ class _RecipeDetailHeaderDelegate extends SliverPersistentHeaderDelegate {
                                 child: Icon(
                                   isFav ? Icons.favorite_rounded : Icons.favorite_border_rounded,
                                   size: 18,
-                                  color: isFav ? const Color(0xFFCC3333) : const Color(0xFF1A1A1A),
+                                  color: isFav ? const Color(0xFFC83A2D) : const Color(0xFF1A1A1A),
                                 ),
                               ),
                             );
@@ -948,7 +955,7 @@ class _RecipeDetailHeaderDelegate extends SliverPersistentHeaderDelegate {
           height: height,
           color: const Color(0xFFF2F1EF),
           child: const Center(
-            child: CircularProgressIndicator(color: Color(0xFFCC3333)),
+            child: CircularProgressIndicator(color: Color(0xFFC83A2D)),
           ),
         ),
       );
@@ -1022,7 +1029,7 @@ class _TabPill extends StatelessWidget {
           duration: const Duration(milliseconds: 200),
           padding: const EdgeInsets.symmetric(vertical: 6),
           decoration: BoxDecoration(
-            color: active ? const Color(0xFFCC3333) : Colors.transparent,
+            color: active ? const Color(0xFFC83A2D) : Colors.transparent,
             borderRadius: BorderRadius.circular(26),
           ),
           child: Center(
@@ -1265,7 +1272,7 @@ class _StepsList extends StatelessWidget {
                   width: 32,
                   height: 32,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFCC3333).withOpacity(0.1),
+                    color: const Color(0xFFC83A2D).withOpacity(0.1),
                     shape: BoxShape.circle,
                   ),
                   alignment: Alignment.center,
@@ -1275,7 +1282,7 @@ class _StepsList extends StatelessWidget {
                       fontFamily: 'SF Pro',
                       fontWeight: FontWeight.w800,
                       fontSize: 13,
-                      color: Color(0xFFCC3333),
+                      color: Color(0xFFC83A2D),
                     ),
                   ),
                 ),

@@ -73,7 +73,7 @@ class AppSearchField extends StatelessWidget {
                 child: Icon(
                   suffixIcon,
                   size: 22.sp,
-                  color: const Color(0xFFCC3333),
+                  color: const Color(0xFFC83A2D),
                 ),
               ),
             ),

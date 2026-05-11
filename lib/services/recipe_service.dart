@@ -17,6 +17,7 @@ class RecipeService {
     null,
   );
   final ValueNotifier<List<Recipe>?> recentImportsNotifier = ValueNotifier(null);
+  final ValueNotifier<List<Recipe>?> homeSuggestionsNotifier = ValueNotifier(null);
   
   // Cache for explore data
   final Map<String, dynamic> _cache = {};
@@ -199,6 +200,10 @@ class RecipeService {
   }
 
   Future<void> toggleFavorite(String id) async {
+    if (id.isEmpty) {
+      debugPrint('RecipeService: Cannot toggle favorite for empty recipe ID');
+      return;
+    }
     final url = Uri.parse('${ApiConfig.baseUrl}/recipes/$id/favorite');
     final response = await http.put(url, headers: await _getHeaders());
 
@@ -237,6 +242,10 @@ class RecipeService {
   }
 
   Future<List<Recipe>> getHomeSuggestions({bool forceRefresh = false}) async {
+    if (!forceRefresh && homeSuggestionsNotifier.value != null) {
+      return homeSuggestionsNotifier.value!;
+    }
+
     const cacheKey = 'home_suggestions';
     if (!forceRefresh && _cache.containsKey(cacheKey)) {
       return _cache[cacheKey] as List<Recipe>;
@@ -249,6 +258,7 @@ class RecipeService {
       final List<dynamic> data = jsonDecode(response.body);
       final results = data.map((json) => Recipe.fromJson(json)).toList();
       _cache[cacheKey] = results;
+      homeSuggestionsNotifier.value = results;
       return results;
     } else {
       throw Exception('Unable to load home suggestions.');
@@ -372,10 +382,19 @@ class RecipeService {
     );
 
     if (response.statusCode == 200) {
+      final recipe = Recipe.fromJson(jsonDecode(response.body));
+      
+      // Update local state immediately for "live" feel
+      if (recentImportsNotifier.value != null) {
+        recentImportsNotifier.value = [recipe, ...recentImportsNotifier.value!.where((r) => r.id != recipe.id)];
+      } else {
+        recentImportsNotifier.value = [recipe];
+      }
+
       getMyRecipes(forceRefresh: true).then((_) => null).catchError((_) => null);
       getRecentImports(forceRefresh: true).then((_) => null).catchError((_) => null);
       CookbookService.instance.getMyCookbooks(forceRefresh: true).then((_) => null).catchError((_) => null);
-      return Recipe.fromJson(jsonDecode(response.body));
+      return recipe;
     } else {
       String errorMessage = 'Import failed';
       try {
@@ -477,5 +496,7 @@ class RecipeService {
   void clearData() {
     myRecipesNotifier.value = null;
     favoriteRecipesNotifier.value = null;
+    recentImportsNotifier.value = null;
+    homeSuggestionsNotifier.value = null;
   }
 }

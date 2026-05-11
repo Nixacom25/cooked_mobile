@@ -401,7 +401,7 @@ class _ContactCard extends StatelessWidget {
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: selected ? const Color(0xFFCC3333) : Colors.transparent,
+            color: selected ? const Color(0xFFC83A2D) : Colors.transparent,
             width: 2,
           ),
         ),

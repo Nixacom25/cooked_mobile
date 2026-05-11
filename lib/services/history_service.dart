@@ -63,8 +63,11 @@ class HistoryService {
     try {
       final List<Recipe> current = List.from(recentlyViewedNotifier.value);
       
-      // Remove if already exists to move it to the top
-      current.removeWhere((r) => r.id == recipe.id);
+      // Remove if already exists (by ID or by Name to catch duplicates from different sources)
+      current.removeWhere((r) => 
+        (r.id.isNotEmpty && r.id == recipe.id) || 
+        (r.name.toLowerCase() == recipe.name.toLowerCase())
+      );
       
       // Add to start
       current.insert(0, recipe);

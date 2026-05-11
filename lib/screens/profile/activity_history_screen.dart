@@ -87,7 +87,7 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
                 icon = Icons.person_rounded;
               } else if (t.contains('recipe') || t.contains('cookbook')) {
                 icon = Icons.restaurant_menu_rounded;
-                iconColor = const Color(0xFFCC3333);
+                iconColor = const Color(0xFFC83A2D);
               }
 
               return Container(

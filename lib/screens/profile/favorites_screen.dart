@@ -51,7 +51,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
         builder: (context, recipes, _) {
           if (recipes == null) {
             return const Center(
-              child: CircularProgressIndicator(color: Color(0xFFCC3333)),
+              child: CircularProgressIndicator(color: Color(0xFFC83A2D)),
             );
           }
           if (recipes.isEmpty) {

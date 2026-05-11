@@ -57,7 +57,7 @@ void showRenameRecipeDialog(
               }
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFCC3333),
+              backgroundColor: const Color(0xFFC83A2D),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
               ),

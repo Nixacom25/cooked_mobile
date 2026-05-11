@@ -375,7 +375,7 @@ class _PolicyButton extends StatelessWidget {
                 color: const Color(0xFFFFEEEE),
                 borderRadius: BorderRadius.circular(10.r),
               ),
-              child: Icon(icon, size: 18.sp, color: const Color(0xFFCC3333)),
+              child: Icon(icon, size: 18.sp, color: const Color(0xFFC83A2D)),
             ),
             SizedBox(width: 10.w),
             Expanded(
@@ -423,7 +423,7 @@ class _FaqItemState extends State<_FaqItem> {
           borderRadius: BorderRadius.circular(14.r),
           border: Border.all(
             color: _expanded
-                ? const Color(0xFFCC3333).withValues(alpha: 0.3)
+                ? const Color(0xFFC83A2D).withValues(alpha: 0.3)
                 : const Color(0xFFEEEEEE),
           ),
         ),
@@ -440,7 +440,7 @@ class _FaqItemState extends State<_FaqItem> {
                       fontWeight: FontWeight.w700,
                       fontSize: 14.sp,
                       color: _expanded
-                          ? const Color(0xFFCC3333)
+                          ? const Color(0xFFC83A2D)
                           : const Color(0xFF1A1A1A),
                     ),
                   ),
@@ -451,7 +451,7 @@ class _FaqItemState extends State<_FaqItem> {
                       : Icons.keyboard_arrow_down_rounded,
                   size: 20.sp,
                   color: _expanded
-                      ? const Color(0xFFCC3333)
+                      ? const Color(0xFFC83A2D)
                       : const Color(0xFF888888),
                 ),
               ],

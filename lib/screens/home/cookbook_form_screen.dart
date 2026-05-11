@@ -137,7 +137,7 @@ class _CookbookFormScreenState extends State<CookbookFormScreen> {
                                   child: Icon(
                                     Icons.delete_outline_rounded,
                                     size: 20.sp,
-                                    color: const Color(0xFFCC3333),
+                                    color: const Color(0xFFC83A2D),
                                   ),
                                 ),
                               ),
@@ -206,7 +206,7 @@ class _CookbookFormScreenState extends State<CookbookFormScreen> {
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12.r),
                             borderSide: const BorderSide(
-                              color: Color(0xFFCC3333),
+                              color: Color(0xFFC83A2D),
                               width: 1.5,
                             ),
                           ),
@@ -327,7 +327,7 @@ class _CookbookFormScreenState extends State<CookbookFormScreen> {
                 child: Container(
                   height: 52.h,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFCC3333),
+                    color: const Color(0xFFC83A2D),
                     borderRadius: BorderRadius.circular(30.r),
                   ),
                   child: Center(
@@ -392,7 +392,7 @@ class _FormRecipeCard extends StatelessWidget {
                     child: const Icon(
                       Icons.delete_outline_rounded,
                       size: 16,
-                      color: Color(0xFFCC3333),
+                      color: Color(0xFFC83A2D),
                     ),
                   ),
                 ),
@@ -588,7 +588,7 @@ class _RecipePickerState extends State<_RecipePicker> {
                     style: TextStyle(
                       fontFamily: 'SF Pro',
                       fontWeight: FontWeight.w700,
-                      color: Color(0xFFCC3333),
+                      color: Color(0xFFC83A2D),
                     ),
                   ),
                 ),
@@ -614,7 +614,7 @@ class _RecipePickerState extends State<_RecipePicker> {
                           child: Icon(
                             Icons.menu_book_rounded,
                             size: 40.sp,
-                            color: const Color(0xFFCC3333).withValues(alpha: 0.4),
+                            color: const Color(0xFFC83A2D).withValues(alpha: 0.4),
                           ),
                         ),
                         const SizedBox(height: 16),
@@ -729,7 +729,7 @@ class _RecipePickerState extends State<_RecipePicker> {
                               )
                             : Checkbox(
                                 value: isSelected,
-                                activeColor: const Color(0xFFCC3333),
+                                activeColor: const Color(0xFFC83A2D),
                                 onChanged: (val) {
                                   setState(() {
                                     if (val == true) {
@@ -777,7 +777,7 @@ class _EmptyStateButton extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 16, color: const Color(0xFFCC3333)),
+            Icon(icon, size: 16, color: const Color(0xFFC83A2D)),
             const SizedBox(width: 6),
             Text(
               label,
@@ -785,7 +785,7 @@ class _EmptyStateButton extends StatelessWidget {
                 fontFamily: 'SF Pro',
                 fontWeight: FontWeight.w600,
                 fontSize: 13,
-                color: Color(0xFFCC3333),
+                color: Color(0xFFC83A2D),
               ),
             ),
           ],

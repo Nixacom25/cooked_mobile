@@ -3,6 +3,7 @@ import 'dart:ui' as ui;
 import 'dart:typed_data';
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:camera/camera.dart';
@@ -70,7 +71,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
   bool _hasCameraError = false;
   bool _useManualStreaming = false;
   DateTime? _lastInitAttempt;
-  
+
   // Software Rendering Logic
   DateTime? _lastFrameTime;
   ui.Image? _decodedFrame;
@@ -85,6 +86,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
 
   void _updateState(ScanState newState) {
     if (!mounted) return;
+    if (_state != newState) HapticFeedback.selectionClick();
     setState(() {
       _state = newState;
     });
@@ -98,7 +100,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
     _ingCtrl.addListener(_onIngChanged);
     _fetchSavedIngredients();
     _fetchRecentIngredients();
-    
+
     // Sync saved recipes status
     RecipeService.instance.myRecipesNotifier.addListener(_onRecipesChanged);
     _onRecipesChanged();
@@ -131,8 +133,12 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
 
   Future<void> _fetchRecentIngredients() async {
     try {
-      final items = await IngredientService.instance.getRecentIngredients();
-      if (mounted) setState(() => _recentIngredients = items);
+      final names = await IngredientService.instance.getRecentTypedIngredients();
+      if (mounted) {
+        setState(() {
+          _recentIngredients = names.map((name) => {'name': name, 'icon': '🥕'}).toList();
+        });
+      }
     } catch (_) {}
   }
 
@@ -161,7 +167,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
               _selectedSavedNames.add(item['name'].toString());
             }
           } else {
-            // Ensure we don't clear if user already selected some before refresh, 
+            // Ensure we don't clear if user already selected some before refresh,
             // but for now, default is empty selection on first load.
           }
         });
@@ -196,7 +202,9 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
       orElse: () => {},
     );
     if (existing.isNotEmpty) {
-      final success = await IngredientService.instance.unsaveIngredient(existing['id'].toString());
+      final success = await IngredientService.instance.unsaveIngredient(
+        existing['id'].toString(),
+      );
       if (success) _fetchSavedIngredients();
     } else {
       final success = await IngredientService.instance.saveIngredient(name);
@@ -218,11 +226,14 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
     });
   }
 
-
   Future<void> _generateFromTyped() async {
     final allIngredients = [..._typedIngredients, ..._selectedSavedNames];
     if (allIngredients.isEmpty) {
-      IosToast.show(context, message: "Please add or select ingredients", type: ToastType.error);
+      IosToast.show(
+        context,
+        message: "Please add or select ingredients",
+        type: ToastType.error,
+      );
       return;
     }
 
@@ -232,13 +243,15 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
 
     try {
       final response = await RecipeService.instance.scanTyped(allIngredients);
-      
-      final List<RecipeIngredient> allowed = (response['allowed_ingredients'] as List)
-          .map((i) => RecipeIngredient.fromJson(i))
-          .toList();
-      final List<RecipeIngredient> restricted = (response['restricted_ingredients'] as List)
-          .map((i) => RecipeIngredient.fromJson(i))
-          .toList();
+
+      final List<RecipeIngredient> allowed =
+          (response['allowed_ingredients'] as List)
+              .map((i) => RecipeIngredient.fromJson(i))
+              .toList();
+      final List<RecipeIngredient> restricted =
+          (response['restricted_ingredients'] as List)
+              .map((i) => RecipeIngredient.fromJson(i))
+              .toList();
       final List<Recipe> recipes = (response['recipes'] as List)
           .map((r) => Recipe.fromJson(r))
           .toList();
@@ -260,7 +273,11 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
       if (mounted) {
         setState(() => _stopAnalysisLoading());
         if (!PaywallHelper.handleError(context, e)) {
-          IosToast.show(context, message: ErrorHelper.getFriendlyMessage(e), type: ToastType.error);
+          IosToast.show(
+            context,
+            message: ErrorHelper.getFriendlyMessage(e),
+            type: ToastType.error,
+          );
         }
       }
     }
@@ -273,10 +290,13 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
 
       // Trigger onboarding instantly if active
       if (!TutorialService.instance.hasSeenScan) {
-        TutorialHelper.showScanOnboardingDialog(context, onTabSwitch: widget.onTabSwitch);
+        TutorialHelper.showScanOnboardingDialog(
+          context,
+          onTabSwitch: widget.onTabSwitch,
+        );
         TutorialService.instance.completeScan();
       }
-      
+
       if (!_isCameraInitialized) {
         _initCamera();
       }
@@ -284,7 +304,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
       // Keep camera alive but maybe stop stream if any to save resources
       // instead of full dispose which causes the re-init delay the user dislikes.
       if (_cameraController != null && _useManualStreaming) {
-         _toggleManualStreaming(); // Stop stream if active
+        _toggleManualStreaming(); // Stop stream if active
       }
     }
   }
@@ -297,8 +317,6 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
       widget.isActiveNotifier.addListener(_onActiveStateChanged);
     }
   }
-
-
 
   Future<void> _disposeCamera() async {
     if (_cameraController != null) {
@@ -317,9 +335,10 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
 
   Future<void> _initCamera() async {
     if (_isInitializing || !mounted) return;
-    
+
     final now = DateTime.now();
-    if (_lastInitAttempt != null && now.difference(_lastInitAttempt!).inSeconds < 5) {
+    if (_lastInitAttempt != null &&
+        now.difference(_lastInitAttempt!).inSeconds < 5) {
       debugPrint("CAMERA_LOG: Init throttled (too frequent).");
       return;
     }
@@ -350,8 +369,10 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
     }
 
     setState(() => _cameraStatus = "Finding cameras...");
-    await Future.delayed(const Duration(milliseconds: 200)); // Hardware stabilization
-    
+    await Future.delayed(
+      const Duration(milliseconds: 200),
+    ); // Hardware stabilization
+
     try {
       final cameras = await availableCameras();
       if (cameras.isEmpty) {
@@ -378,23 +399,21 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
 
       debugPrint("CAMERA_LOG: Stabilization delay 2...");
       await Future.delayed(const Duration(milliseconds: 200));
-      
+
       debugPrint("CAMERA_LOG: Executing initialize()...");
       await _cameraController!.initialize();
-      
+
       if (!mounted) return;
 
       // Stream removed from default init - only start when manual mode is requested
       // to avoid ImageReader_JNI buffer pressure warnings.
-      
+
       setState(() {
         _isCameraInitialized = true;
         _isInitializing = false;
         _cameraStatus = "Ready";
       });
       debugPrint("CAMERA_LOG: Setup finished.");
-
-
     } catch (e) {
       debugPrint("CAMERA_LOG: Critical HW Catch: $e");
       if (mounted) {
@@ -409,9 +428,11 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
 
   Future<void> _toggleManualStreaming() async {
     if (_cameraController == null || !mounted) return;
-    
+
     if (_useManualStreaming) {
-      try { await _cameraController!.stopImageStream(); } catch (_) {}
+      try {
+        await _cameraController!.stopImageStream();
+      } catch (_) {}
       setState(() => _useManualStreaming = false);
     } else {
       setState(() => _useManualStreaming = true);
@@ -429,7 +450,8 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
     if (!_useManualStreaming || _isProcessingFrame) return;
 
     final now = DateTime.now();
-    if (_lastFrameTime != null && now.difference(_lastFrameTime!).inMilliseconds < 150) {
+    if (_lastFrameTime != null &&
+        now.difference(_lastFrameTime!).inMilliseconds < 150) {
       return; // Cap at ~6 FPS for software rendering stability
     }
     _lastFrameTime = now;
@@ -458,7 +480,9 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
           final int vValue = vPlane[uvIndex] - 128;
 
           int r = (yValue + 1.370705 * vValue).toInt().clamp(0, 255);
-          int g = (yValue - 0.337633 * uValue - 0.698001 * vValue).toInt().clamp(0, 255);
+          int g = (yValue - 0.337633 * uValue - 0.698001 * vValue)
+              .toInt()
+              .clamp(0, 255);
           int b = (yValue + 1.732446 * uValue).toInt().clamp(0, 255);
 
           final int rgbaIndex = (y * width + x) * 4;
@@ -469,23 +493,19 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
         }
       }
 
-      ui.decodeImageFromPixels(
-        rgba,
-        width,
-        height,
-        ui.PixelFormat.rgba8888,
-        (ui.Image img) {
-          if (mounted) {
-            setState(() {
-              _decodedFrame?.dispose();
-              _decodedFrame = img;
-              _isProcessingFrame = false;
-            });
-          } else {
-            img.dispose();
-          }
-        },
-      );
+      ui.decodeImageFromPixels(rgba, width, height, ui.PixelFormat.rgba8888, (
+        ui.Image img,
+      ) {
+        if (mounted) {
+          setState(() {
+            _decodedFrame?.dispose();
+            _decodedFrame = img;
+            _isProcessingFrame = false;
+          });
+        } else {
+          img.dispose();
+        }
+      });
     } catch (e) {
       _isProcessingFrame = false;
     }
@@ -507,7 +527,9 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    debugPrint("BUILD_SCAN: state=$_state manual=$_useManualStreaming init=$_isCameraInitialized status=$_cameraStatus notify=${widget.isActiveNotifier.value}");
+    debugPrint(
+      "BUILD_SCAN: state=$_state manual=$_useManualStreaming init=$_isCameraInitialized status=$_cameraStatus notify=${widget.isActiveNotifier.value}",
+    );
     final bool isKeyboardOpen = MediaQuery.of(context).viewInsets.bottom > 0;
     bool showPill = _state != ScanState.results && !isKeyboardOpen;
     return Scaffold(
@@ -551,10 +573,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
               bottom: 20.h,
               left: 22.w,
               right: 22.w,
-              child: SafeArea(
-                top: false,
-                child: _buildBottomPillNav(),
-              ),
+              child: SafeArea(top: false, child: _buildBottomPillNav()),
             ),
         ],
       ),
@@ -605,13 +624,10 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
           SizedBox(
             width: double.infinity,
             height: double.infinity,
-            child: Image.file(
-              File(_capturedImagePath!),
-              fit: BoxFit.cover,
-            ),
+            child: Image.file(File(_capturedImagePath!), fit: BoxFit.cover),
           ),
           if (loadingOverlay != null) loadingOverlay,
-          
+
           // 4. Close Icon (Top-left) for Scan mode
           Positioned(
             top: 50.h,
@@ -624,7 +640,11 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                   color: Colors.black26,
                   shape: BoxShape.circle,
                 ),
-                child: Icon(Icons.close_rounded, color: Colors.white, size: 22.sp),
+                child: Icon(
+                  Icons.close_rounded,
+                  color: Colors.white,
+                  size: 22.sp,
+                ),
               ),
             ),
           ),
@@ -636,10 +656,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
       children: [
         // 1. MAIN DISPLAY LAYER (Native or Manual)
         Positioned.fill(
-          child: Container(
-            color: Colors.black,
-            child: _buildCameraLayer(),
-          ),
+          child: Container(color: Colors.black, child: _buildCameraLayer()),
         ),
 
         // 2. Loading / Status Layer
@@ -656,8 +673,10 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                   SizedBox(height: 16.h),
                   // Status Text
                   Container(
-                    padding:
-                        EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 12.w,
+                      vertical: 4.h,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.black54,
                       borderRadius: BorderRadius.circular(12.r),
@@ -667,8 +686,9 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                           ? "MODE: DIRECT STREAM (Logic)"
                           : _cameraStatus,
                       style: TextStyle(
-                        color:
-                            _useManualStreaming ? Colors.amber : Colors.white70,
+                        color: _useManualStreaming
+                            ? Colors.amber
+                            : Colors.white70,
                         fontSize: 12.sp,
                         fontWeight: FontWeight.bold,
                       ),
@@ -678,7 +698,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
               ),
             ),
           ),
-        
+
         // 3. Discreet "Reset/Fix" anchor (Top-right)
         if (_isCameraInitialized && !_useManualStreaming)
           Positioned(
@@ -686,10 +706,14 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
             right: 20.w,
             child: GestureDetector(
               onLongPress: () => _toggleManualStreaming(),
-              child: Icon(Icons.help_outline_rounded, color: Colors.white24, size: 20.sp),
+              child: Icon(
+                Icons.help_outline_rounded,
+                color: Colors.white24,
+                size: 20.sp,
+              ),
             ),
           ),
-        
+
         // 4. Close Icon (Top-left) for Scan mode
         Positioned(
           top: 50.h,
@@ -702,7 +726,11 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                 color: Colors.black26,
                 shape: BoxShape.circle,
               ),
-              child: Icon(Icons.close_rounded, color: Colors.white, size: 22.sp),
+              child: Icon(
+                Icons.close_rounded,
+                color: Colors.white,
+                size: 22.sp,
+              ),
             ),
           ),
         ),
@@ -713,7 +741,9 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
   }
 
   Widget _buildCameraLayer() {
-    if (!_isCameraInitialized || _cameraController == null || !_cameraController!.value.isInitialized) {
+    if (!_isCameraInitialized ||
+        _cameraController == null ||
+        !_cameraController!.value.isInitialized) {
       return const SizedBox();
     }
 
@@ -722,10 +752,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
         child: Center(
           child: RotatedBox(
             quarterTurns: 1,
-            child: RawImage(
-              image: _decodedFrame,
-              fit: BoxFit.cover,
-            ),
+            child: RawImage(image: _decodedFrame, fit: BoxFit.cover),
           ),
         ),
       );
@@ -755,7 +782,9 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
           children: [
             GestureDetector(
               onTap: () {
-                _updateState(ScanState.scan); // "enleve tout et affiche la page scan"
+                _updateState(
+                  ScanState.scan,
+                ); // "enleve tout et affiche la page scan"
                 if (widget.onClose != null) widget.onClose!();
               },
               child: Container(
@@ -764,13 +793,21 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                   color: Colors.grey[100],
                   shape: BoxShape.circle,
                 ),
-                child: Icon(Icons.close_rounded, size: 20.sp, color: Colors.grey[700]),
+                child: Icon(
+                  Icons.close_rounded,
+                  size: 20.sp,
+                  color: Colors.grey[700],
+                ),
               ),
             ),
             // Optional: Info button on the right for results page too if needed
             GestureDetector(
               onTap: _showScanHelpModal,
-              child: Icon(Icons.help_outline_rounded, color: Colors.grey[400], size: 20.sp),
+              child: Icon(
+                Icons.help_outline_rounded,
+                color: Colors.grey[400],
+                size: 20.sp,
+              ),
             ),
           ],
         ),
@@ -801,7 +838,11 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                 color: Colors.grey[100],
                 shape: BoxShape.circle,
               ),
-              child: Icon(Icons.close_rounded, size: 20.sp, color: Colors.grey[700]),
+              child: Icon(
+                Icons.close_rounded,
+                size: 20.sp,
+                color: Colors.grey[700],
+              ),
             ),
           ),
         ],
@@ -831,7 +872,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
           painter: _FramePainter(
             corner: 30.r,
             thick: 3.w,
-            color: const Color(0xFFCC3333),
+            color: const Color(0xFFC83A2D),
           ),
         ),
       ),
@@ -874,10 +915,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
       bottom: _state == ScanState.results ? 15.h : 90.h,
       left: 22.w,
       right: 22.w,
-      child: SafeArea(
-        top: false,
-        child: actionBtn,
-      ),
+      child: SafeArea(top: false, child: actionBtn),
     );
   }
 
@@ -939,7 +977,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
         width: double.infinity,
         height: 50.h,
         decoration: BoxDecoration(
-          color: const Color(0xFFCC3333),
+          color: const Color(0xFFC83A2D),
           borderRadius: BorderRadius.circular(30.r),
         ),
         alignment: Alignment.center,
@@ -1023,17 +1061,26 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                 child: TextField(
                   controller: _ingCtrl,
                   textCapitalization: TextCapitalization.words,
-                  style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.w500),
+                  style: TextStyle(
+                    fontSize: 15.sp,
+                    fontWeight: FontWeight.w500,
+                  ),
                   decoration: InputDecoration(
                     hintText: 'e.g., Tomato, Cheese...',
-                    hintStyle: TextStyle(color: const Color(0xFF94A3B8), fontSize: 14.sp),
+                    hintStyle: TextStyle(
+                      color: const Color(0xFF94A3B8),
+                      fontSize: 14.sp,
+                    ),
                     border: InputBorder.none,
-                    contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 16.w,
+                      vertical: 14.h,
+                    ),
                     suffixIcon: IconButton(
                       onPressed: _addTypedIngredient,
                       icon: Icon(
                         Icons.add_circle_rounded,
-                        color: const Color(0xFFCC3333),
+                        color: const Color(0xFFC83A2D),
                         size: 26.sp,
                       ),
                     ),
@@ -1058,7 +1105,8 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                         shrinkWrap: true,
                         padding: EdgeInsets.zero,
                         itemCount: _suggestedIngredients.length,
-                        separatorBuilder: (_, __) => Divider(height: 1, color: Colors.grey[100]),
+                        separatorBuilder: (_, __) =>
+                            Divider(height: 1, color: Colors.grey[100]),
                         itemBuilder: (context, i) {
                           final item = _suggestedIngredients[i];
                           return ListTile(
@@ -1094,56 +1142,74 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                     fontStyle: FontStyle.italic,
                   ),
                 ),
-                // if (_recentIngredients.isNotEmpty) ...[
-                //   SizedBox(height: 25.h),
-                //   Text(
-                //     "Recently Used",
-                //     style: TextStyle(
-                //       fontWeight: FontWeight.bold,
-                //       fontSize: 14.sp,
-                //       color: const Color(0xFF64748B),
-                //     ),
-                //   ),
-                //   SizedBox(height: 10.h),
-                //   Wrap(
-                //     spacing: 8.w,
-                //     runSpacing: 8.h,
-                //     children: _recentIngredients.take(8).map((ing) {
-                //       final name = ing['name'] ?? '';
-                //       return GestureDetector(
-                //         onTap: () {
-                //           _ingCtrl.text = name;
-                //           _addTypedIngredient();
-                //         },
-                //         child: Container(
-                //           padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
-                //           decoration: BoxDecoration(
-                //             color: Colors.grey[100],
-                //             borderRadius: BorderRadius.circular(20.r),
-                //             border: Border.all(color: Colors.grey[200]!),
-                //           ),
-                //           child: Text(
-                //             name,
-                //             style: TextStyle(
-                //               fontSize: 12.sp,
-                //               color: const Color(0xFF475569),
-                //               fontWeight: FontWeight.w500,
-                //             ),
-                //           ),
-                //         ),
-                //       );
-                //     }).toList(),
-                //   ),
-                // ],
+
+                // DYNAMIC RECENTLY USED
+                if (_recentIngredients.isNotEmpty) ...(() {
+                  // Filter out ingredients already in _typedIngredients
+                  final filteredRecent = _recentIngredients
+                      .where((ing) => !_typedIngredients.contains(ing['name']))
+                      .toList();
+
+                  if (filteredRecent.isEmpty) return [const SizedBox.shrink()];
+
+                  return [
+                    SizedBox(height: 25.h),
+                    Text(
+                      "Recently Used",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14.sp,
+                        color: const Color(0xFF64748B),
+                      ),
+                    ),
+                    SizedBox(height: 10.h),
+                    Wrap(
+                      spacing: 8.w,
+                      runSpacing: 8.h,
+                      children: filteredRecent.take(8).map((ing) {
+                        final name = ing['name'] ?? '';
+                        return GestureDetector(
+                          onTap: () {
+                            _ingCtrl.text = name;
+                            _addTypedIngredient();
+                          },
+                          child: Container(
+                            padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+                            decoration: BoxDecoration(
+                              color: Colors.grey[100],
+                              borderRadius: BorderRadius.circular(20.r),
+                              border: Border.all(color: Colors.grey[200]!),
+                            ),
+                            child: Text(
+                              name,
+                              style: TextStyle(
+                                color: const Color(0xFF1E293B),
+                                fontSize: 13.sp,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ];
+                })(),
               ],
               SizedBox(height: 24.h),
-              ..._typedIngredients.map((ing) => _buildIngredientCard(
-                ing,
-                isSaved: _savedIngredients.any((si) => si['name'].toString().toLowerCase() == ing.toLowerCase()),
-                onContainerTap: () => _toggleSaveIngredient(ing),
-                onHeartTap: () => _toggleSaveIngredient(ing),
-                onDeleteTap: () => setState(() => _typedIngredients.remove(ing)),
-              )),
+              ..._typedIngredients.map(
+                (ing) => _buildIngredientCard(
+                  ing,
+                  isSaved: _savedIngredients.any(
+                    (si) =>
+                        si['name'].toString().toLowerCase() ==
+                        ing.toLowerCase(),
+                  ),
+                  onContainerTap: () => _toggleSaveIngredient(ing),
+                  onHeartTap: () => _toggleSaveIngredient(ing),
+                  onDeleteTap: () =>
+                      setState(() => _typedIngredients.remove(ing)),
+                ),
+              ),
             ],
           ),
         ),
@@ -1170,14 +1236,16 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                       scale: 0.8,
                       child: Switch(
                         value: _useAllSaved,
-                        activeColor: const Color(0xFFCC3333),
+                        activeColor: const Color(0xFFC83A2D),
                         onChanged: (val) {
                           setState(() {
                             _useAllSaved = val;
                             if (val) {
                               _selectedSavedNames.clear();
                               for (var item in _savedIngredients) {
-                                _selectedSavedNames.add(item['name'].toString());
+                                _selectedSavedNames.add(
+                                  item['name'].toString(),
+                                );
                               }
                             } else {
                               _selectedSavedNames.clear();
@@ -1239,7 +1307,10 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
               padding: EdgeInsets.only(top: 40.h),
               child: Text(
                 "No saved ingredients yet.",
-                style: TextStyle(color: const Color(0xFF6B7280), fontSize: 14.sp),
+                style: TextStyle(
+                  color: const Color(0xFF6B7280),
+                  fontSize: 14.sp,
+                ),
               ),
             ),
           ),
@@ -1277,13 +1348,17 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                 child: Padding(
                   padding: EdgeInsets.only(right: 12.w),
                   child: Icon(
-                    (isSelected ?? false) ? Icons.check_box_rounded : Icons.check_box_outline_blank_rounded,
-                    color: (isSelected ?? false) ? const Color(0xFFCC3333) : const Color(0xFFCBD5E1),
+                    (isSelected ?? false)
+                        ? Icons.check_box_rounded
+                        : Icons.check_box_outline_blank_rounded,
+                    color: (isSelected ?? false)
+                        ? const Color(0xFFC83A2D)
+                        : const Color(0xFFCBD5E1),
                     size: 24.sp,
                   ),
                 ),
               ),
-            
+
             Expanded(
               child: Text(
                 name,
@@ -1303,12 +1378,14 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                   padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
                   child: Icon(
                     Icons.favorite_rounded,
-                    color: (isSaved ?? false) ? const Color(0xFFCC3333) : const Color(0xFFCBD5E1),
+                    color: (isSaved ?? false)
+                        ? const Color(0xFFC83A2D)
+                        : const Color(0xFFCBD5E1),
                     size: 24.sp,
                   ),
                 ),
               ),
-            
+
             if (onDeleteTap != null)
               GestureDetector(
                 onTap: onDeleteTap,
@@ -1316,7 +1393,9 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                 child: Padding(
                   padding: EdgeInsets.fromLTRB(8.w, 4.h, 4.w, 4.h),
                   child: Icon(
-                    _state == ScanState.saved ? Icons.delete_outline_rounded : Icons.close_rounded,
+                    _state == ScanState.saved
+                        ? Icons.delete_outline_rounded
+                        : Icons.close_rounded,
                     color: const Color(0xFF94A3B8),
                     size: 24.sp,
                   ),
@@ -1373,10 +1452,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                 Navigator.pushNamed(
                   context,
                   AppRoutes.recipeDetail,
-                  arguments: {
-                    'recipe': recipe,
-                    'isPreview': true,
-                  },
+                  arguments: {'recipe': recipe, 'isPreview': true},
                 );
               },
             );
@@ -1408,10 +1484,20 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
             },
             decoration: InputDecoration(
               hintText: "Add missing ingredient...",
-              hintStyle: TextStyle(fontSize: 13.sp, color: const Color(0xFF94A3B8)),
+              hintStyle: TextStyle(
+                fontSize: 13.sp,
+                color: const Color(0xFF94A3B8),
+              ),
               border: InputBorder.none,
-              prefixIcon: Icon(Icons.add_rounded, color: const Color(0xFFCC3333), size: 20.sp),
-              contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
+              prefixIcon: Icon(
+                Icons.add_rounded,
+                color: const Color(0xFFC83A2D),
+                size: 20.sp,
+              ),
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: 12.w,
+                vertical: 10.h,
+              ),
             ),
           ),
         ),
@@ -1432,14 +1518,17 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                   shrinkWrap: true,
                   padding: EdgeInsets.zero,
                   itemCount: _suggestedIngredients.length,
-                  separatorBuilder: (_, __) => Divider(height: 1, color: Colors.grey[100]),
+                  separatorBuilder: (_, __) =>
+                      Divider(height: 1, color: Colors.grey[100]),
                   itemBuilder: (context, i) {
                     final item = _suggestedIngredients[i];
                     return ListTile(
                       dense: true,
                       title: Text(_capitalize(item['name'] ?? '')),
                       onTap: () {
-                        _addIngredientToResults(_capitalize(item['name'] ?? ''));
+                        _addIngredientToResults(
+                          _capitalize(item['name'] ?? ''),
+                        );
                       },
                     );
                   },
@@ -1449,23 +1538,30 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
           ),
         SizedBox(height: 16.h),
         if (_ingredients.isEmpty && _restrictedIngredients.isEmpty)
-          Text("No items detected.", style: TextStyle(color: Colors.grey, fontSize: 13.sp))
+          Text(
+            "No items detected.",
+            style: TextStyle(color: Colors.grey, fontSize: 13.sp),
+          )
         else
           Wrap(
             spacing: 8.w,
             runSpacing: 10.h,
             children: [
-              ..._ingredients.map((ing) => _buildYellowChip(
-                ing.name, 
-                icon: ing.icon,
-                onDelete: () => _removeIngredientFromResults(ing, false),
-              )),
-              ..._restrictedIngredients.map((ing) => _buildYellowChip(
-                ing.name, 
-                icon: ing.icon, 
-                isRestricted: true,
-                onDelete: () => _removeIngredientFromResults(ing, true),
-              )),
+              ..._ingredients.map(
+                (ing) => _buildYellowChip(
+                  ing.name,
+                  icon: ing.icon,
+                  onDelete: () => _removeIngredientFromResults(ing, false),
+                ),
+              ),
+              ..._restrictedIngredients.map(
+                (ing) => _buildYellowChip(
+                  ing.name,
+                  icon: ing.icon,
+                  isRestricted: true,
+                  onDelete: () => _removeIngredientFromResults(ing, true),
+                ),
+              ),
             ],
           ),
         if (_restrictedIngredients.isNotEmpty)
@@ -1473,7 +1569,11 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
             padding: EdgeInsets.only(top: 10.h),
             child: Row(
               children: [
-                Icon(Icons.info_outline_rounded, size: 14.sp, color: Colors.red[400]),
+                Icon(
+                  Icons.info_outline_rounded,
+                  size: 14.sp,
+                  color: Colors.red[400],
+                ),
                 SizedBox(width: 6.w),
                 Expanded(
                   child: Text(
@@ -1518,7 +1618,12 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildYellowChip(String label, {String? icon, bool isRestricted = false, VoidCallback? onDelete}) {
+  Widget _buildYellowChip(
+    String label, {
+    String? icon,
+    bool isRestricted = false,
+    VoidCallback? onDelete,
+  }) {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
       decoration: BoxDecoration(
@@ -1581,8 +1686,15 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
   void _addTypedIngredient() {
     final text = _ingCtrl.text.trim();
     if (text.isNotEmpty) {
+      final capitalized = _capitalize(text);
+      
+      // Save to recent
+      IngredientService.instance.addToRecentTypedIngredient(capitalized).then((_) {
+        _fetchRecentIngredients();
+      });
+
+      HapticFeedback.lightImpact();
       setState(() {
-        final capitalized = _capitalize(text);
         if (!_typedIngredients.contains(capitalized)) {
           _typedIngredients.add(capitalized);
         }
@@ -1609,6 +1721,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
     }
 
     if (photo == null) return;
+    HapticFeedback.mediumImpact();
     setState(() {
       _startAnalysisLoading("Analyzing...");
       _capturedImagePath = photo!.path;
@@ -1619,17 +1732,23 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
       setState(() {
         _recipes.clear();
         _recipes.addAll(
-          (result['recipes'] as List? ?? []).map((j) => Recipe.fromJson(j)).toList(),
+          (result['recipes'] as List? ?? [])
+              .map((j) => Recipe.fromJson(j))
+              .toList(),
         );
 
         _ingredients.clear();
         _ingredients.addAll(
-          (result['allowed_ingredients'] as List? ?? []).map((j) => RecipeIngredient.fromJson(j)).toList(),
+          (result['allowed_ingredients'] as List? ?? [])
+              .map((j) => RecipeIngredient.fromJson(j))
+              .toList(),
         );
 
         _restrictedIngredients.clear();
         _restrictedIngredients.addAll(
-          (result['restricted_ingredients'] as List? ?? []).map((j) => RecipeIngredient.fromJson(j)).toList(),
+          (result['restricted_ingredients'] as List? ?? [])
+              .map((j) => RecipeIngredient.fromJson(j))
+              .toList(),
         );
 
         _analysisTimer?.cancel();
@@ -1715,8 +1834,13 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
       builder: (context) => AlertDialog(
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.transparent,
-        alignment: const Alignment(0, -1), // Positioned towards the top near the icon
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+        alignment: const Alignment(
+          0,
+          -1,
+        ), // Positioned towards the top near the icon
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16.r),
+        ),
         content: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
@@ -1724,7 +1848,12 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
             Expanded(
               child: Text(
                 "For best results, ensure all ingredients are clearly visible when scanning. Add missing items manually.",
-                style: TextStyle(fontSize: 14.sp, color: const Color(0xFF1A1A1A), height: 1.5, fontWeight: FontWeight.w500),
+                style: TextStyle(
+                  fontSize: 14.sp,
+                  color: const Color(0xFF1A1A1A),
+                  height: 1.5,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ),
           ],
@@ -1745,13 +1874,15 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
 
   void _addIngredientToResults(String name) {
     setState(() {
-      _ingredients.add(RecipeIngredient(
-        id: DateTime.now().toString(),
-        name: name,
-        amount: 1.0,
-        unit: "",
-        quantity: "1",
-      ));
+      _ingredients.add(
+        RecipeIngredient(
+          id: DateTime.now().toString(),
+          name: name,
+          amount: 1.0,
+          unit: "",
+          quantity: "1",
+        ),
+      );
       _ingCtrl.clear();
       _suggestedIngredients = [];
     });
@@ -1762,9 +1893,13 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
       ..._ingredients.map((i) => i.name),
       ..._restrictedIngredients.map((i) => i.name),
     ];
-    
+
     if (allNames.isEmpty) {
-      IosToast.show(context, message: "Please keep at least one ingredient", type: ToastType.error);
+      IosToast.show(
+        context,
+        message: "Please keep at least one ingredient",
+        type: ToastType.error,
+      );
       return;
     }
 
@@ -1774,13 +1909,15 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
 
     try {
       final response = await RecipeService.instance.scanTyped(allNames);
-      
-      final List<RecipeIngredient> allowed = (response['allowed_ingredients'] as List)
-          .map((i) => RecipeIngredient.fromJson(i))
-          .toList();
-      final List<RecipeIngredient> restricted = (response['restricted_ingredients'] as List)
-          .map((i) => RecipeIngredient.fromJson(i))
-          .toList();
+
+      final List<RecipeIngredient> allowed =
+          (response['allowed_ingredients'] as List)
+              .map((i) => RecipeIngredient.fromJson(i))
+              .toList();
+      final List<RecipeIngredient> restricted =
+          (response['restricted_ingredients'] as List)
+              .map((i) => RecipeIngredient.fromJson(i))
+              .toList();
       final List<Recipe> recipes = (response['recipes'] as List)
           .map((r) => Recipe.fromJson(r))
           .toList();
@@ -1799,7 +1936,11 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
     } catch (e) {
       if (mounted) {
         setState(() => _stopAnalysisLoading());
-        IosToast.show(context, message: ErrorHelper.getFriendlyMessage(e), type: ToastType.error);
+        IosToast.show(
+          context,
+          message: ErrorHelper.getFriendlyMessage(e),
+          type: ToastType.error,
+        );
       }
     }
   }
@@ -1826,7 +1967,7 @@ class _PillTab extends StatelessWidget {
           margin: EdgeInsets.symmetric(horizontal: 2.w),
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: active ? const Color(0xFFCC3333) : Colors.transparent,
+            color: active ? const Color(0xFFC83A2D) : Colors.transparent,
             borderRadius: BorderRadius.circular(25.r),
           ),
           child: Text(

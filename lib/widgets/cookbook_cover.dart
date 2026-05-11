@@ -19,8 +19,36 @@ class CookbookCover extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final recipes = cookbook.recipes;
-    final recipesWithImages = recipes.where((r) => r.image != null && r.image!.isNotEmpty).toList();
+    final recipes = List<Recipe>.from(cookbook.recipes);
+    
+    // Sort logic: 
+    // 1. Prioritize recipes WITH images first
+    // 2. Among those, prioritize 'IMPORT' origin
+    // 3. Among those, prioritize recipes with sourceUrl
+    // 4. Finally, sort by createdAt descending
+    recipes.sort((a, b) {
+      final aHasImage = a.image != null && a.image!.isNotEmpty;
+      final bHasImage = b.image != null && b.image!.isNotEmpty;
+      
+      if (aHasImage && !bHasImage) return -1;
+      if (!aHasImage && bHasImage) return 1;
+      
+      final aIsImport = a.origin?.toUpperCase() == 'IMPORT';
+      final bIsImport = b.origin?.toUpperCase() == 'IMPORT';
+      
+      if (aIsImport && !bIsImport) return -1;
+      if (!aIsImport && bIsImport) return 1;
+
+      final aHasUrl = a.sourceUrl != null && a.sourceUrl!.isNotEmpty;
+      final bHasUrl = b.sourceUrl != null && b.sourceUrl!.isNotEmpty;
+      
+      if (aHasUrl && !bHasUrl) return -1;
+      if (!aHasUrl && bHasUrl) return 1;
+      
+      return b.createdAt.compareTo(a.createdAt);
+    });
+    
+    final displayRecipes = recipes.take(3).toList();
 
     return Container(
       width: width ?? double.infinity,
@@ -30,9 +58,9 @@ class CookbookCover extends StatelessWidget {
         borderRadius: BorderRadius.circular(16.r),
       ),
       clipBehavior: Clip.antiAlias,
-      child: recipesWithImages.isEmpty 
+      child: displayRecipes.isEmpty 
           ? _buildEmptyState() 
-          : _buildCollage(recipesWithImages),
+          : _buildCollage(displayRecipes),
     );
   }
 
@@ -62,7 +90,7 @@ class CookbookCover extends StatelessWidget {
         child: Container(
           padding: EdgeInsets.all(12.w),
           decoration: BoxDecoration(
-            color: const Color(0xFFCC3333).withValues(alpha: 0.05),
+            color: const Color(0xFFC83A2D).withOpacity(0.05),
             shape: BoxShape.circle,
           ),
           child: Image.asset(
@@ -70,7 +98,7 @@ class CookbookCover extends StatelessWidget {
             width: 45.w,
             height: 45.h,
             fit: BoxFit.cover,
-            color: const Color(0xFFCC3333).withValues(alpha: 0.3),
+            color: const Color(0xFFC83A2D).withOpacity(0.3),
             colorBlendMode: BlendMode.srcIn,
           ),
         ),
@@ -79,43 +107,61 @@ class CookbookCover extends StatelessWidget {
   }
 
   Widget _buildCollage(List<Recipe> recipes) {
-    // Always use 3 slots (1 large left, 2 small right)
-    // Repeat images if we have less than 3
-    final String? img1 = recipes.isNotEmpty ? recipes[0].image : null;
-    final String? img2 = recipes.length > 1 ? recipes[1].image : null;
-    final String? img3 = recipes.length > 2 ? recipes[2].image : null;
-
-    return Row(
-      children: [
-        // Left - Large image
-        Expanded(
-          flex: 3,
-          child: _buildImage(img1),
-        ),
-        Container(width: 1.5, color: Colors.white),
-        // Right - Two small images stacked
-        Expanded(
-          flex: 2,
-          child: Column(
-            children: [
-              Expanded(
-                child: _buildImage(img2),
-              ),
-              Container(height: 1.5, color: Colors.white),
-              Expanded(
-                child: _buildImage(img3),
-              ),
-            ],
+    if (recipes.length == 1) {
+      return _buildImage(recipes[0].image);
+    } else if (recipes.length == 2) {
+      return Row(
+        children: [
+          Expanded(
+            child: _buildImage(recipes[0].image),
           ),
-        ),
-      ],
-    );
+          Container(width: 1.5, color: Colors.white),
+          Expanded(
+            child: _buildImage(recipes[1].image),
+          ),
+        ],
+      );
+    } else {
+      // 3 recipes (latest)
+      final String? img1 = recipes[0].image;
+      final String? img2 = recipes[1].image;
+      final String? img3 = recipes[2].image;
+
+      return Row(
+        children: [
+          // Left - Large image
+          Expanded(
+            flex: 3,
+            child: _buildImage(img1),
+          ),
+          Container(width: 1.5, color: Colors.white),
+          // Right - Two small images stacked
+          Expanded(
+            flex: 2,
+            child: Column(
+              children: [
+                Expanded(
+                  child: _buildImage(img2),
+                ),
+                Container(height: 1.5, color: Colors.white),
+                Expanded(
+                  child: _buildImage(img3),
+                ),
+              ],
+            ),
+          ),
+        ],
+      );
+    }
   }
 
   Widget _buildImage(String? imageUrl) {
     if (imageUrl == null || imageUrl.isEmpty) {
-      return Container(
-        color: const Color(0xFFF2EFED),
+      return Image.asset(
+        'assets/images/recipes.png',
+        width: double.infinity,
+        height: double.infinity,
+        fit: BoxFit.cover,
       );
     }
 
@@ -128,7 +174,7 @@ class CookbookCover extends StatelessWidget {
         'assets/images/recipes.png',
         width: double.infinity,
         height: double.infinity,
-        fit: BoxFit.contain,
+        fit: BoxFit.cover,
       ),
       placeholder: (_, __) => Container(
         width: double.infinity,
@@ -137,7 +183,7 @@ class CookbookCover extends StatelessWidget {
         child: const Center(
           child: CircularProgressIndicator(
             strokeWidth: 2,
-            color: Color(0xFFCC3333),
+            color: Color(0xFFC83A2D),
           ),
         ),
       ),

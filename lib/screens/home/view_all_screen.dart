@@ -93,7 +93,7 @@ class _ViewAllScreenState extends State<ViewAllScreen> {
                         width: 30,
                         height: 30,
                         decoration: BoxDecoration(
-                          color: const Color(0xFFCC3333),
+                          color: const Color(0xFFC83A2D),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: const Icon(
@@ -214,7 +214,7 @@ class _CookbooksGridState extends State<_CookbooksGrid> {
       builder: (context, cookbooks, _) {
         if (cookbooks == null) {
           return const Center(
-            child: CircularProgressIndicator(color: Color(0xFFCC3333)),
+            child: CircularProgressIndicator(color: Color(0xFFC83A2D)),
           );
         }
 
@@ -467,7 +467,7 @@ class _RecipesGridState extends State<_RecipesGrid> {
         builder: (context, recipes, _) {
           if (recipes == null) {
             return const Center(
-              child: CircularProgressIndicator(color: Color(0xFFCC3333)),
+              child: CircularProgressIndicator(color: Color(0xFFC83A2D)),
             );
           }
           return _buildGrid(recipes);
@@ -480,7 +480,7 @@ class _RecipesGridState extends State<_RecipesGrid> {
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(
-            child: CircularProgressIndicator(color: Color(0xFFCC3333)),
+            child: CircularProgressIndicator(color: Color(0xFFC83A2D)),
           );
         }
 
@@ -518,7 +518,7 @@ class _CreatorsGridState extends State<_CreatorsGrid> {
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(
-            child: CircularProgressIndicator(color: Color(0xFFCC3333)),
+            child: CircularProgressIndicator(color: Color(0xFFC83A2D)),
           );
         }
 
@@ -564,7 +564,7 @@ class _CreatorsGridState extends State<_CreatorsGrid> {
                               c.lastname[0].toUpperCase(),
                           style: const TextStyle(
                             fontWeight: FontWeight.bold,
-                            color: Color(0xFFCC3333),
+                            color: Color(0xFFC83A2D),
                           ),
                         )
                       : null,
@@ -669,7 +669,7 @@ class _StaticCookbooksGridState extends State<_StaticCookbooksGrid> {
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(
-            child: CircularProgressIndicator(color: Color(0xFFCC3333)),
+            child: CircularProgressIndicator(color: Color(0xFFC83A2D)),
           );
         }
 

@@ -76,7 +76,7 @@ class WelcomeScreen extends StatelessWidget {
                                       AppRoutes.preferences,
                                     ),
                                     style: ElevatedButton.styleFrom(
-                                      backgroundColor: const Color(0xFFCC3333),
+                                      backgroundColor: const Color(0xFFC83A2D),
                                       foregroundColor: Colors.white,
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(30.r),
@@ -113,7 +113,7 @@ class WelcomeScreen extends StatelessWidget {
                                       child: Text(
                                         'Sign In',
                                         style: TextStyle(
-                                          color: const Color(0xFFCC3333),
+                                          color: const Color(0xFFC83A2D),
                                           fontWeight: FontWeight.w700,
                                           fontFamily: 'SF Pro',
                                           fontSize: 14.sp,

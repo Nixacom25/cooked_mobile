@@ -28,6 +28,9 @@ class CookbookService {
   }
 
   Future<List<Cookbook>> getMyCookbooks({bool forceRefresh = false}) async {
+    if (forceRefresh) {
+      _cache.clear();
+    }
     if (!forceRefresh && myCookbooksNotifier.value != null) {
       return myCookbooksNotifier.value!;
     }
@@ -117,7 +120,8 @@ class CookbookService {
     String cookbookId,
     String recipeId,
   ) async {
-    final cb = await getCookbook(cookbookId);
+    // Force refresh to ensure we have the latest recipe list before updating
+    final cb = await getCookbook(cookbookId, forceRefresh: true);
     final ids = cb.recipes.map((r) => r.id).toList();
     if (!ids.contains(recipeId)) {
       ids.add(recipeId);

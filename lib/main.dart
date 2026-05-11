@@ -31,6 +31,7 @@ import 'screens/scan_screen.dart';
 import 'package:cooked/core/services/tutorial_service.dart';
 import 'package:cooked/services/notification_service.dart';
 import 'package:cooked/services/history_service.dart';
+import 'package:cooked/services/sharing_service.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 void main() {
@@ -71,6 +72,9 @@ class _CookedAppState extends State<CookedApp> {
 
   Future<void> _initApp() async {
     try {
+      SharingService.instance.init();
+      SharingService.instance.sharedTextNotifier.addListener(_onSharedTextReceived);
+
       await Future.wait([
         AuthService.instance.getToken(),
         TutorialService.instance.init(),
@@ -80,6 +84,44 @@ class _CookedAppState extends State<CookedApp> {
     } catch (e) {
       debugPrint('Initialization error: $e');
     }
+  }
+
+  void _onSharedTextReceived() {
+    final text = SharingService.instance.sharedTextNotifier.value;
+    debugPrint("CookedApp: _onSharedTextReceived triggered with text: $text");
+    
+    if (text != null && text.isNotEmpty) {
+      final url = SharingService.instance.extractUrl(text);
+      debugPrint("CookedApp: Extracted URL: $url");
+      
+      if (url != null) {
+        // Heavy impact to show we caught it
+        HapticFeedback.heavyImpact();
+        
+        // Short delay to ensure navigator is ready
+        Future.delayed(const Duration(milliseconds: 500), () {
+          final state = _navigatorKey.currentState;
+          if (state != null) {
+            debugPrint("CookedApp: Navigating to Home/Import with URL: $url");
+            state.pushNamedAndRemoveUntil(
+              AppRoutes.home,
+              (route) => false,
+              arguments: {'initialTab': 4, 'initialUrl': url},
+            );
+            SharingService.instance.consumeSharedText();
+          } else {
+            debugPrint("CookedApp: Navigator state is STILL NULL after delay.");
+          }
+        });
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    SharingService.instance.sharedTextNotifier.removeListener(_onSharedTextReceived);
+    SharingService.instance.dispose();
+    super.dispose();
   }
 
   @override
@@ -155,7 +197,10 @@ class _CookedAppState extends State<CookedApp> {
                   break;
                 case AppRoutes.home:
                   final args = settings.arguments as Map<String, dynamic>?;
-                  builder = HomeScreen(initialTab: args?['initialTab'] ?? 0);
+                  builder = HomeScreen(
+                    initialTab: args?['initialTab'] ?? 0,
+                    initialUrl: args?['initialUrl'],
+                  );
                   break;
                 case AppRoutes.viewAll:
                   builder = const ViewAllScreen();

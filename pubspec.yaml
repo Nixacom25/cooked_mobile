@@ -1,7 +1,7 @@
 name: cooked
 description: "A new Flutter project."
 publish_to: 'none' 
-version: 1.0.0+18
+version: 1.0.0+19
 
 environment:
   sdk: ^3.8.1
@@ -36,6 +36,7 @@ dependencies:
   webview_flutter_android: ^4.10.1
   webview_flutter_wkwebview: ^3.23.0
   timezone: ^0.10.1
+  receive_sharing_intent: ^1.8.1
 
 dev_dependencies:
   flutter_test:

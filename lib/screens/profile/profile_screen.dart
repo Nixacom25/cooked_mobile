@@ -441,7 +441,7 @@ class _LogoutSheet extends StatelessWidget {
                     width: double.infinity,
                     height: 54.h,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFCC3333),
+                      color: const Color(0xFFC83A2D),
                       borderRadius: BorderRadius.circular(16.r),
                     ),
                     child: Center(

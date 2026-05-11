@@ -97,8 +97,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   void _initIap() async {
     IapService.instance.initialize();
     IapService.instance.onPurchaseSuccess = () {
-      if (mounted && _currentPage == 20) {
-        setState(() => _isLoading = false);
+      if (mounted && _currentPage == 19) {
         _pageController.nextPage(
           duration: const Duration(milliseconds: 400),
           curve: Curves.easeInOut,
@@ -814,7 +813,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           if (mounted) {
                             Navigator.pushReplacementNamed(
                               context,
-                              AppRoutes.success,
+                              AppRoutes.home,
                               arguments: {'initialTab': 0},
                             );
                           }
@@ -873,7 +872,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                       _currentPage == 19 // TrialStep
                                           ? (_selectedPlanId == 'yearly'
                                               ? 'Start My 3-Day Free Trial'
-                                              : 'Continue')
+                                              : 'Start Monthly Subscription')
                                           : 'Continue',
                                       style: TextStyle(
                                         fontSize: 18.sp,

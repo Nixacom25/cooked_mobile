@@ -89,7 +89,7 @@ class RecipeCard extends StatelessWidget {
                                 ? Colors.green
                                 : const Color(0xFFAAAAAA))
                             : (isHearted
-                                ? const Color(0xFFCC3333)
+                                ? const Color(0xFFC83A2D)
                                 : const Color(0xFFAAAAAA)),
                         size: useValidationIcon ? 20.sp : 18.sp,
                       ),
@@ -106,7 +106,7 @@ class RecipeCard extends StatelessWidget {
                       child: Container(
                         padding: EdgeInsets.all(6.r),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFCC3333),
+                          color: const Color(0xFFC83A2D),
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
@@ -204,7 +204,7 @@ class RecipeCard extends StatelessWidget {
           child: const Center(
             child: CircularProgressIndicator(
               strokeWidth: 2,
-              color: Color(0xFFCC3333),
+              color: Color(0xFFC83A2D),
             ),
           ),
         ),
