@@ -27,7 +27,7 @@ class TrialStep extends StatefulWidget {
 class _TrialStepState extends State<TrialStep> {
   String _selectedPlan = 'yearly';
   String _monthlyPrice = '\$9.99';
-  String _yearlyPrice = '\$29.99';
+  String _yearlyPrice = '\$2.49 / mo';
 
   @override
   void initState() {
@@ -43,8 +43,13 @@ class _TrialStepState extends State<TrialStep> {
     if (mounted) {
       setState(() {
         for (var p in products) {
-          if (p.id == 'monthly_sub') _monthlyPrice = p.price;
-          if (p.id == 'yearly_sub') _yearlyPrice = p.price;
+          if (p.id == 'monthly_sub') {
+            _monthlyPrice = p.price;
+          }
+          if (p.id == 'yearly_sub') {
+            // Keep the format requested: $2.49 / mo
+            _yearlyPrice = '\$2.49 / mo';
+          }
         }
       });
     }
@@ -74,7 +79,7 @@ class _TrialStepState extends State<TrialStep> {
             icon: 'unlock.svg',
             title: 'Today',
             description:
-                "Unlock all features: Unlimited Scan, exclusive recipes, and more.",
+                "Unlock unlimited recipes and get the most out of every ingredient in your fridge.",
             isFirst: true,
           ),
           _buildTimelineItem(
@@ -87,7 +92,7 @@ class _TrialStepState extends State<TrialStep> {
             icon: 'crown.svg',
             title: 'In 3 Days - Billing Starts',
             description:
-                "Your subscription starts on ${DateFormat('MMM d, yyyy').format(DateTime.now().plusDays(3))}. Cancel anytime before in your App Store settings.",
+                "You'll be charged on ${DateFormat('MMM d, yyyy').format(DateTime.now().plusDays(3))} unless you cancel anytime before.",
             isLast: true,
           ),
 
@@ -117,29 +122,29 @@ class _TrialStepState extends State<TrialStep> {
             ],
           ),
 
-          SizedBox(height: 24.h),
-
-          // No Payment Due
-          GestureDetector(
-            onTap: widget.onSkip,
-            behavior: HitTestBehavior.opaque,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.check, color: const Color(0xFF0D1B3E), size: 16.sp),
-                SizedBox(width: 8.w),
-                Text(
-                  'No Payment Due Now',
-                  style: TextStyle(
-                    fontSize: 16.sp,
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xFF0D1B3E),
-                    fontFamily: 'SF Pro',
+          if (_selectedPlan == 'yearly') ...[
+            SizedBox(height: 24.h),
+            GestureDetector(
+              onTap: widget.onSkip,
+              behavior: HitTestBehavior.opaque,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.check, color: const Color(0xFF0D1B3E), size: 16.sp),
+                  SizedBox(width: 8.w),
+                  Text(
+                    'No Payment Due Now',
+                    style: TextStyle(
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF0D1B3E),
+                      fontFamily: 'SF Pro',
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
+          ],
 
           SizedBox(height: 120.h), // Space for bottom button
         ],
@@ -224,6 +229,7 @@ class _TrialStepState extends State<TrialStep> {
     required String id,
     required String title,
     required String price,
+    String? subPrice,
     required bool isSelected,
     String? badge,
   }) {
@@ -289,6 +295,15 @@ class _TrialStepState extends State<TrialStep> {
                     fontFamily: 'SF Pro',
                   ),
                 ),
+                if (subPrice != null)
+                  Text(
+                    subPrice,
+                    style: TextStyle(
+                      fontSize: 10.sp,
+                      color: const Color(0xFF7B8190),
+                      fontFamily: 'SF Pro',
+                    ),
+                  ),
               ],
             ),
           ),

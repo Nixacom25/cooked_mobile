@@ -69,9 +69,19 @@ class ErrorHelper {
       return 'Account not found. Please sign up via onboarding.';
     }
 
+    if (lower.contains('429') || lower.contains('too many requests') || lower.contains('quota')) {
+      return 'Our servers are currently busy. Please try again in a moment.';
+    }
+    if (lower.contains('extraction failed')) {
+      return 'Failed to extract recipe from this link. Please check the URL or try another one.';
+    }
+
     // Fallback logic
     if (str.startsWith('Exception: ')) {
-      // if it's a clean exception message thrown locally
+      // If the exception contains weird technical characters like <EOL> or HTML or JSON, it's a raw backend error
+      if (str.contains('<') || str.contains('{') || str.contains('429') || str.contains('500') || str.contains('Failed to')) {
+          return 'Something went wrong. Please try again later.';
+      }
       return str.replaceAll('Exception: ', '');
     }
 

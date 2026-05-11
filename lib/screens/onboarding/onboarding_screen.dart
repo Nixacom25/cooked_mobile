@@ -871,7 +871,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                     )
                                   : Text(
                                       _currentPage == 19 // TrialStep
-                                          ? 'Start My 3-Day Free Trial'
+                                          ? (_selectedPlanId == 'yearly'
+                                              ? 'Start My 3-Day Free Trial'
+                                              : 'Continue')
                                           : 'Continue',
                                       style: TextStyle(
                                         fontSize: 18.sp,
@@ -881,11 +883,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                     ),
                             ),
                           ),
-                           if (_currentPage == 19) ...[
+                          if (_currentPage == 19) ...[
                             // TrialStep
                             SizedBox(height: 12.h),
                             Text(
-                              '3 days free',
+                              _selectedPlanId == 'yearly'
+                                  ? '3 days free, then \$29.99 per year (\$2.49/mo)'
+                                  : '\$9.99 per month',
                               style: TextStyle(
                                 fontSize: 14.sp,
                                 color: const Color(0xFF7B8190),

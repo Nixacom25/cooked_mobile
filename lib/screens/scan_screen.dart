@@ -260,7 +260,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
       if (mounted) {
         setState(() => _stopAnalysisLoading());
         if (!PaywallHelper.handleError(context, e)) {
-          IosToast.show(context, message: e.toString(), type: ToastType.error);
+          IosToast.show(context, message: ErrorHelper.getFriendlyMessage(e), type: ToastType.error);
         }
       }
     }
@@ -1082,9 +1082,10 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
         // ── SCROLLABLE LIST PART ──────────────────────────────────────────
         Expanded(
           child: ListView(
-            padding: EdgeInsets.fromLTRB(22.w, 15.h, 22.w, bottomInset + 120.h),
+            padding: EdgeInsets.fromLTRB(22.w, 5.h, 22.w, bottomInset + 120.h),
             children: [
               if (_ingCtrl.text.isEmpty) ...[
+                SizedBox(height: 5.h),
                 Text(
                   "Add ingredients to find recipes you can make",
                   style: TextStyle(
@@ -1093,47 +1094,47 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                     fontStyle: FontStyle.italic,
                   ),
                 ),
-                if (_recentIngredients.isNotEmpty) ...[
-                  SizedBox(height: 20.h),
-                  Text(
-                    "Recently Used",
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14.sp,
-                      color: const Color(0xFF64748B),
-                    ),
-                  ),
-                  SizedBox(height: 10.h),
-                  Wrap(
-                    spacing: 8.w,
-                    runSpacing: 8.h,
-                    children: _recentIngredients.take(5).map((ing) {
-                      final name = ing['name'] ?? '';
-                      return GestureDetector(
-                        onTap: () {
-                          _ingCtrl.text = name;
-                          _addTypedIngredient();
-                        },
-                        child: Container(
-                          padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
-                          decoration: BoxDecoration(
-                            color: Colors.grey[100],
-                            borderRadius: BorderRadius.circular(20.r),
-                            border: Border.all(color: Colors.grey[200]!),
-                          ),
-                          child: Text(
-                            name,
-                            style: TextStyle(
-                              fontSize: 12.sp,
-                              color: const Color(0xFF475569),
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                ],
+                // if (_recentIngredients.isNotEmpty) ...[
+                //   SizedBox(height: 25.h),
+                //   Text(
+                //     "Recently Used",
+                //     style: TextStyle(
+                //       fontWeight: FontWeight.bold,
+                //       fontSize: 14.sp,
+                //       color: const Color(0xFF64748B),
+                //     ),
+                //   ),
+                //   SizedBox(height: 10.h),
+                //   Wrap(
+                //     spacing: 8.w,
+                //     runSpacing: 8.h,
+                //     children: _recentIngredients.take(8).map((ing) {
+                //       final name = ing['name'] ?? '';
+                //       return GestureDetector(
+                //         onTap: () {
+                //           _ingCtrl.text = name;
+                //           _addTypedIngredient();
+                //         },
+                //         child: Container(
+                //           padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+                //           decoration: BoxDecoration(
+                //             color: Colors.grey[100],
+                //             borderRadius: BorderRadius.circular(20.r),
+                //             border: Border.all(color: Colors.grey[200]!),
+                //           ),
+                //           child: Text(
+                //             name,
+                //             style: TextStyle(
+                //               fontSize: 12.sp,
+                //               color: const Color(0xFF475569),
+                //               fontWeight: FontWeight.w500,
+                //             ),
+                //           ),
+                //         ),
+                //       );
+                //     }).toList(),
+                //   ),
+                // ],
               ],
               SizedBox(height: 24.h),
               ..._typedIngredients.map((ing) => _buildIngredientCard(
@@ -1798,7 +1799,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
     } catch (e) {
       if (mounted) {
         setState(() => _stopAnalysisLoading());
-        IosToast.show(context, message: e.toString(), type: ToastType.error);
+        IosToast.show(context, message: ErrorHelper.getFriendlyMessage(e), type: ToastType.error);
       }
     }
   }

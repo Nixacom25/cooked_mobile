@@ -236,6 +236,25 @@ class RecipeService {
     }
   }
 
+  Future<List<Recipe>> getHomeSuggestions({bool forceRefresh = false}) async {
+    const cacheKey = 'home_suggestions';
+    if (!forceRefresh && _cache.containsKey(cacheKey)) {
+      return _cache[cacheKey] as List<Recipe>;
+    }
+
+    final url = Uri.parse('${ApiConfig.baseUrl}/recipes/suggested');
+    final response = await http.get(url, headers: await _getHeaders());
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+      final results = data.map((json) => Recipe.fromJson(json)).toList();
+      _cache[cacheKey] = results;
+      return results;
+    } else {
+      throw Exception('Unable to load home suggestions.');
+    }
+  }
+
   Future<Map<String, int>> getExploreCuisines({bool forceRefresh = false}) async {
     const cacheKey = 'explore_cuisines';
     if (!forceRefresh && _cache.containsKey(cacheKey)) {

@@ -713,7 +713,7 @@ class _HomeTabState extends State<_HomeTab> {
                                         }
                                       : null,
                                 ),
-                                SizedBox(height: 12.h),
+                                SizedBox(height: 20.h),
                                 _SavedRecipesGrid(
                                   searchQuery: searchQuery,
                                   recipes: savedRecipes,
@@ -1373,16 +1373,10 @@ class _SuggestedRecipesSectionState extends State<_SuggestedRecipesSection> {
   Future<void> _fetchSuggestions() async {
     setState(() => _isLoading = true);
     try {
-      const page = 0; // Always start with fresh content (new user suggestions are here)
-      final results = await RecipeService.instance.getExploreRecipes(
-        page: page,
-        size: 8,
-      );
+      final results = await RecipeService.instance.getHomeSuggestions();
       if (mounted) {
         setState(() {
-          _suggestions = results
-              .map((r) => r.copyWith(origin: 'SUGGESTED'))
-              .toList();
+          _suggestions = results;
           _isLoading = false;
         });
       }
@@ -1417,6 +1411,7 @@ class _SuggestedRecipesSectionState extends State<_SuggestedRecipesSection> {
 
     return Column(
       children: [
+        SizedBox(height: 22.h),
         _SectionRow(title: 'Suggested Recipes'),
         SizedBox(height: 12.h),
         widget.isCompact

@@ -1015,7 +1015,7 @@ class _RecipeWebPreviewModalState extends State<_RecipeWebPreviewModal> {
       height: double.infinity,
       color: Colors.white,
       child: SafeArea(
-        bottom: false,
+        bottom: true,
         child: Column(
           children: [
             // Header
@@ -1067,7 +1067,7 @@ class _RecipeWebPreviewModalState extends State<_RecipeWebPreviewModal> {
             
             // Actions
             Padding(
-              padding: EdgeInsets.fromLTRB(20.w, 15.h, 20.w, 35.h),
+              padding: EdgeInsets.fromLTRB(20.w, 15.h, 20.w, 15.h),
               child: SizedBox(
                 width: double.infinity,
                 height: 52.h,
