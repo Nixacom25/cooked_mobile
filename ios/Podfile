@@ -22,10 +22,9 @@ target 'Runner' do
   use_modular_headers!
 
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
-end
-
-target 'ShareExtension' do
-  use_frameworks!
+  target 'ShareExtension' do
+    inherit! :search_paths
+  end
 end
 
 post_install do |installer|
