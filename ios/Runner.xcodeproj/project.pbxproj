@@ -224,6 +224,10 @@
 						CreatedOnToolsVersion = 14.0;
 						TestTargetID = 97C146ED1CF9000F007C117D;
 					};
+					33D8A5B4294A63A400263B01 = {
+						CreatedOnToolsVersion = 14.0;
+						ProvisioningStyle = Manual;
+					};
 					97C146ED1CF9000F007C117D = {
 						CreatedOnToolsVersion = 7.3.1;
 						LastSwiftMigration = 1100;
@@ -671,7 +675,9 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.cookedapp.app.ShareExtension;
 				CODE_SIGN_ENTITLEMENTS = ShareExtension/ShareExtension.entitlements;
+				CODE_SIGN_STYLE = Manual;
 				DEVELOPMENT_TEAM = AP5DNHH44A;
+				PROVISIONING_PROFILE_SPECIFIER = Cooked_Share_Extension_Profile;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				SWIFT_VERSION = 5.0;
@@ -694,7 +700,9 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.cookedapp.app.ShareExtension;
 				CODE_SIGN_ENTITLEMENTS = ShareExtension/ShareExtension.entitlements;
+				CODE_SIGN_STYLE = Manual;
 				DEVELOPMENT_TEAM = AP5DNHH44A;
+				PROVISIONING_PROFILE_SPECIFIER = Cooked_Share_Extension_Profile;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				SWIFT_VERSION = 5.0;
@@ -717,7 +725,9 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.cookedapp.app.ShareExtension;
 				CODE_SIGN_ENTITLEMENTS = ShareExtension/ShareExtension.entitlements;
+				CODE_SIGN_STYLE = Manual;
 				DEVELOPMENT_TEAM = AP5DNHH44A;
+				PROVISIONING_PROFILE_SPECIFIER = Cooked_Share_Extension_Profile;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				SWIFT_VERSION = 5.0;
