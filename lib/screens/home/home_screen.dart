@@ -613,7 +613,11 @@ class _HomeTabState extends State<_HomeTab> {
 
   void _onHistoryChanged() {
     if (mounted) {
-      setState(() {});
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          setState(() {});
+        }
+      });
     }
   }
 
@@ -658,7 +662,7 @@ class _HomeTabState extends State<_HomeTab> {
                                 ? ' (${cookbooks.length})'
                                 : '';
                             return _SectionRow(
-                              title: 'Your cookbooks$countBadge',
+                              title: 'Your Cookbooks$countBadge',
                               onViewAll:
                                   (cookbooks != null && cookbooks.length > 5)
                                   ? () {
@@ -747,7 +751,7 @@ class _HomeTabState extends State<_HomeTab> {
 
                           final allRecipes = recipes;
                           final savedRecipes = allRecipes
-                              .where((r) => r.origin != 'SUGGESTED')
+                              .where((r) => !r.isInCookbook)
                               .toList();
                           final hasSaved = savedRecipes.isNotEmpty;
 
@@ -1027,6 +1031,9 @@ class _CookbooksRow extends StatefulWidget {
 }
 
 class _CookbooksRowState extends State<_CookbooksRow> {
+  final ScrollController _scrollController = ScrollController();
+  bool _hintShown = false;
+
   @override
   void initState() {
     super.initState();
@@ -1035,8 +1042,38 @@ class _CookbooksRowState extends State<_CookbooksRow> {
     }
   }
 
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
   void _loadData() {
     CookbookService.instance.getMyCookbooks();
+  }
+
+  void _showScrollHint() {
+    if (_hintShown) return;
+    Future.delayed(const Duration(milliseconds: 800), () {
+      if (!mounted) return;
+      if (_scrollController.hasClients && _scrollController.position.maxScrollExtent > 0) {
+        _scrollController
+            .animateTo(
+              45.w,
+              duration: const Duration(milliseconds: 1000),
+              curve: Curves.elasticOut,
+            )
+            .then((_) {
+              if (!mounted) return;
+              _scrollController.animateTo(
+                0.0,
+                duration: const Duration(milliseconds: 800),
+                curve: Curves.easeOutQuart,
+              );
+            });
+        _hintShown = true;
+      }
+    });
   }
 
   @override
@@ -1049,6 +1086,10 @@ class _CookbooksRowState extends State<_CookbooksRow> {
     return ValueListenableBuilder<List<Cookbook>?>(
       valueListenable: CookbookService.instance.myCookbooksNotifier,
       builder: (context, cookbooks, _) {
+        if (cookbooks != null && cookbooks.length > 1) {
+          _showScrollHint();
+        }
+
         if (cookbooks == null) {
           return SizedBox(
             height: 200.h,
@@ -1073,27 +1114,43 @@ class _CookbooksRowState extends State<_CookbooksRow> {
 
         return SizedBox(
           height: 200.h,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            padding: EdgeInsets.symmetric(horizontal: 18.w),
-            itemCount: cookbooks.length + 1,
-            itemBuilder: (_, i) {
-              if (i == 0) {
-                // The "+" Card for creating a new cookbook
-                return Padding(
-                  padding: EdgeInsets.only(right: 16.w),
-                  child: GestureDetector(
-                    key: widget.firstCookbookKey,
-                    onTap: () async {
-                      final result = await Navigator.pushNamed(
-                        context,
-                        AppRoutes.cookbookForm,
-                        arguments: {'mode': 'add'},
-                      );
-                      if (result == true) {
-                        setState(() => _loadData());
-                        widget.onRefresh?.call();
-                      }
+          child: ShaderMask(
+            shaderCallback: (Rect rect) {
+              return const LinearGradient(
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
+                colors: [
+                  Colors.white,
+                  Colors.white,
+                  Colors.white,
+                  Colors.transparent,
+                ],
+                stops: [0.0, 0.05, 0.85, 1.0],
+              ).createShader(rect);
+            },
+            blendMode: BlendMode.dstIn,
+            child: ListView.builder(
+              controller: _scrollController,
+              scrollDirection: Axis.horizontal,
+              padding: EdgeInsets.symmetric(horizontal: 18.w),
+              itemCount: cookbooks.length + 1,
+              itemBuilder: (_, i) {
+                if (i == 0) {
+                  // The "+" Card for creating a new cookbook
+                  return Padding(
+                    padding: EdgeInsets.only(right: 16.w),
+                    child: GestureDetector(
+                      key: widget.firstCookbookKey,
+                      onTap: () async {
+                        final result = await Navigator.pushNamed(
+                          context,
+                          AppRoutes.cookbookForm,
+                          arguments: {'mode': 'add'},
+                        );
+                        if (result == true) {
+                          setState(() => _loadData());
+                          widget.onRefresh?.call();
+                        }
                     },
                     child: SizedBox(
                       width: 150.w,
@@ -1215,7 +1272,8 @@ class _CookbooksRowState extends State<_CookbooksRow> {
                   ),
                 ),
               );
-            },
+              },
+            ),
           ),
         );
       },
@@ -1384,6 +1442,14 @@ class _SavedRecipesGrid extends StatelessWidget {
                 );
               }
             },
+            // onSaveTap: () {
+            //   showModalBottomSheet(
+            //     context: ctx,
+            //     isScrollControlled: true,
+            //     backgroundColor: Colors.transparent,
+            //     builder: (context) => AddToCookbookSheet(recipe: r),
+            //   );
+            // },
             onTap: () {
               HistoryService.instance.addToHistory(r);
               Navigator.pushNamed(

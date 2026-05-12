@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter/services.dart';
 
 class LanguageRegionStep extends StatefulWidget {
   final String initialLanguage;
@@ -35,6 +36,11 @@ class _LanguageRegionStepState extends State<LanguageRegionStep> {
     _selectedLanguage = widget.initialLanguage;
     _selectedCountry = widget.initialCountry;
     _selectedMeasurementSystem = widget.initialMeasurementSystem;
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
   }
 
   void _notifyChange() {
@@ -99,6 +105,7 @@ class _LanguageRegionStepState extends State<LanguageRegionStep> {
             value: _selectedLanguage,
             items: _languages,
             onChanged: (val) {
+              HapticFeedback.mediumImpact();
               setState(() => _selectedLanguage = val!);
               _notifyChange();
             },
@@ -112,6 +119,7 @@ class _LanguageRegionStepState extends State<LanguageRegionStep> {
             value: _selectedCountry,
             items: _countries,
             onChanged: (val) {
+              HapticFeedback.mediumImpact();
               setState(() => _selectedCountry = val!);
               _notifyChange();
             },
@@ -133,7 +141,7 @@ class _LanguageRegionStepState extends State<LanguageRegionStep> {
               : 'Metric (grams, ml, °C)'} ',
                     style: TextStyle(
                       fontSize: 12.sp,
-                      color: const Color(0xFF7B8190),
+                      color: const Color(0xFF4B5563),
                       fontFamily: 'SF Pro',
                     ),
                   ),
@@ -181,6 +189,7 @@ class _LanguageRegionStepState extends State<LanguageRegionStep> {
   Widget _buildToggleOption(String label, bool isSelected) {
     return GestureDetector(
       onTap: () {
+        HapticFeedback.mediumImpact();
         setState(() => _selectedMeasurementSystem = label);
         _notifyChange();
       },
@@ -199,7 +208,7 @@ class _LanguageRegionStepState extends State<LanguageRegionStep> {
             fontFamily: 'SF Pro',
             fontSize: 12.sp,
             fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-            color: isSelected ? Colors.white : const Color(0xFF7B8190),
+            color: isSelected ? Colors.white : const Color(0xFF4B5563),
           ),
         ),
       ),
@@ -212,7 +221,7 @@ class _LanguageRegionStepState extends State<LanguageRegionStep> {
       style: TextStyle(
         fontSize: 14.sp,
         fontWeight: FontWeight.w600,
-        color: const Color(0xFF7B8190),
+        color: const Color(0xFF4B5563),
         fontFamily: 'SF Pro',
       ),
     );

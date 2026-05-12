@@ -1,5 +1,7 @@
 import 'dart:convert';
+import 'dart:async';
 import 'package:cooked/services/cookbook_service.dart';
+import 'package:cooked/services/history_service.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import '../core/api_config.dart';
@@ -21,6 +23,10 @@ class RecipeService {
   
   // Cache for explore data
   final Map<String, dynamic> _cache = {};
+
+  // Debouncing for favorites
+  final Map<String, Timer> _favoriteDebouncers = {};
+  final Map<String, bool> _originalFavoriteStates = {};
 
   void clearCache() {
     _cache.clear();
@@ -190,14 +196,28 @@ class RecipeService {
     if (response.statusCode == 200 || response.statusCode == 201) {
       final saved = Recipe.fromJson(jsonDecode(response.body));
       
-      // Update local state immediately
+      // 1. Insert partial skeleton (placeholder)
       if (myRecipesNotifier.value != null) {
-        myRecipesNotifier.value = [saved, ...myRecipesNotifier.value!.where((r) => r.id != saved.id)];
+        final placeholder = Recipe(
+          id: 'pending_${DateTime.now().millisecondsSinceEpoch}',
+          name: recipe.name,
+          cookTime: recipe.cookTime,
+          kcal: recipe.kcal,
+          steps: [],
+          equipment: [],
+          ingredients: [],
+          isPublic: false,
+          isFavorite: false,
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+          isPlaceholder: true,
+        );
+        myRecipesNotifier.value = [placeholder, ...myRecipesNotifier.value!];
       }
 
       // Trigger background refresh 
-      getMyRecipes(forceRefresh: true).then((_) => null).catchError((_) => null);
-      getRecentImports(forceRefresh: true).then((_) => null).catchError((_) => null);
+      await getMyRecipes(forceRefresh: true);
+      await getRecentImports(forceRefresh: true);
       CookbookService.instance.getMyCookbooks(forceRefresh: true).then((_) => null).catchError((_) => null);
       return saved;
     } else {
@@ -212,17 +232,107 @@ class RecipeService {
       debugPrint('RecipeService: Cannot toggle favorite for empty recipe ID');
       return;
     }
-    final url = Uri.parse('${ApiConfig.baseUrl}/recipes/$id/favorite');
-    final response = await http.put(url, headers: await _getHeaders());
 
-    if (response.statusCode != 200) {
-      throw Exception('Unable to change favorite status.');
+    // 1. Optimistic local update
+    _updateLocalFavoriteStatus(id);
+
+    // 2. Debounce backend call (5s delay)
+    _favoriteDebouncers[id]?.cancel();
+    _favoriteDebouncers[id] = Timer(const Duration(seconds: 5), () async {
+      final currentIsFav = _getCurrentIsFavorite(id);
+      final originalIsFav = _originalFavoriteStates[id];
+
+      // Only send to backend if the final state is different from the original
+      if (originalIsFav != null && currentIsFav != originalIsFav) {
+        try {
+          final url = Uri.parse('${ApiConfig.baseUrl}/recipes/$id/favorite');
+          final response = await http.put(url, headers: await _getHeaders());
+
+          if (response.statusCode == 200) {
+            // Silently refresh in background to ensure full sync
+            getFavoriteRecipes(size: 100, forceRefresh: true).then((_) => null).catchError((_) => null);
+            getMyRecipes(forceRefresh: true).then((_) => null).catchError((_) => null);
+            CookbookService.instance.getMyCookbooks(forceRefresh: true).then((_) => null).catchError((_) => null);
+          }
+        } catch (e) {
+          debugPrint('Error syncing favorite state for $id: $e');
+        }
+      }
+
+      _favoriteDebouncers.remove(id);
+      _originalFavoriteStates.remove(id);
+    });
+  }
+
+  void _updateLocalFavoriteStatus(String id) {
+    bool foundInAny = false;
+
+    void toggleInList(ValueNotifier<List<Recipe>?> notifier) {
+      if (notifier.value == null) return;
+      bool changed = false;
+      final newList = notifier.value!.map((r) {
+        if (r.id == id) {
+          if (!foundInAny) {
+            // First time we see it in this toggle sequence, remember original state
+            if (!_originalFavoriteStates.containsKey(id)) {
+              _originalFavoriteStates[id] = r.isFavorite;
+            }
+            foundInAny = true;
+          }
+          r.isFavorite = !r.isFavorite;
+          changed = true;
+        }
+        return r;
+      }).toList();
+      if (changed) {
+        notifier.value = newList;
+      }
     }
 
-    // Update favorite notifier optimistically or refresh
-    getFavoriteRecipes(size: 100, forceRefresh: true).then((_) => null).catchError((_) => null);
-    getMyRecipes(forceRefresh: true).then((_) => null).catchError((_) => null);
-    CookbookService.instance.getMyCookbooks(forceRefresh: true).then((_) => null).catchError((_) => null);
+    // Toggle in all major notifiers
+    toggleInList(myRecipesNotifier);
+    toggleInList(favoriteRecipesNotifier);
+    toggleInList(recentImportsNotifier);
+    toggleInList(homeSuggestionsNotifier);
+    
+    // Also check history service if available
+    final historyList = HistoryService.instance.recentlyViewedNotifier.value;
+    if (historyList.isNotEmpty) {
+      bool changed = false;
+      final newHistory = historyList.map((r) {
+        if (r.id == id) {
+          if (!foundInAny) {
+            if (!_originalFavoriteStates.containsKey(id)) {
+              _originalFavoriteStates[id] = r.isFavorite;
+            }
+            foundInAny = true;
+          }
+          r.isFavorite = !r.isFavorite;
+          changed = true;
+        }
+        return r;
+      }).toList();
+      if (changed) {
+        HistoryService.instance.recentlyViewedNotifier.value = newHistory;
+      }
+    }
+  }
+
+  bool _getCurrentIsFavorite(String id) {
+    // Check in any notifier to get the current UI state
+    final all = [
+      myRecipesNotifier.value,
+      favoriteRecipesNotifier.value,
+      homeSuggestionsNotifier.value,
+      HistoryService.instance.recentlyViewedNotifier.value,
+    ];
+    for (var list in all) {
+      if (list == null) continue;
+      for (var r in list) {
+        if (r.id == id) return r.isFavorite;
+      }
+    }
+    return false;
   }
 
   Future<List<Recipe>> getExploreRecipes({String? cuisine, String? category, int page = 0, int size = 10, bool forceRefresh = false}) async {
@@ -392,15 +502,44 @@ class RecipeService {
     if (response.statusCode == 200) {
       final recipe = Recipe.fromJson(jsonDecode(response.body));
       
-      // Update local state immediately for "live" feel
+      // 1. Insert partial skeleton (placeholder)
       if (recentImportsNotifier.value != null) {
-        recentImportsNotifier.value = [recipe, ...recentImportsNotifier.value!.where((r) => r.id != recipe.id)];
-      } else {
-        recentImportsNotifier.value = [recipe];
+        final placeholder = Recipe(
+          id: 'pending_${DateTime.now().millisecondsSinceEpoch}',
+          name: 'Importing recipe...',
+          cookTime: 0,
+          kcal: 0,
+          steps: [],
+          equipment: [],
+          ingredients: [],
+          isPublic: false,
+          isFavorite: false,
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+          isPlaceholder: true,
+        );
+        recentImportsNotifier.value = [placeholder, ...recentImportsNotifier.value!];
+      }
+      if (myRecipesNotifier.value != null) {
+        final placeholder = Recipe(
+          id: 'pending_my_${DateTime.now().millisecondsSinceEpoch}',
+          name: 'Importing recipe...',
+          cookTime: 0,
+          kcal: 0,
+          steps: [],
+          equipment: [],
+          ingredients: [],
+          isPublic: false,
+          isFavorite: false,
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+          isPlaceholder: true,
+        );
+        myRecipesNotifier.value = [placeholder, ...myRecipesNotifier.value!];
       }
 
-      getMyRecipes(forceRefresh: true).then((_) => null).catchError((_) => null);
-      getRecentImports(forceRefresh: true).then((_) => null).catchError((_) => null);
+      await getMyRecipes(forceRefresh: true);
+      await getRecentImports(forceRefresh: true);
       CookbookService.instance.getMyCookbooks(forceRefresh: true).then((_) => null).catchError((_) => null);
       return recipe;
     } else {
@@ -494,15 +633,8 @@ class RecipeService {
     if (response.statusCode == 200) {
       final validated = Recipe.fromJson(jsonDecode(response.body));
       
-      // Update recent imports immediately (remove suggested, add validated)
-      if (recentImportsNotifier.value != null) {
-        recentImportsNotifier.value = recentImportsNotifier.value!
-            .map((r) => r.id == validated.id ? validated : r)
-            .toList();
-      }
-
-      // Trigger background refresh 
-      getMyRecipes(forceRefresh: true).then((_) => null).catchError((_) => null);
+      // Refresh list without full skeleton
+      await getMyRecipes(forceRefresh: true);
       CookbookService.instance.getMyCookbooks(forceRefresh: true).then((_) => null).catchError((_) => null);
       return validated;
     } else {

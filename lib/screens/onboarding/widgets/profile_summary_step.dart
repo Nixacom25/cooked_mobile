@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import '../../../core/extensions/string_extensions.dart';
 
 class ProfileSummaryStep extends StatelessWidget {
-  final String firstName;
   final List<String> favoriteCuisines;
   final List<String> flavorDna;
   final int recipeCount;
@@ -12,7 +10,6 @@ class ProfileSummaryStep extends StatelessWidget {
 
   const ProfileSummaryStep({
     super.key,
-    required this.firstName,
     required this.favoriteCuisines,
     required this.flavorDna,
     required this.recipeCount,

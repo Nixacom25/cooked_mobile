@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class GoalsStep extends StatefulWidget {
@@ -94,6 +95,7 @@ class _GoalsStepState extends State<GoalsStep> {
       padding: EdgeInsets.only(bottom: 16.h),
       child: InkWell(
         onTap: () {
+          HapticFeedback.selectionClick();
           setState(() {
             if (isSelected) {
               _selected.remove(goal['title']);

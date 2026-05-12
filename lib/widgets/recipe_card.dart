@@ -38,6 +38,25 @@ class RecipeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (recipe?.isPlaceholder == true) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: SkeletonLoader(
+              width: double.infinity,
+              height: double.infinity,
+              borderRadius: 12.r,
+            ),
+          ),
+          SizedBox(height: 8.h),
+          const SkeletonLoader(width: 120, height: 14),
+          SizedBox(height: 4.h),
+          const SkeletonLoader(width: 80, height: 10),
+        ],
+      );
+    }
+
     final displayImg = recipe?.image ?? img ?? '';
     final displayName = recipe?.name ?? name ?? 'Unknown Recipe';
     final displayTime = recipe != null

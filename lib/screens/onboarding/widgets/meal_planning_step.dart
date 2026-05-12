@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class MealPlanningStep extends StatefulWidget {
@@ -87,6 +88,7 @@ class _MealPlanningStepState extends State<MealPlanningStep> {
       padding: EdgeInsets.only(bottom: 16.h),
       child: InkWell(
         onTap: () {
+          HapticFeedback.selectionClick();
           setState(() => _selected = opt['title']!);
           widget.onChanged(_selected);
         },

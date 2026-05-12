@@ -3,23 +3,22 @@ import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class AccountStep extends StatefulWidget {
-  final String initialFullName;
   final String initialEmail;
   final String initialPassword;
   final String initialPhone;
   final bool initialAcceptedTerms;
   final Function({
-    required String fullName,
     required String email,
     required String password,
     required String phone,
     required bool acceptedTerms,
+    String? firstname,
+    String? lastname,
   })
   onChanged;
 
   const AccountStep({
     super.key,
-    required this.initialFullName,
     required this.initialEmail,
     required this.initialPassword,
     required this.initialPhone,
@@ -32,10 +31,10 @@ class AccountStep extends StatefulWidget {
 }
 
 class _AccountStepState extends State<AccountStep> {
-  late TextEditingController _nameController;
   late TextEditingController _emailController;
   late TextEditingController _passwordController;
   late TextEditingController _confirmController;
+  late TextEditingController _nameController;
   late String _phone;
   bool _acceptedTerms = false;
   bool _obscurePassword = true;
@@ -44,30 +43,45 @@ class _AccountStepState extends State<AccountStep> {
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController(text: widget.initialFullName);
     _emailController = TextEditingController(text: widget.initialEmail);
     _passwordController = TextEditingController(text: widget.initialPassword);
     _confirmController = TextEditingController(text: widget.initialPassword);
+    _nameController = TextEditingController();
     _phone = widget.initialPhone;
     _acceptedTerms = widget.initialAcceptedTerms;
   }
 
   @override
   void dispose() {
-    _nameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     _confirmController.dispose();
+    _nameController.dispose();
     super.dispose();
   }
 
   void _notifyChange() {
+    String? firstname;
+    String? lastname;
+
+    final fullName = _nameController.text.trim();
+    if (fullName.isNotEmpty) {
+      if (fullName.contains(' ')) {
+        final lastSpaceIndex = fullName.lastIndexOf(' ');
+        firstname = fullName.substring(0, lastSpaceIndex).trim();
+        lastname = fullName.substring(lastSpaceIndex + 1).trim();
+      } else {
+        firstname = fullName;
+      }
+    }
+
     widget.onChanged(
-      fullName: _nameController.text,
       email: _emailController.text,
       password: _passwordController.text,
       phone: _phone,
       acceptedTerms: _acceptedTerms,
+      firstname: firstname,
+      lastname: lastname,
     );
   }
 
@@ -100,7 +114,8 @@ class _AccountStepState extends State<AccountStep> {
             ),
             SizedBox(height: 32.h),
 
-            _buildLabel('Full Name'),
+
+            _buildLabel('Full Name', required: false),
             const SizedBox(height: 8),
             _buildField(
               controller: _nameController,
@@ -110,7 +125,7 @@ class _AccountStepState extends State<AccountStep> {
 
             const SizedBox(height: 20),
 
-            _buildLabel('Email'),
+            _buildLabel('Email', required: true),
             const SizedBox(height: 8),
             _buildField(
               controller: _emailController,
@@ -121,7 +136,7 @@ class _AccountStepState extends State<AccountStep> {
 
             const SizedBox(height: 20),
 
-            _buildLabel('Password'),
+            _buildLabel('Password', required: true),
             const SizedBox(height: 8),
             _buildField(
               controller: _passwordController,
@@ -145,7 +160,7 @@ class _AccountStepState extends State<AccountStep> {
 
             const SizedBox(height: 20),
 
-            _buildLabel('Confirm Password'),
+            _buildLabel('Confirm Password', required: true),
             const SizedBox(height: 8),
             _buildField(
               controller: _confirmController,
@@ -176,14 +191,27 @@ class _AccountStepState extends State<AccountStep> {
     );
   }
 
-  Widget _buildLabel(String label) {
-    return Text(
-      label,
-      style: TextStyle(
-        fontSize: 14.sp,
-        fontWeight: FontWeight.w600,
-        color: const Color(0xFF7B8190),
-        fontFamily: 'SF Pro',
+  Widget _buildLabel(String label, {bool required = false}) {
+    return RichText(
+      text: TextSpan(
+        text: label,
+        style: TextStyle(
+          fontSize: 14.sp,
+          fontWeight: FontWeight.w600,
+          color: const Color(0xFF7B8190),
+          fontFamily: 'SF Pro',
+        ),
+        children: [
+          if (required)
+            TextSpan(
+              text: ' *',
+              style: TextStyle(
+                color: const Color(0xFFC83A2D),
+                fontSize: 14.sp,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+        ],
       ),
     );
   }

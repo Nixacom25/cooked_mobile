@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../core/extensions/string_extensions.dart';
+import 'package:flutter/services.dart';
 
 class CuisinesStep extends StatefulWidget {
   final List<String> initialSelected;
@@ -58,6 +59,7 @@ class _CuisinesStepState extends State<CuisinesStep> {
   }
 
   void _addCustomCuisine() {
+    HapticFeedback.selectionClick();
     final text = _othersController.text.trim();
     if (text.isEmpty) return;
 
@@ -75,6 +77,7 @@ class _CuisinesStepState extends State<CuisinesStep> {
   }
 
   void _removeCuisine(String title) {
+    HapticFeedback.selectionClick();
     setState(() {
       _selected.remove(title);
     });
@@ -195,6 +198,7 @@ class _CuisinesStepState extends State<CuisinesStep> {
     final bool isSelected = _selected.contains(cuisine['title']);
     return GestureDetector(
       onTap: () {
+        HapticFeedback.selectionClick();
         setState(() {
           if (isSelected) {
             _selected.remove(cuisine['title']);

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:async';
 import 'package:http/http.dart' as http;
 import '../core/api_config.dart';
 import '../models/grocery_item.dart';
@@ -10,6 +11,10 @@ class GroceryService {
   static final GroceryService instance = GroceryService._privateConstructor();
   
   final ValueNotifier<List<GroceryItem>?> myGroceriesNotifier = ValueNotifier(null);
+
+  // Debouncing for toggles
+  final Map<String, Timer> _toggleDebouncers = {};
+  final Map<String, bool> _originalToggleStates = {};
 
   Future<Map<String, String>> _getHeaders() async {
     final token = await AuthService.instance.getToken();
@@ -44,6 +49,23 @@ class GroceryService {
     DateTime? date,
   }) async {
     final url = Uri.parse('${ApiConfig.baseUrl}/grocery-items');
+
+    // 1. Insert partial skeleton (placeholder)
+    if (myGroceriesNotifier.value != null) {
+      final placeholder = GroceryItem(
+        id: 'pending_${DateTime.now().millisecondsSinceEpoch}',
+        ingredientName: name,
+        ingredientIcon: icon,
+        quantity: quantity,
+        isBought: false,
+        plannedDate: date,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+        isPlaceholder: true,
+      );
+      myGroceriesNotifier.value = [placeholder, ...myGroceriesNotifier.value!];
+    }
+
     final response = await http.post(
       url,
       headers: await _getHeaders(),
@@ -57,23 +79,75 @@ class GroceryService {
     );
 
     if (response.statusCode == 200) {
+      // Refresh list to replace placeholder with real data
       await getMyGroceries(forceRefresh: true);
       return GroceryItem.fromJson(jsonDecode(response.body));
     } else {
+      // Remove placeholder on error
+      if (myGroceriesNotifier.value != null) {
+        myGroceriesNotifier.value = myGroceriesNotifier.value!
+            .where((item) => !item.isPlaceholder)
+            .toList();
+      }
       throw Exception('Failed to add item to grocery list.');
     }
   }
 
-  Future<GroceryItem> toggleBought(String id) async {
-    final url = Uri.parse('${ApiConfig.baseUrl}/grocery-items/$id/toggle');
-    final response = await http.put(url, headers: await _getHeaders());
+  Future<void> toggleBought(String id) async {
+    if (id.isEmpty) return;
 
-    if (response.statusCode == 200) {
-      await getMyGroceries(forceRefresh: true);
-      return GroceryItem.fromJson(jsonDecode(response.body));
-    } else {
-      throw Exception('Failed to toggle item status.');
+    // 1. Optimistic local update
+    _updateLocalToggleStatus(id);
+
+    // 2. Debounce backend call (5s delay)
+    _toggleDebouncers[id]?.cancel();
+    _toggleDebouncers[id] = Timer(const Duration(seconds: 5), () async {
+      final currentIsBought = _getCurrentIsBought(id);
+      final originalIsBought = _originalToggleStates[id];
+
+      // Only send to backend if the final state is different from the original
+      if (originalIsBought != null && currentIsBought != originalIsBought) {
+        try {
+          final url = Uri.parse('${ApiConfig.baseUrl}/grocery-items/$id/toggle');
+          final response = await http.put(url, headers: await _getHeaders());
+
+          if (response.statusCode == 200) {
+            // Silently refresh in background
+            getMyGroceries(forceRefresh: true).then((_) => null).catchError((_) => null);
+          }
+        } catch (e) {
+          print('Error syncing toggle state for grocery $id: $e');
+        }
+      }
+
+      _toggleDebouncers.remove(id);
+      _originalToggleStates.remove(id);
+    });
+  }
+
+  void _updateLocalToggleStatus(String id) {
+    if (myGroceriesNotifier.value == null) return;
+    
+    final newList = myGroceriesNotifier.value!.map((item) {
+      if (item.id == id) {
+        // Remember original state before any toggles in this sequence
+        if (!_originalToggleStates.containsKey(id)) {
+          _originalToggleStates[id] = item.isBought;
+        }
+        item.isBought = !item.isBought;
+      }
+      return item;
+    }).toList();
+    
+    myGroceriesNotifier.value = newList;
+  }
+
+  bool _getCurrentIsBought(String id) {
+    if (myGroceriesNotifier.value == null) return false;
+    for (var item in myGroceriesNotifier.value!) {
+      if (item.id == id) return item.isBought;
     }
+    return false;
   }
 
   Future<void> deleteGroceryItem(String id) async {
@@ -83,6 +157,7 @@ class GroceryService {
     if (response.statusCode != 200) {
       throw Exception('Failed to delete grocery item.');
     }
+    // For delete, we keep it simple: refresh list
     await getMyGroceries(forceRefresh: true);
   }
 

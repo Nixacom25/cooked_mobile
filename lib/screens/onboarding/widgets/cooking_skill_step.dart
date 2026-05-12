@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:flutter/services.dart';
 
 class CookingSkillStep extends StatefulWidget {
   final String? initialSelected;
@@ -82,6 +83,7 @@ class _CookingSkillStepState extends State<CookingSkillStep> {
               padding: EdgeInsets.only(bottom: 15.h),
               child: GestureDetector(
                 onTap: () {
+                  HapticFeedback.selectionClick();
                   setState(() => _selectedLevel = level['title']);
                   widget.onChanged(level['title']!);
                 },

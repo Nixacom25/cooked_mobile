@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter/services.dart';
 
 class DietaryProfile {
   final String title;
@@ -99,6 +100,7 @@ class _DietaryPreferencesStepState extends State<DietaryPreferencesStep> {
   }
 
   void _toggleOption(String title) {
+    HapticFeedback.selectionClick();
     setState(() {
       if (title == 'No Restrictions') {
         _selectedDiet.clear();

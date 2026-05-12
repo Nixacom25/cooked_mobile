@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../core/extensions/string_extensions.dart';
+import 'package:flutter/services.dart';
 
 class DislikesStep extends StatefulWidget {
   final Set<String> initialSelected;
@@ -55,6 +56,7 @@ class _DislikesStepState extends State<DislikesStep> {
   }
 
   void _addDislike(String val) {
+    HapticFeedback.selectionClick();
     final cleanVal = val.trim().toTitleCase();
     if (cleanVal.isNotEmpty) {
       setState(() {
@@ -66,6 +68,7 @@ class _DislikesStepState extends State<DislikesStep> {
   }
 
   void _removeDislike(String val) {
+    HapticFeedback.selectionClick();
     setState(() {
       _selectedDislikes.remove(val);
     });
@@ -73,6 +76,7 @@ class _DislikesStepState extends State<DislikesStep> {
   }
 
   void _toggleSuggestion(String val) {
+    HapticFeedback.selectionClick();
     setState(() {
       if (_selectedDislikes.contains(val)) {
         _selectedDislikes.remove(val);

@@ -6,6 +6,7 @@ class Cookbook {
   final List<Recipe> recipes;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final bool isPlaceholder;
 
   Cookbook({
     required this.id,
@@ -13,6 +14,7 @@ class Cookbook {
     required this.recipes,
     required this.createdAt,
     required this.updatedAt,
+    this.isPlaceholder = false,
   });
 
   factory Cookbook.fromJson(Map<String, dynamic> json) {

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter/services.dart';
 
 class NotificationsStep extends StatefulWidget {
   final List<String> initialSelected;
@@ -72,6 +73,7 @@ class _NotificationsStepState extends State<NotificationsStep> {
                     _selected.clear();
                   }
                 });
+                HapticFeedback.selectionClick();
                 widget.onChanged(_selected.toList());
               },
               style: TextButton.styleFrom(
@@ -143,6 +145,7 @@ class _NotificationsStepState extends State<NotificationsStep> {
               _selected.add(opt['title']!);
             }
           });
+          HapticFeedback.selectionClick();
           widget.onChanged(_selected.toList());
         },
         borderRadius: BorderRadius.circular(16.r),

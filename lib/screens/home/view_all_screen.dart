@@ -457,10 +457,8 @@ class _RecipesGridState extends State<_RecipesGrid> {
         _type == ViewAllType.favorites ||
         _type == ViewAllType.imports ||
         _type == ViewAllType.recentlyViewed) {
-      final notifier = _type == ViewAllType.savedRecipes
+      final notifier = _type == ViewAllType.savedRecipes || _type == ViewAllType.favorites
           ? RecipeService.instance.myRecipesNotifier
-          : _type == ViewAllType.favorites
-          ? RecipeService.instance.favoriteRecipesNotifier
           : _type == ViewAllType.imports
           ? RecipeService.instance.recentImportsNotifier
           : HistoryService.instance.recentlyViewedNotifier;
@@ -473,7 +471,14 @@ class _RecipesGridState extends State<_RecipesGrid> {
               padding: EdgeInsets.fromLTRB(16, 4, 16, 20),
             );
           }
-          return _buildGrid(recipes);
+          
+          final displayList = (_type == ViewAllType.favorites)
+              ? recipes.where((r) => r.isFavorite).toList()
+              : (_type == ViewAllType.savedRecipes)
+                  ? recipes.where((r) => !r.isInCookbook).toList()
+                  : recipes;
+              
+          return _buildGrid(displayList);
         },
       );
     }

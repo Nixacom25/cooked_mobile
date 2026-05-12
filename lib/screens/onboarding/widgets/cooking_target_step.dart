@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:flutter/services.dart';
 
 class CookingTargetStep extends StatefulWidget {
   final String initialTarget;
@@ -85,6 +86,7 @@ class _CookingTargetStepState extends State<CookingTargetStep> {
       padding: EdgeInsets.only(bottom: 16.h),
       child: InkWell(
         onTap: () {
+          HapticFeedback.selectionClick();
           setState(() => _selected = opt['title']!);
           widget.onChanged(_selected);
         },

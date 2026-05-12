@@ -1,7 +1,7 @@
 name: cooked
 description: "A new Flutter project."
 publish_to: 'none' 
-version: 1.0.0+20
+version: 1.0.0+21
 
 environment:
   sdk: ^3.8.1
@@ -48,7 +48,7 @@ dev_dependencies:
 flutter_icons:
   android: true
   ios: true
-  image_path: "assets/favicon/android2.png"
+  image_path: "assets/favicon/android.png"
   min_sdk_android: 21
   remove_alpha_ios: true
 

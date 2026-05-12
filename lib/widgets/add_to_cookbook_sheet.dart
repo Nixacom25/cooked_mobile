@@ -9,6 +9,7 @@ import '../core/widgets/ios_toast.dart';
 import '../core/utils/error_helper.dart';
 import 'red_button.dart';
 import 'skeleton_list.dart';
+import 'skeleton_loader.dart';
 
 class AddToCookbookSheet extends StatefulWidget {
   final Recipe recipe;
@@ -97,7 +98,17 @@ class _AddToCookbookSheetState extends State<AddToCookbookSheet> {
                     }
                   },
                 ),
-                SizedBox(height: 20.h),
+                SizedBox(height: 12.h),
+
+                // Save Only Option - Show only if recipe is suggested/not yet saved permanently
+                if (widget.recipe.isSuggested) ...[
+                  _buildActionTile(
+                    icon: Icons.bookmark_added_rounded,
+                    label: 'Save to My Recipes only',
+                    onTap: _handleSaveOnly,
+                  ),
+                  SizedBox(height: 20.h),
+                ],
 
                 Text(
                   'Select Recipe Books',
@@ -148,8 +159,20 @@ class _AddToCookbookSheetState extends State<AddToCookbookSheet> {
                         physics: const NeverScrollableScrollPhysics(),
                         itemCount: cookbooks.length,
                         separatorBuilder: (_, __) => const Divider(height: 1, color: Color(0xFFF3F4F6)),
-                        itemBuilder: (lCtx, i) {
+                         itemBuilder: (lCtx, i) {
                           final cb = cookbooks[i];
+                          if (cb.isPlaceholder) {
+                            return Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+                              child: Row(
+                                children: [
+                                  const SkeletonLoader(width: 140, height: 16),
+                                  const Spacer(),
+                                  const SkeletonLoader(width: 24, height: 24, borderRadius: 12),
+                                ],
+                              ),
+                            );
+                          }
                           final isSelected = _selectedIds.contains(cb.id);
                           return ListTile(
                             onTap: () {
@@ -238,6 +261,41 @@ class _AddToCookbookSheetState extends State<AddToCookbookSheet> {
     );
   }
 
+  Future<void> _handleSaveOnly() async {
+    setState(() => _isSaving = true);
+    try {
+      if (widget.recipe.id.isEmpty) {
+        // Recipe is not saved yet (Preview mode)
+        await RecipeService.instance.createRecipe(widget.recipe);
+      } else {
+        // If it was a suggestion, validate it so it becomes a permanent part of "My Recipes"
+        if (widget.recipe.origin == 'SUGGESTED') {
+          await RecipeService.instance.validateRecipe(widget.recipe.id);
+        } else {
+          // Just refresh to ensure it's in the list
+          await RecipeService.instance.getMyRecipes(forceRefresh: true);
+        }
+      }
+
+      if (!mounted) return;
+      Navigator.pop(context); // Close sheet
+      widget.onSuccess?.call();
+      IosToast.show(
+        context,
+        message: 'Recipe saved to your collection!',
+        type: ToastType.success,
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isSaving = false);
+      IosToast.show(
+        context,
+        message: ErrorHelper.getFriendlyMessage(e),
+        type: ToastType.error,
+      );
+    }
+  }
+
   Future<void> _handleConfirm() async {
     setState(() => _isSaving = true);
     final idsList = _selectedIds.toList();
@@ -259,7 +317,7 @@ class _AddToCookbookSheetState extends State<AddToCookbookSheet> {
         }
         
         // If it was a suggestion, validate it so it becomes a permanent part of "My Recipes"
-        if (widget.recipe.origin == 'SUGGESTED') {
+        if (widget.recipe.isSuggested) {
           await RecipeService.instance.validateRecipe(widget.recipe.id);
         }
       }

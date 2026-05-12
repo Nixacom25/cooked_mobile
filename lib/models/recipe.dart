@@ -20,7 +20,9 @@ class Recipe {
   final DateTime? expiresAt;
   final String? origin;
   final String? cuisine;
-  final bool isSuggested;
+  bool get isSuggested => expiresAt != null;
+  final bool isInCookbook;
+  final bool isPlaceholder;
 
   Recipe({
     required this.id,
@@ -44,7 +46,8 @@ class Recipe {
     this.expiresAt,
     this.origin,
     this.cuisine,
-    this.isSuggested = false,
+    this.isInCookbook = false,
+    this.isPlaceholder = false,
   });
 
   factory Recipe.fromJson(Map<String, dynamic> json) {
@@ -80,7 +83,7 @@ class Recipe {
           : null,
       origin: json['origin'],
       cuisine: json['cuisine'],
-      isSuggested: json['isSuggested'] ?? false,
+      isInCookbook: json['isInCookbook'] ?? json['inCookbook'] ?? false,
     );
   }
 
@@ -107,7 +110,7 @@ class Recipe {
       'expiresAt': expiresAt?.toIso8601String(),
       'origin': origin,
       'cuisine': cuisine,
-      'isSuggested': isSuggested,
+      'isInCookbook': isInCookbook,
     };
   }
 
@@ -133,7 +136,7 @@ class Recipe {
     DateTime? expiresAt,
     String? origin,
     String? cuisine,
-    bool? isSuggested,
+    bool? isInCookbook,
   }) {
     return Recipe(
       id: id ?? this.id,
@@ -157,9 +160,17 @@ class Recipe {
       expiresAt: expiresAt ?? this.expiresAt,
       origin: origin ?? this.origin,
       cuisine: cuisine ?? this.cuisine,
-      isSuggested: isSuggested ?? this.isSuggested,
+      isInCookbook: isInCookbook ?? this.isInCookbook,
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Recipe && runtimeType == other.runtimeType && id == other.id;
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class RecipeCreator {
@@ -255,4 +266,12 @@ class RecipeIngredient {
       'icon': icon,
     };
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is RecipeIngredient && runtimeType == other.runtimeType && id == other.id;
+
+  @override
+  int get hashCode => id.hashCode;
 }

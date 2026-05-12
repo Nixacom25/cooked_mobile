@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../core/extensions/string_extensions.dart';
+import 'package:flutter/services.dart';
 
 class AllergyOption {
   final String title;
@@ -61,6 +62,7 @@ class _AllergiesStepState extends State<AllergiesStep> {
   }
 
   void _toggleOption(String title) {
+    HapticFeedback.selectionClick();
     setState(() {
       if (title == 'No allergies') {
         _selectedAllergies.clear();
@@ -80,6 +82,7 @@ class _AllergiesStepState extends State<AllergiesStep> {
   }
 
   void _addCustomAllergy() {
+    HapticFeedback.selectionClick();
     final val = _otherController.text.trim().toTitleCase();
     if (val.isNotEmpty) {
       setState(() {
@@ -96,6 +99,7 @@ class _AllergiesStepState extends State<AllergiesStep> {
   }
 
   void _removeCustomAllergy(String val) {
+    HapticFeedback.selectionClick();
     setState(() {
       _customAllergies.remove(val);
       _selectedAllergies.remove(val);

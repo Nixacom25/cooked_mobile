@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:flutter/services.dart';
 
 class FlavorSpiceStep extends StatefulWidget {
   final Map<String, int> initialDna;
@@ -130,6 +131,7 @@ class _FlavorSpiceStepState extends State<FlavorSpiceStep> {
                     final active = index < chiliCount;
                     return GestureDetector(
                       onTap: () {
+                        HapticFeedback.selectionClick();
                         setState(() => _spice = _levels[index]['title']!);
                         _notifyChange();
                       },
@@ -252,6 +254,9 @@ class _FlavorSpiceStepState extends State<FlavorSpiceStep> {
                       min: 0,
                       max: 100,
                       onChanged: (val) {
+                        if ((val - _dna[key]!).abs() > 5) {
+                          HapticFeedback.selectionClick();
+                        }
                         setState(() => _dna[key] = val.toInt());
                         _notifyChange();
                       },

@@ -93,15 +93,12 @@ class _ProfileLoadingStepState extends State<ProfileLoadingStep>
                     SizedBox(
                       width: 130.r,
                       height: 130.r,
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(65.r),
-                        child: LinearProgressIndicator(
-                          valueColor: const AlwaysStoppedAnimation<Color>(
-                            Color(0xFFC83A2D),
-                          ),
-                          backgroundColor: const Color(0xFFF3F4F6),
-                          value: _progressController.value,
+                      child: CircularProgressIndicator(
+                        valueColor: const AlwaysStoppedAnimation<Color>(
+                          Color(0xFFC83A2D),
                         ),
+                        strokeWidth: 4.w,
+                        value: _progressController.value,
                       ),
                     ),
                   ],

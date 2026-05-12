@@ -7,10 +7,11 @@ class GroceryItem {
   final String? recipeName;
   final String? recipeImage;
   final String quantity;
-  final bool isBought;
+  bool isBought;
   final DateTime? plannedDate;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final bool isPlaceholder;
 
   GroceryItem({
     required this.id,
@@ -25,6 +26,7 @@ class GroceryItem {
     this.plannedDate,
     required this.createdAt,
     required this.updatedAt,
+    this.isPlaceholder = false,
   });
 
   factory GroceryItem.fromJson(Map<String, dynamic> json) {

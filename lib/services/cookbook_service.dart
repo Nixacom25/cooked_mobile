@@ -72,7 +72,20 @@ class CookbookService {
     );
 
     if (response.statusCode == 200) {
-      getMyCookbooks(forceRefresh: true).then((_) => null).catchError((_) => null);
+      // 1. Insert partial skeleton (placeholder)
+      if (myCookbooksNotifier.value != null) {
+        final placeholder = Cookbook(
+          id: 'pending_${DateTime.now().millisecondsSinceEpoch}',
+          name: name,
+          recipes: [],
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+          isPlaceholder: true,
+        );
+        myCookbooksNotifier.value = [placeholder, ...myCookbooksNotifier.value!];
+      }
+
+      await getMyCookbooks(forceRefresh: true);
       final cookbook = Cookbook.fromJson(jsonDecode(response.body));
       _cache[cookbook.id] = cookbook;
       return cookbook;
@@ -95,7 +108,8 @@ class CookbookService {
     );
 
     if (response.statusCode == 200) {
-      getMyCookbooks(forceRefresh: true).then((_) => null).catchError((_) => null);
+      // Just refresh without full skeleton
+      await getMyCookbooks(forceRefresh: true);
       final cookbook = Cookbook.fromJson(jsonDecode(response.body));
       _cache[id] = cookbook;
       return cookbook;
@@ -113,7 +127,8 @@ class CookbookService {
       throw Exception('Unable to delete cookbook.');
     }
     _cache.remove(id);
-    getMyCookbooks(forceRefresh: true).catchError((_) => <Cookbook>[]);
+    // Just refresh without full skeleton
+    await getMyCookbooks(forceRefresh: true);
   }
 
   Future<Cookbook> addRecipeToCookbook(
@@ -128,6 +143,15 @@ class CookbookService {
       return updateCookbook(cookbookId, cb.name, ids);
     }
     return cb;
+  }
+
+  Future<Cookbook> removeRecipeFromCookbook(
+    String cookbookId,
+    String recipeId,
+  ) async {
+    final cb = await getCookbook(cookbookId, forceRefresh: true);
+    final ids = cb.recipes.map((r) => r.id).where((id) => id != recipeId).toList();
+    return updateCookbook(cookbookId, cb.name, ids);
   }
 
   void clearData() {

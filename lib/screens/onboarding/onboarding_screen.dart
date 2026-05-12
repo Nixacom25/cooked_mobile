@@ -383,24 +383,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
     if (_acceptedTerms || isGuest) {
       // Immediate loading to prevent visible delay before social picker
-      if (provider != 'LOCAL') {
-        _startAnalysisLoading();
-        setState(() => _isLoading = true);
-        // Ensure the loading frame is rendered before social picker takes over
-        await Future.delayed(const Duration(milliseconds: 50));
-      }
       _submitPreferencesActual(provider: provider, isGuest: isGuest);
       return;
     }
 
     TermsValidationModal.show(context, onAccepted: () async {
       setState(() => _acceptedTerms = true);
-      
-      if (provider != 'LOCAL') {
-        _startAnalysisLoading();
-        setState(() => _isLoading = true);
-        await Future.delayed(const Duration(milliseconds: 50));
-      }
       
       _submitPreferencesActual(provider: provider, isGuest: isGuest);
     });
@@ -429,8 +417,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       return;
     }
 
-    // If not already set by _submitPreferences (e.g. for LOCAL flow)
-    if (!_isLoading) {
+    // If not already set (e.g. for LOCAL flow)
+    if (!isSocial && !_isLoading) {
       _startAnalysisLoading();
       setState(() => _isLoading = true);
     }
@@ -440,12 +428,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         if (!isSocial) {
           // Standard Email Signup
           // Split name if it contains a space and lastname is empty
-          String finalFirst = _firstName;
+          String finalFirst = _firstName.isNotEmpty ? _firstName : 'Chef';
           String finalLast = _lastName;
           if (_lastName.isEmpty && _firstName.contains(' ')) {
-            final parts = _firstName.trim().split(' ');
-            finalFirst = parts.first;
-            finalLast = parts.sublist(1).join(' ');
+            final trimmedName = _firstName.trim();
+            final lastSpaceIndex = trimmedName.lastIndexOf(' ');
+            finalFirst = trimmedName.substring(0, lastSpaceIndex).trim();
+            finalLast = trimmedName.substring(lastSpaceIndex + 1).trim();
           }
 
           await AuthService.instance.register(
@@ -490,6 +479,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             );
           }
 
+          // Start loading ONLY after the social modal has been dismissed by the user
+          _startAnalysisLoading();
+          setState(() => _isLoading = true);
+
           developer.log('Social Auth Result: $socialRes', name: 'OnboardingScreen');
 
           if (socialRes['success'] != true) {
@@ -501,13 +494,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               ? socialRes['email']
               : _email;
 
-          String finalFirst = _firstName.isNotEmpty ? _firstName : (socialRes['firstname'] ?? '');
+          String finalFirst = _firstName.isNotEmpty ? _firstName : (socialRes['firstname']?.toString().isNotEmpty == true ? socialRes['firstname'] : 'Chef');
           String finalLast = _lastName.isNotEmpty ? _lastName : (socialRes['lastname'] ?? '');
           
           if (finalLast.isEmpty && finalFirst.contains(' ')) {
-            final parts = finalFirst.trim().split(' ');
-            finalFirst = parts.first;
-            finalLast = parts.sublist(1).join(' ');
+            final trimmedName = finalFirst.trim();
+            final lastSpaceIndex = trimmedName.lastIndexOf(' ');
+            finalFirst = trimmedName.substring(0, lastSpaceIndex).trim();
+            finalLast = trimmedName.substring(lastSpaceIndex + 1).trim();
           }
 
           if (finalEmail.isEmpty) {
@@ -619,12 +613,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           children: [
             Image.asset(
               'assets/images/logo2.png',
-              width: 120.w,
+              width: 100.w,
               fit: BoxFit.contain,
             ),
             SizedBox(height: 24.h),
             LoadingText(
-              text: 'Analyzing',
+              text: 'Connecting',
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 18.sp,
@@ -811,7 +805,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       ),
                       ProfileLoadingStep(onComplete: _onContinue),
                       ProfileSummaryStep(
-                        firstName: _firstName,
                         favoriteCuisines: _favoriteCuisines,
                         flavorDna: _flavorDna.keys.toList(),
                         recipeCount: _calculateRecipeCount(),
@@ -838,25 +831,27 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         onGuest: () => _submitPreferences(isGuest: true),
                       ),
                       AccountStep(
-                        initialFullName: _firstName,
                         initialEmail: _email,
                         initialPassword: _password,
                         initialPhone: _phone,
                         initialAcceptedTerms: _acceptedTerms,
+                        
                         onChanged:
                             ({
-                              required fullName,
                               required email,
                               required password,
                               required phone,
                               required acceptedTerms,
+                              firstname,
+                              lastname,
                             }) {
                               setState(() {
-                                _firstName = fullName;
                                 _email = email;
                                 _password = password;
                                 _phone = phone;
                                 _acceptedTerms = acceptedTerms;
+                                _firstName = firstname ?? '';
+                                _lastName = lastname ?? '';
                               });
                             },
                       ),
@@ -912,7 +907,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             label: _currentPage == 19
                                 ? (_selectedPlanId == 'yearly'
                                     ? 'Start My 3-Day Free Trial'
-                                    : 'Start Monthly Subscription')
+                                    : 'Continue')
                                 : 'Continue',
                             loadingLabel: _currentPage == 19 ? 'Processing' : 'Continuing',
                             isLoading: _isLoading,

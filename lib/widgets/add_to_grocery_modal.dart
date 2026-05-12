@@ -8,8 +8,15 @@ import 'red_button.dart';
 
 class AddToGroceryModal extends StatefulWidget {
   final Recipe recipe;
+  final int currentServings;
+  final int originalServings;
 
-  const AddToGroceryModal({super.key, required this.recipe});
+  const AddToGroceryModal({
+    super.key,
+    required this.recipe,
+    this.currentServings = 1,
+    this.originalServings = 1,
+  });
 
   @override
   State<AddToGroceryModal> createState() => _AddToGroceryModalState();
@@ -25,6 +32,24 @@ class _AddToGroceryModalState extends State<AddToGroceryModal> {
   void initState() {
     super.initState();
     _selectedIngredients = List.generate(widget.recipe.ingredients.length, (_) => true);
+  }
+
+  String _formatScaledQuantity(RecipeIngredient ing) {
+    if (ing.amount == 0) return ing.quantity;
+    
+    double scaledAmount = (ing.amount * widget.currentServings) / widget.originalServings;
+    
+    String formattedAmount;
+    if (scaledAmount == scaledAmount.toInt()) {
+      formattedAmount = scaledAmount.toInt().toString();
+    } else {
+      formattedAmount = scaledAmount.toStringAsFixed(1);
+      if (formattedAmount.endsWith('.0')) {
+        formattedAmount = formattedAmount.substring(0, formattedAmount.length - 2);
+      }
+    }
+    
+    return ing.unit.isEmpty ? formattedAmount : '$formattedAmount ${ing.unit}';
   }
 
   bool get _canSubmit => _selectedIngredients.any((selected) => selected) && !_isSaving;
@@ -44,7 +69,7 @@ class _AddToGroceryModalState extends State<AddToGroceryModal> {
       for (var ing in selectedItems) {
         await GroceryService.instance.addGroceryItem(
           name: ing.name,
-          quantity: ing.quantity,
+          quantity: _formatScaledQuantity(ing),
           icon: ing.icon,
           recipeId: widget.recipe.id,
           date: _isSpecificDate ? (_selectedDate ?? DateTime.now()) : null,
@@ -185,7 +210,7 @@ class _AddToGroceryModalState extends State<AddToGroceryModal> {
                             ),
                           ),
                           subtitle: Text(
-                            ing.quantity,
+                            _formatScaledQuantity(ing),
                             style: TextStyle(
                               fontFamily: 'SF Pro',
                               fontSize: 13.sp,

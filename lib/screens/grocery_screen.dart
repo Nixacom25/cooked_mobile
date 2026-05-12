@@ -23,7 +23,8 @@ class GroceryScreen extends StatefulWidget {
 }
 
 class _GroceryScreenState extends State<GroceryScreen> {
-  // We'll use the notifier from GroceryService
+  final Set<String> _collapsedGroups = {};
+  bool _initializedDefaults = false;
 
   @override
   void initState() {
@@ -48,11 +49,33 @@ class _GroceryScreenState extends State<GroceryScreen> {
     final groups = <String, List<GroceryItem>>{};
     
     // Sort items so null dates come first, then chronologically
-    final sorted = List<GroceryItem>.from(allItems)..sort((a, b) {
-      if (a.plannedDate == null && b.plannedDate == null) return 0;
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+
+    // 1. Filter out past dates (keep null and today/future)
+    final filteredItems = allItems.where((item) {
+      if (item.plannedDate == null) return true;
+      final itemDate = DateTime(
+        item.plannedDate!.year,
+        item.plannedDate!.month,
+        item.plannedDate!.day,
+      );
+      return !itemDate.isBefore(today);
+    }).toList();
+
+    // 2. Sort items: General items first (newest first), then upcoming dates (closest first)
+    final sorted = filteredItems..sort((a, b) {
+      if (a.plannedDate == null && b.plannedDate == null) {
+        return b.createdAt.compareTo(a.createdAt);
+      }
       if (a.plannedDate == null) return -1;
       if (b.plannedDate == null) return 1;
-      return a.plannedDate!.compareTo(b.plannedDate!);
+      
+      final dateComp = a.plannedDate!.compareTo(b.plannedDate!);
+      if (dateComp != 0) return dateComp;
+      
+      // Same date: newest first
+      return b.createdAt.compareTo(a.createdAt);
     });
 
     for (final item in sorted) {
@@ -120,69 +143,114 @@ class _GroceryScreenState extends State<GroceryScreen> {
 
                       final grouped = _getGroupedByDate(allItems);
 
+                      // Initialize defaults: General items open, or first date if general is empty
+                      if (!_initializedDefaults && grouped.isNotEmpty) {
+                        final keys = grouped.keys.toList();
+                        final hasGeneral = keys.contains('General items');
+                        final openKey = hasGeneral ? 'General items' : keys.first;
+                        
+                        for (final key in keys) {
+                          if (key != openKey) {
+                            _collapsedGroups.add(key);
+                          }
+                        }
+                        _initializedDefaults = true;
+                      }
+
                       return ListView.builder(
                         padding: EdgeInsets.only(bottom: 120.h),
                         itemCount: grouped.length,
                         itemBuilder: (_, gi) {
                           final dateKey = grouped.keys.elementAt(gi);
                           final items = grouped[dateKey]!;
+                          final isCollapsed = _collapsedGroups.contains(dateKey);
 
                           return Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Padding(
-                                padding: EdgeInsets.fromLTRB(
-                                  18,
-                                  gi == 0 ? 14 : 28,
-                                  18,
-                                  4,
-                                ),
-                                child: Text(
-                                  dateKey,
-                                  style: TextStyle(
-                                    fontFamily: 'SF Pro',
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 18.sp,
-                                    color: dateKey == 'General items' 
-                                        ? const Color(0xFF1A1A1A)
-                                        : const Color(0xFFC83A2D),
+                              GestureDetector(
+                                onTap: () {
+                                  HapticFeedback.lightImpact();
+                                  setState(() {
+                                    if (_collapsedGroups.contains(dateKey)) {
+                                      _collapsedGroups.remove(dateKey);
+                                    } else {
+                                      _collapsedGroups.add(dateKey);
+                                    }
+                                  });
+                                },
+                                child: Container(
+                                  width: double.infinity,
+                                  color: Colors.transparent, // For better hit testing
+                                  padding: EdgeInsets.fromLTRB(
+                                    18,
+                                    gi == 0 ? 14 : 24,
+                                    18,
+                                    12,
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        dateKey,
+                                        style: TextStyle(
+                                          fontFamily: 'SF Pro',
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 18.sp,
+                                          color: dateKey == 'General items' 
+                                              ? const Color(0xFF1A1A1A)
+                                              : const Color(0xFFC83A2D),
+                                        ),
+                                      ),
+                                      Icon(
+                                        isCollapsed 
+                                            ? Icons.keyboard_arrow_right_rounded 
+                                            : Icons.keyboard_arrow_down_rounded,
+                                        color: Colors.black,
+                                        size: 20.sp,
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ),
-                              ...items.map((item) {
-                                return Column(
-                                  children: [
-                                    _ItemRow(
-                                      item: item,
-                                      onToggle: () async {
-                                        HapticFeedback.selectionClick();
-                                        try {
-                                          await GroceryService.instance
-                                              .toggleBought(item.id);
-                                        } catch (e) {
-                                          IosToast.show(context, message: ErrorHelper.getFriendlyMessage(e), type: ToastType.error);
-                                        }
-                                      },
-                                      onDelete: () async {
-                                        HapticFeedback.mediumImpact();
-                                        try {
-                                          await GroceryService.instance
-                                              .deleteGroceryItem(item.id);
-                                        } catch (e) {
-                                          IosToast.show(context, message: ErrorHelper.getFriendlyMessage(e), type: ToastType.error);
-                                        }
-                                      },
-                                    ),
-                                    const Divider(
-                                      height: 0,
-                                      thickness: 1,
-                                      color: Color(0xFFF2F2F2),
-                                      indent: 18,
-                                      endIndent: 18,
-                                    ),
-                                  ],
-                                );
-                              }),
+                              if (!isCollapsed)
+                                ...items.map((item) {
+                                  if (item.isPlaceholder) {
+                                    return const GrocerySkeletonItem();
+                                  }
+                                  return Column(
+                                    children: [
+                                      _ItemRow(
+                                        item: item,
+                                        onToggle: () async {
+                                          HapticFeedback.selectionClick();
+                                          try {
+                                            await GroceryService.instance
+                                                .toggleBought(item.id);
+                                          } catch (e) {
+                                            IosToast.show(context, message: ErrorHelper.getFriendlyMessage(e), type: ToastType.error);
+                                          }
+                                        },
+                                        onDelete: () async {
+                                          HapticFeedback.mediumImpact();
+                                          try {
+                                            await GroceryService.instance
+                                                .deleteGroceryItem(item.id);
+                                          } catch (e) {
+                                            IosToast.show(context, message: ErrorHelper.getFriendlyMessage(e), type: ToastType.error);
+                                          }
+                                        },
+                                      ),
+                                      const Divider(
+                                        height: 0,
+                                        thickness: 1,
+                                        color: Color(0xFFF2F2F2),
+                                        indent: 18,
+                                        endIndent: 18,
+                                      ),
+                                    ],
+                                  );
+                                }),
                             ],
                           );
                         },
@@ -393,7 +461,7 @@ class _ItemRow extends StatelessWidget {
               SizedBox(width: 14.w),
               Text(
                 item.ingredientIcon ?? '🛒',
-                style: TextStyle(fontSize: 18.sp),
+                style: TextStyle(fontSize: 15.sp),
               ),
               SizedBox(width: 5.w),
               Expanded(
@@ -402,7 +470,7 @@ class _ItemRow extends StatelessWidget {
                   style: TextStyle(
                     fontFamily: 'SF Pro',
                     fontWeight: FontWeight.w500,
-                    fontSize: 16.sp,
+                    fontSize: 15.sp,
                     color: item.isBought
                         ? const Color(0xFFAAAAAA)
                         : const Color(0xFF1A1A1A),
@@ -467,6 +535,7 @@ class _AddGrocerySheetState extends State<_AddGrocerySheet> {
   void initState() {
     super.initState();
     _date = widget.selectedDate;
+    _qtyController.text = '1';
     if (RecipeService.instance.myRecipesNotifier.value == null) {
       RecipeService.instance.getMyRecipes();
     }
@@ -658,7 +727,7 @@ class _AddGrocerySheetState extends State<_AddGrocerySheet> {
                                 padding: EdgeInsets.symmetric(horizontal: 16.w),
                                 child: Text(
                                   hasRecipes ? 'Pick a recipe' : 'No recipes found.',
-                                  style: TextStyle(color: Colors.white60, fontSize: 14.sp)
+                                  style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 14.sp),
                                 ),
                               ),
                               icon: Padding(
@@ -722,7 +791,7 @@ class _AddGrocerySheetState extends State<_AddGrocerySheet> {
                         ),
                         decoration: InputDecoration(
                           hintText: 'e.g. Garlic',
-                          hintStyle: TextStyle(color: Colors.white38),
+                          hintStyle: TextStyle(color: Colors.black.withOpacity(0.4)),
                           contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
                           border: InputBorder.none,
                         ),
@@ -796,11 +865,11 @@ class _AddGrocerySheetState extends State<_AddGrocerySheet> {
                         style: TextStyle(
                           fontFamily: 'SF Pro',
                           fontSize: 14.sp,
-                          color: Colors.black,
+                          color: Colors.white,
                         ),
                         decoration: InputDecoration(
                           hintText: 'e.g. 2 cloves',
-                          hintStyle: TextStyle(color: Colors.white38),
+                          hintStyle: TextStyle(color: Colors.white.withOpacity(0.4)),
                           contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
                           border: InputBorder.none,
                         ),

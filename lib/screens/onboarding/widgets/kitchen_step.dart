@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../core/extensions/string_extensions.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:flutter/services.dart';
 
 class KitchenStep extends StatefulWidget {
   final List<String> initialSelected;
@@ -199,6 +200,7 @@ class _KitchenStepState extends State<KitchenStep> {
     final bool isSelected = _selected.contains(app['title']);
     return InkWell(
       onTap: () {
+        HapticFeedback.selectionClick();
         setState(() {
           if (isSelected) {
             _selected.remove(app['title']);

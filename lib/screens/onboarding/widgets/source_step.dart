@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import '../../../core/extensions/string_extensions.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import '../../../core/extensions/string_extensions.dart';
 
 class DiscoverySource {
   final String label;
@@ -56,6 +57,7 @@ class _SourceStepState extends State<SourceStep> {
   }
 
   void _handleSourceTap(String source) {
+    HapticFeedback.selectionClick();
     setState(() {
       _selectedSource = source;
     });

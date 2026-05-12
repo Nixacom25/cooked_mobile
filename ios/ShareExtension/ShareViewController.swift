@@ -52,10 +52,11 @@ class ShareViewController: SLComposeServiceViewController {
         userDefaults?.synchronize()
         
         // Open the host app
+        // Open the host app using the lowercase scheme matching Info.plist
         var responder: UIResponder? = self
         while responder != nil {
             if let application = responder as? UIApplication {
-                application.open(URL(string: "Cooked://")!, options: [:], completionHandler: nil)
+                application.open(URL(string: "cooked://")!, options: [:], completionHandler: nil)
                 break
             }
             responder = responder?.next
