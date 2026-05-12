@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class AccountStep extends StatefulWidget {
@@ -135,8 +136,10 @@ class _AccountStepState extends State<AccountStep> {
                   color: const Color(0xFF7B8190),
                   size: 20,
                 ),
-                onPressed: () =>
-                    setState(() => _obscurePassword = !_obscurePassword),
+                onPressed: () {
+                  HapticFeedback.selectionClick();
+                  setState(() => _obscurePassword = !_obscurePassword);
+                },
               ),
             ),
 
@@ -157,8 +160,10 @@ class _AccountStepState extends State<AccountStep> {
                   color: const Color(0xFF7B8190),
                   size: 20,
                 ),
-                onPressed: () =>
-                    setState(() => _obscureConfirm = !_obscureConfirm),
+                onPressed: () {
+                  HapticFeedback.selectionClick();
+                  setState(() => _obscureConfirm = !_obscureConfirm);
+                },
               ),
             ),
 

@@ -11,6 +11,7 @@ import '../../core/widgets/ios_toast.dart';
 import '../../core/utils/error_helper.dart';
 import '../../widgets/add_to_grocery_modal.dart';
 import '../../widgets/add_to_cookbook_sheet.dart';
+import '../../widgets/skeleton_loader.dart';
 
 enum DetailTab { steps, ingredients, equipment }
 
@@ -955,7 +956,7 @@ class _RecipeDetailHeaderDelegate extends SliverPersistentHeaderDelegate {
           height: height,
           color: const Color(0xFFF2F1EF),
           child: const Center(
-            child: CircularProgressIndicator(color: Color(0xFFC83A2D)),
+            child: SkeletonLoader(width: 40, height: 40, borderRadius: 20),
           ),
         ),
       );

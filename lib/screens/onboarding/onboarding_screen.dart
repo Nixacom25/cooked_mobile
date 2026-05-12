@@ -1,5 +1,7 @@
+import 'dart:async';
 import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../routes/app_routes.dart';
 import '../../services/user_service.dart';
@@ -34,6 +36,8 @@ import '../../core/utils/error_helper.dart';
 
 import '../../core/widgets/terms_validation_modal.dart';
 import 'onboarding_storage.dart';
+import '../../widgets/red_button.dart';
+import '../../widgets/loading_text.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -46,6 +50,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   late PageController _pageController;
   int _currentPage = 0;
   bool _isLoading = false;
+  int _analysisDotCount = 0;
+  Timer? _analysisTimer;
 
   // IAP
   List<ProductDetails> _products = [];
@@ -168,6 +174,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   void dispose() {
     IapService.instance.dispose();
     _pageController.dispose();
+    _analysisTimer?.cancel();
     super.dispose();
   }
 
@@ -291,6 +298,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   Future<void> _onContinue() async {
+    HapticFeedback.selectionClick();
     FocusScope.of(context).unfocus();
     if (_currentPage == 0) {
       // LanguageRegionStep - No mandatory fields for now, or check country
@@ -345,6 +353,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   void _onBack() {
+    HapticFeedback.selectionClick();
     FocusScope.of(context).unfocus();
     if (_currentPage == 20) return; // Prevent going back during final loading
     if (_currentPage == 15) {
@@ -370,14 +379,29 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     bool isGuest = false,
     String provider = 'LOCAL',
   }) async {
+    HapticFeedback.selectionClick();
 
-    if (_acceptedTerms) {
+    if (_acceptedTerms || isGuest) {
+      // Immediate loading to prevent visible delay before social picker
+      if (provider != 'LOCAL') {
+        _startAnalysisLoading();
+        setState(() => _isLoading = true);
+        // Ensure the loading frame is rendered before social picker takes over
+        await Future.delayed(const Duration(milliseconds: 50));
+      }
       _submitPreferencesActual(provider: provider, isGuest: isGuest);
       return;
     }
 
-    TermsValidationModal.show(context, onAccepted: () {
+    TermsValidationModal.show(context, onAccepted: () async {
       setState(() => _acceptedTerms = true);
+      
+      if (provider != 'LOCAL') {
+        _startAnalysisLoading();
+        setState(() => _isLoading = true);
+        await Future.delayed(const Duration(milliseconds: 50));
+      }
+      
       _submitPreferencesActual(provider: provider, isGuest: isGuest);
     });
   }
@@ -405,7 +429,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       return;
     }
 
-    setState(() => _isLoading = true);
+    // If not already set by _submitPreferences (e.g. for LOCAL flow)
+    if (!_isLoading) {
+      _startAnalysisLoading();
+      setState(() => _isLoading = true);
+    }
 
     try {
       if (!isGuest) {
@@ -548,6 +576,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _isLoading = false);
+      _stopAnalysisLoading();
 
       final errorMsg = ErrorHelper.getFriendlyMessage(e).replaceAll('Exception: ', '');
       
@@ -563,6 +592,50 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         type: ToastType.error,
       );
     }
+  }
+
+  void _startAnalysisLoading() {
+    _analysisDotCount = 0;
+    _analysisTimer?.cancel();
+    _analysisTimer = Timer.periodic(const Duration(milliseconds: 500), (timer) {
+      if (mounted) {
+        setState(() {
+          _analysisDotCount = (_analysisDotCount + 1) % 4;
+        });
+      }
+    });
+  }
+
+  void _stopAnalysisLoading() {
+    _analysisTimer?.cancel();
+  }
+
+  Widget _buildFullScreenLoading() {
+    return Container(
+      color: Colors.black.withOpacity(0.7),
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Image.asset(
+              'assets/images/logo2.png',
+              width: 120.w,
+              fit: BoxFit.contain,
+            ),
+            SizedBox(height: 24.h),
+            LoadingText(
+              text: 'Analyzing',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 18.sp,
+                fontWeight: FontWeight.w700,
+                fontFamily: 'SF Pro',
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -831,56 +904,23 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   SafeArea(
                     top: false,
                     child: Padding(
-                      padding: EdgeInsets.fromLTRB(24.w, 10.h, 24.w, 20.h),
+                      padding: EdgeInsets.fromLTRB(24.w, 5.h, 24.w, 15.h),
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          SizedBox(
-                            width: double.infinity,
-                            height: 56.h,
-                            child: ElevatedButton(
-                              onPressed:
-                                  (_isLoading ||
-                                      (_currentPage == 1 && // SourceStep
-                                          _source == null) ||
-                                      (_currentPage == 17 && // AccountStep
-                                          (_email.isEmpty ||
-                                              _password.isEmpty ||
-                                              !_acceptedTerms)))
-                                  ? null
-                                  : _onContinue,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFFC83A2D),
-                                foregroundColor: Colors.white,
-                                disabledBackgroundColor: const Color(0xFFE5E7EB),
-                                disabledForegroundColor: const Color(0xFF9CA3AF),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(30.r),
-                                ),
-                                elevation: 0,
-                              ),
-                              child: _isLoading
-                                  ? SizedBox(
-                                      height: 24.r,
-                                      width: 24.r,
-                                      child: const CircularProgressIndicator(
-                                        color: Colors.white,
-                                        strokeWidth: 2.5,
-                                      ),
-                                    )
-                                  : Text(
-                                      _currentPage == 19 // TrialStep
-                                          ? (_selectedPlanId == 'yearly'
-                                              ? 'Start My 3-Day Free Trial'
-                                              : 'Start Monthly Subscription')
-                                          : 'Continue',
-                                      style: TextStyle(
-                                        fontSize: 18.sp,
-                                        fontWeight: FontWeight.w700,
-                                        fontFamily: 'SF Pro',
-                                      ),
-                                    ),
-                            ),
+                          RedButton(
+                            label: _currentPage == 19
+                                ? (_selectedPlanId == 'yearly'
+                                    ? 'Start My 3-Day Free Trial'
+                                    : 'Start Monthly Subscription')
+                                : 'Continue',
+                            loadingLabel: _currentPage == 19 ? 'Processing' : 'Continuing',
+                            isLoading: _isLoading,
+                            isDisabled: (_currentPage == 1 && _source == null) ||
+                                (_currentPage == 17 && (_email.isEmpty || _password.isEmpty || !_acceptedTerms)),
+                            onTap: _onContinue,
+                            height: 55.h,
+                            fontSize: 18.sp,
                           ),
                           if (_currentPage == 19) ...[
                             // TrialStep
@@ -935,6 +975,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               ],
             ),
           ),
+          if (_isLoading) _buildFullScreenLoading(),
         ],
       ),
     ),

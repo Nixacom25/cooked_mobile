@@ -20,6 +20,7 @@ class Recipe {
   final DateTime? expiresAt;
   final String? origin;
   final String? cuisine;
+  final bool isSuggested;
 
   Recipe({
     required this.id,
@@ -43,6 +44,7 @@ class Recipe {
     this.expiresAt,
     this.origin,
     this.cuisine,
+    this.isSuggested = false,
   });
 
   factory Recipe.fromJson(Map<String, dynamic> json) {
@@ -78,6 +80,7 @@ class Recipe {
           : null,
       origin: json['origin'],
       cuisine: json['cuisine'],
+      isSuggested: json['isSuggested'] ?? false,
     );
   }
 
@@ -104,6 +107,7 @@ class Recipe {
       'expiresAt': expiresAt?.toIso8601String(),
       'origin': origin,
       'cuisine': cuisine,
+      'isSuggested': isSuggested,
     };
   }
 
@@ -129,6 +133,7 @@ class Recipe {
     DateTime? expiresAt,
     String? origin,
     String? cuisine,
+    bool? isSuggested,
   }) {
     return Recipe(
       id: id ?? this.id,
@@ -152,6 +157,7 @@ class Recipe {
       expiresAt: expiresAt ?? this.expiresAt,
       origin: origin ?? this.origin,
       cuisine: cuisine ?? this.cuisine,
+      isSuggested: isSuggested ?? this.isSuggested,
     );
   }
 }

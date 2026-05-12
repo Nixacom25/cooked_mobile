@@ -1,5 +1,10 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import '../../../services/user_service.dart';
+import '../../../services/recipe_service.dart';
+import '../../../services/cookbook_service.dart';
 
 class RecipeGenerationLoadingStep extends StatefulWidget {
   final VoidCallback? onComplete;
@@ -15,6 +20,8 @@ class _RecipeGenerationLoadingStepState
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _progressAnimation;
+  Timer? _pollingTimer;
+  bool _isNavigating = false;
 
   final List<Map<String, String>> _steps = [
     {'icon': '🥕', 'text': 'Building your recommendations'},
@@ -28,28 +35,80 @@ class _RecipeGenerationLoadingStepState
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 5), // Fixed 5-second animation
+      duration: const Duration(seconds: 15), // Longer slow progress
     );
 
-    _progressAnimation = Tween<double>(begin: 0, end: 100).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.linear),
+    _progressAnimation = Tween<double>(begin: 0, end: 90).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
     )..addListener(() {
         setState(() {});
       });
 
-    _controller.addStatusListener((status) {
-      if (status == AnimationStatus.completed) {
+    _controller.forward();
+    _startPolling();
+  }
+
+  void _startPolling() {
+    _pollingTimer?.cancel();
+    _pollingTimer = Timer.periodic(const Duration(seconds: 3), (timer) async {
+      if (_isNavigating) return;
+      try {
+        final user = await UserService.instance.getCurrentUser();
+        if (user['suggestionsReady'] == true) {
+          timer.cancel();
+          _onSuggestionsReady();
+        }
+      } catch (e) {
+        debugPrint('Polling error: $e');
+      }
+    });
+  }
+
+  Future<void> _onSuggestionsReady() async {
+    if (_isNavigating) return;
+
+    // Speed up progress to 100%
+    _progressAnimation = Tween<double>(
+      begin: _progressAnimation.value,
+      end: 100,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeIn));
+    _controller.duration = const Duration(milliseconds: 800);
+    _controller.forward(from: 0);
+
+    // Prefetch data
+    try {
+      await Future.wait([
+        RecipeService.instance.getHomeSuggestions(forceRefresh: true),
+        RecipeService.instance.getMyRecipes(forceRefresh: true),
+        CookbookService.instance.getMyCookbooks(forceRefresh: true),
+      ]);
+
+      final suggestions = RecipeService.instance.homeSuggestionsNotifier.value;
+      if (suggestions != null && mounted) {
+        final images = suggestions.take(6).map((r) => r.image).toList();
+        for (var url in images) {
+          if (url != null && url.isNotEmpty) {
+            precacheImage(CachedNetworkImageProvider(url), context);
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('Prefetch error: $e');
+    }
+
+    if (mounted) {
+      setState(() => _isNavigating = true);
+      Future.delayed(const Duration(milliseconds: 500), () {
         if (mounted && widget.onComplete != null) {
           widget.onComplete!();
         }
-      }
-    });
-
-    _controller.forward();
+      });
+    }
   }
 
   @override
   void dispose() {
+    _pollingTimer?.cancel();
     _controller.dispose();
     super.dispose();
   }
@@ -183,10 +242,7 @@ class _RecipeGenerationLoadingStepState
                           width: 2.w,
                         ),
                       ),
-                      child: isLast ? Padding(
-                        padding: EdgeInsets.all(4.r),
-                        child: const CircularProgressIndicator(strokeWidth: 2, color: Color(0xFFE5E7EB)),
-                      ) : null,
+                      child: isLast ? const SizedBox.shrink() : null,
                     ),
                 ],
               ),

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../core/theme/app_theme.dart';
 import '../../routes/app_routes.dart';
 import '../../services/auth_service.dart';
 import '../../core/widgets/ios_toast.dart';
+import '../../widgets/red_button.dart';
 import '../../core/utils/error_helper.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -30,6 +32,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _handleLogin() async {
+    HapticFeedback.selectionClick();
     FocusScope.of(context).unfocus();
     final identifier = _emailCtrl.text.trim();
     final password = _passCtrl.text;
@@ -71,6 +74,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _handleSocialLogin(String provider) async {
+    HapticFeedback.selectionClick();
     _handleSocialLoginActual(provider);
   }
 
@@ -132,7 +136,10 @@ class _LoginScreenState extends State<LoginScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   GestureDetector(
-                    onTap: () => Navigator.pushReplacementNamed(context, AppRoutes.welcome),
+                    onTap: () {
+                      HapticFeedback.selectionClick();
+                      Navigator.pushReplacementNamed(context, AppRoutes.welcome);
+                    },
                     child: Container(
                       width: 44.w,
                       height: 44.w,
@@ -274,7 +281,10 @@ class _LoginScreenState extends State<LoginScreen> {
                           Align(
                             alignment: Alignment.centerRight,
                             child: GestureDetector(
-                              onTap: () => Navigator.pushNamed(context, AppRoutes.forgotPassword),
+                              onTap: () {
+                                HapticFeedback.selectionClick();
+                                Navigator.pushNamed(context, AppRoutes.forgotPassword);
+                              },
                               child: Text(
                                 'Forgot password?',
                                 style: TextStyle(
@@ -289,41 +299,20 @@ class _LoginScreenState extends State<LoginScreen> {
                           SizedBox(height: 25.h),
 
                           // Login Button
-                          SizedBox(
-                            width: double.infinity,
-                            height: 50.h,
-                            child: ElevatedButton(
-                              onPressed: _isLoading ? null : _handleLogin,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFFC83A2D),
-                                foregroundColor: Colors.white,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(30.r),
-                                ),
-                                elevation: 4,
-                                shadowColor: Colors.black.withOpacity(0.3),
-                              ),
-                              child: _isLoading
-                                  ? SizedBox(
-                                      width: 24.sp,
-                                      height: 24.sp,
-                                      child: const CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-                                    )
-                                  : Text(
-                                      'Login',
-                                      style: TextStyle(
-                                        fontSize: 18.sp,
-                                        fontWeight: FontWeight.w700,
-                                        fontFamily: 'SF Pro',
-                                      ),
-                                    ),
-                            ),
+                          RedButton(
+                            label: 'Login',
+                            loadingLabel: 'Logging in',
+                            isLoading: _isLoading,
+                            onTap: _handleLogin,
                           ),
                           SizedBox(height: 20.h),
 
                           Center(
                             child: GestureDetector(
-                              onTap: () => Navigator.pushNamed(context, AppRoutes.preferences),
+                              onTap: () {
+                                HapticFeedback.selectionClick();
+                                Navigator.pushNamed(context, AppRoutes.preferences);
+                              },
                               child: RichText(
                                 text: TextSpan(
                                   style: TextStyle(

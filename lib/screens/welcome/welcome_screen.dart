@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../core/theme/app_theme.dart';
 import '../../routes/app_routes.dart';
+import '../../widgets/red_button.dart';
 
 /// The single Welcome screen — kept as the user requested.
 /// Flow: Splash → Welcome → GetStarted → Login / Register
@@ -67,30 +68,11 @@ class WelcomeScreen extends StatelessWidget {
                                 SizedBox(height: 20.h),
 
                                 // Get Started → navigates to GetStarted (replaces Welcome so no back)
-                                SizedBox(
-                                  width: double.infinity,
-                                  height: 54.h,
-                                  child: ElevatedButton(
-                                    onPressed: () => Navigator.pushReplacementNamed(
-                                      context,
-                                      AppRoutes.preferences,
-                                    ),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: const Color(0xFFC83A2D),
-                                      foregroundColor: Colors.white,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(30.r),
-                                      ),
-                                      elevation: 0,
-                                    ),
-                                    child: Text(
-                                      'Get Started',
-                                      style: TextStyle(
-                                        fontSize: 16.sp,
-                                        fontWeight: FontWeight.w700,
-                                        fontFamily: 'SF Pro',
-                                      ),
-                                    ),
+                                RedButton(
+                                  label: 'Get Started',
+                                  onTap: () => Navigator.pushReplacementNamed(
+                                    context,
+                                    AppRoutes.preferences,
                                   ),
                                 ),
                                 SizedBox(height: 10.h),

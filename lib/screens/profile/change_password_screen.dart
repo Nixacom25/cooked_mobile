@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../../widgets/skeleton_list.dart';
 import '../../widgets/red_button.dart';
 import '../../services/user_service.dart';
 import '../../services/auth_service.dart';
@@ -191,11 +192,12 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
             ),
             SizedBox(height: 36.h),
 
-            _isLoading
-                ? const Center(
-                    child: CircularProgressIndicator(color: Color(0xFFC83A2D)),
-                  )
-                : RedButton(label: 'Save', onTap: _savePassword),
+            RedButton(
+              label: 'Save',
+              loadingLabel: 'Recording in progress',
+              isLoading: _isLoading,
+              onTap: _savePassword,
+            ),
             SizedBox(height: 50.h),
 
             _buildActiveSessions(),
@@ -211,9 +213,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
       future: AuthService.instance.getSessions(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(
-            child: CircularProgressIndicator(color: Color(0xFFC83A2D)),
-          );
+          return const SkeletonList(height: 80, itemCount: 2);
         }
 
         final sessions = snapshot.data ?? [];

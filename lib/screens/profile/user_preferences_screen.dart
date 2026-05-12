@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../services/user_service.dart';
+import '../../widgets/skeleton_list.dart';
 import '../../core/widgets/ios_toast.dart';
 import '../onboarding/widgets/dietary_preferences_step.dart';
 import '../onboarding/widgets/allergies_step.dart';
@@ -197,8 +198,9 @@ class _UserPreferencesScreenState extends State<UserPreferencesScreen> {
         ],
       ),
       body: _isLoading
-          ? const Center(
-              child: CircularProgressIndicator(color: Color(0xFFC83A2D)),
+          ? const Padding(
+              padding: EdgeInsets.all(20),
+              child: SkeletonList(height: 70, itemCount: 10),
             )
           : ListView(
               padding: EdgeInsets.all(16.r),

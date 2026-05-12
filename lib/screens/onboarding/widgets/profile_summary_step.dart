@@ -180,11 +180,7 @@ class ProfileSummaryStep extends StatelessWidget {
               height: 24.sp,
               width: 24.sp,
               colorFilter: ColorFilter.mode(iconColor, BlendMode.srcIn),
-              placeholderBuilder: (context) => SizedBox(
-                height: 24.sp,
-                width: 24.sp,
-                child: const CircularProgressIndicator(strokeWidth: 2),
-              ),
+              placeholderBuilder: (context) => const SizedBox.shrink(),
             ),
           ),
           SizedBox(width: 16.w),

@@ -123,11 +123,7 @@ class _GoalsStepState extends State<GoalsStep> {
                   'assets/icones/${goal['icon']}',
                   height: 28.sp,
                   width: 28.sp,
-                  placeholderBuilder: (context) => SizedBox(
-                    height: 28.sp,
-                    width: 28.sp,
-                    child: const CircularProgressIndicator(strokeWidth: 2),
-                  ),
+                  placeholderBuilder: (context) => const SizedBox.shrink(),
                 ),
               ),
               SizedBox(width: 16.w),

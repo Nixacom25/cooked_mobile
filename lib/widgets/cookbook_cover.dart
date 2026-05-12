@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../models/cookbook.dart';
 import '../models/recipe.dart';
+import 'skeleton_loader.dart';
 
 class CookbookCover extends StatelessWidget {
   final Cookbook cookbook;
@@ -30,21 +31,25 @@ class CookbookCover extends StatelessWidget {
       final aHasImage = a.image != null && a.image!.isNotEmpty;
       final bHasImage = b.image != null && b.image!.isNotEmpty;
       
+      // If one has an image and the other doesn't, image wins
       if (aHasImage && !bHasImage) return -1;
       if (!aHasImage && bHasImage) return 1;
       
+      // If both have images (or both don't), prioritize IMPORT origin
       final aIsImport = a.origin?.toUpperCase() == 'IMPORT';
       final bIsImport = b.origin?.toUpperCase() == 'IMPORT';
       
       if (aIsImport && !bIsImport) return -1;
       if (!aIsImport && bIsImport) return 1;
 
+      // Then prioritize those with source URLs
       final aHasUrl = a.sourceUrl != null && a.sourceUrl!.isNotEmpty;
       final bHasUrl = b.sourceUrl != null && b.sourceUrl!.isNotEmpty;
       
       if (aHasUrl && !bHasUrl) return -1;
       if (!aHasUrl && bHasUrl) return 1;
       
+      // Finally by date
       return b.createdAt.compareTo(a.createdAt);
     });
     
@@ -176,16 +181,9 @@ class CookbookCover extends StatelessWidget {
         height: double.infinity,
         fit: BoxFit.cover,
       ),
-      placeholder: (_, __) => Container(
+      placeholder: (_, __) => const SkeletonLoader(
         width: double.infinity,
         height: double.infinity,
-        color: const Color(0xFFE5E7EB),
-        child: const Center(
-          child: CircularProgressIndicator(
-            strokeWidth: 2,
-            color: Color(0xFFC83A2D),
-          ),
-        ),
       ),
     );
   }

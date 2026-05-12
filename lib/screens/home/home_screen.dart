@@ -26,6 +26,8 @@ import '../../core/services/tutorial_service.dart';
 import '../../main.dart';
 import '../../services/history_service.dart';
 import '../../models/view_all_type.dart';
+import '../../services/sharing_service.dart';
+import '../../widgets/skeleton_loader.dart';
 
 class HomeScreen extends StatefulWidget {
   final int initialTab;
@@ -108,13 +110,25 @@ class _HomeScreenState extends State<HomeScreen>
       _startTutorial(delayMs: 1500);
     }
 
-    // Load initial data
-    if (RecipeService.instance.myRecipesNotifier.value == null) {
-      RecipeService.instance.getMyRecipes();
-    }
     if (CookbookService.instance.myCookbooksNotifier.value == null) {
       CookbookService.instance.getMyCookbooks();
     }
+
+    // 🔗 Auto-trigger pending shared URL after login/startup
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        // If we didn't get a URL via constructor, check the service for any 'parked' URL
+        if (widget.initialUrl == null) {
+          final pendingUrl = SharingService.instance.sharedTextNotifier.value;
+          if (pendingUrl != null && pendingUrl.isNotEmpty) {
+            debugPrint("HomeScreen: Found pending shared URL: $pendingUrl");
+            _switchTab(4);
+            // The ImportScreen (tab 4) will be built/active. 
+            // We'll update it to listen to the service as well.
+          }
+        }
+      }
+    });
   }
 
   void _tutorialDataListener() {
@@ -697,7 +711,41 @@ class _HomeTabState extends State<_HomeTab> {
                         valueListenable:
                             RecipeService.instance.myRecipesNotifier,
                         builder: (context, recipes, _) {
-                          final allRecipes = recipes ?? [];
+                          if (recipes == null) {
+                            return Column(
+                              children: [
+                                SizedBox(height: 30.h),
+                                _SectionRow(title: 'Saved Recipes'),
+                                SizedBox(height: 20.h),
+                                Padding(
+                                  padding: EdgeInsets.symmetric(horizontal: 18.w),
+                                  child: GridView.builder(
+                                    shrinkWrap: true,
+                                    physics: const NeverScrollableScrollPhysics(),
+                                    itemCount: 4,
+                                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                      crossAxisCount: 2,
+                                      mainAxisSpacing: 14.h,
+                                      crossAxisSpacing: 14.w,
+                                      childAspectRatio: 0.72,
+                                    ),
+                                    itemBuilder: (_, __) => Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        SkeletonLoader(width: double.infinity, height: 145.h, borderRadius: 20),
+                                        SizedBox(height: 10.h),
+                                        SkeletonLoader(width: 140.w, height: 16.h),
+                                        SizedBox(height: 6.h),
+                                        SkeletonLoader(width: 80.w, height: 12.h),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            );
+                          }
+
+                          final allRecipes = recipes;
                           final savedRecipes = allRecipes
                               .where((r) => r.origin != 'SUGGESTED')
                               .toList();
@@ -1003,9 +1051,22 @@ class _CookbooksRowState extends State<_CookbooksRow> {
       builder: (context, cookbooks, _) {
         if (cookbooks == null) {
           return SizedBox(
-            height: 188.h,
-            child: const Center(
-              child: CircularProgressIndicator(color: Color(0xFFC83A2D)),
+            height: 200.h,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              padding: EdgeInsets.symmetric(horizontal: 18.w),
+              itemCount: 4,
+              itemBuilder: (_, __) => Padding(
+                padding: EdgeInsets.only(right: 16.w),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SkeletonLoader(width: 150.w, height: 150.h, borderRadius: 16),
+                    SizedBox(height: 8.h),
+                    SkeletonLoader(width: 100.w, height: 16.h),
+                  ],
+                ),
+              ),
             ),
           );
         }
@@ -1306,7 +1367,7 @@ class _SavedRecipesGrid extends StatelessWidget {
           crossAxisCount: 2,
           mainAxisSpacing: 14.h,
           crossAxisSpacing: 14.w,
-          childAspectRatio: 0.82,
+          childAspectRatio: 0.72,
         ),
         itemBuilder: (ctx, i) {
           final r = displayList[i];
@@ -1405,11 +1466,33 @@ class _SuggestedRecipesSectionState extends State<_SuggestedRecipesSection> {
       valueListenable: RecipeService.instance.homeSuggestionsNotifier,
       builder: (context, suggestions, _) {
         if (suggestions == null) {
-          return SizedBox(
-            height: 150.h,
-            child: const Center(
-              child: CircularProgressIndicator(color: Color(0xFFC83A2D)),
-            ),
+          return Column(
+            children: [
+              SizedBox(height: 22.h),
+              _SectionRow(title: 'Suggested Recipes'),
+              SizedBox(height: 12.h),
+              SizedBox(
+                height: 220.h,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  padding: EdgeInsets.symmetric(horizontal: 18.w),
+                  itemCount: 3,
+                  itemBuilder: (_, __) => Padding(
+                    padding: EdgeInsets.only(right: 16.w),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SkeletonLoader(width: 280.w, height: 160.h, borderRadius: 20),
+                        SizedBox(height: 12.h),
+                        SkeletonLoader(width: 200.w, height: 18.h),
+                        SizedBox(height: 6.h),
+                        SkeletonLoader(width: 120.w, height: 14.h),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
           );
         }
 
@@ -1480,7 +1563,7 @@ class _SuggestedRecipesSectionState extends State<_SuggestedRecipesSection> {
 
   Widget _buildHorizontalList(List<Recipe> items, Set<String> savedNames) {
     return SizedBox(
-      height: 190.h,
+      height: 215.h,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         padding: EdgeInsets.symmetric(horizontal: 18.w),

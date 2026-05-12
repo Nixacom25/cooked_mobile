@@ -184,13 +184,7 @@ class _DietaryPreferencesStepState extends State<DietaryPreferencesStep> {
                         'assets/icones/${option.icon}',
                         height: 32.h,
                         width: 32.w,
-                        placeholderBuilder: (context) => SizedBox(
-                          height: 32.h,
-                          width: 32.w,
-                          child: const CircularProgressIndicator(
-                            strokeWidth: 2,
-                          ),
-                        ),
+                        placeholderBuilder: (context) => const SizedBox.shrink(),
                       ),
                       SizedBox(height: 6.h),
                       Text(

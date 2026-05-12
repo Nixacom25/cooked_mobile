@@ -98,6 +98,31 @@ class _CookedAppState extends State<CookedApp> {
         // Heavy impact to show we caught it
         HapticFeedback.heavyImpact();
         
+        final isLoggedIn = AuthService.instance.isLoggedIn;
+        
+        if (!isLoggedIn) {
+          debugPrint("CookedApp: User not logged in. Keeping shared URL in memory for post-login import.");
+          // We don't clear it from SharingService, so it stays available
+          // If the user is on Welcome/Login, they will eventually log in
+          // We can optionally force redirect to Welcome if they are elsewhere
+          final state = _navigatorKey.currentState;
+          if (state != null) {
+             String? currentRoute;
+             state.popUntil((route) {
+               currentRoute = route.settings.name;
+               return true;
+             });
+             
+             if (currentRoute != AppRoutes.welcome && 
+                 currentRoute != AppRoutes.login && 
+                 currentRoute != AppRoutes.otp) {
+               debugPrint("CookedApp: Not on auth screens, redirecting to Welcome.");
+               state.pushNamedAndRemoveUntil(AppRoutes.welcome, (route) => false);
+             }
+          }
+          return;
+        }
+
         // Short delay to ensure navigator is ready
         Future.delayed(const Duration(milliseconds: 500), () {
           final state = _navigatorKey.currentState;

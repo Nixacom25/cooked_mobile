@@ -4,6 +4,7 @@ import '../models/recipe.dart';
 import '../services/grocery_service.dart';
 import '../core/widgets/ios_toast.dart';
 import '../core/utils/error_helper.dart';
+import 'red_button.dart';
 
 class AddToGroceryModal extends StatefulWidget {
   final Recipe recipe;
@@ -269,29 +270,16 @@ class _AddToGroceryModalState extends State<AddToGroceryModal> {
             // Submit Button
             Padding(
               padding: EdgeInsets.fromLTRB(20.w, 10.h, 20.w, 10.h + bottomPad),
-              child: SizedBox(
-                width: double.infinity,
+              child: RedButton(
+                label: 'Add selected ingredients',
+                loadingLabel: 'Saving',
+                isLoading: _isSaving,
+                isDisabled: !_canSubmit,
+                onTap: _handleSave,
+                color: Colors.white,
+                textColor: const Color(0xFFC83A2D),
                 height: 54.h,
-                child: ElevatedButton(
-                  onPressed: _canSubmit ? _handleSave : null,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: const Color(0xFFC83A2D),
-                    disabledBackgroundColor: Colors.white.withOpacity(0.3),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
-                    elevation: 0,
-                  ),
-                  child: _isSaving
-                      ? const CircularProgressIndicator(color: Color(0xFFC83A2D))
-                      : Text(
-                          'Add selected ingredients',
-                          style: TextStyle(
-                            fontFamily: 'SF Pro',
-                            fontWeight: FontWeight.w700,
-                            fontSize: 16.sp,
-                          ),
-                        ),
-                ),
+                fontSize: 16.sp,
               ),
             ),
           ],

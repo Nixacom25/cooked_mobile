@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'legal_content_modal.dart';
+import '../../widgets/red_button.dart';
 
 class TermsValidationModal extends StatefulWidget {
   final VoidCallback onAccepted;
@@ -148,32 +149,15 @@ class _TermsValidationModalState extends State<TermsValidationModal> {
           SizedBox(height: 40.h),
           
           // Action Button
-          SizedBox(
-            width: double.infinity,
+          RedButton(
+            label: 'Confirm and Continue',
+            isDisabled: !_accepted,
+            onTap: () {
+              Navigator.pop(context);
+              widget.onAccepted();
+            },
             height: 56.h,
-            child: ElevatedButton(
-              onPressed: _accepted 
-                ? () {
-                    Navigator.pop(context);
-                    widget.onAccepted();
-                  }
-                : null,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFC83A2D),
-                disabledBackgroundColor: const Color(0xFFE5E7EB),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30.r)),
-                elevation: 0,
-              ),
-              child: Text(
-                'Confirm and Continue',
-                style: TextStyle(
-                  fontSize: 16.sp,
-                  fontWeight: FontWeight.w700,
-                  color: _accepted ? Colors.white : const Color(0xFF9CA3AF),
-                  fontFamily: 'SF Pro',
-                ),
-              ),
-            ),
+            fontSize: 16.sp,
           ),
           
           SizedBox(height: MediaQuery.of(context).padding.bottom + 20.h),

@@ -5,6 +5,8 @@ import '../../routes/app_routes.dart';
 import '../../services/auth_service.dart';
 import '../../core/widgets/ios_toast.dart';
 import '../../core/utils/error_helper.dart';
+import '../../widgets/red_button.dart';
+import '../../widgets/loading_text.dart';
 
 class ForgotOtpScreen extends StatefulWidget {
   const ForgotOtpScreen({super.key});
@@ -64,6 +66,7 @@ class _ForgotOtpScreenState extends State<ForgotOtpScreen> {
   }
 
   Future<void> _verifyCode(String identifier) async {
+    HapticFeedback.selectionClick();
     final code = _getOtpCode();
     if (code.length < _otpLength) {
       IosToast.show(
@@ -99,6 +102,7 @@ class _ForgotOtpScreenState extends State<ForgotOtpScreen> {
   }
 
   Future<void> _resendCode(String identifier) async {
+    HapticFeedback.selectionClick();
     setState(() => _isResending = true);
     try {
       await AuthService.instance.forgotPassword(identifier);
@@ -244,12 +248,13 @@ class _ForgotOtpScreenState extends State<ForgotOtpScreen> {
                                     }
                                   },
                             child: _isResending
-                                ? const SizedBox(
-                                    width: 14,
-                                    height: 14,
-                                    child: CircularProgressIndicator(
+                                ? const LoadingText(
+                                    text: 'Resending',
+                                    style: TextStyle(
                                       color: Color(0xFFFFF6D6),
-                                      strokeWidth: 1.5,
+                                      fontFamily: 'SF Pro',
+                                      fontWeight: FontWeight.w500,
+                                      fontSize: 14,
                                     ),
                                   )
                                 : const Text(
@@ -264,50 +269,21 @@ class _ForgotOtpScreenState extends State<ForgotOtpScreen> {
                           ),
                           const SizedBox(height: 28),
 
-                          SizedBox(
-                            width: double.infinity,
-                            height: 50,
-                            child: ElevatedButton(
-                              onPressed: _isLoading
-                                  ? null
-                                  : () {
-                                      if (identifier != null) {
-                                        _verifyCode(identifier);
-                                      } else {
-                                        IosToast.show(
-                                          context,
-                                          message:
-                                              'Missing identifier context. Please try again.',
-                                          type: ToastType.success,
-                                        );
-                                      }
-                                    },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFFC83A2D),
-                                foregroundColor: Colors.white,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(30),
-                                ),
-                                elevation: 0,
-                              ),
-                              child: _isLoading
-                                  ? const SizedBox(
-                                      width: 24,
-                                      height: 24,
-                                      child: CircularProgressIndicator(
-                                        color: Colors.white,
-                                        strokeWidth: 2,
-                                      ),
-                                    )
-                                  : const Text(
-                                      'Continue',
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w600,
-                                        fontFamily: 'SF Pro',
-                                      ),
-                                    ),
-                            ),
+                          RedButton(
+                            label: 'Continue',
+                            loadingLabel: 'Verifying',
+                            isLoading: _isLoading,
+                            onTap: () {
+                              if (identifier != null) {
+                                _verifyCode(identifier);
+                              } else {
+                                IosToast.show(
+                                  context,
+                                  message: 'Missing identifier context. Please try again.',
+                                  type: ToastType.success,
+                                );
+                              }
+                            },
                           ),
                           SizedBox(
                             height: MediaQuery.of(context).viewInsets.bottom,
@@ -330,7 +306,10 @@ class _ForgotOtpScreenState extends State<ForgotOtpScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 GestureDetector(
-                  onTap: () => Navigator.pop(context),
+                  onTap: () {
+                    HapticFeedback.selectionClick();
+                    Navigator.pop(context);
+                  },
                   child: Container(
                     width: 42,
                     height: 42,

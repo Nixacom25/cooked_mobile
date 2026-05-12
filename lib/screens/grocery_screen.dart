@@ -8,8 +8,10 @@ import '../services/ingredient_service.dart';
 import '../models/grocery_item.dart';
 import '../models/recipe.dart';
 import '../core/widgets/ios_toast.dart';
+import '../widgets/red_button.dart';
 import '../core/utils/error_helper.dart';
 import '../core/extensions/string_extensions.dart';
+import '../widgets/grocery_skeleton.dart';
 
 // ══════════════════════════════════════════════════════════════════════════════
 // GROCERY SCREEN
@@ -111,11 +113,7 @@ class _GroceryScreenState extends State<GroceryScreen> {
                     valueListenable: GroceryService.instance.myGroceriesNotifier,
                     builder: (context, allItems, _) {
                       if (allItems == null) {
-                        return const Center(
-                          child: CircularProgressIndicator(
-                            color: Color(0xFFC83A2D),
-                          ),
-                        );
+                        return const GrocerySkeleton();
                       }
 
                       if (allItems.isEmpty) return _buildEmpty(allItems);
@@ -856,79 +854,63 @@ class _AddGrocerySheetState extends State<_AddGrocerySheet> {
                   SizedBox(height: 20.h),
 
                   // ── Save button ──────────────────────────────────────────
-                  SizedBox(
-                    width: double.infinity,
-                    height: 50.h,
-                    child: ElevatedButton(
-                      onPressed: _isSaving
-                          ? null
-                          : () async {
-                              setState(() => _isSaving = true);
-                              try {
-                                if (_isRecipeMode) {
-                                  if (_selectedRecipe == null) {
-                                    IosToast.show(context, message: 'Please select a recipe', type: ToastType.error);
-                                    setState(() => _isSaving = false);
-                                    return;
-                                  }
-                                  final fullRecipe = await RecipeService.instance.getRecipe(_selectedRecipe!.id);
+                  RedButton(
+                    label: 'Save to grocery list',
+                    loadingLabel: 'Saving',
+                    isLoading: _isSaving,
+                    onTap: () async {
+                      setState(() => _isSaving = true);
+                      try {
+                        if (_isRecipeMode) {
+                          if (_selectedRecipe == null) {
+                            IosToast.show(context, message: 'Please select a recipe', type: ToastType.error);
+                            setState(() => _isSaving = false);
+                            return;
+                          }
+                          final fullRecipe = await RecipeService.instance.getRecipe(_selectedRecipe!.id);
 
-                                  for (var ing in fullRecipe.ingredients) {
-                                    widget.onSave(
-                                      ing.name,
-                                      ing.quantity,
-                                      _date,
-                                      ing.icon,
-                                      fullRecipe.id,
-                                    );
-                                  }
-                                } else {
-                                  final name = _nameController.text.trim();
-                                  final qty = _qtyController.text.trim();
-                                  if (name.isNotEmpty) {
-                                    widget.onSave(
-                                      name,
-                                      qty,
-                                      null, // Manual adds always go to General Items
-                                      null,
-                                      null,
-                                    );
-                                  }
-                                }
-                                if (!mounted) return;
-                                IosToast.show(
-                                  context,
-                                  message: _isRecipeMode 
-                                      ? 'Recipe ingredients added successfully' 
-                                      : 'Item added successfully',
-                                  type: ToastType.success,
-                                );
-                                Navigator.pop(context);
-                              } catch (e) {
-                                if (!mounted) return;
-                                IosToast.show(context, message: ErrorHelper.getFriendlyMessage(e), type: ToastType.error);
-                              } finally {
-                                if (mounted) setState(() => _isSaving = false);
-                              }
-                            },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        foregroundColor: const Color(0xFFC83A2D),
-                        disabledBackgroundColor: Colors.white.withOpacity(0.3),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
-                        elevation: 0,
-                      ),
-                      child: _isSaving
-                          ? const CircularProgressIndicator(color: Color(0xFFC83A2D))
-                          : Text(
-                              'Save to grocery list',
-                              style: TextStyle(
-                                fontFamily: 'SF Pro',
-                                fontWeight: FontWeight.w700,
-                                fontSize: 15.sp,
-                              ),
-                            ),
-                    ),
+                          for (var ing in fullRecipe.ingredients) {
+                            widget.onSave(
+                              ing.name,
+                              ing.quantity,
+                              _date,
+                              ing.icon,
+                              fullRecipe.id,
+                            );
+                          }
+                        } else {
+                          final name = _nameController.text.trim();
+                          final qty = _qtyController.text.trim();
+                          if (name.isNotEmpty) {
+                            widget.onSave(
+                              name,
+                              qty,
+                              null, // Manual adds always go to General Items
+                              null,
+                              null,
+                            );
+                          }
+                        }
+                        if (!mounted) return;
+                        IosToast.show(
+                          context,
+                          message: _isRecipeMode 
+                              ? 'Recipe ingredients added successfully' 
+                              : 'Item added successfully',
+                          type: ToastType.success,
+                        );
+                        Navigator.pop(context);
+                      } catch (e) {
+                        if (!mounted) return;
+                        IosToast.show(context, message: ErrorHelper.getFriendlyMessage(e), type: ToastType.error);
+                      } finally {
+                        if (mounted) setState(() => _isSaving = false);
+                      }
+                    },
+                    color: Colors.white,
+                    textColor: const Color(0xFFC83A2D),
+                    height: 50.h,
+                    fontSize: 15.sp,
                   ),
                 ],
               ),

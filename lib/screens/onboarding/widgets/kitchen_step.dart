@@ -241,11 +241,7 @@ class _KitchenStepState extends State<KitchenStep> {
                 'assets/icones/${app['icon']}',
                 height: 28.sp,
                 width: 28.sp,
-                placeholderBuilder: (context) => SizedBox(
-                  height: 28.sp,
-                  width: 28.sp,
-                  child: const CircularProgressIndicator(strokeWidth: 2),
-                ),
+                placeholderBuilder: (context) => const SizedBox.shrink(),
               )
             else
               Icon(Icons.add_circle_outline, size: 28.sp, color: isSelected ? const Color(0xFFC83A2D) : const Color(0xFF9CA3AF)),

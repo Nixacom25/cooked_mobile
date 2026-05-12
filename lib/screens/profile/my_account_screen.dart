@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/extensions/string_extensions.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:image_picker/image_picker.dart';
+import '../../widgets/skeleton_loader.dart';
 import '../../widgets/red_button.dart';
 import '../../services/user_service.dart';
 import '../../services/auth_service.dart';
@@ -332,16 +333,26 @@ class _MyAccountScreenState extends State<MyAccountScreen> {
                   ),
                   SizedBox(height: 36.h),
 
-                  _isLoading
-                      ? Center(
-                          child: CircularProgressIndicator(
-                            color: const Color(0xFFC83A2D),
-                          ),
-                        )
-                      : RedButton(
-                          label: _isSaving ? 'Saving...' : 'Save Changes',
-                          onTap: _isSaving ? () {} : _saveProfile,
-                        ),
+                  if (_isLoading)
+                    Padding(
+                      padding: EdgeInsets.symmetric(vertical: 20.h),
+                      child: Column(
+                        children: [
+                          const SkeletonLoader(height: 50, width: double.infinity),
+                          SizedBox(height: 18.h),
+                          const SkeletonLoader(height: 50, width: double.infinity),
+                          SizedBox(height: 18.h),
+                          const SkeletonLoader(height: 50, width: double.infinity),
+                        ],
+                      ),
+                    )
+                  else
+                    RedButton(
+                      label: 'Save Changes',
+                      loadingLabel: 'Recording in progress',
+                      isLoading: _isSaving,
+                      onTap: _saveProfile,
+                    ),
                   SizedBox(height: 20.h),
 
                   // Logout Button

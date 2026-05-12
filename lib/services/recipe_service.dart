@@ -188,10 +188,18 @@ class RecipeService {
     );
 
     if (response.statusCode == 200 || response.statusCode == 201) {
-      // Trigger background refresh of recipes list
+      final saved = Recipe.fromJson(jsonDecode(response.body));
+      
+      // Update local state immediately
+      if (myRecipesNotifier.value != null) {
+        myRecipesNotifier.value = [saved, ...myRecipesNotifier.value!.where((r) => r.id != saved.id)];
+      }
+
+      // Trigger background refresh 
       getMyRecipes(forceRefresh: true).then((_) => null).catchError((_) => null);
+      getRecentImports(forceRefresh: true).then((_) => null).catchError((_) => null);
       CookbookService.instance.getMyCookbooks(forceRefresh: true).then((_) => null).catchError((_) => null);
-      return Recipe.fromJson(jsonDecode(response.body));
+      return saved;
     } else {
       print('Failed to save recipe: ${response.statusCode}');
       print('Response body: ${response.body}');
@@ -211,9 +219,9 @@ class RecipeService {
       throw Exception('Unable to change favorite status.');
     }
 
-    // Refresh local state in background
-    getMyRecipes(forceRefresh: true).then((_) => null).catchError((_) => null);
+    // Update favorite notifier optimistically or refresh
     getFavoriteRecipes(size: 100, forceRefresh: true).then((_) => null).catchError((_) => null);
+    getMyRecipes(forceRefresh: true).then((_) => null).catchError((_) => null);
     CookbookService.instance.getMyCookbooks(forceRefresh: true).then((_) => null).catchError((_) => null);
   }
 
@@ -484,10 +492,19 @@ class RecipeService {
     final response = await http.put(url, headers: await _getHeaders());
 
     if (response.statusCode == 200) {
+      final validated = Recipe.fromJson(jsonDecode(response.body));
+      
+      // Update recent imports immediately (remove suggested, add validated)
+      if (recentImportsNotifier.value != null) {
+        recentImportsNotifier.value = recentImportsNotifier.value!
+            .map((r) => r.id == validated.id ? validated : r)
+            .toList();
+      }
+
       // Trigger background refresh 
       getMyRecipes(forceRefresh: true).then((_) => null).catchError((_) => null);
       CookbookService.instance.getMyCookbooks(forceRefresh: true).then((_) => null).catchError((_) => null);
-      return Recipe.fromJson(jsonDecode(response.body));
+      return validated;
     } else {
       throw Exception('Failed to validate recipe.');
     }

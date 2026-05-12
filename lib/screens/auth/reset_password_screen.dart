@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../core/theme/app_theme.dart';
 import '../../routes/app_routes.dart';
 import '../../services/auth_service.dart';
 import '../../core/widgets/ios_toast.dart';
 import '../../core/utils/error_helper.dart';
+import '../../widgets/red_button.dart';
 
 class ResetPasswordScreen extends StatefulWidget {
   const ResetPasswordScreen({super.key});
@@ -29,6 +31,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   }
 
   Future<void> _handleReset(String identifier) async {
+    HapticFeedback.selectionClick();
     final newPass = _newPassCtrl.text;
     final confirmPass = _confirmPassCtrl.text;
 
@@ -191,51 +194,21 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                           ),
                           const SizedBox(height: 40),
 
-                          // Send button
-                          SizedBox(
-                            width: double.infinity,
-                            height: 50,
-                            child: ElevatedButton(
-                              onPressed: _isLoading
-                                  ? null
-                                  : () {
-                                      if (identifier != null) {
-                                        _handleReset(identifier);
-                                      } else {
-                                        IosToast.show(
-                                          context,
-                                          message:
-                                              'Missing identifier context. Please try again.',
-                                          type: ToastType.error,
-                                        );
-                                      }
-                                    },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFFC83A2D),
-                                foregroundColor: Colors.white,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(30),
-                                ),
-                                elevation: 0,
-                              ),
-                              child: _isLoading
-                                  ? const SizedBox(
-                                      width: 24,
-                                      height: 24,
-                                      child: CircularProgressIndicator(
-                                        color: Colors.white,
-                                        strokeWidth: 2,
-                                      ),
-                                    )
-                                  : const Text(
-                                      'Send',
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w600,
-                                        fontFamily: 'SF Pro',
-                                      ),
-                                    ),
-                            ),
+                          RedButton(
+                            label: 'Send',
+                            loadingLabel: 'Updating',
+                            isLoading: _isLoading,
+                            onTap: () {
+                              if (identifier != null) {
+                                _handleReset(identifier);
+                              } else {
+                                IosToast.show(
+                                  context,
+                                  message: 'Missing identifier context. Please try again.',
+                                  type: ToastType.error,
+                                );
+                              }
+                            },
                           ),
                           SizedBox(
                             height: MediaQuery.of(context).viewInsets.bottom,
@@ -258,7 +231,10 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 GestureDetector(
-                  onTap: () => Navigator.pop(context),
+                  onTap: () {
+                    HapticFeedback.selectionClick();
+                    Navigator.pop(context);
+                  },
                   child: Container(
                     width: 42,
                     height: 42,

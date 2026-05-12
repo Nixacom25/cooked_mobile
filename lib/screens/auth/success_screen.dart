@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
 import '../../routes/app_routes.dart';
+import '../../widgets/red_button.dart';
 
 class SuccessScreen extends StatefulWidget {
   const SuccessScreen({super.key});
@@ -130,34 +131,17 @@ class _SuccessScreenState extends State<SuccessScreen>
                                     ),
                                   ),
                                   const SizedBox(height: 20),
-                                  SizedBox(
-                                    width: double.infinity,
+                                  RedButton(
+                                    label: 'Get Started',
+                                    onTap: () {
+                                      Navigator.pushReplacementNamed(
+                                        context,
+                                        AppRoutes.home,
+                                        arguments: {'initialTab': 0},
+                                      );
+                                    },
                                     height: 50,
-                                    child: ElevatedButton(
-                                      onPressed: () {
-                                        Navigator.pushReplacementNamed(
-                                          context,
-                                          AppRoutes.home,
-                                          arguments: {'initialTab': 0},
-                                        );
-                                      },
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: const Color(0xFFC83A2D),
-                                        foregroundColor: Colors.white,
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(30),
-                                        ),
-                                        elevation: 0,
-                                      ),
-                                      child: const Text(
-                                        'Get Started',
-                                        style: TextStyle(
-                                          fontSize: 15,
-                                          fontWeight: FontWeight.w600,
-                                          fontFamily: 'SF Pro',
-                                        ),
-                                      ),
-                                    ),
+                                    fontSize: 15,
                                   ),
                                 ],
                               ),

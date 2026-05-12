@@ -7,6 +7,8 @@ import '../services/cookbook_service.dart';
 import '../routes/app_routes.dart';
 import '../core/widgets/ios_toast.dart';
 import '../core/utils/error_helper.dart';
+import 'red_button.dart';
+import 'skeleton_list.dart';
 
 class AddToCookbookSheet extends StatefulWidget {
   final Recipe recipe;
@@ -113,9 +115,9 @@ class _AddToCookbookSheetState extends State<AddToCookbookSheet> {
                   builder: (ctx, cookbooks, _) {
                     if (cookbooks == null) {
                       CookbookService.instance.getMyCookbooks();
-                      return SizedBox(
-                        height: 100.h,
-                        child: const Center(child: CircularProgressIndicator(color: Color(0xFFC83A2D))),
+                      return Padding(
+                        padding: EdgeInsets.symmetric(vertical: 10.h),
+                        child: const SkeletonList(height: 60, itemCount: 3),
                       );
                     }
                     
@@ -186,34 +188,18 @@ class _AddToCookbookSheetState extends State<AddToCookbookSheet> {
             ),
           ),
 
-          // Confirm Button
           Padding(
             padding: EdgeInsets.fromLTRB(20.w, 10.h, 20.w, 10.h + bottomPad),
-            child: SizedBox(
-              width: double.infinity,
+            child: RedButton(
+              label: _selectedIds.isEmpty 
+                  ? 'Select at least one book' 
+                  : 'Add to selected books (${_selectedIds.length})',
+              loadingLabel: 'Saving',
+              isLoading: _isSaving,
+              isDisabled: _selectedIds.isEmpty,
+              onTap: _handleConfirm,
               height: 54.h,
-              child: ElevatedButton(
-                onPressed: (_isSaving || _selectedIds.isEmpty) ? null : _handleConfirm,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFC83A2D),
-                  foregroundColor: Colors.white,
-                  disabledBackgroundColor: const Color(0xFFE5E7EB),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
-                  elevation: 0,
-                ),
-                child: _isSaving
-                    ? const CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
-                    : Text(
-                        _selectedIds.isEmpty 
-                            ? 'Select at least one book' 
-                            : 'Add to selected books (${_selectedIds.length})',
-                        style: TextStyle(
-                          fontFamily: 'SF Pro',
-                          fontWeight: FontWeight.w700,
-                          fontSize: 16.sp,
-                        ),
-                      ),
-              ),
+              fontSize: 16.sp,
             ),
           ),
         ],

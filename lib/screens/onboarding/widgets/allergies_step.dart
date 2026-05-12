@@ -374,11 +374,7 @@ class _AllergyCard extends StatelessWidget {
                 'assets/icones/$icon',
                 height: 28.h,
                 width: 28.w,
-                placeholderBuilder: (context) => SizedBox(
-                  height: 28.h,
-                  width: 28.w,
-                  child: const CircularProgressIndicator(strokeWidth: 2),
-                ),
+                placeholderBuilder: (context) => const SizedBox.shrink(),
               ),
               SizedBox(height: 6.h),
             ],

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../services/user_service.dart';
 import '../../models/activity_log.dart';
+import '../../widgets/skeleton_list.dart';
 
 // ══════════════════════════════════════════════════════════════════════════════
 // ACTIVITY HISTORY SCREEN
@@ -41,8 +42,9 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
         future: UserService.instance.getActivities(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(
-              child: CircularProgressIndicator(color: Color(0xFFC83A2D)),
+            return const Padding(
+              padding: EdgeInsets.all(20),
+              child: SkeletonList(height: 100, itemCount: 6),
             );
           }
           if (snapshot.hasError) {

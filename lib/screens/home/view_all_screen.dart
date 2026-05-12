@@ -16,6 +16,9 @@ import '../../core/utils/error_helper.dart';
 import '../../models/view_all_type.dart';
 import '../../core/extensions/string_extensions.dart';
 import '../explore_screen.dart';
+import '../../widgets/recipe_grid_skeleton.dart';
+import '../../widgets/cookbook_grid_skeleton.dart';
+import '../../widgets/skeleton_loader.dart';
 
 // ══════════════════════════════════════════════════════════════════════════════
 // VIEW ALL SCREEN
@@ -213,8 +216,8 @@ class _CookbooksGridState extends State<_CookbooksGrid> {
       valueListenable: CookbookService.instance.myCookbooksNotifier,
       builder: (context, cookbooks, _) {
         if (cookbooks == null) {
-          return const Center(
-            child: CircularProgressIndicator(color: Color(0xFFC83A2D)),
+          return const CookbookGridSkeleton(
+            padding: EdgeInsets.fromLTRB(16, 4, 16, 20),
           );
         }
 
@@ -241,7 +244,7 @@ class _CookbooksGridState extends State<_CookbooksGrid> {
             crossAxisCount: 2,
             crossAxisSpacing: 12,
             mainAxisSpacing: 16,
-            childAspectRatio: 0.82,
+            childAspectRatio: 0.72,
           ),
           itemBuilder: (ctx, i) {
             final cb = displayList[i];
@@ -414,7 +417,7 @@ class _RecipesGridState extends State<_RecipesGrid> {
         crossAxisCount: 2,
         mainAxisSpacing: 14.h,
         crossAxisSpacing: 14.w,
-        childAspectRatio: 0.82,
+        childAspectRatio: 0.72,
       ),
       itemBuilder: (ctx, i) {
         final r = displayList[i];
@@ -466,8 +469,8 @@ class _RecipesGridState extends State<_RecipesGrid> {
         valueListenable: notifier,
         builder: (context, recipes, _) {
           if (recipes == null) {
-            return const Center(
-              child: CircularProgressIndicator(color: Color(0xFFC83A2D)),
+            return const RecipeGridSkeleton(
+              padding: EdgeInsets.fromLTRB(16, 4, 16, 20),
             );
           }
           return _buildGrid(recipes);
@@ -479,8 +482,8 @@ class _RecipesGridState extends State<_RecipesGrid> {
       future: _future,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(
-            child: CircularProgressIndicator(color: Color(0xFFC83A2D)),
+          return const RecipeGridSkeleton(
+            padding: EdgeInsets.fromLTRB(16, 4, 16, 20),
           );
         }
 
@@ -517,8 +520,24 @@ class _CreatorsGridState extends State<_CreatorsGrid> {
       future: _future,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(
-            child: CircularProgressIndicator(color: Color(0xFFC83A2D)),
+          return GridView.builder(
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 20),
+            itemCount: 9,
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 3,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 20,
+              childAspectRatio: 0.75,
+            ),
+            itemBuilder: (_, __) => Column(
+              children: [
+                const SkeletonLoader(width: 80, height: 80, borderRadius: 40),
+                const SizedBox(height: 8),
+                const SkeletonLoader(width: 70, height: 14),
+                const SizedBox(height: 4),
+                const SkeletonLoader(width: 50, height: 11),
+              ],
+            ),
           );
         }
 
@@ -668,8 +687,8 @@ class _StaticCookbooksGridState extends State<_StaticCookbooksGrid> {
       future: _future,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(
-            child: CircularProgressIndicator(color: Color(0xFFC83A2D)),
+          return const CookbookGridSkeleton(
+            padding: EdgeInsets.fromLTRB(16, 4, 16, 20),
           );
         }
 
@@ -726,7 +745,7 @@ class _StaticCookbooksGridState extends State<_StaticCookbooksGrid> {
         crossAxisCount: 2,
         crossAxisSpacing: 12,
         mainAxisSpacing: 16,
-        childAspectRatio: 0.82,
+        childAspectRatio: 0.72,
       ),
       itemBuilder: (ctx, i) {
         final name = names[i];

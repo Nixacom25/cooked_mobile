@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/recipe.dart';
+import 'red_button.dart';
 
 void showRenameRecipeDialog(
   BuildContext context,
@@ -47,8 +48,9 @@ void showRenameRecipeDialog(
             onPressed: () => Navigator.pop(context),
             child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
           ),
-          ElevatedButton(
-            onPressed: () {
+          RedButton(
+            label: 'Save',
+            onTap: () {
               final newName = nameController.text.trim();
               if (newName.isNotEmpty) {
                 Navigator.pop(context);
@@ -56,13 +58,9 @@ void showRenameRecipeDialog(
                 onRetry(updatedRecipe);
               }
             },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFC83A2D),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-            child: const Text('Save', style: TextStyle(color: Colors.white)),
+            width: 100,
+            height: 40,
+            fontSize: 14,
           ),
         ],
       );

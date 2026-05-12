@@ -144,34 +144,6 @@ class _LanguageRegionStepState extends State<LanguageRegionStep> {
           SizedBox(height: 8.h),
           _buildMeasurementSelector(),
           SizedBox(height: 32.h),
-          
-          Center(
-            child: GestureDetector(
-              onTap: () => Navigator.pushNamed(context, '/login'),
-              child: RichText(
-                text: TextSpan(
-                  text: 'Already have an account? ',
-                  style: TextStyle(
-                    fontSize: 14.sp,
-                    color: const Color(0xFF7B8190),
-                    fontFamily: 'SF Pro',
-                  ),
-                  children: [
-                    TextSpan(
-                      text: 'Login',
-                      style: TextStyle(
-                        fontSize: 14.sp,
-                        color: const Color(0xFFC83A2D),
-                        fontWeight: FontWeight.w700,
-                        fontFamily: 'SF Pro',
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          SizedBox(height: 48.h),
         ],
       ),
     );

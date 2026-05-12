@@ -3,6 +3,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../models/recipe.dart';
 
+import 'skeleton_loader.dart';
+
 class RecipeCard extends StatelessWidget {
   final Recipe? recipe;
   // Fallback fields for backward compatibility during migration
@@ -199,14 +201,9 @@ class RecipeCard extends StatelessWidget {
         fit: BoxFit.cover,
         errorWidget: (_, __, ___) =>
             Image.asset('assets/images/recipes.png', fit: BoxFit.cover),
-        placeholder: (_, __) => Container(
-          color: const Color(0xFFF2F1EF),
-          child: const Center(
-            child: CircularProgressIndicator(
-              strokeWidth: 2,
-              color: Color(0xFFC83A2D),
-            ),
-          ),
+        placeholder: (_, __) => const SkeletonLoader(
+          width: double.infinity,
+          height: double.infinity,
         ),
       );
     }

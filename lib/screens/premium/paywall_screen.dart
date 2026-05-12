@@ -6,6 +6,8 @@ import '../../services/paywall_service.dart';
 import '../../services/iap_service.dart';
 import '../../core/utils/error_helper.dart';
 import '../../services/user_service.dart';
+import '../../widgets/red_button.dart';
+import '../../widgets/skeleton_loader.dart';
 
 enum PaywallFlowType { standard, offer }
 
@@ -26,6 +28,7 @@ class PaywallScreen extends StatefulWidget {
 class _PaywallScreenState extends State<PaywallScreen> {
   Map<String, dynamic>? config;
   bool isLoading = true;
+  bool _isPurchasing = false;
   List<ProductDetails> _products = [];
   String _selectedPlanId = 'yearly_sub';
 
@@ -127,10 +130,26 @@ class _PaywallScreenState extends State<PaywallScreen> {
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
-      return const Scaffold(
+      return Scaffold(
         backgroundColor: Colors.white,
-        body: Center(
-          child: CircularProgressIndicator(color: Color(0xFFC83A2D)),
+        body: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 40.h),
+          child: SafeArea(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SkeletonLoader(height: 30, width: 200),
+                SizedBox(height: 28.h),
+                const SkeletonLoader(height: 100, width: double.infinity),
+                SizedBox(height: 16.h),
+                const SkeletonLoader(height: 100, width: double.infinity),
+                SizedBox(height: 16.h),
+                const SkeletonLoader(height: 100, width: double.infinity),
+                const Spacer(),
+                const SkeletonLoader(height: 50, width: double.infinity),
+              ],
+            ),
+          ),
         ),
       );
     }
@@ -325,30 +344,14 @@ class _PaywallScreenState extends State<PaywallScreen> {
                         ),
                         SizedBox(height: 16.h),
                       ],
-                      SizedBox(
-                        width: double.infinity,
+                      RedButton(
+                        label: isUserPremium ? 'Active Subscription' : (config!['ctaText'] ?? 'Subscribe now'),
+                        loadingLabel: 'Processing',
+                        isLoading: _isPurchasing,
+                        isDisabled: isUserPremium,
+                        onTap: _handlePurchase,
                         height: 50.h,
-                        child: ElevatedButton(
-                          onPressed: isUserPremium ? null : _handlePurchase,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: isUserPremium ? const Color(0xFFE5E7EB) : primaryColor,
-                            disabledBackgroundColor: const Color(0xFFE5E7EB),
-                            foregroundColor: Colors.white,
-                            disabledForegroundColor: const Color(0xFF9CA3AF),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(50.r),
-                            ),
-                            elevation: 0,
-                          ),
-                          child: Text(
-                            isUserPremium ? 'Active Subscription' : (config!['ctaText'] ?? 'Subscribe now'),
-                            style: TextStyle(
-                              fontSize: 15.sp,
-                              fontWeight: FontWeight.w700,
-                              fontFamily: 'SF Pro',
-                            ),
-                          ),
-                        ),
+                        fontSize: 15.sp,
                       ),
                       if (!isOffer) ...[
                         SizedBox(height: 12.h),
@@ -407,6 +410,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                 ),
                 child: SvgPicture.asset(
                   'assets/icones/$icon',
+                  placeholderBuilder: (context) => const SizedBox.shrink(),
                   width: double.infinity,
                   height: double.infinity,
                   colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
@@ -588,6 +592,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
     }
 
     try {
+      setState(() => _isPurchasing = true);
       ProductDetails? product;
       for (var p in _products) {
         if (p.id == _selectedPlanId) {
@@ -605,6 +610,8 @@ class _PaywallScreenState extends State<PaywallScreen> {
       }
     } catch (e) {
       _showErrorSnackBar("Purchase failed: ${e.toString()}");
+    } finally {
+      if (mounted) setState(() => _isPurchasing = false);
     }
   }
 }

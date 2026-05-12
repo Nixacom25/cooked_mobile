@@ -5,6 +5,7 @@ import '../../services/auth_service.dart';
 import '../../services/user_service.dart';
 import '../../core/api_config.dart';
 import '../../models/view_all_type.dart';
+import '../../widgets/skeleton_loader.dart';
 
 // ══════════════════════════════════════════════════════════════════════════════
 // PROFILE SCREEN
@@ -190,9 +191,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
           // ── Name & Phone ──
           _isLoading
-              ? const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 20),
-                  child: CircularProgressIndicator(color: Color(0xFFC83A2D)),
+              ? Padding(
+                  padding: EdgeInsets.symmetric(vertical: 20.h),
+                  child: Column(
+                    children: [
+                      const SkeletonLoader(width: 150, height: 20),
+                      SizedBox(height: 8.h),
+                      const SkeletonLoader(width: 100, height: 14),
+                    ],
+                  ),
                 )
               : Column(
                   children: [

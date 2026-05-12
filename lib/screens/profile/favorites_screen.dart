@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../services/recipe_service.dart';
 import '../../models/recipe.dart';
 import '../../routes/app_routes.dart';
+import '../../widgets/skeleton_list.dart';
 
 // ══════════════════════════════════════════════════════════════════════════════
 // FAVORITES SCREEN
@@ -50,8 +51,9 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
         valueListenable: RecipeService.instance.favoriteRecipesNotifier,
         builder: (context, recipes, _) {
           if (recipes == null) {
-            return const Center(
-              child: CircularProgressIndicator(color: Color(0xFFC83A2D)),
+            return const Padding(
+              padding: EdgeInsets.all(20),
+              child: SkeletonList(height: 80, itemCount: 8),
             );
           }
           if (recipes.isEmpty) {

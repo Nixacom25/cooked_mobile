@@ -11,6 +11,7 @@ import '../../core/widgets/ios_toast.dart';
 import '../../core/utils/error_helper.dart';
 import '../../core/extensions/string_extensions.dart';
 import '../../core/utils/tutorial_helper.dart';
+import '../../widgets/skeleton_loader.dart';
 
 class CookbookDetailScreen extends StatefulWidget {
   const CookbookDetailScreen({super.key});
@@ -175,9 +176,24 @@ class _CookbookDetailScreenState extends State<CookbookDetailScreen> {
                 // ── Recipes grid ────────────────────────────────────────────────
                 Expanded(
                   child: _loading
-                      ? const Center(
-                          child: CircularProgressIndicator(
-                            color: Color(0xFFC83A2D),
+                      ? GridView.builder(
+                          padding: const EdgeInsets.fromLTRB(16, 4, 16, 20),
+                          itemCount: 4,
+                          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            mainAxisSpacing: 14.h,
+                            crossAxisSpacing: 14.w,
+                            childAspectRatio: 0.72,
+                          ),
+                          itemBuilder: (_, __) => Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              SkeletonLoader(width: double.infinity, height: 145.h, borderRadius: 20),
+                              SizedBox(height: 10.h),
+                              SkeletonLoader(width: 140.w, height: 16.h),
+                              SizedBox(height: 6.h),
+                              SkeletonLoader(width: 80.w, height: 12.h),
+                            ],
                           ),
                         )
                       : recipes.isEmpty
@@ -235,7 +251,7 @@ class _CookbookDetailScreenState extends State<CookbookDetailScreen> {
                             crossAxisCount: 2,
                             mainAxisSpacing: 14.h,
                             crossAxisSpacing: 14.w,
-                            childAspectRatio: 0.82,
+                            childAspectRatio: 0.72,
                           ),
                           itemBuilder: (ctx, i) {
                             final r = recipes[i];

@@ -4,6 +4,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../services/auth_service.dart';
 import '../../../core/widgets/ios_toast.dart';
 import '../../../core/utils/error_helper.dart';
+import '../../../widgets/red_button.dart';
+import '../../../widgets/loading_text.dart';
 
 class OtpStep extends StatefulWidget {
   final String email;
@@ -62,6 +64,7 @@ class _OtpStepState extends State<OtpStep> {
   }
 
   Future<void> _verifyCode() async {
+    HapticFeedback.selectionClick();
     FocusScope.of(context).unfocus();
     final code = _getOtpCode();
     if (code.length < _otpLength) {
@@ -96,6 +99,7 @@ class _OtpStepState extends State<OtpStep> {
   }
 
   Future<void> _resendCode() async {
+    HapticFeedback.selectionClick();
     setState(() => _isResending = true);
     try {
       await AuthService.instance.resendCode(widget.email);
@@ -217,12 +221,13 @@ class _OtpStepState extends State<OtpStep> {
                 TextButton(
                   onPressed: _isResending ? null : _resendCode,
                   child: _isResending
-                      ? SizedBox(
-                          width: 20.w,
-                          height: 20.h,
-                          child: const CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Color(0xFFC83A2D),
+                      ? LoadingText(
+                          text: 'Resending',
+                          style: TextStyle(
+                            fontSize: 16.sp,
+                            fontWeight: FontWeight.w700,
+                            color: const Color(0xFFC83A2D),
+                            fontFamily: 'SF Pro',
                           ),
                         )
                       : Text(
@@ -241,37 +246,13 @@ class _OtpStepState extends State<OtpStep> {
 
           SizedBox(height: 48.h),
 
-          SizedBox(
-            width: double.infinity,
+          RedButton(
+            label: 'Verify & Continue',
+            loadingLabel: 'Verifying',
+            isLoading: _isLoading,
+            onTap: _verifyCode,
             height: 56.h,
-            child: ElevatedButton(
-              onPressed: _isLoading ? null : _verifyCode,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFC83A2D),
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(30.r),
-                ),
-                elevation: 0,
-              ),
-              child: _isLoading
-                  ? SizedBox(
-                      width: 24.w,
-                      height: 24.h,
-                      child: const CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
-                    )
-                  : Text(
-                      'Verify & Continue',
-                      style: TextStyle(
-                        fontSize: 18.sp,
-                        fontWeight: FontWeight.w700,
-                        fontFamily: 'SF Pro',
-                      ),
-                    ),
-            ),
+            fontSize: 18.sp,
           ),
           SizedBox(height: 120.h),
           SizedBox(height: MediaQuery.of(context).viewInsets.bottom),

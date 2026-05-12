@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
 import '../../core/theme/app_theme.dart';
 import '../../routes/app_routes.dart';
 import '../../services/auth_service.dart';
 import '../../core/widgets/ios_toast.dart';
 import '../../core/utils/error_helper.dart';
+import '../../widgets/red_button.dart';
 
 enum _ContactMethod { email, phone }
 
@@ -31,6 +33,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   }
 
   Future<void> _onContinue() async {
+    HapticFeedback.selectionClick();
     FocusScope.of(context).unfocus();
     if (_step == _ForgotStep.select) {
       setState(() => _step = _ForgotStep.input);
@@ -160,6 +163,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               children: [
                 GestureDetector(
                   onTap: () {
+                    HapticFeedback.selectionClick();
                     if (_step == _ForgotStep.input) {
                       setState(() => _step = _ForgotStep.select);
                     } else {
@@ -237,7 +241,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   title: 'Email',
                   subtitle: 'Send to your email',
                   selected: _method == _ContactMethod.email,
-                  onTap: () => setState(() => _method = _ContactMethod.email),
+                  onTap: () {
+                    HapticFeedback.selectionClick();
+                    setState(() => _method = _ContactMethod.email);
+                  },
                 ),
               ),
               const SizedBox(width: 14),
@@ -248,7 +255,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   title: 'Phone Number',
                   subtitle: 'Send to your phone',
                   selected: _method == _ContactMethod.phone,
-                  onTap: () => setState(() => _method = _ContactMethod.phone),
+                  onTap: () {
+                    HapticFeedback.selectionClick();
+                    setState(() => _method = _ContactMethod.phone);
+                  },
                 ),
               ),
             ],
@@ -256,28 +266,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           const SizedBox(height: 28),
 
           // Continue btn
-          SizedBox(
-            width: double.infinity,
-            height: 50,
-            child: ElevatedButton(
-              onPressed: _onContinue,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFC83A2D),
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(30),
-                ),
-                elevation: 0,
-              ),
-              child: const Text(
-                'Continue',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  fontFamily: 'SF Pro',
-                ),
-              ),
-            ),
+          RedButton(
+            label: 'Continue',
+            onTap: _onContinue,
           ),
         ],
       ),
@@ -334,37 +325,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
           const SizedBox(height: 28),
 
-          SizedBox(
-            width: double.infinity,
-            height: 50,
-            child: ElevatedButton(
-              onPressed: _isLoading ? null : _onContinue,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFC83A2D),
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(30),
-                ),
-                elevation: 0,
-              ),
-              child: _isLoading
-                  ? const SizedBox(
-                      width: 24,
-                      height: 24,
-                      child: CircularProgressIndicator(
-                        color: Colors.white,
-                        strokeWidth: 2,
-                      ),
-                    )
-                  : const Text(
-                      'Send',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        fontFamily: 'SF Pro',
-                      ),
-                    ),
-            ),
+          RedButton(
+            label: 'Send',
+            loadingLabel: 'Sending',
+            isLoading: _isLoading,
+            onTap: _onContinue,
           ),
         ],
       ),

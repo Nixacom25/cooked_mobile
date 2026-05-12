@@ -123,11 +123,7 @@ class ProfileSignupStep extends StatelessWidget {
                 'assets/icones/$icon',
                 height: 24.sp,
                 width: 24.sp,
-                placeholderBuilder: (context) => SizedBox(
-                  height: 24.sp,
-                  width: 24.sp,
-                  child: const CircularProgressIndicator(strokeWidth: 2),
-                ),
+                placeholderBuilder: (context) => const SizedBox.shrink(),
               ),
               SizedBox(width: 12.w),
               Text(

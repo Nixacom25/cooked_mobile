@@ -5,6 +5,8 @@ import '../routes/app_routes.dart';
 import '../services/recipe_service.dart';
 import '../models/recipe.dart';
 import '../models/view_all_type.dart';
+import '../widgets/skeleton_loader.dart';
+import '../widgets/recipe_grid_skeleton.dart';
 
 // ══════════════════════════════════════════════════════════════════════════════
 // EXPLORE SCREEN (Backend Driven)
@@ -227,6 +229,33 @@ class _ExploreScreenState extends State<ExploreScreen> {
     return FutureBuilder<Map<String, int>>(
       future: _cuisinesFuture,
       builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _SectionHeader(title: 'Browse by Cuisine', onViewAll: () {}),
+              SizedBox(height: 8.h),
+              SizedBox(
+                height: 90.h,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  padding: EdgeInsets.symmetric(horizontal: 20.w),
+                  itemCount: 5,
+                  itemBuilder: (_, __) => Padding(
+                    padding: EdgeInsets.only(right: 15.w),
+                    child: Column(
+                      children: [
+                        SkeletonLoader(width: 65.w, height: 65.h, borderRadius: 32.5),
+                        SizedBox(height: 5.h),
+                        SkeletonLoader(width: 50.w, height: 12.h),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          );
+        }
         if (!snapshot.hasData || snapshot.data!.isEmpty) {
           return const SizedBox.shrink();
         }
@@ -334,6 +363,37 @@ class _ExploreScreenState extends State<ExploreScreen> {
     return FutureBuilder<Map<String, int>>(
       future: _categoriesFuture,
       builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _SectionHeader(title: 'Popular Categories', onViewAll: () {}),
+              SizedBox(height: 8.h),
+              SizedBox(
+                height: 200.h,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  padding: EdgeInsets.symmetric(horizontal: 20.w),
+                  itemCount: 3,
+                  itemBuilder: (_, __) => Container(
+                    width: 160.w,
+                    margin: EdgeInsets.only(right: 16.w),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SkeletonLoader(width: 160.w, height: 130.h, borderRadius: 16),
+                        SizedBox(height: 10.h),
+                        SkeletonLoader(width: 120.w, height: 14.h),
+                        SizedBox(height: 4.h),
+                        SkeletonLoader(width: 80.w, height: 12.h),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          );
+        }
         if (!snapshot.hasData || snapshot.data!.isEmpty) {
           return const SizedBox.shrink();
         }
@@ -482,11 +542,20 @@ class _ExploreScreenState extends State<ExploreScreen> {
         }
 
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return Padding(
-            padding: EdgeInsets.symmetric(vertical: 40.h),
-            child: const Center(
-              child: CircularProgressIndicator(color: Color(0xFFC83A2D)),
-            ),
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 20.w),
+                child: const SkeletonLoader(width: 120, height: 18),
+              ),
+              SizedBox(height: 12.h),
+              const RecipeGridSkeleton(
+                itemCount: 4,
+                padding: EdgeInsets.symmetric(horizontal: 20),
+                childAspectRatio: 0.72,
+              ),
+            ],
           );
         }
 
@@ -534,7 +603,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                   crossAxisCount: 2,
                   crossAxisSpacing: 16.w,
                   mainAxisSpacing: 20.h,
-                  childAspectRatio: 0.85,
+                  childAspectRatio: 0.72,
                 ),
                 itemBuilder: (context, i) {
                   final recipe = popular[i];

@@ -7,6 +7,8 @@ import '../../services/recipe_service.dart';
 import '../../core/widgets/ios_toast.dart';
 import '../../core/utils/error_helper.dart';
 import '../../routes/app_routes.dart';
+import '../../widgets/red_button.dart';
+import '../../widgets/skeleton_list.dart';
 
 class CookbookFormScreen extends StatefulWidget {
   const CookbookFormScreen({super.key});
@@ -278,72 +280,43 @@ class _CookbookFormScreenState extends State<CookbookFormScreen> {
             ),
     
             // ── Save button (fixed bottom) ──────────────────────────────────
-            Container(
+            Padding(
               padding: EdgeInsets.fromLTRB(20.w, 10.h, 20.w, bottomPad + 12.h),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, -5),
-                  ),
-                ],
-              ),
-              child: GestureDetector(
-                onTap: _saving
-                    ? null
-                    : () async {
-                        if (_nameCtrl.text.trim().isEmpty) {
-                          IosToast.show(context, message: 'Please enter a name.', type: ToastType.success);
-                          return;
-                        }
-                        setState(() => _saving = true);
-                        try {
-                          final List<String> recipeIds = _recipes
-                              .map((r) => r.id)
-                              .toList();
-                          if (isEdit) {
-                            await CookbookService.instance.updateCookbook(
-                              _cookbook!.id,
-                              _nameCtrl.text.trim(),
-                              recipeIds,
-                            );
-                          } else {
-                            await CookbookService.instance.createCookbook(
-                              _nameCtrl.text.trim(),
-                              recipeIds,
-                            );
-                          }
-                          if (mounted) Navigator.pop(context, true);
-                        } catch (e) {
-                          if (mounted) {
-                            IosToast.show(context, message: ErrorHelper.getFriendlyMessage(e), type: ToastType.error);
-                          }
-                        } finally {
-                          if (mounted) setState(() => _saving = false);
-                        }
-                      },
-                child: Container(
-                  height: 52.h,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFC83A2D),
-                    borderRadius: BorderRadius.circular(30.r),
-                  ),
-                  child: Center(
-                    child: _saving
-                        ? const CircularProgressIndicator(color: Colors.white)
-                        : Text(
-                            'Save',
-                            style: TextStyle(
-                              fontFamily: 'SF Pro',
-                              fontWeight: FontWeight.w700,
-                              fontSize: 16.sp,
-                              color: Colors.white,
-                            ),
-                          ),
-                  ),
-                ),
+              child: RedButton(
+                label: 'Save',
+                loadingLabel: 'Recording in progress',
+                isLoading: _saving,
+                onTap: () async {
+                  if (_nameCtrl.text.trim().isEmpty) {
+                    IosToast.show(context, message: 'Please enter a name.', type: ToastType.success);
+                    return;
+                  }
+                  setState(() => _saving = true);
+                  try {
+                    final List<String> recipeIds = _recipes
+                        .map((r) => r.id)
+                        .toList();
+                    if (isEdit) {
+                      await CookbookService.instance.updateCookbook(
+                        _cookbook!.id,
+                        _nameCtrl.text.trim(),
+                        recipeIds,
+                      );
+                    } else {
+                      await CookbookService.instance.createCookbook(
+                        _nameCtrl.text.trim(),
+                        recipeIds,
+                      );
+                    }
+                    if (mounted) Navigator.pop(context, true);
+                  } catch (e) {
+                    if (mounted) {
+                      IosToast.show(context, message: ErrorHelper.getFriendlyMessage(e), type: ToastType.error);
+                    }
+                  } finally {
+                    if (mounted) setState(() => _saving = false);
+                  }
+                },
               ),
             ),
           ],
@@ -598,7 +571,10 @@ class _RecipePickerState extends State<_RecipePicker> {
           const Divider(),
           Expanded(
             child: _loading
-                ? const Center(child: CircularProgressIndicator())
+                ? const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 20),
+                    child: SkeletonList(height: 60, itemCount: 8),
+                  )
                 : _allRecipes == null || _allRecipes!.isEmpty
                 ? Center(
                     child: Column(

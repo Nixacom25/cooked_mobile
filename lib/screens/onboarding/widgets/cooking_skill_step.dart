@@ -112,13 +112,7 @@ class _CookingSkillStepState extends State<CookingSkillStep> {
                           'assets/icones/${level['icon']}',
                           height: 32.sp,
                           width: 32.sp,
-                          placeholderBuilder: (context) => SizedBox(
-                            height: 32.sp,
-                            width: 32.sp,
-                            child: const CircularProgressIndicator(
-                              strokeWidth: 2,
-                            ),
-                          ),
+                          placeholderBuilder: (context) => const SizedBox.shrink(),
                         ),
                       ),
                       SizedBox(width: 16.w),

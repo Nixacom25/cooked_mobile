@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 import '../../services/subscription_service.dart';
+import '../../widgets/skeleton_loader.dart';
+import '../../widgets/skeleton_list.dart';
 import '../../models/subscription_payment.dart';
 import '../../core/widgets/ios_toast.dart';
 import '../../services/auth_service.dart';
@@ -136,8 +138,17 @@ class _SubscriptionManagementScreenState
         foregroundColor: Colors.black,
       ),
       body: _isLoading
-          ? const Center(
-              child: CircularProgressIndicator(color: Color(0xFFC83A2D)),
+          ? SingleChildScrollView(
+              padding: EdgeInsets.all(24.r),
+              child: Column(
+                children: [
+                  const SkeletonLoader(height: 150, width: double.infinity, borderRadius: 20),
+                  SizedBox(height: 32.h),
+                  const SkeletonList(height: 40, itemCount: 4),
+                  SizedBox(height: 32.h),
+                  const SkeletonLoader(height: 56, width: double.infinity, borderRadius: 30),
+                ],
+              ),
             )
           : SingleChildScrollView(
               padding: EdgeInsets.all(24.r),

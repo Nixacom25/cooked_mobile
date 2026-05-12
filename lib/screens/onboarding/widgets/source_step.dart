@@ -132,11 +132,7 @@ class _SourceStepState extends State<SourceStep> {
                           'assets/icones/${source.iconAsset}',
                           height: 26.h,
                           width: 26.w,
-                          placeholderBuilder: (BuildContext context) =>
-                              Container(
-                                padding: EdgeInsets.all(8.r),
-                                child: const CircularProgressIndicator(),
-                              ),
+                          placeholderBuilder: (BuildContext context) => const SizedBox.shrink(),
                         ),
                         SizedBox(height: 8.h),
                       ],

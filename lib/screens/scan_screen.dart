@@ -12,6 +12,10 @@ import '../routes/app_routes.dart';
 import '../core/utils/error_helper.dart';
 import '../services/ingredient_service.dart';
 import '../services/recipe_service.dart';
+import '../widgets/skeleton_loader.dart';
+import '../widgets/loading_text.dart';
+import '../widgets/recipe_grid_skeleton.dart';
+import '../widgets/skeleton_list.dart';
 import '../widgets/recipe_card.dart';
 import '../widgets/add_to_cookbook_sheet.dart';
 import '../models/recipe.dart';
@@ -106,7 +110,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
     _onRecipesChanged();
     // Pre-fetch if null to ensure we have the data
     if (RecipeService.instance.myRecipesNotifier.value == null) {
-      RecipeService.instance.getMyRecipes().catchError((_) => []);
+      RecipeService.instance.getMyRecipes().catchError((_) => <Recipe>[]);
     }
 
     if (widget.isActiveNotifier.value) {
@@ -590,10 +594,10 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const CircularProgressIndicator(color: Colors.white),
+                const SkeletonLoader(width: 40, height: 40, borderRadius: 20),
                 SizedBox(height: 16.h),
-                Text(
-                  "Initializing Camera...",
+                LoadingText(
+                  text: "Initializing Camera",
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 16.sp,
@@ -667,9 +671,9 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   if (_isInitializing)
-                    const CircularProgressIndicator(color: Colors.white)
+                    const SkeletonLoader(width: 40, height: 40, borderRadius: 20)
                   else if (!_isCameraInitialized && !_hasCameraError)
-                    const CircularProgressIndicator(color: Colors.white70),
+                    const SkeletonLoader(width: 40, height: 40, borderRadius: 20),
                   SizedBox(height: 16.h),
                   // Status Text
                   Container(
@@ -1220,7 +1224,10 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
   // ── Tab 3: Saved ──────────────────────────────────────────────────────────
   Widget _buildSavedTab() {
     if (_isLoadingSaved) {
-      return const Center(child: CircularProgressIndicator());
+      return Padding(
+        padding: EdgeInsets.only(top: 20.h),
+        child: const SkeletonList(height: 60, itemCount: 8),
+      );
     }
     return ListView(
       padding: EdgeInsets.symmetric(horizontal: 22.w),
@@ -1432,15 +1439,15 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
           physics: const NeverScrollableScrollPhysics(),
           itemCount: _recipes.isNotEmpty
               ? (_recipes.length > 10 ? 10 : _recipes.length)
-              : 4,
+              : 6,
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 2,
             mainAxisSpacing: 14.h,
             crossAxisSpacing: 14.w,
-            childAspectRatio: 0.82,
+            childAspectRatio: 0.72,
           ),
           itemBuilder: (_, i) {
-            if (_recipes.isEmpty) return _buildMockResultCard(i);
+            if (_recipes.isEmpty) return const RecipeGridSkeleton(itemCount: 1, padding: EdgeInsets.zero);
             final recipe = _recipes[i];
             final isSaved = _savedRecipeNames.contains(recipe.name);
             return RecipeCard(
@@ -1593,30 +1600,6 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildMockResultCard(int i) {
-    final names = [
-      "Cheese Omelet",
-      "Alfredo Fettuccini",
-      "Lemon Grilled Salmon",
-      "Chicken Stir-Fry",
-    ];
-    final imgs = [
-      "assets/images/recipe_omelet.png",
-      "assets/images/recipe_pasta.png",
-      "assets/images/recipe_salmon.png",
-      "assets/images/recipe_stir_fry.png",
-    ];
-    final times = ["5 min", "20 min", "20 min", "25 min"];
-    final kcals = ["117 kcal", "417 kcal", "217 kcal", "317 kcal"];
-
-    return RecipeCard(
-      name: names[i % 4],
-      img: imgs[i % 4],
-      time: times[i % 4],
-      kcal: kcals[i % 4],
-      onTap: () {},
-    );
-  }
 
   Widget _buildYellowChip(
     String label, {
@@ -1800,7 +1783,6 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
   }
 
   Widget _buildSuccessOverlay() {
-    String dots = '.' * _analysisDotCount;
     return Container(
       color: Colors.black.withValues(alpha: 0.7),
       child: Center(
@@ -1813,8 +1795,8 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
               fit: BoxFit.contain,
             ),
             SizedBox(height: 24.h),
-            Text(
-              'Analyzing$dots',
+            LoadingText(
+              text: _cameraStatus.replaceAll('.', ''),
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 18.sp,
