@@ -332,12 +332,28 @@ class _AddToCookbookSheetState extends State<AddToCookbookSheet> {
 
     try {
       if (!isSelected) {
-        await CookbookService.instance.addRecipeToCookbook(cookbookId, widget.recipe.id);
+        CookbookService.instance.addRecipeToCookbook(cookbookId, widget.recipe.id).catchError((e) {
+           // Revert UI on error
+           if (mounted) {
+             setState(() {
+              _selectedIds.remove(cookbookId);
+            });
+            IosToast.show(context, message: ErrorHelper.getFriendlyMessage(e), type: ToastType.error);
+           }
+        });
         if (widget.recipe.isSuggested) {
-          await RecipeService.instance.validateRecipe(widget.recipe.id);
+          RecipeService.instance.validateRecipe(widget.recipe.id).catchError((_) => null);
         }
       } else {
-        await CookbookService.instance.removeRecipeFromCookbook(cookbookId, widget.recipe.id);
+        CookbookService.instance.removeRecipeFromCookbook(cookbookId, widget.recipe.id).catchError((e) {
+           // Revert UI on error
+           if (mounted) {
+             setState(() {
+              _selectedIds.add(cookbookId);
+            });
+            IosToast.show(context, message: ErrorHelper.getFriendlyMessage(e), type: ToastType.error);
+           }
+        });
       }
     } catch (e) {
        // Revert UI on error

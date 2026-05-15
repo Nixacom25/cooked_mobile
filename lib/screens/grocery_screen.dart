@@ -19,10 +19,10 @@ import '../widgets/grocery_skeleton.dart';
 class GroceryScreen extends StatefulWidget {
   const GroceryScreen({super.key});
   @override
-  State<GroceryScreen> createState() => _GroceryScreenState();
+  State<GroceryScreen> createState() => GroceryScreenState();
 }
 
-class _GroceryScreenState extends State<GroceryScreen> with SingleTickerProviderStateMixin {
+class GroceryScreenState extends State<GroceryScreen> with SingleTickerProviderStateMixin {
   final Set<String> _collapsedGroups = {};
   bool _initializedDefaults = false;
 
@@ -79,6 +79,11 @@ class _GroceryScreenState extends State<GroceryScreen> with SingleTickerProvider
         if (mounted) _hintController.forward(from: 0);
       });
     }
+  }
+
+  void triggerHint() {
+    _hintShownThisSession = false; // Allow it to show again
+    if (mounted) setState(() {});
   }
 
   @override
@@ -192,7 +197,7 @@ class _GroceryScreenState extends State<GroceryScreen> with SingleTickerProvider
 
                       if (allItems.isEmpty) return _buildEmpty(allItems);
 
-                      if (!_hintShownThisSession && allItems.isNotEmpty) {
+                      if (allItems.isNotEmpty && !_hintShownThisSession) {
                         _hintShownThisSession = true;
                         Future.delayed(const Duration(milliseconds: 1000), () async {
                           if (mounted) {
@@ -284,9 +289,6 @@ class _GroceryScreenState extends State<GroceryScreen> with SingleTickerProvider
                                 sizeCurve: Curves.easeInOut,
                                 firstChild: Column(
                                   children: items.map((item) {
-                                    if (item.isPlaceholder) {
-                                      return const GrocerySkeletonItem();
-                                    }
                                     return Column(
                                       children: [
                                         // Animate only the very first item of the very first group as a hint
@@ -300,7 +302,7 @@ class _GroceryScreenState extends State<GroceryScreen> with SingleTickerProvider
                                                 child: _ItemRow(
                                                   item: item,
                                                   onToggle: () => _toggleItem(item),
-                                                  onDelete: (item) async {
+                                            onDelete: (item) async {
                                                     final confirm = await _showDeleteConfirm(context, item.ingredientName);
                                                     if (confirm == true) {
                                                       await _deleteItem(item);
@@ -490,18 +492,20 @@ class _GroceryScreenState extends State<GroceryScreen> with SingleTickerProvider
       builder: (_) => _AddGrocerySheet(
         selectedDate: DateTime.now(),
         allItems: allItems,
-        onSave: (name, qty, date, icon, recipeId) async {
-          try {
-            await GroceryService.instance.addGroceryItem(
-              name: name,
-              quantity: qty,
-              date: date,
-              icon: icon,
-              recipeId: recipeId,
-            );
-          } catch (e) {
-            IosToast.show(context, message: ErrorHelper.getFriendlyMessage(e), type: ToastType.error);
-          }
+        onSave: (name, qty, date, icon, recipeId) {
+          // Fire and forget (optimistic update is inside the service)
+          GroceryService.instance.addGroceryItem(
+            name: name,
+            quantity: qty,
+            date: date,
+            icon: icon,
+            recipeId: recipeId,
+          ).catchError((e) {
+            if (mounted) {
+              IosToast.show(context, message: ErrorHelper.getFriendlyMessage(e), type: ToastType.error);
+            }
+            return Future<GroceryItem>.error(e);
+          });
         },
       ),
     );
@@ -525,9 +529,11 @@ class _ItemRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool isPlaceholder = item.isPlaceholder;
+
     return Dismissible(
       key: Key(item.id),
-      confirmDismiss: (direction) => onDelete(item),
+      confirmDismiss: (direction) => isPlaceholder ? Future.value(false) : onDelete(item),
       onDismissed: (_) {
         // The deletion logic is already handled in _deleteItem if confirmDismiss returns true
       },
@@ -538,45 +544,58 @@ class _ItemRow extends StatelessWidget {
         child: Icon(Icons.delete_outline, color: Colors.white, size: 24.sp),
       ),
       child: InkWell(
-        onTap: onToggle,
-        child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 18.w, vertical: 16.h),
-          child: Row(
-            children: [
-              _AnimatedCheckbox(isBought: item.isBought),
-              SizedBox(width: 14.w),
-              Text(
-                item.ingredientIcon ?? '🛒',
-                style: TextStyle(fontSize: 15.sp),
-              ),
-              SizedBox(width: 5.w),
-              Expanded(
-                child: AnimatedDefaultTextStyle(
-                  duration: const Duration(milliseconds: 250),
-                  curve: Curves.easeInOut,
+        onTap: isPlaceholder ? null : onToggle,
+        child: Opacity(
+          opacity: isPlaceholder ? 0.6 : 1.0,
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 18.w, vertical: 16.h),
+            child: Row(
+              children: [
+                if (isPlaceholder)
+                  SizedBox(
+                    width: 20.w,
+                    height: 20.w,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.w,
+                      valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFC83A2D)),
+                    ),
+                  )
+                else
+                  _AnimatedCheckbox(isBought: item.isBought),
+                SizedBox(width: 14.w),
+                Text(
+                  item.ingredientIcon ?? '🛒',
+                  style: TextStyle(fontSize: 15.sp),
+                ),
+                SizedBox(width: 5.w),
+                Expanded(
+                  child: AnimatedDefaultTextStyle(
+                    duration: const Duration(milliseconds: 250),
+                    curve: Curves.easeInOut,
+                    style: TextStyle(
+                      fontFamily: 'SF Pro',
+                      fontWeight: FontWeight.w500,
+                      fontSize: 15.sp,
+                      color: item.isBought
+                          ? const Color(0xFFAAAAAA)
+                          : const Color(0xFF1A1A1A),
+                      decoration: item.isBought
+                          ? TextDecoration.lineThrough
+                          : TextDecoration.none,
+                    ),
+                    child: Text(item.ingredientName),
+                  ),
+                ),
+                Text(
+                  item.quantity,
                   style: TextStyle(
                     fontFamily: 'SF Pro',
-                    fontWeight: FontWeight.w500,
-                    fontSize: 15.sp,
-                    color: item.isBought
-                        ? const Color(0xFFAAAAAA)
-                        : const Color(0xFF1A1A1A),
-                    decoration: item.isBought
-                        ? TextDecoration.lineThrough
-                        : TextDecoration.none,
+                    fontSize: 14.sp,
+                    color: const Color(0xFFAAAAAA),
                   ),
-                  child: Text(item.ingredientName),
                 ),
-              ),
-              Text(
-                item.quantity,
-                style: TextStyle(
-                  fontFamily: 'SF Pro',
-                  fontSize: 14.sp,
-                  color: const Color(0xFFAAAAAA),
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -1150,9 +1169,9 @@ class _AddGrocerySheetState extends State<_AddGrocerySheet> {
                     loadingLabel: 'Saving',
                     isLoading: _isSaving,
                     onTap: () async {
-                      setState(() => _isSaving = true);
                       try {
                         if (_isRecipeMode) {
+                          setState(() => _isSaving = true);
                           if (_selectedRecipe == null) {
                             IosToast.show(context, message: 'Please select a recipe', type: ToastType.error);
                             setState(() => _isSaving = false);
@@ -1176,12 +1195,13 @@ class _AddGrocerySheetState extends State<_AddGrocerySheet> {
                             widget.onSave(
                               name,
                               qty,
-                              null, // Manual adds always go to Manual Adds
+                              null, 
                               null,
                               null,
                             );
                           }
                         }
+                        
                         if (!mounted) return;
                         IosToast.show(
                           context,

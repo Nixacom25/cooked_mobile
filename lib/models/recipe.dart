@@ -23,6 +23,7 @@ class Recipe {
   final bool isSuggested;
   final bool isInCookbook;
   final bool isPinned;
+  final bool isValidated;
   final bool isPlaceholder;
 
   Recipe({
@@ -50,6 +51,7 @@ class Recipe {
     this.isSuggested = false,
     this.isInCookbook = false,
     this.isPinned = false,
+    this.isValidated = false,
     this.isPlaceholder = false,
   });
 
@@ -89,6 +91,7 @@ class Recipe {
       isSuggested: json['isSuggested'] ?? json['is_suggested'] ?? (json['expiresAt'] != null),
       isInCookbook: json['isInCookbook'] ?? json['inCookbook'] ?? false,
       isPinned: json['isPinned'] ?? json['is_pinned'] ?? json['pinned'] ?? false,
+      isValidated: json['isValidated'] ?? json['isValidated'] ?? false,
     );
   }
 
@@ -118,6 +121,7 @@ class Recipe {
       'isSuggested': isSuggested,
       'isInCookbook': isInCookbook,
       'isPinned': isPinned,
+      'isValidated': isValidated,
     };
   }
 
@@ -146,6 +150,7 @@ class Recipe {
     bool? isSuggested,
     bool? isInCookbook,
     bool? isPinned,
+    bool? isValidated,
   }) {
     return Recipe(
       id: id ?? this.id,
@@ -172,6 +177,7 @@ class Recipe {
       isSuggested: isSuggested ?? this.isSuggested,
       isInCookbook: isInCookbook ?? this.isInCookbook,
       isPinned: isPinned ?? this.isPinned,
+      isValidated: isValidated ?? this.isValidated,
     );
   }
 

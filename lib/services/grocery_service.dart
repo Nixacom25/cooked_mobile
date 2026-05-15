@@ -45,6 +45,26 @@ class GroceryService {
     }
   }
 
+  Future<http.Response> _reliableRequest(
+    Future<http.Response> Function() requestCall, {
+    int maxRetries = 3,
+  }) async {
+    int attempts = 0;
+    while (true) {
+      try {
+        final response = await requestCall();
+        if (response.statusCode < 500) {
+          return response;
+        }
+        throw Exception('Server error: ${response.statusCode}');
+      } catch (e) {
+        attempts++;
+        if (attempts >= maxRetries) rethrow;
+        await Future.delayed(Duration(seconds: attempts * 2));
+      }
+    }
+  }
+
   Future<GroceryItem> addGroceryItem({
     required String name,
     required String quantity,
@@ -70,30 +90,34 @@ class GroceryService {
       myGroceriesNotifier.value = [placeholder, ...myGroceriesNotifier.value!];
     }
 
-    final response = await http.post(
-      url,
-      headers: await _getHeaders(),
-      body: jsonEncode({
-        'ingredientName': name,
-        'ingredientIcon': icon,
-        'quantity': quantity,
-        'recipeId': recipeId,
-        'plannedDate': date?.toIso8601String().split('T')[0],
-      }),
-    );
+    try {
+      final response = await _reliableRequest(() async => http.post(
+        url,
+        headers: await _getHeaders(),
+        body: jsonEncode({
+          'ingredientName': name,
+          'ingredientIcon': icon,
+          'quantity': quantity,
+          'recipeId': recipeId,
+          'plannedDate': date?.toIso8601String().split('T')[0],
+        }),
+      ));
 
-    if (response.statusCode == 200) {
-      // Refresh list to replace placeholder with real data
-      await getMyGroceries(forceRefresh: true);
-      return GroceryItem.fromJson(jsonDecode(response.body));
-    } else {
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        // Refresh list to replace placeholder with real data
+        await getMyGroceries(forceRefresh: true);
+        return GroceryItem.fromJson(jsonDecode(response.body));
+      } else {
+        throw Exception('Failed to add item');
+      }
+    } catch (e) {
       // Remove placeholder on error
       if (myGroceriesNotifier.value != null) {
         myGroceriesNotifier.value = myGroceriesNotifier.value!
             .where((item) => !item.isPlaceholder)
             .toList();
       }
-      throw Exception('Failed to add item to grocery list.');
+      rethrow;
     }
   }
 
@@ -113,13 +137,11 @@ class GroceryService {
       if (originalIsBought != null && currentIsBought != originalIsBought) {
         try {
           final url = Uri.parse('${ApiConfig.baseUrl}/grocery-items/$id/toggle');
-          final response = await http.put(url, headers: await _getHeaders());
-
-          if (response.statusCode == 200) {
-            // No need to force refresh here, we trust our local optimistic update.
-          }
+          await _reliableRequest(() async => http.put(url, headers: await _getHeaders()));
         } catch (e) {
           print('Error syncing toggle state for grocery $id: $e');
+          // On total failure, refresh list to revert UI
+          await getMyGroceries(forceRefresh: true);
         }
       }
 
@@ -169,14 +191,24 @@ class GroceryService {
   }
 
   Future<void> deleteGroceryItem(String id) async {
-    final url = Uri.parse('${ApiConfig.baseUrl}/grocery-items/$id');
-    final response = await http.delete(url, headers: await _getHeaders());
+    // 1. Optimistic remove
+    if (myGroceriesNotifier.value != null) {
+      myGroceriesNotifier.value = myGroceriesNotifier.value!
+          .where((item) => item.id != id)
+          .toList();
+    }
 
-    if (response.statusCode != 200) {
+    final url = Uri.parse('${ApiConfig.baseUrl}/grocery-items/$id');
+    try {
+      final response = await _reliableRequest(() async => http.delete(url, headers: await _getHeaders()));
+      if (response.statusCode != 200) {
+        throw Exception('Failed to delete item');
+      }
+    } catch (e) {
+      // Revert on error? (In complex cases yes, but here we usually refresh anyway)
+      await getMyGroceries(forceRefresh: true);
       throw Exception('Failed to delete grocery item.');
     }
-    // For delete, we keep it simple: refresh list
-    await getMyGroceries(forceRefresh: true);
   }
 
   Future<void> _autoCleanupItems(List<GroceryItem> items) async {
@@ -190,13 +222,8 @@ class GroceryService {
       if (item.isBought && item.updatedAt.isBefore(oneDayAgo)) return true;
       
       // Rule 2: Planned items where the date passed more than 24h ago
+      // (plannedDate is usually 00:00:00, so +48h means 24h after that day ended)
       if (item.plannedDate != null) {
-        // Since plannedDate is usually at 00:00:00 of that day,
-        // adding 24h means we wait until the end of that day.
-        // Wait another 24h (total 48h from start of day) to be safe or as requested.
-        // The user said "24h after the date passed".
-        // If date passed = start of next day. 24h after that = start of day after next.
-        // Let's stick to: plannedDate + 48h < now
         if (item.plannedDate!.add(const Duration(hours: 48)).isBefore(now)) return true;
       }
       

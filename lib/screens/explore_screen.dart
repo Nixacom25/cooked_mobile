@@ -68,8 +68,8 @@ class _ExploreScreenState extends State<ExploreScreen>
   //   ('🥐', 'Bakery'),
   // ];
 
-  late Future<Map<String, int>> _cuisinesFuture;
-  late Future<Map<String, int>> _categoriesFuture;
+  late Future<List<Map<String, dynamic>>> _cuisinesFuture;
+  late Future<List<Map<String, dynamic>>> _categoriesFuture;
   late Future<List<Recipe>> _popularFuture;
   List<Recipe> _allPopularRecipes = [];
   List<Recipe> _recentRecipes = [];
@@ -298,7 +298,7 @@ class _ExploreScreenState extends State<ExploreScreen>
 
   // ── Browse by Cuisine ───────────────────────────────────────────────────────
   Widget _buildBrowseByCuisine() {
-    return FutureBuilder<Map<String, int>>(
+    return FutureBuilder<List<Map<String, dynamic>>>(
       future: _cuisinesFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
@@ -335,16 +335,16 @@ class _ExploreScreenState extends State<ExploreScreen>
         if (!snapshot.hasData || snapshot.data!.isEmpty) {
           return const SizedBox.shrink();
         }
-        final cuisinesMap = snapshot.data!;
-        final names = cuisinesMap.keys
+        final cuisinesList = snapshot.data!;
+        final filteredList = cuisinesList
             .where(
-              (name) => _allowedCuisines.any(
-                (c) => c.toLowerCase() == name.toLowerCase(),
+              (item) => _allowedCuisines.any(
+                (c) => c.toLowerCase() == (item['name'] as String).toLowerCase(),
               ),
             )
             .toList();
 
-        if (names.isEmpty) return const SizedBox.shrink();
+        if (filteredList.isEmpty) return const SizedBox.shrink();
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -368,9 +368,11 @@ class _ExploreScreenState extends State<ExploreScreen>
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
                 padding: EdgeInsets.symmetric(horizontal: 20.w),
-                itemCount: names.length,
+                itemCount: filteredList.length,
                 itemBuilder: (context, i) {
-                  final name = names[i];
+                  final item = filteredList[i];
+                  final name = item['name'] as String;
+                  final imageUrl = item['image'] as String?;
 
                   // Use local mapping for image
                   String imgPath =
@@ -405,10 +407,15 @@ class _ExploreScreenState extends State<ExploreScreen>
                                   offset: const Offset(0, 4),
                                 ),
                               ],
-                              image: DecorationImage(
-                                image: AssetImage(imgPath),
-                                fit: BoxFit.cover,
-                              ),
+                              image: imageUrl != null && imageUrl.isNotEmpty
+                                  ? DecorationImage(
+                                      image: CachedNetworkImageProvider(imageUrl),
+                                      fit: BoxFit.cover,
+                                    )
+                                  : DecorationImage(
+                                      image: AssetImage(imgPath),
+                                      fit: BoxFit.cover,
+                                    ),
                             ),
                           ),
                           SizedBox(height: 5.h),
@@ -436,7 +443,7 @@ class _ExploreScreenState extends State<ExploreScreen>
 
   // ── Popular Categories ──────────────────────────────────────────────────────
   Widget _buildPopularCategories() {
-    return FutureBuilder<Map<String, int>>(
+    return FutureBuilder<List<Map<String, dynamic>>>(
       future: _categoriesFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
@@ -477,16 +484,16 @@ class _ExploreScreenState extends State<ExploreScreen>
         if (!snapshot.hasData || snapshot.data!.isEmpty) {
           return const SizedBox.shrink();
         }
-        final categoriesMap = snapshot.data!;
-        final names = categoriesMap.keys
+        final categoriesList = snapshot.data!;
+        final filteredList = categoriesList
             .where(
-              (name) => _allowedNiches.any(
-                (n) => n.toLowerCase() == name.toLowerCase(),
+              (item) => _allowedNiches.any(
+                (n) => n.toLowerCase() == (item['name'] as String).toLowerCase(),
               ),
             )
             .toList();
 
-        if (names.isEmpty) return const SizedBox.shrink();
+        if (filteredList.isEmpty) return const SizedBox.shrink();
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -510,10 +517,12 @@ class _ExploreScreenState extends State<ExploreScreen>
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
                 padding: EdgeInsets.zero,
-                itemCount: names.length,
+                itemCount: filteredList.length,
                 itemBuilder: (context, i) {
-                  final name = names[i];
-                  final count = categoriesMap[name] ?? 0;
+                  final item = filteredList[i];
+                  final name = item['name'] as String;
+                  final count = item['recipeCount'] ?? 0;
+                  final imageUrl = item['image'] as String?;
                   final imgPath =
                       ExploreScreen.nicheImages[name] ??
                       'assets/images/explore_autumn.png';
@@ -541,12 +550,31 @@ class _ExploreScreenState extends State<ExploreScreen>
                         children: [
                           ClipRRect(
                             borderRadius: BorderRadius.circular(16.r),
-                            child: Image.asset(
-                              imgPath,
-                              width: 160.w,
-                              height: 130.h,
-                              fit: BoxFit.cover,
-                            ),
+                            child: imageUrl != null && imageUrl.isNotEmpty
+                                ? CachedNetworkImage(
+                                    imageUrl: imageUrl,
+                                    width: 160.w,
+                                    height: 130.h,
+                                    fit: BoxFit.cover,
+                                    placeholder: (context, url) => SkeletonLoader(
+                                      width: 160.w,
+                                      height: 130.h,
+                                      borderRadius: 16,
+                                    ),
+                                    errorWidget: (context, url, error) =>
+                                        Image.asset(
+                                      imgPath,
+                                      width: 160.w,
+                                      height: 130.h,
+                                      fit: BoxFit.cover,
+                                    ),
+                                  )
+                                : Image.asset(
+                                    imgPath,
+                                    width: 160.w,
+                                    height: 130.h,
+                                    fit: BoxFit.cover,
+                                  ),
                           ),
                           SizedBox(height: 10.h),
                           Text(
@@ -708,6 +736,7 @@ class _ExploreScreenState extends State<ExploreScreen>
                         isValidated: isSaved,
                         animationDelay: Duration(milliseconds: i * 800),
                         useExploreButton: true,
+                        disableSlide: true,
                         onValidateTap: () {
                           if (isSaved) {
                             IosToast.show(
@@ -785,12 +814,13 @@ class _ExploreScreenState extends State<ExploreScreen>
         final horizontalPadding = lerpDouble(20.w, 12.w, value)!;
         final borderRadius = lerpDouble(50.r, 32.r, value)!;
         final screenHeight = MediaQuery.of(context).size.height;
-        final bottomMargin = topPos / 2;
-        final maxExpandedHeight = screenHeight - topPos - bottomMargin;
-        final targetHeight = (_overlaySearchCtrl.text.length >= 3)
-            ? maxExpandedHeight
-            : 450.h;
-        final height = lerpDouble(50.h, targetHeight, value)!;
+        final bottomLimit = topPos / 2; // User requested: bottom = top / 2
+        final maxModalHeight = screenHeight - topPos - bottomLimit;
+        
+        // Dynamic height: expand only if needed, but limited by maxModalHeight
+        final height = value < 1.0 
+            ? lerpDouble(50.h, 450.h, value)!
+            : maxModalHeight;
         final bgColor = Color.lerp(
           Colors.white,
           const Color(0xFFF7F7F7),
@@ -976,7 +1006,7 @@ class _ExploreScreenState extends State<ExploreScreen>
                                   ),
                                   SizedBox(height: 20.h),
                                   Text(
-                                    'Recent searches',
+                                    'Recents',
                                     style: TextStyle(
                                       fontFamily: 'SF Pro',
                                       fontWeight: FontWeight.w700,

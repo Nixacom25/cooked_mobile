@@ -394,18 +394,18 @@ class RecipeService {
     }
   }
 
-  Future<Map<String, int>> getExploreCuisines({bool forceRefresh = false}) async {
+  Future<List<Map<String, dynamic>>> getExploreCuisines({bool forceRefresh = false}) async {
     const cacheKey = 'explore_cuisines';
     if (!forceRefresh && _cache.containsKey(cacheKey)) {
-      return _cache[cacheKey] as Map<String, int>;
+      return List<Map<String, dynamic>>.from(_cache[cacheKey]);
     }
 
     final url = Uri.parse('${ApiConfig.baseUrl}/recipes/explore/cuisines');
     final response = await http.get(url, headers: await _getHeaders());
 
     if (response.statusCode == 200) {
-      final Map<String, dynamic> data = jsonDecode(response.body);
-      final results = data.cast<String, int>();
+      final List<dynamic> data = jsonDecode(response.body);
+      final results = data.cast<Map<String, dynamic>>();
       _cache[cacheKey] = results;
       return results;
     } else {
@@ -413,18 +413,18 @@ class RecipeService {
     }
   }
 
-  Future<Map<String, int>> getExploreCategories({bool forceRefresh = false}) async {
+  Future<List<Map<String, dynamic>>> getExploreCategories({bool forceRefresh = false}) async {
     const cacheKey = 'explore_categories';
     if (!forceRefresh && _cache.containsKey(cacheKey)) {
-      return _cache[cacheKey] as Map<String, int>;
+      return List<Map<String, dynamic>>.from(_cache[cacheKey]);
     }
 
     final url = Uri.parse('${ApiConfig.baseUrl}/recipes/explore/categories');
     final response = await http.get(url, headers: await _getHeaders());
 
     if (response.statusCode == 200) {
-      final Map<String, dynamic> data = jsonDecode(response.body);
-      final results = data.cast<String, int>();
+      final List<dynamic> data = jsonDecode(response.body);
+      final results = data.cast<Map<String, dynamic>>();
       _cache[cacheKey] = results;
       return results;
     } else {
@@ -622,37 +622,86 @@ class RecipeService {
     }
   }
 
-  Future<Recipe> validateRecipe(String id) async {
-    final url = Uri.parse('${ApiConfig.baseUrl}/recipes/$id/validate');
-    final response = await http.put(url, headers: await _getHeaders());
+  Future<http.Response> _reliableRequest(
+    Future<http.Response> Function() requestCall, {
+    int maxRetries = 3,
+  }) async {
+    int attempts = 0;
+    while (true) {
+      try {
+        final response = await requestCall();
+        if (response.statusCode < 500) {
+          return response;
+        }
+        throw Exception('Server error: ${response.statusCode}');
+      } catch (e) {
+        attempts++;
+        if (attempts >= maxRetries) rethrow;
+        await Future.delayed(Duration(seconds: attempts * 2));
+      }
+    }
+  }
 
-    if (response.statusCode == 200) {
-      final validated = Recipe.fromJson(jsonDecode(response.body));
-      
-      // Refresh list without full skeleton
+  Future<Recipe> validateRecipe(String id) async {
+    // 1. Optimistic local update
+    if (myRecipesNotifier.value != null) {
+      final newList = List<Recipe>.from(myRecipesNotifier.value!);
+      final idx = newList.indexWhere((r) => r.id == id);
+      if (idx != -1) {
+        newList[idx] = newList[idx].copyWith(isValidated: true);
+        myRecipesNotifier.value = newList;
+      }
+    }
+
+    final url = Uri.parse('${ApiConfig.baseUrl}/recipes/$id/validate');
+    try {
+      final response = await _reliableRequest(() async => http.put(url, headers: await _getHeaders()));
+      if (response.statusCode == 200) {
+        final validated = Recipe.fromJson(jsonDecode(response.body));
+        // Background cleanup
+        _removeTemporarySuggestion(validated.name).catchError((_) => null);
+        CookbookService.instance.getMyCookbooks(forceRefresh: true).catchError((_) => null);
+        return validated;
+      } else {
+        throw Exception('Failed to validate recipe.');
+      }
+    } catch (e) {
       await getMyRecipes(forceRefresh: true);
-      
-      // Cleanup from temporary suggestions
-      await _removeTemporarySuggestion(validated.name);
-      
-      CookbookService.instance.getMyCookbooks(forceRefresh: true).then((_) => null).catchError((_) => null);
-      return validated;
-    } else {
-      throw Exception('Failed to validate recipe.');
+      rethrow;
     }
   }
 
   Future<bool> deleteRecipe(String id) async {
-    final url = Uri.parse('${ApiConfig.baseUrl}/recipes/$id');
-    final response = await http.delete(url, headers: await _getHeaders());
-
-    if (response.statusCode == 200 || response.statusCode == 204) {
-      _cache.removeWhere((key, value) => key.contains(id));
-      await getMyRecipes(forceRefresh: true);
-      CookbookService.instance.getMyCookbooks(forceRefresh: true).then((_) => null).catchError((_) => null);
-      return true;
+    // 1. Optimistic remove
+    if (myRecipesNotifier.value != null) {
+      myRecipesNotifier.value = myRecipesNotifier.value!
+          .where((r) => r.id != id)
+          .toList();
     }
-    return false;
+    if (recentImportsNotifier.value != null) {
+      recentImportsNotifier.value = recentImportsNotifier.value!
+          .where((r) => r.id != id)
+          .toList();
+    }
+    if (homeSuggestionsNotifier.value != null) {
+      homeSuggestionsNotifier.value = homeSuggestionsNotifier.value!
+          .where((r) => r.id != id)
+          .toList();
+    }
+
+    final url = Uri.parse('${ApiConfig.baseUrl}/recipes/$id');
+    try {
+      final response = await _reliableRequest(() async => http.delete(url, headers: await _getHeaders()));
+      if (response.statusCode == 200 || response.statusCode == 204) {
+        _cache.removeWhere((key, value) => key.contains(id));
+        CookbookService.instance.getMyCookbooks(forceRefresh: true).catchError((_) => null);
+        return true;
+      }
+      throw Exception('Delete failed');
+    } catch (e) {
+      await getMyRecipes(forceRefresh: true);
+      return false;
+    }
   }
 
   void clearData() {
@@ -662,15 +711,28 @@ class RecipeService {
   }
 
   Future<Recipe> togglePin(String id) async {
-    final url = Uri.parse('${ApiConfig.baseUrl}/recipes/$id/pin');
-    final response = await http.patch(url, headers: await _getHeaders());
+    // 1. Optimistic local update
+    if (myRecipesNotifier.value != null) {
+      final newList = List<Recipe>.from(myRecipesNotifier.value!);
+      final idx = newList.indexWhere((r) => r.id == id);
+      if (idx != -1) {
+        newList[idx] = newList[idx].copyWith(isPinned: !newList[idx].isPinned);
+        myRecipesNotifier.value = newList;
+      }
+    }
 
-    if (response.statusCode == 200) {
-      final updated = Recipe.fromJson(jsonDecode(response.body));
+    final url = Uri.parse('${ApiConfig.baseUrl}/recipes/$id/pin');
+    try {
+      final response = await _reliableRequest(() async => http.patch(url, headers: await _getHeaders()));
+      if (response.statusCode == 200) {
+        final updated = Recipe.fromJson(jsonDecode(response.body));
+        return updated;
+      } else {
+        throw Exception('Failed to toggle pin status.');
+      }
+    } catch (e) {
       await getMyRecipes(forceRefresh: true);
-      return updated;
-    } else {
-      throw Exception('Failed to toggle pin status.');
+      rethrow;
     }
   }
 }

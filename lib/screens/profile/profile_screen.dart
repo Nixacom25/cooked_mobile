@@ -631,30 +631,6 @@ class _DeleteAccountSheetState extends State<_DeleteAccountSheet> {
                     ),
                   ),
                 ),
-                SizedBox(height: 12.h),
-                // Cancel button
-                GestureDetector(
-                  onTap: () => Navigator.pop(context),
-                  child: Container(
-                    width: double.infinity,
-                    height: 54.h,
-                    decoration: BoxDecoration(
-                      color: Colors.transparent,
-                      borderRadius: BorderRadius.circular(16.r),
-                    ),
-                    child: Center(
-                      child: Text(
-                        'Cancel',
-                        style: TextStyle(
-                          fontFamily: 'SF Pro',
-                          fontWeight: FontWeight.w600,
-                          fontSize: 16.sp,
-                          color: const Color(0xFF64748B),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
                 SizedBox(height: bottomPad + 10.h),
               ],
             ),

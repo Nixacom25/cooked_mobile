@@ -59,8 +59,10 @@ class _HomeScreenState extends State<HomeScreen>
   final ValueNotifier<bool> _isScanInResultsMode = ValueNotifier<bool>(false);
   final ValueNotifier<bool> _isImportLoading = ValueNotifier<bool>(false);
 
-  // Tutorial keys
+  // Global Keys to trigger hints
+  final GlobalKey<_CookbooksRowState> _cookbooksRowKey = GlobalKey();
   final GlobalKey _firstCookbookKey = GlobalKey();
+  final GlobalKey<GroceryScreenState> _groceryScreenKey = GlobalKey();
 
   @override
   void initState() {
@@ -76,6 +78,7 @@ class _HomeScreenState extends State<HomeScreen>
         onRefresh: () => setState(() {}),
         onScanTap: () => _switchTab(2),
         firstCookbookKey: _firstCookbookKey,
+        cookbooksRowKey: _cookbooksRowKey,
       ),
       const ExploreScreen(),
       ScanScreen(
@@ -84,7 +87,7 @@ class _HomeScreenState extends State<HomeScreen>
         onTabSwitch: _switchTab,
         onClose: () => _switchTab(_previousTab),
       ),
-      const GroceryScreen(),
+      GroceryScreen(key: _groceryScreenKey),
       ImportScreen(
         isActiveNotifier: _importActiveNotifier,
         isImportingNotifier: _isImportLoading,
@@ -250,6 +253,13 @@ class _HomeScreenState extends State<HomeScreen>
     } else if (i != 0 && prev == 0) {
       // Switching away from home - dismiss Home tutorial if showing
       TutorialHelper.dismissCurrent();
+    }
+
+    // Trigger hints when rejoining tabs
+    if (i == 0) {
+      _cookbooksRowKey.currentState?.triggerHint();
+    } else if (i == 3) {
+      _groceryScreenKey.currentState?.triggerHint();
     }
   }
 
@@ -557,10 +567,10 @@ class _NavItemState extends State<_NavItem> with SingleTickerProviderStateMixin 
     super.initState();
     _anim = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 100),
+      duration: const Duration(milliseconds: 150),
     );
-    _scale = Tween<double>(begin: 1.0, end: 0.60).animate(
-      CurvedAnimation(parent: _anim, curve: Curves.easeInOut),
+    _scale = Tween<double>(begin: 1.0, end: 0.88).animate(
+      CurvedAnimation(parent: _anim, curve: Curves.easeOutCubic),
     );
   }
 
@@ -631,7 +641,13 @@ class _HomeTab extends StatefulWidget {
   final VoidCallback? onRefresh;
   final VoidCallback? onScanTap;
   final GlobalKey? firstCookbookKey;
-  const _HomeTab({this.onRefresh, this.onScanTap, this.firstCookbookKey});
+  final GlobalKey<_CookbooksRowState>? cookbooksRowKey;
+  const _HomeTab({
+    this.onRefresh,
+    this.onScanTap,
+    this.firstCookbookKey,
+    this.cookbooksRowKey,
+  });
 
   @override
   State<_HomeTab> createState() => _HomeTabState();
@@ -724,6 +740,7 @@ class _HomeTabState extends State<_HomeTab> {
                         ),
                         SizedBox(height: 12.h),
                         _CookbooksRow(
+                          key: widget.cookbooksRowKey,
                           onRefresh: widget.onRefresh,
                           firstCookbookKey: widget.firstCookbookKey,
                         ),
@@ -1069,7 +1086,7 @@ class _SectionRow extends StatelessWidget {
 class _CookbooksRow extends StatefulWidget {
   final VoidCallback? onRefresh;
   final GlobalKey? firstCookbookKey;
-  const _CookbooksRow({this.onRefresh, this.firstCookbookKey});
+  const _CookbooksRow({super.key, this.onRefresh, this.firstCookbookKey});
 
   @override
   State<_CookbooksRow> createState() => _CookbooksRowState();
@@ -1094,6 +1111,10 @@ class _CookbooksRowState extends State<_CookbooksRow> {
 
   void _loadData() {
     CookbookService.instance.getMyCookbooks();
+  }
+
+  void triggerHint() {
+    _showScrollHint();
   }
 
   void _showScrollHint() {
@@ -1303,41 +1324,37 @@ class _CookbooksRowState extends State<_CookbooksRow> {
                         HapticMenuAction(
                           title: cb.isPinned ? 'Unpin Cookbook' : 'Pin Cookbook',
                           icon: cb.isPinned ? Icons.push_pin_rounded : Icons.push_pin_outlined,
-                          onTap: () async {
-                            try {
-                              final updated = await CookbookService.instance.togglePin(cb.id);
+                          onTap: () {
+                            // FIRE AND FORGET - Optimistic
+                            CookbookService.instance.togglePin(cb.id).then((updated) {
                               if (mounted) {
-                                setState(() => _loadData());
                                 IosToast.show(context, 
                                   message: updated.isPinned ? 'Cookbook pinned' : 'Cookbook unpinned', 
                                   type: ToastType.success
                                 );
                               }
-                            } catch (e) {
+                            }).catchError((e) {
                               if (mounted) {
                                 IosToast.show(context, message: 'Operation failed', type: ToastType.error);
                               }
-                            }
+                            });
                           },
                         ),
                         HapticMenuAction(
                           title: 'Delete Cookbook',
                           icon: Icons.delete_outline_rounded,
                           isDestructive: true,
-                          onTap: () async {
-                            try {
-                              await CookbookService.instance.deleteCookbook(cb.id);
+                          onTap: () {
+                            // FIRE AND FORGET - Optimistic
+                            CookbookService.instance.deleteCookbook(cb.id).then((_) {
                               if (mounted) {
-                                setState(() {
-                                  _loadData();
-                                });
                                 IosToast.show(context, message: 'Cookbook deleted', type: ToastType.success);
                               }
-                            } catch (e) {
+                            }).catchError((e) {
                               if (mounted) {
                                 IosToast.show(context, message: 'Failed to delete cookbook', type: ToastType.error);
                               }
-                            }
+                            });
                           },
                         ),
                       ],
@@ -1567,20 +1584,20 @@ class _SavedRecipesGrid extends StatelessWidget {
                 builder: (_) => AddToCookbookSheet(recipe: r),
               );
             },
-            onPinTap: () async {
-              try {
-                final updated = await RecipeService.instance.togglePin(r.id);
+            onPinTap: () {
+              // FIRE AND FORGET - Optimistic
+              RecipeService.instance.togglePin(r.id).then((updated) {
                 if (ctx.mounted) {
                   IosToast.show(ctx, 
                     message: updated.isPinned ? 'Recipe pinned' : 'Recipe unpinned', 
                     type: ToastType.success
                   );
                 }
-              } catch (e) {
+              }).catchError((e) {
                 if (ctx.mounted) {
                   IosToast.show(ctx, message: 'Failed to pin recipe', type: ToastType.error);
                 }
-              }
+              });
             },
             onShareTap: () async {
               try {
@@ -1596,11 +1613,13 @@ class _SavedRecipesGrid extends StatelessWidget {
                 }
               }
             },
-            onDeleteTap: () async {
-              final success = await RecipeService.instance.deleteRecipe(r.id);
-              if (success && ctx.mounted) {
-                IosToast.show(ctx, message: 'Recipe deleted', type: ToastType.success);
-              }
+            onDeleteTap: () {
+              // FIRE AND FORGET - Optimistic
+              RecipeService.instance.deleteRecipe(r.id).then((success) {
+                if (success && ctx.mounted) {
+                  IosToast.show(ctx, message: 'Recipe deleted', type: ToastType.success);
+                }
+              });
             },
           );
         },
@@ -1757,7 +1776,7 @@ class _SuggestedRecipesSectionState extends State<_SuggestedRecipesSection> {
             index: i,
             useValidationIcon: true,
             isValidated: isSaved,
-            disableSlide: false,
+            disableSlide: true,
             onValidateTap: () => _handleValidation(r, isSaved),
             onTap: () {
               HistoryService.instance.addToHistory(r);
@@ -1811,7 +1830,7 @@ class _SuggestedRecipesSectionState extends State<_SuggestedRecipesSection> {
               index: i,
               useValidationIcon: true,
               isValidated: isSaved,
-              disableSlide: false,
+              disableSlide: true,
               onValidateTap: () => _handleValidation(r, isSaved),
               onTap: () {
                 HistoryService.instance.addToHistory(r);

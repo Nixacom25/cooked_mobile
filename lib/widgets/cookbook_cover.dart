@@ -72,7 +72,7 @@ class CookbookCover extends StatelessWidget {
         ),
         if (isPinned)
           Positioned(
-            bottom: 4.h,
+            top: 4.h,
             right: 4.w,
             child: Container(
               padding: EdgeInsets.all(3.w),

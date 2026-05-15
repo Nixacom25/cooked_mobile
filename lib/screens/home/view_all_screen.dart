@@ -1,5 +1,6 @@
 import 'package:cooked/widgets/recipe_grid_skeleton.dart';
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../routes/app_routes.dart';
 import '../../widgets/app_search_field.dart';
@@ -443,6 +444,7 @@ class _RecipesGridState extends State<_RecipesGrid> {
   }
 
   Future<List<Recipe>> _fetchGroceryHistory() async {
+
     final groceries = await GroceryService.instance.getMyGroceries();
     final recipeIds = <String>{};
     final recipes = <Recipe>[];
@@ -490,6 +492,7 @@ class _RecipesGridState extends State<_RecipesGrid> {
           ),
           itemBuilder: (ctx, i) {
             final r = displayList[i];
+            final isImport = _type == ViewAllType.imports;
             final isExplore = _type == ViewAllType.explore ||
                 _type == ViewAllType.exploreRecipesByCuisine ||
                 _type == ViewAllType.exploreRecipesByCategory;
@@ -499,10 +502,11 @@ class _RecipesGridState extends State<_RecipesGrid> {
 
             return RecipeCard(
               recipe: r,
-              useValidationIcon: isExplore,
+              useValidationIcon: isExplore || isImport,
               isValidated: isSaved,
               animationDelay: Duration(milliseconds: i * 800),
               useExploreButton: isExplore,
+              disableSlide: !isImport, // Static for everything except imports
               inactiveColor: isCuisineOrCategory ? const Color(0xFF9CA3AF) : null,
               onValidateTap: isExplore
                   ? () {
@@ -753,7 +757,7 @@ class _StaticCookbooksGrid extends StatefulWidget {
 }
 
 class _StaticCookbooksGridState extends State<_StaticCookbooksGrid> {
-  Future<Map<String, int>>? _future;
+  Future<List<Map<String, dynamic>>>? _future;
 
   @override
   void initState() {
@@ -793,7 +797,7 @@ class _StaticCookbooksGridState extends State<_StaticCookbooksGrid> {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<Map<String, int>>(
+    return FutureBuilder<List<Map<String, dynamic>>>(
       future: _future,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
@@ -802,55 +806,43 @@ class _StaticCookbooksGridState extends State<_StaticCookbooksGrid> {
           );
         }
 
-        if (!snapshot.hasData) {
+        if (!snapshot.hasData || snapshot.data!.isEmpty) {
           return const Center(child: Text("No items found."));
         }
 
-        final Map<String, int> itemsMap = snapshot.data!;
+        final List<Map<String, dynamic>> items = snapshot.data!;
         final allowedList = widget.type == ViewAllType.exploreCategories
             ? _allowedNiches
             : _allowedCuisines;
 
-        var names = itemsMap.keys
+        var filteredItems = items
             .where(
-              (name) => allowedList.any(
-                (an) => an.toLowerCase() == name.toLowerCase(),
+              (item) => allowedList.any(
+                (an) => an.toLowerCase() == (item['name'] as String).toLowerCase(),
               ),
             )
             .toList();
 
         if (widget.searchQuery.trim().isNotEmpty) {
           final query = widget.searchQuery.trim().toLowerCase();
-          names = names
-              .where((n) => n.toLowerCase().contains(query))
+          filteredItems = filteredItems
+              .where((item) => (item['name'] as String).toLowerCase().contains(query))
               .toList();
         }
 
-        if (names.isEmpty) {
+        if (filteredItems.isEmpty) {
           return const Center(child: Text("No items match your search."));
         }
 
-        return _buildGrid(names, (name) {
-          if (widget.type == ViewAllType.exploreCategories) {
-            return ExploreScreen.nicheImages[name] ??
-                'assets/images/explore_autumn.png';
-          } else {
-            return ExploreScreen.cuisineImages[name] ??
-                'assets/images/others.png';
-          }
-        }, (name) => itemsMap[name] ?? 0);
+        return _buildGrid(filteredItems);
       },
     );
   }
 
-  Widget _buildGrid(
-    List<String> names,
-    String Function(String) getImg,
-    int Function(String) getCount,
-  ) {
+  Widget _buildGrid(List<Map<String, dynamic>> items) {
     return GridView.builder(
       padding: const EdgeInsets.fromLTRB(16, 4, 16, 20),
-      itemCount: names.length,
+      itemCount: items.length,
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
         crossAxisSpacing: 12,
@@ -858,15 +850,24 @@ class _StaticCookbooksGridState extends State<_StaticCookbooksGrid> {
         childAspectRatio: 0.72,
       ),
       itemBuilder: (ctx, i) {
-        final name = names[i];
-        final img = getImg(name);
-        final count = getCount(name);
-        return _buildItem(ctx, name, img, count);
+        final item = items[i];
+        final name = item['name'] as String;
+        final img = item['image'] as String?;
+        final count = item['recipeCount'] as int? ?? 0;
+        
+        String fallbackImg;
+        if (widget.type == ViewAllType.exploreCategories) {
+          fallbackImg = ExploreScreen.nicheImages[name] ?? 'assets/images/explore_autumn.png';
+        } else {
+          fallbackImg = ExploreScreen.cuisineImages[name] ?? 'assets/images/others.png';
+        }
+
+        return _buildItem(ctx, name, img, fallbackImg, count);
       },
     );
   }
 
-  Widget _buildItem(BuildContext ctx, String name, String img, int count) {
+  Widget _buildItem(BuildContext ctx, String name, String? imgUrl, String fallbackImg, int count) {
     return GestureDetector(
       onTap: () {
         Navigator.pushNamed(
@@ -893,7 +894,20 @@ class _StaticCookbooksGridState extends State<_StaticCookbooksGrid> {
               child: Container(
                 width: double.infinity,
                 color: const Color(0xFFF2F1EF),
-                child: Image.asset(img, fit: BoxFit.cover),
+                child: imgUrl != null && imgUrl.startsWith('http')
+                    ? CachedNetworkImage(
+                        imageUrl: imgUrl,
+                        fit: BoxFit.cover,
+                        placeholder: (context, url) => const Center(
+                          child: SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFFC83A2D)),
+                          ),
+                        ),
+                        errorWidget: (context, url, error) => Image.asset(fallbackImg, fit: BoxFit.cover),
+                      )
+                    : Image.asset(fallbackImg, fit: BoxFit.cover),
               ),
             ),
           ),
