@@ -1,24 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/services.dart';
+import '../core/extensions/string_extensions.dart';
 import '../models/recipe.dart';
 import '../models/cookbook.dart';
 import '../services/recipe_service.dart';
 import '../services/cookbook_service.dart';
-import '../routes/app_routes.dart';
 import '../core/widgets/ios_toast.dart';
 import '../core/utils/error_helper.dart';
-import 'red_button.dart';
-import 'skeleton_list.dart';
-import 'skeleton_loader.dart';
+import 'cookbook_form_modal.dart';
+
+enum _SheetMode { list, create }
 
 class AddToCookbookSheet extends StatefulWidget {
   final Recipe recipe;
   final VoidCallback? onSuccess;
+  final String? title;
 
   const AddToCookbookSheet({
     super.key,
     required this.recipe,
     this.onSuccess,
+    this.title,
   });
 
   @override
@@ -26,318 +30,322 @@ class AddToCookbookSheet extends StatefulWidget {
 }
 
 class _AddToCookbookSheetState extends State<AddToCookbookSheet> {
+  _SheetMode _mode = _SheetMode.list;
   final Set<String> _selectedIds = {};
-  bool _isSaving = false;
+  final _newCookbookCtrl = TextEditingController();
+  final FocusNode _focusNode = FocusNode();
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize selected IDs from current cookbooks
+    final cookbooks = CookbookService.instance.myCookbooksNotifier.value;
+    if (cookbooks != null && widget.recipe.id.isNotEmpty) {
+      for (var cb in cookbooks) {
+        if (cb.recipes.any((r) => r.id == widget.recipe.id)) {
+          _selectedIds.add(cb.id);
+        }
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _newCookbookCtrl.dispose();
+    _focusNode.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final bottomPad = MediaQuery.of(context).padding.bottom;
-
-    return Container(
-      constraints: BoxConstraints(maxHeight: 0.85.sh),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Handle
-          Container(
-            width: 40.w,
-            height: 4.h,
-            margin: EdgeInsets.symmetric(vertical: 12.h),
-            decoration: BoxDecoration(
-              color: const Color(0xFFE5E7EB),
-              borderRadius: BorderRadius.circular(2.r),
-            ),
+    return DraggableScrollableSheet(
+      initialChildSize: 0.6,
+      minChildSize: 0.4,
+      maxChildSize: 0.95,
+      expand: false,
+      builder: (context, scrollController) {
+        return Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
           ),
-
-          // Header
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 20.w),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Add to Cookbook',
-                  style: TextStyle(
-                    fontFamily: 'SF Pro',
-                    fontWeight: FontWeight.w800,
-                    fontSize: 20.sp,
-                    color: const Color(0xFF1A1A1A),
-                  ),
+          child: Column(
+            children: [
+              // Drag Handle
+              Container(
+                margin: EdgeInsets.symmetric(vertical: 12.h),
+                width: 36.w,
+                height: 4.h,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE5E7EB),
+                  borderRadius: BorderRadius.circular(2.r),
                 ),
-                IconButton(
-                  onPressed: () => Navigator.pop(context),
-                  icon: Icon(Icons.close_rounded, size: 24.sp, color: const Color(0xFF64748B)),
+              ),
+              
+              Expanded(
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 300),
+                  child: _mode == _SheetMode.list
+                      ? _buildListView(scrollController)
+                      : _buildCreateView(),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-
-          const Divider(height: 1),
-
-          Flexible(
-            child: ListView(
-              shrinkWrap: true,
-              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
-              children: [
-                // Create New Option
-                _buildActionTile(
-                  icon: Icons.add_circle_outline_rounded,
-                  label: 'Create a new recipe book',
-                  onTap: () async {
-                    final result = await Navigator.pushNamed(
-                      context,
-                      AppRoutes.cookbookForm,
-                      arguments: {'mode': 'add'},
-                    );
-                    if (result == true) {
-                      setState(() {});
-                    }
-                  },
-                ),
-                SizedBox(height: 12.h),
-
-                // Save Only Option - Show only if recipe is suggested/not yet saved permanently
-                if (widget.recipe.isSuggested) ...[
-                  _buildActionTile(
-                    icon: Icons.bookmark_added_rounded,
-                    label: 'Save to My Recipes only',
-                    onTap: _handleSaveOnly,
-                  ),
-                  SizedBox(height: 20.h),
-                ],
-
-                Text(
-                  'Select Recipe Books',
-                  style: TextStyle(
-                    fontFamily: 'SF Pro',
-                    fontWeight: FontWeight.w700,
-                    fontSize: 14.sp,
-                    color: const Color(0xFF64748B),
-                  ),
-                ),
-                SizedBox(height: 12.h),
-
-                ValueListenableBuilder<List<Cookbook>?>(
-                  valueListenable: CookbookService.instance.myCookbooksNotifier,
-                  builder: (ctx, cookbooks, _) {
-                    if (cookbooks == null) {
-                      CookbookService.instance.getMyCookbooks();
-                      return Padding(
-                        padding: EdgeInsets.symmetric(vertical: 10.h),
-                        child: const SkeletonList(height: 60, itemCount: 3),
-                      );
-                    }
-                    
-                    if (cookbooks.isEmpty) {
-                      return Padding(
-                        padding: EdgeInsets.symmetric(vertical: 20.h),
-                        child: Center(
-                          child: Text(
-                            "No recipe books found.",
-                            style: TextStyle(
-                              color: const Color(0xFF64748B),
-                              fontSize: 14.sp,
-                              fontFamily: 'SF Pro',
-                            ),
-                          ),
-                        ),
-                      );
-                    }
-
-                    return Container(
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF9FAFB),
-                        borderRadius: BorderRadius.circular(16.r),
-                        border: Border.all(color: const Color(0xFFF3F4F6)),
-                      ),
-                      child: ListView.separated(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: cookbooks.length,
-                        separatorBuilder: (_, __) => const Divider(height: 1, color: Color(0xFFF3F4F6)),
-                         itemBuilder: (lCtx, i) {
-                          final cb = cookbooks[i];
-                          if (cb.isPlaceholder) {
-                            return Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-                              child: Row(
-                                children: [
-                                  const SkeletonLoader(width: 140, height: 16),
-                                  const Spacer(),
-                                  const SkeletonLoader(width: 24, height: 24, borderRadius: 12),
-                                ],
-                              ),
-                            );
-                          }
-                          final isSelected = _selectedIds.contains(cb.id);
-                          return ListTile(
-                            onTap: () {
-                              setState(() {
-                                if (isSelected) {
-                                  _selectedIds.remove(cb.id);
-                                } else {
-                                  _selectedIds.add(cb.id);
-                                }
-                              });
-                            },
-                            contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
-                            title: Text(
-                              cb.name,
-                              style: TextStyle(
-                                fontFamily: 'SF Pro',
-                                fontWeight: FontWeight.w600,
-                                fontSize: 15.sp,
-                                color: const Color(0xFF1F2937),
-                              ),
-                            ),
-                            trailing: Icon(
-                              isSelected 
-                                  ? Icons.check_circle_rounded 
-                                  : Icons.radio_button_unchecked_rounded,
-                              color: isSelected ? const Color(0xFFC83A2D) : const Color(0xFFD1D5DB),
-                              size: 24.sp,
-                            ),
-                          );
-                        },
-                      ),
-                    );
-                  },
-                ),
-              ],
-            ),
-          ),
-
-          Padding(
-            padding: EdgeInsets.fromLTRB(20.w, 10.h, 20.w, 10.h + bottomPad),
-            child: RedButton(
-              label: _selectedIds.isEmpty 
-                  ? 'Select at least one book' 
-                  : 'Add to selected books (${_selectedIds.length})',
-              loadingLabel: 'Saving',
-              isLoading: _isSaving,
-              isDisabled: _selectedIds.isEmpty,
-              onTap: _handleConfirm,
-              height: 54.h,
-              fontSize: 16.sp,
-            ),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
-  Widget _buildActionTile({required IconData icon, required String label, required VoidCallback onTap}) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
-        decoration: BoxDecoration(
-          color: const Color(0xFFC83A2D).withOpacity(0.05),
-          borderRadius: BorderRadius.circular(16.r),
-          border: Border.all(color: const Color(0xFFC83A2D).withOpacity(0.2)),
+  Widget _buildListView(ScrollController scrollController) {
+    final hasAnySelection = _selectedIds.isNotEmpty;
+
+    return Column(
+      key: const ValueKey('list'),
+      children: [
+        // Top Recipe Row
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+          child: Row(
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8.r),
+                child: widget.recipe.image != null && widget.recipe.image!.isNotEmpty
+                  ? CachedNetworkImage(
+                      imageUrl: widget.recipe.image!,
+                      width: 50.w,
+                      height: 50.w,
+                      fit: BoxFit.cover,
+                      placeholder: (_, __) => Container(color: const Color(0xFFF3F4F6)),
+                      errorWidget: (_, __, ___) => Container(
+                        width: 50.w,
+                        height: 50.w,
+                        color: const Color(0xFFF3F4F6),
+                        child: Icon(Icons.fastfood_rounded, color: const Color(0xFFD1D5DB), size: 20.sp),
+                      ),
+                    )
+                  : Container(
+                      width: 50.w,
+                      height: 50.w,
+                      color: const Color(0xFFF3F4F6),
+                      child: Icon(Icons.fastfood_rounded, color: const Color(0xFFD1D5DB), size: 20.sp),
+                    ),
+              ),
+              SizedBox(width: 12.w),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      widget.recipe.name.toTitleCase(),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: const Color(0xFF1A1A1A),
+                        fontSize: 15.sp,
+                        fontWeight: FontWeight.w600,
+                        fontFamily: 'SF Pro',
+                      ),
+                    ),
+                    Text(
+                      '${widget.recipe.kcal} kcal • ${widget.recipe.cookTime} min',
+                      style: TextStyle(
+                        color: const Color(0xFF6B7280),
+                        fontSize: 13.sp,
+                        fontFamily: 'SF Pro',
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
+        
+        Divider(color: const Color(0xFFE5E7EB), height: 32.h),
+
+        // Cookbooks Header
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16.w),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Cookbooks',
+                style: TextStyle(
+                  color: const Color(0xFF111827),
+                  fontSize: 16.sp,
+                  fontWeight: FontWeight.bold,
+                  fontFamily: 'SF Pro',
+                ),
+              ),
+              GestureDetector(
+                onTap: () => setState(() => _mode = _SheetMode.create),
+                child: Text(
+                  'New cookbook',
+                  style: TextStyle(
+                    color: const Color(0xFFC83A2D), // Red as requested
+                    fontSize: 14.sp,
+                    fontWeight: FontWeight.w600,
+                    fontFamily: 'SF Pro',
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        SizedBox(height: 16.h),
+
+        Expanded(
+          child: ValueListenableBuilder<List<Cookbook>?>(
+            valueListenable: CookbookService.instance.myCookbooksNotifier,
+            builder: (context, cookbooks, _) {
+              if (cookbooks == null) {
+                CookbookService.instance.getMyCookbooks();
+                return const Center(child: CircularProgressIndicator(color: Color(0xFFC83A2D)));
+              }
+
+              return ListView.builder(
+                controller: scrollController,
+                padding: EdgeInsets.symmetric(horizontal: 16.w),
+                itemCount: cookbooks.length,
+                itemBuilder: (context, index) {
+                  final cb = cookbooks[index];
+                  final isSelected = _selectedIds.contains(cb.id);
+                  
+                  // Hide plus icon for others if one is already selected
+                  final shouldShowAction = isSelected || !hasAnySelection;
+
+                  return _buildCookbookTile(cb, isSelected, shouldShowAction);
+                },
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCookbookTile(Cookbook cb, bool isSelected, bool shouldShowAction) {
+    return GestureDetector(
+      onTap: () {
+        if (shouldShowAction) _toggleSelection(cb.id);
+      },
+      child: Padding(
+        padding: EdgeInsets.symmetric(vertical: 8.h),
         child: Row(
           children: [
-            Icon(icon, color: const Color(0xFFC83A2D), size: 22.sp),
-            SizedBox(width: 12.w),
-            Text(
-              label,
-              style: TextStyle(
-                fontFamily: 'SF Pro',
-                fontWeight: FontWeight.w700,
-                fontSize: 15.sp,
-                color: const Color(0xFFC83A2D),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12.r),
+              child: cb.recipes.isNotEmpty && cb.recipes.first.image != null && cb.recipes.first.image!.isNotEmpty
+                  ? CachedNetworkImage(
+                      imageUrl: cb.recipes.first.image!,
+                      width: 54.w,
+                      height: 54.w,
+                      fit: BoxFit.cover,
+                      placeholder: (_, __) => Container(color: const Color(0xFFF3F4F6)),
+                      errorWidget: (_, __, ___) => Container(
+                        width: 54.w,
+                        height: 54.w,
+                        color: const Color(0xFFF3F4F6),
+                        child: Icon(Icons.menu_book_rounded, color: const Color(0xFFD1D5DB), size: 24.sp),
+                      ),
+                    )
+                  : Container(
+                      width: 54.w,
+                      height: 54.w,
+                      color: const Color(0xFFF3F4F6),
+                      child: Icon(Icons.menu_book_rounded, color: const Color(0xFFD1D5DB), size: 24.sp),
+                    ),
+            ),
+            SizedBox(width: 14.w),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    cb.name.toTitleCase(),
+                    style: TextStyle(
+                      color: const Color(0xFF1F2937),
+                      fontSize: 15.sp,
+                      fontWeight: FontWeight.w500,
+                      fontFamily: 'SF Pro',
+                    ),
+                  ),
+                  Text(
+                    '${cb.recipes.length} recipes',
+                    style: TextStyle(
+                      color: const Color(0xFF6B7280),
+                      fontSize: 13.sp,
+                      fontFamily: 'SF Pro',
+                    ),
+                  ),
+                ],
               ),
             ),
-            const Spacer(),
-            Icon(Icons.chevron_right_rounded, color: const Color(0xFFC83A2D), size: 20.sp),
+            if (shouldShowAction)
+              Icon(
+                isSelected ? Icons.remove_circle_outline_rounded : Icons.add_circle_outline_rounded,
+                color: isSelected ? const Color(0xFFC83A2D) : const Color(0xFFD1D5DB),
+                size: 26.sp,
+              ),
           ],
         ),
       ),
     );
   }
 
-  Future<void> _handleSaveOnly() async {
-    setState(() => _isSaving = true);
-    try {
-      if (widget.recipe.id.isEmpty) {
-        // Recipe is not saved yet (Preview mode)
-        await RecipeService.instance.createRecipe(widget.recipe);
-      } else {
-        // If it was a suggestion, validate it so it becomes a permanent part of "My Recipes"
-        if (widget.recipe.origin == 'SUGGESTED') {
-          await RecipeService.instance.validateRecipe(widget.recipe.id);
-        } else {
-          // Just refresh to ensure it's in the list
-          await RecipeService.instance.getMyRecipes(forceRefresh: true);
+  Widget _buildCreateView() {
+    return CookbookFormModal(
+      isEmbedded: true,
+      initialName: _newCookbookCtrl.text,
+      initialRecipes: [widget.recipe],
+      onCancel: () => setState(() => _mode = _SheetMode.list),
+      onComplete: (cb) {
+        if (mounted) {
+          setState(() {
+            _mode = _SheetMode.list;
+            _selectedIds.add(cb.id);
+          });
+          // Also trigger the success callback if needed, 
+          // but we stay in the sheet to show the new cookbook selected
+          widget.onSuccess?.call();
         }
-      }
-
-      if (!mounted) return;
-      Navigator.pop(context); // Close sheet
-      widget.onSuccess?.call();
-      IosToast.show(
-        context,
-        message: 'Recipe saved to your collection!',
-        type: ToastType.success,
-      );
-    } catch (e) {
-      if (!mounted) return;
-      setState(() => _isSaving = false);
-      IosToast.show(
-        context,
-        message: ErrorHelper.getFriendlyMessage(e),
-        type: ToastType.error,
-      );
-    }
+      },
+    );
   }
 
-  Future<void> _handleConfirm() async {
-    setState(() => _isSaving = true);
-    final idsList = _selectedIds.toList();
+  Future<void> _toggleSelection(String cookbookId) async {
+    HapticFeedback.lightImpact();
     
-    try {
-      if (widget.recipe.id.isEmpty) {
-        // Recipe is not saved yet (Preview mode)
-        await RecipeService.instance.createRecipe(
-          widget.recipe,
-          cookbookIds: idsList,
-        );
+    final isSelected = _selectedIds.contains(cookbookId);
+    setState(() {
+      if (isSelected) {
+        _selectedIds.remove(cookbookId);
       } else {
-        // Recipe exists, add to each selected cookbook
-        for (final cbId in idsList) {
-          await CookbookService.instance.addRecipeToCookbook(
-            cbId,
-            widget.recipe.id,
-          );
-        }
-        
-        // If it was a suggestion, validate it so it becomes a permanent part of "My Recipes"
+        // Enforce single selection as requested: "enleve l'icone plus des autres"
+        _selectedIds.clear();
+        _selectedIds.add(cookbookId);
+      }
+    });
+
+    try {
+      if (!isSelected) {
+        await CookbookService.instance.addRecipeToCookbook(cookbookId, widget.recipe.id);
         if (widget.recipe.isSuggested) {
           await RecipeService.instance.validateRecipe(widget.recipe.id);
         }
+      } else {
+        await CookbookService.instance.removeRecipeFromCookbook(cookbookId, widget.recipe.id);
       }
-
-      if (!mounted) return;
-      Navigator.pop(context); // Close sheet
-      widget.onSuccess?.call();
-      IosToast.show(
-        context,
-        message: 'Successfully added to ${idsList.length} book${idsList.length > 1 ? 's' : ''}!',
-        type: ToastType.success,
-      );
     } catch (e) {
-      if (!mounted) return;
-      setState(() => _isSaving = false);
-      IosToast.show(
-        context,
-        message: ErrorHelper.getFriendlyMessage(e),
-        type: ToastType.error,
-      );
+       // Revert UI on error
+       setState(() {
+        if (!isSelected) _selectedIds.remove(cookbookId);
+        else _selectedIds.add(cookbookId);
+      });
+      IosToast.show(context, message: ErrorHelper.getFriendlyMessage(e), type: ToastType.error);
     }
   }
 }

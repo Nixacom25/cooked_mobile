@@ -20,8 +20,9 @@ class Recipe {
   final DateTime? expiresAt;
   final String? origin;
   final String? cuisine;
-  bool get isSuggested => expiresAt != null;
+  final bool isSuggested;
   final bool isInCookbook;
+  final bool isPinned;
   final bool isPlaceholder;
 
   Recipe({
@@ -46,7 +47,9 @@ class Recipe {
     this.expiresAt,
     this.origin,
     this.cuisine,
+    this.isSuggested = false,
     this.isInCookbook = false,
+    this.isPinned = false,
     this.isPlaceholder = false,
   });
 
@@ -83,7 +86,9 @@ class Recipe {
           : null,
       origin: json['origin'],
       cuisine: json['cuisine'],
+      isSuggested: json['isSuggested'] ?? json['is_suggested'] ?? (json['expiresAt'] != null),
       isInCookbook: json['isInCookbook'] ?? json['inCookbook'] ?? false,
+      isPinned: json['isPinned'] ?? json['is_pinned'] ?? json['pinned'] ?? false,
     );
   }
 
@@ -110,7 +115,9 @@ class Recipe {
       'expiresAt': expiresAt?.toIso8601String(),
       'origin': origin,
       'cuisine': cuisine,
+      'isSuggested': isSuggested,
       'isInCookbook': isInCookbook,
+      'isPinned': isPinned,
     };
   }
 
@@ -136,7 +143,9 @@ class Recipe {
     DateTime? expiresAt,
     String? origin,
     String? cuisine,
+    bool? isSuggested,
     bool? isInCookbook,
+    bool? isPinned,
   }) {
     return Recipe(
       id: id ?? this.id,
@@ -160,7 +169,9 @@ class Recipe {
       expiresAt: expiresAt ?? this.expiresAt,
       origin: origin ?? this.origin,
       cuisine: cuisine ?? this.cuisine,
+      isSuggested: isSuggested ?? this.isSuggested,
       isInCookbook: isInCookbook ?? this.isInCookbook,
+      isPinned: isPinned ?? this.isPinned,
     );
   }
 

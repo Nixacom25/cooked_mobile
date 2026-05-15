@@ -502,6 +502,34 @@ class AuthService {
     developer.log('All local data cleared on logout', name: 'AuthService');
   }
 
+  Future<void> deleteAccount() async {
+    final token = await getToken();
+    if (token == null) return;
+
+    final url = Uri.parse('${ApiConfig.baseUrl}/user/me');
+    try {
+      final response = await http.delete(
+        url,
+        headers: ApiConfig.authHeaders(token),
+      ).timeout(const Duration(seconds: 15));
+
+      if (response.statusCode == 200 || response.statusCode == 204) {
+        // Successful deletion on backend, now clear local session
+        await _googleSignIn.signOut();
+        _clearAllServiceData();
+        _token = null;
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.clear();
+        developer.log('Account deleted and local data cleared successfully', name: 'AuthService');
+      } else {
+        throw Exception(_extractErrorMessage(response.body, 'Failed to delete account.'));
+      }
+    } catch (e) {
+      developer.log('Error deleting account: $e', name: 'AuthService');
+      rethrow;
+    }
+  }
+
   Future<List<DeviceSession>> getSessions() async {
     final token = await getToken();
     if (token == null) return [];

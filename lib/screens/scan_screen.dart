@@ -272,6 +272,9 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
           _typedIngredients.clear();
           _updateState(ScanState.results);
         });
+        
+        // Save to temporary home suggestions for 3 days
+        RecipeService.instance.saveScanResults(recipes);
       }
     } catch (e) {
       if (mounted) {
@@ -1454,6 +1457,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
               recipe: recipe,
               useValidationIcon: true,
               isValidated: isSaved,
+              useScanButton: true,
               onValidateTap: () => _saveGeneratedRecipe(recipe),
               onTap: () {
                 Navigator.pushNamed(
@@ -1712,13 +1716,13 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
 
     try {
       final result = await RecipeService.instance.scan(photo);
+      final recipes = (result['recipes'] as List? ?? [])
+          .map((j) => Recipe.fromJson(j))
+          .toList();
+
       setState(() {
         _recipes.clear();
-        _recipes.addAll(
-          (result['recipes'] as List? ?? [])
-              .map((j) => Recipe.fromJson(j))
-              .toList(),
-        );
+        _recipes.addAll(recipes);
 
         _ingredients.clear();
         _ingredients.addAll(
@@ -1739,6 +1743,9 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
         _capturedImagePath = null;
         _updateState(ScanState.results);
       });
+      
+      // Save to temporary home suggestions for 3 days
+      RecipeService.instance.saveScanResults(recipes);
     } catch (e) {
       setState(() {
         _stopAnalysisLoading();

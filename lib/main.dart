@@ -1,7 +1,6 @@
 import 'package:cooked/services/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/foundation.dart';
 import 'core/theme/app_theme.dart';
 import 'routes/app_routes.dart';
 import 'screens/splash/splash_screen.dart';
@@ -22,7 +21,6 @@ import 'screens/home/recipe_detail_screen.dart';
 import 'screens/profile/profile_screen.dart';
 import 'screens/profile/my_account_screen.dart';
 import 'screens/profile/change_password_screen.dart';
-import 'screens/profile/favorites_screen.dart';
 import 'screens/profile/activity_history_screen.dart';
 import 'screens/profile/help_center_screen.dart';
 import 'screens/profile/user_preferences_screen.dart';
@@ -33,6 +31,9 @@ import 'package:cooked/services/notification_service.dart';
 import 'package:cooked/services/history_service.dart';
 import 'package:cooked/services/sharing_service.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:cooked/widgets/clipboard_banner.dart';
+import 'package:cooked/widgets/floating_heart.dart';
+import 'package:cooked/core/widgets/ios_toast.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -60,20 +61,112 @@ class CookedApp extends StatefulWidget {
   State<CookedApp> createState() => _CookedAppState();
 }
 
-class _CookedAppState extends State<CookedApp> {
+class _CookedAppState extends State<CookedApp> with WidgetsBindingObserver {
   final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
+  OverlayEntry? _clipboardOverlay;
 
   @override
   void initState() {
     super.initState();
-    // Non-blocking initialization
+    WidgetsBinding.instance.addObserver(this);
     _initApp();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    SharingService.instance.sharedTextNotifier.removeListener(_onSharedTextReceived);
+    SharingService.instance.clipboardTextNotifier.removeListener(_onClipboardTextReceived);
+    _removeClipboardOverlay();
+    SharingService.instance.dispose();
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      SharingService.instance.checkClipboard();
+    }
+  }
+
+  void _onClipboardTextReceived() {
+    final url = SharingService.instance.clipboardTextNotifier.value;
+    if (url != null && url.isNotEmpty) {
+      _showClipboardOverlay(url);
+    } else {
+      _removeClipboardOverlay();
+    }
+  }
+
+  void _showClipboardOverlay(String url) {
+    _removeClipboardOverlay();
+    _clipboardOverlay = OverlayEntry(
+      builder: (context) => ClipboardBanner(
+        url: url,
+        topOffset: MediaQuery.of(context).padding.top + 10.h,
+        onClose: () => SharingService.instance.ignoreClipboard(),
+        onPaste: () => _handlePaste(url),
+      ),
+    );
+    _navigatorKey.currentState?.overlay?.insert(_clipboardOverlay!);
+  }
+
+  void _removeClipboardOverlay() {
+    _clipboardOverlay?.remove();
+    _clipboardOverlay = null;
+  }
+
+  void _handlePaste(String url) {
+    SharingService.instance.ignoreClipboard();
+    final isLoggedIn = AuthService.instance.isLoggedIn;
+
+    if (!isLoggedIn) {
+      final state = _navigatorKey.currentState;
+      if (state != null) {
+        state.pushNamedAndRemoveUntil(AppRoutes.welcome, (route) => false);
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          IosToast.show(state.context, message: 'Please log in first to save this recipe', type: ToastType.warning);
+        });
+      }
+      return;
+    }
+
+    final state = _navigatorKey.currentState;
+    if (state != null) {
+      // Check if it's an internal recipe link
+      final recipeRegex = RegExp(r'(?:cooked\.nixacom\.com|cookedapp\.com)/recipes/([a-zA-Z0-9-]+)');
+      final match = recipeRegex.firstMatch(url);
+
+      if (match != null) {
+        final recipeId = match.group(1);
+        debugPrint("CookedApp: Internal recipe link pasted. ID: $recipeId");
+        
+        state.pushNamedAndRemoveUntil(
+          AppRoutes.home,
+          (route) => false,
+        );
+        state.pushNamed(
+          AppRoutes.recipeDetail,
+          arguments: {'recipeId': recipeId},
+        );
+      } else {
+        state.pushNamedAndRemoveUntil(
+          AppRoutes.home,
+          (route) => false,
+          arguments: {'initialTab': 4, 'initialUrl': url},
+        );
+      }
+    }
   }
 
   Future<void> _initApp() async {
     try {
       SharingService.instance.init();
       SharingService.instance.sharedTextNotifier.addListener(_onSharedTextReceived);
+      SharingService.instance.clipboardTextNotifier.addListener(_onClipboardTextReceived);
+      
+      // Check clipboard on startup
+      SharingService.instance.checkClipboard();
 
       await Future.wait([
         AuthService.instance.getToken(),
@@ -127,12 +220,32 @@ class _CookedAppState extends State<CookedApp> {
         Future.delayed(const Duration(milliseconds: 500), () {
           final state = _navigatorKey.currentState;
           if (state != null) {
-            debugPrint("CookedApp: Navigating to Home/Import with URL: $url");
-            state.pushNamedAndRemoveUntil(
-              AppRoutes.home,
-              (route) => false,
-              arguments: {'initialTab': 4, 'initialUrl': url},
-            );
+            debugPrint("CookedApp: Processing shared URL: $url");
+            
+            // Check if it's an internal recipe link
+            final recipeRegex = RegExp(r'(?:cooked\.nixacom\.com|cookedapp\.com)/recipes/([a-zA-Z0-9-]+)');
+            final match = recipeRegex.firstMatch(url);
+            
+            if (match != null) {
+              final recipeId = match.group(1);
+              debugPrint("CookedApp: Internal recipe link detected. ID: $recipeId");
+              
+              state.pushNamedAndRemoveUntil(
+                AppRoutes.home,
+                (route) => false,
+              );
+              state.pushNamed(
+                AppRoutes.recipeDetail,
+                arguments: {'recipeId': recipeId},
+              );
+            } else {
+              debugPrint("CookedApp: External link detected. Navigating to Import with URL: $url");
+              state.pushNamedAndRemoveUntil(
+                AppRoutes.home,
+                (route) => false,
+                arguments: {'initialTab': 4, 'initialUrl': url},
+              );
+            }
             SharingService.instance.consumeSharedText();
           } else {
             debugPrint("CookedApp: Navigator state is STILL NULL after delay.");
@@ -140,13 +253,6 @@ class _CookedAppState extends State<CookedApp> {
         });
       }
     }
-  }
-
-  @override
-  void dispose() {
-    SharingService.instance.sharedTextNotifier.removeListener(_onSharedTextReceived);
-    SharingService.instance.dispose();
-    super.dispose();
   }
 
   @override
@@ -164,14 +270,16 @@ class _CookedAppState extends State<CookedApp> {
             debugShowCheckedModeBanner: false,
             theme: AppTheme.light,
             builder: (context, child) {
-              return GestureDetector(
-                onTap: () {
-                  final currentFocus = FocusScope.of(context);
-                  if (!currentFocus.hasPrimaryFocus && currentFocus.focusedChild != null) {
-                    FocusManager.instance.primaryFocus?.unfocus();
-                  }
-                },
-                child: child!,
+              return FloatingHeartManager(
+                child: GestureDetector(
+                  onTap: () {
+                    final currentFocus = FocusScope.of(context);
+                    if (!currentFocus.hasPrimaryFocus && currentFocus.focusedChild != null) {
+                      FocusManager.instance.primaryFocus?.unfocus();
+                    }
+                  },
+                  child: child!,
+                ),
               );
             },
             navigatorObservers: [routeObserver],
@@ -247,9 +355,6 @@ class _CookedAppState extends State<CookedApp> {
                   break;
                 case AppRoutes.changePassword:
                   builder = const ChangePasswordScreen();
-                  break;
-                case AppRoutes.favorites:
-                  builder = const FavoritesScreen();
                   break;
                 case AppRoutes.activityHistory:
                   builder = const ActivityHistoryScreen();

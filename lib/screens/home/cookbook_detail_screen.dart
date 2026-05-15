@@ -12,6 +12,8 @@ import '../../core/utils/error_helper.dart';
 import '../../core/extensions/string_extensions.dart';
 import '../../core/utils/tutorial_helper.dart';
 import '../../widgets/skeleton_loader.dart';
+import '../../widgets/cookbook_form_modal.dart';
+import '../../widgets/add_to_cookbook_sheet.dart';
 
 class CookbookDetailScreen extends StatefulWidget {
   const CookbookDetailScreen({super.key});
@@ -131,14 +133,17 @@ class _CookbookDetailScreenState extends State<CookbookDetailScreen> {
                       if (_cookbook != null && !_cookbook!.id.startsWith('static_'))
                         GestureDetector(
                           onTap: () async {
-                            final result = await Navigator.pushNamed(
-                              context,
-                              AppRoutes.cookbookForm,
-                              arguments: {'mode': 'edit', 'cookbook': _cookbook},
+                            final result = await showModalBottomSheet(
+                              context: context,
+                              isScrollControlled: true,
+                              backgroundColor: Colors.transparent,
+                              builder: (context) => CookbookFormModal(
+                                cookbook: _cookbook,
+                              ),
                             );
                             if (result == 'deleted') {
                               if (mounted) Navigator.pop(context, true);
-                            } else if (result == true) {
+                            } else if (result is Cookbook) {
                               _load();
                             }
                           },
@@ -257,21 +262,32 @@ class _CookbookDetailScreenState extends State<CookbookDetailScreen> {
                             final r = recipes[i];
                             return RecipeCard(
                               recipe: r,
-                              onHeartTap: () async {
-                                try {
-                                  await RecipeService.instance.toggleFavorite(r.id);
-                                  setState(() {
-                                    r.isFavorite = !r.isFavorite;
-                                  });
-                                } catch (e) {
-                                  IosToast.show(ctx, message: ErrorHelper.getFriendlyMessage(e), type: ToastType.error);
-                                }
-                              },
                               onTap: () => Navigator.pushNamed(
                                 context,
                                 AppRoutes.recipeDetail,
-                                arguments: {'recipe': r},
+                                arguments: {'recipe': r, 'isPreview': false},
                               ),
+                              onAddToCookbookTap: () {
+                                showModalBottomSheet(
+                                  context: context,
+                                  backgroundColor: Colors.transparent,
+                                  isScrollControlled: true,
+                                  builder: (_) => AddToCookbookSheet(recipe: r),
+                                );
+                              },
+                              onPinTap: () {
+                                // Pin logic
+                              },
+                              onShareTap: () {
+                                // Share logic
+                              },
+                              onDeleteTap: () async {
+                                final success = await RecipeService.instance.deleteRecipe(r.id);
+                                if (success && mounted) {
+                                  _load();
+                                  IosToast.show(context, message: 'Recipe deleted', type: ToastType.success);
+                                }
+                              },
                             );
                           },
                         ),

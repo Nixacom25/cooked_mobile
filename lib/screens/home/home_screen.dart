@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../services/auth_service.dart';
@@ -19,9 +20,10 @@ import '../../models/cookbook.dart';
 import '../../widgets/recipe_card.dart';
 import '../../widgets/cookbook_cover.dart';
 import '../../core/widgets/ios_toast.dart';
-import '../../core/utils/error_helper.dart';
 import '../../core/utils/tutorial_helper.dart';
 import '../../widgets/add_to_cookbook_sheet.dart';
+import '../../widgets/cookbook_form_modal.dart';
+import '../../widgets/haptic_context_menu.dart';
 import '../../core/services/tutorial_service.dart';
 import '../../main.dart';
 import '../../services/history_service.dart';
@@ -438,16 +440,16 @@ class _FloatingBottomNav extends StatelessWidget {
               child: Row(
                 children: [
                   _NavItem(
-                    icon: Icons.home_outlined,
-                    activeIcon: Icons.home_rounded,
+                    svgPath: 'assets/nav/home.svg',
+                    activeSvgPath: 'assets/nav/home_active.svg',
                     label: 'Home',
                     index: 0,
                     current: currentIndex,
                     onTap: onTap,
                   ),
                   _NavItem(
-                    icon: Icons.search_rounded,
-                    activeIcon: Icons.search_rounded,
+                    svgPath: 'assets/nav/explore.svg',
+                    activeSvgPath: 'assets/nav/explore_active.svg',
                     label: 'Explore',
                     index: 1,
                     current: currentIndex,
@@ -456,8 +458,8 @@ class _FloatingBottomNav extends StatelessWidget {
                   const Expanded(child: SizedBox()),
                   _NavItem(
                     iconKey: groceryTabKey,
-                    icon: Icons.shopping_bag_outlined,
-                    activeIcon: Icons.shopping_bag_rounded,
+                    svgPath: 'assets/nav/grocery.svg',
+                    activeSvgPath: 'assets/nav/grocery_active.svg',
                     label: 'Grocery',
                     index: 3,
                     current: currentIndex,
@@ -467,8 +469,8 @@ class _FloatingBottomNav extends StatelessWidget {
                   ),
                   _NavItem(
                     iconKey: importTabKey,
-                    icon: Icons.file_download_outlined,
-                    activeIcon: Icons.file_download_rounded,
+                    svgPath: 'assets/nav/import.svg',
+                    activeSvgPath: 'assets/nav/import_active.svg',
                     label: 'Import',
                     index: 4,
                     current: currentIndex,
@@ -523,9 +525,9 @@ class _FloatingBottomNav extends StatelessWidget {
   }
 }
 
-class _NavItem extends StatelessWidget {
-  final IconData icon;
-  final IconData activeIcon;
+class _NavItem extends StatefulWidget {
+  final String svgPath;
+  final String activeSvgPath;
   final String label;
   final int index;
   final int current;
@@ -533,8 +535,8 @@ class _NavItem extends StatelessWidget {
   final GlobalKey? iconKey;
 
   const _NavItem({
-    required this.icon,
-    required this.activeIcon,
+    required this.svgPath,
+    required this.activeSvgPath,
     required this.label,
     required this.index,
     required this.current,
@@ -543,32 +545,76 @@ class _NavItem extends StatelessWidget {
   });
 
   @override
+  State<_NavItem> createState() => _NavItemState();
+}
+
+class _NavItemState extends State<_NavItem> with SingleTickerProviderStateMixin {
+  late AnimationController _anim;
+  late Animation<double> _scale;
+
+  @override
+  void initState() {
+    super.initState();
+    _anim = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 100),
+    );
+    _scale = Tween<double>(begin: 1.0, end: 0.60).animate(
+      CurvedAnimation(parent: _anim, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _anim.dispose();
+    super.dispose();
+  }
+
+  Future<void> _handleTap() async {
+    // 1. Scale down
+    await _anim.forward();
+    // 2. Scale back up
+    await _anim.reverse();
+    // 3. Trigger action (turns red)
+    widget.onTap(widget.index);
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final active = index == current;
+    final active = widget.index == widget.current;
     return Expanded(
       child: GestureDetector(
-        onTap: () => onTap(index),
+        onTap: _handleTap,
         behavior: HitTestBehavior.opaque,
-        child: Column(
+      child: Column(
+          key: widget.iconKey,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              active ? activeIcon : icon,
-              key:
-                  iconKey, // Use iconKey here to avoid duplicate GlobalKey on _NavItem itself
-              size: 24.sp,
-              color: active ? const Color(0xFFC83A2D) : const Color(0xFF8E8E8E),
+            ScaleTransition(
+              scale: _scale,
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 200),
+                transitionBuilder: (child, anim) => FadeTransition(opacity: anim, child: child),
+                child: SvgPicture.asset(
+                  active ? widget.activeSvgPath : widget.svgPath,
+                  key: ValueKey(active),
+                  width: 22.w,
+                  height: 22.h,
+                  colorFilter: ColorFilter.mode(
+                    active ? const Color(0xFFC83A2D) : const Color(0xFF8E8E8E),
+                    BlendMode.srcIn,
+                  ),
+                ),
+              ),
             ),
             SizedBox(height: 3.h),
             Text(
-              label,
+              widget.label,
               style: TextStyle(
                 fontFamily: 'SF Pro',
                 fontSize: 12.sp,
                 fontWeight: active ? FontWeight.w700 : FontWeight.w500,
-                color: active
-                    ? const Color(0xFFC83A2D)
-                    : const Color(0xFF8E8E8E),
+                color: active ? const Color(0xFFC83A2D) : const Color(0xFF8E8E8E),
               ),
             ),
           ],
@@ -749,9 +795,8 @@ class _HomeTabState extends State<_HomeTab> {
                             );
                           }
 
-                          final allRecipes = recipes;
-                          final savedRecipes = allRecipes
-                              .where((r) => !r.isInCookbook)
+                          final savedRecipes = recipes
+                              .where((r) => !r.isInCookbook && !r.isSuggested)
                               .toList();
                           final hasSaved = savedRecipes.isNotEmpty;
 
@@ -1032,7 +1077,6 @@ class _CookbooksRow extends StatefulWidget {
 
 class _CookbooksRowState extends State<_CookbooksRow> {
   final ScrollController _scrollController = ScrollController();
-  bool _hintShown = false;
 
   @override
   void initState() {
@@ -1053,25 +1097,23 @@ class _CookbooksRowState extends State<_CookbooksRow> {
   }
 
   void _showScrollHint() {
-    if (_hintShown) return;
-    Future.delayed(const Duration(milliseconds: 800), () {
+    Future.delayed(const Duration(milliseconds: 1000), () {
       if (!mounted) return;
       if (_scrollController.hasClients && _scrollController.position.maxScrollExtent > 0) {
         _scrollController
             .animateTo(
-              45.w,
-              duration: const Duration(milliseconds: 1000),
+              60.w,
+              duration: const Duration(milliseconds: 1200),
               curve: Curves.elasticOut,
             )
             .then((_) {
               if (!mounted) return;
               _scrollController.animateTo(
                 0.0,
-                duration: const Duration(milliseconds: 800),
+                duration: const Duration(milliseconds: 1000),
                 curve: Curves.easeOutQuart,
               );
             });
-        _hintShown = true;
       }
     });
   }
@@ -1085,12 +1127,12 @@ class _CookbooksRowState extends State<_CookbooksRow> {
   Widget build(BuildContext context) {
     return ValueListenableBuilder<List<Cookbook>?>(
       valueListenable: CookbookService.instance.myCookbooksNotifier,
-      builder: (context, cookbooks, _) {
-        if (cookbooks != null && cookbooks.length > 1) {
+      builder: (context, rawCookbooks, _) {
+        if (rawCookbooks != null && rawCookbooks.length > 1) {
           _showScrollHint();
         }
 
-        if (cookbooks == null) {
+        if (rawCookbooks == null) {
           return SizedBox(
             height: 200.h,
             child: ListView.builder(
@@ -1112,23 +1154,16 @@ class _CookbooksRowState extends State<_CookbooksRow> {
           );
         }
 
+        final cookbooks = List<Cookbook>.from(rawCookbooks)
+          ..sort((a, b) {
+            if (a.isPinned && !b.isPinned) return -1;
+            if (!a.isPinned && b.isPinned) return 1;
+            return b.updatedAt.compareTo(a.updatedAt);
+          });
+
         return SizedBox(
           height: 200.h,
-          child: ShaderMask(
-            shaderCallback: (Rect rect) {
-              return const LinearGradient(
-                begin: Alignment.centerLeft,
-                end: Alignment.centerRight,
-                colors: [
-                  Colors.white,
-                  Colors.white,
-                  Colors.white,
-                  Colors.transparent,
-                ],
-                stops: [0.0, 0.05, 0.85, 1.0],
-              ).createShader(rect);
-            },
-            blendMode: BlendMode.dstIn,
+          child: ClipRRect(
             child: ListView.builder(
               controller: _scrollController,
               scrollDirection: Axis.horizontal,
@@ -1142,16 +1177,17 @@ class _CookbooksRowState extends State<_CookbooksRow> {
                     child: GestureDetector(
                       key: widget.firstCookbookKey,
                       onTap: () async {
-                        final result = await Navigator.pushNamed(
-                          context,
-                          AppRoutes.cookbookForm,
-                          arguments: {'mode': 'add'},
+                        final result = await showModalBottomSheet<bool>(
+                          context: context,
+                          isScrollControlled: true,
+                          backgroundColor: Colors.transparent,
+                          builder: (context) => const CookbookFormModal(),
                         );
                         if (result == true) {
                           setState(() => _loadData());
                           widget.onRefresh?.call();
                         }
-                    },
+                      },
                     child: SizedBox(
                       width: 150.w,
                       child: Column(
@@ -1226,6 +1262,86 @@ class _CookbooksRowState extends State<_CookbooksRow> {
                     if (result == true) {
                       setState(() => _loadData());
                     }
+                  },
+                  behavior: HitTestBehavior.opaque,
+                  onLongPressStart: (details) {
+                    HapticFeedback.heavyImpact();
+                    HapticContextMenu.show(
+                      context,
+                      targetPosition: details.globalPosition,
+                      actions: [
+                        HapticMenuAction(
+                          title: 'Add Recipes',
+                          icon: Icons.add_circle_outline_rounded,
+                          onTap: () async {
+                            final result = await showModalBottomSheet(
+                              context: context,
+                              isScrollControlled: true,
+                              backgroundColor: Colors.transparent,
+                              builder: (context) => CookbookFormModal(cookbook: cb),
+                            );
+                            if (result is Cookbook || result == 'deleted') {
+                              setState(() => _loadData());
+                            }
+                          },
+                        ),
+                        HapticMenuAction(
+                          title: 'Edit Cookbook',
+                          icon: Icons.edit_outlined,
+                          onTap: () async {
+                            final result = await showModalBottomSheet(
+                              context: context,
+                              isScrollControlled: true,
+                              backgroundColor: Colors.transparent,
+                              builder: (context) => CookbookFormModal(cookbook: cb),
+                            );
+                            if (result is Cookbook || result == 'deleted') {
+                              setState(() => _loadData());
+                            }
+                          },
+                        ),
+                        HapticMenuAction(
+                          title: cb.isPinned ? 'Unpin Cookbook' : 'Pin Cookbook',
+                          icon: cb.isPinned ? Icons.push_pin_rounded : Icons.push_pin_outlined,
+                          onTap: () async {
+                            try {
+                              final updated = await CookbookService.instance.togglePin(cb.id);
+                              if (mounted) {
+                                setState(() => _loadData());
+                                IosToast.show(context, 
+                                  message: updated.isPinned ? 'Cookbook pinned' : 'Cookbook unpinned', 
+                                  type: ToastType.success
+                                );
+                              }
+                            } catch (e) {
+                              if (mounted) {
+                                IosToast.show(context, message: 'Operation failed', type: ToastType.error);
+                              }
+                            }
+                          },
+                        ),
+                        HapticMenuAction(
+                          title: 'Delete Cookbook',
+                          icon: Icons.delete_outline_rounded,
+                          isDestructive: true,
+                          onTap: () async {
+                            try {
+                              await CookbookService.instance.deleteCookbook(cb.id);
+                              if (mounted) {
+                                setState(() {
+                                  _loadData();
+                                });
+                                IosToast.show(context, message: 'Cookbook deleted', type: ToastType.success);
+                              }
+                            } catch (e) {
+                              if (mounted) {
+                                IosToast.show(context, message: 'Failed to delete cookbook', type: ToastType.error);
+                              }
+                            }
+                          },
+                        ),
+                      ],
+                    );
                   },
                   child: SizedBox(
                     width: 180.w,
@@ -1345,10 +1461,7 @@ class _RecentlyViewedRow extends StatelessWidget {
                     SizedBox(width: 10.w),
                     Flexible(
                       child: Text(
-                        r.name.isEmpty
-                            ? r.name
-                            : r.name[0].toUpperCase() +
-                                  r.name.substring(1).toLowerCase(),
+                        r.name,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
@@ -1405,15 +1518,22 @@ class _SavedRecipesGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    List<Recipe> displayList = recipes;
+    List<Recipe> displayList = List<Recipe>.from(recipes);
     if (searchQuery.trim().isNotEmpty) {
       final query = searchQuery.trim().toLowerCase();
-      displayList = recipes
+      displayList = displayList
           .where((r) => r.name.toLowerCase().contains(query))
           .toList();
     }
 
     if (displayList.isEmpty) return const SizedBox.shrink();
+    
+    // Sort displayList: pinned first, then by date
+    displayList.sort((a, b) {
+      if (a.isPinned && !b.isPinned) return -1;
+      if (!a.isPinned && b.isPinned) return 1;
+      return b.createdAt.compareTo(a.createdAt);
+    });
 
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 18.w),
@@ -1431,32 +1551,56 @@ class _SavedRecipesGrid extends StatelessWidget {
           final r = displayList[i];
           return RecipeCard(
             recipe: r,
-            onHeartTap: () async {
-              try {
-                await RecipeService.instance.toggleFavorite(r.id);
-              } catch (e) {
-                IosToast.show(
-                  ctx,
-                  message: ErrorHelper.getFriendlyMessage(e),
-                  type: ToastType.error,
-                );
-              }
-            },
-            // onSaveTap: () {
-            //   showModalBottomSheet(
-            //     context: ctx,
-            //     isScrollControlled: true,
-            //     backgroundColor: Colors.transparent,
-            //     builder: (context) => AddToCookbookSheet(recipe: r),
-            //   );
-            // },
             onTap: () {
               HistoryService.instance.addToHistory(r);
               Navigator.pushNamed(
                 ctx,
                 AppRoutes.recipeDetail,
-                arguments: {'recipe': r},
+                arguments: {'recipe': r, 'isPreview': false},
               );
+            },
+            onAddToCookbookTap: () {
+              showModalBottomSheet(
+                context: ctx,
+                backgroundColor: Colors.transparent,
+                isScrollControlled: true,
+                builder: (_) => AddToCookbookSheet(recipe: r),
+              );
+            },
+            onPinTap: () async {
+              try {
+                final updated = await RecipeService.instance.togglePin(r.id);
+                if (ctx.mounted) {
+                  IosToast.show(ctx, 
+                    message: updated.isPinned ? 'Recipe pinned' : 'Recipe unpinned', 
+                    type: ToastType.success
+                  );
+                }
+              } catch (e) {
+                if (ctx.mounted) {
+                  IosToast.show(ctx, message: 'Failed to pin recipe', type: ToastType.error);
+                }
+              }
+            },
+            onShareTap: () async {
+              try {
+                final link = await RecipeService.instance.getShareLink(r.id);
+                // In a real app we would use Share.share(link);
+                // For now just toast it
+                if (ctx.mounted) {
+                  IosToast.show(ctx, message: 'Link copied: $link', type: ToastType.success);
+                }
+              } catch (e) {
+                if (ctx.mounted) {
+                  IosToast.show(ctx, message: 'Failed to generate link', type: ToastType.error);
+                }
+              }
+            },
+            onDeleteTap: () async {
+              final success = await RecipeService.instance.deleteRecipe(r.id);
+              if (success && ctx.mounted) {
+                IosToast.show(ctx, message: 'Recipe deleted', type: ToastType.success);
+              }
             },
           );
         },
@@ -1610,8 +1754,10 @@ class _SuggestedRecipesSectionState extends State<_SuggestedRecipesSection> {
           final isSaved = savedNames.contains(r.name.toLowerCase());
           return RecipeCard(
             recipe: r,
+            index: i,
             useValidationIcon: true,
             isValidated: isSaved,
+            disableSlide: false,
             onValidateTap: () => _handleValidation(r, isSaved),
             onTap: () {
               HistoryService.instance.addToHistory(r);
@@ -1620,6 +1766,26 @@ class _SuggestedRecipesSectionState extends State<_SuggestedRecipesSection> {
                 AppRoutes.recipeDetail,
                 arguments: {'recipe': r, 'isPreview': !isSaved},
               );
+            },
+            onAddToCookbookTap: () {
+              showModalBottomSheet(
+                context: ctx,
+                backgroundColor: Colors.transparent,
+                isScrollControlled: true,
+                builder: (_) => AddToCookbookSheet(recipe: r),
+              );
+            },
+            onShareTap: () async {
+              try {
+                final link = await RecipeService.instance.getShareLink(r.id);
+                if (ctx.mounted) {
+                  IosToast.show(ctx, message: 'Link copied: $link', type: ToastType.success);
+                }
+              } catch (e) {
+                if (ctx.mounted) {
+                  IosToast.show(ctx, message: 'Failed to generate link', type: ToastType.error);
+                }
+              }
             },
           );
         },
@@ -1642,8 +1808,10 @@ class _SuggestedRecipesSectionState extends State<_SuggestedRecipesSection> {
             width: 160.w,
             child: RecipeCard(
               recipe: r,
+              index: i,
               useValidationIcon: true,
               isValidated: isSaved,
+              disableSlide: false,
               onValidateTap: () => _handleValidation(r, isSaved),
               onTap: () {
                 HistoryService.instance.addToHistory(r);
@@ -1652,6 +1820,26 @@ class _SuggestedRecipesSectionState extends State<_SuggestedRecipesSection> {
                   AppRoutes.recipeDetail,
                   arguments: {'recipe': r, 'isPreview': !isSaved},
                 );
+              },
+              onAddToCookbookTap: () {
+                showModalBottomSheet(
+                  context: ctx,
+                  backgroundColor: Colors.transparent,
+                  isScrollControlled: true,
+                  builder: (_) => AddToCookbookSheet(recipe: r),
+                );
+              },
+              onShareTap: () async {
+                try {
+                  final link = await RecipeService.instance.getShareLink(r.id);
+                  if (ctx.mounted) {
+                    IosToast.show(ctx, message: 'Link copied: $link', type: ToastType.success);
+                  }
+                } catch (e) {
+                  if (ctx.mounted) {
+                    IosToast.show(ctx, message: 'Failed to generate link', type: ToastType.error);
+                  }
+                }
               },
             ),
           );

@@ -7,6 +7,7 @@ class Cookbook {
   final DateTime createdAt;
   final DateTime updatedAt;
   final bool isPlaceholder;
+  final bool isPinned;
 
   Cookbook({
     required this.id,
@@ -15,6 +16,7 @@ class Cookbook {
     required this.createdAt,
     required this.updatedAt,
     this.isPlaceholder = false,
+    this.isPinned = false,
   });
 
   factory Cookbook.fromJson(Map<String, dynamic> json) {
@@ -26,6 +28,7 @@ class Cookbook {
           .toList(),
       createdAt: DateTime.parse(json['createdAt']),
       updatedAt: DateTime.parse(json['updatedAt']),
+      isPinned: json['isPinned'] ?? json['is_pinned'] ?? json['pinned'] ?? false,
     );
   }
 }

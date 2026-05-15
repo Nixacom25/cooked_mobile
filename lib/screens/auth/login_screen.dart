@@ -25,6 +25,19 @@ class _LoginScreenState extends State<LoginScreen> {
   String? _passError;
 
   @override
+  void initState() {
+    super.initState();
+    _checkExistingToken();
+  }
+
+  Future<void> _checkExistingToken() async {
+    final token = await AuthService.instance.getToken();
+    if (token != null && token.isNotEmpty) {
+      await AuthService.instance.logout();
+    }
+  }
+
+  @override
   void dispose() {
     _emailCtrl.dispose();
     _passCtrl.dispose();

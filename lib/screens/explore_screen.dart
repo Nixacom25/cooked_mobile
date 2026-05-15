@@ -1,3 +1,6 @@
+import 'dart:ui';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:cooked/core/widgets/ios_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../widgets/app_search_field.dart';
@@ -7,6 +10,8 @@ import '../models/recipe.dart';
 import '../models/view_all_type.dart';
 import '../widgets/skeleton_loader.dart';
 import '../widgets/recipe_grid_skeleton.dart';
+import '../widgets/recipe_card.dart';
+import '../widgets/add_to_cookbook_sheet.dart';
 
 // ══════════════════════════════════════════════════════════════════════════════
 // EXPLORE SCREEN (Backend Driven)
@@ -44,8 +49,14 @@ class ExploreScreen extends StatefulWidget {
   State<ExploreScreen> createState() => _ExploreScreenState();
 }
 
-class _ExploreScreenState extends State<ExploreScreen> {
+class _ExploreScreenState extends State<ExploreScreen>
+    with SingleTickerProviderStateMixin {
   final _searchCtrl = TextEditingController();
+  final _overlaySearchCtrl = TextEditingController();
+  bool _isSearching = false;
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
+  OverlayEntry? _searchOverlayEntry;
   // int _selectedCategory = 0;
 
   // static const _categories = [
@@ -60,6 +71,8 @@ class _ExploreScreenState extends State<ExploreScreen> {
   late Future<Map<String, int>> _cuisinesFuture;
   late Future<Map<String, int>> _categoriesFuture;
   late Future<List<Recipe>> _popularFuture;
+  List<Recipe> _allPopularRecipes = [];
+  List<Recipe> _recentRecipes = [];
 
   @override
   void initState() {
@@ -67,15 +80,60 @@ class _ExploreScreenState extends State<ExploreScreen> {
     _cuisinesFuture = RecipeService.instance.getExploreCuisines();
     _categoriesFuture = RecipeService.instance.getExploreCategories();
     _popularFuture = RecipeService.instance.getPopularRecipes(size: 10);
-    
+
     _searchCtrl.addListener(() {
       if (mounted) setState(() {});
     });
+
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 400),
+    );
+
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeIn),
+    );
+  }
+
+  void _toggleSearch(bool searching) {
+    if (searching) {
+      setState(() {
+        _isSearching = true;
+      });
+      _animationController.forward();
+      _showOverlay();
+    } else {
+      _animationController.reverse().then((_) {
+        if (mounted) {
+          setState(() {
+            _isSearching = false;
+            _searchCtrl.clear();
+            _overlaySearchCtrl.clear();
+          });
+          _removeOverlay();
+        }
+      });
+    }
+  }
+
+  void _showOverlay() {
+    _removeOverlay();
+    _searchOverlayEntry = OverlayEntry(
+      builder: (context) => _buildSearchOverlay(),
+    );
+    Overlay.of(context, rootOverlay: true).insert(_searchOverlayEntry!);
+  }
+
+  void _removeOverlay() {
+    _searchOverlayEntry?.remove();
+    _searchOverlayEntry = null;
   }
 
   @override
   void dispose() {
     _searchCtrl.dispose();
+    _overlaySearchCtrl.dispose();
+    _animationController.dispose();
     super.dispose();
   }
 
@@ -107,23 +165,27 @@ class _ExploreScreenState extends State<ExploreScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      resizeToAvoidBottomInset: false,
-      body: ListView(
-        padding: EdgeInsets.only(bottom: 120.h),
-        children: [
-          _buildHeader(),
-          SizedBox(height: 20.h),
-          if (_searchCtrl.text.isEmpty) ...[
-            _buildBrowseByCuisine(),
-            SizedBox(height: 20.h),
-            _buildPopularCategories(),
-          ],
-          _buildPopularNow(),
-            SizedBox(height: 50.h),
-        ],
-      ),
+    return Stack(
+      children: [
+        Scaffold(
+          backgroundColor: Colors.white,
+          resizeToAvoidBottomInset: false,
+          body: ListView(
+            padding: EdgeInsets.only(bottom: 120.h),
+            children: [
+              _buildHeader(),
+              SizedBox(height: 20.h),
+              if (_searchCtrl.text.isEmpty) ...[
+                _buildBrowseByCuisine(),
+                SizedBox(height: 20.h),
+                _buildPopularCategories(),
+              ],
+              _buildPopularNow(),
+              SizedBox(height: 50.h),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
@@ -161,9 +223,19 @@ class _ExploreScreenState extends State<ExploreScreen> {
               ),
             ),
             SizedBox(height: 20.h),
-            AppSearchField(
-              controller: _searchCtrl,
-              hintText: 'Search recipes, ingredients....',
+            Opacity(
+              opacity: (_isSearching || _animationController.isAnimating)
+                  ? 0.0
+                  : 1.0,
+              child: GestureDetector(
+                onTap: () => _toggleSearch(true),
+                child: AbsorbPointer(
+                  child: AppSearchField(
+                    controller: _searchCtrl,
+                    hintText: 'Search recipes, ingredients....',
+                  ),
+                ),
+              ),
             ),
             // SizedBox(height: 16.h),
             // SingleChildScrollView(
@@ -245,7 +317,11 @@ class _ExploreScreenState extends State<ExploreScreen> {
                     padding: EdgeInsets.only(right: 15.w),
                     child: Column(
                       children: [
-                        SkeletonLoader(width: 65.w, height: 65.h, borderRadius: 32.5),
+                        SkeletonLoader(
+                          width: 65.w,
+                          height: 65.h,
+                          borderRadius: 32.5,
+                        ),
                         SizedBox(height: 5.h),
                         SkeletonLoader(width: 50.w, height: 12.h),
                       ],
@@ -381,7 +457,11 @@ class _ExploreScreenState extends State<ExploreScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        SkeletonLoader(width: 160.w, height: 130.h, borderRadius: 16),
+                        SkeletonLoader(
+                          width: 160.w,
+                          height: 130.h,
+                          borderRadius: 16,
+                        ),
                         SizedBox(height: 10.h),
                         SkeletonLoader(width: 120.w, height: 14.h),
                         SizedBox(height: 4.h),
@@ -531,7 +611,10 @@ class _ExploreScreenState extends State<ExploreScreen> {
                 TextButton(
                   onPressed: () {
                     setState(() {
-                      _popularFuture = RecipeService.instance.getPopularRecipes(size: 10, forceRefresh: true);
+                      _popularFuture = RecipeService.instance.getPopularRecipes(
+                        size: 10,
+                        forceRefresh: true,
+                      );
                     });
                   },
                   child: const Text('Retry'),
@@ -559,17 +642,18 @@ class _ExploreScreenState extends State<ExploreScreen> {
           );
         }
 
-        final query = _searchCtrl.text.trim().toLowerCase();
-        var popular = snapshot.data ?? [];
-        if (popular.length > 10) popular = popular.sublist(0, 10);
-
-        if (query.isNotEmpty) {
-          popular = popular
-              .where((r) => r.name.toLowerCase().contains(query))
-              .toList();
+        final popular = snapshot.data ?? [];
+        if (_allPopularRecipes.isEmpty && popular.isNotEmpty) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) setState(() => _allPopularRecipes = popular);
+          });
         }
 
-        if (popular.isEmpty) {
+        final displayList = popular.length > 10
+            ? popular.sublist(0, 10)
+            : popular;
+
+        if (displayList.isEmpty) {
           return Padding(
             padding: EdgeInsets.symmetric(vertical: 40.h),
             child: const Center(child: Text('No recipes found.')),
@@ -594,121 +678,93 @@ class _ExploreScreenState extends State<ExploreScreen> {
             SizedBox(height: 8.h),
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 20.w),
-              child: GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                padding: EdgeInsets.zero,
-                itemCount: popular.length,
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 16.w,
-                  mainAxisSpacing: 20.h,
-                  childAspectRatio: 0.72,
-                ),
-                itemBuilder: (context, i) {
-                  final recipe = popular[i];
-                  return GestureDetector(
-                    onTap: () {
-                      Navigator.pushNamed(
-                        context,
-                        AppRoutes.recipeDetail,
-                        arguments: {'recipe': recipe},
+              child: ValueListenableBuilder<List<Recipe>?>(
+                valueListenable: RecipeService.instance.myRecipesNotifier,
+                builder: (context, savedRecipes, _) {
+                  final savedNames = (savedRecipes ?? [])
+                      .map((r) => r.name.toLowerCase())
+                      .toSet();
+
+                  return GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    padding: EdgeInsets.zero,
+                    itemCount: popular.length,
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      crossAxisSpacing: 16.w,
+                      mainAxisSpacing: 20.h,
+                      childAspectRatio: 0.72,
+                    ),
+                    itemBuilder: (context, i) {
+                      final recipe = popular[i];
+                      final isSaved = savedNames.contains(
+                        recipe.name.toLowerCase(),
+                      );
+
+                      return RecipeCard(
+                        recipe: recipe,
+                        useValidationIcon: true,
+                        isValidated: isSaved,
+                        animationDelay: Duration(milliseconds: i * 800),
+                        useExploreButton: true,
+                        onValidateTap: () {
+                          if (isSaved) {
+                            IosToast.show(
+                              context,
+                              message: "Already in your recipes",
+                              type: ToastType.success,
+                            );
+                            return;
+                          }
+                          showModalBottomSheet(
+                            context: context,
+                            backgroundColor: Colors.transparent,
+                            isScrollControlled: true,
+                            builder: (_) => AddToCookbookSheet(recipe: recipe),
+                          );
+                        },
+                        onTap: () {
+                          Navigator.pushNamed(
+                            context,
+                            AppRoutes.recipeDetail,
+                            arguments: {
+                              'recipe': recipe,
+                              'isPreview': !isSaved,
+                            },
+                          );
+                        },
+                        onAddToCookbookTap: () {
+                          showModalBottomSheet(
+                            context: context,
+                            backgroundColor: Colors.transparent,
+                            isScrollControlled: true,
+                            builder: (_) => AddToCookbookSheet(recipe: recipe),
+                          );
+                        },
+                        onShareTap: () {
+                          // Share logic
+                        },
+                        onPinTap: isSaved
+                            ? () {
+                                // Pin logic
+                              }
+                            : null,
+                        onDeleteTap: isSaved
+                            ? () async {
+                                final success = await RecipeService.instance
+                                    .deleteRecipe(recipe.id);
+                                if (success && context.mounted) {
+                                  IosToast.show(
+                                    context,
+                                    message: 'Recipe deleted',
+                                    type: ToastType.success,
+                                  );
+                                }
+                              }
+                            : null,
                       );
                     },
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFF7F7F7),
-                              borderRadius: BorderRadius.circular(10.r),
-                            ),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(16.r),
-                              child:
-                                  recipe.image != null &&
-                                      recipe.image!.startsWith('http')
-                                  ? Image.network(
-                                      recipe.image!,
-                                      width: double.infinity,
-                                      fit: BoxFit.contain,
-                                      errorBuilder: (_, __, ___) => Image.asset(
-                                        'assets/images/recipes.png',
-                                        width: double.infinity,
-                                        fit: BoxFit.contain,
-                                      ),
-                                    )
-                                  : Image.asset(
-                                      recipe.image ?? 'assets/images/recipes.png',
-                                      width: double.infinity,
-                                      fit: BoxFit.contain,
-                                    ),
-                            ),
-                          ),
-                        ),
-                        SizedBox(height: 8.h),
-                        Row(
-                          children: [
-                            Text(
-                              '${i + 1}',
-                              style: TextStyle(
-                                fontFamily: 'SF Pro',
-                                fontWeight: FontWeight.w900,
-                                fontSize: 18.sp,
-                                color: const Color(0xFFD8D8D8),
-                              ),
-                            ),
-                            SizedBox(width: 8.w),
-                            Expanded(
-                              child: Text(
-                                recipe.name,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  fontFamily: 'SF Pro',
-                                  fontWeight: FontWeight.w800,
-                                  fontSize: 14.sp,
-                                  color: const Color(0xFF222222),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        Row(
-                          children: [
-                            SizedBox(width: 20.w), // Offset for number
-                            Icon(
-                              Icons.timer,
-                              size: 12.sp,
-                              color: const Color(0xFF9CA3AF),
-                            ),
-                            Text(
-                              '${recipe.cookTime} min',
-                              style: TextStyle(
-                                fontFamily: 'SF Pro',
-                                fontSize: 11.sp,
-                                color: const Color(0xFF9CA3AF),
-                              ),
-                            ),
-                            SizedBox(width: 5.w),
-                            Icon(
-                              Icons.local_fire_department,
-                              size: 12.sp,
-                              color: const Color(0xFF9CA3AF),
-                            ),
-                            Text(
-                              '${recipe.kcal} kcal',
-                              style: TextStyle(
-                                fontFamily: 'SF Pro',
-                                fontSize: 11.sp,
-                                color: const Color(0xFF9CA3AF),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
                   );
                 },
               ),
@@ -716,6 +772,378 @@ class _ExploreScreenState extends State<ExploreScreen> {
           ],
         );
       },
+    );
+  }
+
+  // ── Search Overlay ──────────────────────────────────────────────────────────
+  Widget _buildSearchOverlay() {
+    return AnimatedBuilder(
+      animation: _animationController,
+      builder: (context, child) {
+        final value = _animationController.value;
+        final topPos = lerpDouble(135.h, 100.h, value)!;
+        final horizontalPadding = lerpDouble(20.w, 12.w, value)!;
+        final borderRadius = lerpDouble(50.r, 32.r, value)!;
+        final screenHeight = MediaQuery.of(context).size.height;
+        final bottomMargin = topPos / 2;
+        final maxExpandedHeight = screenHeight - topPos - bottomMargin;
+        final targetHeight = (_overlaySearchCtrl.text.length >= 3)
+            ? maxExpandedHeight
+            : 450.h;
+        final height = lerpDouble(50.h, targetHeight, value)!;
+        final bgColor = Color.lerp(
+          Colors.white,
+          const Color(0xFFF7F7F7),
+          value,
+        )!;
+
+        return Material(
+          color: Colors.transparent,
+          child: Stack(
+            children: [
+              // Backdrop Blur
+              GestureDetector(
+                onTap: () => _toggleSearch(false),
+                child: FadeTransition(
+                  opacity: _fadeAnimation,
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+                    child: Container(color: Colors.black.withOpacity(0.3)),
+                  ),
+                ),
+              ),
+              // Expanding Search Card
+              Positioned(
+                top: topPos,
+                left: horizontalPadding,
+                right: horizontalPadding,
+                child: Container(
+                  constraints: BoxConstraints(maxHeight: height),
+                  padding: EdgeInsets.all(20.w),
+                  decoration: BoxDecoration(
+                    color: bgColor,
+                    borderRadius: BorderRadius.circular(borderRadius),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.08 * value),
+                        blurRadius: 20,
+                        offset: const Offset(0, 10),
+                      ),
+                    ],
+                  ),
+                  child: SingleChildScrollView(
+                    physics: value > 0.9
+                        ? const BouncingScrollPhysics()
+                        : const NeverScrollableScrollPhysics(),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Header when expanded
+                        if (value > 0.5)
+                          FadeTransition(
+                            opacity: _animationController,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Explore',
+                                  style: TextStyle(
+                                    fontFamily: 'SF Pro',
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: 22.sp,
+                                    color: const Color(0xFF1A1A1A),
+                                  ),
+                                ),
+                                SizedBox(height: 16.h),
+                              ],
+                            ),
+                          ),
+
+                        // The Search Input (Morphs size/style)
+                        AppSearchField(
+                          controller: _overlaySearchCtrl,
+                          hintText: value > 0.5
+                              ? 'Search recipes, ingredients...'
+                              : 'Start your search',
+                          backgroundColor: Colors.white,
+                          borderColor: value > 0.5
+                              ? const Color(0xFFDDDDDD)
+                              : Colors.transparent,
+                          onChanged: (val) {
+                            setState(() {
+                              _searchCtrl.text = val;
+                            });
+                            _searchOverlayEntry?.markNeedsBuild();
+                          },
+                        ),
+
+                        if (value > 0.8)
+                          FadeTransition(
+                            opacity: _animationController,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                SizedBox(height: 24.h),
+                                if (_overlaySearchCtrl.text.length >= 3) ...[
+                                  Text(
+                                    'Search results',
+                                    style: TextStyle(
+                                      fontFamily: 'SF Pro',
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 14.sp,
+                                      color: const Color(0xFF1A1A1A),
+                                    ),
+                                  ),
+                                  SizedBox(height: 12.h),
+                                ],
+                                if (_overlaySearchCtrl.text.length < 3) ...[
+                                  Text(
+                                    'Recommended',
+                                    style: TextStyle(
+                                      fontFamily: 'SF Pro',
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 13.sp,
+                                      color: const Color(0xFF6B7280),
+                                    ),
+                                  ),
+                                  SizedBox(height: 10.h),
+                                  SizedBox(
+                                    height: 34.h,
+                                    child: ListView(
+                                      scrollDirection: Axis.horizontal,
+                                      physics: const BouncingScrollPhysics(),
+                                      children:
+                                          [
+                                                'Chicken',
+                                                'Beef',
+                                                'Fish',
+                                                'Dessert',
+                                                'Pasta',
+                                                'Vegetarian',
+                                                'Healthy',
+                                                'Breakfast',
+                                              ]
+                                              .map(
+                                                (tag) => GestureDetector(
+                                                  onTap: () {
+                                                    setState(() {
+                                                      _overlaySearchCtrl.text =
+                                                          tag;
+                                                      _searchCtrl.text = tag;
+                                                    });
+                                                    _searchOverlayEntry
+                                                        ?.markNeedsBuild();
+                                                  },
+                                                  child: Container(
+                                                    margin: EdgeInsets.only(
+                                                      right: 8.w,
+                                                    ),
+                                                    padding:
+                                                        EdgeInsets.symmetric(
+                                                          horizontal: 14.w,
+                                                        ),
+                                                    alignment: Alignment.center,
+                                                    decoration: BoxDecoration(
+                                                      color: Colors.white,
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                            20.r,
+                                                          ),
+                                                      border: Border.all(
+                                                        color: const Color(
+                                                          0xFFEEEEEE,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    child: Text(
+                                                      tag,
+                                                      style: TextStyle(
+                                                        fontFamily: 'SF Pro',
+                                                        fontSize: 12.sp,
+                                                        fontWeight:
+                                                            FontWeight.w500,
+                                                        color: const Color(
+                                                          0xFF4B5563,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                              )
+                                              .toList(),
+                                    ),
+                                  ),
+                                  SizedBox(height: 20.h),
+                                  Text(
+                                    'Recent searches',
+                                    style: TextStyle(
+                                      fontFamily: 'SF Pro',
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 13.sp,
+                                      color: const Color(0xFF6B7280),
+                                    ),
+                                  ),
+                                  SizedBox(height: 8.h),
+                                ],
+                                if (_overlaySearchCtrl.text.length < 3)
+                                  ...(_recentRecipes.isEmpty
+                                      ? [
+                                          Text(
+                                            'No recent searches',
+                                            style: TextStyle(
+                                              fontSize: 12.sp,
+                                              color: Colors.grey,
+                                            ),
+                                          ),
+                                        ]
+                                      : _recentRecipes.map(
+                                          (r) => _buildRecentSearchItem(r),
+                                        ))
+                                else
+                                  ...(() {
+                                    final q = _overlaySearchCtrl.text
+                                        .toLowerCase();
+                                    final filtered = _allPopularRecipes
+                                        .where(
+                                          (r) =>
+                                              r.name.toLowerCase().contains(q),
+                                        )
+                                        .toList();
+                                    if (filtered.isEmpty) {
+                                      return [
+                                        Text(
+                                          'No results found',
+                                          style: TextStyle(
+                                            fontSize: 12.sp,
+                                            color: Colors.grey,
+                                          ),
+                                        ),
+                                      ];
+                                    }
+                                    return filtered.map(
+                                      (r) => _buildRecentSearchItem(r),
+                                    );
+                                  }()),
+                              ],
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+
+              // Close Button
+              Positioned(
+                top: MediaQuery.of(context).padding.top + 10.h,
+                right: 16.w,
+                child: FadeTransition(
+                  opacity: _fadeAnimation,
+                  child: GestureDetector(
+                    onTap: () => _toggleSearch(false),
+                    child: Container(
+                      padding: EdgeInsets.all(8.r),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 10,
+                          ),
+                        ],
+                      ),
+                      child: Icon(
+                        Icons.close,
+                        color: Colors.black87,
+                        size: 20.sp,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildRecentSearchItem(Recipe recipe) {
+    return GestureDetector(
+      onTap: () {
+        if (!_recentRecipes.contains(recipe)) {
+          setState(() {
+            _recentRecipes.insert(0, recipe);
+            if (_recentRecipes.length > 5) _recentRecipes.removeLast();
+          });
+        }
+        _toggleSearch(false);
+        Navigator.pushNamed(
+          context,
+          AppRoutes.recipeDetail,
+          arguments: {'recipe': recipe},
+        );
+      },
+      child: Padding(
+        padding: EdgeInsets.only(bottom: 12.h),
+        child: Row(
+          children: [
+            Container(
+              width: 48.w,
+              height: 48.w,
+              decoration: BoxDecoration(
+                color: const Color(0xFFF3F4F6),
+                borderRadius: BorderRadius.circular(12.r),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12.r),
+                child: recipe.image != null
+                    ? CachedNetworkImage(
+                        imageUrl: recipe.image!,
+                        fit: BoxFit.cover,
+                        placeholder: (context, url) =>
+                            Container(color: Colors.grey[200]),
+                        errorWidget: (context, url, error) =>
+                            const Icon(Icons.broken_image),
+                      )
+                    : Image.asset(
+                        'assets/images/others.png',
+                        fit: BoxFit.cover,
+                      ),
+              ),
+            ),
+            SizedBox(width: 12.w),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    recipe.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontFamily: 'SF Pro',
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14.sp,
+                      color: const Color(0xFF1A1A1A),
+                    ),
+                  ),
+                  Text(
+                    '${recipe.kcal} kcal • ${recipe.cookTime} min',
+                    style: TextStyle(
+                      fontFamily: 'SF Pro',
+                      fontSize: 12.sp,
+                      color: const Color(0xFF6B7280),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

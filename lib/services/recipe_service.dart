@@ -1,32 +1,26 @@
 import 'dart:convert';
 import 'dart:async';
 import 'package:cooked/services/cookbook_service.dart';
-import 'package:cooked/services/history_service.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import '../core/api_config.dart';
 import '../models/recipe.dart';
 import '../models/creator.dart';
-import 'auth_service.dart';
+import 'package:cooked/services/auth_service.dart';
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class RecipeService {
   RecipeService._privateConstructor();
   static final RecipeService instance = RecipeService._privateConstructor();
 
   final ValueNotifier<List<Recipe>?> myRecipesNotifier = ValueNotifier(null);
-  final ValueNotifier<List<Recipe>?> favoriteRecipesNotifier = ValueNotifier(
-    null,
-  );
   final ValueNotifier<List<Recipe>?> recentImportsNotifier = ValueNotifier(null);
   final ValueNotifier<List<Recipe>?> homeSuggestionsNotifier = ValueNotifier(null);
   
   // Cache for explore data
   final Map<String, dynamic> _cache = {};
 
-  // Debouncing for favorites
-  final Map<String, Timer> _favoriteDebouncers = {};
-  final Map<String, bool> _originalFavoriteStates = {};
 
   void clearCache() {
     _cache.clear();
@@ -211,6 +205,7 @@ class RecipeService {
           createdAt: DateTime.now(),
           updatedAt: DateTime.now(),
           isPlaceholder: true,
+          isSuggested: true,
         );
         myRecipesNotifier.value = [placeholder, ...myRecipesNotifier.value!];
       }
@@ -218,6 +213,10 @@ class RecipeService {
       // Trigger background refresh 
       await getMyRecipes(forceRefresh: true);
       await getRecentImports(forceRefresh: true);
+      
+      // Cleanup from temporary suggestions
+      await _removeTemporarySuggestion(recipe.name);
+      
       CookbookService.instance.getMyCookbooks(forceRefresh: true).then((_) => null).catchError((_) => null);
       return saved;
     } else {
@@ -227,113 +226,6 @@ class RecipeService {
     }
   }
 
-  Future<void> toggleFavorite(String id) async {
-    if (id.isEmpty) {
-      debugPrint('RecipeService: Cannot toggle favorite for empty recipe ID');
-      return;
-    }
-
-    // 1. Optimistic local update
-    _updateLocalFavoriteStatus(id);
-
-    // 2. Debounce backend call (5s delay)
-    _favoriteDebouncers[id]?.cancel();
-    _favoriteDebouncers[id] = Timer(const Duration(seconds: 5), () async {
-      final currentIsFav = _getCurrentIsFavorite(id);
-      final originalIsFav = _originalFavoriteStates[id];
-
-      // Only send to backend if the final state is different from the original
-      if (originalIsFav != null && currentIsFav != originalIsFav) {
-        try {
-          final url = Uri.parse('${ApiConfig.baseUrl}/recipes/$id/favorite');
-          final response = await http.put(url, headers: await _getHeaders());
-
-          if (response.statusCode == 200) {
-            // Silently refresh in background to ensure full sync
-            getFavoriteRecipes(size: 100, forceRefresh: true).then((_) => null).catchError((_) => null);
-            getMyRecipes(forceRefresh: true).then((_) => null).catchError((_) => null);
-            CookbookService.instance.getMyCookbooks(forceRefresh: true).then((_) => null).catchError((_) => null);
-          }
-        } catch (e) {
-          debugPrint('Error syncing favorite state for $id: $e');
-        }
-      }
-
-      _favoriteDebouncers.remove(id);
-      _originalFavoriteStates.remove(id);
-    });
-  }
-
-  void _updateLocalFavoriteStatus(String id) {
-    bool foundInAny = false;
-
-    void toggleInList(ValueNotifier<List<Recipe>?> notifier) {
-      if (notifier.value == null) return;
-      bool changed = false;
-      final newList = notifier.value!.map((r) {
-        if (r.id == id) {
-          if (!foundInAny) {
-            // First time we see it in this toggle sequence, remember original state
-            if (!_originalFavoriteStates.containsKey(id)) {
-              _originalFavoriteStates[id] = r.isFavorite;
-            }
-            foundInAny = true;
-          }
-          r.isFavorite = !r.isFavorite;
-          changed = true;
-        }
-        return r;
-      }).toList();
-      if (changed) {
-        notifier.value = newList;
-      }
-    }
-
-    // Toggle in all major notifiers
-    toggleInList(myRecipesNotifier);
-    toggleInList(favoriteRecipesNotifier);
-    toggleInList(recentImportsNotifier);
-    toggleInList(homeSuggestionsNotifier);
-    
-    // Also check history service if available
-    final historyList = HistoryService.instance.recentlyViewedNotifier.value;
-    if (historyList.isNotEmpty) {
-      bool changed = false;
-      final newHistory = historyList.map((r) {
-        if (r.id == id) {
-          if (!foundInAny) {
-            if (!_originalFavoriteStates.containsKey(id)) {
-              _originalFavoriteStates[id] = r.isFavorite;
-            }
-            foundInAny = true;
-          }
-          r.isFavorite = !r.isFavorite;
-          changed = true;
-        }
-        return r;
-      }).toList();
-      if (changed) {
-        HistoryService.instance.recentlyViewedNotifier.value = newHistory;
-      }
-    }
-  }
-
-  bool _getCurrentIsFavorite(String id) {
-    // Check in any notifier to get the current UI state
-    final all = [
-      myRecipesNotifier.value,
-      favoriteRecipesNotifier.value,
-      homeSuggestionsNotifier.value,
-      HistoryService.instance.recentlyViewedNotifier.value,
-    ];
-    for (var list in all) {
-      if (list == null) continue;
-      for (var r in list) {
-        if (r.id == id) return r.isFavorite;
-      }
-    }
-    return false;
-  }
 
   Future<List<Recipe>> getExploreRecipes({String? cuisine, String? category, int page = 0, int size = 10, bool forceRefresh = false}) async {
     final cacheKey = 'explore_recipes_${cuisine ?? ''}_${category ?? ''}_${page}_${size}';
@@ -375,11 +267,130 @@ class RecipeService {
     if (response.statusCode == 200) {
       final List<dynamic> data = jsonDecode(response.body);
       final results = data.map((json) => Recipe.fromJson(json)).toList();
-      _cache[cacheKey] = results;
-      homeSuggestionsNotifier.value = results;
-      return results;
+      
+      // Merge with temporary local suggestions
+      final merged = await _mergeTemporarySuggestions(results);
+      
+      _cache[cacheKey] = merged;
+      homeSuggestionsNotifier.value = merged;
+      return merged;
     } else {
       throw Exception('Unable to load home suggestions.');
+    }
+  }
+
+  static const String _tempSuggestionsKey = 'temp_suggestions_v1';
+
+  Future<void> saveScanResults(List<Recipe> recipes) async {
+    if (recipes.isEmpty) return;
+    
+    final prefs = await SharedPreferences.getInstance();
+    final String? existingJson = prefs.getString(_tempSuggestionsKey);
+    List<Recipe> current = [];
+    
+    if (existingJson != null) {
+      try {
+        final List<dynamic> decoded = jsonDecode(existingJson);
+        current = decoded.map((j) => Recipe.fromJson(j)).toList();
+      } catch (_) {}
+    }
+
+    // Set expiration to 3 days from now for new ones
+    final expiry = DateTime.now().add(const Duration(days: 3));
+    final newOnes = recipes.map((r) {
+      // Create a copy with expiresAt
+      return Recipe(
+        id: r.id,
+        name: r.name,
+        image: r.image,
+        cookTime: r.cookTime,
+        prepTime: r.prepTime,
+        kcal: r.kcal,
+        steps: r.steps,
+        equipment: r.equipment,
+        ingredients: r.ingredients,
+        isPublic: r.isPublic,
+        isFavorite: r.isFavorite,
+        createdAt: r.createdAt,
+        updatedAt: r.updatedAt,
+        category: r.category,
+        creator: r.creator,
+        sourceUrl: r.sourceUrl,
+        servings: r.servings,
+        tips: r.tips,
+        expiresAt: expiry,
+        origin: 'SUGGESTED',
+        cuisine: r.cuisine,
+        isInCookbook: r.isInCookbook,
+        isPlaceholder: r.isPlaceholder,
+      );
+    }).toList();
+
+    // Add without duplicates (by name or ID)
+    for (var r in newOnes) {
+      if (!current.any((c) => c.name.toLowerCase() == r.name.toLowerCase())) {
+        current.insert(0, r);
+      }
+    }
+
+    // Save back
+    await prefs.setString(_tempSuggestionsKey, jsonEncode(current.map((r) => r.toJson()).toList()));
+    
+    // Refresh notifier if already has data
+    if (homeSuggestionsNotifier.value != null) {
+      await getHomeSuggestions(forceRefresh: true);
+    }
+  }
+
+  Future<void> _removeTemporarySuggestion(String name) async {
+    final prefs = await SharedPreferences.getInstance();
+    final String? existingJson = prefs.getString(_tempSuggestionsKey);
+    if (existingJson == null) return;
+
+    try {
+      final List<dynamic> decoded = jsonDecode(existingJson);
+      final List<Recipe> local = decoded.map((j) => Recipe.fromJson(j)).toList();
+      final filtered = local.where((r) => r.name.toLowerCase() != name.toLowerCase()).toList();
+      
+      if (filtered.length != local.length) {
+        await prefs.setString(_tempSuggestionsKey, jsonEncode(filtered.map((r) => r.toJson()).toList()));
+        if (homeSuggestionsNotifier.value != null) {
+          await getHomeSuggestions(forceRefresh: true);
+        }
+      }
+    } catch (_) {}
+  }
+
+  Future<List<Recipe>> _mergeTemporarySuggestions(List<Recipe> backendResults) async {
+    final prefs = await SharedPreferences.getInstance();
+    final String? existingJson = prefs.getString(_tempSuggestionsKey);
+    if (existingJson == null) return backendResults;
+
+    try {
+      final List<dynamic> decoded = jsonDecode(existingJson);
+      final List<Recipe> local = decoded.map((j) => Recipe.fromJson(j)).toList();
+      
+      final now = DateTime.now();
+      // Filter out expired ones
+      final validLocal = local.where((r) => r.expiresAt != null && r.expiresAt!.isAfter(now)).toList();
+      
+      // If some expired, update storage
+      if (validLocal.length != local.length) {
+        await prefs.setString(_tempSuggestionsKey, jsonEncode(validLocal.map((r) => r.toJson()).toList()));
+      }
+
+      if (validLocal.isEmpty) return backendResults;
+
+      // Merge: Local ones first, then backend
+      final List<Recipe> merged = [...validLocal];
+      for (var r in backendResults) {
+        if (!merged.any((m) => m.name.toLowerCase() == r.name.toLowerCase())) {
+          merged.add(r);
+        }
+      }
+      return merged;
+    } catch (_) {
+      return backendResults;
     }
   }
 
@@ -421,30 +432,6 @@ class RecipeService {
     }
   }
 
-  Future<List<Recipe>> getFavoriteRecipes({int page = 0, int size = 10, bool forceRefresh = false}) async {
-    if (!forceRefresh && page == 0 && favoriteRecipesNotifier.value != null) {
-      return favoriteRecipesNotifier.value!;
-    }
-    final url = Uri.parse(
-      '${ApiConfig.baseUrl}/recipes/favorites?page=$page&size=$size',
-    );
-    final response = await http.get(url, headers: await _getHeaders());
-
-    if (response.statusCode == 200) {
-      final Map<String, dynamic> data = jsonDecode(response.body);
-      final List<dynamic> content = data['content'];
-      final recipes = content.map((json) => Recipe.fromJson(json)).toList();
-
-      // Update global notifier if we query a large enough chunk (like in ViewAllScreen)
-      if (size >= 50 || page == 0) {
-        favoriteRecipesNotifier.value = recipes;
-      }
-
-      return recipes;
-    } else {
-      throw Exception('Unable to load favorite recipes.');
-    }
-  }
 
   Future<List<Creator>> getTopCreators({int page = 0, int size = 10}) async {
     final url = Uri.parse(
@@ -517,6 +504,7 @@ class RecipeService {
           createdAt: DateTime.now(),
           updatedAt: DateTime.now(),
           isPlaceholder: true,
+          isSuggested: true,
         );
         recentImportsNotifier.value = [placeholder, ...recentImportsNotifier.value!];
       }
@@ -534,6 +522,7 @@ class RecipeService {
           createdAt: DateTime.now(),
           updatedAt: DateTime.now(),
           isPlaceholder: true,
+          isSuggested: true,
         );
         myRecipesNotifier.value = [placeholder, ...myRecipesNotifier.value!];
       }
@@ -585,24 +574,31 @@ class RecipeService {
     final endpoint = Uri.parse(
       '${ApiConfig.baseUrl}/recipes/web-search?query=${Uri.encodeComponent(query)}',
     );
-    final response = await http.get(endpoint, headers: await _getHeaders());
+    try {
+      final response = await http.get(endpoint, headers: await _getHeaders())
+          .timeout(const Duration(seconds: 30));
 
-    if (response.statusCode == 200) {
-      final List<dynamic> data = jsonDecode(response.body);
-      return data.map((item) => Map<String, dynamic>.from(item)).toList();
-    } else {
-      String errorMessage = 'Web search failed';
-      try {
-        final errorData = jsonDecode(response.body);
-        if (errorData['message'] != null) {
-          errorMessage = errorData['message'];
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        return data.map((item) => Map<String, dynamic>.from(item)).toList();
+      } else {
+        String errorMessage = 'Web search failed';
+        try {
+          final errorData = jsonDecode(response.body);
+          if (errorData['message'] != null) {
+            errorMessage = errorData['message'];
+          }
+        } catch (_) {}
+
+        if (response.statusCode == 402) {
+          throw Exception('402: $errorMessage');
         }
-      } catch (_) {}
-
-      if (response.statusCode == 402) {
-        throw Exception('402: $errorMessage');
+        throw Exception(errorMessage);
       }
-      throw Exception(errorMessage);
+    } on TimeoutException {
+      throw Exception('Search took too long. Please try again.');
+    } catch (e) {
+      rethrow;
     }
   }
 
@@ -635,6 +631,10 @@ class RecipeService {
       
       // Refresh list without full skeleton
       await getMyRecipes(forceRefresh: true);
+      
+      // Cleanup from temporary suggestions
+      await _removeTemporarySuggestion(validated.name);
+      
       CookbookService.instance.getMyCookbooks(forceRefresh: true).then((_) => null).catchError((_) => null);
       return validated;
     } else {
@@ -642,10 +642,35 @@ class RecipeService {
     }
   }
 
+  Future<bool> deleteRecipe(String id) async {
+    final url = Uri.parse('${ApiConfig.baseUrl}/recipes/$id');
+    final response = await http.delete(url, headers: await _getHeaders());
+
+    if (response.statusCode == 200 || response.statusCode == 204) {
+      _cache.removeWhere((key, value) => key.contains(id));
+      await getMyRecipes(forceRefresh: true);
+      CookbookService.instance.getMyCookbooks(forceRefresh: true).then((_) => null).catchError((_) => null);
+      return true;
+    }
+    return false;
+  }
+
   void clearData() {
     myRecipesNotifier.value = null;
-    favoriteRecipesNotifier.value = null;
     recentImportsNotifier.value = null;
     homeSuggestionsNotifier.value = null;
+  }
+
+  Future<Recipe> togglePin(String id) async {
+    final url = Uri.parse('${ApiConfig.baseUrl}/recipes/$id/pin');
+    final response = await http.patch(url, headers: await _getHeaders());
+
+    if (response.statusCode == 200) {
+      final updated = Recipe.fromJson(jsonDecode(response.body));
+      await getMyRecipes(forceRefresh: true);
+      return updated;
+    } else {
+      throw Exception('Failed to toggle pin status.');
+    }
   }
 }

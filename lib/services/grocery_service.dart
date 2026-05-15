@@ -34,6 +34,10 @@ class GroceryService {
     if (response.statusCode == 200) {
       final List<dynamic> data = jsonDecode(response.body);
       final items = data.map((json) => GroceryItem.fromJson(json)).toList();
+      
+      // Auto-cleanup items: bought or expired planned dates
+      _autoCleanupItems(items);
+      
       myGroceriesNotifier.value = items;
       return items;
     } else {
@@ -99,9 +103,9 @@ class GroceryService {
     // 1. Optimistic local update
     _updateLocalToggleStatus(id);
 
-    // 2. Debounce backend call (5s delay)
+    // 2. Debounce backend call (1s delay for better reliability)
     _toggleDebouncers[id]?.cancel();
-    _toggleDebouncers[id] = Timer(const Duration(seconds: 5), () async {
+    _toggleDebouncers[id] = Timer(const Duration(seconds: 1), () async {
       final currentIsBought = _getCurrentIsBought(id);
       final originalIsBought = _originalToggleStates[id];
 
@@ -112,8 +116,7 @@ class GroceryService {
           final response = await http.put(url, headers: await _getHeaders());
 
           if (response.statusCode == 200) {
-            // Silently refresh in background
-            getMyGroceries(forceRefresh: true).then((_) => null).catchError((_) => null);
+            // No need to force refresh here, we trust our local optimistic update.
           }
         } catch (e) {
           print('Error syncing toggle state for grocery $id: $e');
@@ -128,13 +131,28 @@ class GroceryService {
   void _updateLocalToggleStatus(String id) {
     if (myGroceriesNotifier.value == null) return;
     
-    final newList = myGroceriesNotifier.value!.map((item) {
+    final newList = List<GroceryItem>.from(myGroceriesNotifier.value!).map((item) {
       if (item.id == id) {
         // Remember original state before any toggles in this sequence
         if (!_originalToggleStates.containsKey(id)) {
           _originalToggleStates[id] = item.isBought;
         }
-        item.isBought = !item.isBought;
+        // Create a new instance with the toggled state to ensure ValueNotifier detects change
+        return GroceryItem(
+          id: item.id,
+          ingredientId: item.ingredientId,
+          ingredientName: item.ingredientName,
+          ingredientIcon: item.ingredientIcon,
+          recipeId: item.recipeId,
+          recipeName: item.recipeName,
+          recipeImage: item.recipeImage,
+          quantity: item.quantity,
+          isBought: !item.isBought,
+          plannedDate: item.plannedDate,
+          createdAt: item.createdAt,
+          updatedAt: DateTime.now(),
+          isPlaceholder: item.isPlaceholder,
+        );
       }
       return item;
     }).toList();
@@ -159,6 +177,43 @@ class GroceryService {
     }
     // For delete, we keep it simple: refresh list
     await getMyGroceries(forceRefresh: true);
+  }
+
+  Future<void> _autoCleanupItems(List<GroceryItem> items) async {
+    final now = DateTime.now();
+    final oneDayAgo = now.subtract(const Duration(hours: 24));
+    
+    // 1. Clean up items bought more than 24h ago
+    // 2. Clean up items with a planned date that passed more than 24h ago
+    final toDelete = items.where((item) {
+      // Rule 1: Bought items older than 24h
+      if (item.isBought && item.updatedAt.isBefore(oneDayAgo)) return true;
+      
+      // Rule 2: Planned items where the date passed more than 24h ago
+      if (item.plannedDate != null) {
+        // Since plannedDate is usually at 00:00:00 of that day,
+        // adding 24h means we wait until the end of that day.
+        // Wait another 24h (total 48h from start of day) to be safe or as requested.
+        // The user said "24h after the date passed".
+        // If date passed = start of next day. 24h after that = start of day after next.
+        // Let's stick to: plannedDate + 48h < now
+        if (item.plannedDate!.add(const Duration(hours: 48)).isBefore(now)) return true;
+      }
+      
+      return false;
+    }).toList();
+
+    for (final item in toDelete) {
+      try {
+        // Silently delete from backend
+        final url = Uri.parse('${ApiConfig.baseUrl}/grocery-items/${item.id}');
+        http.delete(url, headers: await _getHeaders());
+        // Remove from local list to avoid waiting for next refresh
+        items.remove(item);
+      } catch (e) {
+        print('Error auto-cleaning item ${item.id}: $e');
+      }
+    }
   }
 
   void clearData() {

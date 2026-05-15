@@ -19,7 +19,6 @@ class AppRoutes {
   static const String profile = '/profile';
   static const String myAccount = '/my-account';
   static const String changePassword = '/change-password';
-  static const String favorites = '/favorites';
   static const String activityHistory = '/activity-history';
   static const String helpCenter = '/help-center';
   static const String viewAll = '/view-all';

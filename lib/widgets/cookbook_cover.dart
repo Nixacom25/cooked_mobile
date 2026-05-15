@@ -54,18 +54,40 @@ class CookbookCover extends StatelessWidget {
     });
     
     final displayRecipes = recipes.take(3).toList();
+    final bool isPinned = cookbook.isPinned;
 
-    return Container(
-      width: width ?? double.infinity,
-      height: height ?? double.infinity,
-      decoration: BoxDecoration(
-        color: const Color(0xFFF3F4F6),
-        borderRadius: BorderRadius.circular(16.r),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: displayRecipes.isEmpty 
-          ? _buildEmptyState() 
-          : _buildCollage(displayRecipes),
+    return Stack(
+      children: [
+        Container(
+          width: width ?? double.infinity,
+          height: height ?? double.infinity,
+          decoration: BoxDecoration(
+            color: const Color(0xFFF3F4F6),
+            borderRadius: BorderRadius.circular(16.r),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: displayRecipes.isEmpty 
+              ? _buildEmptyState() 
+              : _buildCollage(displayRecipes),
+        ),
+        if (isPinned)
+          Positioned(
+            bottom: 4.h,
+            right: 4.w,
+            child: Container(
+              padding: EdgeInsets.all(3.w),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.push_pin_rounded,
+                size: 12.sp,
+                color: const Color(0xFFC83A2D),
+              ),
+            ),
+          ),
+      ],
     );
   }
 

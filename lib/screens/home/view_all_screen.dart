@@ -1,3 +1,4 @@
+import 'package:cooked/widgets/recipe_grid_skeleton.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../routes/app_routes.dart';
@@ -12,13 +13,14 @@ import '../../services/history_service.dart';
 import '../../services/cookbook_service.dart';
 import '../../services/grocery_service.dart';
 import '../../core/widgets/ios_toast.dart';
-import '../../core/utils/error_helper.dart';
 import '../../models/view_all_type.dart';
 import '../../core/extensions/string_extensions.dart';
 import '../explore_screen.dart';
-import '../../widgets/recipe_grid_skeleton.dart';
 import '../../widgets/cookbook_grid_skeleton.dart';
 import '../../widgets/skeleton_loader.dart';
+import '../../widgets/add_to_cookbook_sheet.dart';
+import '../../widgets/cookbook_form_modal.dart';
+import '../../widgets/haptic_context_menu.dart';
 
 // ══════════════════════════════════════════════════════════════════════════════
 // VIEW ALL SCREEN
@@ -86,10 +88,11 @@ class _ViewAllScreenState extends State<ViewAllScreen> {
                   if (showPlus)
                     GestureDetector(
                       onTap: () async {
-                        await Navigator.pushNamed(
-                          context,
-                          AppRoutes.cookbookForm,
-                          arguments: {'mode': 'add'},
+                        await showModalBottomSheet(
+                          context: context,
+                          isScrollControlled: true,
+                          backgroundColor: Colors.transparent,
+                          builder: (context) => const CookbookFormModal(),
                         );
                       },
                       child: Container(
@@ -146,7 +149,6 @@ class _ViewAllScreenState extends State<ViewAllScreen> {
         return _CookbooksGrid(searchQuery: query);
       case ViewAllType.savedRecipes:
       case ViewAllType.recentlyViewed:
-      case ViewAllType.favorites:
       case ViewAllType.explore:
       case ViewAllType.groceryHistory:
       case ViewAllType.imports:
@@ -165,9 +167,7 @@ class _ViewAllScreenState extends State<ViewAllScreen> {
     ValueNotifier<List<Recipe>?>? notifier;
     if (type == ViewAllType.savedRecipes) {
       notifier = RecipeService.instance.myRecipesNotifier;
-    } else if (type == ViewAllType.favorites)
-      notifier = RecipeService.instance.favoriteRecipesNotifier;
-    else if (type == ViewAllType.imports)
+    } else if (type == ViewAllType.imports)
       notifier = RecipeService.instance.recentImportsNotifier;
 
     if (notifier == null) return const SizedBox.shrink();
@@ -250,10 +250,75 @@ class _CookbooksGridState extends State<_CookbooksGrid> {
             final cb = displayList[i];
             return GestureDetector(
               onTap: () async {
-                await Navigator.pushNamed(
+                final result = await Navigator.pushNamed(
                   ctx,
                   AppRoutes.cookbookDetail,
                   arguments: {'cookbook': cb},
+                );
+                if (result == true) {
+                  CookbookService.instance.getMyCookbooks(forceRefresh: true);
+                }
+              },
+              onLongPressStart: (details) {
+                HapticContextMenu.show(
+                  ctx,
+                  targetPosition: details.globalPosition,
+                  actions: [
+                    HapticMenuAction(
+                      title: 'Add Recipes',
+                      icon: Icons.add_circle_outline_rounded,
+                      onTap: () async {
+                        final result = await showModalBottomSheet(
+                          context: ctx,
+                          isScrollControlled: true,
+                          backgroundColor: Colors.transparent,
+                          builder: (context) => CookbookFormModal(cookbook: cb),
+                        );
+                        if (result is Cookbook || result == 'deleted') {
+                          CookbookService.instance.getMyCookbooks(forceRefresh: true);
+                        }
+                      },
+                    ),
+                    HapticMenuAction(
+                      title: 'Edit Cookbook',
+                      icon: Icons.edit_outlined,
+                      onTap: () async {
+                        final result = await showModalBottomSheet(
+                          context: ctx,
+                          isScrollControlled: true,
+                          backgroundColor: Colors.transparent,
+                          builder: (context) => CookbookFormModal(cookbook: cb),
+                        );
+                        if (result is Cookbook || result == 'deleted') {
+                          CookbookService.instance.getMyCookbooks(forceRefresh: true);
+                        }
+                      },
+                    ),
+                    HapticMenuAction(
+                      title: 'Pin Cookbook',
+                      icon: Icons.push_pin_outlined,
+                      onTap: () {
+                        // Pin logic
+                      },
+                    ),
+                    HapticMenuAction(
+                      title: 'Delete Cookbook',
+                      icon: Icons.delete_outline_rounded,
+                      isDestructive: true,
+                      onTap: () async {
+                        try {
+                          await CookbookService.instance.deleteCookbook(cb.id);
+                          if (mounted) {
+                            IosToast.show(ctx, message: 'Cookbook deleted', type: ToastType.success);
+                          }
+                        } catch (e) {
+                          if (mounted) {
+                            IosToast.show(ctx, message: 'Failed to delete cookbook', type: ToastType.error);
+                          }
+                        }
+                      },
+                    ),
+                  ],
                 );
               },
               child: Column(
@@ -340,9 +405,6 @@ class _RecipesGridState extends State<_RecipesGrid> {
           RecipeService.instance.getMyRecipes();
         }
         break;
-      case ViewAllType.favorites:
-        RecipeService.instance.getFavoriteRecipes(size: 50);
-        break;
       case ViewAllType.imports:
         RecipeService.instance.getRecentImports(size: 50);
         break;
@@ -410,39 +472,85 @@ class _RecipesGridState extends State<_RecipesGrid> {
       return const Center(child: Text("No recipes match your search."));
     }
 
-    return GridView.builder(
-      padding: const EdgeInsets.fromLTRB(16, 4, 16, 20),
-      itemCount: displayList.length,
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        mainAxisSpacing: 14.h,
-        crossAxisSpacing: 14.w,
-        childAspectRatio: 0.72,
-      ),
-      itemBuilder: (ctx, i) {
-        final r = displayList[i];
-        return RecipeCard(
-          recipe: r,
-          onHeartTap: () async {
-            try {
-              await RecipeService.instance.toggleFavorite(r.id);
-            } catch (e) {
-              if (ctx.mounted) {
-                IosToast.show(
-                  ctx,
-                  message: ErrorHelper.getFriendlyMessage(e),
-                  type: ToastType.error,
+    return ValueListenableBuilder<List<Recipe>?>(
+      valueListenable: RecipeService.instance.myRecipesNotifier,
+      builder: (context, savedRecipes, _) {
+        final savedNames = (savedRecipes ?? [])
+            .map((r) => r.name.toLowerCase())
+            .toSet();
+
+        return GridView.builder(
+          padding: const EdgeInsets.fromLTRB(16, 4, 16, 20),
+          itemCount: displayList.length,
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            mainAxisSpacing: 14.h,
+            crossAxisSpacing: 14.w,
+            childAspectRatio: 0.72,
+          ),
+          itemBuilder: (ctx, i) {
+            final r = displayList[i];
+            final isExplore = _type == ViewAllType.explore ||
+                _type == ViewAllType.exploreRecipesByCuisine ||
+                _type == ViewAllType.exploreRecipesByCategory;
+            final isCuisineOrCategory = _type == ViewAllType.exploreRecipesByCuisine ||
+                _type == ViewAllType.exploreRecipesByCategory;
+            final isSaved = savedNames.contains(r.name.toLowerCase());
+
+            return RecipeCard(
+              recipe: r,
+              useValidationIcon: isExplore,
+              isValidated: isSaved,
+              animationDelay: Duration(milliseconds: i * 800),
+              useExploreButton: isExplore,
+              inactiveColor: isCuisineOrCategory ? const Color(0xFF9CA3AF) : null,
+              onValidateTap: isExplore
+                  ? () {
+                      if (isSaved) {
+                        IosToast.show(
+                          ctx,
+                          message: "Already in your recipes",
+                          type: ToastType.success,
+                        );
+                        return;
+                      }
+                      showModalBottomSheet(
+                        context: ctx,
+                        backgroundColor: Colors.transparent,
+                        isScrollControlled: true,
+                        builder: (_) => AddToCookbookSheet(recipe: r),
+                      );
+                    }
+                  : null,
+               onAddToCookbookTap: (isSaved || isExplore) ? () {
+                showModalBottomSheet(
+                  context: ctx,
+                  backgroundColor: Colors.transparent,
+                  isScrollControlled: true,
+                  builder: (_) => AddToCookbookSheet(recipe: r),
                 );
-              }
-            }
-          },
-          onTap: () async {
-            await Navigator.pushNamed(
-              ctx,
-              AppRoutes.recipeDetail,
-              arguments: {
-                'recipe': r,
-                'isMyRecipe': _type == ViewAllType.savedRecipes,
+              } : null,
+              onShareTap: (isSaved || isExplore) ? () {
+                // Share logic
+              } : null,
+              onPinTap: isSaved ? () {
+                // Pin logic
+              } : null,
+              onDeleteTap: isSaved ? () async {
+                final success = await RecipeService.instance.deleteRecipe(r.id);
+                if (success && ctx.mounted) {
+                  IosToast.show(ctx, message: 'Recipe deleted', type: ToastType.success);
+                }
+              } : null,
+              onTap: () async {
+                await Navigator.pushNamed(
+                  ctx,
+                  AppRoutes.recipeDetail,
+                  arguments: {
+                    'recipe': r,
+                    'isPreview': !isSaved,
+                  },
+                );
               },
             );
           },
@@ -454,10 +562,9 @@ class _RecipesGridState extends State<_RecipesGrid> {
   @override
   Widget build(BuildContext context) {
     if (_type == ViewAllType.savedRecipes ||
-        _type == ViewAllType.favorites ||
         _type == ViewAllType.imports ||
         _type == ViewAllType.recentlyViewed) {
-      final notifier = _type == ViewAllType.savedRecipes || _type == ViewAllType.favorites
+      final notifier = _type == ViewAllType.savedRecipes
           ? RecipeService.instance.myRecipesNotifier
           : _type == ViewAllType.imports
           ? RecipeService.instance.recentImportsNotifier
@@ -472,10 +579,8 @@ class _RecipesGridState extends State<_RecipesGrid> {
             );
           }
           
-          final displayList = (_type == ViewAllType.favorites)
-              ? recipes.where((r) => r.isFavorite).toList()
-              : (_type == ViewAllType.savedRecipes)
-                  ? recipes.where((r) => !r.isInCookbook).toList()
+          final displayList = (_type == ViewAllType.savedRecipes)
+                  ? recipes.where((r) => !r.isInCookbook && !r.isSuggested).toList()
                   : recipes;
               
           return _buildGrid(displayList);

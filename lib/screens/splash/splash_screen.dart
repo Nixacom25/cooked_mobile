@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../routes/app_routes.dart';
 import '../../services/auth_service.dart';
+import '../../services/user_service.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -40,7 +41,17 @@ class _SplashScreenState extends State<SplashScreen>
 
     final token = await AuthService.instance.getToken();
     if (token != null && token.isNotEmpty) {
-      Navigator.pushReplacementNamed(context, AppRoutes.home);
+      try {
+        // Verify token by fetching user data
+        await UserService.instance.getCurrentUser();
+        if (!mounted) return;
+        Navigator.pushReplacementNamed(context, AppRoutes.home);
+      } catch (e) {
+        // If token is invalid or expired, force logout and go to welcome
+        await AuthService.instance.logout();
+        if (!mounted) return;
+        Navigator.pushReplacementNamed(context, AppRoutes.welcome);
+      }
     } else {
       Navigator.pushReplacementNamed(context, AppRoutes.welcome);
     }

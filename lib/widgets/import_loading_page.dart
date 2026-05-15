@@ -9,13 +9,18 @@ class ImportLoadingPage extends StatefulWidget {
   State<ImportLoadingPage> createState() => _ImportLoadingPageState();
 }
 
-class _ImportLoadingPageState extends State<ImportLoadingPage> {
+class _ImportLoadingPageState extends State<ImportLoadingPage> with SingleTickerProviderStateMixin {
   int _dotCount = 0;
   late Timer _timer;
+  late AnimationController _controller;
+  late Animation<double> _floatAnimation;
+  late Animation<double> _rotateAnimation;
 
   @override
   void initState() {
     super.initState();
+    
+    // Dot animation timer
     _timer = Timer.periodic(const Duration(milliseconds: 500), (timer) {
       if (mounted) {
         setState(() {
@@ -23,11 +28,32 @@ class _ImportLoadingPageState extends State<ImportLoadingPage> {
         });
       }
     });
+
+    // Magic Float & Rotate Animation
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2000),
+    )..repeat(reverse: true);
+
+    _floatAnimation = Tween<double>(begin: 0, end: -15.h).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: Curves.easeInOutSine,
+      ),
+    );
+
+    _rotateAnimation = Tween<double>(begin: -0.05, end: 0.05).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: Curves.easeInOutSine,
+      ),
+    );
   }
 
   @override
   void dispose() {
     _timer.cancel();
+    _controller.dispose();
     super.dispose();
   }
 
@@ -57,12 +83,24 @@ class _ImportLoadingPageState extends State<ImportLoadingPage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // Vegetable Illustration
-                  Image.asset(
-                    'assets/images/import_load.png',
-                    width: 170.w,
-                    height: 170.h,
-                    fit: BoxFit.contain,
+                  // Animated Vegetable Illustration
+                  AnimatedBuilder(
+                    animation: _controller,
+                    builder: (context, child) {
+                      return Transform.translate(
+                        offset: Offset(0, _floatAnimation.value),
+                        child: Transform.rotate(
+                          angle: _rotateAnimation.value,
+                          child: child,
+                        ),
+                      );
+                    },
+                    child: Image.asset(
+                      'assets/images/import_load.png',
+                      width: 170.w,
+                      height: 170.h,
+                      fit: BoxFit.contain,
+                    ),
                   ),
                   SizedBox(height: 32.h),
 

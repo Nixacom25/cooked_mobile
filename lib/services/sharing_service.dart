@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:receive_sharing_intent/receive_sharing_intent.dart';
 
 class SharingService {
@@ -8,6 +9,8 @@ class SharingService {
 
   StreamSubscription? _intentDataStreamSubscription;
   final ValueNotifier<String?> sharedTextNotifier = ValueNotifier<String?>(null);
+  final ValueNotifier<String?> clipboardTextNotifier = ValueNotifier<String?>(null);
+  String? _lastClipboardText;
 
   void init() {
     // For sharing or opening urls from outside the app while the app is in the memory
@@ -42,6 +45,27 @@ class SharingService {
         sharedTextNotifier.value = value.first.path;
       }
     });
+  }
+
+  Future<void> checkClipboard() async {
+    try {
+      final data = await Clipboard.getData(Clipboard.kTextPlain);
+      final text = data?.text;
+      
+      if (text != null && text.isNotEmpty && text != _lastClipboardText) {
+        final url = extractUrl(text);
+        if (url != null) {
+          _lastClipboardText = text;
+          clipboardTextNotifier.value = url;
+        }
+      }
+    } catch (e) {
+      debugPrint("Error checking clipboard: $e");
+    }
+  }
+
+  void ignoreClipboard() {
+    clipboardTextNotifier.value = null;
   }
 
   String? extractUrl(String text) {

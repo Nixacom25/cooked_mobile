@@ -22,14 +22,70 @@ class GroceryScreen extends StatefulWidget {
   State<GroceryScreen> createState() => _GroceryScreenState();
 }
 
-class _GroceryScreenState extends State<GroceryScreen> {
+class _GroceryScreenState extends State<GroceryScreen> with SingleTickerProviderStateMixin {
   final Set<String> _collapsedGroups = {};
   bool _initializedDefaults = false;
+
+  late AnimationController _hintController;
+  late Animation<Offset> _hintAnimation;
+  bool _hintShownThisSession = false;
 
   @override
   void initState() {
     super.initState();
     _loadGroceries();
+
+    _hintController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    );
+
+    _hintAnimation = TweenSequence<Offset>([
+      TweenSequenceItem(
+        tween: Tween<Offset>(begin: Offset.zero, end: const Offset(-0.3, 0.0))
+            .chain(CurveTween(curve: Curves.easeOutCubic)),
+        weight: 30,
+      ),
+      TweenSequenceItem(
+        tween: Tween<Offset>(begin: const Offset(-0.3, 0.0), end: const Offset(-0.25, 0.0))
+            .chain(CurveTween(curve: Curves.easeInOut)),
+        weight: 15,
+      ),
+      TweenSequenceItem(
+        tween: Tween<Offset>(begin: const Offset(-0.25, 0.0), end: const Offset(-0.35, 0.0))
+            .chain(CurveTween(curve: Curves.easeOutCubic)),
+        weight: 20,
+      ),
+      TweenSequenceItem(
+        tween: Tween<Offset>(begin: const Offset(-0.35, 0.0), end: Offset.zero)
+            .chain(CurveTween(curve: Curves.elasticOut)),
+        weight: 35,
+      ),
+    ]).animate(_hintController);
+
+    // Show hint after a short delay once data is loaded
+    GroceryService.instance.myGroceriesNotifier.addListener(_onDataLoaded);
+    if (GroceryService.instance.myGroceriesNotifier.value != null && 
+        GroceryService.instance.myGroceriesNotifier.value!.isNotEmpty) {
+      _onDataLoaded();
+    }
+  }
+
+  void _onDataLoaded() {
+    final items = GroceryService.instance.myGroceriesNotifier.value;
+    if (items != null && items.isNotEmpty) {
+      GroceryService.instance.myGroceriesNotifier.removeListener(_onDataLoaded);
+      Future.delayed(const Duration(milliseconds: 1200), () {
+        if (mounted) _hintController.forward(from: 0);
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    GroceryService.instance.myGroceriesNotifier.removeListener(_onDataLoaded);
+    _hintController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadGroceries() async {
@@ -44,54 +100,49 @@ class _GroceryScreenState extends State<GroceryScreen> {
     }
   }
 
-  // Grouped by date
-  Map<String, List<GroceryItem>> _getGroupedByDate(List<GroceryItem> allItems) {
+  // Grouped by Recipe
+  Map<String, List<GroceryItem>> _getGroupedByRecipe(List<GroceryItem> allItems) {
     final groups = <String, List<GroceryItem>>{};
     
-    // Sort items so null dates come first, then chronologically
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-
-    // 1. Filter out past dates (keep null and today/future)
-    final filteredItems = allItems.where((item) {
-      if (item.plannedDate == null) return true;
-      final itemDate = DateTime(
-        item.plannedDate!.year,
-        item.plannedDate!.month,
-        item.plannedDate!.day,
-      );
-      return !itemDate.isBefore(today);
-    }).toList();
-
-    // 2. Sort items: General items first (newest first), then upcoming dates (closest first)
-    final sorted = filteredItems..sort((a, b) {
-      if (a.plannedDate == null && b.plannedDate == null) {
+    // Sort items: Manual Adds first (newest first), then by recipe name
+    final sorted = List<GroceryItem>.from(allItems)..sort((a, b) {
+      if (a.recipeName == null && b.recipeName == null) {
         return b.createdAt.compareTo(a.createdAt);
       }
-      if (a.plannedDate == null) return -1;
-      if (b.plannedDate == null) return 1;
+      if (a.recipeName == null) return -1;
+      if (b.recipeName == null) return 1;
       
-      final dateComp = a.plannedDate!.compareTo(b.plannedDate!);
-      if (dateComp != 0) return dateComp;
-      
-      // Same date: newest first
-      return b.createdAt.compareTo(a.createdAt);
+      return a.recipeName!.compareTo(b.recipeName!);
     });
 
     for (final item in sorted) {
-      String key;
-      if (item.plannedDate == null) {
-        key = 'General items';
-      } else {
-        // MM/DD/YYYY format as requested for US format
-        final d = item.plannedDate!;
-        key = '${d.month.toString().padLeft(2, '0')}/${d.day.toString().padLeft(2, '0')}/${d.year}';
-      }
-      
+      String key = item.recipeName ?? ''; // Empty key for manual adds
       if (!groups.containsKey(key)) groups[key] = [];
       groups[key]!.add(item);
     }
     return groups;
+  }
+
+  Future<void> _toggleItem(GroceryItem item) async {
+    HapticFeedback.selectionClick();
+    try {
+      await GroceryService.instance.toggleBought(item.id);
+    } catch (e) {
+      if (mounted) {
+        IosToast.show(context, message: ErrorHelper.getFriendlyMessage(e), type: ToastType.error);
+      }
+    }
+  }
+
+  Future<void> _deleteItem(GroceryItem item) async {
+    HapticFeedback.mediumImpact();
+    try {
+      await GroceryService.instance.deleteGroceryItem(item.id);
+    } catch (e) {
+      if (mounted) {
+        IosToast.show(context, message: ErrorHelper.getFriendlyMessage(e), type: ToastType.error);
+      }
+    }
   }
 
   @override
@@ -141,13 +192,24 @@ class _GroceryScreenState extends State<GroceryScreen> {
 
                       if (allItems.isEmpty) return _buildEmpty(allItems);
 
-                      final grouped = _getGroupedByDate(allItems);
+                      if (!_hintShownThisSession && allItems.isNotEmpty) {
+                        _hintShownThisSession = true;
+                        Future.delayed(const Duration(milliseconds: 1000), () async {
+                          if (mounted) {
+                            await _hintController.forward(from: 0);
+                            await Future.delayed(const Duration(milliseconds: 400));
+                            if (mounted) await _hintController.forward(from: 0);
+                          }
+                        });
+                      }
 
-                      // Initialize defaults: General items open, or first date if general is empty
+                      final grouped = _getGroupedByRecipe(allItems);
+
+                      // Initialize defaults: Manual Adds open, or first recipe if general is empty
                       if (!_initializedDefaults && grouped.isNotEmpty) {
                         final keys = grouped.keys.toList();
-                        final hasGeneral = keys.contains('General items');
-                        final openKey = hasGeneral ? 'General items' : keys.first;
+                        final hasGeneral = keys.contains('');
+                        final openKey = hasGeneral ? '' : keys.first;
                         
                         for (final key in keys) {
                           if (key != openKey) {
@@ -161,27 +223,28 @@ class _GroceryScreenState extends State<GroceryScreen> {
                         padding: EdgeInsets.only(bottom: 120.h),
                         itemCount: grouped.length,
                         itemBuilder: (_, gi) {
-                          final dateKey = grouped.keys.elementAt(gi);
-                          final items = grouped[dateKey]!;
-                          final isCollapsed = _collapsedGroups.contains(dateKey);
+                          final recipeKey = grouped.keys.elementAt(gi);
+                          final items = grouped[recipeKey]!;
+                          final isCollapsed = _collapsedGroups.contains(recipeKey);
 
                           return Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              GestureDetector(
-                                onTap: () {
+                              if (recipeKey.isNotEmpty)
+                                GestureDetector(
+                                  onTap: () {
                                   HapticFeedback.lightImpact();
                                   setState(() {
-                                    if (_collapsedGroups.contains(dateKey)) {
-                                      _collapsedGroups.remove(dateKey);
+                                    if (_collapsedGroups.contains(recipeKey)) {
+                                      _collapsedGroups.remove(recipeKey);
                                     } else {
-                                      _collapsedGroups.add(dateKey);
+                                      _collapsedGroups.add(recipeKey);
                                     }
                                   });
                                 },
                                 child: Container(
                                   width: double.infinity,
-                                  color: Colors.transparent, // For better hit testing
+                                  color: Colors.transparent, 
                                   padding: EdgeInsets.fromLTRB(
                                     18,
                                     gi == 0 ? 14 : 24,
@@ -191,66 +254,90 @@ class _GroceryScreenState extends State<GroceryScreen> {
                                   child: Row(
                                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                     children: [
-                                      Text(
-                                        dateKey,
-                                        style: TextStyle(
-                                          fontFamily: 'SF Pro',
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 18.sp,
-                                          color: dateKey == 'General items' 
-                                              ? const Color(0xFF1A1A1A)
-                                              : const Color(0xFFC83A2D),
+                                      Expanded(
+                                        child: Text(
+                                          recipeKey,
+                                          style: TextStyle(
+                                            fontFamily: 'SF Pro',
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16.sp,
+                                            color: const Color(0xFF1A1A1A),
+                                          ),
                                         ),
                                       ),
-                                      Icon(
-                                        isCollapsed 
-                                            ? Icons.keyboard_arrow_right_rounded 
-                                            : Icons.keyboard_arrow_down_rounded,
-                                        color: Colors.black,
-                                        size: 20.sp,
+                                      AnimatedRotation(
+                                        turns: isCollapsed ? 0 : 0.25,
+                                        duration: const Duration(milliseconds: 250),
+                                        curve: Curves.easeInOut,
+                                        child: Icon(
+                                          Icons.keyboard_arrow_right_rounded,
+                                          color: const Color(0xFF1A1A1A),
+                                          size: 22.sp,
+                                        ),
                                       ),
                                     ],
                                   ),
                                 ),
                               ),
-                              if (!isCollapsed)
-                                ...items.map((item) {
-                                  if (item.isPlaceholder) {
-                                    return const GrocerySkeletonItem();
-                                  }
-                                  return Column(
-                                    children: [
-                                      _ItemRow(
-                                        item: item,
-                                        onToggle: () async {
-                                          HapticFeedback.selectionClick();
-                                          try {
-                                            await GroceryService.instance
-                                                .toggleBought(item.id);
-                                          } catch (e) {
-                                            IosToast.show(context, message: ErrorHelper.getFriendlyMessage(e), type: ToastType.error);
-                                          }
-                                        },
-                                        onDelete: () async {
-                                          HapticFeedback.mediumImpact();
-                                          try {
-                                            await GroceryService.instance
-                                                .deleteGroceryItem(item.id);
-                                          } catch (e) {
-                                            IosToast.show(context, message: ErrorHelper.getFriendlyMessage(e), type: ToastType.error);
-                                          }
-                                        },
-                                      ),
-                                      const Divider(
-                                        height: 0,
-                                        thickness: 1,
-                                        color: Color(0xFFF2F2F2),
-                                        indent: 18,
-                                        endIndent: 18,
-                                      ),
-                                    ],
-                                  );
-                                }),
+                              AnimatedCrossFade(
+                                duration: const Duration(milliseconds: 300),
+                                sizeCurve: Curves.easeInOut,
+                                firstChild: Column(
+                                  children: items.map((item) {
+                                    if (item.isPlaceholder) {
+                                      return const GrocerySkeletonItem();
+                                    }
+                                    return Column(
+                                      children: [
+                                        // Animate only the very first item of the very first group as a hint
+                                        gi == 0 && item == items.first
+                                            ? AnimatedBuilder(
+                                                animation: _hintAnimation,
+                                                builder: (context, child) => SlideTransition(
+                                                  position: _hintAnimation,
+                                                  child: child,
+                                                ),
+                                                child: _ItemRow(
+                                                  item: item,
+                                                  onToggle: () => _toggleItem(item),
+                                                  onDelete: (item) async {
+                                                    final confirm = await _showDeleteConfirm(context, item.ingredientName);
+                                                    if (confirm == true) {
+                                                      await _deleteItem(item);
+                                                      return true;
+                                                    }
+                                                    return false;
+                                                  },
+                                                ),
+                                              )
+                                            : _ItemRow(
+                                                item: item,
+                                                onToggle: () => _toggleItem(item),
+                                                onDelete: (item) async {
+                                                  final confirm = await _showDeleteConfirm(context, item.ingredientName);
+                                                  if (confirm == true) {
+                                                    await _deleteItem(item);
+                                                    return true;
+                                                  }
+                                                  return false;
+                                                },
+                                              ),
+                                        const Divider(
+                                          height: 0,
+                                          thickness: 1,
+                                          color: Color(0xFFF2F2F2),
+                                          indent: 18,
+                                          endIndent: 18,
+                                        ),
+                                      ],
+                                    );
+                                  }).toList(),
+                                ),
+                                secondChild: const SizedBox(width: double.infinity),
+                                crossFadeState: isCollapsed 
+                                    ? CrossFadeState.showSecond 
+                                    : CrossFadeState.showFirst,
+                              ),
                             ],
                           );
                         },
@@ -375,6 +462,26 @@ class _GroceryScreenState extends State<GroceryScreen> {
     );
   }
 
+  Future<bool?> _showDeleteConfirm(BuildContext context, String name) {
+    return showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete Item'),
+        content: Text('Are you sure you want to delete "$name" from your grocery list?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Delete', style: TextStyle(color: Color(0xFFC83A2D), fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _showAddGrocerySheet(BuildContext context, List<GroceryItem> allItems) {
     showModalBottomSheet(
       context: context,
@@ -409,7 +516,7 @@ class _GroceryScreenState extends State<GroceryScreen> {
 class _ItemRow extends StatelessWidget {
   final GroceryItem item;
   final VoidCallback onToggle;
-  final VoidCallback onDelete;
+  final Future<bool?> Function(GroceryItem) onDelete;
   const _ItemRow({
     required this.item,
     required this.onToggle,
@@ -420,8 +527,10 @@ class _ItemRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Dismissible(
       key: Key(item.id),
-      direction: DismissDirection.endToStart,
-      onDismissed: (_) => onDelete(),
+      confirmDismiss: (direction) => onDelete(item),
+      onDismissed: (_) {
+        // The deletion logic is already handled in _deleteItem if confirmDismiss returns true
+      },
       background: Container(
         color: Colors.red,
         alignment: Alignment.centerRight,
@@ -434,30 +543,7 @@ class _ItemRow extends StatelessWidget {
           padding: EdgeInsets.symmetric(horizontal: 18.w, vertical: 16.h),
           child: Row(
             children: [
-              // Circle checkbox
-              Container(
-                width: 20.w,
-                height: 20.h,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: item.isBought
-                        ? const Color(0xFFC83A2D)
-                        : const Color(0xFFCCCCCC),
-                    width: 2.w,
-                  ),
-                  color: item.isBought
-                      ? const Color(0xFFC83A2D)
-                      : Colors.transparent,
-                ),
-                child: item.isBought
-                    ? Icon(
-                        Icons.check_rounded,
-                        size: 13.sp,
-                        color: Colors.white,
-                      )
-                    : null,
-              ),
+              _AnimatedCheckbox(isBought: item.isBought),
               SizedBox(width: 14.w),
               Text(
                 item.ingredientIcon ?? '🛒',
@@ -465,8 +551,9 @@ class _ItemRow extends StatelessWidget {
               ),
               SizedBox(width: 5.w),
               Expanded(
-                child: Text(
-                  item.ingredientName,
+                child: AnimatedDefaultTextStyle(
+                  duration: const Duration(milliseconds: 250),
+                  curve: Curves.easeInOut,
                   style: TextStyle(
                     fontFamily: 'SF Pro',
                     fontWeight: FontWeight.w500,
@@ -476,8 +563,9 @@ class _ItemRow extends StatelessWidget {
                         : const Color(0xFF1A1A1A),
                     decoration: item.isBought
                         ? TextDecoration.lineThrough
-                        : null,
+                        : TextDecoration.none,
                   ),
+                  child: Text(item.ingredientName),
                 ),
               ),
               Text(
@@ -494,6 +582,140 @@ class _ItemRow extends StatelessWidget {
       ),
     );
   }
+}
+
+class _AnimatedCheckbox extends StatefulWidget {
+  final bool isBought;
+  const _AnimatedCheckbox({required this.isBought});
+
+  @override
+  State<_AnimatedCheckbox> createState() => _AnimatedCheckboxState();
+}
+
+class _AnimatedCheckboxState extends State<_AnimatedCheckbox> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _fillAnimation;
+  late Animation<double> _checkAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1000),
+    );
+
+    _fillAnimation = CurvedAnimation(
+      parent: _controller,
+      curve: const Interval(0.0, 0.5, curve: Curves.easeOutCubic),
+    );
+
+    _checkAnimation = CurvedAnimation(
+      parent: _controller,
+      curve: const Interval(0.4, 1.0, curve: Curves.easeInOutCubic),
+    );
+
+    if (widget.isBought) {
+      _controller.value = 1.0;
+    }
+  }
+
+  @override
+  void didUpdateWidget(_AnimatedCheckbox oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isBought != oldWidget.isBought) {
+      if (widget.isBought) {
+        _controller.forward();
+      } else {
+        _controller.reverse();
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        return Container(
+          width: 20.w,
+          height: 20.w,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: Color.lerp(
+                const Color(0xFFCCCCCC),
+                const Color(0xFFC83A2D),
+                _fillAnimation.value,
+              )!,
+              width: 2.w,
+            ),
+            color: const Color(0xFFC83A2D).withOpacity(_fillAnimation.value),
+          ),
+          child: CustomPaint(
+            painter: _CheckmarkPainter(
+              progress: _checkAnimation.value,
+              color: Colors.white,
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _CheckmarkPainter extends CustomPainter {
+  final double progress;
+  final Color color;
+
+  _CheckmarkPainter({required this.progress, required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (progress <= 0) return;
+
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.0
+      ..strokeCap = StrokeCap.round;
+
+    final path = Path();
+    
+    // Checkmark coordinates relative to size
+    final start = Offset(size.width * 0.25, size.height * 0.5);
+    final mid = Offset(size.width * 0.45, size.height * 0.7);
+    final end = Offset(size.width * 0.75, size.height * 0.35);
+
+    // We split the progress: first half for the first segment, second half for the second
+    if (progress < 0.5) {
+      final p = progress / 0.5;
+      path.moveTo(start.dx, start.dy);
+      path.lineTo(
+        start.dx + (mid.dx - start.dx) * p,
+        start.dy + (mid.dy - start.dy) * p,
+      );
+    } else {
+      final p = (progress - 0.5) / 0.5;
+      path.moveTo(start.dx, start.dy);
+      path.lineTo(mid.dx, mid.dy);
+      path.lineTo(
+        mid.dx + (end.dx - mid.dx) * p,
+        mid.dy + (end.dy - mid.dy) * p,
+      );
+    }
+
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(_CheckmarkPainter oldDelegate) => oldDelegate.progress != progress;
 }
 
 // ── Add Grocery bottom sheet ──────────────────────────────────────────────────
@@ -954,7 +1176,7 @@ class _AddGrocerySheetState extends State<_AddGrocerySheet> {
                             widget.onSave(
                               name,
                               qty,
-                              null, // Manual adds always go to General Items
+                              null, // Manual adds always go to Manual Adds
                               null,
                               null,
                             );

@@ -154,6 +154,20 @@ class CookbookService {
     return updateCookbook(cookbookId, cb.name, ids);
   }
 
+  Future<Cookbook> togglePin(String id) async {
+    final url = Uri.parse('${ApiConfig.baseUrl}/cookbooks/$id/pin');
+    final response = await http.patch(url, headers: await _getHeaders());
+
+    if (response.statusCode == 200) {
+      final cookbook = Cookbook.fromJson(jsonDecode(response.body));
+      _cache[id] = cookbook;
+      await getMyCookbooks(forceRefresh: true);
+      return cookbook;
+    } else {
+      throw Exception('Unable to pin/unpin cookbook.');
+    }
+  }
+
   void clearData() {
     myCookbooksNotifier.value = null;
   }

@@ -261,12 +261,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       Navigator.pushNamed(context, AppRoutes.changePassword),
                 ),
                 _MenuItem(
-                  icon: Icons.favorite,
-                  label: 'Favorites',
-                  onTap: () =>
-                      Navigator.pushNamed(context, AppRoutes.favorites),
-                ),
-                _MenuItem(
                   icon: Icons.receipt_long_rounded,
                   label: 'Activity History',
                   onTap: () =>
@@ -307,6 +301,41 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           style: TextStyle(
                             fontFamily: 'SF Pro',
                             fontWeight: FontWeight.w500,
+                            fontSize: 16.sp,
+                            color: const Color(0xFFC83A2D),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                SizedBox(height: 12.h),
+                const Divider(height: 1, color: Color(0xFFF3F4F6)),
+                SizedBox(height: 12.h),
+                GestureDetector(
+                  onTap: () {
+                    showModalBottomSheet(
+                      context: context,
+                      backgroundColor: Colors.transparent,
+                      builder: (_) => const _DeleteAccountSheet(),
+                    );
+                  },
+                  behavior: HitTestBehavior.opaque,
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(vertical: 12.h),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.delete_forever_rounded,
+                          color: const Color(0xFFC83A2D),
+                          size: 24.sp,
+                        ),
+                        SizedBox(width: 16.w),
+                        Text(
+                          'Delete Account',
+                          style: TextStyle(
+                            fontFamily: 'SF Pro',
+                            fontWeight: FontWeight.w600,
                             fontSize: 16.sp,
                             color: const Color(0xFFC83A2D),
                           ),
@@ -479,4 +508,159 @@ Widget _defaultAvatar() {
     color: const Color(0xFFEEEEEE),
     child: Icon(Icons.person_rounded, size: 40.sp, color: const Color(0xFFAAAAAA)),
   );
+}
+
+// ── Delete Account confirmation sheet ───────────────────────────────────────
+class _DeleteAccountSheet extends StatefulWidget {
+  const _DeleteAccountSheet();
+
+  @override
+  State<_DeleteAccountSheet> createState() => _DeleteAccountSheetState();
+}
+
+class _DeleteAccountSheetState extends State<_DeleteAccountSheet> {
+  bool _isDeleting = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final bottomPad = MediaQuery.of(context).padding.bottom;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Handle
+          Container(
+            width: 40.w,
+            height: 4.h,
+            margin: EdgeInsets.symmetric(vertical: 12.h),
+            decoration: BoxDecoration(
+              color: const Color(0xFFE5E7EB),
+              borderRadius: BorderRadius.circular(2.r),
+            ),
+          ),
+
+          // Header
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20.w),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Delete Account',
+                  style: TextStyle(
+                    fontFamily: 'SF Pro',
+                    fontWeight: FontWeight.w800,
+                    fontSize: 20.sp,
+                    color: const Color(0xFF1A1A1A),
+                  ),
+                ),
+                IconButton(
+                  onPressed: () => Navigator.pop(context),
+                  icon: Icon(Icons.close_rounded, size: 24.sp, color: const Color(0xFF64748B)),
+                ),
+              ],
+            ),
+          ),
+
+          const Divider(height: 1),
+
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Are you sure you want to permanently delete your account? This action cannot be undone and you will lose all your data (Cookbooks, grocery items, etc.).',
+                  style: TextStyle(
+                    fontFamily: 'SF Pro',
+                    fontSize: 14.sp,
+                    color: const Color(0xFF64748B),
+                    height: 1.6,
+                  ),
+                ),
+                SizedBox(height: 28.h),
+
+                // Delete button
+                GestureDetector(
+                  onTap: _isDeleting ? null : () async {
+                    setState(() => _isDeleting = true);
+                    try {
+                      await AuthService.instance.deleteAccount();
+                      if (!context.mounted) return;
+                      Navigator.pushNamedAndRemoveUntil(
+                        context,
+                        AppRoutes.welcome,
+                        (_) => false,
+                      );
+                    } catch (e) {
+                      setState(() => _isDeleting = false);
+                      if (!context.mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Error: ${e.toString()}')),
+                      );
+                    }
+                  },
+                  child: Container(
+                    width: double.infinity,
+                    height: 54.h,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFC83A2D),
+                      borderRadius: BorderRadius.circular(16.r),
+                    ),
+                    child: Center(
+                      child: _isDeleting 
+                        ? const SizedBox(
+                            width: 20, 
+                            height: 20, 
+                            child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
+                          )
+                        : Text(
+                            'Delete permanently',
+                            style: TextStyle(
+                              fontFamily: 'SF Pro',
+                              fontWeight: FontWeight.w700,
+                              fontSize: 16.sp,
+                              color: Colors.white,
+                            ),
+                          ),
+                    ),
+                  ),
+                ),
+                SizedBox(height: 12.h),
+                // Cancel button
+                GestureDetector(
+                  onTap: () => Navigator.pop(context),
+                  child: Container(
+                    width: double.infinity,
+                    height: 54.h,
+                    decoration: BoxDecoration(
+                      color: Colors.transparent,
+                      borderRadius: BorderRadius.circular(16.r),
+                    ),
+                    child: Center(
+                      child: Text(
+                        'Cancel',
+                        style: TextStyle(
+                          fontFamily: 'SF Pro',
+                          fontWeight: FontWeight.w600,
+                          fontSize: 16.sp,
+                          color: const Color(0xFF64748B),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(height: bottomPad + 10.h),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }

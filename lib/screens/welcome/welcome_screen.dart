@@ -2,12 +2,31 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../core/theme/app_theme.dart';
 import '../../routes/app_routes.dart';
+import '../../services/auth_service.dart';
 import '../../widgets/red_button.dart';
 
 /// The single Welcome screen — kept as the user requested.
 /// Flow: Splash → Welcome → GetStarted → Login / Register
-class WelcomeScreen extends StatelessWidget {
+class WelcomeScreen extends StatefulWidget {
   const WelcomeScreen({super.key});
+
+  @override
+  State<WelcomeScreen> createState() => _WelcomeScreenState();
+}
+
+class _WelcomeScreenState extends State<WelcomeScreen> {
+  @override
+  void initState() {
+    super.initState();
+    _checkExistingToken();
+  }
+
+  Future<void> _checkExistingToken() async {
+    final token = await AuthService.instance.getToken();
+    if (token != null && token.isNotEmpty) {
+      await AuthService.instance.logout();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
