@@ -38,10 +38,24 @@ class CookbookService {
     final response = await http.get(url, headers: await _getHeaders());
 
     if (response.statusCode == 200) {
-      final List<dynamic> data = jsonDecode(response.body);
-      final cookbooks = data.map((json) => Cookbook.fromJson(json)).toList();
-      myCookbooksNotifier.value = cookbooks;
-      return cookbooks;
+      try {
+        final List<dynamic> data = jsonDecode(response.body);
+        final cookbooks = <Cookbook>[];
+        for (var item in data) {
+          try {
+            cookbooks.add(Cookbook.fromJson(item));
+          } catch (e) {
+            debugPrint('Error parsing individual cookbook: $e');
+            // Skip this one
+          }
+        }
+        myCookbooksNotifier.value = cookbooks;
+        return cookbooks;
+      } catch (e) {
+        debugPrint('ERROR parsing cookbooks: $e');
+        debugPrint('BODY: ${response.body}');
+        rethrow;
+      }
     } else {
       throw Exception('Unable to load your cookbooks.');
     }
@@ -110,16 +124,35 @@ class CookbookService {
       ));
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        final cookbook = Cookbook.fromJson(jsonDecode(response.body));
-        _cache[cookbook.id] = cookbook;
-        
-        // Background refresh to get the real object and remove placeholder
-        await getMyCookbooks(forceRefresh: true);
-        return cookbook;
+        debugPrint('COOKBOOK CREATE RAW BODY: ${response.body}');
+        try {
+          final dynamic decoded = jsonDecode(response.body);
+          // Handle case where backend might return a list with one item or a single object
+          final Map<String, dynamic> json = decoded is List ? decoded.first : decoded;
+          
+          final cookbook = Cookbook.fromJson(json);
+          _cache[cookbook.id] = cookbook;
+          
+          // Background refresh to get the real object and remove placeholder
+          try {
+            await getMyCookbooks(forceRefresh: true);
+          } catch (e) {
+             debugPrint('Non-critical background refresh failed: $e');
+          }
+          return cookbook;
+        } catch (e, stack) {
+          debugPrint('CRITICAL ERROR parsing new cookbook: $e');
+          debugPrint('STACKTRACE: $stack');
+          debugPrint('RAW JSON: ${response.body}');
+          rethrow;
+        }
       } else {
-        throw Exception('Unable to create cookbook.');
+        debugPrint('COOKBOOK CREATE SERVER ERROR: ${response.statusCode}');
+        debugPrint('SERVER BODY: ${response.body}');
+        throw Exception(response.body);
       }
     } catch (e) {
+      debugPrint('TOTAL FAILURE in createCookbook: $e');
       // Revert placeholder on error
       if (myCookbooksNotifier.value != null && placeholder != null) {
         myCookbooksNotifier.value = myCookbooksNotifier.value!

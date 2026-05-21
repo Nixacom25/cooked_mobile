@@ -10,6 +10,7 @@ import 'recipe_service.dart';
 import 'cookbook_service.dart';
 import 'user_service.dart';
 import 'history_service.dart';
+import '../core/services/tutorial_service.dart';
 
 class AuthService {
   // Singleton pattern
@@ -170,6 +171,7 @@ class AuthService {
       final data = jsonDecode(response.body);
       if (data['token'] != null) {
         await _saveToken(data['token']);
+        await TutorialService.instance.completeHome();
       }
       return data;
     } else {
@@ -259,6 +261,7 @@ class AuthService {
         final data = jsonDecode(response.body);
         if (data['token'] != null) {
           await _saveToken(data['token']);
+          if (!isSignup) await TutorialService.instance.completeHome();
         }
         return data;
       } else {
@@ -346,6 +349,7 @@ class AuthService {
         final data = jsonDecode(response.body);
         if (data['token'] != null) {
           await _saveToken(data['token']);
+          if (!isSignup) await TutorialService.instance.completeHome();
         }
         return data;
       } else {

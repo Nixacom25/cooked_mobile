@@ -18,8 +18,6 @@ import '../core/extensions/string_extensions.dart';
 import '../services/ingredient_service.dart';
 import '../services/sharing_service.dart';
 import 'package:webview_flutter/webview_flutter.dart';
-import 'package:url_launcher/url_launcher.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import '../utils/paywall_helper.dart';
@@ -27,7 +25,7 @@ import '../widgets/skeleton_list.dart';
 import '../widgets/red_button.dart';
 import '../widgets/skeleton_loader.dart';
 import '../widgets/add_to_cookbook_sheet.dart';
-import '../widgets/animated_validation_button.dart';
+import '../widgets/recent_import_tile.dart';
 
 class ImportScreen extends StatefulWidget {
   final ValueNotifier<bool>? isActiveNotifier;
@@ -119,7 +117,7 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
 
   Future<void> _loadRecentImports() async {
     try {
-      await RecipeService.instance.getRecentImports(size: 6);
+      await RecipeService.instance.getRecentImports(size: 5);
     } catch (_) {}
   }
 
@@ -298,6 +296,70 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
 
   String _capitalize(String text) {
     return text.toTitleCase();
+  }
+
+  void _handleValidation(Recipe r) async {
+    if (r.isInCookbook) {
+      IosToast.show(
+        context,
+        message: "Already in your recipes",
+        type: ToastType.success,
+      );
+      return;
+    }
+
+    // 1. Update local state immediately to trigger the "falling check" animation
+    _updateLocalStateForValidation(r);
+
+    // 2. Perform backend validation
+    RecipeService.instance.validateRecipe(r.id).catchError((e) {
+      if (mounted) {
+        IosToast.show(context, message: ErrorHelper.getFriendlyMessage(e), type: ToastType.error);
+      }
+      return r;
+    });
+
+    // 3. Wait for the falling animation to complete (700ms in AnimatedValidationButton)
+    await Future.delayed(const Duration(milliseconds: 800));
+
+    if (!mounted) return;
+
+    // 4. Show the modal
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => AddToCookbookSheet(
+        recipe: r,
+        onSuccess: () => _updateLocalStateForValidation(r),
+      ),
+    );
+  }
+
+  void _updateLocalStateForValidation(Recipe r) {
+    if (!mounted) return;
+    
+    final validatedRecipe = r.copyWith(origin: r.origin ?? 'IMPORT', isValidated: true);
+
+    // Update local animation state if needed
+    setState(() => _validatedRecipeIds.add(r.id));
+
+    // Update global state via notifiers
+    final currentSaved = RecipeService.instance.myRecipesNotifier.value ?? [];
+    if (!currentSaved.any((item) => item.id == r.id)) {
+      RecipeService.instance.myRecipesNotifier.value = [validatedRecipe, ...currentSaved];
+    }
+
+    // Refresh backgrounds
+    RecipeService.instance.getMyRecipes(forceRefresh: true).catchError((_) => <Recipe>[]);
+    RecipeService.instance.getRecentImports(forceRefresh: true).catchError((_) => <Recipe>[]);
+    
+    // Clear animation state after a delay if desired, or let the refresh handle it
+    Future.delayed(const Duration(milliseconds: 1500), () {
+      if (mounted) {
+        setState(() => _validatedRecipeIds.remove(r.id));
+      }
+    });
   }
 
   @override
@@ -646,7 +708,7 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
                         ),
                       )
                     else
-                      ...list.asMap().entries.map((entry) {
+                      ...list.take(5).toList().asMap().entries.map((entry) {
                         final i = entry.key;
                         final r = entry.value;
                         String source = 'Web';
@@ -672,6 +734,8 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
                           sourceAsset = 'assets/images/facebook.png';
                         }
 
+                        final bool isSaved = _validatedRecipeIds.contains(r.id) || r.isInCookbook;
+
                         return GestureDetector(
                           onTap: () {
                             Navigator.pushNamed(
@@ -679,7 +743,7 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
                               AppRoutes.recipeDetail,
                               arguments: {
                                 'recipe': r,
-                                'isPreview': !r.isInCookbook,
+                                'isPreview': !isSaved,
                               },
                             );
                           },
@@ -718,7 +782,7 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
                               ],
                             );
                           },
-                          child: _RecentImportTile(
+                          child: RecentImportTile(
                             img: r.image ?? '',
                             title: r.name,
                             source: source,
@@ -726,35 +790,10 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
                             srcIcon: icon,
                             srcIconColor: iconColor,
                             srcAsset: sourceAsset,
-                            isSuggested: r.isSuggested,
+                            isSuggested: true, // Force true to show the button
                             index: i,
-                            onValidate: () {
-                              showModalBottomSheet(
-                                context: context,
-                                isScrollControlled: true,
-                                backgroundColor: Colors.transparent,
-                                builder: (context) => AddToCookbookSheet(
-                                  recipe: r,
-                                  onSuccess: () async {
-                                    // Option 3: Animate first, then remove
-                                    if (mounted) {
-                                      setState(() => _validatedRecipeIds.add(r.id));
-                                    }
-                                    
-                                    // Wait for the animation to complete (700ms + buffer)
-                                    await Future.delayed(const Duration(milliseconds: 1200));
-                                    
-                                    // Refresh the list - this will remove the item if backend moved it
-                                    await RecipeService.instance.getRecentImports(forceRefresh: true);
-                                    
-                                    if (mounted) {
-                                      setState(() => _validatedRecipeIds.remove(r.id));
-                                    }
-                                  },
-                                ),
-                              );
-                            },
-                            isValidated: _validatedRecipeIds.contains(r.id),
+                            onValidate: () => _handleValidation(r),
+                            isValidated: isSaved,
                           ),
                         );
                       }),
@@ -1180,7 +1219,7 @@ class _TrendingChip extends StatelessWidget {
               ),
             if (icon == null) SizedBox(width: 10.w),
             Text(
-              name,
+              name.toTitleCase(),
               style: TextStyle(
                 fontFamily: 'SF Pro',
                 fontWeight: FontWeight.w600,
@@ -1195,130 +1234,6 @@ class _TrendingChip extends StatelessWidget {
   }
 }
 
-class _RecentImportTile extends StatelessWidget {
-  final String img;
-  final String title;
-  final String source;
-  final String? sourceUrl;
-  final IconData srcIcon;
-  final Color srcIconColor;
-  final String? srcAsset;
-  final bool isSuggested;
-  final int index;
-  final VoidCallback onValidate;
-  final bool isValidated;
-
-  const _RecentImportTile({
-    required this.img,
-    required this.title,
-    required this.source,
-    this.sourceUrl,
-    required this.srcIcon,
-    required this.srcIconColor,
-    this.srcAsset,
-    this.isSuggested = false,
-    this.index = 0,
-    required this.onValidate,
-    this.isValidated = false,
-  });
-
-  Future<void> _launchUrl() async {
-    if (sourceUrl == null || sourceUrl!.isEmpty) return;
-    final Uri url = Uri.parse(sourceUrl!);
-    if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
-      throw Exception('Could not launch $sourceUrl');
-    }
-  }
-
-  Widget _buildImage(String path) {
-    if (path.isEmpty) {
-      return Image.asset('assets/images/recipes.png', fit: BoxFit.cover);
-    }
-    if (path.startsWith('http')) {
-      return CachedNetworkImage(
-        imageUrl: path,
-        fit: BoxFit.cover,
-        placeholder: (_, __) => Container(
-          color: const Color(0xFFF2F1EF),
-          child: const Center(
-            child: SkeletonLoader(width: 30, height: 30, borderRadius: 15),
-          ),
-        ),
-        errorWidget: (_, __, ___) => Image.asset('assets/images/recipes.png', fit: BoxFit.cover),
-      );
-    }
-    return Image.asset(path, fit: BoxFit.cover);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: EdgeInsets.only(bottom: 12.h),
-      padding: EdgeInsets.all(12.r),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF9F8F6),
-        borderRadius: BorderRadius.circular(16.r),
-      ),
-      child: Row(
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(12.r),
-            child: SizedBox(width: 56.w, height: 56.h, child: _buildImage(img)),
-          ),
-          SizedBox(width: 12.w),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontFamily: 'SF Pro',
-                    fontWeight: FontWeight.bold,
-                    fontSize: 15.sp,
-                    color: const Color(0xFF1A1A1A),
-                  ),
-                ),
-                SizedBox(height: 4.h),
-                GestureDetector(
-                  onTap: _launchUrl,
-                  child: Row(
-                    children: [
-                      if (srcAsset != null)
-                        Image.asset(srcAsset!, width: 14.w, height: 14.h)
-                      else
-                        Icon(srcIcon, size: 14.sp, color: srcIconColor),
-                      SizedBox(width: 6.w),
-                      Text(
-                        source,
-                        style: TextStyle(
-                          fontFamily: 'SF Pro',
-                          fontSize: 12.sp,
-                          color: const Color(0xFF888888),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          if (isSuggested)
-            AnimatedValidationButton(
-              isValidated: isValidated,
-              onTap: onValidate,
-              useWhiteBackground: true,
-              autoAnimate: !isValidated,
-              index: index,
-              disableSlide: false,
-            ),
-        ],
-      ),
-    );
-  }
-}
 
 class _WebSearchResults extends StatelessWidget {
   final List<Map<String, dynamic>> results;

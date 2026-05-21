@@ -583,7 +583,7 @@ class _ItemRow extends StatelessWidget {
                           ? TextDecoration.lineThrough
                           : TextDecoration.none,
                     ),
-                    child: Text(item.ingredientName),
+                    child: Text(item.ingredientName.capitalize()),
                   ),
                 ),
                 Text(

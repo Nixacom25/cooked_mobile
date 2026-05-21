@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../models/recipe.dart';
+import '../core/extensions/string_extensions.dart';
 import '../models/cookbook.dart';
 import '../services/cookbook_service.dart';
 import '../services/recipe_service.dart';
@@ -36,6 +37,7 @@ class _CookbookFormModalState extends State<CookbookFormModal> {
   late List<Recipe> _selectedRecipes;
   bool _isSaving = false;
   bool _isPickingRecipes = false;
+  bool _isPopping = false;
   final DraggableScrollableController _dragCtrl = DraggableScrollableController();
 
   @override
@@ -132,7 +134,7 @@ class _CookbookFormModalState extends State<CookbookFormModal> {
                   ),
                 ),
                 Text(
-                  _isPickingRecipes ? 'Select Recipes' : (_isEdit ? 'Edit cookbook' : 'New cookbook'),
+                  _isPickingRecipes ? 'Select Recipes' : (_isEdit ? 'Edit Cookbook' : 'New Cookbook'),
                   style: TextStyle(
                     color: const Color(0xFF111827),
                     fontSize: 16.sp,
@@ -321,14 +323,28 @@ class _CookbookFormModalState extends State<CookbookFormModal> {
       }
       
       if (!mounted) return;
+      if (mounted) {
+        IosToast.show(context, 
+          message: _isEdit ? 'Cookbook updated!' : 'Cookbook created!', 
+          type: ToastType.success
+        );
+      }
+      
+      if (!mounted || _isPopping) return;
+      _isPopping = true;
+      
+      // Small delay to ensure the toast has started and context is stable
+      await Future.delayed(const Duration(milliseconds: 100));
+      if (!mounted) return;
+
       if (!widget.isEmbedded) {
-        Navigator.pop(context, cb);
+        try {
+          Navigator.of(context).pop(cb);
+        } catch (e) {
+          debugPrint('Silent error during modal pop: $e');
+        }
       }
       widget.onComplete?.call(cb);
-      IosToast.show(context, 
-        message: _isEdit ? 'Cookbook updated!' : 'Cookbook created!', 
-        type: ToastType.success
-      );
     } catch (e) {
       if (mounted) {
         setState(() => _isSaving = false);
@@ -381,7 +397,7 @@ class _RecipeChip extends StatelessWidget {
           SizedBox(width: 6.w),
           Flexible(
             child: Text(
-              recipe.name,
+              recipe.name.toTitleCase(),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
@@ -503,7 +519,7 @@ class _InlineRecipePickerState extends State<_InlineRecipePicker> {
                       ),
                 ),
                 title: Text(
-                  r.name,
+                  r.name.toTitleCase(),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(fontWeight: FontWeight.w600),

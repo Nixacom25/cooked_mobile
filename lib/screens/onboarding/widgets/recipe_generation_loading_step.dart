@@ -35,13 +35,18 @@ class _RecipeGenerationLoadingStepState
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 15), // Longer slow progress
+      duration: const Duration(seconds: 10), // Exactly 10 seconds
     );
 
-    _progressAnimation = Tween<double>(begin: 0, end: 90).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
+    _progressAnimation = Tween<double>(begin: 0, end: 100).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOutCirc),
     )..addListener(() {
         setState(() {});
+      })
+      ..addStatusListener((status) {
+        if (status == AnimationStatus.completed && !_isNavigating) {
+          _onSuggestionsReady(forceComplete: true);
+        }
       });
 
     _controller.forward();
@@ -64,24 +69,24 @@ class _RecipeGenerationLoadingStepState
     });
   }
 
-  Future<void> _onSuggestionsReady() async {
+  Future<void> _onSuggestionsReady({bool forceComplete = false}) async {
     if (_isNavigating) return;
 
-    // Speed up progress to 100%
-    _progressAnimation = Tween<double>(
-      begin: _progressAnimation.value,
-      end: 100,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeIn));
-    _controller.duration = const Duration(milliseconds: 800);
-    _controller.forward(from: 0);
+    if (!forceComplete) {
+      // Speed up progress to 100% since we finished early
+      _progressAnimation = Tween<double>(
+        begin: _progressAnimation.value,
+        end: 100,
+      ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeIn));
+      _controller.duration = const Duration(milliseconds: 500);
+      _controller.forward(from: 0);
+    }
 
-    // Prefetch data
+    // Attempt to prefetch, but don't block navigation indefinitely
     try {
-      await Future.wait([
-        RecipeService.instance.getHomeSuggestions(forceRefresh: true),
-        RecipeService.instance.getMyRecipes(forceRefresh: true),
-        CookbookService.instance.getMyCookbooks(forceRefresh: true),
-      ]);
+      RecipeService.instance.getHomeSuggestions(forceRefresh: true);
+      RecipeService.instance.getMyRecipes(forceRefresh: true);
+      CookbookService.instance.getMyCookbooks(forceRefresh: true);
 
       final suggestions = RecipeService.instance.homeSuggestionsNotifier.value;
       if (suggestions != null && mounted) {
@@ -98,7 +103,7 @@ class _RecipeGenerationLoadingStepState
 
     if (mounted) {
       setState(() => _isNavigating = true);
-      Future.delayed(const Duration(milliseconds: 500), () {
+      Future.delayed(Duration(milliseconds: forceComplete ? 100 : 500), () {
         if (mounted && widget.onComplete != null) {
           widget.onComplete!();
         }

@@ -228,7 +228,7 @@ class RecipeService {
 
 
   Future<List<Recipe>> getExploreRecipes({String? cuisine, String? category, int page = 0, int size = 10, bool forceRefresh = false}) async {
-    final cacheKey = 'explore_recipes_${cuisine ?? ''}_${category ?? ''}_${page}_${size}';
+    final cacheKey = 'explore_recipes_${cuisine ?? ''}_${category ?? ''}_${page}_$size';
     if (!forceRefresh && _cache.containsKey(cacheKey)) {
       return _cache[cacheKey] as List<Recipe>;
     }
@@ -455,7 +455,7 @@ class RecipeService {
     int size = 10,
     bool forceRefresh = false,
   }) async {
-    final cacheKey = 'popular_recipes_${category ?? ''}_${cuisine ?? ''}_${page}_${size}';
+    final cacheKey = 'popular_recipes_${category ?? ''}_${cuisine ?? ''}_${page}_$size';
     if (!forceRefresh && _cache.containsKey(cacheKey)) {
       return _cache[cacheKey] as List<Recipe>;
     }
@@ -658,6 +658,19 @@ class RecipeService {
       final response = await _reliableRequest(() async => http.put(url, headers: await _getHeaders()));
       if (response.statusCode == 200) {
         final validated = Recipe.fromJson(jsonDecode(response.body));
+        
+        // Update local state with the actual backend result (handles ID changes if cloned)
+        if (myRecipesNotifier.value != null) {
+          final newList = List<Recipe>.from(myRecipesNotifier.value!);
+          final idx = newList.indexWhere((r) => r.id == id || r.name.toLowerCase() == validated.name.toLowerCase());
+          if (idx != -1) {
+            newList[idx] = validated;
+          } else {
+            newList.insert(0, validated);
+          }
+          myRecipesNotifier.value = newList;
+        }
+
         // Background cleanup
         _removeTemporarySuggestion(validated.name).catchError((_) => null);
         CookbookService.instance.getMyCookbooks(forceRefresh: true).catchError((_) => null);
@@ -708,6 +721,7 @@ class RecipeService {
     myRecipesNotifier.value = null;
     recentImportsNotifier.value = null;
     homeSuggestionsNotifier.value = null;
+    _cache.clear();
   }
 
   Future<Recipe> togglePin(String id) async {

@@ -20,15 +20,31 @@ class Cookbook {
   });
 
   factory Cookbook.fromJson(Map<String, dynamic> json) {
-    return Cookbook(
-      id: json['id'],
-      name: json['name'],
-      recipes: (json['recipes'] as List? ?? [])
-          .map((r) => Recipe.fromJson(r))
-          .toList(),
-      createdAt: DateTime.parse(json['createdAt']),
-      updatedAt: DateTime.parse(json['updatedAt']),
-      isPinned: json['isPinned'] ?? json['is_pinned'] ?? json['pinned'] ?? false,
-    );
+    try {
+      return Cookbook(
+        id: json['id']?.toString() ?? '',
+        name: json['name']?.toString() ?? 'Untitled',
+        recipes: (json['recipes'] as List? ?? [])
+            .where((r) => r != null)
+            .map((r) => Recipe.fromJson(Map<String, dynamic>.from(r)))
+            .toList(),
+        createdAt: json['createdAt'] != null
+            ? (DateTime.tryParse(json['createdAt'].toString()) ?? DateTime.now())
+            : DateTime.now(),
+        updatedAt: json['updatedAt'] != null
+            ? (DateTime.tryParse(json['updatedAt'].toString()) ?? DateTime.now())
+            : DateTime.now(),
+        isPinned: json['isPinned'] ?? json['is_pinned'] ?? json['pinned'] ?? false,
+      );
+    } catch (e) {
+      // Return a minimal valid object if parsing fails completely for one item
+      return Cookbook(
+        id: json['id']?.toString() ?? 'error',
+        name: json['name']?.toString() ?? 'Error loading',
+        recipes: [],
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+    }
   }
 }

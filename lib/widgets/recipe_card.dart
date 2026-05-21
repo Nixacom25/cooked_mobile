@@ -34,9 +34,11 @@ class RecipeCard extends StatelessWidget {
   final VoidCallback? onPinTap;
   final VoidCallback? onDeleteTap;
   final VoidCallback? onAddToCookbookTap;
+  final int? rank;
 
   const RecipeCard({
     super.key,
+    this.rank,
     this.recipe,
     this.img,
     this.name,
@@ -162,55 +164,74 @@ class RecipeCard extends StatelessWidget {
           SizedBox(height: 10.h),
           Padding(
             padding: EdgeInsets.symmetric(horizontal: 4.w),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Text(
-                  displayName,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontFamily: 'SF Pro',
-                    fontWeight: FontWeight.w700,
-                    fontSize: 14.sp,
-                    color: const Color(0xFF1A1A1A),
+                if (rank != null) ...[
+                  Text(
+                    '$rank',
+                    style: TextStyle(
+                      fontFamily: 'SF Pro',
+                      fontWeight: FontWeight.bold,
+                      fontSize: 20.sp,
+                      color: const Color(0xFFD1D1D6),
+                    ),
                   ),
-                ),
-                SizedBox(height: 4.h),
-                Row(
-                  children: [
-                    Icon(
-                      Icons.timer_outlined,
-                      size: 12.sp,
-                      color: const Color(0xFF8E8E93),
-                    ),
-                    SizedBox(width: 4.w),
-                    Text(
-                      displayTime,
-                      style: TextStyle(
-                        fontFamily: 'SF Pro',
-                        fontSize: 11.sp,
-                        color: const Color(0xFF8E8E93),
-                      ),
-                    ),
-                    if (displayKcal.isNotEmpty) ...[
-                      SizedBox(width: 8.w),
-                      Icon(
-                        Icons.local_fire_department_outlined,
-                        size: 12.sp,
-                        color: const Color(0xFF8E8E93),
-                      ),
-                      SizedBox(width: 2.w),
+                  SizedBox(width: 8.w),
+                ],
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                       Text(
-                        displayKcal,
+                        displayName,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           fontFamily: 'SF Pro',
-                          fontSize: 11.sp,
-                          color: const Color(0xFF8E8E93),
+                          fontWeight: FontWeight.w700,
+                          fontSize: 14.sp,
+                          color: const Color(0xFF1A1A1A),
                         ),
                       ),
+                      SizedBox(height: 4.h),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.timer_outlined,
+                            size: 12.sp,
+                            color: const Color(0xFF8E8E93),
+                          ),
+                          SizedBox(width: 4.w),
+                          Text(
+                            displayTime,
+                            style: TextStyle(
+                              fontFamily: 'SF Pro',
+                              fontSize: 11.sp,
+                              color: const Color(0xFF8E8E93),
+                            ),
+                          ),
+                          if (displayKcal.isNotEmpty) ...[
+                            SizedBox(width: 8.w),
+                            Icon(
+                              Icons.local_fire_department_outlined,
+                              size: 12.sp,
+                              color: const Color(0xFF8E8E93),
+                            ),
+                            SizedBox(width: 2.w),
+                            Text(
+                              displayKcal,
+                              style: TextStyle(
+                                fontFamily: 'SF Pro',
+                                fontSize: 11.sp,
+                                color: const Color(0xFF8E8E93),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
                     ],
-                  ],
+                  ),
                 ),
               ],
             ),
@@ -268,7 +289,7 @@ class RecipeCard extends StatelessWidget {
       child: AnimatedValidationButton(
         isValidated: isValidated,
         onTap: onValidateTap,
-        autoAnimate: true,
+        autoAnimate: false,
         index: index,
         disableSlide: false,
         activeColor: activeColor,

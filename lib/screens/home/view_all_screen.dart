@@ -16,12 +16,13 @@ import '../../services/grocery_service.dart';
 import '../../core/widgets/ios_toast.dart';
 import '../../models/view_all_type.dart';
 import '../../core/extensions/string_extensions.dart';
-import '../explore_screen.dart';
 import '../../widgets/cookbook_grid_skeleton.dart';
 import '../../widgets/skeleton_loader.dart';
 import '../../widgets/add_to_cookbook_sheet.dart';
 import '../../widgets/cookbook_form_modal.dart';
 import '../../widgets/haptic_context_menu.dart';
+import '../../core/utils/error_helper.dart';
+import '../../widgets/recent_import_tile.dart';
 
 // ══════════════════════════════════════════════════════════════════════════════
 // VIEW ALL SCREEN
@@ -381,6 +382,7 @@ class _RecipesGrid extends StatefulWidget {
 class _RecipesGridState extends State<_RecipesGrid> {
   Future<List<Recipe>>? _future;
   late ViewAllType _type;
+  final Set<String> _validatedRecipeIds = {};
 
   @override
   void didChangeDependencies() {
@@ -477,9 +479,57 @@ class _RecipesGridState extends State<_RecipesGrid> {
     return ValueListenableBuilder<List<Recipe>?>(
       valueListenable: RecipeService.instance.myRecipesNotifier,
       builder: (context, savedRecipes, _) {
-        final savedNames = (savedRecipes ?? [])
-            .map((r) => r.name.toLowerCase())
+        final savedIds = (savedRecipes ?? [])
+            .map((r) => r.id)
             .toSet();
+
+        if (_type == ViewAllType.imports) {
+          return ListView.builder(
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 20),
+            itemCount: displayList.length,
+            itemBuilder: (ctx, i) {
+              final r = displayList[i];
+              final isSaved = r.isInCookbook || savedIds.contains(r.id) || _validatedRecipeIds.contains(r.id);
+
+              String source = 'Web';
+              IconData icon = Icons.language_rounded;
+              Color iconColor = const Color(0xFF888888);
+              String? sourceAsset;
+
+              if (r.sourceUrl?.contains('instagram.com') ?? false) {
+                source = 'Instagram';
+                iconColor = const Color(0xFFe6683c);
+                sourceAsset = 'assets/images/instagram.png';
+              } else if (r.sourceUrl?.contains('tiktok.com') ?? false) {
+                source = 'TikTok';
+                iconColor = Colors.black;
+                sourceAsset = 'assets/images/tiktok.png';
+              } else if (r.sourceUrl?.contains('youtube.com') ?? false) {
+                source = 'YouTube';
+                iconColor = Colors.red;
+                sourceAsset = 'assets/images/youtube.png';
+              } else if (r.sourceUrl?.contains('facebook.com') ?? false) {
+                source = 'Facebook';
+                iconColor = Colors.blue;
+                sourceAsset = 'assets/images/facebook.png';
+              }
+
+              return RecentImportTile(
+                img: r.image ?? '',
+                title: r.name,
+                source: source,
+                sourceUrl: r.sourceUrl,
+                srcIcon: icon,
+                srcIconColor: iconColor,
+                srcAsset: sourceAsset,
+                isSuggested: true,
+                index: i,
+                onValidate: () => _handleValidation(ctx, r, isSaved),
+                isValidated: isSaved,
+              );
+            },
+          );
+        }
 
         return GridView.builder(
           padding: const EdgeInsets.fromLTRB(16, 4, 16, 20),
@@ -492,39 +542,23 @@ class _RecipesGridState extends State<_RecipesGrid> {
           ),
           itemBuilder: (ctx, i) {
             final r = displayList[i];
-            final isImport = _type == ViewAllType.imports;
             final isExplore = _type == ViewAllType.explore ||
                 _type == ViewAllType.exploreRecipesByCuisine ||
                 _type == ViewAllType.exploreRecipesByCategory;
             final isCuisineOrCategory = _type == ViewAllType.exploreRecipesByCuisine ||
                 _type == ViewAllType.exploreRecipesByCategory;
-            final isSaved = savedNames.contains(r.name.toLowerCase());
+            final isSaved = r.isInCookbook || savedIds.contains(r.id) || _validatedRecipeIds.contains(r.id);
 
             return RecipeCard(
               recipe: r,
-              useValidationIcon: isExplore || isImport,
+              useValidationIcon: isExplore, // Removed isImport here as it uses ListView above
               isValidated: isSaved,
               animationDelay: Duration(milliseconds: i * 800),
               useExploreButton: isExplore,
-              disableSlide: !isImport, // Static for everything except imports
+              disableSlide: true, 
               inactiveColor: isCuisineOrCategory ? const Color(0xFF9CA3AF) : null,
               onValidateTap: isExplore
-                  ? () {
-                      if (isSaved) {
-                        IosToast.show(
-                          ctx,
-                          message: "Already in your recipes",
-                          type: ToastType.success,
-                        );
-                        return;
-                      }
-                      showModalBottomSheet(
-                        context: ctx,
-                        backgroundColor: Colors.transparent,
-                        isScrollControlled: true,
-                        builder: (_) => AddToCookbookSheet(recipe: r),
-                      );
-                    }
+                  ? () => _handleValidation(ctx, r, isSaved)
                   : null,
                onAddToCookbookTap: (isSaved || isExplore) ? () {
                 showModalBottomSheet(
@@ -561,6 +595,64 @@ class _RecipesGridState extends State<_RecipesGrid> {
         );
       },
     );
+  }
+
+  void _handleValidation(BuildContext ctx, Recipe r, bool isSaved) async {
+    if (isSaved) {
+      IosToast.show(
+        ctx,
+        message: "Already in your recipes",
+        type: ToastType.success,
+      );
+      return;
+    }
+
+    // 1. Update local state immediately to trigger the "falling check" animation
+    _updateLocalStateForValidation(r);
+
+    // 2. Perform backend validation
+    RecipeService.instance.validateRecipe(r.id).catchError((e) {
+      if (mounted) {
+        IosToast.show(ctx, message: ErrorHelper.getFriendlyMessage(e), type: ToastType.error);
+      }
+      return r;
+    });
+
+    // 3. Wait for the falling animation to complete (700ms in AnimatedValidationButton)
+    await Future.delayed(const Duration(milliseconds: 800));
+
+    if (!mounted) return;
+
+    // 4. Show the modal
+    showModalBottomSheet(
+      context: ctx,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => AddToCookbookSheet(
+        recipe: r,
+        onSuccess: () => _updateLocalStateForValidation(r),
+      ),
+    );
+  }
+
+  void _updateLocalStateForValidation(Recipe r) {
+    if (!mounted) return;
+    
+    final validatedRecipe = r.copyWith(origin: r.origin ?? 'IMPORT', isValidated: true);
+
+    // Update local state via notifiers
+    _validatedRecipeIds.add(r.id);
+    
+    final currentSaved = RecipeService.instance.myRecipesNotifier.value ?? [];
+    if (!currentSaved.any((item) => item.id == r.id)) {
+      RecipeService.instance.myRecipesNotifier.value = [validatedRecipe, ...currentSaved];
+    }
+
+    // Refresh backgrounds
+    RecipeService.instance.getMyRecipes(forceRefresh: true).catchError((_) => <Recipe>[]);
+    RecipeService.instance.getHomeSuggestions(forceRefresh: true).catchError((_) => <Recipe>[]);
+    
+    setState(() {}); // Local refresh for ViewAllScreen
   }
 
   @override
@@ -769,31 +861,6 @@ class _StaticCookbooksGridState extends State<_StaticCookbooksGrid> {
     }
   }
 
-  static const List<String> _allowedCuisines = [
-    'Italian',
-    'Mexican',
-    'Chinese',
-    'Japanese',
-    'Thai',
-    'Indian',
-    'Korean',
-    'Mediterranean',
-    'Middle Eastern',
-    'French',
-    'Spanish',
-    'Greek',
-    'Caribbean',
-    'West African',
-  ];
-
-  static const List<String> _allowedNiches = [
-    'High Protein Picks',
-    'Easy Desserts',
-    '30-Minute Meals',
-    'Healthy Breakfasts',
-    'Plant-Based Essentials',
-    'Low-Carb Meals',
-  ];
 
   @override
   Widget build(BuildContext context) {
@@ -811,17 +878,7 @@ class _StaticCookbooksGridState extends State<_StaticCookbooksGrid> {
         }
 
         final List<Map<String, dynamic>> items = snapshot.data!;
-        final allowedList = widget.type == ViewAllType.exploreCategories
-            ? _allowedNiches
-            : _allowedCuisines;
-
-        var filteredItems = items
-            .where(
-              (item) => allowedList.any(
-                (an) => an.toLowerCase() == (item['name'] as String).toLowerCase(),
-              ),
-            )
-            .toList();
+        var filteredItems = items;
 
         if (widget.searchQuery.trim().isNotEmpty) {
           final query = widget.searchQuery.trim().toLowerCase();
@@ -855,14 +912,7 @@ class _StaticCookbooksGridState extends State<_StaticCookbooksGrid> {
         final img = item['image'] as String?;
         final count = item['recipeCount'] as int? ?? 0;
         
-        String fallbackImg;
-        if (widget.type == ViewAllType.exploreCategories) {
-          fallbackImg = ExploreScreen.nicheImages[name] ?? 'assets/images/explore_autumn.png';
-        } else {
-          fallbackImg = ExploreScreen.cuisineImages[name] ?? 'assets/images/others.png';
-        }
-
-        return _buildItem(ctx, name, img, fallbackImg, count);
+        return _buildItem(ctx, name, img, 'assets/images/others.png', count);
       },
     );
   }

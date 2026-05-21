@@ -34,6 +34,7 @@ class _AddToCookbookSheetState extends State<AddToCookbookSheet> {
   final Set<String> _selectedIds = {};
   final _newCookbookCtrl = TextEditingController();
   final FocusNode _focusNode = FocusNode();
+  bool _isProcessing = false;
 
   @override
   void initState() {
@@ -46,6 +47,9 @@ class _AddToCookbookSheetState extends State<AddToCookbookSheet> {
           _selectedIds.add(cb.id);
         }
       }
+    } else {
+      // Trigger load if null
+      CookbookService.instance.getMyCookbooks();
     }
   }
 
@@ -182,7 +186,7 @@ class _AddToCookbookSheetState extends State<AddToCookbookSheet> {
               GestureDetector(
                 onTap: () => setState(() => _mode = _SheetMode.create),
                 child: Text(
-                  'New cookbook',
+                  'New Cookbook',
                   style: TextStyle(
                     color: const Color(0xFFC83A2D), // Red as requested
                     fontSize: 14.sp,
@@ -202,7 +206,6 @@ class _AddToCookbookSheetState extends State<AddToCookbookSheet> {
             valueListenable: CookbookService.instance.myCookbooksNotifier,
             builder: (context, cookbooks, _) {
               if (cookbooks == null) {
-                CookbookService.instance.getMyCookbooks();
                 return const Center(child: CircularProgressIndicator(color: Color(0xFFC83A2D)));
               }
 
@@ -317,6 +320,9 @@ class _AddToCookbookSheetState extends State<AddToCookbookSheet> {
   }
 
   Future<void> _toggleSelection(String cookbookId) async {
+    if (_isProcessing) return;
+    _isProcessing = true;
+    
     HapticFeedback.lightImpact();
     
     final isSelected = _selectedIds.contains(cookbookId);
@@ -332,7 +338,7 @@ class _AddToCookbookSheetState extends State<AddToCookbookSheet> {
 
     try {
       if (!isSelected) {
-        CookbookService.instance.addRecipeToCookbook(cookbookId, widget.recipe.id).catchError((e) {
+        await CookbookService.instance.addRecipeToCookbook(cookbookId, widget.recipe.id).catchError((e) {
            // Revert UI on error
            if (mounted) {
              setState(() {
@@ -340,12 +346,18 @@ class _AddToCookbookSheetState extends State<AddToCookbookSheet> {
             });
             IosToast.show(context, message: ErrorHelper.getFriendlyMessage(e), type: ToastType.error);
            }
+           throw e;
         });
         if (widget.recipe.isSuggested) {
-          RecipeService.instance.validateRecipe(widget.recipe.id).catchError((_) => null);
+          RecipeService.instance.validateRecipe(widget.recipe.id).catchError((_) => widget.recipe);
         }
+        
+        // AUTO CLOSE after success (optimistic)
+        widget.onSuccess?.call();
+        if (mounted) Navigator.of(context).maybePop();
+        
       } else {
-        CookbookService.instance.removeRecipeFromCookbook(cookbookId, widget.recipe.id).catchError((e) {
+        await CookbookService.instance.removeRecipeFromCookbook(cookbookId, widget.recipe.id).catchError((e) {
            // Revert UI on error
            if (mounted) {
              setState(() {
@@ -353,15 +365,23 @@ class _AddToCookbookSheetState extends State<AddToCookbookSheet> {
             });
             IosToast.show(context, message: ErrorHelper.getFriendlyMessage(e), type: ToastType.error);
            }
+           throw e;
         });
       }
     } catch (e) {
        // Revert UI on error
-       setState(() {
-        if (!isSelected) _selectedIds.remove(cookbookId);
-        else _selectedIds.add(cookbookId);
-      });
-      IosToast.show(context, message: ErrorHelper.getFriendlyMessage(e), type: ToastType.error);
+       if (mounted) {
+         setState(() {
+          if (!isSelected) {
+            _selectedIds.remove(cookbookId);
+          } else {
+            _selectedIds.add(cookbookId);
+          }
+        });
+        IosToast.show(context, message: ErrorHelper.getFriendlyMessage(e), type: ToastType.error);
+       }
+    } finally {
+      _isProcessing = false;
     }
   }
 }

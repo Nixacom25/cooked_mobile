@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../routes/app_routes.dart';
 import '../../widgets/app_search_field.dart';
@@ -14,6 +15,7 @@ import '../../core/utils/tutorial_helper.dart';
 import '../../widgets/skeleton_loader.dart';
 import '../../widgets/cookbook_form_modal.dart';
 import '../../widgets/add_to_cookbook_sheet.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class CookbookDetailScreen extends StatefulWidget {
   const CookbookDetailScreen({super.key});
@@ -206,24 +208,33 @@ class _CookbookDetailScreenState extends State<CookbookDetailScreen> {
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(20.r),
-                                child: Container(
-                                  width: 200.w,
-                                  height: 200.h,
-                                  decoration: BoxDecoration(
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withValues(alpha: 0.1),
-                                        blurRadius: 10,
-                                        offset: const Offset(0, 5),
-                                      ),
-                                    ],
-                                  ),
-                                  child: _buildThemedEmptyImage(name),
+                              Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 24.w),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                  children: [
+                                    _buildShortcutButton(
+                                      context,
+                                      icon: Icons.camera_alt_rounded,
+                                      label: 'Scan',
+                                      tabIndex: 2,
+                                    ),
+                                    _buildShortcutButton(
+                                      context,
+                                      svgPath: 'assets/nav/import.svg',
+                                      label: 'Import',
+                                      tabIndex: 4,
+                                    ),
+                                    _buildShortcutButton(
+                                      context,
+                                      svgPath: 'assets/nav/explore.svg',
+                                      label: 'Explore',
+                                      tabIndex: 1,
+                                    ),
+                                  ],
                                 ),
                               ),
-                              const SizedBox(height: 30),
+                              const SizedBox(height: 35),
                               Text(
                                 "No recipes yet",
                                 style: TextStyle(
@@ -237,7 +248,7 @@ class _CookbookDetailScreenState extends State<CookbookDetailScreen> {
                               Padding(
                                 padding: EdgeInsets.symmetric(horizontal: 40.w),
                                 child: Text(
-                                  "Tap the + button above to add recipes to this cookbook.",
+                                  "Start adding recipes to this cookbook by scanning, importing or exploring.",
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
                                     fontFamily: 'SF Pro',
@@ -300,33 +311,74 @@ class _CookbookDetailScreenState extends State<CookbookDetailScreen> {
     );
   }
 
-  Widget _buildThemedEmptyImage(String name) {
-    final lowerName = name.toLowerCase();
-    String assetPath = 'assets/images/cookbook_everyday.png';
-
-    if (lowerName.contains('protein')) {
-      assetPath = 'assets/images/higth-proteins.png';
-    } else if (lowerName.contains('dessert')) {
-      assetPath = 'assets/images/cookbook_dessert.png';
-    } else if (lowerName.contains('healthy')) {
-      assetPath = 'assets/images/cookbook_healthy.png';
-    } else if (lowerName.contains('italian')) {
-      assetPath = 'assets/images/cookbook_italian.png';
-    } else if (lowerName.contains('lunch')) {
-      assetPath = 'assets/images/cookbook_lunch.png';
-    } else if (lowerName.contains('meat')) {
-      assetPath = 'assets/images/cookbook_meat.png';
-    } else if (lowerName.contains('veggie')) {
-      assetPath = 'assets/images/cookbook_veggie.png';
-    }
-
-    return Image.asset(
-      assetPath,
-      fit: BoxFit.cover,
-      errorBuilder: (_, __, ___) => Container(
-        color: const Color(0xFFF5F5F5),
-        child: const Center(
-          child: Icon(Icons.menu_book_rounded, size: 60, color: Color(0xFFCCCCCC)),
+  Widget _buildShortcutButton(
+    BuildContext context, {
+    IconData? icon,
+    String? svgPath,
+    required String label,
+    required int tabIndex,
+  }) {
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.lightImpact();
+        Navigator.pushNamedAndRemoveUntil(
+          context,
+          AppRoutes.home,
+          (route) => false,
+          arguments: {'initialTab': tabIndex},
+        );
+      },
+      child: Container(
+        width: 100.w,
+        height: 105.h,
+        decoration: BoxDecoration(
+          color: const Color(0xFFF7F7F7),
+          borderRadius: BorderRadius.circular(20.r),
+          border: Border.all(color: Colors.grey.shade200, width: 1),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 46.w,
+              height: 46.h,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.04),
+                    blurRadius: 8.r,
+                    offset: Offset(0, 3.h),
+                  ),
+                ],
+              ),
+              child: Center(
+                child: svgPath != null
+                    ? SvgPicture.asset(
+                        svgPath,
+                        width: 22.w,
+                        height: 22.h,
+                        colorFilter: const ColorFilter.mode(Color(0xFFC83A2D), BlendMode.srcIn),
+                      )
+                    : Icon(
+                        icon,
+                        color: const Color(0xFFC83A2D),
+                        size: 24.sp,
+                      ),
+              ),
+            ),
+            SizedBox(height: 10.h),
+            Text(
+              label,
+              style: TextStyle(
+                fontFamily: 'SF Pro',
+                fontWeight: FontWeight.w600,
+                fontSize: 13.sp,
+                color: const Color(0xFF1A1A1A),
+              ),
+            ),
+          ],
         ),
       ),
     );

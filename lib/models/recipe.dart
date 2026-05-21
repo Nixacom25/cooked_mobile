@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 class Recipe {
   final String id;
   final String name;
@@ -56,43 +58,65 @@ class Recipe {
   });
 
   factory Recipe.fromJson(Map<String, dynamic> json) {
-    return Recipe(
-      id: json['id'] ?? '',
-      name: json['name'] ?? 'Recipe',
-      image: json['image'],
-      cookTime: json['cookTime'] ?? 0,
-      kcal: json['kcal'] ?? 0,
-      steps: List<String>.from(json['steps'] ?? []),
-      equipment: List<String>.from(json['equipment'] ?? []),
-      ingredients: (json['ingredients'] as List? ?? [])
-          .map((i) => RecipeIngredient.fromJson(i))
-          .toList(),
-      isPublic: json['isPublic'] ?? json['public'] ?? false,
-      isFavorite: json['isFavorite'] ?? json['favorite'] ?? false,
-      createdAt: json['createdAt'] != null
-          ? DateTime.parse(json['createdAt'])
-          : DateTime.now(),
-      updatedAt: json['updatedAt'] != null
-          ? DateTime.parse(json['updatedAt'])
-          : DateTime.now(),
-      category: json['category'],
-      creator: json['creator'] != null
-          ? RecipeCreator.fromJson(json['creator'])
-          : null,
-      sourceUrl: json['sourceUrl'],
-      servings: json['servings'],
-      tips: json['tips'],
-      prepTime: json['prepTime'],
-      expiresAt: json['expiresAt'] != null
-          ? DateTime.parse(json['expiresAt'])
-          : null,
-      origin: json['origin'],
-      cuisine: json['cuisine'],
-      isSuggested: json['isSuggested'] ?? json['is_suggested'] ?? (json['expiresAt'] != null),
-      isInCookbook: json['isInCookbook'] ?? json['inCookbook'] ?? false,
-      isPinned: json['isPinned'] ?? json['is_pinned'] ?? json['pinned'] ?? false,
-      isValidated: json['isValidated'] ?? json['isValidated'] ?? false,
-    );
+    try {
+      final stepsList = (json['steps'] as List?)?.map((e) => e.toString()).toList() ?? [];
+      final equipmentList = (json['equipment'] as List?)?.map((e) => e.toString()).toList() ?? [];
+      debugPrint('📦 [Recipe.fromJson] parsing ${json['name']}: steps=${stepsList.length}, equipment=${equipmentList.length}');
+
+      return Recipe(
+        id: json['id']?.toString() ?? '',
+        name: json['name']?.toString() ?? 'Recipe',
+        image: json['image']?.toString(),
+        cookTime: (json['cookTime'] as num?)?.toInt() ?? 0,
+        kcal: (json['kcal'] as num?)?.toInt() ?? 0,
+        steps: stepsList,
+        equipment: equipmentList,
+        ingredients: (json['ingredients'] as List? ?? [])
+            .where((i) => i != null)
+            .map((i) => RecipeIngredient.fromJson(Map<String, dynamic>.from(i)))
+            .toList(),
+        isPublic: json['isPublic'] ?? json['public'] ?? false,
+        isFavorite: json['isFavorite'] ?? json['favorite'] ?? false,
+        createdAt: json['createdAt'] != null
+            ? (DateTime.tryParse(json['createdAt'].toString()) ?? DateTime.now())
+            : DateTime.now(),
+        updatedAt: json['updatedAt'] != null
+            ? (DateTime.tryParse(json['updatedAt'].toString()) ?? DateTime.now())
+            : DateTime.now(),
+        category: json['category']?.toString(),
+        creator: json['creator'] != null
+            ? RecipeCreator.fromJson(Map<String, dynamic>.from(json['creator']))
+            : null,
+        sourceUrl: json['sourceUrl']?.toString(),
+        servings: (json['servings'] as num?)?.toInt(),
+        tips: json['tips']?.toString(),
+        prepTime: (json['prepTime'] as num?)?.toInt(),
+        expiresAt: json['expiresAt'] != null
+            ? DateTime.tryParse(json['expiresAt'].toString())
+            : null,
+        origin: json['origin']?.toString(),
+        cuisine: json['cuisine']?.toString(),
+        isSuggested: json['isSuggested'] ?? json['is_suggested'] ?? (json['expiresAt'] != null),
+        isInCookbook: json['isInCookbook'] ?? json['inCookbook'] ?? false,
+        isPinned: json['isPinned'] ?? json['is_pinned'] ?? json['pinned'] ?? false,
+        isValidated: json['isValidated'] ?? json['isValidated'] ?? false,
+      );
+    } catch (e) {
+      return Recipe(
+        id: json['id']?.toString() ?? 'error',
+        name: json['name']?.toString() ?? 'Error loading',
+        cookTime: 0,
+        kcal: 0,
+        steps: [],
+        equipment: [],
+        ingredients: [],
+        isPublic: false,
+        isFavorite: false,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+        isPlaceholder: true,
+      );
+    }
   }
 
   Map<String, dynamic> toJson() {

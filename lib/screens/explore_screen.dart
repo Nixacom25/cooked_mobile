@@ -11,39 +11,15 @@ import '../models/view_all_type.dart';
 import '../widgets/skeleton_loader.dart';
 import '../widgets/recipe_grid_skeleton.dart';
 import '../widgets/recipe_card.dart';
+import '../core/extensions/string_extensions.dart';
 import '../widgets/add_to_cookbook_sheet.dart';
+import '../core/utils/error_helper.dart';
 
 // ══════════════════════════════════════════════════════════════════════════════
 // EXPLORE SCREEN (Backend Driven)
 // ══════════════════════════════════════════════════════════════════════════════
 class ExploreScreen extends StatefulWidget {
   const ExploreScreen({super.key});
-
-  static const Map<String, String> cuisineImages = {
-    'Italian': 'assets/images/italian.png',
-    'Mexican': 'assets/images/mexican1.png',
-    'Chinese': 'assets/images/chinese.png',
-    'Japanese': 'assets/images/japanese.png',
-    'Thai': 'assets/images/thai.png',
-    'Indian': 'assets/images/indian.png',
-    'Korean': 'assets/images/korean.png',
-    'Mediterranean': 'assets/images/mediterranean.png',
-    'Middle Eastern': 'assets/images/east.png',
-    'French': 'assets/images/french1.png',
-    'Spanish': 'assets/images/mexican.png',
-    'Greek': 'assets/images/greek1.png',
-    'Caribbean': 'assets/images/caribbean1.png',
-    'West African': 'assets/images/west-african.png',
-  };
-
-  static const Map<String, String> nicheImages = {
-    'High Protein Picks': 'assets/images/higth-proteins.png',
-    'Easy Desserts': 'assets/images/easy-desserts.png',
-    '30-Minute Meals': 'assets/images/30-Minutes.png',
-    'Healthy Breakfasts': 'assets/images/explore_summer.png',
-    'Plant-Based Essentials': 'assets/images/Plant-Based.png',
-    'Low-Carb Meals': 'assets/images/low-cards.png',
-  };
 
   @override
   State<ExploreScreen> createState() => _ExploreScreenState();
@@ -57,22 +33,12 @@ class _ExploreScreenState extends State<ExploreScreen>
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   OverlayEntry? _searchOverlayEntry;
-  // int _selectedCategory = 0;
-
-  // static const _categories = [
-  //   ('🍕', 'Italian'),
-  //   ('🥗', 'Healthy'),
-  //   ('🥦', 'Vegetarian'),
-  //   ('💪', 'High Protein'),
-  //   ('🍜', 'Asian'),
-  //   ('🥐', 'Bakery'),
-  // ];
 
   late Future<List<Map<String, dynamic>>> _cuisinesFuture;
   late Future<List<Map<String, dynamic>>> _categoriesFuture;
   late Future<List<Recipe>> _popularFuture;
   List<Recipe> _allPopularRecipes = [];
-  List<Recipe> _recentRecipes = [];
+  final List<Recipe> _recentRecipes = [];
 
   @override
   void initState() {
@@ -87,7 +53,7 @@ class _ExploreScreenState extends State<ExploreScreen>
 
     _animationController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 400),
+      duration: const Duration(milliseconds: 100),
     );
 
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
@@ -137,31 +103,54 @@ class _ExploreScreenState extends State<ExploreScreen>
     super.dispose();
   }
 
-  static const List<String> _allowedCuisines = [
-    'Italian',
-    'Mexican',
-    'Chinese',
-    'Japanese',
-    'Thai',
-    'Indian',
-    'Korean',
-    'Mediterranean',
-    'Middle Eastern',
-    'French',
-    'Spanish',
-    'Greek',
-    'Caribbean',
-    'West African',
-  ];
 
-  static const List<String> _allowedNiches = [
-    'High Protein Picks',
-    'Easy Desserts',
-    '30-Minute Meals',
-    'Healthy Breakfasts',
-    'Plant-Based Essentials',
-    'Low-Carb Meals',
-  ];
+  void _handleValidation(Recipe r, bool isSaved) {
+    if (isSaved) {
+      IosToast.show(
+        context,
+        message: "Already in your recipes",
+        type: ToastType.success,
+      );
+      return;
+    }
+
+    // 1. Optimistic Save immediately 'In Direct'
+    RecipeService.instance.validateRecipe(r.id).catchError((e) {
+      if (mounted) {
+        IosToast.show(context, message: ErrorHelper.getFriendlyMessage(e), type: ToastType.error);
+      }
+      return r;
+    });
+    _updateLocalStateForValidation(r);
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => AddToCookbookSheet(
+        recipe: r,
+        onSuccess: () => _updateLocalStateForValidation(r),
+      ),
+    );
+  }
+
+  void _updateLocalStateForValidation(Recipe r) {
+    if (!mounted) return;
+    
+    final validatedRecipe = r.copyWith(origin: 'MANUAL', isValidated: true);
+
+    // Update global state via notifiers
+    final currentSaved = RecipeService.instance.myRecipesNotifier.value ?? [];
+    if (!currentSaved.any((item) => item.id == r.id)) {
+      RecipeService.instance.myRecipesNotifier.value = [validatedRecipe, ...currentSaved];
+    }
+
+    // Refresh backgrounds
+    RecipeService.instance.getMyRecipes(forceRefresh: true).catchError((_) => <Recipe>[]);
+    RecipeService.instance.getPopularRecipes(forceRefresh: true).catchError((_) => <Recipe>[]);
+    
+    setState(() {}); // Local refresh
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -237,59 +226,6 @@ class _ExploreScreenState extends State<ExploreScreen>
                 ),
               ),
             ),
-            // SizedBox(height: 16.h),
-            // SingleChildScrollView(
-            //   scrollDirection: Axis.horizontal,
-            //   child: Row(
-            //     children: List.generate(_categories.length, (i) {
-            //       final (emoji, label) = _categories[i];
-            //       final active = _selectedCategory == i;
-            //       return GestureDetector(
-            //         onTap: () {
-            //           setState(() => _selectedCategory = i);
-            //           // _loadPopularRecipes(label); // Note: Removed in recent cleanup
-            //         },
-            //         child: AnimatedContainer(
-            //           duration: const Duration(milliseconds: 200),
-            //           margin: EdgeInsets.only(right: 8.w),
-            //           padding:
-            //               EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
-            //           decoration: BoxDecoration(
-            //             color:
-            //                 active
-            //                     ? const Color(0xFFFFF6D6)
-            //                     : Colors.white.withOpacity(0.18),
-            //             borderRadius: BorderRadius.circular(30.r),
-            //             border: Border.all(
-            //               color:
-            //                   active
-            //                       ? const Color(0xFFF2C94C)
-            //                       : Colors.white.withOpacity(0.35),
-            //             ),
-            //           ),
-            //           child: Row(
-            //             children: [
-            //               Text(emoji, style: TextStyle(fontSize: 13.sp)),
-            //               SizedBox(width: 6.w),
-            //               Text(
-            //                 label,
-            //                 style: TextStyle(
-            //                   fontFamily: 'SF Pro',
-            //                   fontWeight: FontWeight.w600,
-            //                   fontSize: 13.sp,
-            //                   color:
-            //                       active
-            //                           ? const Color(0xFFC83A2D)
-            //                           : Colors.white,
-            //                 ),
-            //               ),
-            //             ],
-            //           ),
-            //         ),
-            //       );
-            //     }),
-            //   ),
-            // ),
           ],
         ),
       ),
@@ -335,16 +271,7 @@ class _ExploreScreenState extends State<ExploreScreen>
         if (!snapshot.hasData || snapshot.data!.isEmpty) {
           return const SizedBox.shrink();
         }
-        final cuisinesList = snapshot.data!;
-        final filteredList = cuisinesList
-            .where(
-              (item) => _allowedCuisines.any(
-                (c) => c.toLowerCase() == (item['name'] as String).toLowerCase(),
-              ),
-            )
-            .toList();
-
-        if (filteredList.isEmpty) return const SizedBox.shrink();
+        final filteredList = snapshot.data!;
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -373,11 +300,6 @@ class _ExploreScreenState extends State<ExploreScreen>
                   final item = filteredList[i];
                   final name = item['name'] as String;
                   final imageUrl = item['image'] as String?;
-
-                  // Use local mapping for image
-                  String imgPath =
-                      ExploreScreen.cuisineImages[name] ??
-                      'assets/images/others.png';
 
                   return Padding(
                     padding: EdgeInsets.only(right: 15.w),
@@ -412,15 +334,15 @@ class _ExploreScreenState extends State<ExploreScreen>
                                       image: CachedNetworkImageProvider(imageUrl),
                                       fit: BoxFit.cover,
                                     )
-                                  : DecorationImage(
-                                      image: AssetImage(imgPath),
+                                  : const DecorationImage(
+                                      image: AssetImage('assets/images/others.png'),
                                       fit: BoxFit.cover,
                                     ),
                             ),
                           ),
                           SizedBox(height: 5.h),
                           Text(
-                            name,
+                            name.toTitleCase(),
                             style: TextStyle(
                               fontFamily: 'SF Pro',
                               fontWeight: FontWeight.w700,
@@ -484,16 +406,7 @@ class _ExploreScreenState extends State<ExploreScreen>
         if (!snapshot.hasData || snapshot.data!.isEmpty) {
           return const SizedBox.shrink();
         }
-        final categoriesList = snapshot.data!;
-        final filteredList = categoriesList
-            .where(
-              (item) => _allowedNiches.any(
-                (n) => n.toLowerCase() == (item['name'] as String).toLowerCase(),
-              ),
-            )
-            .toList();
-
-        if (filteredList.isEmpty) return const SizedBox.shrink();
+        final filteredList = snapshot.data!;
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -523,10 +436,6 @@ class _ExploreScreenState extends State<ExploreScreen>
                   final name = item['name'] as String;
                   final count = item['recipeCount'] ?? 0;
                   final imageUrl = item['image'] as String?;
-                  final imgPath =
-                      ExploreScreen.nicheImages[name] ??
-                      'assets/images/explore_autumn.png';
-
                   return GestureDetector(
                     onTap: () {
                       Navigator.pushNamed(
@@ -563,14 +472,14 @@ class _ExploreScreenState extends State<ExploreScreen>
                                     ),
                                     errorWidget: (context, url, error) =>
                                         Image.asset(
-                                      imgPath,
+                                      'assets/images/others.png',
                                       width: 160.w,
                                       height: 130.h,
                                       fit: BoxFit.cover,
                                     ),
                                   )
                                 : Image.asset(
-                                    imgPath,
+                                    'assets/images/others.png',
                                     width: 160.w,
                                     height: 130.h,
                                     fit: BoxFit.cover,
@@ -578,7 +487,7 @@ class _ExploreScreenState extends State<ExploreScreen>
                           ),
                           SizedBox(height: 10.h),
                           Text(
-                            name,
+                            name.toTitleCase(),
                             maxLines: 2,
                             style: TextStyle(
                               fontFamily: 'SF Pro',
@@ -709,6 +618,7 @@ class _ExploreScreenState extends State<ExploreScreen>
               child: ValueListenableBuilder<List<Recipe>?>(
                 valueListenable: RecipeService.instance.myRecipesNotifier,
                 builder: (context, savedRecipes, _) {
+                  final savedIds = (savedRecipes ?? []).map((r) => r.id).toSet();
                   final savedNames = (savedRecipes ?? [])
                       .map((r) => r.name.toLowerCase())
                       .toSet();
@@ -726,33 +636,18 @@ class _ExploreScreenState extends State<ExploreScreen>
                     ),
                     itemBuilder: (context, i) {
                       final recipe = popular[i];
-                      final isSaved = savedNames.contains(
-                        recipe.name.toLowerCase(),
-                      );
+                      final isSaved = savedIds.contains(recipe.id) ||
+                          savedNames.contains(recipe.name.toLowerCase());
 
                       return RecipeCard(
                         recipe: recipe,
+                        rank: i + 1,
                         useValidationIcon: true,
                         isValidated: isSaved,
                         animationDelay: Duration(milliseconds: i * 800),
                         useExploreButton: true,
                         disableSlide: true,
-                        onValidateTap: () {
-                          if (isSaved) {
-                            IosToast.show(
-                              context,
-                              message: "Already in your recipes",
-                              type: ToastType.success,
-                            );
-                            return;
-                          }
-                          showModalBottomSheet(
-                            context: context,
-                            backgroundColor: Colors.transparent,
-                            isScrollControlled: true,
-                            builder: (_) => AddToCookbookSheet(recipe: recipe),
-                          );
-                        },
+                        onValidateTap: () => _handleValidation(recipe, isSaved),
                         onTap: () {
                           Navigator.pushNamed(
                             context,
@@ -809,22 +704,27 @@ class _ExploreScreenState extends State<ExploreScreen>
     return AnimatedBuilder(
       animation: _animationController,
       builder: (context, child) {
-        final value = _animationController.value;
-        final topPos = lerpDouble(135.h, 100.h, value)!;
-        final horizontalPadding = lerpDouble(20.w, 12.w, value)!;
-        final borderRadius = lerpDouble(50.r, 32.r, value)!;
+        // Use a sharper curve for an even faster feel
+        final curvedValue = CurvedAnimation(
+          parent: _animationController,
+          curve: Curves.easeOutQuart,
+        ).value;
+
+        final topPos = lerpDouble(135.h, 100.h, curvedValue)!;
+        final horizontalPadding = lerpDouble(20.w, 12.w, curvedValue)!;
+        final borderRadius = lerpDouble(50.r, 32.r, curvedValue)!;
         final screenHeight = MediaQuery.of(context).size.height;
         final bottomLimit = topPos / 2; // User requested: bottom = top / 2
         final maxModalHeight = screenHeight - topPos - bottomLimit;
         
         // Dynamic height: expand only if needed, but limited by maxModalHeight
-        final height = value < 1.0 
-            ? lerpDouble(50.h, 450.h, value)!
+        final height = curvedValue < 1.0 
+            ? lerpDouble(50.h, 450.h, curvedValue)!
             : maxModalHeight;
         final bgColor = Color.lerp(
           Colors.white,
           const Color(0xFFF7F7F7),
-          value,
+          curvedValue,
         )!;
 
         return Material(
@@ -855,14 +755,14 @@ class _ExploreScreenState extends State<ExploreScreen>
                     borderRadius: BorderRadius.circular(borderRadius),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.08 * value),
+                        color: Colors.black.withOpacity(0.08 * curvedValue),
                         blurRadius: 20,
                         offset: const Offset(0, 10),
                       ),
                     ],
                   ),
                   child: SingleChildScrollView(
-                    physics: value > 0.9
+                    physics: curvedValue > 0.9
                         ? const BouncingScrollPhysics()
                         : const NeverScrollableScrollPhysics(),
                     child: Column(
@@ -870,7 +770,7 @@ class _ExploreScreenState extends State<ExploreScreen>
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // Header when expanded
-                        if (value > 0.5)
+                        if (curvedValue > 0.5)
                           FadeTransition(
                             opacity: _animationController,
                             child: Column(
@@ -893,11 +793,11 @@ class _ExploreScreenState extends State<ExploreScreen>
                         // The Search Input (Morphs size/style)
                         AppSearchField(
                           controller: _overlaySearchCtrl,
-                          hintText: value > 0.5
+                          hintText: curvedValue > 0.5
                               ? 'Search recipes, ingredients...'
                               : 'Start your search',
                           backgroundColor: Colors.white,
-                          borderColor: value > 0.5
+                          borderColor: curvedValue > 0.5
                               ? const Color(0xFFDDDDDD)
                               : Colors.transparent,
                           onChanged: (val) {
@@ -908,7 +808,7 @@ class _ExploreScreenState extends State<ExploreScreen>
                           },
                         ),
 
-                        if (value > 0.8)
+                        if (curvedValue > 0.8)
                           FadeTransition(
                             opacity: _animationController,
                             child: Column(

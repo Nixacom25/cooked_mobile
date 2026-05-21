@@ -28,6 +28,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
   bool _isPreview = false;
   bool _isInitialized = false;
   bool _isRemoving = false;
+  bool _isSaving = false;
   bool _isLoading = false;
   String? _infoMessage;
   String? _error;
@@ -39,26 +40,26 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
     _recipe = r;
     _currentServings = r.servings ?? 1;
     _originalServings = r.servings ?? 1;
+    debugPrint('🍳 [RecipeDetail] _initRecipeData: ${r.name} | steps=${r.steps.length} | ingredients=${r.ingredients.length}');
     HistoryService.instance.addToHistory(r);
-
-    // Auto-detect if recipe is actually already saved (by name) is too aggressive 
-    // and overrides the explicit isPreview flag from imports. 
-    // We should trust the isPreview flag passed via arguments.
   }
 
   Future<void> _fetchRecipe(String id) async {
+    debugPrint('🔄 [RecipeDetail] _fetchRecipe called for id=$id');
     setState(() {
       _isLoading = true;
       _error = null;
     });
     try {
       final r = await RecipeService.instance.getRecipe(id);
+      debugPrint('✅ [RecipeDetail] getRecipe returned: ${r.name} | steps=${r.steps.length}');
       if (mounted) {
         setState(() {
           _initRecipeData(r);
         });
       }
     } catch (e) {
+      debugPrint('❌ [RecipeDetail] _fetchRecipe error: $e');
       if (mounted) {
         setState(() => _error = ErrorHelper.getFriendlyMessage(e));
       }
@@ -83,6 +84,11 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
 
       if (r != null) {
         _initRecipeData(r);
+        // If the recipe passed from a list has no steps, re-fetch the full
+        // detail from the API to get complete data (steps, equipment, tips).
+        if (r.steps.isEmpty) {
+          _fetchRecipe(r.id);
+        }
       } else if (id != null) {
         _fetchRecipe(id);
       }
@@ -175,7 +181,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
           ? "${r.creator!.displayName}'s "
           : "";
 
-      final template = "Check out ${creatorStr}$name on Cooked 🙌\n\n$link";
+      final template = "Check out $creatorStr$name on Cooked 🙌\n\n$link";
 
       final RenderBox? box = context.findRenderObject() as RenderBox?;
       Share.share(
@@ -195,15 +201,45 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
   }
 
   Future<void> _saveRecipe(Recipe r) async {
-    _showAddToCookbookModal(
-      context,
-      r,
-      onSuccess: () {
-        setState(() {
-          _isPreview = false;
-        });
-      },
-    );
+    setState(() => _isSaving = true);
+    try {
+      Recipe finalRecipe = r;
+      // If we are in preview mode, we need to validate/save the recipe to the user's account first
+      if (_isPreview) {
+        finalRecipe = await RecipeService.instance.validateRecipe(r.id);
+        if (mounted) {
+          setState(() {
+            _isPreview = false;
+            _recipe = finalRecipe;
+          });
+        }
+      }
+
+      if (!mounted) return;
+      setState(() => _isSaving = false);
+
+      _showAddToCookbookModal(
+        context,
+        finalRecipe,
+        onSuccess: () {
+          // Additional safety: ensure we are out of preview mode
+          if (mounted && _isPreview) {
+            setState(() {
+              _isPreview = false;
+            });
+          }
+        },
+      );
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isSaving = false);
+        IosToast.show(
+          context,
+          message: ErrorHelper.getFriendlyMessage(e),
+          type: ToastType.error,
+        );
+      }
+    }
   }
 
   Future<void> _removeFromCookbooks(Recipe r) async {
@@ -331,6 +367,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
         ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>? ??
         {};
     final Recipe? r = _recipe ?? args['recipe'] as Recipe?;
+    debugPrint('🏗️ [RecipeDetail] build: r=${r?.name}, steps=${r?.steps.length}, _recipe=${_recipe?.name}');
     final String img = r?.image ?? args['img'] as String? ?? '';
     final String name = (r?.name ??
             args['name'] as String? ??
@@ -422,8 +459,9 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                                           0.0,
                                           1.0,
                                         );
-                                    if (opacity == 0)
+                                    if (opacity == 0) {
                                       return const SizedBox.shrink();
+                                    }
                                     return Column(
                                       mainAxisSize: MainAxisSize.min,
                                       crossAxisAlignment:
@@ -652,21 +690,9 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                                       Navigator.pop(context);
                                       onImport();
                                     } else {
-                                      final buttonText = isTrend
-                                          ? 'Import this recipe'
-                                          : 'Save Recipe';
-                                      showModalBottomSheet(
-                                        context: context,
-                                        backgroundColor: Colors.transparent,
-                                        isScrollControlled: true,
-                                        builder: (_) => AddToCookbookSheet(
-                                          recipe: r!,
-                                          title: buttonText,
-                                          onSuccess: () => setState(
-                                            () => _isPreview = false,
-                                          ),
-                                        ),
-                                      );
+                                      if (r != null) {
+                                        _saveRecipe(r);
+                                      }
                                     }
                                   },
                                   child: Container(
@@ -684,30 +710,42 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                                         ),
                                       ],
                                     ),
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        Icon(
-                                          isTrend
-                                              ? Icons.cloud_download_rounded
-                                              : Icons.bookmark_add_rounded,
-                                          color: Colors.white,
-                                          size: 20.sp,
-                                        ),
-                                        SizedBox(width: 8.w),
-                                        Text(
-                                          isTrend
-                                              ? 'Import this recipe'
-                                              : 'Save Recipe',
-                                          style: TextStyle(
-                                            fontFamily: 'SF Pro',
-                                            fontWeight: FontWeight.w700,
-                                            fontSize: 16.sp,
-                                            color: Colors.white,
-                                          ),
-                                        ),
-                                      ],
+                                    child: Center(
+                                      child: _isSaving
+                                          ? SizedBox(
+                                              width: 20.w,
+                                              height: 20.w,
+                                              child:
+                                                  const CircularProgressIndicator(
+                                                color: Colors.white,
+                                                strokeWidth: 2,
+                                              ),
+                                            )
+                                          : Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
+                                              children: [
+                                                Icon(
+                                                  isTrend
+                                                      ? Icons.cloud_download_rounded
+                                                      : Icons.bookmark_add_rounded,
+                                                  color: Colors.white,
+                                                  size: 20.sp,
+                                                ),
+                                                SizedBox(width: 8.w),
+                                                Text(
+                                                  isTrend
+                                                      ? 'Import this recipe'
+                                                      : 'Save Recipe',
+                                                  style: TextStyle(
+                                                    fontFamily: 'SF Pro',
+                                                    fontWeight: FontWeight.w700,
+                                                    fontSize: 16.sp,
+                                                    color: Colors.white,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
                                     ),
                                   ),
                                 ),
@@ -813,7 +851,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                                       ],
                                     ),
                                     child: Center(
-                                      child: _isRemoving
+                                      child: _isRemoving || _isSaving
                                           ? SizedBox(
                                               width: 20.w,
                                               height: 20.w,
@@ -1033,7 +1071,7 @@ class _RecipeDetailHeaderDelegate extends SliverPersistentHeaderDelegate {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       GestureDetector(
-                        onTap: isPreview ? onValidate : onShare,
+                        onTap: onShare,
                         child: Container(
                           width: 36.w,
                           height: 36.w,
@@ -1054,13 +1092,9 @@ class _RecipeDetailHeaderDelegate extends SliverPersistentHeaderDelegate {
                           ),
                           alignment: Alignment.center,
                           child: Icon(
-                            isPreview
-                                ? Icons.add_circle_rounded
-                                : Icons.ios_share,
+                            Icons.ios_share,
                             size: 20.sp,
-                            color: isPreview
-                                ? const Color(0xFFC83A2D)
-                                : const Color(0xFF1A1A1A),
+                            color: const Color(0xFF1A1A1A),
                           ),
                         ),
                       ),
@@ -1100,13 +1134,14 @@ class _RecipeDetailHeaderDelegate extends SliverPersistentHeaderDelegate {
     double progress,
   ) {
     const fit = BoxFit.cover;
-    if (path.isEmpty)
+    if (path.isEmpty) {
       return Image.asset(
         'assets/images/recipes.png',
         width: width,
         height: height,
         fit: fit,
       );
+    }
     if (path.startsWith('http')) {
       return CachedNetworkImage(
         imageUrl: path,
@@ -1285,23 +1320,25 @@ class _IngredientsList extends StatelessWidget {
       formattedAmount = scaledAmount.toInt().toString();
     } else {
       formattedAmount = scaledAmount.toStringAsFixed(1);
-      if (formattedAmount.endsWith('.0'))
+      if (formattedAmount.endsWith('.0')) {
         formattedAmount = formattedAmount.substring(
           0,
           formattedAmount.length - 2,
         );
+      }
     }
     return ing.unit.isEmpty ? formattedAmount : '$formattedAmount ${ing.unit}';
   }
 
   @override
   Widget build(BuildContext context) {
-    if (ingredients.isEmpty)
+    if (ingredients.isEmpty) {
       return _EmptyState(
         icon: Icons.shopping_basket_outlined,
         title: "No ingredients listed",
         subtitle: "Check the recipe description for details.",
       );
+    }
     return Column(
       children: List.generate(ingredients.length, (i) {
         final ing = ingredients[i];
@@ -1328,7 +1365,7 @@ class _IngredientsList extends StatelessWidget {
                     flex: 3,
                     child: Text(
                       ing.name.toTitleCase(),
-                      maxLines: 1,
+                      maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         fontFamily: 'SF Pro',
@@ -1371,12 +1408,13 @@ class _EquipmentList extends StatelessWidget {
   const _EquipmentList({required this.equipment});
   @override
   Widget build(BuildContext context) {
-    if (equipment.isEmpty)
+    if (equipment.isEmpty) {
       return _EmptyState(
         icon: Icons.soup_kitchen_outlined,
         title: "No specific equipment listed",
         subtitle: "Standard kitchen tools should be enough.",
       );
+    }
     return Column(
       children: List.generate(equipment.length, (i) {
         final item = equipment[i];
@@ -1428,12 +1466,13 @@ class _StepsList extends StatelessWidget {
   const _StepsList({required this.steps, required this.equipment, this.tips});
   @override
   Widget build(BuildContext context) {
-    if (steps.isEmpty)
+    if (steps.isEmpty) {
       return _EmptyState(
         icon: Icons.format_list_numbered_rtl,
         title: "No steps listed",
         subtitle: "Follow your intuition or check the source.",
       );
+    }
     return Column(
       children: [
         ...List.generate(steps.length, (i) {
@@ -1474,7 +1513,7 @@ class _StepsList extends StatelessWidget {
                           );
                           content = content.replaceFirst(stepPrefixRegex, '');
                           return Text(
-                            content,
+                            content.capitalize(),
                             style: TextStyle(
                               fontFamily: 'SF Pro',
                               fontSize: 14.sp,
@@ -1539,7 +1578,7 @@ class _StepsList extends StatelessWidget {
                 ),
                 SizedBox(height: 8.h),
                 Text(
-                  tips!,
+                  tips!.capitalize(),
                   style: TextStyle(
                     fontFamily: 'SF Pro',
                     fontSize: 14.sp,

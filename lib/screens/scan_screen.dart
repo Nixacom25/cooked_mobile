@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'dart:ui' as ui;
-import 'dart:typed_data';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -1452,18 +1451,30 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
           itemBuilder: (_, i) {
             if (_recipes.isEmpty) return const RecipeGridSkeleton(itemCount: 1, padding: EdgeInsets.zero);
             final recipe = _recipes[i];
-            final isSaved = _savedRecipeNames.contains(recipe.name);
-            return RecipeCard(
-              recipe: recipe,
-              useValidationIcon: true,
-              isValidated: isSaved,
-              useScanButton: true,
-              onValidateTap: () => _saveGeneratedRecipe(recipe),
-              onTap: () {
-                Navigator.pushNamed(
-                  context,
-                  AppRoutes.recipeDetail,
-                  arguments: {'recipe': recipe, 'isPreview': true},
+            
+            return ValueListenableBuilder<List<Recipe>?>(
+              valueListenable: RecipeService.instance.myRecipesNotifier,
+              builder: (context, savedRecipes, _) {
+                final savedIds = (savedRecipes ?? []).map((r) => r.id).toSet();
+                final savedNames = (savedRecipes ?? []).map((r) => r.name.toLowerCase()).toSet();
+                
+                final isSaved = _savedRecipeNames.contains(recipe.name) || 
+                                savedIds.contains(recipe.id) ||
+                                savedNames.contains(recipe.name.toLowerCase());
+
+                return RecipeCard(
+                  recipe: recipe,
+                  useValidationIcon: true,
+                  isValidated: isSaved,
+                  useScanButton: true,
+                  onValidateTap: () => _handleValidation(recipe),
+                  onTap: () {
+                    Navigator.pushNamed(
+                      context,
+                      AppRoutes.recipeDetail,
+                      arguments: {'recipe': recipe, 'isPreview': !isSaved},
+                    );
+                  },
                 );
               },
             );
@@ -1761,8 +1772,8 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
     }
   }
 
-  Future<void> _saveGeneratedRecipe(Recipe recipe) async {
-    final isSaved = _savedRecipeNames.contains(recipe.name);
+  void _handleValidation(Recipe r) {
+    final isSaved = _savedRecipeNames.contains(r.name);
     if (isSaved) {
       IosToast.show(
         context,
@@ -1772,21 +1783,44 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
       return;
     }
 
+    // 1. Optimistic Save immediately 'In Direct'
+    RecipeService.instance.validateRecipe(r.id).catchError((e) {
+      if (mounted) {
+        IosToast.show(context, message: ErrorHelper.getFriendlyMessage(e), type: ToastType.error);
+      }
+      return r;
+    });
+    _updateLocalStateForValidation(r);
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => AddToCookbookSheet(
-        recipe: recipe,
-        onSuccess: () {
-          if (mounted) {
-            setState(() {
-              _savedRecipeNames.add(recipe.name);
-            });
-          }
-        },
+        recipe: r,
+        onSuccess: () => _updateLocalStateForValidation(r),
       ),
     );
+  }
+
+  void _updateLocalStateForValidation(Recipe r) {
+    if (!mounted) return;
+    
+    final validatedRecipe = r.copyWith(origin: 'MANUAL', isValidated: true);
+
+    // Update local set
+    _savedRecipeNames.add(r.name);
+
+    // Update global state via notifiers
+    final currentSaved = RecipeService.instance.myRecipesNotifier.value ?? [];
+    if (!currentSaved.any((item) => item.id == r.id)) {
+      RecipeService.instance.myRecipesNotifier.value = [validatedRecipe, ...currentSaved];
+    }
+
+    // Refresh backgrounds
+    RecipeService.instance.getMyRecipes(forceRefresh: true).catchError((_) => <Recipe>[]);
+    
+    setState(() {}); // Local refresh
   }
 
   Widget _buildSuccessOverlay() {
@@ -1948,7 +1982,11 @@ class _PillTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Give more width ratio to the longer "Type Ingredients" text
+    final int flexValue = label.length > 10 ? 12 : 7;
+    
     return Expanded(
+      flex: flexValue,
       child: GestureDetector(
         onTap: onTap,
         child: Container(
