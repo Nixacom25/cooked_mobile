@@ -38,6 +38,7 @@ class _ExploreScreenState extends State<ExploreScreen>
   late Future<List<Map<String, dynamic>>> _categoriesFuture;
   late Future<List<Recipe>> _popularFuture;
   List<Recipe> _allPopularRecipes = [];
+  List<Recipe> _allExploreRecipes = [];
   final List<Recipe> _recentRecipes = [];
 
   @override
@@ -46,6 +47,14 @@ class _ExploreScreenState extends State<ExploreScreen>
     _cuisinesFuture = RecipeService.instance.getExploreCuisines();
     _categoriesFuture = RecipeService.instance.getExploreCategories();
     _popularFuture = RecipeService.instance.getPopularRecipes(size: 10);
+
+    RecipeService.instance.getExploreRecipes(size: 100).then((recipes) {
+      if (mounted) {
+        setState(() {
+          _allExploreRecipes = recipes;
+        });
+      }
+    }).catchError((_) {});
 
     _searchCtrl.addListener(() {
       if (mounted) setState(() {});
@@ -808,9 +817,6 @@ class _ExploreScreenState extends State<ExploreScreen>
                               ? const Color(0xFFDDDDDD)
                               : Colors.transparent,
                           onChanged: (val) {
-                            setState(() {
-                              _searchCtrl.text = val;
-                            });
                             _searchOverlayEntry?.markNeedsBuild();
                           },
                         ),
@@ -864,11 +870,7 @@ class _ExploreScreenState extends State<ExploreScreen>
                                               .map(
                                                 (tag) => GestureDetector(
                                                   onTap: () {
-                                                    setState(() {
-                                                      _overlaySearchCtrl.text =
-                                                          tag;
-                                                      _searchCtrl.text = tag;
-                                                    });
+                                                    _overlaySearchCtrl.text = tag;
                                                     _searchOverlayEntry
                                                         ?.markNeedsBuild();
                                                   },
@@ -941,7 +943,10 @@ class _ExploreScreenState extends State<ExploreScreen>
                                   ...(() {
                                     final q = _overlaySearchCtrl.text
                                         .toLowerCase();
-                                    final filtered = _allPopularRecipes
+                                    final sourceList = _allExploreRecipes.isNotEmpty
+                                        ? _allExploreRecipes
+                                        : _allPopularRecipes;
+                                    final filtered = sourceList
                                         .where(
                                           (r) =>
                                               r.name.toLowerCase().contains(q),
@@ -1036,19 +1041,7 @@ class _ExploreScreenState extends State<ExploreScreen>
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(12.r),
-                child: recipe.image != null
-                    ? CachedNetworkImage(
-                        imageUrl: recipe.image!,
-                        fit: BoxFit.cover,
-                        placeholder: (context, url) =>
-                            Container(color: Colors.grey[200]),
-                        errorWidget: (context, url, error) =>
-                            const Icon(Icons.broken_image),
-                      )
-                    : Image.asset(
-                        'assets/images/others.png',
-                        fit: BoxFit.cover,
-                      ),
+                child: _buildItemImage(recipe.image),
               ),
             ),
             SizedBox(width: 12.w),
@@ -1080,6 +1073,39 @@ class _ExploreScreenState extends State<ExploreScreen>
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildItemImage(String? path) {
+    final imagePath = path ?? '';
+    if (imagePath.isEmpty || imagePath == 'null') {
+      return Image.asset(
+        'assets/images/recipes.png',
+        fit: BoxFit.cover,
+      );
+    }
+
+    if (imagePath.startsWith('http')) {
+      return CachedNetworkImage(
+        imageUrl: imagePath,
+        fit: BoxFit.cover,
+        placeholder: (context, url) => Container(
+          color: const Color(0xFFF3F4F6),
+        ),
+        errorWidget: (context, url, error) => Image.asset(
+          'assets/images/recipes.png',
+          fit: BoxFit.cover,
+        ),
+      );
+    }
+
+    return Image.asset(
+      imagePath,
+      fit: BoxFit.cover,
+      errorBuilder: (context, error, stackTrace) => Image.asset(
+        'assets/images/recipes.png',
+        fit: BoxFit.cover,
       ),
     );
   }

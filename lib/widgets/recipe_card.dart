@@ -299,7 +299,7 @@ class RecipeCard extends StatelessWidget {
   }
 
   Widget _buildImage(String path) {
-    if (path.isEmpty) {
+    if (path.isEmpty || path == 'null') {
       return Image.asset('assets/images/recipes.png', fit: BoxFit.cover);
     }
 

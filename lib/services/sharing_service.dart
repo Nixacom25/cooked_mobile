@@ -53,14 +53,60 @@ class SharingService {
       final text = data?.text;
       
       if (text != null && text.isNotEmpty && text != _lastClipboardText) {
+        _lastClipboardText = text;
         final url = extractUrl(text);
-        if (url != null) {
-          _lastClipboardText = text;
+        if (url != null && _isValidRecipeOrSocialUrl(url)) {
           clipboardTextNotifier.value = url;
         }
       }
     } catch (e) {
       debugPrint("Error checking clipboard: $e");
+    }
+  }
+
+  bool _isValidRecipeOrSocialUrl(String urlString) {
+    try {
+      final uri = Uri.tryParse(urlString);
+      if (uri == null) return false;
+
+      final scheme = uri.scheme.toLowerCase();
+      if (scheme != 'http' && scheme != 'https') return false;
+
+      final host = uri.host.toLowerCase();
+      if (host.isEmpty || !host.contains('.')) return false;
+
+      final path = uri.path.toLowerCase();
+      
+      // 1. Social Platforms (TikTok, YouTube, Facebook, Instagram)
+      if (host.contains('tiktok.com') || 
+          host.contains('youtube.com') || 
+          host.contains('youtu.be') || 
+          host.contains('facebook.com') || 
+          host.contains('fb.watch') || 
+          host.contains('instagram.com') ||
+          host.contains('instagr.am')) {
+        return true;
+      }
+      
+      // 2. Popular recipe platforms & keywords
+      final recipeKeywords = [
+        'recipe', 'recette', 'cook', 'cuisine', 'food', 'kitchen', 'dish',
+        'marmiton', '750g', 'cuisineaz', 'delish', 'allrecipes',
+        'epicurious', 'tasty', 'bonappetit', 'seriouseats',
+        'simplyrecipes', 'marthastewart', 'foodnetwork', 'chef',
+        'bakery', 'baking', 'culinary', 'gourmet', 'supertoinette',
+        'ptitchef', 'chefsimon'
+      ];
+      
+      for (final keyword in recipeKeywords) {
+        if (host.contains(keyword) || path.contains(keyword)) {
+          return true;
+        }
+      }
+      
+      return false;
+    } catch (_) {
+      return false;
     }
   }
 
@@ -73,7 +119,7 @@ class SharingService {
     final trimmed = text.trim();
     
     // If the text itself is a URL
-    if (trimmed.startsWith('http')) {
+    if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
       return trimmed.split(RegExp(r'\s')).first;
     }
 

@@ -1499,7 +1499,7 @@ class _RecentlyViewedRow extends StatelessWidget {
 
   Widget _buildThumbnail(String? image) {
     const fallback = 'assets/images/recipes.png';
-    if (image == null || image.isEmpty) {
+    if (image == null || image.isEmpty || image == 'null') {
       return Image.asset(fallback, fit: BoxFit.cover);
     }
     if (image.startsWith('http')) {
