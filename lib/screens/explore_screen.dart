@@ -329,16 +329,23 @@ class _ExploreScreenState extends State<ExploreScreen>
                                   offset: const Offset(0, 4),
                                 ),
                               ],
+                              color: const Color(0xFFF2F1EF),
                               image: imageUrl != null && imageUrl.isNotEmpty
                                   ? DecorationImage(
                                       image: CachedNetworkImageProvider(imageUrl),
                                       fit: BoxFit.cover,
                                     )
-                                  : const DecorationImage(
-                                      image: AssetImage('assets/images/others.png'),
-                                      fit: BoxFit.cover,
-                                    ),
+                                  : null,
                             ),
+                            child: imageUrl == null || imageUrl.isEmpty
+                                ? Center(
+                                    child: Icon(
+                                      Icons.restaurant_menu,
+                                      color: const Color(0xFFC83A2D),
+                                      size: 24.sp,
+                                    ),
+                                  )
+                                : null,
                           ),
                           SizedBox(height: 5.h),
                           Text(

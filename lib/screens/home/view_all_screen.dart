@@ -918,6 +918,7 @@ class _StaticCookbooksGridState extends State<_StaticCookbooksGrid> {
   }
 
   Widget _buildItem(BuildContext ctx, String name, String? imgUrl, String fallbackImg, int count) {
+    final bool isCuisine = widget.type == ViewAllType.exploreCuisines;
     return GestureDetector(
       onTap: () {
         Navigator.pushNamed(
@@ -955,9 +956,25 @@ class _StaticCookbooksGridState extends State<_StaticCookbooksGrid> {
                             child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFFC83A2D)),
                           ),
                         ),
-                        errorWidget: (context, url, error) => Image.asset(fallbackImg, fit: BoxFit.cover),
+                        errorWidget: (context, url, error) => isCuisine
+                            ? Center(
+                                child: Icon(
+                                  Icons.restaurant_menu,
+                                  color: const Color(0xFFC83A2D),
+                                  size: 32,
+                                ),
+                              )
+                            : Image.asset(fallbackImg, fit: BoxFit.cover),
                       )
-                    : Image.asset(fallbackImg, fit: BoxFit.cover),
+                    : isCuisine
+                        ? Center(
+                            child: Icon(
+                              Icons.restaurant_menu,
+                              color: const Color(0xFFC83A2D),
+                              size: 32,
+                            ),
+                          )
+                        : Image.asset(fallbackImg, fit: BoxFit.cover),
               ),
             ),
           ),
