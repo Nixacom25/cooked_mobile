@@ -791,7 +791,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
           children: [
             // Cooked logo — same as used in loading overlay
             Image.asset(
-              'assets/images/logo1.png',
+              'assets/images/logo2.png',
               height: 28.h,
               fit: BoxFit.contain,
             ),
@@ -1459,8 +1459,8 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                 final savedNames = (savedRecipes ?? []).map((r) => r.name.toLowerCase()).toSet();
                 
                 final isSaved = _savedRecipeNames.contains(recipe.name) || 
-                                savedIds.contains(recipe.id) ||
-                                savedNames.contains(recipe.name.toLowerCase());
+                                (recipe.id.isNotEmpty && savedIds.contains(recipe.id)) ||
+                                (recipe.name.isNotEmpty && savedNames.contains(recipe.name.toLowerCase()));
 
                 return RecipeCard(
                   recipe: recipe,
@@ -1784,7 +1784,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
     }
 
     // 1. Optimistic Save immediately 'In Direct'
-    RecipeService.instance.validateRecipe(r.id).catchError((e) {
+    RecipeService.instance.createRecipe(r).catchError((e) {
       if (mounted) {
         IosToast.show(context, message: ErrorHelper.getFriendlyMessage(e), type: ToastType.error);
       }

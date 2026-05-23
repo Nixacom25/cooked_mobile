@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:receive_sharing_intent/receive_sharing_intent.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SharingService {
   static final SharingService instance = SharingService._();
@@ -52,11 +53,21 @@ class SharingService {
       final data = await Clipboard.getData(Clipboard.kTextPlain);
       final text = data?.text;
       
-      if (text != null && text.isNotEmpty && text != _lastClipboardText) {
-        _lastClipboardText = text;
-        final url = extractUrl(text);
-        if (url != null && _isValidRecipeOrSocialUrl(url)) {
-          clipboardTextNotifier.value = url;
+      if (text != null && text.isNotEmpty) {
+        final prefs = await SharedPreferences.getInstance();
+        final storedLastText = prefs.getString('last_clipboard_text');
+        
+        // Use stored value if _lastClipboardText is null (e.g. on app restart)
+        _lastClipboardText ??= storedLastText;
+
+        if (text != _lastClipboardText) {
+          _lastClipboardText = text;
+          await prefs.setString('last_clipboard_text', text);
+          
+          final url = extractUrl(text);
+          if (url != null && _isValidRecipeOrSocialUrl(url)) {
+            clipboardTextNotifier.value = url;
+          }
         }
       }
     } catch (e) {

@@ -41,7 +41,11 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
     _currentServings = r.servings ?? 1;
     _originalServings = r.servings ?? 1;
     debugPrint('🍳 [RecipeDetail] _initRecipeData: ${r.name} | steps=${r.steps.length} | ingredients=${r.ingredients.length}');
-    HistoryService.instance.addToHistory(r);
+    
+    // Defer history addition to avoid build phase conflicts
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      HistoryService.instance.addToHistory(r);
+    });
   }
 
   Future<void> _fetchRecipe(String id) async {
@@ -206,7 +210,11 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
       Recipe finalRecipe = r;
       // If we are in preview mode, we need to validate/save the recipe to the user's account first
       if (_isPreview) {
-        finalRecipe = await RecipeService.instance.validateRecipe(r.id);
+        if (r.id.isEmpty) {
+          finalRecipe = await RecipeService.instance.createRecipe(r);
+        } else {
+          finalRecipe = await RecipeService.instance.validateRecipe(r.id);
+        }
         if (mounted) {
           setState(() {
             _isPreview = false;
