@@ -1,6 +1,7 @@
 import 'package:cooked/widgets/recipe_grid_skeleton.dart';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../routes/app_routes.dart';
 import '../../widgets/app_search_field.dart';
@@ -568,11 +569,34 @@ class _RecipesGridState extends State<_RecipesGrid> {
                   builder: (_) => AddToCookbookSheet(recipe: r),
                 );
               } : null,
-              onShareTap: (isSaved || isExplore) ? () {
-                // Share logic
+              onShareTap: (isSaved || isExplore) ? () async {
+                try {
+                  final RenderBox? box = ctx.findRenderObject() as RenderBox?;
+                  final Rect? sharePositionOrigin = box != null ? box.localToGlobal(Offset.zero) & box.size : null;
+                  
+                  final rawLink = await RecipeService.instance.getShareLink(r.id);
+                  final link = rawLink.replaceAll('cooked.nixacom.com', 'cookedapp.app');
+                  final name = r.name;
+                  final creatorStr = r.creator != null ? "${r.creator!.displayName}'s " : "";
+                  final template = "Check out $creatorStr$name on Cooked 🙌\n$link";
+                  
+                  Share.share(template, sharePositionOrigin: sharePositionOrigin);
+                } catch (e) {
+                  if (ctx.mounted) {
+                    IosToast.show(ctx, message: ErrorHelper.getFriendlyMessage(e), type: ToastType.error);
+                  }
+                }
               } : null,
               onPinTap: isSaved ? () {
-                // Pin logic
+                RecipeService.instance.togglePin(r.id).then((updated) {
+                  if (ctx.mounted) {
+                    IosToast.show(ctx, message: updated.isPinned ? 'Recipe pinned' : 'Recipe unpinned', type: ToastType.success);
+                  }
+                }).catchError((e) {
+                  if (ctx.mounted) {
+                    IosToast.show(ctx, message: 'Failed to pin recipe', type: ToastType.error);
+                  }
+                });
               } : null,
               onDeleteTap: isSaved ? () async {
                 final success = await RecipeService.instance.deleteRecipe(r.id);

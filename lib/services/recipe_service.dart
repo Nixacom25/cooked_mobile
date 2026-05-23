@@ -21,9 +21,49 @@ class RecipeService {
   // Cache for explore data
   final Map<String, dynamic> _cache = {};
 
+  static const String _persistentCachePrefix = 'persistent_cache_v2_';
+
+  Future<void> _writeToPersistentCache(String key, dynamic data) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final cacheData = {
+        'timestamp': DateTime.now().millisecondsSinceEpoch,
+        'data': data,
+      };
+      await prefs.setString('$_persistentCachePrefix$key', jsonEncode(cacheData));
+    } catch (_) {}
+  }
+
+  Future<dynamic> _readFromPersistentCache(String key, Duration ttl) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final String? jsonStr = prefs.getString('$_persistentCachePrefix$key');
+      if (jsonStr == null) return null;
+
+      final decoded = jsonDecode(jsonStr);
+      final int timestamp = decoded['timestamp'] as int;
+      final cachedTime = DateTime.fromMillisecondsSinceEpoch(timestamp);
+      
+      if (DateTime.now().difference(cachedTime) > ttl) {
+        await prefs.remove('$_persistentCachePrefix$key');
+        return null;
+      }
+      return decoded['data'];
+    } catch (_) {
+      return null;
+    }
+  }
 
   void clearCache() {
     _cache.clear();
+    SharedPreferences.getInstance().then((prefs) {
+      final keys = prefs.getKeys();
+      for (final key in keys) {
+        if (key.startsWith(_persistentCachePrefix)) {
+          prefs.remove(key);
+        }
+      }
+    }).catchError((_) {});
   }
 
   Future<Map<String, String>> _getHeaders() async {
@@ -229,8 +269,17 @@ class RecipeService {
 
   Future<List<Recipe>> getExploreRecipes({String? cuisine, String? category, int page = 0, int size = 10, bool forceRefresh = false}) async {
     final cacheKey = 'explore_recipes_${cuisine ?? ''}_${category ?? ''}_${page}_$size';
-    if (!forceRefresh && _cache.containsKey(cacheKey)) {
-      return _cache[cacheKey] as List<Recipe>;
+    if (!forceRefresh) {
+      if (_cache.containsKey(cacheKey)) {
+        return _cache[cacheKey] as List<Recipe>;
+      }
+      final cachedData = await _readFromPersistentCache(cacheKey, const Duration(hours: 12));
+      if (cachedData != null) {
+        final List<dynamic> decodedList = cachedData;
+        final results = decodedList.map((json) => Recipe.fromJson(json)).toList();
+        _cache[cacheKey] = results;
+        return results;
+      }
     }
 
     final cuisineParam = cuisine != null ? '&cuisine=$cuisine' : '';
@@ -245,6 +294,7 @@ class RecipeService {
       final List<dynamic> content = data['content'];
       final results = content.map((json) => Recipe.fromJson(json)).toList();
       _cache[cacheKey] = results;
+      await _writeToPersistentCache(cacheKey, content);
       return results;
     } else {
       throw Exception('Unable to load explore recipes.');
@@ -396,8 +446,17 @@ class RecipeService {
 
   Future<List<Map<String, dynamic>>> getExploreCuisines({bool forceRefresh = false}) async {
     const cacheKey = 'explore_cuisines';
-    if (!forceRefresh && _cache.containsKey(cacheKey)) {
-      return List<Map<String, dynamic>>.from(_cache[cacheKey]);
+    if (!forceRefresh) {
+      if (_cache.containsKey(cacheKey)) {
+        return List<Map<String, dynamic>>.from(_cache[cacheKey]);
+      }
+      final cachedData = await _readFromPersistentCache(cacheKey, const Duration(hours: 24));
+      if (cachedData != null) {
+        final List<dynamic> decodedList = cachedData;
+        final results = decodedList.map((item) => Map<String, dynamic>.from(item)).toList();
+        _cache[cacheKey] = results;
+        return results;
+      }
     }
 
     final url = Uri.parse('${ApiConfig.baseUrl}/recipes/explore/cuisines');
@@ -405,8 +464,9 @@ class RecipeService {
 
     if (response.statusCode == 200) {
       final List<dynamic> data = jsonDecode(response.body);
-      final results = data.cast<Map<String, dynamic>>();
+      final results = data.map((item) => Map<String, dynamic>.from(item)).toList();
       _cache[cacheKey] = results;
+      await _writeToPersistentCache(cacheKey, results);
       return results;
     } else {
       throw Exception('Unable to load cuisines.');
@@ -415,8 +475,17 @@ class RecipeService {
 
   Future<List<Map<String, dynamic>>> getExploreCategories({bool forceRefresh = false}) async {
     const cacheKey = 'explore_categories';
-    if (!forceRefresh && _cache.containsKey(cacheKey)) {
-      return List<Map<String, dynamic>>.from(_cache[cacheKey]);
+    if (!forceRefresh) {
+      if (_cache.containsKey(cacheKey)) {
+        return List<Map<String, dynamic>>.from(_cache[cacheKey]);
+      }
+      final cachedData = await _readFromPersistentCache(cacheKey, const Duration(hours: 24));
+      if (cachedData != null) {
+        final List<dynamic> decodedList = cachedData;
+        final results = decodedList.map((item) => Map<String, dynamic>.from(item)).toList();
+        _cache[cacheKey] = results;
+        return results;
+      }
     }
 
     final url = Uri.parse('${ApiConfig.baseUrl}/recipes/explore/categories');
@@ -424,8 +493,9 @@ class RecipeService {
 
     if (response.statusCode == 200) {
       final List<dynamic> data = jsonDecode(response.body);
-      final results = data.cast<Map<String, dynamic>>();
+      final results = data.map((item) => Map<String, dynamic>.from(item)).toList();
       _cache[cacheKey] = results;
+      await _writeToPersistentCache(cacheKey, results);
       return results;
     } else {
       throw Exception('Unable to load categories.');
@@ -456,8 +526,17 @@ class RecipeService {
     bool forceRefresh = false,
   }) async {
     final cacheKey = 'popular_recipes_${category ?? ''}_${cuisine ?? ''}_${page}_$size';
-    if (!forceRefresh && _cache.containsKey(cacheKey)) {
-      return _cache[cacheKey] as List<Recipe>;
+    if (!forceRefresh) {
+      if (_cache.containsKey(cacheKey)) {
+        return _cache[cacheKey] as List<Recipe>;
+      }
+      final cachedData = await _readFromPersistentCache(cacheKey, const Duration(hours: 12));
+      if (cachedData != null) {
+        final List<dynamic> decodedList = cachedData;
+        final results = decodedList.map((json) => Recipe.fromJson(json)).toList();
+        _cache[cacheKey] = results;
+        return results;
+      }
     }
 
     final categoryParam = category != null ? '&category=$category' : '';
@@ -472,6 +551,7 @@ class RecipeService {
       final List<dynamic> content = data['content'];
       final results = content.map((json) => Recipe.fromJson(json)).toList();
       _cache[cacheKey] = results;
+      await _writeToPersistentCache(cacheKey, content);
       return results;
     } else {
       throw Exception('Unable to load popular recipes.');
@@ -673,7 +753,7 @@ class RecipeService {
 
         // Background cleanup
         _removeTemporarySuggestion(validated.name).catchError((_) => null);
-        CookbookService.instance.getMyCookbooks(forceRefresh: true).catchError((_) => null);
+        CookbookService.instance.getMyCookbooks(forceRefresh: true).then((_) => null).catchError((_) => null);
         return validated;
       } else {
         throw Exception('Failed to validate recipe.');
@@ -707,7 +787,7 @@ class RecipeService {
       final response = await _reliableRequest(() async => http.delete(url, headers: await _getHeaders()));
       if (response.statusCode == 200 || response.statusCode == 204) {
         _cache.removeWhere((key, value) => key.contains(id));
-        CookbookService.instance.getMyCookbooks(forceRefresh: true).catchError((_) => null);
+        CookbookService.instance.getMyCookbooks(forceRefresh: true).then((_) => null).catchError((_) => null);
         return true;
       }
       throw Exception('Delete failed');
@@ -721,7 +801,7 @@ class RecipeService {
     myRecipesNotifier.value = null;
     recentImportsNotifier.value = null;
     homeSuggestionsNotifier.value = null;
-    _cache.clear();
+    clearCache();
   }
 
   Future<Recipe> togglePin(String id) async {

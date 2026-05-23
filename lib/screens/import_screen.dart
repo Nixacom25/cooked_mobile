@@ -101,7 +101,8 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
     if (url != null && url.isNotEmpty) {
       if (!_isImporting && _linkCtrl.text != url) {
         _linkCtrl.text = url;
-        _importFromUrl(url);
+        SharingService.instance.consumeSharedText(); // Consume immediately
+        _showWebPreview(url, 'Recipe Preview');
       }
     }
   }

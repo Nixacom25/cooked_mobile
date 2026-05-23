@@ -149,9 +149,12 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
     if (!mounted) return;
     final recipes = RecipeService.instance.myRecipesNotifier.value;
     if (recipes != null) {
-      setState(() {
-        _savedRecipeNames.clear();
-        _savedRecipeNames.addAll(recipes.map((r) => r.name));
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        setState(() {
+          _savedRecipeNames.clear();
+          _savedRecipeNames.addAll(recipes.map((r) => r.name));
+        });
       });
     }
   }
@@ -786,11 +789,16 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
+            // Cooked logo — same as used in loading overlay
+            Image.asset(
+              'assets/images/logo1.png',
+              height: 28.h,
+              fit: BoxFit.contain,
+            ),
+            // Close button — same style as Type/Saved header
             GestureDetector(
               onTap: () {
-                _updateState(
-                  ScanState.scan,
-                ); // "enleve tout et affiche la page scan"
+                _updateState(ScanState.scan);
                 if (widget.onClose != null) widget.onClose!();
               },
               child: Container(
@@ -806,19 +814,11 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                 ),
               ),
             ),
-            // Optional: Info button on the right for results page too if needed
-            GestureDetector(
-              onTap: _showScanHelpModal,
-              child: Icon(
-                Icons.help_outline_rounded,
-                color: Colors.grey[400],
-                size: 20.sp,
-              ),
-            ),
           ],
         ),
       );
     }
+
 
     String title = _state == ScanState.type ? "Type Ingredient" : "Saved";
     return Padding(
@@ -1851,39 +1851,8 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
     );
   }
 
-  void _showScanHelpModal() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: Colors.white,
-        surfaceTintColor: Colors.transparent,
-        alignment: const Alignment(
-          0,
-          -1,
-        ), // Positioned towards the top near the icon
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16.r),
-        ),
-        content: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Expanded(
-              child: Text(
-                "For best results, ensure all ingredients are clearly visible when scanning. Add missing items manually.",
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  color: const Color(0xFF1A1A1A),
-                  height: 1.5,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+
+
 
   void _removeIngredientFromResults(RecipeIngredient ing, bool isRestricted) {
     setState(() {

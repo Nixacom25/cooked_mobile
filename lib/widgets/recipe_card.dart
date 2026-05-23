@@ -34,6 +34,7 @@ class RecipeCard extends StatelessWidget {
   final VoidCallback? onPinTap;
   final VoidCallback? onDeleteTap;
   final VoidCallback? onAddToCookbookTap;
+  final VoidCallback? onRemoveFromCookbookTap;
   final int? rank;
 
   const RecipeCard({
@@ -61,6 +62,7 @@ class RecipeCard extends StatelessWidget {
     this.onPinTap,
     this.onDeleteTap,
     this.onAddToCookbookTap,
+    this.onRemoveFromCookbookTap,
   });
 
   String get displayName => (recipe?.name ?? name ?? '').toTitleCase();
@@ -93,7 +95,7 @@ class RecipeCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
-      onLongPressStart: (onEditTap == null && onShareTap == null && onPinTap == null && onDeleteTap == null && onAddToCookbookTap == null)
+      onLongPressStart: (onEditTap == null && onShareTap == null && onPinTap == null && onDeleteTap == null && onAddToCookbookTap == null && onRemoveFromCookbookTap == null)
           ? null
           : (details) {
               HapticFeedback.heavyImpact();
@@ -251,6 +253,13 @@ class RecipeCard extends StatelessWidget {
             title: 'Add to Cookbook',
             icon: Icons.add_circle_outline_rounded,
             onTap: onAddToCookbookTap!,
+          ),
+        if (onRemoveFromCookbookTap != null)
+          HapticMenuAction(
+            title: 'Remove from Cookbook',
+            icon: Icons.remove_circle_outline_rounded,
+            isDestructive: true,
+            onTap: onRemoveFromCookbookTap!,
           ),
         if (onPinTap != null)
           HapticMenuAction(

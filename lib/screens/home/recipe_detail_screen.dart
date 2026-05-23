@@ -174,14 +174,14 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
     try {
       final rawLink = await RecipeService.instance.getShareLink(r.id);
       // Replace domain as requested by user
-      final link = rawLink.replaceAll('cooked.nixacom.com', 'cookedapp.com');
+      final link = rawLink.replaceAll('cooked.nixacom.com', 'cookedapp.app');
 
       final name = r.name;
       final creatorStr = r.creator != null
           ? "${r.creator!.displayName}'s "
           : "";
 
-      final template = "Check out $creatorStr$name on Cooked 🙌\n\n$link";
+      final template = "Check out $creatorStr$name on Cooked 🙌\n$link";
 
       final RenderBox? box = context.findRenderObject() as RenderBox?;
       Share.share(

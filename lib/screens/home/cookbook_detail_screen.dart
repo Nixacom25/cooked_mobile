@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:share_plus/share_plus.dart';
 import '../../routes/app_routes.dart';
 import '../../widgets/app_search_field.dart';
 import '../../widgets/recipe_card.dart';
@@ -98,7 +99,12 @@ class _CookbookDetailScreenState extends State<CookbookDetailScreen> {
         }
 
         final String name = _cookbook?.name ?? 'Cookbook';
-        final List<Recipe> recipes = _cookbook?.recipes ?? [];
+        final List<Recipe> recipes = _cookbook?.recipes != null ? List.from(_cookbook!.recipes) : [];
+        recipes.sort((a, b) {
+          if (a.isPinned && !b.isPinned) return -1;
+          if (!a.isPinned && b.isPinned) return 1;
+          return 0; // maintain original order for others
+        });
 
         return Scaffold(
           backgroundColor: Colors.white,
@@ -287,10 +293,56 @@ class _CookbookDetailScreenState extends State<CookbookDetailScreen> {
                                 );
                               },
                               onPinTap: () {
-                                // Pin logic
+                                // Optimistic local update
+                                setState(() {
+                                  final idx = _cookbook!.recipes.indexWhere((req) => req.id == r.id);
+                                  if (idx != -1) {
+                                    _cookbook!.recipes[idx] = _cookbook!.recipes[idx].copyWith(isPinned: !_cookbook!.recipes[idx].isPinned);
+                                  }
+                                });
+                                RecipeService.instance.togglePin(r.id).then((updated) {
+                                  if (mounted) {
+                                    IosToast.show(context, message: updated.isPinned ? 'Recipe pinned' : 'Recipe unpinned', type: ToastType.success);
+                                  }
+                                }).catchError((e) {
+                                  // Revert on error
+                                  if (mounted) {
+                                    setState(() {
+                                      final idx = _cookbook!.recipes.indexWhere((req) => req.id == r.id);
+                                      if (idx != -1) {
+                                        _cookbook!.recipes[idx] = _cookbook!.recipes[idx].copyWith(isPinned: !_cookbook!.recipes[idx].isPinned);
+                                      }
+                                    });
+                                    IosToast.show(context, message: 'Failed to pin recipe', type: ToastType.error);
+                                  }
+                                });
                               },
-                              onShareTap: () {
-                                // Share logic
+                              onShareTap: () async {
+                                try {
+                                  final RenderBox? box = context.findRenderObject() as RenderBox?;
+                                  final Rect? sharePositionOrigin = box != null ? box.localToGlobal(Offset.zero) & box.size : null;
+                                  
+                                  final rawLink = await RecipeService.instance.getShareLink(r.id);
+                                  final link = rawLink.replaceAll('cooked.nixacom.com', 'cookedapp.app');
+                                  final name = r.name;
+                                  final creatorStr = r.creator != null ? "${r.creator!.displayName}'s " : "";
+                                  final template = "Check out $creatorStr$name on Cooked 🙌\n$link";
+                                  
+                                  Share.share(template, sharePositionOrigin: sharePositionOrigin);
+                                } catch (e) {
+                                  if (mounted) {
+                                    IosToast.show(context, message: ErrorHelper.getFriendlyMessage(e), type: ToastType.error);
+                                  }
+                                }
+                              },
+                              onRemoveFromCookbookTap: () async {
+                                final updatedCookbook = await CookbookService.instance.removeRecipeFromCookbook(_cookbook!.id, r.id);
+                                if (mounted) {
+                                  setState(() {
+                                    _cookbook = updatedCookbook;
+                                  });
+                                  IosToast.show(context, message: 'Removed from cookbook', type: ToastType.success);
+                                }
                               },
                               onDeleteTap: () async {
                                 final success = await RecipeService.instance.deleteRecipe(r.id);

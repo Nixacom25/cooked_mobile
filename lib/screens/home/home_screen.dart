@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -1609,21 +1610,21 @@ class _SavedRecipesGrid extends StatelessWidget {
             },
             onShareTap: () async {
               try {
-                final link = await RecipeService.instance.getShareLink(r.id);
-                // In a real app we would use Share.share(link);
-                // For now just toast it
-                if (ctx.mounted) {
-                  IosToast.show(
-                    ctx,
-                    message: 'Link copied: $link',
-                    type: ToastType.success,
-                  );
-                }
+                final RenderBox? box = context.findRenderObject() as RenderBox?;
+                final Rect? sharePositionOrigin = box != null ? box.localToGlobal(Offset.zero) & box.size : null;
+                
+                final rawLink = await RecipeService.instance.getShareLink(r.id);
+                final link = rawLink.replaceAll('cooked.nixacom.com', 'cookedapp.app');
+                final name = r.name;
+                final creatorStr = r.creator != null ? "${r.creator!.displayName}'s " : "";
+                final template = "Check out $creatorStr$name on Cooked 🙌\n$link";
+                
+                Share.share(template, sharePositionOrigin: sharePositionOrigin);
               } catch (e) {
                 if (ctx.mounted) {
                   IosToast.show(
                     ctx,
-                    message: 'Failed to generate link',
+                    message: ErrorHelper.getFriendlyMessage(e),
                     type: ToastType.error,
                   );
                 }
@@ -1686,7 +1687,7 @@ class _SuggestedRecipesSectionState extends State<_SuggestedRecipesSection> {
   void _startPolling() {
     _pollingTimer?.cancel();
     int attempts = 0;
-    _pollingTimer = Timer.periodic(const Duration(seconds: 10), (timer) async {
+    _pollingTimer = Timer.periodic(const Duration(seconds: 30), (timer) async {
       attempts++;
       final current = RecipeService.instance.homeSuggestionsNotifier.value;
       if (current != null && current.length >= 4) {
@@ -1694,8 +1695,8 @@ class _SuggestedRecipesSectionState extends State<_SuggestedRecipesSection> {
         return;
       }
 
-      if (attempts > 12) {
-        // Stop after 2 minutes
+      if (attempts > 4) {
+        // Stop after 2 minutes (4 attempts of 30 seconds)
         timer.cancel();
         return;
       }
@@ -1816,19 +1817,21 @@ class _SuggestedRecipesSectionState extends State<_SuggestedRecipesSection> {
             },
             onShareTap: () async {
               try {
-                final link = await RecipeService.instance.getShareLink(r.id);
-                if (ctx.mounted) {
-                  IosToast.show(
-                    ctx,
-                    message: 'Link copied: $link',
-                    type: ToastType.success,
-                  );
-                }
+                final RenderBox? box = context.findRenderObject() as RenderBox?;
+                final Rect? sharePositionOrigin = box != null ? box.localToGlobal(Offset.zero) & box.size : null;
+                
+                final rawLink = await RecipeService.instance.getShareLink(r.id);
+                final link = rawLink.replaceAll('cooked.nixacom.com', 'cookedapp.app');
+                final name = r.name;
+                final creatorStr = r.creator != null ? "${r.creator!.displayName}'s " : "";
+                final template = "Check out $creatorStr$name on Cooked 🙌\n$link";
+                
+                Share.share(template, sharePositionOrigin: sharePositionOrigin);
               } catch (e) {
                 if (ctx.mounted) {
                   IosToast.show(
                     ctx,
-                    message: 'Failed to generate link',
+                    message: ErrorHelper.getFriendlyMessage(e),
                     type: ToastType.error,
                   );
                 }
@@ -1905,19 +1908,21 @@ class _SuggestedRecipesSectionState extends State<_SuggestedRecipesSection> {
               },
               onShareTap: () async {
                 try {
-                  final link = await RecipeService.instance.getShareLink(r.id);
-                  if (ctx.mounted) {
-                    IosToast.show(
-                      ctx,
-                      message: 'Link copied: $link',
-                      type: ToastType.success,
-                    );
-                  }
+                  final RenderBox? box = context.findRenderObject() as RenderBox?;
+                  final Rect? sharePositionOrigin = box != null ? box.localToGlobal(Offset.zero) & box.size : null;
+                  
+                  final rawLink = await RecipeService.instance.getShareLink(r.id);
+                  final link = rawLink.replaceAll('cooked.nixacom.com', 'cookedapp.app');
+                  final name = r.name;
+                  final creatorStr = r.creator != null ? "${r.creator!.displayName}'s " : "";
+                  final template = "Check out $creatorStr$name on Cooked 🙌\n$link";
+                  
+                  Share.share(template, sharePositionOrigin: sharePositionOrigin);
                 } catch (e) {
                   if (ctx.mounted) {
                     IosToast.show(
                       ctx,
-                      message: 'Failed to generate link',
+                      message: ErrorHelper.getFriendlyMessage(e),
                       type: ToastType.error,
                     );
                   }
