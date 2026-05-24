@@ -278,7 +278,9 @@ class _CookbooksGridState extends State<_CookbooksGrid> {
                           builder: (context) => CookbookFormModal(cookbook: cb),
                         );
                         if (result is Cookbook || result == 'deleted') {
-                          CookbookService.instance.getMyCookbooks(forceRefresh: true);
+                          CookbookService.instance.getMyCookbooks(
+                            forceRefresh: true,
+                          );
                         }
                       },
                     ),
@@ -293,7 +295,9 @@ class _CookbooksGridState extends State<_CookbooksGrid> {
                           builder: (context) => CookbookFormModal(cookbook: cb),
                         );
                         if (result is Cookbook || result == 'deleted') {
-                          CookbookService.instance.getMyCookbooks(forceRefresh: true);
+                          CookbookService.instance.getMyCookbooks(
+                            forceRefresh: true,
+                          );
                         }
                       },
                     ),
@@ -312,11 +316,19 @@ class _CookbooksGridState extends State<_CookbooksGrid> {
                         try {
                           await CookbookService.instance.deleteCookbook(cb.id);
                           if (mounted) {
-                            IosToast.show(ctx, message: 'Cookbook deleted', type: ToastType.success);
+                            IosToast.show(
+                              ctx,
+                              message: 'Cookbook deleted',
+                              type: ToastType.success,
+                            );
                           }
                         } catch (e) {
                           if (mounted) {
-                            IosToast.show(ctx, message: 'Failed to delete cookbook', type: ToastType.error);
+                            IosToast.show(
+                              ctx,
+                              message: 'Failed to delete cookbook',
+                              type: ToastType.error,
+                            );
                           }
                         }
                       },
@@ -447,7 +459,6 @@ class _RecipesGridState extends State<_RecipesGrid> {
   }
 
   Future<List<Recipe>> _fetchGroceryHistory() async {
-
     final groceries = await GroceryService.instance.getMyGroceries();
     final recipeIds = <String>{};
     final recipes = <Recipe>[];
@@ -480,9 +491,7 @@ class _RecipesGridState extends State<_RecipesGrid> {
     return ValueListenableBuilder<List<Recipe>?>(
       valueListenable: RecipeService.instance.myRecipesNotifier,
       builder: (context, savedRecipes, _) {
-        final savedIds = (savedRecipes ?? [])
-            .map((r) => r.id)
-            .toSet();
+        final savedIds = (savedRecipes ?? []).map((r) => r.id).toSet();
 
         if (_type == ViewAllType.imports) {
           return ListView.builder(
@@ -490,7 +499,10 @@ class _RecipesGridState extends State<_RecipesGrid> {
             itemCount: displayList.length,
             itemBuilder: (ctx, i) {
               final r = displayList[i];
-              final isSaved = r.isInCookbook || savedIds.contains(r.id) || _validatedRecipeIds.contains(r.id);
+              final isSaved =
+                  r.isInCookbook ||
+                  savedIds.contains(r.id) ||
+                  _validatedRecipeIds.contains(r.id);
 
               String source = 'Web';
               IconData icon = Icons.language_rounded;
@@ -543,75 +555,113 @@ class _RecipesGridState extends State<_RecipesGrid> {
           ),
           itemBuilder: (ctx, i) {
             final r = displayList[i];
-            final isExplore = _type == ViewAllType.explore ||
+            final isExplore =
+                _type == ViewAllType.explore ||
                 _type == ViewAllType.exploreRecipesByCuisine ||
                 _type == ViewAllType.exploreRecipesByCategory;
-            final isCuisineOrCategory = _type == ViewAllType.exploreRecipesByCuisine ||
+            final isCuisineOrCategory =
+                _type == ViewAllType.exploreRecipesByCuisine ||
                 _type == ViewAllType.exploreRecipesByCategory;
-            final isSaved = r.isInCookbook || savedIds.contains(r.id) || _validatedRecipeIds.contains(r.id);
+            final isSaved =
+                r.isInCookbook ||
+                savedIds.contains(r.id) ||
+                _validatedRecipeIds.contains(r.id);
 
             return RecipeCard(
               recipe: r,
-              useValidationIcon: isExplore, // Removed isImport here as it uses ListView above
+              useValidationIcon:
+                  isExplore, // Removed isImport here as it uses ListView above
               isValidated: isSaved,
               animationDelay: Duration(milliseconds: i * 800),
               useExploreButton: isExplore,
-              disableSlide: true, 
-              inactiveColor: isCuisineOrCategory ? const Color(0xFF9CA3AF) : null,
+              disableSlide: true,
+              inactiveColor: isCuisineOrCategory
+                  ? const Color(0xFF9CA3AF)
+                  : null,
               onValidateTap: isExplore
                   ? () => _handleValidation(ctx, r, isSaved)
                   : null,
-               onAddToCookbookTap: (isSaved || isExplore) ? () {
-                showModalBottomSheet(
-                  context: ctx,
-                  backgroundColor: Colors.transparent,
-                  isScrollControlled: true,
-                  builder: (_) => AddToCookbookSheet(recipe: r),
-                );
-              } : null,
-              onShareTap: (isSaved || isExplore) ? () async {
-                try {
-                  final RenderBox? box = ctx.findRenderObject() as RenderBox?;
-                  final Rect? sharePositionOrigin = box != null ? box.localToGlobal(Offset.zero) & box.size : null;
-                  
-                  final rawLink = await RecipeService.instance.getShareLink(r.id);
-                  final link = rawLink.replaceAll('cooked.nixacom.com', 'cookedapp.app');
-                  final name = r.name;
-                  final creatorStr = r.creator != null ? "${r.creator!.displayName}'s " : "";
-                  final template = "Check out $creatorStr$name on Cooked 🙌\n$link";
-                  
-                  Share.share(template, sharePositionOrigin: sharePositionOrigin);
-                } catch (e) {
-                  if (ctx.mounted) {
-                    IosToast.show(ctx, message: ErrorHelper.getFriendlyMessage(e), type: ToastType.error);
-                  }
-                }
-              } : null,
-              onPinTap: isSaved ? () {
-                RecipeService.instance.togglePin(r.id).then((updated) {
-                  if (ctx.mounted) {
-                    IosToast.show(ctx, message: updated.isPinned ? 'Recipe pinned' : 'Recipe unpinned', type: ToastType.success);
-                  }
-                }).catchError((e) {
-                  if (ctx.mounted) {
-                    IosToast.show(ctx, message: 'Failed to pin recipe', type: ToastType.error);
-                  }
-                });
-              } : null,
-              onDeleteTap: isSaved ? () async {
-                final success = await RecipeService.instance.deleteRecipe(r.id);
-                if (success && ctx.mounted) {
-                  IosToast.show(ctx, message: 'Recipe deleted', type: ToastType.success);
-                }
-              } : null,
+              onAddToCookbookTap: (isSaved || isExplore)
+                  ? () {
+                      showModalBottomSheet(
+                        context: ctx,
+                        backgroundColor: Colors.transparent,
+                        isScrollControlled: true,
+                        builder: (_) => AddToCookbookSheet(recipe: r),
+                      );
+                    }
+                  : null,
+              onShareTap: (isSaved || isExplore)
+                  ? () async {
+                      try {
+                        final RenderBox? box = ctx.findRenderObject() as RenderBox?;
+                        final Rect? sharePositionOrigin = box != null ? box.localToGlobal(Offset.zero) & box.size : null;
+                        final rawLink = await RecipeService.instance.getShareLink(r.id);
+                        final link = rawLink.replaceAll('cooked.nixacom.com','link.cookedapp.com').replaceAll('https://cookedapp.app','https://link.cookedapp.com');
+                        final name = r.name;
+                        final creatorStr = r.creator != null ? "${r.creator!.displayName}'s " : "";
+                        final template = "Check out $creatorStr$name on Cooked 🙌\n$link";
+
+                        Share.share(
+                          template,
+                          sharePositionOrigin: sharePositionOrigin,
+                        );
+                      } catch (e) {
+                        if (ctx.mounted) {
+                          IosToast.show(
+                            ctx,
+                            message: ErrorHelper.getFriendlyMessage(e),
+                            type: ToastType.error,
+                          );
+                        }
+                      }
+                    }
+                  : null,
+              onPinTap: isSaved
+                  ? () {
+                      RecipeService.instance
+                          .togglePin(r.id)
+                          .then((updated) {
+                            if (ctx.mounted) {
+                              IosToast.show(
+                                ctx,
+                                message: updated.isPinned
+                                    ? 'Recipe pinned'
+                                    : 'Recipe unpinned',
+                                type: ToastType.success,
+                              );
+                            }
+                          })
+                          .catchError((e) {
+                            if (ctx.mounted) {
+                              IosToast.show(
+                                ctx,
+                                message: 'Failed to pin recipe',
+                                type: ToastType.error,
+                              );
+                            }
+                          });
+                    }
+                  : null,
+              onDeleteTap: isSaved
+                  ? () async {
+                      final success = await RecipeService.instance.deleteRecipe(
+                        r.id,
+                      );
+                      if (success && ctx.mounted) {
+                        IosToast.show(
+                          ctx,
+                          message: 'Recipe deleted',
+                          type: ToastType.success,
+                        );
+                      }
+                    }
+                  : null,
               onTap: () async {
                 await Navigator.pushNamed(
                   ctx,
                   AppRoutes.recipeDetail,
-                  arguments: {
-                    'recipe': r,
-                    'isPreview': !isSaved,
-                  },
+                  arguments: {'recipe': r, 'isPreview': !isSaved},
                 );
               },
             );
@@ -637,7 +687,11 @@ class _RecipesGridState extends State<_RecipesGrid> {
     // 2. Perform backend validation
     RecipeService.instance.validateRecipe(r.id).catchError((e) {
       if (mounted) {
-        IosToast.show(ctx, message: ErrorHelper.getFriendlyMessage(e), type: ToastType.error);
+        IosToast.show(
+          ctx,
+          message: ErrorHelper.getFriendlyMessage(e),
+          type: ToastType.error,
+        );
       }
       return r;
     });
@@ -661,21 +715,31 @@ class _RecipesGridState extends State<_RecipesGrid> {
 
   void _updateLocalStateForValidation(Recipe r) {
     if (!mounted) return;
-    
-    final validatedRecipe = r.copyWith(origin: r.origin ?? 'IMPORT', isValidated: true);
+
+    final validatedRecipe = r.copyWith(
+      origin: r.origin ?? 'IMPORT',
+      isValidated: true,
+    );
 
     // Update local state via notifiers
     _validatedRecipeIds.add(r.id);
-    
+
     final currentSaved = RecipeService.instance.myRecipesNotifier.value ?? [];
     if (!currentSaved.any((item) => item.id == r.id)) {
-      RecipeService.instance.myRecipesNotifier.value = [validatedRecipe, ...currentSaved];
+      RecipeService.instance.myRecipesNotifier.value = [
+        validatedRecipe,
+        ...currentSaved,
+      ];
     }
 
     // Refresh backgrounds
-    RecipeService.instance.getMyRecipes(forceRefresh: true).catchError((_) => <Recipe>[]);
-    RecipeService.instance.getHomeSuggestions(forceRefresh: true).catchError((_) => <Recipe>[]);
-    
+    RecipeService.instance
+        .getMyRecipes(forceRefresh: true)
+        .catchError((_) => <Recipe>[]);
+    RecipeService.instance
+        .getHomeSuggestions(forceRefresh: true)
+        .catchError((_) => <Recipe>[]);
+
     setState(() {}); // Local refresh for ViewAllScreen
   }
 
@@ -698,11 +762,11 @@ class _RecipesGridState extends State<_RecipesGrid> {
               padding: EdgeInsets.fromLTRB(16, 4, 16, 20),
             );
           }
-          
+
           final displayList = (_type == ViewAllType.savedRecipes)
-                  ? recipes.where((r) => !r.isInCookbook && !r.isSuggested).toList()
-                  : recipes;
-              
+              ? recipes.where((r) => !r.isInCookbook && !r.isSuggested).toList()
+              : recipes;
+
           return _buildGrid(displayList);
         },
       );
@@ -885,7 +949,6 @@ class _StaticCookbooksGridState extends State<_StaticCookbooksGrid> {
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<List<Map<String, dynamic>>>(
@@ -907,7 +970,10 @@ class _StaticCookbooksGridState extends State<_StaticCookbooksGrid> {
         if (widget.searchQuery.trim().isNotEmpty) {
           final query = widget.searchQuery.trim().toLowerCase();
           filteredItems = filteredItems
-              .where((item) => (item['name'] as String).toLowerCase().contains(query))
+              .where(
+                (item) =>
+                    (item['name'] as String).toLowerCase().contains(query),
+              )
               .toList();
         }
 
@@ -935,13 +1001,19 @@ class _StaticCookbooksGridState extends State<_StaticCookbooksGrid> {
         final name = item['name'] as String;
         final img = item['image'] as String?;
         final count = item['recipeCount'] as int? ?? 0;
-        
+
         return _buildItem(ctx, name, img, 'assets/images/others.png', count);
       },
     );
   }
 
-  Widget _buildItem(BuildContext ctx, String name, String? imgUrl, String fallbackImg, int count) {
+  Widget _buildItem(
+    BuildContext ctx,
+    String name,
+    String? imgUrl,
+    String fallbackImg,
+    int count,
+  ) {
     final bool isCuisine = widget.type == ViewAllType.exploreCuisines;
     return GestureDetector(
       onTap: () {
@@ -977,7 +1049,10 @@ class _StaticCookbooksGridState extends State<_StaticCookbooksGrid> {
                           child: SizedBox(
                             width: 24,
                             height: 24,
-                            child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFFC83A2D)),
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Color(0xFFC83A2D),
+                            ),
                           ),
                         ),
                         errorWidget: (context, url, error) => isCuisine
@@ -991,14 +1066,14 @@ class _StaticCookbooksGridState extends State<_StaticCookbooksGrid> {
                             : Image.asset(fallbackImg, fit: BoxFit.cover),
                       )
                     : isCuisine
-                        ? Center(
-                            child: Icon(
-                              Icons.restaurant_menu,
-                              color: const Color(0xFFC83A2D),
-                              size: 32,
-                            ),
-                          )
-                        : Image.asset(fallbackImg, fit: BoxFit.cover),
+                    ? Center(
+                        child: Icon(
+                          Icons.restaurant_menu,
+                          color: const Color(0xFFC83A2D),
+                          size: 32,
+                        ),
+                      )
+                    : Image.asset(fallbackImg, fit: BoxFit.cover),
               ),
             ),
           ),

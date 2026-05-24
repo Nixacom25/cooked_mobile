@@ -56,13 +56,13 @@ class _CookbookDetailScreenState extends State<CookbookDetailScreen> {
 
   Future<void> _load() async {
     if (_cookbook == null || _cookbook!.id.startsWith('static_')) return;
-    
+
     // Only show loading if we don't have recipes yet
     final bool showSpinner = _cookbook!.recipes.isEmpty;
     if (showSpinner) {
       setState(() => _loading = true);
     }
-    
+
     try {
       final updated = await CookbookService.instance.getCookbook(_cookbookId);
       if (mounted) {
@@ -74,7 +74,11 @@ class _CookbookDetailScreenState extends State<CookbookDetailScreen> {
     } catch (e) {
       if (mounted) {
         setState(() => _loading = false);
-        IosToast.show(context, message: ErrorHelper.getFriendlyMessage(e), type: ToastType.error);
+        IosToast.show(
+          context,
+          message: ErrorHelper.getFriendlyMessage(e),
+          type: ToastType.error,
+        );
       }
     }
   }
@@ -92,14 +96,18 @@ class _CookbookDetailScreenState extends State<CookbookDetailScreen> {
       builder: (context, cookbooks, _) {
         // If the global list updated, find our cookbook to stay in sync
         if (cookbooks != null) {
-          final updated = cookbooks.where((c) => c.id == _cookbookId).firstOrNull;
+          final updated = cookbooks
+              .where((c) => c.id == _cookbookId)
+              .firstOrNull;
           if (updated != null) {
             _cookbook = updated;
           }
         }
 
         final String name = _cookbook?.name ?? 'Cookbook';
-        final List<Recipe> recipes = _cookbook?.recipes != null ? List.from(_cookbook!.recipes) : [];
+        final List<Recipe> recipes = _cookbook?.recipes != null
+            ? List.from(_cookbook!.recipes)
+            : [];
         recipes.sort((a, b) {
           if (a.isPinned && !b.isPinned) return -1;
           if (!a.isPinned && b.isPinned) return 1;
@@ -138,16 +146,16 @@ class _CookbookDetailScreenState extends State<CookbookDetailScreen> {
                         ),
                       ),
                       // + button opens Edit Cookbook form
-                      if (_cookbook != null && !_cookbook!.id.startsWith('static_'))
+                      if (_cookbook != null &&
+                          !_cookbook!.id.startsWith('static_'))
                         GestureDetector(
                           onTap: () async {
                             final result = await showModalBottomSheet(
                               context: context,
                               isScrollControlled: true,
                               backgroundColor: Colors.transparent,
-                              builder: (context) => CookbookFormModal(
-                                cookbook: _cookbook,
-                              ),
+                              builder: (context) =>
+                                  CookbookFormModal(cookbook: _cookbook),
                             );
                             if (result == 'deleted') {
                               if (mounted) Navigator.pop(context, true);
@@ -192,16 +200,21 @@ class _CookbookDetailScreenState extends State<CookbookDetailScreen> {
                       ? GridView.builder(
                           padding: const EdgeInsets.fromLTRB(16, 4, 16, 20),
                           itemCount: 4,
-                          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            mainAxisSpacing: 14.h,
-                            crossAxisSpacing: 14.w,
-                            childAspectRatio: 0.72,
-                          ),
+                          gridDelegate:
+                              SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 2,
+                                mainAxisSpacing: 14.h,
+                                crossAxisSpacing: 14.w,
+                                childAspectRatio: 0.72,
+                              ),
                           itemBuilder: (_, __) => Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              SkeletonLoader(width: double.infinity, height: 145.h, borderRadius: 20),
+                              SkeletonLoader(
+                                width: double.infinity,
+                                height: 145.h,
+                                borderRadius: 20,
+                              ),
                               SizedBox(height: 10.h),
                               SkeletonLoader(width: 140.w, height: 16.h),
                               SizedBox(height: 6.h),
@@ -217,7 +230,8 @@ class _CookbookDetailScreenState extends State<CookbookDetailScreen> {
                               Padding(
                                 padding: EdgeInsets.symmetric(horizontal: 24.w),
                                 child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceEvenly,
                                   children: [
                                     _buildShortcutButton(
                                       context,
@@ -269,12 +283,13 @@ class _CookbookDetailScreenState extends State<CookbookDetailScreen> {
                       : GridView.builder(
                           padding: const EdgeInsets.fromLTRB(16, 4, 16, 20),
                           itemCount: recipes.length,
-                          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            mainAxisSpacing: 14.h,
-                            crossAxisSpacing: 14.w,
-                            childAspectRatio: 0.72,
-                          ),
+                          gridDelegate:
+                              SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 2,
+                                mainAxisSpacing: 14.h,
+                                crossAxisSpacing: 14.w,
+                                childAspectRatio: 0.72,
+                              ),
                           itemBuilder: (ctx, i) {
                             final r = recipes[i];
                             return RecipeCard(
@@ -295,60 +310,116 @@ class _CookbookDetailScreenState extends State<CookbookDetailScreen> {
                               onPinTap: () {
                                 // Optimistic local update
                                 setState(() {
-                                  final idx = _cookbook!.recipes.indexWhere((req) => req.id == r.id);
+                                  final idx = _cookbook!.recipes.indexWhere(
+                                    (req) => req.id == r.id,
+                                  );
                                   if (idx != -1) {
-                                    _cookbook!.recipes[idx] = _cookbook!.recipes[idx].copyWith(isPinned: !_cookbook!.recipes[idx].isPinned);
+                                    _cookbook!.recipes[idx] = _cookbook!
+                                        .recipes[idx]
+                                        .copyWith(
+                                          isPinned:
+                                              !_cookbook!.recipes[idx].isPinned,
+                                        );
                                   }
                                 });
-                                RecipeService.instance.togglePin(r.id).then((updated) {
-                                  if (mounted) {
-                                    IosToast.show(context, message: updated.isPinned ? 'Recipe pinned' : 'Recipe unpinned', type: ToastType.success);
-                                  }
-                                }).catchError((e) {
-                                  // Revert on error
-                                  if (mounted) {
-                                    setState(() {
-                                      final idx = _cookbook!.recipes.indexWhere((req) => req.id == r.id);
-                                      if (idx != -1) {
-                                        _cookbook!.recipes[idx] = _cookbook!.recipes[idx].copyWith(isPinned: !_cookbook!.recipes[idx].isPinned);
+                                RecipeService.instance
+                                    .togglePin(r.id)
+                                    .then((updated) {
+                                      if (mounted) {
+                                        IosToast.show(
+                                          context,
+                                          message: updated.isPinned
+                                              ? 'Recipe pinned'
+                                              : 'Recipe unpinned',
+                                          type: ToastType.success,
+                                        );
+                                      }
+                                    })
+                                    .catchError((e) {
+                                      // Revert on error
+                                      if (mounted) {
+                                        setState(() {
+                                          final idx = _cookbook!.recipes
+                                              .indexWhere(
+                                                (req) => req.id == r.id,
+                                              );
+                                          if (idx != -1) {
+                                            _cookbook!.recipes[idx] = _cookbook!
+                                                .recipes[idx]
+                                                .copyWith(
+                                                  isPinned: !_cookbook!
+                                                      .recipes[idx]
+                                                      .isPinned,
+                                                );
+                                          }
+                                        });
+                                        IosToast.show(
+                                          context,
+                                          message: 'Failed to pin recipe',
+                                          type: ToastType.error,
+                                        );
                                       }
                                     });
-                                    IosToast.show(context, message: 'Failed to pin recipe', type: ToastType.error);
-                                  }
-                                });
                               },
                               onShareTap: () async {
                                 try {
-                                  final RenderBox? box = context.findRenderObject() as RenderBox?;
-                                  final Rect? sharePositionOrigin = box != null ? box.localToGlobal(Offset.zero) & box.size : null;
-                                  
+                                  final RenderBox? box =
+                                      context.findRenderObject() as RenderBox?;
+                                  final Rect? sharePositionOrigin = box != null
+                                      ? box.localToGlobal(Offset.zero) &
+                                            box.size
+                                      : null;
+
                                   final rawLink = await RecipeService.instance.getShareLink(r.id);
-                                  final link = rawLink.replaceAll('cooked.nixacom.com', 'cookedapp.app');
+                                  final link = rawLink.replaceAll('cooked.nixacom.com', 'link.cookedapp.com').replaceAll('https://cooked.nixacom.app', 'https://link.cookedapp.com');
                                   final name = r.name;
                                   final creatorStr = r.creator != null ? "${r.creator!.displayName}'s " : "";
                                   final template = "Check out $creatorStr$name on Cooked 🙌\n$link";
-                                  
-                                  Share.share(template, sharePositionOrigin: sharePositionOrigin);
+
+                                  Share.share(
+                                    template,
+                                    sharePositionOrigin: sharePositionOrigin,
+                                  );
                                 } catch (e) {
                                   if (mounted) {
-                                    IosToast.show(context, message: ErrorHelper.getFriendlyMessage(e), type: ToastType.error);
+                                    IosToast.show(
+                                      context,
+                                      message: ErrorHelper.getFriendlyMessage(
+                                        e,
+                                      ),
+                                      type: ToastType.error,
+                                    );
                                   }
                                 }
                               },
                               onRemoveFromCookbookTap: () async {
-                                final updatedCookbook = await CookbookService.instance.removeRecipeFromCookbook(_cookbook!.id, r.id);
+                                final updatedCookbook = await CookbookService
+                                    .instance
+                                    .removeRecipeFromCookbook(
+                                      _cookbook!.id,
+                                      r.id,
+                                    );
                                 if (mounted) {
                                   setState(() {
                                     _cookbook = updatedCookbook;
                                   });
-                                  IosToast.show(context, message: 'Removed from cookbook', type: ToastType.success);
+                                  IosToast.show(
+                                    context,
+                                    message: 'Removed from cookbook',
+                                    type: ToastType.success,
+                                  );
                                 }
                               },
                               onDeleteTap: () async {
-                                final success = await RecipeService.instance.deleteRecipe(r.id);
+                                final success = await RecipeService.instance
+                                    .deleteRecipe(r.id);
                                 if (success && mounted) {
                                   _load();
-                                  IosToast.show(context, message: 'Recipe deleted', type: ToastType.success);
+                                  IosToast.show(
+                                    context,
+                                    message: 'Recipe deleted',
+                                    type: ToastType.success,
+                                  );
                                 }
                               },
                             );
@@ -411,13 +482,12 @@ class _CookbookDetailScreenState extends State<CookbookDetailScreen> {
                         svgPath,
                         width: 22.w,
                         height: 22.h,
-                        colorFilter: const ColorFilter.mode(Color(0xFFC83A2D), BlendMode.srcIn),
+                        colorFilter: const ColorFilter.mode(
+                          Color(0xFFC83A2D),
+                          BlendMode.srcIn,
+                        ),
                       )
-                    : Icon(
-                        icon,
-                        color: const Color(0xFFC83A2D),
-                        size: 24.sp,
-                      ),
+                    : Icon(icon, color: const Color(0xFFC83A2D), size: 24.sp),
               ),
             ),
             SizedBox(height: 10.h),

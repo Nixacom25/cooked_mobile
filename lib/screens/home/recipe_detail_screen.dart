@@ -177,8 +177,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
 
     try {
       final rawLink = await RecipeService.instance.getShareLink(r.id);
-      // Replace domain as requested by user
-      final link = rawLink.replaceAll('cooked.nixacom.com', 'cookedapp.app');
+      final link = rawLink.replaceAll('cooked.nixacom.com', 'link.cookedapp.com').replaceAll('https://cookedapp.app', 'https://link.cookedapp.com');
 
       final name = r.name;
       final creatorStr = r.creator != null

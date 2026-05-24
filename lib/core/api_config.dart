@@ -1,7 +1,7 @@
 class ApiConfig {
   static String get baseUrl {
     // return 'http://192.168.1.69:8099';
-    return 'https://cooked-backend-latest.onrender.com';
+    return 'https://api.cookedapp.com';
   }
 
   static const String googleClientId =

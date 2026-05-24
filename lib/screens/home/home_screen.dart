@@ -1612,9 +1612,8 @@ class _SavedRecipesGrid extends StatelessWidget {
               try {
                 final RenderBox? box = context.findRenderObject() as RenderBox?;
                 final Rect? sharePositionOrigin = box != null ? box.localToGlobal(Offset.zero) & box.size : null;
-                
                 final rawLink = await RecipeService.instance.getShareLink(r.id);
-                final link = rawLink.replaceAll('cooked.nixacom.com', 'cookedapp.app');
+                final link = rawLink.replaceAll('cooked.nixacom.com', 'link.cookedapp.com').replaceAll('https://cookedapp.app', 'https://link.cookedapp.com');
                 final name = r.name;
                 final creatorStr = r.creator != null ? "${r.creator!.displayName}'s " : "";
                 final template = "Check out $creatorStr$name on Cooked 🙌\n$link";
@@ -1790,8 +1789,8 @@ class _SuggestedRecipesSectionState extends State<_SuggestedRecipesSection> {
           final r = gridItems[index];
           final i = index;
           final isSaved =
-              savedIds.contains(r.id) ||
-              savedNames.contains(r.name.toLowerCase());
+              (r.id.isNotEmpty && savedIds.contains(r.id)) ||
+              (r.name.isNotEmpty && savedNames.contains(r.name.toLowerCase()));
           return RecipeCard(
             recipe: r,
             index: i,
@@ -1819,9 +1818,8 @@ class _SuggestedRecipesSectionState extends State<_SuggestedRecipesSection> {
               try {
                 final RenderBox? box = context.findRenderObject() as RenderBox?;
                 final Rect? sharePositionOrigin = box != null ? box.localToGlobal(Offset.zero) & box.size : null;
-                
                 final rawLink = await RecipeService.instance.getShareLink(r.id);
-                final link = rawLink.replaceAll('cooked.nixacom.com', 'cookedapp.app');
+                final link = rawLink.replaceAll('cooked.nixacom.com', 'link.cookedapp.com').replaceAll('https://cookedapp.app', 'https://link.cookedapp.com');
                 final name = r.name;
                 final creatorStr = r.creator != null ? "${r.creator!.displayName}'s " : "";
                 final template = "Check out $creatorStr$name on Cooked 🙌\n$link";
@@ -1879,8 +1877,8 @@ class _SuggestedRecipesSectionState extends State<_SuggestedRecipesSection> {
 
           final r = listItems[i];
           final isSaved =
-              savedIds.contains(r.id) ||
-              savedNames.contains(r.name.toLowerCase());
+              (r.id.isNotEmpty && savedIds.contains(r.id)) ||
+              (r.name.isNotEmpty && savedNames.contains(r.name.toLowerCase()));
           return SizedBox(
             width: 160.w,
             child: RecipeCard(
@@ -1912,7 +1910,7 @@ class _SuggestedRecipesSectionState extends State<_SuggestedRecipesSection> {
                   final Rect? sharePositionOrigin = box != null ? box.localToGlobal(Offset.zero) & box.size : null;
                   
                   final rawLink = await RecipeService.instance.getShareLink(r.id);
-                  final link = rawLink.replaceAll('cooked.nixacom.com', 'cookedapp.app');
+                  final link = rawLink.replaceAll('cooked.nixacom.com', 'link.cookedapp.com').replaceAll('https://cookedapp.app', 'https://link.cookedapp.com');
                   final name = r.name;
                   final creatorStr = r.creator != null ? "${r.creator!.displayName}'s " : "";
                   final template = "Check out $creatorStr$name on Cooked 🙌\n$link";
@@ -1946,16 +1944,21 @@ class _SuggestedRecipesSectionState extends State<_SuggestedRecipesSection> {
     }
 
     // 1. Optimistic Save immediately 'In Direct'
-    RecipeService.instance.validateRecipe(r.id).catchError((e) {
-      if (mounted) {
-        IosToast.show(
-          context,
-          message: ErrorHelper.getFriendlyMessage(e),
-          type: ToastType.error,
-        );
-      }
-      return r;
-    });
+    if (r.id.isEmpty) {
+      RecipeService.instance.createRecipe(r).catchError((e) {
+        if (mounted) {
+          IosToast.show(context, message: ErrorHelper.getFriendlyMessage(e), type: ToastType.error);
+        }
+        return r;
+      });
+    } else {
+      RecipeService.instance.validateRecipe(r.id).catchError((e) {
+        if (mounted) {
+          IosToast.show(context, message: ErrorHelper.getFriendlyMessage(e), type: ToastType.error);
+        }
+        return r;
+      });
+    }
     _updateLocalStateForValidation(r);
 
     showModalBottomSheet(

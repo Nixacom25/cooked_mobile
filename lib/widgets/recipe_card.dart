@@ -126,30 +126,9 @@ class RecipeCard extends StatelessWidget {
                     right: 8.w,
                     child: _buildValidationButton(),
                   ),
-                // Save icon bottom-right
-                if (onSaveTap != null)
-                  Positioned(
-                    bottom: 8.h,
-                    right: 8.w,
-                    child: GestureDetector(
-                      onTap: onSaveTap,
-                      child: Container(
-                        padding: EdgeInsets.all(6.r),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.8),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          Icons.bookmark_border_rounded,
-                          color: const Color(0xFF1A1A1A),
-                          size: 18.sp,
-                        ),
-                      ),
-                    ),
-                  ),
                 if (recipe?.isPinned == true)
                   Positioned(
-                    bottom: 4.h,
+                    top: 4.h,
                     right: useValidationIcon ? 46.w : 4.w,
                     child: Container(
                       padding: EdgeInsets.all(5.r),

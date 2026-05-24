@@ -792,7 +792,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
             // Cooked logo — same as used in loading overlay
             Image.asset(
               'assets/images/logo2.png',
-              height: 28.h,
+              width: 120.w,
               fit: BoxFit.contain,
             ),
             // Close button — same style as Type/Saved header

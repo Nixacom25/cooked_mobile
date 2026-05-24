@@ -1,6 +1,8 @@
 import 'package:cooked/services/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:app_links/app_links.dart';
+import 'dart:async';
 import 'core/theme/app_theme.dart';
 import 'routes/app_routes.dart';
 import 'screens/splash/splash_screen.dart';
@@ -64,6 +66,8 @@ class CookedApp extends StatefulWidget {
 class _CookedAppState extends State<CookedApp> with WidgetsBindingObserver {
   final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
   OverlayEntry? _clipboardOverlay;
+  late AppLinks _appLinks;
+  StreamSubscription<Uri>? _linkSubscription;
 
   @override
   void initState() {
@@ -79,6 +83,7 @@ class _CookedAppState extends State<CookedApp> with WidgetsBindingObserver {
     SharingService.instance.clipboardTextNotifier.removeListener(_onClipboardTextReceived);
     _removeClipboardOverlay();
     SharingService.instance.dispose();
+    _linkSubscription?.cancel();
     super.dispose();
   }
 
@@ -134,7 +139,7 @@ class _CookedAppState extends State<CookedApp> with WidgetsBindingObserver {
     final state = _navigatorKey.currentState;
     if (state != null) {
       // Check if it's an internal recipe link
-      final recipeRegex = RegExp(r'(?:cooked\.nixacom\.com|cookedapp\.com)/recipes/([a-zA-Z0-9-]+)');
+      final recipeRegex = RegExp(r'(?:cooked\.nixacom\.com|cookedapp\.com)/(?:share/)?recipes/([a-zA-Z0-9-]+)');
       final match = recipeRegex.firstMatch(url);
 
       if (match != null) {
@@ -174,9 +179,38 @@ class _CookedAppState extends State<CookedApp> with WidgetsBindingObserver {
         NotificationService.instance.init(),
         HistoryService.instance.init(),
       ]);
+      
+      _initDeepLinks();
     } catch (e) {
       debugPrint('Initialization error: $e');
     }
+  }
+
+  void _initDeepLinks() {
+    _appLinks = AppLinks();
+    
+    // Handle link when app is in cold state
+    _appLinks.getInitialLink().then((Uri? uri) {
+      if (uri != null) {
+        debugPrint("CookedApp: Initial AppLink received: $uri");
+        _handleDeepLink(uri.toString());
+      }
+    });
+
+    // Handle link when app is in background/foreground
+    _linkSubscription = _appLinks.uriLinkStream.listen((Uri? uri) {
+      if (uri != null) {
+        debugPrint("CookedApp: AppLink stream received: $uri");
+        _handleDeepLink(uri.toString());
+      }
+    }, onError: (err) {
+      debugPrint("CookedApp: AppLink stream error: $err");
+    });
+  }
+
+  void _handleDeepLink(String url) {
+    // Treat the deep link exactly like a shared text
+    SharingService.instance.sharedTextNotifier.value = url;
   }
 
   void _onSharedTextReceived() {
@@ -223,7 +257,7 @@ class _CookedAppState extends State<CookedApp> with WidgetsBindingObserver {
             debugPrint("CookedApp: Processing shared URL: $url");
             
             // Check if it's an internal recipe link
-            final recipeRegex = RegExp(r'(?:cooked\.nixacom\.com|cookedapp\.com)/recipes/([a-zA-Z0-9-]+)');
+            final recipeRegex = RegExp(r'(?:cooked\.nixacom\.com|cookedapp\.com)/(?:share/)?recipes/([a-zA-Z0-9-]+)');
             final match = recipeRegex.firstMatch(url);
             
             if (match != null) {
