@@ -14,6 +14,7 @@ import '../../widgets/add_to_cookbook_sheet.dart';
 import '../../widgets/skeleton_loader.dart';
 import '../../models/cookbook.dart';
 import '../../services/cookbook_service.dart';
+import '../../services/user_service.dart';
 
 enum DetailTab { steps, ingredients }
 
@@ -59,6 +60,10 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
       debugPrint('✅ [RecipeDetail] getRecipe returned: ${r.name} | steps=${r.steps.length}');
       if (mounted) {
         setState(() {
+          final currentUserId = UserService.instance.currentUserNotifier.value?['id'];
+          if (r.creator?.id != null && currentUserId != null && r.creator!.id != currentUserId) {
+            _isPreview = true;
+          }
           _initRecipeData(r);
         });
       }
@@ -87,6 +92,10 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
       _infoMessage = args['infoMessage'] as String?;
 
       if (r != null) {
+        final currentUserId = UserService.instance.currentUserNotifier.value?['id'];
+        if (r.creator?.id != null && currentUserId != null && r.creator!.id != currentUserId) {
+          _isPreview = true;
+        }
         _initRecipeData(r);
         // If the recipe passed from a list has no steps, re-fetch the full
         // detail from the API to get complete data (steps, equipment, tips).
@@ -172,15 +181,40 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
     final args =
         ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>? ??
         {};
-    final Recipe? r = args['recipe'] as Recipe?;
+    Recipe? r = _recipe ?? args['recipe'] as Recipe?;
     if (r == null) return;
 
     try {
+      if (r.id.isEmpty) {
+        showDialog(
+          context: context,
+          barrierColor: Colors.black26,
+          barrierDismissible: false,
+          builder: (context) => const Center(
+            child: CircularProgressIndicator(color: Color(0xFFC83A2D)),
+          ),
+        );
+        try {
+          final createdRecipe = await RecipeService.instance.createRecipe(r);
+          r = createdRecipe;
+          if (mounted) {
+            Navigator.pop(context);
+            setState(() {
+              _recipe = createdRecipe;
+              _isPreview = false;
+            });
+          }
+        } catch (e) {
+          if (mounted) Navigator.pop(context);
+          rethrow;
+        }
+      }
+
       final rawLink = await RecipeService.instance.getShareLink(r.id);
       final link = rawLink.replaceAll('cooked.nixacom.com', 'link.cookedapp.com').replaceAll('https://cookedapp.app', 'https://link.cookedapp.com');
 
       final name = r.name;
-      final creatorStr = r.creator != null
+      final creatorStr = r.creator != null && r.creator!.firstname.isNotEmpty
           ? "${r.creator!.displayName}'s "
           : "";
 
@@ -423,10 +457,99 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
             : Stack(
                 children: [
                   if (_isLoading && r == null)
-                    const Center(
-                      child: CircularProgressIndicator(
-                        color: Color(0xFFC83A2D),
-                      ),
+                    CustomScrollView(
+                      physics: const NeverScrollableScrollPhysics(),
+                      slivers: [
+                        SliverToBoxAdapter(
+                          child: SkeletonLoader(
+                            width: double.infinity,
+                            height: 350.h,
+                            borderRadius: 0,
+                          ),
+                        ),
+                        SliverPadding(
+                          padding: EdgeInsets.fromLTRB(20.w, 20.h, 20.w, 0),
+                          sliver: SliverToBoxAdapter(
+                            child: SkeletonLoader(
+                              width: 250.w,
+                              height: 28.h,
+                              borderRadius: 8,
+                            ),
+                          ),
+                        ),
+                        SliverPadding(
+                          padding: EdgeInsets.fromLTRB(20.w, 15.h, 20.w, 5.h),
+                          sliver: SliverToBoxAdapter(
+                            child: Row(
+                              children: [
+                                SkeletonLoader(width: 80.w, height: 32.h, borderRadius: 20),
+                                SizedBox(width: 8.w),
+                                SkeletonLoader(width: 100.w, height: 32.h, borderRadius: 20),
+                                SizedBox(width: 8.w),
+                                SkeletonLoader(width: 70.w, height: 32.h, borderRadius: 20),
+                              ],
+                            ),
+                          ),
+                        ),
+                        SliverToBoxAdapter(
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(20, 15, 20, 10),
+                            child: SkeletonLoader(
+                              width: double.infinity,
+                              height: 60.h,
+                              borderRadius: 16,
+                            ),
+                          ),
+                        ),
+                        SliverToBoxAdapter(
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 15.h),
+                            child: SkeletonLoader(
+                              width: double.infinity,
+                              height: 50.h,
+                              borderRadius: 30,
+                            ),
+                          ),
+                        ),
+                        SliverToBoxAdapter(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            child: SkeletonLoader(
+                              width: double.infinity,
+                              height: 50.h,
+                              borderRadius: 30,
+                            ),
+                          ),
+                        ),
+                        SliverPadding(
+                          padding: EdgeInsets.fromLTRB(20.w, 20.h, 20.w, 100.h),
+                          sliver: SliverList(
+                            delegate: SliverChildBuilderDelegate(
+                              (context, index) => Padding(
+                                padding: EdgeInsets.only(bottom: 16.h),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    SkeletonLoader(width: 24.w, height: 24.w, borderRadius: 12),
+                                    SizedBox(width: 12.w),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          SkeletonLoader(width: double.infinity, height: 16.h, borderRadius: 4),
+                                          SizedBox(height: 8.h),
+                                          SkeletonLoader(width: 200.w, height: 16.h, borderRadius: 4),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              childCount: 4,
+                            ),
+                          ),
+                        ),
+                      ],
                     )
                   else
                     CustomScrollView(
@@ -1347,65 +1470,70 @@ class _IngredientsList extends StatelessWidget {
       );
     }
     return Column(
-      children: List.generate(ingredients.length, (i) {
-        final ing = ingredients[i];
-        return Column(
-          children: [
-            Padding(
-              padding: EdgeInsets.symmetric(vertical: 10.h),
-              child: Row(
-                children: [
-                  if (ing.icon != null && ing.icon!.isNotEmpty) ...[
-                    Container(
-                      width: 30.w,
-                      height: 30.w,
-                      margin: EdgeInsets.only(right: 10.w),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFFF6D6),
-                        borderRadius: BorderRadius.circular(8.r),
+      children: [
+        ...List.generate(ingredients.length, (i) {
+          final ing = ingredients[i];
+          return Column(
+            children: [
+              Padding(
+                padding: EdgeInsets.symmetric(vertical: 10.h),
+                child: Row(
+                  children: [
+                    if (ing.icon != null && ing.icon!.isNotEmpty) ...[
+                      Container(
+                        width: 30.w,
+                        height: 30.w,
+                        margin: EdgeInsets.only(right: 10.w),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFFF6D6),
+                          borderRadius: BorderRadius.circular(8.r),
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(ing.icon!, style: TextStyle(fontSize: 18.sp)),
                       ),
-                      alignment: Alignment.center,
-                      child: Text(ing.icon!, style: TextStyle(fontSize: 18.sp)),
+                    ],
+                    Expanded(
+                      flex: 3,
+                      child: Text(
+                        ing.name.toTitleCase(),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontFamily: 'SF Pro',
+                          fontSize: 15.sp,
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFF111827),
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 10.w),
+                    Expanded(
+                      flex: 2,
+                      child: Text(
+                        _formatQuantity(ing),
+                        textAlign: TextAlign.right,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontFamily: 'SF Pro',
+                          fontSize: 14.sp,
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFF6B7280),
+                        ),
+                      ),
                     ),
                   ],
-                  Expanded(
-                    flex: 3,
-                    child: Text(
-                      ing.name.toTitleCase(),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontFamily: 'SF Pro',
-                        fontSize: 15.sp,
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFF111827),
-                      ),
-                    ),
-                  ),
-                  SizedBox(width: 10.w),
-                  Expanded(
-                    flex: 2,
-                    child: Text(
-                      _formatQuantity(ing),
-                      textAlign: TextAlign.right,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontFamily: 'SF Pro',
-                        fontSize: 14.sp,
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFF6B7280),
-                      ),
-                    ),
-                  ),
-                ],
+                ),
               ),
-            ),
-            if (i < ingredients.length - 1)
-              const Divider(height: 0, color: Color(0xFFF0F0F0)),
-          ],
-        );
-      }),
+              if (i < ingredients.length - 1)
+                const Divider(height: 0, color: Color(0xFFF0F0F0)),
+            ],
+          );
+        }),
+        SizedBox(height: 30.h),
+        const _SavingsBreakdownCard(),
+        SizedBox(height: 20.h),
+      ],
     );
   }
 }
@@ -1616,6 +1744,141 @@ class _ServingsButton extends StatelessWidget {
         height: 32.w,
         alignment: Alignment.center,
         child: Icon(icon, size: 18.sp, color: const Color(0xFF1A1A1A)),
+      ),
+    );
+  }
+}
+
+class _SavingsBreakdownCard extends StatelessWidget {
+  const _SavingsBreakdownCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(20.w),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFEF4DC),
+        borderRadius: BorderRadius.circular(16.r),
+        border: Border.all(color: const Color(0xFFF7D5A4), width: 1.5),
+      ),
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: Align(
+              alignment: Alignment.center,
+              child: Opacity(
+                opacity: 0.1,
+                child: Image.asset(
+                  'assets/images/logo2.png',
+                  height: 110.h,
+                  fit: BoxFit.contain,
+                ),
+              ),
+            ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "Tonight's Saving",
+                style: TextStyle(
+                  fontFamily: 'SF Pro',
+                  fontSize: 14.sp,
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFF7A532A),
+                ),
+              ),
+              SizedBox(height: 16.h),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.restaurant, color: const Color(0xFF623F18), size: 20.sp),
+                      SizedBox(width: 10.w),
+                      Text(
+                        "Ordering nearby",
+                        style: TextStyle(
+                          fontFamily: 'SF Pro',
+                          fontSize: 16.sp,
+                          color: const Color(0xFF623F18),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                  Text(
+                    "~\$28",
+                    style: TextStyle(
+                      fontFamily: 'SF Pro',
+                      fontSize: 16.sp,
+                      color: const Color(0xFF623F18),
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 12.h),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.shopping_cart_outlined, color: const Color(0xFF623F18), size: 20.sp),
+                      SizedBox(width: 10.w),
+                      Text(
+                        "Making at home",
+                        style: TextStyle(
+                          fontFamily: 'SF Pro',
+                          fontSize: 16.sp,
+                          color: const Color(0xFF623F18),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                  Text(
+                    "~\$9",
+                    style: TextStyle(
+                      fontFamily: 'SF Pro',
+                      fontSize: 16.sp,
+                      color: const Color(0xFF623F18),
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 16.h),
+              const Divider(color: Color(0xFFEEDAB2), thickness: 1),
+              SizedBox(height: 16.h),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    "Estimated savings",
+                    style: TextStyle(
+                      fontFamily: 'Georgia',
+                      fontStyle: FontStyle.italic,
+                      fontSize: 20.sp,
+                      color: const Color(0xFF623F18),
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  Text(
+                    "~\$19",
+                    style: TextStyle(
+                      fontFamily: 'SF Pro',
+                      fontSize: 24.sp,
+                      color: const Color(0xFFC83A2D),
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

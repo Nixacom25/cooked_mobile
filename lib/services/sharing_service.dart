@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:receive_sharing_intent/receive_sharing_intent.dart';
@@ -48,7 +49,19 @@ class SharingService {
     });
   }
 
+  static const _clipboardChannel = MethodChannel('com.cooked.app/clipboard');
+
   Future<void> checkClipboard() async {
+    if (Platform.isIOS) {
+      try {
+        final hasWebUrl = await _clipboardChannel.invokeMethod<bool>('hasWebURL');
+        if (hasWebUrl != true) return;
+      } catch (e) {
+        debugPrint("Clipboard channel error: $e");
+        return;
+      }
+    }
+
     try {
       final data = await Clipboard.getData(Clipboard.kTextPlain);
       final text = data?.text;

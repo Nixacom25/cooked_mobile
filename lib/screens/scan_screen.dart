@@ -789,10 +789,10 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            // Cooked logo — same as used in loading overlay
+            // Cooked logo — resized for normal header size
             Image.asset(
               'assets/images/logo2.png',
-              width: 120.w,
+              width: 40.w,
               fit: BoxFit.contain,
             ),
             // Close button — same style as Type/Saved header

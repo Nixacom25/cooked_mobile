@@ -8,6 +8,32 @@ import UIKit
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
     GeneratedPluginRegistrant.register(with: self)
+    
+    let controller : FlutterViewController = window?.rootViewController as! FlutterViewController
+    let clipboardChannel = FlutterMethodChannel(name: "com.cooked.app/clipboard",
+                                              binaryMessenger: controller.binaryMessenger)
+    clipboardChannel.setMethodCallHandler({
+      (call: FlutterMethodCall, result: @escaping FlutterResult) -> Void in
+      if call.method == "hasWebURL" {
+        if #available(iOS 14.0, *) {
+          UIPasteboard.general.detectPatterns(for: [.webURL]) { resultPattern in
+            DispatchQueue.main.async {
+              switch resultPattern {
+              case .success(let detected):
+                result(detected.contains(.webURL))
+              case .failure(_):
+                result(false)
+              }
+            }
+          }
+        } else {
+          result(UIPasteboard.general.hasURLs)
+        }
+      } else {
+        result(FlutterMethodNotImplemented)
+      }
+    })
+
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 

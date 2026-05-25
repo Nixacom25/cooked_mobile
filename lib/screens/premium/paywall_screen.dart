@@ -42,7 +42,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
     _initIap();
     _loadConfigAndProducts();
     // Refresh user data in background to ensure latest premium status
-    UserService.instance.getCurrentUser().catchError((_) => {});
+    UserService.instance.getCurrentUser().catchError((_) => <String, dynamic>{});
   }
 
   void _initIap() {

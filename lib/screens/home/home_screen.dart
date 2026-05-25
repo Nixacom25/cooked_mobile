@@ -78,6 +78,7 @@ class _HomeScreenState extends State<HomeScreen>
       _HomeTab(
         onRefresh: () => setState(() {}),
         onScanTap: () => _switchTab(2),
+        onImportTap: () => _switchTab(4),
         firstCookbookKey: _firstCookbookKey,
         cookbooksRowKey: _cookbooksRowKey,
       ),
@@ -588,11 +589,13 @@ class _NavItemState extends State<_NavItem>
 class _HomeTab extends StatefulWidget {
   final VoidCallback? onRefresh;
   final VoidCallback? onScanTap;
+  final VoidCallback? onImportTap;
   final GlobalKey? firstCookbookKey;
   final GlobalKey<_CookbooksRowState>? cookbooksRowKey;
   const _HomeTab({
     this.onRefresh,
     this.onScanTap,
+    this.onImportTap,
     this.firstCookbookKey,
     this.cookbooksRowKey,
   });
@@ -663,6 +666,8 @@ class _HomeTabState extends State<_HomeTab> {
                     padding: EdgeInsets.only(bottom: 40.h, top: 15.h),
                     children: [
                       if (searchQuery.isEmpty) ...[
+                        const _SavingsCard(),
+                        SizedBox(height: 20.h),
                         ValueListenableBuilder<List<Cookbook>?>(
                           valueListenable:
                               CookbookService.instance.myCookbooksNotifier,
@@ -721,6 +726,14 @@ class _HomeTabState extends State<_HomeTab> {
                             );
                           },
                         ),
+                      ],
+                      if (searchQuery.isEmpty) ...[
+                        SizedBox(height: 25.h),
+                        _QuickActionsRow(
+                          onScanTap: widget.onScanTap,
+                          onImportTap: widget.onImportTap,
+                        ),
+                        SizedBox(height: 5.h),
                       ],
                       ValueListenableBuilder<List<Recipe>?>(
                         valueListenable:
@@ -1731,7 +1744,7 @@ class _SuggestedRecipesSectionState extends State<_SuggestedRecipesSection> {
               .toList();
         }
 
-        if (displayList != null && displayList.isEmpty && widget.searchQuery.trim().isNotEmpty) {
+        if (displayList != null && displayList.isEmpty) {
           return const SizedBox.shrink();
         }
 
@@ -1768,9 +1781,9 @@ class _SuggestedRecipesSectionState extends State<_SuggestedRecipesSection> {
           mainAxisSpacing: 14.h,
           mainAxisExtent: 220.h,
         ),
-        itemCount: 4, // Always pad to 4 with skeletons if necessary
+        itemCount: items == null ? 4 : gridItems.length,
         itemBuilder: (ctx, index) {
-          if (index >= gridItems.length) {
+          if (items == null) {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -1847,8 +1860,8 @@ class _SuggestedRecipesSectionState extends State<_SuggestedRecipesSection> {
     Set<String> savedNames,
   ) {
     final List<Recipe> listItems = items ?? [];
-    // Always show at least 3 slots to display skeletons if not fully loaded
-    final itemCount = listItems.length < 3 ? 3 : listItems.length;
+    // Only show skeletons if items is null (loading state)
+    final itemCount = items == null ? 3 : listItems.length;
 
     return SizedBox(
       height: 215.h,
@@ -1858,7 +1871,7 @@ class _SuggestedRecipesSectionState extends State<_SuggestedRecipesSection> {
         itemCount: itemCount,
         separatorBuilder: (_, __) => SizedBox(width: 14.w),
         itemBuilder: (ctx, i) {
-          if (i >= listItems.length) {
+          if (items == null) {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -2005,5 +2018,196 @@ class _SuggestedRecipesSectionState extends State<_SuggestedRecipesSection> {
     RecipeService.instance
         .getHomeSuggestions(forceRefresh: true)
         .catchError((_) => <Recipe>[]);
+  }
+}
+
+class _SavingsCard extends StatelessWidget {
+  const _SavingsCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal: 22.w),
+      padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFEF8F0),
+        borderRadius: BorderRadius.circular(16.r),
+        border: Border.all(color: const Color(0xFFF3EBE0), width: 1),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "You've saved",
+                  style: TextStyle(
+                    fontFamily: 'SF Pro',
+                    fontSize: 14.sp,
+                    color: const Color(0xFF7D562D),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                SizedBox(height: 4.h),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.baseline,
+                  textBaseline: TextBaseline.alphabetic,
+                  children: [
+                    Text(
+                      "~\$214",
+                      style: TextStyle(
+                        fontFamily: 'SF Pro',
+                        fontSize: 28.sp,
+                        color: const Color(0xFF00C40A),
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    SizedBox(width: 6.w),
+                    Text(
+                      "this month",
+                      style: TextStyle(
+                        fontFamily: 'SF Pro',
+                        fontSize: 16.sp,
+                        color: const Color(0xFF1A1A1A),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 4.h),
+                Text(
+                  "Compared to ordering takeout.",
+                  style: TextStyle(
+                    fontFamily: 'SF Pro',
+                    fontSize: 14.sp,
+                    color: const Color(0xFF7D562D).withOpacity(0.7),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Image.asset(
+            'assets/images/logo2.png',
+            height: 47.h,
+            width: 47.w,
+            fit: BoxFit.contain,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _QuickActionsRow extends StatelessWidget {
+  final VoidCallback? onScanTap;
+  final VoidCallback? onImportTap;
+
+  const _QuickActionsRow({
+    this.onScanTap,
+    this.onImportTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 22.w),
+      child: Row(
+        children: [
+          Expanded(
+            child: _QuickActionCard(
+              title: "Scan Recipe",
+              subtitle: "Use your camera to scan a recipe",
+              icon: Icons.camera_alt_outlined,
+              onTap: () {
+                if (onScanTap != null) onScanTap!();
+              },
+            ),
+          ),
+          SizedBox(width: 14.w),
+          Expanded(
+            child: _QuickActionCard(
+              title: "Import Recipe",
+              subtitle: "Import from link, photo, or file",
+              icon: Icons.file_upload_outlined,
+              onTap: () {
+                if (onImportTap != null) onImportTap!();
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _QuickActionCard extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final VoidCallback onTap;
+
+  const _QuickActionCard({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: EdgeInsets.all(16.w),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16.r),
+          border: Border.all(color: const Color(0xFFF6C8CB), width: 1.5),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 40.w,
+              height: 40.w,
+              decoration: BoxDecoration(
+                color: const Color(0xFFFDF0D5),
+                borderRadius: BorderRadius.circular(12.r),
+              ),
+              child: Center(
+                child: Icon(
+                  icon,
+                  color: const Color(0xFFC83A2D),
+                  size: 22.sp,
+                ),
+              ),
+            ),
+            SizedBox(height: 10.h),
+            Text(
+              title,
+              style: TextStyle(
+                fontFamily: 'SF Pro',
+                fontSize: 14.sp,
+                color: const Color(0xFF1A1A1A),
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            SizedBox(height: 4.h),
+            Text(
+              subtitle,
+              style: TextStyle(
+                fontFamily: 'SF Pro',
+                fontSize: 10.sp,
+                color: const Color(0xFF7A8499),
+                fontWeight: FontWeight.w400,
+                height: 1.3,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
