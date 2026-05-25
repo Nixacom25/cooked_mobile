@@ -16,11 +16,11 @@ import UIKit
       (call: FlutterMethodCall, result: @escaping FlutterResult) -> Void in
       if call.method == "hasWebURL" {
         if #available(iOS 14.0, *) {
-          UIPasteboard.general.detectPatterns(for: [.webURL]) { resultPattern in
+          UIPasteboard.general.detectPatterns(for: [.probableWebURL]) { resultPattern in
             DispatchQueue.main.async {
               switch resultPattern {
               case .success(let detected):
-                result(detected.contains(.webURL))
+                result(detected.contains(.probableWebURL))
               case .failure(_):
                 result(false)
               }

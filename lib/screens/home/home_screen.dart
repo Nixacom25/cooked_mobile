@@ -729,6 +729,8 @@ class _HomeTabState extends State<_HomeTab> {
                       ],
                       if (searchQuery.isEmpty) ...[
                         SizedBox(height: 25.h),
+                        _SectionRow(title: 'Add New Recipe'),
+                        SizedBox(height: 12.h),
                         _QuickActionsRow(
                           onScanTap: widget.onScanTap,
                           onImportTap: widget.onImportTap,
