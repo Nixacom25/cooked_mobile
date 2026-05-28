@@ -27,6 +27,8 @@ class Recipe {
   final bool isPinned;
   final bool isValidated;
   final bool isPlaceholder;
+  final double? totalPrice;
+  final int? ingredientsCount;
 
   Recipe({
     required this.id,
@@ -55,6 +57,8 @@ class Recipe {
     this.isPinned = false,
     this.isValidated = false,
     this.isPlaceholder = false,
+    this.totalPrice,
+    this.ingredientsCount,
   });
 
   factory Recipe.fromJson(Map<String, dynamic> json) {
@@ -100,6 +104,9 @@ class Recipe {
         isInCookbook: json['isInCookbook'] ?? json['inCookbook'] ?? false,
         isPinned: json['isPinned'] ?? json['is_pinned'] ?? json['pinned'] ?? false,
         isValidated: json['isValidated'] ?? json['isValidated'] ?? false,
+        isPlaceholder: json['isPlaceholder'] ?? false,
+        totalPrice: (json['totalPrice'] as num?)?.toDouble(),
+        ingredientsCount: (json['ingredientsCount'] as num?)?.toInt(),
       );
     } catch (e) {
       return Recipe(
@@ -146,6 +153,9 @@ class Recipe {
       'isInCookbook': isInCookbook,
       'isPinned': isPinned,
       'isValidated': isValidated,
+      'isPlaceholder': isPlaceholder,
+      'totalPrice': totalPrice,
+      'ingredientsCount': ingredientsCount,
     };
   }
 
@@ -255,6 +265,7 @@ class RecipeIngredient {
   final String unit;
   final String quantity;
   final String? icon;
+  final double? price;
 
   RecipeIngredient({
     required this.id,
@@ -263,6 +274,7 @@ class RecipeIngredient {
     required this.unit,
     required this.quantity,
     this.icon,
+    this.price,
   });
 
   factory RecipeIngredient.fromJson(Map<String, dynamic> json) {
@@ -294,6 +306,7 @@ class RecipeIngredient {
       unit: unit,
       quantity: quantity.isEmpty ? '1' : quantity,
       icon: json['icon'], 
+      price: (json['price'] as num?)?.toDouble(),
     );
   }
 
@@ -305,6 +318,7 @@ class RecipeIngredient {
       'unit': unit,
       'quantity': quantity,
       'icon': icon,
+      'price': price,
     };
   }
 

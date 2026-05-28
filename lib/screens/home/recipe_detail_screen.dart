@@ -788,6 +788,8 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                                       ingredients: r?.ingredients ?? [],
                                       currentServings: _currentServings,
                                       originalServings: _originalServings,
+                                      showSavings: r?.origin?.toUpperCase() == 'SCAN' && r?.totalPrice != null && r!.totalPrice! > 0,
+                                      totalPrice: r?.totalPrice,
                                     )
                                   else
                                     _StepsList(
@@ -1436,10 +1438,14 @@ class _IngredientsList extends StatelessWidget {
   final List<RecipeIngredient> ingredients;
   final int currentServings;
   final int originalServings;
+  final bool showSavings;
+  final double? totalPrice;
   const _IngredientsList({
     required this.ingredients,
     required this.currentServings,
     required this.originalServings,
+    this.showSavings = false,
+    this.totalPrice,
   });
 
   String _formatQuantity(RecipeIngredient ing) {
@@ -1531,8 +1537,10 @@ class _IngredientsList extends StatelessWidget {
           );
         }),
         SizedBox(height: 30.h),
-        const _SavingsBreakdownCard(),
-        SizedBox(height: 20.h),
+        if (showSavings && totalPrice != null) ...[
+          _SavingsBreakdownCard(totalPrice: totalPrice!),
+          SizedBox(height: 20.h),
+        ],
       ],
     );
   }
@@ -1750,10 +1758,15 @@ class _ServingsButton extends StatelessWidget {
 }
 
 class _SavingsBreakdownCard extends StatelessWidget {
-  const _SavingsBreakdownCard();
+  final double totalPrice;
+  const _SavingsBreakdownCard({required this.totalPrice});
 
   @override
   Widget build(BuildContext context) {
+    double makeAtHome = totalPrice;
+    double orderNearby = makeAtHome * 2.5 + 5.0;
+    double savings = orderNearby - makeAtHome;
+    
     return Container(
       width: double.infinity,
       padding: EdgeInsets.all(20.w),
@@ -1809,7 +1822,7 @@ class _SavingsBreakdownCard extends StatelessWidget {
                     ],
                   ),
                   Text(
-                    "~\$28",
+                    "~\$${orderNearby.toStringAsFixed(2)}",
                     style: TextStyle(
                       fontFamily: 'SF Pro',
                       fontSize: 16.sp,
@@ -1839,7 +1852,7 @@ class _SavingsBreakdownCard extends StatelessWidget {
                     ],
                   ),
                   Text(
-                    "~\$9",
+                    "~\$${makeAtHome.toStringAsFixed(2)}",
                     style: TextStyle(
                       fontFamily: 'SF Pro',
                       fontSize: 16.sp,
@@ -1866,7 +1879,7 @@ class _SavingsBreakdownCard extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    "~\$19",
+                    "~\$${savings.toStringAsFixed(2)}",
                     style: TextStyle(
                       fontFamily: 'SF Pro',
                       fontSize: 24.sp,

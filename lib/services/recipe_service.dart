@@ -170,6 +170,21 @@ class RecipeService {
     if (!forceRefresh && myRecipesNotifier.value != null) {
       return myRecipesNotifier.value!;
     }
+
+    // Fast disk cache load
+    if (myRecipesNotifier.value == null) {
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        final cachedStr = prefs.getString('my_recipes_cache_v2');
+        if (cachedStr != null) {
+          final List<dynamic> data = jsonDecode(cachedStr);
+          myRecipesNotifier.value = data.map((json) => Recipe.fromJson(json)).toList();
+        }
+      } catch (e) {
+        debugPrint('Failed to load recipe cache: $e');
+      }
+    }
+
     final url = Uri.parse('${ApiConfig.baseUrl}/recipes');
     final response = await http.get(url, headers: await _getHeaders());
 
@@ -177,8 +192,15 @@ class RecipeService {
       final List<dynamic> data = jsonDecode(response.body);
       final recipes = data.map((json) => Recipe.fromJson(json)).toList();
       myRecipesNotifier.value = recipes;
+      
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        prefs.setString('my_recipes_cache_v2', response.body);
+      } catch (_) {}
+
       return recipes;
     } else {
+      if (myRecipesNotifier.value != null) return myRecipesNotifier.value!;
       throw Exception('Unable to load your recipes.');
     }
   }

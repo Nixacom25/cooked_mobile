@@ -20,6 +20,7 @@ import '../../models/cookbook.dart';
 import '../../widgets/recipe_card.dart';
 import '../../widgets/cookbook_cover.dart';
 import '../../core/widgets/ios_toast.dart';
+import '../../core/api_config.dart';
 import '../../core/utils/tutorial_helper.dart';
 import '../../widgets/add_to_cookbook_sheet.dart';
 import '../../widgets/cookbook_form_modal.dart';
@@ -646,355 +647,473 @@ class _HomeTabState extends State<_HomeTab> {
   Widget build(BuildContext context) {
     return Container(
       color: Colors.white,
-      child: SafeArea(
-        bottom: false,
-        child: Column(
-          children: [
-            const _Header(),
-            SizedBox(height: 14.h),
-            _SearchBar(
-              onChanged: (val) {
-                _searchQueryNotifier.value = val;
-              },
-            ),
-            SizedBox(height: 10.h),
-            Expanded(
-              child: ValueListenableBuilder<String>(
-                valueListenable: _searchQueryNotifier,
-                builder: (context, searchQuery, _) {
-                  return ListView(
-                    padding: EdgeInsets.only(bottom: 40.h, top: 15.h),
-                    children: [
-                      if (searchQuery.isEmpty) ...[
-                        const _SavingsCard(),
-                        SizedBox(height: 20.h),
-                        ValueListenableBuilder<List<Cookbook>?>(
-                          valueListenable:
-                              CookbookService.instance.myCookbooksNotifier,
-                          builder: (context, cookbooks, _) {
-                            final countBadge =
-                                (cookbooks != null && cookbooks.isNotEmpty)
-                                ? ' (${cookbooks.length})'
-                                : '';
-                            return _SectionRow(
-                              title: 'Your Cookbooks$countBadge',
-                              onViewAll:
-                                  (cookbooks != null && cookbooks.length > 5)
-                                  ? () {
-                                      _goViewAll(
-                                        context,
-                                        ViewAllType.cookbooks,
-                                        'Cookbooks',
-                                      );
-                                    }
-                                  : null,
-                            );
-                          },
-                        ),
-                        SizedBox(height: 12.h),
-                        _CookbooksRow(
-                          key: widget.cookbooksRowKey,
-                          onRefresh: widget.onRefresh,
-                          firstCookbookKey: widget.firstCookbookKey,
-                        ),
-                      ],
-                      if (searchQuery.isEmpty) ...[
-                        ValueListenableBuilder<List<Recipe>>(
-                          valueListenable:
-                              HistoryService.instance.recentlyViewedNotifier,
-                          builder: (context, recent, _) {
-                            if (recent.isEmpty) return const SizedBox.shrink();
-                            return Column(
-                              children: [
-                                SizedBox(height: 30.h),
-                                _SectionRow(
-                                  title: 'Recently Viewed',
-                                  onViewAll: recent.length > 5
-                                      ? () => _goViewAll(
-                                          context,
-                                          ViewAllType.recentlyViewed,
-                                          'Recently Viewed',
-                                        )
-                                      : null,
-                                ),
-                                SizedBox(height: 12.h),
-                                _RecentlyViewedRow(
-                                  key: ValueKey(recent.first.id),
-                                  recipes: recent,
-                                ),
-                              ],
-                            );
-                          },
-                        ),
-                      ],
-                      if (searchQuery.isEmpty) ...[
-                        SizedBox(height: 25.h),
-                        _SectionRow(title: 'Add New Recipe'),
-                        SizedBox(height: 12.h),
-                        _QuickActionsRow(
-                          onScanTap: widget.onScanTap,
-                          onImportTap: widget.onImportTap,
-                        ),
-                        SizedBox(height: 5.h),
-                      ],
-                      ValueListenableBuilder<List<Recipe>?>(
+      child: ValueListenableBuilder<String>(
+        valueListenable: _searchQueryNotifier,
+        builder: (context, searchQuery, _) {
+          return CustomScrollView(
+            slivers: [
+              SliverPersistentHeader(
+                pinned: true,
+                delegate: _HomeHeaderDelegate(
+                  topPadding: MediaQuery.of(context).padding.top,
+                  onSearchChanged: (val) {
+                    _searchQueryNotifier.value = val;
+                  },
+                ),
+              ),
+              SliverPadding(
+                padding: EdgeInsets.only(bottom: 40.h, top: 0.h),
+                sliver: SliverList(
+                  delegate: SliverChildListDelegate([
+                    if (searchQuery.isEmpty) ...[
+                      const _SavingsCard(),
+                      ValueListenableBuilder<List<Cookbook>?>(
                         valueListenable:
-                            RecipeService.instance.myRecipesNotifier,
-                        builder: (context, recipes, _) {
-                          if (recipes == null) {
-                            return Column(
-                              children: [
-                                SizedBox(height: 30.h),
-                                _SectionRow(title: 'Saved Recipes'),
-                                SizedBox(height: 20.h),
-                                Padding(
-                                  padding: EdgeInsets.symmetric(
-                                    horizontal: 18.w,
-                                  ),
-                                  child: GridView.builder(
-                                    shrinkWrap: true,
-                                    physics:
-                                        const NeverScrollableScrollPhysics(),
-                                    itemCount: 4,
-                                    gridDelegate:
-                                        SliverGridDelegateWithFixedCrossAxisCount(
-                                          crossAxisCount: 2,
-                                          mainAxisSpacing: 14.h,
-                                          crossAxisSpacing: 14.w,
-                                          childAspectRatio: 0.72,
-                                        ),
-                                    itemBuilder: (_, __) => Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        SkeletonLoader(
-                                          width: double.infinity,
-                                          height: 145.h,
-                                          borderRadius: 20,
-                                        ),
-                                        SizedBox(height: 10.h),
-                                        SkeletonLoader(
-                                          width: 140.w,
-                                          height: 16.h,
-                                        ),
-                                        SizedBox(height: 6.h),
-                                        SkeletonLoader(
-                                          width: 80.w,
-                                          height: 12.h,
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            );
-                          }
-
-                          final savedRecipes = recipes
-                              .where((r) => !r.isInCookbook && !r.isSuggested)
-                              .toList();
-                          final hasSaved = savedRecipes.isNotEmpty;
-
+                            CookbookService.instance.myCookbooksNotifier,
+                        builder: (context, cookbooks, _) {
+                          final countBadge =
+                              (cookbooks != null && cookbooks.isNotEmpty)
+                              ? ' (${cookbooks.length})'
+                              : '';
+                          return _SectionRow(
+                            title: 'Your Cookbooks$countBadge',
+                            onViewAll:
+                                (cookbooks != null && cookbooks.length > 5)
+                                ? () {
+                                    _goViewAll(
+                                      context,
+                                      ViewAllType.cookbooks,
+                                      'Cookbooks',
+                                    );
+                                  }
+                                : null,
+                          );
+                        },
+                      ),
+                      SizedBox(height: 12.h),
+                      _CookbooksRow(
+                        key: widget.cookbooksRowKey,
+                        onRefresh: widget.onRefresh,
+                        firstCookbookKey: widget.firstCookbookKey,
+                      ),
+                    ],
+                    if (searchQuery.isEmpty) ...[
+                      ValueListenableBuilder<List<Recipe>>(
+                        valueListenable:
+                            HistoryService.instance.recentlyViewedNotifier,
+                        builder: (context, recent, _) {
+                          if (recent.isEmpty) return const SizedBox.shrink();
                           return Column(
                             children: [
-                              if (hasSaved) ...[
-                                SizedBox(height: 30.h),
-                                _SectionRow(
-                                  title: 'Saved Recipes',
-                                  onViewAll: savedRecipes.length > 6
-                                      ? () {
-                                          _goViewAll(
-                                            context,
-                                            ViewAllType.savedRecipes,
-                                            'Saved Recipes',
-                                          );
-                                        }
-                                      : null,
-                                ),
-                                SizedBox(height: 20.h),
-                                _SavedRecipesGrid(
-                                  searchQuery: searchQuery,
-                                  recipes: savedRecipes,
-                                ),
-                              ],
-
-                              _SuggestedRecipesSection(
-                                searchQuery: searchQuery,
-                                isCompact: hasSaved,
+                              SizedBox(height: 30.h),
+                              _SectionRow(
+                                title: 'Recently Viewed',
+                                onViewAll: recent.length > 5
+                                    ? () => _goViewAll(
+                                        context,
+                                        ViewAllType.recentlyViewed,
+                                        'Recently Viewed',
+                                      )
+                                    : null,
+                              ),
+                              SizedBox(height: 12.h),
+                              _RecentlyViewedRow(
+                                key: ValueKey(recent.first.id),
+                                recipes: recent,
                               ),
                             ],
                           );
                         },
                       ),
-                      SizedBox(height: 100.h),
                     ],
-                  );
-                },
+                    if (searchQuery.isEmpty) ...[
+                      SizedBox(height: 25.h),
+                      _SectionRow(title: 'Add New Recipe'),
+                      SizedBox(height: 12.h),
+                      _QuickActionsRow(
+                        onScanTap: widget.onScanTap,
+                        onImportTap: widget.onImportTap,
+                      ),
+                      SizedBox(height: 5.h),
+                    ],
+                    ValueListenableBuilder<List<Recipe>?>(
+                      valueListenable: RecipeService.instance.myRecipesNotifier,
+                      builder: (context, recipes, _) {
+                        if (recipes == null) {
+                          return Column(
+                            children: [
+                              SizedBox(height: 30.h),
+                              _SectionRow(title: 'Saved Recipes'),
+                              SizedBox(height: 20.h),
+                              Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 18.w),
+                                child: GridView.builder(
+                                  padding: EdgeInsets.zero,
+                                  shrinkWrap: true,
+                                  physics: const NeverScrollableScrollPhysics(),
+                                  itemCount: 4,
+                                  gridDelegate:
+                                      SliverGridDelegateWithFixedCrossAxisCount(
+                                        crossAxisCount: 2,
+                                        mainAxisSpacing: 14.h,
+                                        crossAxisSpacing: 14.w,
+                                        childAspectRatio: 0.72,
+                                      ),
+                                  itemBuilder: (_, __) => Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      SkeletonLoader(
+                                        width: double.infinity,
+                                        height: 145.h,
+                                        borderRadius: 20,
+                                      ),
+                                      SizedBox(height: 10.h),
+                                      SkeletonLoader(
+                                        width: 140.w,
+                                        height: 16.h,
+                                      ),
+                                      SizedBox(height: 6.h),
+                                      SkeletonLoader(width: 80.w, height: 12.h),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          );
+                        }
+
+                        final savedRecipes = recipes
+                            .where((r) => !r.isInCookbook && !r.isSuggested)
+                            .toList();
+                        final hasSaved = savedRecipes.isNotEmpty;
+
+                        return Column(
+                          children: [
+                            if (hasSaved) ...[
+                              SizedBox(height: 30.h),
+                              _SectionRow(
+                                title: 'Saved Recipes',
+                                onViewAll: savedRecipes.length > 6
+                                    ? () {
+                                        _goViewAll(
+                                          context,
+                                          ViewAllType.savedRecipes,
+                                          'Saved Recipes',
+                                        );
+                                      }
+                                    : null,
+                              ),
+                              SizedBox(height: 12.h),
+                              _SavedRecipesGrid(
+                                searchQuery: searchQuery,
+                                recipes: savedRecipes,
+                              ),
+                            ],
+
+                            _SuggestedRecipesSection(
+                              searchQuery: searchQuery,
+                              isCompact: hasSaved,
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                    SizedBox(height: 100.h),
+                  ]),
+                ),
               ),
-            ),
-          ],
-        ),
+            ],
+          );
+        },
       ),
     );
   }
 }
 
 // ── Header ─────────────────────────────────────────────────────────────────────
-class _Header extends StatefulWidget {
-  const _Header();
+class _HomeHeaderDelegate extends SliverPersistentHeaderDelegate {
+  final ValueChanged<String>? onSearchChanged;
+  final double topPadding;
+
+  _HomeHeaderDelegate({this.onSearchChanged, required this.topPadding});
 
   @override
-  State<_Header> createState() => _HeaderState();
-}
-
-class _HeaderState extends State<_Header> {
+  double get maxExtent => 240.h + topPadding;
   @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.fromLTRB(18.w, 14.h, 18.w, 0),
-      child: ValueListenableBuilder<Map<String, dynamic>?>(
-        valueListenable: UserService.instance.currentUserNotifier,
-        builder: (context, userMap, _) {
-          return Row(
-            children: [
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Image.asset(
-                  'assets/images/logo1.png',
-                  height: 25.h,
-                  fit: BoxFit.contain,
-                  errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+  double get minExtent => 80.h + topPadding;
+
+  @override
+  bool shouldRebuild(covariant _HomeHeaderDelegate oldDelegate) {
+    return topPadding != oldDelegate.topPadding;
+  }
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    final double maxShrinkOffset = maxExtent - minExtent;
+    final double progress = (shrinkOffset / maxShrinkOffset).clamp(0.0, 1.0);
+
+    return Container(
+      color: Colors.white,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Positioned(
+            top: -(shrinkOffset).clamp(0.0, 200.h),
+            left: 0,
+            right: 0,
+            height: 200.h + topPadding,
+            child: Opacity(
+              opacity: (1 - progress).clamp(0.0, 1.0),
+              child: ClipRRect(
+                borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(20.r),
+                  bottomRight: Radius.circular(20.r),
                 ),
-              ),
-              const Spacer(),
-              SizedBox(width: 4.w),
-              PopupMenuButton<String>(
-                icon: Icon(
-                  Icons.more_vert_rounded,
-                  color: const Color(0xFF1A1A1A),
-                  size: 24.sp,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16.r),
-                ),
-                color: Colors.white,
-                elevation: 8,
-                onSelected: (value) async {
-                  if (value == 'settings') {
-                    Navigator.pushNamed(context, AppRoutes.profile);
-                  } else if (value == 'logout') {
-                    final confirm = await showDialog<bool>(
-                      context: context,
-                      builder: (context) => AlertDialog(
-                        backgroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20.r),
-                        ),
-                        title: Text(
-                          'Log out',
-                          style: TextStyle(
-                            fontFamily: 'SF Pro',
-                            fontWeight: FontWeight.w800,
-                            color: const Color(0xFF1A1A1A),
-                            fontSize: 18.sp,
+                child: Stack(
+                  children: [
+                    Positioned.fill(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.vertical(
+                            bottom: Radius.circular(20.r),
+                          ),
+                          image: const DecorationImage(
+                            image: AssetImage('assets/images/home.png'),
+                            fit: BoxFit.cover,
                           ),
                         ),
-                        content: Text(
-                          'Are you sure you want to log out of your account? You will need to enter your credentials to log back in.',
-                          style: TextStyle(
-                            fontFamily: 'SF Pro',
-                            fontSize: 15.sp,
-                            color: const Color(0xFF555555),
-                          ),
-                        ),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(context, false),
-                            child: const Text(
-                              'Cancel',
-                              style: TextStyle(
-                                fontFamily: 'SF Pro',
-                                fontWeight: FontWeight.w600,
-                                color: Color(0xFF888888),
-                              ),
-                            ),
-                          ),
-                          TextButton(
-                            onPressed: () => Navigator.pop(context, true),
-                            child: const Text(
-                              'Log out',
-                              style: TextStyle(
-                                fontFamily: 'SF Pro',
-                                fontWeight: FontWeight.w700,
-                                color: Color(0xFFC83A2D),
-                              ),
-                            ),
-                          ),
-                        ],
                       ),
-                    );
-
-                    if (confirm == true) {
-                      if (!context.mounted) return;
-                      await AuthService.instance.logout();
-                      if (!context.mounted) return;
-                      Navigator.pushNamedAndRemoveUntil(
-                        context,
-                        AppRoutes.welcome,
-                        (route) => false,
-                      );
-                    }
-                  }
-                },
-                itemBuilder: (context) => [
-                  PopupMenuItem(
-                    value: 'settings',
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.settings_outlined,
-                          size: 20.sp,
-                          color: const Color(0xFF1A1A1A),
-                        ),
-                        SizedBox(width: 12.w),
-                        Text(
-                          'Settings',
-                          style: TextStyle(
-                            fontFamily: 'SF Pro',
-                            fontWeight: FontWeight.w500,
-                            fontSize: 14.sp,
-                          ),
-                        ),
-                      ],
                     ),
-                  ),
-                  PopupMenuItem(
-                    value: 'logout',
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.logout_rounded,
-                          size: 20.sp,
-                          color: const Color(0xFFC83A2D),
+                    SafeArea(
+                      bottom: false,
+                      child: Padding(
+                        padding: EdgeInsets.fromLTRB(20.w, 15.h, 10.w, 0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            ValueListenableBuilder<Map<String, dynamic>?>(
+                              valueListenable:
+                                  UserService.instance.currentUserNotifier,
+                              builder: (context, user, _) {
+                                String firstName = user?['firstname'] ?? 'User';
+                                String? photo = user?['profilePictureUrl'];
+                                String? photoUrl;
+                                if (photo != null && photo.isNotEmpty) {
+                                  photoUrl = photo.startsWith('http')
+                                      ? photo
+                                      : '${ApiConfig.baseUrl}$photo';
+                                }
+                                return Row(
+                                  children: [
+                                    CircleAvatar(
+                                      radius: 20.r,
+                                      backgroundColor: Colors.white24,
+                                      backgroundImage: photoUrl != null
+                                          ? NetworkImage(photoUrl)
+                                          : null,
+                                      child: photoUrl == null
+                                          ? Icon(
+                                              Icons.person,
+                                              color: Colors.white,
+                                              size: 28.sp,
+                                            )
+                                          : null,
+                                    ),
+                                    SizedBox(width: 12.w),
+                                    Text(
+                                      'Hi, $firstName',
+                                      style: TextStyle(
+                                        fontFamily: 'SF Pro',
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: 20.sp,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    const Spacer(),
+                                    PopupMenuButton<String>(
+                                      icon: Icon(
+                                        Icons.more_vert_rounded,
+                                        color: Colors.white,
+                                        size: 25.sp,
+                                      ),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(
+                                          16.r,
+                                        ),
+                                      ),
+                                      color: Colors.white,
+                                      elevation: 8,
+                                      onSelected: (value) async {
+                                        if (value == 'settings') {
+                                          Navigator.pushNamed(
+                                            context,
+                                            AppRoutes.profile,
+                                          );
+                                        } else if (value == 'logout') {
+                                          final confirm = await showDialog<bool>(
+                                            context: context,
+                                            builder: (context) => AlertDialog(
+                                              backgroundColor: Colors.white,
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(20.r),
+                                              ),
+                                              title: Text(
+                                                'Log out',
+                                                style: TextStyle(
+                                                  fontFamily: 'SF Pro',
+                                                  fontWeight: FontWeight.w800,
+                                                  color: const Color(
+                                                    0xFF1A1A1A,
+                                                  ),
+                                                  fontSize: 18.sp,
+                                                ),
+                                              ),
+                                              content: Text(
+                                                'Are you sure you want to log out of your account? You will need to enter your credentials to log back in.',
+                                                style: TextStyle(
+                                                  fontFamily: 'SF Pro',
+                                                  fontSize: 15.sp,
+                                                  color: const Color(
+                                                    0xFF555555,
+                                                  ),
+                                                ),
+                                              ),
+                                              actions: [
+                                                TextButton(
+                                                  onPressed: () =>
+                                                      Navigator.pop(
+                                                        context,
+                                                        false,
+                                                      ),
+                                                  child: const Text(
+                                                    'Cancel',
+                                                    style: TextStyle(
+                                                      fontFamily: 'SF Pro',
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                      color: Color(0xFF888888),
+                                                    ),
+                                                  ),
+                                                ),
+                                                TextButton(
+                                                  onPressed: () =>
+                                                      Navigator.pop(
+                                                        context,
+                                                        true,
+                                                      ),
+                                                  child: const Text(
+                                                    'Log out',
+                                                    style: TextStyle(
+                                                      fontFamily: 'SF Pro',
+                                                      fontWeight:
+                                                          FontWeight.w700,
+                                                      color: Color(0xFFC83A2D),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          );
+                                          if (confirm == true) {
+                                            await AuthService.instance.logout();
+                                            if (context.mounted)
+                                              Navigator.pushNamedAndRemoveUntil(
+                                                context,
+                                                AppRoutes.welcome,
+                                                (_) => false,
+                                              );
+                                          }
+                                        }
+                                      },
+                                      itemBuilder: (context) => [
+                                        PopupMenuItem(
+                                          value: 'settings',
+                                          child: Row(
+                                            children: [
+                                              Icon(
+                                                Icons.settings_rounded,
+                                                color: const Color(0xFF1A1A1A),
+                                                size: 20.sp,
+                                              ),
+                                              SizedBox(width: 12.w),
+                                              Text(
+                                                'Settings',
+                                                style: TextStyle(
+                                                  fontFamily: 'SF Pro',
+                                                  fontSize: 15.sp,
+                                                  color: const Color(
+                                                    0xFF1A1A1A,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        PopupMenuItem(
+                                          value: 'logout',
+                                          child: Row(
+                                            children: [
+                                              Icon(
+                                                Icons.logout_rounded,
+                                                color: const Color(0xFFC83A2D),
+                                                size: 20.sp,
+                                              ),
+                                              SizedBox(width: 12.w),
+                                              Text(
+                                                'Logout',
+                                                style: TextStyle(
+                                                  fontFamily: 'SF Pro',
+                                                  fontSize: 15.sp,
+                                                  color: const Color(
+                                                    0xFFC83A2D,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                );
+                              },
+                            ),
+                            SizedBox(height: 20.h),
+                            Padding(
+                              padding: EdgeInsets.only(right: 30.w),
+                              child: Text(
+                                'What would you like to\ncook today?',
+                                style: TextStyle(
+                                  fontFamily: 'SF Pro',
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 25.sp,
+                                  color: const Color(0xFFFFF6D6),
+                                  height: 1.25,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                        SizedBox(width: 12.w),
-                        Text(
-                          'Logout',
-                          style: TextStyle(
-                            fontFamily: 'SF Pro',
-                            fontWeight: FontWeight.w600,
-                            color: const Color(0xFFC83A2D),
-                            fontSize: 14.sp,
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ],
-          );
-        },
+            ),
+          ),
+          Positioned(
+            bottom: 20,
+            left: 0,
+            right: 0,
+            child: _SearchBar(onChanged: onSearchChanged),
+          ),
+        ],
       ),
     );
   }
@@ -1569,6 +1688,7 @@ class _SavedRecipesGrid extends StatelessWidget {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 18.w),
       child: GridView.builder(
+        padding: EdgeInsets.zero,
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         itemCount: displayList.length,
@@ -1626,13 +1746,23 @@ class _SavedRecipesGrid extends StatelessWidget {
             onShareTap: () async {
               try {
                 final RenderBox? box = context.findRenderObject() as RenderBox?;
-                final Rect? sharePositionOrigin = box != null ? box.localToGlobal(Offset.zero) & box.size : null;
+                final Rect? sharePositionOrigin = box != null
+                    ? box.localToGlobal(Offset.zero) & box.size
+                    : null;
                 final rawLink = await RecipeService.instance.getShareLink(r.id);
-                final link = rawLink.replaceAll('cooked.nixacom.com', 'link.cookedapp.com').replaceAll('https://cookedapp.app', 'https://link.cookedapp.com');
+                final link = rawLink
+                    .replaceAll('cooked.nixacom.com', 'link.cookedapp.com')
+                    .replaceAll(
+                      'https://cookedapp.app',
+                      'https://link.cookedapp.com',
+                    );
                 final name = r.name;
-                final creatorStr = r.creator != null ? "${r.creator!.displayName}'s " : "";
-                final template = "Check out $creatorStr$name on Cooked 🙌\n$link";
-                
+                final creatorStr = r.creator != null
+                    ? "${r.creator!.displayName}'s "
+                    : "";
+                final template =
+                    "Check out $creatorStr$name on Cooked 🙌\n$link";
+
                 Share.share(template, sharePositionOrigin: sharePositionOrigin);
               } catch (e) {
                 if (ctx.mounted) {
@@ -1682,6 +1812,7 @@ class _SuggestedRecipesSection extends StatefulWidget {
 
 class _SuggestedRecipesSectionState extends State<_SuggestedRecipesSection> {
   Timer? _pollingTimer;
+  bool _isPolling = true;
 
   @override
   void initState() {
@@ -1701,17 +1832,19 @@ class _SuggestedRecipesSectionState extends State<_SuggestedRecipesSection> {
   void _startPolling() {
     _pollingTimer?.cancel();
     int attempts = 0;
-    _pollingTimer = Timer.periodic(const Duration(seconds: 30), (timer) async {
+    _pollingTimer = Timer.periodic(const Duration(seconds: 10), (timer) async {
       attempts++;
       final current = RecipeService.instance.homeSuggestionsNotifier.value;
-      if (current != null && current.length >= 4) {
+      if (current != null && current.isNotEmpty) {
         timer.cancel();
+        if (mounted) setState(() => _isPolling = false);
         return;
       }
 
-      if (attempts > 4) {
-        // Stop after 2 minutes (4 attempts of 30 seconds)
+      if (attempts > 12) {
+        // Stop after 2 minutes (12 attempts of 10 seconds)
         timer.cancel();
+        if (mounted) setState(() => _isPolling = false);
         return;
       }
 
@@ -1739,6 +1872,12 @@ class _SuggestedRecipesSectionState extends State<_SuggestedRecipesSection> {
         final savedNames = allSaved.map((r) => r.name.toLowerCase()).toSet();
 
         List<Recipe>? displayList = suggestions;
+
+        // If we have an empty list but we are still polling, treat it as loading (null) to show skeletons
+        if (displayList != null && displayList.isEmpty && _isPolling) {
+          displayList = null;
+        }
+
         if (displayList != null && widget.searchQuery.trim().isNotEmpty) {
           final query = widget.searchQuery.trim().toLowerCase();
           displayList = displayList
@@ -1775,6 +1914,7 @@ class _SuggestedRecipesSectionState extends State<_SuggestedRecipesSection> {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 18.w),
       child: GridView.builder(
+        padding: EdgeInsets.zero,
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -1832,13 +1972,23 @@ class _SuggestedRecipesSectionState extends State<_SuggestedRecipesSection> {
             onShareTap: () async {
               try {
                 final RenderBox? box = context.findRenderObject() as RenderBox?;
-                final Rect? sharePositionOrigin = box != null ? box.localToGlobal(Offset.zero) & box.size : null;
+                final Rect? sharePositionOrigin = box != null
+                    ? box.localToGlobal(Offset.zero) & box.size
+                    : null;
                 final rawLink = await RecipeService.instance.getShareLink(r.id);
-                final link = rawLink.replaceAll('cooked.nixacom.com', 'link.cookedapp.com').replaceAll('https://cookedapp.app', 'https://link.cookedapp.com');
+                final link = rawLink
+                    .replaceAll('cooked.nixacom.com', 'link.cookedapp.com')
+                    .replaceAll(
+                      'https://cookedapp.app',
+                      'https://link.cookedapp.com',
+                    );
                 final name = r.name;
-                final creatorStr = r.creator != null ? "${r.creator!.displayName}'s " : "";
-                final template = "Check out $creatorStr$name on Cooked 🙌\n$link";
-                
+                final creatorStr = r.creator != null
+                    ? "${r.creator!.displayName}'s "
+                    : "";
+                final template =
+                    "Check out $creatorStr$name on Cooked 🙌\n$link";
+
                 Share.share(template, sharePositionOrigin: sharePositionOrigin);
               } catch (e) {
                 if (ctx.mounted) {
@@ -1877,11 +2027,7 @@ class _SuggestedRecipesSectionState extends State<_SuggestedRecipesSection> {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                SkeletonLoader(
-                  width: 250.w,
-                  height: 150.h,
-                  borderRadius: 20,
-                ),
+                SkeletonLoader(width: 250.w, height: 150.h, borderRadius: 20),
                 SizedBox(height: 12.h),
                 SkeletonLoader(width: 180.w, height: 18.h),
                 SizedBox(height: 6.h),
@@ -1921,16 +2067,32 @@ class _SuggestedRecipesSectionState extends State<_SuggestedRecipesSection> {
               },
               onShareTap: () async {
                 try {
-                  final RenderBox? box = context.findRenderObject() as RenderBox?;
-                  final Rect? sharePositionOrigin = box != null ? box.localToGlobal(Offset.zero) & box.size : null;
-                  
-                  final rawLink = await RecipeService.instance.getShareLink(r.id);
-                  final link = rawLink.replaceAll('cooked.nixacom.com', 'link.cookedapp.com').replaceAll('https://cookedapp.app', 'https://link.cookedapp.com');
+                  final RenderBox? box =
+                      context.findRenderObject() as RenderBox?;
+                  final Rect? sharePositionOrigin = box != null
+                      ? box.localToGlobal(Offset.zero) & box.size
+                      : null;
+
+                  final rawLink = await RecipeService.instance.getShareLink(
+                    r.id,
+                  );
+                  final link = rawLink
+                      .replaceAll('cooked.nixacom.com', 'link.cookedapp.com')
+                      .replaceAll(
+                        'https://cookedapp.app',
+                        'https://link.cookedapp.com',
+                      );
                   final name = r.name;
-                  final creatorStr = r.creator != null ? "${r.creator!.displayName}'s " : "";
-                  final template = "Check out $creatorStr$name on Cooked 🙌\n$link";
-                  
-                  Share.share(template, sharePositionOrigin: sharePositionOrigin);
+                  final creatorStr = r.creator != null
+                      ? "${r.creator!.displayName}'s "
+                      : "";
+                  final template =
+                      "Check out $creatorStr$name on Cooked 🙌\n$link";
+
+                  Share.share(
+                    template,
+                    sharePositionOrigin: sharePositionOrigin,
+                  );
                 } catch (e) {
                   if (ctx.mounted) {
                     IosToast.show(
@@ -1962,14 +2124,22 @@ class _SuggestedRecipesSectionState extends State<_SuggestedRecipesSection> {
     if (r.id.isEmpty) {
       RecipeService.instance.createRecipe(r).catchError((e) {
         if (mounted) {
-          IosToast.show(context, message: ErrorHelper.getFriendlyMessage(e), type: ToastType.error);
+          IosToast.show(
+            context,
+            message: ErrorHelper.getFriendlyMessage(e),
+            type: ToastType.error,
+          );
         }
         return r;
       });
     } else {
       RecipeService.instance.validateRecipe(r.id).catchError((e) {
         if (mounted) {
-          IosToast.show(context, message: ErrorHelper.getFriendlyMessage(e), type: ToastType.error);
+          IosToast.show(
+            context,
+            message: ErrorHelper.getFriendlyMessage(e),
+            type: ToastType.error,
+          );
         }
         return r;
       });
@@ -2023,81 +2193,148 @@ class _SuggestedRecipesSectionState extends State<_SuggestedRecipesSection> {
   }
 }
 
-class _SavingsCard extends StatelessWidget {
+class _SavingsCard extends StatefulWidget {
   const _SavingsCard();
 
+  static bool isDismissed = false;
+
+  @override
+  State<_SavingsCard> createState() => _SavingsCardState();
+}
+
+class _SavingsCardState extends State<_SavingsCard> {
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: EdgeInsets.symmetric(horizontal: 22.w),
-      padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFEF8F0),
-        borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: const Color(0xFFF3EBE0), width: 1),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "You've saved",
-                  style: TextStyle(
-                    fontFamily: 'SF Pro',
-                    fontSize: 14.sp,
-                    color: const Color(0xFF7D562D),
-                    fontWeight: FontWeight.w500,
+    if (_SavingsCard.isDismissed) return const SizedBox.shrink();
+
+    return ValueListenableBuilder<List<Recipe>?>(
+      valueListenable: RecipeService.instance.myRecipesNotifier,
+      builder: (context, recipes, _) {
+        final myRecipes = recipes ?? [];
+        double totalSaved = 0.0;
+        for (var r in myRecipes) {
+          if (r.origin?.toUpperCase() == 'SCAN' &&
+              r.totalPrice != null &&
+              r.totalPrice! > 0) {
+            double makeAtHome = r.totalPrice!;
+            double orderNearby = makeAtHome * 2.5 + 5.0;
+            totalSaved += (orderNearby - makeAtHome);
+          }
+        }
+
+        if (totalSaved <= 0) return const SizedBox.shrink();
+
+        return Container(
+          margin: EdgeInsets.only(left: 22.w, right: 22.w, bottom: 20.h),
+          decoration: BoxDecoration(
+            color: const Color(0xFFFEF8F0),
+            borderRadius: BorderRadius.circular(16.r),
+            border: Border.all(color: const Color(0xFFF3EBE0), width: 1),
+          ),
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              GestureDetector(
+                onTap: () {
+                  Navigator.pushNamed(context, AppRoutes.savingsDetails);
+                },
+                behavior: HitTestBehavior.opaque,
+                child: Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 20.w,
+                    vertical: 16.h,
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "You've saved",
+                              style: TextStyle(
+                                fontFamily: 'SF Pro',
+                                fontSize: 14.sp,
+                                color: const Color(0xFF7D562D),
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            SizedBox(height: 4.h),
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.baseline,
+                              textBaseline: TextBaseline.alphabetic,
+                              children: [
+                                Text(
+                                  "~\$${totalSaved.toStringAsFixed(0)}",
+                                  style: TextStyle(
+                                    fontFamily: 'SF Pro',
+                                    fontSize: 28.sp,
+                                    color: const Color(0xFF00C40A),
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
+                                SizedBox(width: 6.w),
+                                Text(
+                                  "this month",
+                                  style: TextStyle(
+                                    fontFamily: 'SF Pro',
+                                    fontSize: 16.sp,
+                                    color: const Color(0xFF1A1A1A),
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: 4.h),
+                            Text(
+                              "Compared to ordering takeout.",
+                              style: TextStyle(
+                                fontFamily: 'SF Pro',
+                                fontSize: 14.sp,
+                                color: const Color(0xFF7D562D).withOpacity(0.7),
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Image.asset(
+                        'assets/images/logo2.png',
+                        height: 47.h,
+                        width: 47.w,
+                        fit: BoxFit.contain,
+                      ),
+                    ],
                   ),
                 ),
-                SizedBox(height: 4.h),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.baseline,
-                  textBaseline: TextBaseline.alphabetic,
-                  children: [
-                    Text(
-                      "~\$214",
-                      style: TextStyle(
-                        fontFamily: 'SF Pro',
-                        fontSize: 28.sp,
-                        color: const Color(0xFF00C40A),
-                        fontWeight: FontWeight.w800,
-                      ),
+              ),
+              Positioned(
+                top: -10.h,
+                right: -4.w,
+                child: GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _SavingsCard.isDismissed = true;
+                    });
+                  },
+                  child: Container(
+                    padding: EdgeInsets.all(6.r),
+                    decoration: BoxDecoration(
+                      color: Color(0xFFC83A2D),
+                      shape: BoxShape.circle,
                     ),
-                    SizedBox(width: 6.w),
-                    Text(
-                      "this month",
-                      style: TextStyle(
-                        fontFamily: 'SF Pro',
-                        fontSize: 16.sp,
-                        color: const Color(0xFF1A1A1A),
-                        fontWeight: FontWeight.w500,
-                      ),
+                    child: Icon(
+                      Icons.close_rounded,
+                      size: 20.sp,
+                      color: const Color(0xFFFFFFFF),
                     ),
-                  ],
-                ),
-                SizedBox(height: 4.h),
-                Text(
-                  "Compared to ordering takeout.",
-                  style: TextStyle(
-                    fontFamily: 'SF Pro',
-                    fontSize: 14.sp,
-                    color: const Color(0xFF7D562D).withOpacity(0.7),
-                    fontWeight: FontWeight.w500,
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-          Image.asset(
-            'assets/images/logo2.png',
-            height: 47.h,
-            width: 47.w,
-            fit: BoxFit.contain,
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
@@ -2106,10 +2343,7 @@ class _QuickActionsRow extends StatelessWidget {
   final VoidCallback? onScanTap;
   final VoidCallback? onImportTap;
 
-  const _QuickActionsRow({
-    this.onScanTap,
-    this.onImportTap,
-  });
+  const _QuickActionsRow({this.onScanTap, this.onImportTap});
 
   @override
   Widget build(BuildContext context) {
@@ -2179,11 +2413,7 @@ class _QuickActionCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12.r),
               ),
               child: Center(
-                child: Icon(
-                  icon,
-                  color: const Color(0xFFC83A2D),
-                  size: 22.sp,
-                ),
+                child: Icon(icon, color: const Color(0xFFC83A2D), size: 22.sp),
               ),
             ),
             SizedBox(height: 10.h),

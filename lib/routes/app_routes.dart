@@ -30,4 +30,5 @@ class AppRoutes {
   static const String scan = '/scan';
   static const String import = '/import';
   static const String webSearch = '/web-search';
+  static const String savingsDetails = '/savings-details';
 }

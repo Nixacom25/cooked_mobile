@@ -20,6 +20,7 @@ import 'screens/home/view_all_screen.dart';
 import 'screens/home/cookbook_detail_screen.dart';
 import 'screens/home/cookbook_form_screen.dart';
 import 'screens/home/recipe_detail_screen.dart';
+import 'screens/home/savings_details_screen.dart';
 import 'screens/profile/profile_screen.dart';
 import 'screens/profile/my_account_screen.dart';
 import 'screens/profile/change_password_screen.dart';
@@ -404,6 +405,9 @@ class _CookedAppState extends State<CookedApp> with WidgetsBindingObserver {
                   break;
                 case AppRoutes.scan:
                   builder = ScanScreen(isActiveNotifier: ValueNotifier<bool>(true));
+                  break;
+                case AppRoutes.savingsDetails:
+                  builder = const SavingsDetailsScreen();
                   break;
                 default:
                   builder = const SplashScreen();

@@ -555,7 +555,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (_state != ScanState.scan) _buildDynamicHeader(),
+                if (_state != ScanState.scan && _state != ScanState.results) _buildDynamicHeader(),
                 Expanded(child: _buildStateContent()),
                 // Spacer for buttons and pill nav
                 if (showPill)
@@ -783,43 +783,6 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
   }
 
   Widget _buildDynamicHeader() {
-    if (_state == ScanState.results) {
-      return Padding(
-        padding: EdgeInsets.fromLTRB(22.w, 10.h, 22.w, 20.h),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            // Cooked logo — resized for normal header size
-            Image.asset(
-              'assets/images/logo2.png',
-              width: 40.w,
-              fit: BoxFit.contain,
-            ),
-            // Close button — same style as Type/Saved header
-            GestureDetector(
-              onTap: () {
-                _updateState(ScanState.scan);
-                if (widget.onClose != null) widget.onClose!();
-              },
-              child: Container(
-                padding: EdgeInsets.all(6.r),
-                decoration: BoxDecoration(
-                  color: Colors.grey[100],
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.close_rounded,
-                  size: 20.sp,
-                  color: Colors.grey[700],
-                ),
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-
     String title = _state == ScanState.type ? "Type Ingredient" : "Saved";
     return Padding(
       padding: EdgeInsets.fromLTRB(22.w, 40.h, 22.w, 20.h),
@@ -1425,8 +1388,37 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
   Widget _buildResultsPage() {
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
     return ListView(
-      padding: EdgeInsets.fromLTRB(22.w, 0, 22.w, bottomInset + 120.h),
+      padding: EdgeInsets.fromLTRB(22.w, 10.h, 22.w, bottomInset + 120.h),
       children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Image.asset(
+              'assets/images/logo2.png',
+              width: 40.w,
+              fit: BoxFit.contain,
+            ),
+            GestureDetector(
+              onTap: () {
+                _updateState(ScanState.scan);
+                if (widget.onClose != null) widget.onClose!();
+              },
+              child: Container(
+                padding: EdgeInsets.all(6.r),
+                decoration: BoxDecoration(
+                  color: Colors.grey[100],
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.close_rounded,
+                  size: 20.sp,
+                  color: Colors.grey[700],
+                ),
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: 20.h),
         Text(
           "Recipes You Can Cook Now",
           style: TextStyle(
