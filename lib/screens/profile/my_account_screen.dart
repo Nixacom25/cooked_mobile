@@ -54,7 +54,6 @@ class _MyAccountScreenState extends State<MyAccountScreen> {
         _nameCtrl.text = '${user['firstname'] ?? ''} ${user['lastname'] ?? ''}'
             .trim();
         _emailCtrl.text = user['email'] ?? '';
-        _phoneCtrl.text = user['phone'] ?? '';
         _phoneNumberStr = user['phone'] ?? '';
         String? photo = user['profilePictureUrl'];
         if (photo != null && photo.isNotEmpty && !photo.startsWith('http')) {
@@ -250,7 +249,21 @@ class _MyAccountScreenState extends State<MyAccountScreen> {
             SizedBox(height: 30.h),
 
             // ── Form Fields ──────────────────────────────────────────────
-            Padding(
+            if (_isLoading)
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 20.h),
+                child: Column(
+                  children: [
+                    const SkeletonLoader(height: 50, width: double.infinity),
+                    SizedBox(height: 18.h),
+                    const SkeletonLoader(height: 50, width: double.infinity),
+                    SizedBox(height: 18.h),
+                    const SkeletonLoader(height: 50, width: double.infinity),
+                  ],
+                ),
+              )
+            else
+              Padding(
               padding: EdgeInsets.symmetric(horizontal: 20.w),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -283,6 +296,7 @@ class _MyAccountScreenState extends State<MyAccountScreen> {
                   _label('Phone Number'),
                   SizedBox(height: 8.h),
                   IntlPhoneField(
+                    initialValue: _phoneNumberStr.isNotEmpty ? _phoneNumberStr : null,
                     controller: _phoneCtrl,
                     decoration: InputDecoration(
                       hintText: 'XX XXX XX XX',
@@ -313,7 +327,7 @@ class _MyAccountScreenState extends State<MyAccountScreen> {
                         ),
                       ),
                     ),
-                    initialCountryCode: 'FR',
+                    initialCountryCode: 'US',
                     onChanged: (phone) {
                       _phoneNumberStr = phone.completeNumber;
                     },
@@ -333,26 +347,12 @@ class _MyAccountScreenState extends State<MyAccountScreen> {
                   ),
                   SizedBox(height: 36.h),
 
-                  if (_isLoading)
-                    Padding(
-                      padding: EdgeInsets.symmetric(vertical: 20.h),
-                      child: Column(
-                        children: [
-                          const SkeletonLoader(height: 50, width: double.infinity),
-                          SizedBox(height: 18.h),
-                          const SkeletonLoader(height: 50, width: double.infinity),
-                          SizedBox(height: 18.h),
-                          const SkeletonLoader(height: 50, width: double.infinity),
-                        ],
-                      ),
-                    )
-                  else
-                    RedButton(
-                      label: 'Save Changes',
-                      loadingLabel: 'Recording in progress',
-                      isLoading: _isSaving,
-                      onTap: _saveProfile,
-                    ),
+                  RedButton(
+                    label: 'Save Changes',
+                    loadingLabel: 'Recording in progress',
+                    isLoading: _isSaving,
+                    onTap: _saveProfile,
+                  ),
                   SizedBox(height: 20.h),
 
                   // Logout Button

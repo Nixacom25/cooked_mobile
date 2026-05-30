@@ -30,18 +30,18 @@ class SavingsDetailsScreen extends StatelessWidget {
         valueListenable: RecipeService.instance.myRecipesNotifier,
         builder: (context, recipes, _) {
           final myRecipes = recipes ?? [];
-          final scannedRecipes = myRecipes
-              .where((r) => r.origin?.toUpperCase() == 'SCAN' && r.totalPrice != null && r.totalPrice! > 0)
+          final validRecipes = myRecipes
+              .where((r) => r.totalPrice != null && r.totalPrice! > 0)
               .toList();
           
           double totalSaved = 0.0;
-          for (var r in scannedRecipes) {
+          for (var r in validRecipes) {
             double makeAtHome = r.totalPrice!;
             double orderNearby = makeAtHome * 2.5 + 5.0;
             totalSaved += (orderNearby - makeAtHome);
           }
 
-          if (scannedRecipes.isEmpty) {
+          if (validRecipes.isEmpty) {
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -87,7 +87,7 @@ class SavingsDetailsScreen extends StatelessWidget {
                       ),
                       SizedBox(height: 8.h),
                       Text(
-                        "From ${scannedRecipes.length} scanned recipes",
+                        "From ${validRecipes.length} saved recipes",
                         style: TextStyle(
                           fontSize: 13.sp,
                           color: const Color(0xFF94A3B8),
@@ -102,10 +102,10 @@ class SavingsDetailsScreen extends StatelessWidget {
                 sliver: SliverList(
                   delegate: SliverChildBuilderDelegate(
                     (context, index) {
-                      final recipe = scannedRecipes[index];
+                      final recipe = validRecipes[index];
                       return _buildSavingsItem(context, recipe);
                     },
-                    childCount: scannedRecipes.length,
+                    childCount: validRecipes.length,
                   ),
                 ),
               ),
@@ -192,7 +192,7 @@ class SavingsDetailsScreen extends StatelessWidget {
                   ),
                   SizedBox(height: 2.h),
                   Text(
-                    "Scanned at home",
+                    recipe.origin?.toUpperCase() == 'SCAN' ? "Scanned at home" : "Saved in your cookbook",
                     style: TextStyle(
                       fontSize: 12.sp,
                       color: const Color(0xFF94A3B8),

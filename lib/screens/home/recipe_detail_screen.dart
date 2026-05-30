@@ -788,7 +788,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                                       ingredients: r?.ingredients ?? [],
                                       currentServings: _currentServings,
                                       originalServings: _originalServings,
-                                      showSavings: r?.origin?.toUpperCase() == 'SCAN' && r?.totalPrice != null && r!.totalPrice! > 0,
+                                      showSavings: r?.totalPrice != null && r!.totalPrice! > 0,
                                       totalPrice: r?.totalPrice,
                                     )
                                   else

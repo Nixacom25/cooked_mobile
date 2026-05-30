@@ -2213,9 +2213,7 @@ class _SavingsCardState extends State<_SavingsCard> {
         final myRecipes = recipes ?? [];
         double totalSaved = 0.0;
         for (var r in myRecipes) {
-          if (r.origin?.toUpperCase() == 'SCAN' &&
-              r.totalPrice != null &&
-              r.totalPrice! > 0) {
+          if (r.totalPrice != null && r.totalPrice! > 0) {
             double makeAtHome = r.totalPrice!;
             double orderNearby = makeAtHome * 2.5 + 5.0;
             totalSaved += (orderNearby - makeAtHome);
@@ -2224,87 +2222,89 @@ class _SavingsCardState extends State<_SavingsCard> {
 
         if (totalSaved <= 0) return const SizedBox.shrink();
 
-        return Container(
-          margin: EdgeInsets.only(left: 22.w, right: 22.w, bottom: 20.h),
-          decoration: BoxDecoration(
-            color: const Color(0xFFFEF8F0),
-            borderRadius: BorderRadius.circular(16.r),
-            border: Border.all(color: const Color(0xFFF3EBE0), width: 1),
-          ),
+        return Padding(
+          padding: EdgeInsets.only(left: 22.w, right: 22.w, bottom: 20.h, top: 15.h),
           child: Stack(
             clipBehavior: Clip.none,
             children: [
-              GestureDetector(
-                onTap: () {
-                  Navigator.pushNamed(context, AppRoutes.savingsDetails);
-                },
-                behavior: HitTestBehavior.opaque,
-                child: Padding(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 20.w,
-                    vertical: 16.h,
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              "You've saved",
-                              style: TextStyle(
-                                fontFamily: 'SF Pro',
-                                fontSize: 14.sp,
-                                color: const Color(0xFF7D562D),
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            SizedBox(height: 4.h),
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.baseline,
-                              textBaseline: TextBaseline.alphabetic,
-                              children: [
-                                Text(
-                                  "~\$${totalSaved.toStringAsFixed(0)}",
-                                  style: TextStyle(
-                                    fontFamily: 'SF Pro',
-                                    fontSize: 28.sp,
-                                    color: const Color(0xFF00C40A),
-                                    fontWeight: FontWeight.w800,
-                                  ),
+              Container(
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFEF8F0),
+                  borderRadius: BorderRadius.circular(16.r),
+                  border: Border.all(color: const Color(0xFFF3EBE0), width: 1),
+                ),
+                child: GestureDetector(
+                  onTap: () {
+                    Navigator.pushNamed(context, AppRoutes.savingsDetails);
+                  },
+                  behavior: HitTestBehavior.opaque,
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 20.w,
+                      vertical: 16.h,
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                "You've saved",
+                                style: TextStyle(
+                                  fontFamily: 'SF Pro',
+                                  fontSize: 14.sp,
+                                  color: const Color(0xFF7D562D),
+                                  fontWeight: FontWeight.w500,
                                 ),
-                                SizedBox(width: 6.w),
-                                Text(
-                                  "this month",
-                                  style: TextStyle(
-                                    fontFamily: 'SF Pro',
-                                    fontSize: 16.sp,
-                                    color: const Color(0xFF1A1A1A),
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            SizedBox(height: 4.h),
-                            Text(
-                              "Compared to ordering takeout.",
-                              style: TextStyle(
-                                fontFamily: 'SF Pro',
-                                fontSize: 14.sp,
-                                color: const Color(0xFF7D562D).withOpacity(0.7),
-                                fontWeight: FontWeight.w500,
                               ),
-                            ),
-                          ],
+                              SizedBox(height: 4.h),
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.baseline,
+                                textBaseline: TextBaseline.alphabetic,
+                                children: [
+                                  Text(
+                                    "~\$${totalSaved.toStringAsFixed(0)}",
+                                    style: TextStyle(
+                                      fontFamily: 'SF Pro',
+                                      fontSize: 28.sp,
+                                      color: const Color(0xFF00C40A),
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                                  ),
+                                  SizedBox(width: 6.w),
+                                  Text(
+                                    "this month",
+                                    style: TextStyle(
+                                      fontFamily: 'SF Pro',
+                                      fontSize: 16.sp,
+                                      color: const Color(0xFF1A1A1A),
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              SizedBox(height: 4.h),
+                              Text(
+                                "Compared to ordering takeout.",
+                                style: TextStyle(
+                                  fontFamily: 'SF Pro',
+                                  fontSize: 14.sp,
+                                  color: const Color(0xFF7D562D).withOpacity(0.7),
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                      Image.asset(
-                        'assets/images/logo2.png',
-                        height: 47.h,
-                        width: 47.w,
-                        fit: BoxFit.contain,
-                      ),
-                    ],
+                        Image.asset(
+                          'assets/images/logo2.png',
+                          height: 47.h,
+                          width: 47.w,
+                          fit: BoxFit.contain,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),

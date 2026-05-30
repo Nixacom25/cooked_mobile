@@ -56,6 +56,7 @@ class AuthService {
     required String email,
     required String password,
     String? phone,
+    String? photo,
     String? provider,
     String? discoverySource,
     String? otherDiscoverySource,
@@ -98,6 +99,7 @@ class AuthService {
         'email': email,
         'password': password,
         'phone': phone,
+        'photo': photo,
         'provider': provider ?? 'LOCAL',
         'discoverySource': discoverySource,
         'otherDiscoverySource': otherDiscoverySource,
@@ -231,6 +233,7 @@ class AuthService {
           'idToken': idToken,
           'firstname': googleUser.displayName?.split(' ').first ?? '',
           'lastname': googleUser.displayName?.split(' ').last ?? '',
+          'photo': googleUser.photoUrl,
         };
       }
 

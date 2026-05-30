@@ -518,6 +518,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             password: socialRes['idToken'], // Send token as password for verification
             provider: provider,
             phone: _phone,
+            photo: socialRes['photo'],
             discoverySource: _source,
             otherDiscoverySource: _otherSource,
             dietaryPreferences: _selectedDiet.toList(),
