@@ -205,6 +205,11 @@ class _KitchenStepState extends State<KitchenStep> {
           if (isSelected) {
             _selected.remove(app['title']);
           } else {
+            if (_selected.length >= 6) {
+              // Optionally show a toast or feedback that limit is reached
+              HapticFeedback.heavyImpact();
+              return;
+            }
             _selected.add(app['title']!);
             if (app['title'] == 'Other') {
               // Expand field but don't focus automatically
@@ -214,10 +219,11 @@ class _KitchenStepState extends State<KitchenStep> {
         widget.onChanged(_selected.toList());
       },
       borderRadius: BorderRadius.circular(16.r),
-      child: Container(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
         padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: isSelected ? const Color(0xFFFFF4F2) : Colors.white,
           borderRadius: BorderRadius.circular(16.r),
           border: Border.all(
             color: isSelected

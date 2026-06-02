@@ -6,9 +6,23 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../routes/app_routes.dart';
 import '../../services/user_service.dart';
 import '../../core/widgets/ios_toast.dart';
-import 'widgets/language_region_step.dart';
+import 'widgets/savings_step.dart';
+import 'widgets/meals_step.dart';
+import 'widgets/frustrations_step.dart';
+import 'widgets/spend_eating_out_step.dart';
+import 'widgets/groceries_bad_step.dart';
+import 'widgets/fridge_scanner_step.dart';
+import 'widgets/takeout_spending_step.dart';
+import 'widgets/cook_more_save_money_step.dart';
+import 'widgets/cooking_system_step.dart';
+import 'widgets/age_step.dart';
+import 'widgets/goals_step.dart';
+import 'widgets/health_goals_step.dart';
+import 'widgets/frustrations_intro_step.dart';
 
 import 'widgets/source_step.dart';
+import 'widgets/grocery_shop_step.dart';
+import 'widgets/excited_features_step.dart';
 import 'widgets/dietary_preferences_step.dart';
 import 'widgets/allergies_step.dart';
 import 'widgets/dislikes_step.dart';
@@ -18,16 +32,20 @@ import 'widgets/time_preference_step.dart';
 import 'widgets/cooking_target_step.dart';
 import 'widgets/cuisines_step.dart';
 import 'widgets/kitchen_step.dart';
-import 'widgets/meal_planning_step.dart';
+import 'widgets/meal_repetition_step.dart';
 import 'widgets/notifications_step.dart';
-import 'widgets/goals_step.dart';
 import 'widgets/profile_loading_step.dart';
+import 'widgets/savings_pitch_step.dart';
 import 'widgets/profile_summary_step.dart';
+import 'widgets/social_proof_step.dart';
 import 'widgets/trial_step.dart';
 import 'widgets/profile_signup_step.dart';
 import 'widgets/account_step.dart';
 import 'widgets/otp_step.dart';
 import 'widgets/recipe_generation_loading_step.dart';
+import 'widgets/free_trial_guide_step.dart';
+import 'widgets/perfect_meal_step.dart';
+
 import '../../services/auth_service.dart';
 import '../../services/iap_service.dart';
 import '../../core/services/tutorial_service.dart';
@@ -67,10 +85,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   String _lastName = '';
   String _phone = '';
   String _measurementSystem = 'Imperial';
-  String? _source;
+  List<String> _recipeSources = [];
   String? _otherSource;
-  String _language = 'US English';
-  String _country = 'US United States';
+  String? _groceryFrequency;
+  List<String> _groceryStores = [];
+  String? _groceryBudget;
+  List<String> _excitedFeatures = [];
   Set<String> _selectedDiet = {};
   Set<String> _selectedAllergy = {};
   Set<String> _selectedDislikes = {};
@@ -82,11 +102,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   String _cookingTarget = '3–4 people';
   List<String> _favoriteCuisines = [];
   List<String> _kitchenAppliances = [];
-  String _mealPlanningStyle = 'Weekly meal plan';
   List<String> _notificationPreferences = [];
   List<String> _onboardingGoals = [];
-  final int _rating = 0;
-  final String _feedback = '';
 
   @override
   void initState() {
@@ -105,7 +122,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     IapService.instance.onPurchaseSuccess = () {
       if (mounted && _currentPage == 19) {
         _pageController.nextPage(
-          duration: const Duration(milliseconds: 400),
+          duration: const Duration(milliseconds: 300),
           curve: Curves.easeInOut,
         );
       }
@@ -194,13 +211,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       'lastName': _lastName,
       'phone': _phone,
       'measurementSystem': _measurementSystem,
-      'source': _source,
+      'source': _recipeSources.join(','),
+      'groceryFrequency': _groceryFrequency,
+      'groceryStores': _groceryStores,
+      'groceryBudget': _groceryBudget,
+      'excitedFeatures': _excitedFeatures,
       'otherSource': _otherSource,
-      'language': _language,
-      'country': _country,
-      'selectedDiet': _selectedDiet,
-      'selectedAllergy': _selectedAllergy,
-      'selectedDislikes': _selectedDislikes,
+      'selectedDiet': _selectedDiet.toList(),
+      'selectedAllergy': _selectedAllergy.toList(),
+      'selectedDislikes': _selectedDislikes.toList(),
       'flavorDna': _flavorDna,
       'spiceLevel': _spiceLevel,
       'cookingSkill': _cookingSkill,
@@ -208,7 +227,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       'cookingTarget': _cookingTarget,
       'favoriteCuisines': _favoriteCuisines,
       'kitchenAppliances': _kitchenAppliances,
-      'mealPlanningStyle': _mealPlanningStyle,
       'notificationPreferences': _notificationPreferences,
       'onboardingGoals': _onboardingGoals,
     };
@@ -230,10 +248,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       _lastName = progress['lastName'] ?? '';
       _phone = progress['phone'] ?? '';
       _measurementSystem = progress['measurementSystem'] ?? 'Imperial';
-      _source = progress['source'];
-      _otherSource = progress['otherSource'];
-      _language = progress['language'] ?? 'US English';
-      _country = progress['country'] ?? 'US United States';
+      _recipeSources = (progress['source'] as String?)?.split(',').where((e) => e.isNotEmpty).toList() ?? [];
+      _groceryFrequency = progress['groceryFrequency'] as String?;
+      _groceryStores = (progress['groceryStores'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [];
+      _groceryBudget = progress['groceryBudget'] as String?;
+      _excitedFeatures = (progress['excitedFeatures'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [];
+      _otherSource = progress['otherSource'] as String?;
       
       if (progress['selectedDiet'] != null) {
         _selectedDiet = (progress['selectedDiet'] as List).cast<String>().toSet();
@@ -251,7 +271,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       _spiceLevel = progress['spiceLevel'] ?? 'Medium heat';
       _cookingSkill = progress['cookingSkill'] ?? 'Home Cook';
       _cookingTime = progress['cookingTime'] ?? '15–30 minutes';
-      _cookingTarget = progress['cookingTarget'] ?? '3–4 people';
       
       if (progress['favoriteCuisines'] != null) {
         _favoriteCuisines = (progress['favoriteCuisines'] as List).cast<String>();
@@ -259,8 +278,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       if (progress['kitchenAppliances'] != null) {
         _kitchenAppliances = (progress['kitchenAppliances'] as List).cast<String>();
       }
-      
-      _mealPlanningStyle = progress['mealPlanningStyle'] ?? 'Weekly meal plan';
       
       if (progress['notificationPreferences'] != null) {
         _notificationPreferences = (progress['notificationPreferences'] as List).cast<String>();
@@ -271,19 +288,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     });
 
     if (_currentPage > 0) {
-      if (_pageController.hasClients) {
-        _pageController.jumpToPage(_currentPage);
-      } else {
-        _pageController = PageController(initialPage: _currentPage);
-      }
+      _pageController = PageController(initialPage: _currentPage);
     }
   }
 
   int _getEffectiveStep() {
-    if (_currentPage < 14) return _currentPage + 1;
-    if (_currentPage == 14) return 14; // Freeze during ProfileLoadingStep
-    if (_currentPage > 14 && _currentPage < 20) return _currentPage;
-    return 19;
+    if (_currentPage < 27) return _currentPage + 1;
+    if (_currentPage == 27) return 27; // Freeze during ProfileLoadingStep
+    if (_currentPage > 27 && _currentPage < 37) return _currentPage;
+    return 37;
   }
 
   int _calculateRecipeCount() {
@@ -304,24 +317,56 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       // LanguageRegionStep - No mandatory fields for now, or check country
     }
 
-    if (_currentPage < 16) {
+    if (_currentPage == 2) {
+      // FrustrationsStep
+    } else if (_currentPage == 3) {
+      // SpendEatingOutStep
+    } else if (_currentPage == 4) {
+      // GroceriesBadStep
+    } else if (_currentPage == 5) {
+      // FridgeScannerStep
+    } else if (_currentPage == 6) {
+      // TakeoutSpendingStep
+    } else if (_currentPage == 7) {
+      // CookMoreSaveMoneyStep
+    } else if (_currentPage == 8) {
+      // CookingSystemStep
+    } else if (_currentPage == 9) {
+      // AgeStep
+    } else if (_currentPage == 10) {
+      // GoalsStep
+    } else if (_currentPage == 11) {
+      // HealthGoalsStep
+    } else if (_currentPage == 12) {
+      // FrustrationsIntroStep
+    } else if (_currentPage == 13) {
+      // CookingSkillStep
+    } else if (_currentPage == 14) {
+      // CuisinesStep
+    } else if (_currentPage == 15) {
+      // MealRepetitionStep
+    }
+
+    if (_currentPage < 32) {
       _pageController.nextPage(
-        duration: const Duration(milliseconds: 400),
+        duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
       );
-    } else if (_currentPage == 16) {
+    } else if (_currentPage == 32) {
       // ProfileSignupStep handles its own navigation via callbacks
-    } else if (_currentPage == 17) {
+    } else if (_currentPage == 33) {
       // AccountStep -> Submit and potentially OTP
       _submitPreferences(isGuest: false);
-    } else if (_currentPage == 18) {
+    } else if (_currentPage == 34) {
       // OtpStep handles its own navigation via onComplete
-    } else if (_currentPage == 19) {
+    } else if (_currentPage == 35) {
+      // FreeTrialGuideStep handles its own navigation
+    } else if (_currentPage == 36) {
       // TrialStep Payment Trigger
       if (!_isIapAvailable || _products.isEmpty) {
         // Fallback or dev: skip billing if store is unavailable
         _pageController.nextPage(
-          duration: const Duration(milliseconds: 400),
+          duration: const Duration(milliseconds: 300),
           curve: Curves.easeInOut,
         );
         return;
@@ -355,19 +400,23 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   void _onBack() {
     HapticFeedback.selectionClick();
     FocusScope.of(context).unfocus();
-    if (_currentPage == 20) return; // Prevent going back during final loading
-    if (_currentPage == 15) {
-      // Skip ProfileLoadingStep (14) when going back from ProfileSummaryStep
-      _pageController.animateToPage(
-        13,
-        duration: const Duration(milliseconds: 400),
-        curve: Curves.easeInOut,
-      );
+    if (_currentPage == 36) return; // Prevent going back during final loading
+    
+    if (_currentPage == 32) {
+      // Skip RecipeGenerationLoadingStep (31) when going back from ProfileSignupStep
+      _pageController.jumpToPage(30);
       return;
     }
+
+    if (_currentPage == 28) {
+      // Skip ProfileLoadingStep (27) when going back from ProfileSummaryStep
+      _pageController.jumpToPage(26);
+      return;
+    }
+    
     if (_currentPage > 0) {
       _pageController.previousPage(
-        duration: const Duration(milliseconds: 400),
+        duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
       );
     } else {
@@ -404,11 +453,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     if (!isGuest &&
         !isSocial &&
         (_email.isEmpty || _password.isEmpty || !_acceptedTerms)) {
-      _pageController.animateToPage(
-        17, // AccountStep directly if email signup
-        duration: const Duration(milliseconds: 400),
-        curve: Curves.easeInOut,
-      );
+      _pageController.jumpToPage(30);
       IosToast.show(
         context,
         message: 'Please complete account info to save your profile',
@@ -443,7 +488,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             email: _email,
             password: _password,
             phone: _phone,
-            discoverySource: _source,
+            discoverySource: _recipeSources.join(','),
             otherDiscoverySource: _otherSource,
             dietaryPreferences: _selectedDiet.toList(),
             allergies: _selectedAllergy.toList(),
@@ -456,13 +501,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             cookingTarget: _cookingTarget,
             favoriteCuisines: _favoriteCuisines,
             kitchenAppliances: _kitchenAppliances,
-            mealPlanningStyle: _mealPlanningStyle,
+            groceryFrequency: _groceryFrequency,
+            groceryStores: _groceryStores,
+            groceryBudget: _groceryBudget,
+            excitedFeatures: _excitedFeatures,
             notificationPreferences: _notificationPreferences,
             onboardingGoals: _onboardingGoals,
-            onboardingRating: _rating,
-            onboardingFeedback: _feedback,
-            language: _language,
-            country: _country,
           );
         } else {
           // Atomic Social Registration Flow
@@ -519,7 +563,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             provider: provider,
             phone: _phone,
             photo: socialRes['photo'],
-            discoverySource: _source,
+            discoverySource: _recipeSources.join(','),
             otherDiscoverySource: _otherSource,
             dietaryPreferences: _selectedDiet.toList(),
             allergies: _selectedAllergy.toList(),
@@ -532,13 +576,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             cookingTarget: _cookingTarget,
             favoriteCuisines: _favoriteCuisines,
             kitchenAppliances: _kitchenAppliances,
-            mealPlanningStyle: _mealPlanningStyle,
+            groceryFrequency: _groceryFrequency,
+            groceryStores: _groceryStores,
+            groceryBudget: _groceryBudget,
+            excitedFeatures: _excitedFeatures,
             notificationPreferences: _notificationPreferences,
             onboardingGoals: _onboardingGoals,
-            onboardingRating: _rating,
-            onboardingFeedback: _feedback,
-            language: _language,
-            country: _country,
           );
         }
       } else {
@@ -556,17 +599,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
       // Navigation logic ONLY after success
       if (isGuest || isSocial) {
-        _pageController.animateToPage(
-          19, // Jump to TrialStep
-          duration: const Duration(milliseconds: 400),
-          curve: Curves.easeInOut,
-        );
+        _pageController.nextPage(duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
       } else {
-        _pageController.animateToPage(
-          18, // Jump to OtpStep
-          duration: const Duration(milliseconds: 400),
-          curve: Curves.easeInOut,
-        );
+        _pageController.jumpToPage(32);
       }
     } catch (e) {
       if (!mounted) return;
@@ -649,18 +684,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             child: Column(
               children: [
                 // Header: Progress & Skip
-                Padding(
-                  padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 0),
+                if (_currentPage != 31)
+                  Padding(
+                    padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 0),
                   child: Row(
                     children: [
                       Opacity(
-                        opacity: (_currentPage == 20)
-                            ? 0.0
-                            : 1.0,
+                        opacity: 1.0,
                         child: GestureDetector(
-                          onTap: (_currentPage == 20)
-                              ? null
-                              : _onBack,
+                          onTap: _onBack,
                           child: Container(
                             padding: EdgeInsets.all(8.r),
                             decoration: BoxDecoration(
@@ -687,7 +719,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                               ),
                               AnimatedFractionallySizedBox(
                                 duration: const Duration(milliseconds: 400),
-                                widthFactor: _getEffectiveStep() / 20,
+                                widthFactor: (_getEffectiveStep() / 37).clamp(0.0, 1.0),
                                 child: Container(
                                   height: 6.h,
                                   color: const Color(0xFFC83A2D),
@@ -709,36 +741,53 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     physics: const NeverScrollableScrollPhysics(),
                     onPageChanged: _onStepChanged,
                     children: [
-
-                      LanguageRegionStep(
-                        initialLanguage: _language,
-                        initialCountry: _country,
-                        initialMeasurementSystem: _measurementSystem,
-                        onChanged:
-                            ({
-                              required language,
-                              required country,
-                              required measurementSystem,
-                            }) {
-                              setState(() {
-                                _language = language;
-                                _country = country;
-                                _measurementSystem = measurementSystem;
-                              });
-                            },
-                      ),
-                      SourceStep(
-                        userName: _firstName.isEmpty ? 'Friend' : _firstName,
-                        initialSource: _source,
-                        initialOtherSource: _otherSource,
-                        onChanged: (src, other) {
+                      SavingsStep(onContinue: _onContinue),
+                      MealsStep(onContinue: _onContinue),
+                      FrustrationsStep(onContinue: _onContinue),
+                      SpendEatingOutStep(onContinue: _onContinue),
+                      GroceriesBadStep(onContinue: _onContinue),
+                      FridgeScannerStep(onContinue: _onContinue),
+                      TakeoutSpendingStep(onContinue: _onContinue),
+                      CookMoreSaveMoneyStep(onContinue: _onContinue),
+                      CookingSystemStep(onContinue: _onContinue),
+                      AgeStep(onContinue: _onContinue),
+                      GoalsStep(
+                        onContinue: _onContinue,
+                        initialSelected: _onboardingGoals,
+                        onChanged: (selections) {
                           setState(() {
-                            _source = src;
-                            _otherSource = other;
+                            // Filter out previous GoalsStep selections (we assume they match some known list or just append)
+                            // But since we merge both, let's just append/remove or replace. 
+                            // Actually, it's safer to just set it, but they might overwrite each other if not careful.
+                            // Let's add them to the set.
+                            final healthGoals = _onboardingGoals.where((g) => [
+                              'weight_loss', 'muscle_gain', 'high_protein', 'healthy_heart', 
+                              'quick_meals', 'budget_friendly', 'no_goal'
+                            ].contains(g)).toList();
+                            _onboardingGoals = [...selections, ...healthGoals];
                           });
                         },
                       ),
-                      // Removed duplicated steps
+                      HealthGoalsStep(
+                        onContinue: _onContinue,
+                        initialSelected: _onboardingGoals,
+                        onChanged: (selections) {
+                          setState(() {
+                            final mainGoals = _onboardingGoals.where((g) => [
+                              'save_money', 'eat_healthier', 'gain_muscle', 'lose_weight',
+                              'waste_less', 'learn_cook', 'discover_recipes', 'meal_prep'
+                            ].contains(g)).toList();
+                            _onboardingGoals = [...mainGoals, ...selections];
+                          });
+                        },
+                      ),
+                      FrustrationsIntroStep(onContinue: _onContinue),
+                      CookingSkillStep(onContinue: _onContinue),
+                      CuisinesStep(
+                        initialSelected: _favoriteCuisines,
+                        onChanged: (val) => setState(() => _favoriteCuisines = val),
+                      ),
+                      MealRepetitionStep(onContinue: _onContinue),
                       DietaryPreferencesStep(
                         initialSelected: _selectedDiet,
                         onChanged: (selected) =>
@@ -764,11 +813,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           });
                         },
                       ),
-                      CookingSkillStep(
-                        initialSelected: _cookingSkill,
-                        onChanged: (selected) =>
-                            setState(() => _cookingSkill = selected),
-                      ),
                       TimePreferenceStep(
                         initialSelected: _cookingTime,
                         onChanged: (selected) =>
@@ -779,30 +823,45 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         onChanged: (target) =>
                             setState(() => _cookingTarget = target),
                       ),
-                      CuisinesStep(
-                        initialSelected: _favoriteCuisines,
-                        onChanged: (selected) =>
-                            setState(() => _favoriteCuisines = selected),
+
+                      GroceryShopStep(
+                        initialFrequency: _groceryFrequency,
+                        initialStores: _groceryStores,
+                        initialBudget: _groceryBudget,
+                        onChanged: (frequency, stores, budget) {
+                          setState(() {
+                            _groceryFrequency = frequency;
+                            _groceryStores = stores;
+                            _groceryBudget = budget;
+                          });
+                        },
                       ),
                       KitchenStep(
                         initialSelected: _kitchenAppliances,
                         onChanged: (selected) =>
                             setState(() => _kitchenAppliances = selected),
                       ),
-                      MealPlanningStep(
-                        initialSelected: _mealPlanningStyle,
-                        onChanged: (selected) =>
-                            setState(() => _mealPlanningStyle = selected),
+                      SourceStep(
+                        initialSources: _recipeSources,
+                        initialOtherSource: _otherSource,
+                        onChanged: (sources, other) {
+                          setState(() {
+                            _recipeSources = sources;
+                            _otherSource = other;
+                          });
+                        },
                       ),
+                      ExcitedFeaturesStep(
+                        initialFeatures: _excitedFeatures,
+                        onChanged: (features) {
+                          setState(() => _excitedFeatures = features);
+                        },
+                      ),
+
                       NotificationsStep(
                         initialSelected: _notificationPreferences,
                         onChanged: (selected) =>
                             setState(() => _notificationPreferences = selected),
-                      ),
-                      GoalsStep(
-                        initialSelected: _onboardingGoals,
-                        onChanged: (selected) =>
-                            setState(() => _onboardingGoals = selected),
                       ),
                       ProfileLoadingStep(onComplete: _onContinue),
                       ProfileSummaryStep(
@@ -811,17 +870,25 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         recipeCount: _calculateRecipeCount(),
                         onContinue: _onContinue,
                       ),
+                      SocialProofStep(
+                        favoriteCuisines: _favoriteCuisines,
+                        onContinue: _onContinue,
+                      ),
+                      SavingsPitchStep(
+                        onContinue: _onContinue,
+                      ),
+                      RecipeGenerationLoadingStep(
+                        onContinue: () {
+                          _pageController.nextPage(duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
+                        },
+                      ),
                       ProfileSignupStep(
                         onSignupEmail: () {
                           TermsValidationModal.show(
                             context,
                             onAccepted: () {
                               setState(() => _acceptedTerms = true);
-                              _pageController.animateToPage(
-                                17, // AccountStep
-                                duration: const Duration(milliseconds: 400),
-                                curve: Curves.easeInOut,
-                              );
+                              _pageController.nextPage(duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
                             },
                           );
                         },
@@ -859,26 +926,31 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       OtpStep(
                         email: _email,
                         onComplete: () {
-                          _pageController.animateToPage(
-                            19, // TrialStep
-                            duration: const Duration(milliseconds: 400),
-                            curve: Curves.easeInOut,
-                          );
+                          _pageController.nextPage(duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
+                        },
+                      ),
+                      FreeTrialGuideStep(
+                        onContinue: () {
+                          _pageController.nextPage(duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
                         },
                       ),
                       TrialStep(
                         onPlanSelected: (plan) {
                           setState(() => _selectedPlanId = plan);
                         },
-                        onSkip: () {
-                          _pageController.nextPage(
-                            duration: const Duration(milliseconds: 400),
-                            curve: Curves.easeInOut,
-                          );
-                        },
+                        onSkip: () {},
                       ),
-                      RecipeGenerationLoadingStep(
-                        onComplete: () {
+                      PerfectMealStep(
+                        onStartCooking: () {
+                          if (mounted) {
+                            Navigator.pushReplacementNamed(
+                              context,
+                              AppRoutes.home,
+                              arguments: {'initialTab': 0},
+                            );
+                          }
+                        },
+                        onViewMore: () {
                           if (mounted) {
                             Navigator.pushReplacementNamed(
                               context,
@@ -888,15 +960,35 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           }
                         },
                       ),
-                    ],
+                    ].map((step) => Container(color: Colors.white, child: step)).toList(),
                   ),
                 ),
 
                 // Footer: Continue Button
-                if (_currentPage != 14 && // ProfileLoading
-                    _currentPage != 16 && // ProfileSignup
-                    _currentPage != 18 && // Otp
-                    _currentPage != 20)  // RecipeGenerationLoading
+                if (_currentPage != 0 && // SavingsStep
+                    _currentPage != 1 && // MealsStep
+                    _currentPage != 2 && // FrustrationsStep
+                    _currentPage != 3 && // SpendEatingOutStep
+                    _currentPage != 4 && // GroceriesBadStep
+                    _currentPage != 5 && // FridgeScannerStep
+                    _currentPage != 6 && // TakeoutSpendingStep
+                    _currentPage != 7 && // CookMoreSaveMoneyStep
+                    _currentPage != 8 && // CookingSystemStep
+                    _currentPage != 9 && // AgeStep
+                    _currentPage != 10 && // GoalsStep
+                    _currentPage != 11 && // HealthGoalsStep
+                    _currentPage != 12 && // FrustrationsIntroStep
+                    _currentPage != 13 && // CookingSkillStep
+                    _currentPage != 15 && // MealRepetitionStep
+                    _currentPage != 27 && // ProfileLoading
+                    _currentPage != 28 && // ProfileSummary (uses own button)
+                    _currentPage != 29 && // SocialProof (uses own button)
+                    _currentPage != 30 && // SavingsPitch
+                    _currentPage != 31 && // RecipeGenLoading
+                    _currentPage != 32 && // ProfileSignup
+                    _currentPage != 34 && // Otp
+                    _currentPage != 35 && // FreeTrialGuideStep
+                    _currentPage != 37)  // PerfectMealStep
                   SafeArea(
                     top: false,
                     child: Padding(
@@ -904,27 +996,57 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
+                          if (_currentPage == 18) ...[
+                            // Dislikes step Skip button
+                            GestureDetector(
+                              onTap: _onContinue,
+                              child: Container(
+                                width: double.infinity,
+                                padding: EdgeInsets.symmetric(vertical: 16.h),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFE5E7EB),
+                                  borderRadius: BorderRadius.circular(50.r),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    'Skip — I eat most things',
+                                    style: TextStyle(
+                                      fontFamily: 'SF Pro',
+                                      fontSize: 18.sp,
+                                      fontWeight: FontWeight.w700,
+                                      color: const Color(0xFF4B5563),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            SizedBox(height: 12.h),
+                          ],
                           RedButton(
-                            label: _currentPage == 19
-                                ? (_selectedPlanId == 'yearly'
-                                    ? 'Start My 3-Day Free Trial'
-                                    : 'Continue')
+                            label: _currentPage == 36
+                                ? 'Start My 3-Day Free Trial (\$0.00)'
                                 : 'Continue',
-                            loadingLabel: _currentPage == 19 ? 'Processing' : 'Continuing',
+                            loadingLabel: _currentPage == 36 ? 'Processing' : 'Continuing',
                             isLoading: _isLoading,
-                            isDisabled: (_currentPage == 1 && _source == null) ||
-                                (_currentPage == 17 && (_email.isEmpty || _password.isEmpty || !_acceptedTerms)),
-                            onTap: _onContinue,
+                            isDisabled: (_currentPage == 22 && (_groceryFrequency == null || _groceryStores.isEmpty || _groceryBudget == null)) ||
+                                (_currentPage == 24 && _recipeSources.isEmpty) ||
+                                (_currentPage == 25 && _excitedFeatures.isEmpty) ||
+                                (_currentPage == 33 && (_email.isEmpty || _password.isEmpty || !_acceptedTerms)),
+                            onTap: _currentPage == 36 ? () {
+                              if (mounted) {
+                                _pageController.nextPage(duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
+                              }
+                            } : _onContinue, // Trial step skips billing and goes home
                             height: 55.h,
                             fontSize: 18.sp,
                           ),
-                          if (_currentPage == 19) ...[
+                          if (_currentPage == 36) ...[
                             // TrialStep
                             SizedBox(height: 12.h),
                             Text(
                               _selectedPlanId == 'yearly'
                                   ? '3 days free, then \$29.99 per year (\$2.49/mo)'
-                                  : '\$9.99 per month',
+                                  : '3 days free, then \$9.99 per month',
                               style: TextStyle(
                                 fontSize: 14.sp,
                                 color: const Color(0xFF7B8190),

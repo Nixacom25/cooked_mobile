@@ -40,98 +40,101 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
 
           // Content
           SafeArea(
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                return SingleChildScrollView(
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                    child: IntrinsicHeight(
-                      child: Column(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                // Top Logo
+                Padding(
+                  padding: EdgeInsets.only(top: 25.h),
+                  child: Image.asset(
+                    'assets/images/logo.png',
+                    width: 80.w,
+                    fit: BoxFit.contain,
+                  ),
+                ),
+
+                // Middle Image (Fills available space)
+                Expanded(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(vertical: 0.h),
+                    child: Image.asset(
+                      'assets/images/welcome.png',
+                      width: double.infinity,
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+                ),
+
+                // Bottom Section
+                Padding(
+                  padding: EdgeInsets.fromLTRB(20.w, 0, 20.w, 10.h),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Cooking should\nfeel easier.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 32.sp,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textDark,
+                          fontFamily: 'SF Pro',
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                      SizedBox(height: 5.h),
+                      Text(
+                        'Cooked turns ingredients, saved videos,\nand recipe ideas into meals you’ll actually\nwant to make.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 16.sp,
+                          color: AppColors.textMuted,
+                          fontFamily: 'SF Pro',
+                          height: 1.1,
+                        ),
+                      ),
+                      SizedBox(height: 20.h),
+
+                      // Get Started
+                      RedButton(
+                        label: 'Get Started',
+                        onTap: () => Navigator.pushReplacementNamed(
+                          context,
+                          AppRoutes.preferences,
+                        ),
+                      ),
+                      SizedBox(height: 10.h),
+
+                      // Already have account?
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          // Logo + title in the upper-center area
-                          const Spacer(flex: 3),
-                          Image.asset(
-                            'assets/images/logo.png',
-                            width: 130.w,
-                            fit: BoxFit.contain,
+                          Text(
+                            'Have an account? ',
+                            style: TextStyle(
+                              color: AppColors.textMuted,
+                              fontFamily: 'SF Pro',
+                              fontSize: 14.sp,
+                            ),
                           ),
-                          const Spacer(flex: 3),
-
-                          // Bottom section (no card — transparent)
-                          Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 20.h),
-                            child: Column(
-                              children: [
-                                Text(
-                                  'Welcome to Cooked',
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    fontSize: 28.sp,
-                                    fontWeight: FontWeight.w800,
-                                    color: AppColors.textDark,
-                                    fontFamily: 'SF Pro',
-                                    letterSpacing: -0.3,
-                                  ),
-                                ),
-                                SizedBox(height: 2.h),
-                                Text(
-                                  'Scan ingredients. Save recipes.Plan effortlessly.',
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    fontSize: 15.sp,
-                                    color: AppColors.textMuted,
-                                    fontFamily: 'SF Pro',
-                                    height: 1.2,
-                                  ),
-                                ),
-                                SizedBox(height: 20.h),
-
-                                // Get Started → navigates to GetStarted (replaces Welcome so no back)
-                                RedButton(
-                                  label: 'Get Started',
-                                  onTap: () => Navigator.pushReplacementNamed(
-                                    context,
-                                    AppRoutes.preferences,
-                                  ),
-                                ),
-                                SizedBox(height: 10.h),
-
-                                // Already have account?
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Text(
-                                      'Have an account? ',
-                                      style: TextStyle(
-                                        color: AppColors.textMuted,
-                                        fontFamily: 'SF Pro',
-                                        fontSize: 14.sp,
-                                      ),
-                                    ),
-                                    GestureDetector(
-                                      onTap: () =>
-                                          Navigator.pushNamed(context, AppRoutes.login),
-                                      child: Text(
-                                        'Sign In',
-                                        style: TextStyle(
-                                          color: const Color(0xFFC83A2D),
-                                          fontWeight: FontWeight.w700,
-                                          fontFamily: 'SF Pro',
-                                          fontSize: 14.sp,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
+                          GestureDetector(
+                            onTap: () => Navigator.pushNamed(context, AppRoutes.login),
+                            child: Text(
+                              'Sign In',
+                              style: TextStyle(
+                                color: const Color(0xFFC83A2D),
+                                fontWeight: FontWeight.w700,
+                                fontFamily: 'SF Pro',
+                                fontSize: 14.sp,
+                              ),
                             ),
                           ),
                         ],
                       ),
-                    ),
+                    ],
                   ),
-                );
-              },
+                ),
+              ],
             ),
           ),
         ],

@@ -71,14 +71,12 @@ class AuthService {
     String? cookingTarget,
     List<String>? favoriteCuisines,
     List<String>? kitchenAppliances,
-    String? mealPlanningStyle,
+    String? groceryFrequency,
+    List<String>? groceryStores,
+    String? groceryBudget,
+    List<String>? excitedFeatures,
     List<String>? notificationPreferences,
     List<String>? onboardingGoals,
-    int? onboardingRating,
-    String? onboardingFeedback,
-    String? language,
-    String? country,
-    String? measurementSystem,
   }) async {
     final url = Uri.parse('${ApiConfig.baseUrl}/auth/register');
     
@@ -114,14 +112,12 @@ class AuthService {
         'cookingTarget': cookingTarget,
         'favoriteCuisines': favoriteCuisines,
         'kitchenAppliances': kitchenAppliances,
-        'mealPlanningStyle': mealPlanningStyle,
+        'groceryFrequency': groceryFrequency,
+        'groceryStores': groceryStores,
+        'groceryBudget': groceryBudget,
+        'excitedFeatures': excitedFeatures,
         'notificationPreferences': notificationPreferences,
         'onboardingGoals': onboardingGoals,
-        'onboardingRating': onboardingRating,
-        'onboardingFeedback': onboardingFeedback,
-        'language': language,
-        'country': country,
-        'measurementSystem': measurementSystem,
       }),
     );
 

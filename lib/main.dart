@@ -122,8 +122,17 @@ class _CookedAppState extends State<CookedApp> with WidgetsBindingObserver {
     _clipboardOverlay = null;
   }
 
-  void _handlePaste(String url) {
+  void _handlePaste(String dummyUrl) async {
     SharingService.instance.ignoreClipboard();
+    
+    // Read the clipboard now that the user explicitly initiated the action
+    final data = await Clipboard.getData(Clipboard.kTextPlain);
+    final text = data?.text;
+    if (text == null || text.isEmpty) return;
+    
+    final url = SharingService.instance.extractUrl(text);
+    if (url == null) return;
+    
     final isLoggedIn = AuthService.instance.isLoggedIn;
 
     if (!isLoggedIn) {

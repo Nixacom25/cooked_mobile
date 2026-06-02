@@ -19,10 +19,7 @@ class NotificationsStep extends StatefulWidget {
 class _NotificationsStepState extends State<NotificationsStep> {
   final List<Map<String, String>> _options = [
     {'title': 'Daily recipe inspiration', 'subtitle': 'Morning suggestion'},
-    {'title': 'Meal plan reminder', 'subtitle': 'Your weekly plan is ready'},
-    {'title': 'What\'s in your fridge?', 'subtitle': 'Dinner time prompt'},
-    {'title': 'New recipes for you', 'subtitle': 'Matching your taste'},
-    {'title': 'Special events & seasonal', 'subtitle': 'Holidays, Ramadan, etc.'},
+    {'title': 'Grocery Reminder', 'subtitle': 'Remember what to buy before ingredients run out.'},
   ];
 
   late Set<String> _selected;
@@ -41,13 +38,14 @@ class _NotificationsStepState extends State<NotificationsStep> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Stay inspired with notifications',
+            'Stay inspired with new recipes',
             style: TextStyle(
               fontSize: 24.sp,
               fontWeight: FontWeight.w900,
               color: const Color(0xFF0D1B3E),
               fontFamily: 'SF Pro',
               height: 1.2,
+              letterSpacing: -0.5,
             ),
           ),
           SizedBox(height: 8.h),
@@ -61,7 +59,7 @@ class _NotificationsStepState extends State<NotificationsStep> {
           ),
           SizedBox(height: 32.h),
           ..._options.map((opt) => _buildToggleItem(opt)),
-          SizedBox(height: 16.h),
+          SizedBox(height: 32.h),
           SizedBox(
             width: double.infinity,
             child: TextButton(
@@ -77,14 +75,13 @@ class _NotificationsStepState extends State<NotificationsStep> {
                 widget.onChanged(_selected.toList());
               },
               style: TextButton.styleFrom(
-                backgroundColor: const Color(0xFFD8D8D8),
-                padding: EdgeInsets.symmetric(vertical: 14.h),
+                backgroundColor: Colors.white,
+                padding: EdgeInsets.symmetric(vertical: 16.h),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(50.r),
                   side: BorderSide(
-                    color: _selected.isEmpty
-                        ? const Color(0xFFD8D8D8)
-                        : const Color(0xFFC83A2D),
+                    color: const Color(0xFFC83A2D),
+                    width: 1.5.w,
                   ),
                 ),
               ),
@@ -92,34 +89,33 @@ class _NotificationsStepState extends State<NotificationsStep> {
                 _selected.isEmpty ? 'Turn on all' : 'Turn off all',
                 style: TextStyle(
                   fontFamily: 'SF Pro',
-                  fontSize: 15.sp,
-                  fontWeight: FontWeight.w700,
-                  color: _selected.isEmpty
-                      ? const Color(0xFF1A1A1A)
-                      : const Color(0xFFC83A2D),
+                  fontSize: 16.sp,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFFC83A2D),
                 ),
               ),
             ),
           ),
           SizedBox(height: 24.h),
           Container(
-            padding: EdgeInsets.all(12.r),
+            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
             decoration: BoxDecoration(
-              color: const Color(0xFFF8F5EF),
-              borderRadius: BorderRadius.circular(16.r),
-              border: Border.all(color: const Color(0xFFEEEEEE)),
+              color: const Color(0xFFFFF7ED), // Light yellowish-beige
+              borderRadius: BorderRadius.circular(12.r),
+              border: Border.all(color: const Color(0xFFFDE68A), width: 0.5),
             ),
             child: Row(
               children: [
-                Text('💡', style: TextStyle(fontSize: 12.sp)),
-                SizedBox(width: 8.w),
+                Text('💡', style: TextStyle(fontSize: 14.sp)),
+                SizedBox(width: 12.w),
                 Expanded(
                   child: Text(
                     'You can adjust these anytime in your settings',
                     style: TextStyle(
                       fontFamily: 'SF Pro',
-                      fontSize: 12.sp,
-                      color: const Color(0xFF854D0E),
+                      fontSize: 13.sp,
+                      fontWeight: FontWeight.w500,
+                      color: const Color(0xFF1A1A1A),
                     ),
                   ),
                 ),
@@ -149,17 +145,23 @@ class _NotificationsStepState extends State<NotificationsStep> {
           widget.onChanged(_selected.toList());
         },
         borderRadius: BorderRadius.circular(16.r),
-        child: Container(
-          padding: EdgeInsets.symmetric(horizontal: 14.r, vertical: 10.h),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(16.r),
             border: Border.all(
-              color: isSelected
-                  ? const Color(0xFFC83A2D)
-                  : const Color(0xFFE5E7EB),
-              width: isSelected ? 1.5.w : 1.w,
+              color: const Color(0xFFE5E7EB),
+              width: 1.w,
             ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.02),
+                blurRadius: 8.r,
+                offset: Offset(0, 4.h),
+              ),
+            ],
           ),
           child: Row(
             children: [
@@ -171,34 +173,37 @@ class _NotificationsStepState extends State<NotificationsStep> {
                       opt['title']!,
                       style: TextStyle(
                         fontFamily: 'SF Pro',
-                        fontSize: 14.sp,
-                        fontWeight: FontWeight.w700,
+                        fontSize: 15.sp,
+                        fontWeight: FontWeight.w600,
                         color: const Color(0xFF1A1A1A),
                       ),
                     ),
-                    SizedBox(height: 2.h),
+                    SizedBox(height: 4.h),
                     Text(
                       opt['subtitle']!,
                       style: TextStyle(
                         fontFamily: 'SF Pro',
-                        fontSize: 12.sp,
+                        fontSize: 13.sp,
                         color: const Color(0xFF7B8190),
                       ),
                     ),
                   ],
                 ),
               ),
+              SizedBox(width: 12.w),
               Container(
-                width: 20.sp,
-                height: 20.sp,
+                width: 24.sp,
+                height: 24.sp,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: isSelected
-                      ? const Color(0xFFC83A2D)
-                      : const Color(0xFFE5E7EB),
+                  color: isSelected ? const Color(0xFFC83A2D) : Colors.transparent,
+                  border: Border.all(
+                    color: isSelected ? const Color(0xFFC83A2D) : const Color(0xFFD1D5DB),
+                    width: 1.5.w,
+                  ),
                 ),
                 child: isSelected
-                    ? Icon(Icons.check, size: 12.sp, color: Colors.white)
+                    ? Icon(Icons.check, size: 14.sp, color: Colors.white)
                     : null,
               ),
             ],

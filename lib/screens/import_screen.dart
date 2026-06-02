@@ -340,7 +340,7 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
   void _updateLocalStateForValidation(Recipe r) {
     if (!mounted) return;
     
-    final validatedRecipe = r.copyWith(origin: r.origin ?? 'IMPORT', isValidated: true);
+    final validatedRecipe = r.copyWith(origin: 'MANUAL', isValidated: true, isSuggested: false);
 
     // Update local animation state if needed
     setState(() => _validatedRecipeIds.add(r.id));

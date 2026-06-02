@@ -858,7 +858,7 @@ class _HomeHeaderDelegate extends SliverPersistentHeaderDelegate {
     final double progress = (shrinkOffset / maxShrinkOffset).clamp(0.0, 1.0);
 
     return Container(
-      color: Colors.white,
+      color: Colors.transparent,
       child: Stack(
         clipBehavior: Clip.none,
         children: [
@@ -2160,8 +2160,11 @@ class _SuggestedRecipesSectionState extends State<_SuggestedRecipesSection> {
   void _updateLocalStateForValidation(Recipe r) {
     if (!mounted) return;
 
-    final validatedRecipe = r.copyWith(origin: 'MANUAL', isValidated: true);
-
+    final validatedRecipe = r.copyWith(
+      origin: r.origin ?? 'IMPORT',
+      isValidated: true,
+      isSuggested: false,
+    );
     // 1. Update global suggestions: Mark as MANUAL and MOVE to the end
     final suggestions = RecipeService.instance.homeSuggestionsNotifier.value;
     if (suggestions != null) {
@@ -2202,7 +2205,52 @@ class _SavingsCard extends StatefulWidget {
   State<_SavingsCard> createState() => _SavingsCardState();
 }
 
-class _SavingsCardState extends State<_SavingsCard> {
+class _SavingsCardState extends State<_SavingsCard>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+  late Animation<Offset> _slideAnimation;
+  bool _hasTriggeredAnimation = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 700),
+      reverseDuration: const Duration(milliseconds: 400),
+    );
+    _scaleAnimation = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.elasticOut,
+      reverseCurve: Curves.easeInBack,
+    );
+    _slideAnimation =
+        Tween<Offset>(begin: const Offset(0, 0.5), end: Offset.zero).animate(
+          CurvedAnimation(
+            parent: _controller,
+            curve: Curves.elasticOut,
+            reverseCurve: Curves.easeInBack,
+          ),
+        );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _dismissCard() {
+    _controller.reverse().then((_) {
+      if (mounted) {
+        setState(() {
+          _SavingsCard.isDismissed = true;
+        });
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_SavingsCard.isDismissed) return const SizedBox.shrink();
@@ -2222,116 +2270,136 @@ class _SavingsCardState extends State<_SavingsCard> {
 
         if (totalSaved <= 0) return const SizedBox.shrink();
 
-        return Padding(
-          padding: EdgeInsets.only(left: 22.w, right: 22.w, bottom: 20.h, top: 15.h),
-          child: Stack(
-            clipBehavior: Clip.none,
-            children: [
-              Container(
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFEF8F0),
-                  borderRadius: BorderRadius.circular(16.r),
-                  border: Border.all(color: const Color(0xFFF3EBE0), width: 1),
-                ),
-                child: GestureDetector(
-                  onTap: () {
-                    Navigator.pushNamed(context, AppRoutes.savingsDetails);
-                  },
-                  behavior: HitTestBehavior.opaque,
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 20.w,
-                      vertical: 16.h,
+        if (!_hasTriggeredAnimation && !_SavingsCard.isDismissed) {
+          _hasTriggeredAnimation = true;
+          Future.microtask(() {
+            if (mounted) _controller.forward();
+          });
+        }
+
+        return SlideTransition(
+          position: _slideAnimation,
+          child: ScaleTransition(
+            scale: _scaleAnimation,
+            child: Padding(
+              padding: EdgeInsets.only(
+                left: 22.w,
+                right: 22.w,
+                bottom: 20.h,
+                top: 0.h,
+              ),
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Container(
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFEF8F0),
+                      borderRadius: BorderRadius.circular(16.r),
+                      border: Border.all(
+                        color: const Color(0xFFF3EBE0),
+                        width: 1,
+                      ),
                     ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                "You've saved",
-                                style: TextStyle(
-                                  fontFamily: 'SF Pro',
-                                  fontSize: 14.sp,
-                                  color: const Color(0xFF7D562D),
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              SizedBox(height: 4.h),
-                              Row(
-                                crossAxisAlignment: CrossAxisAlignment.baseline,
-                                textBaseline: TextBaseline.alphabetic,
+                    child: GestureDetector(
+                      onTap: () {
+                        Navigator.pushNamed(context, AppRoutes.savingsDetails);
+                      },
+                      behavior: HitTestBehavior.opaque,
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 20.w,
+                          vertical: 16.h,
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    "~\$${totalSaved.toStringAsFixed(0)}",
+                                    "You've saved",
                                     style: TextStyle(
                                       fontFamily: 'SF Pro',
-                                      fontSize: 28.sp,
-                                      color: const Color(0xFF00C40A),
-                                      fontWeight: FontWeight.w800,
+                                      fontSize: 14.sp,
+                                      color: const Color(0xFF7D562D),
+                                      fontWeight: FontWeight.w500,
                                     ),
                                   ),
-                                  SizedBox(width: 6.w),
+                                  SizedBox(height: 4.h),
+                                  Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.baseline,
+                                    textBaseline: TextBaseline.alphabetic,
+                                    children: [
+                                      Text(
+                                        "~\$${totalSaved.toStringAsFixed(0)}",
+                                        style: TextStyle(
+                                          fontFamily: 'SF Pro',
+                                          fontSize: 28.sp,
+                                          color: const Color(0xFF00C40A),
+                                          fontWeight: FontWeight.w800,
+                                        ),
+                                      ),
+                                      SizedBox(width: 6.w),
+                                      Text(
+                                        "this month",
+                                        style: TextStyle(
+                                          fontFamily: 'SF Pro',
+                                          fontSize: 16.sp,
+                                          color: const Color(0xFF1A1A1A),
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  SizedBox(height: 4.h),
                                   Text(
-                                    "this month",
+                                    "Compared to ordering takeout.",
                                     style: TextStyle(
                                       fontFamily: 'SF Pro',
-                                      fontSize: 16.sp,
-                                      color: const Color(0xFF1A1A1A),
+                                      fontSize: 14.sp,
+                                      color: const Color(
+                                        0xFF7D562D,
+                                      ).withOpacity(0.7),
                                       fontWeight: FontWeight.w500,
                                     ),
                                   ),
                                 ],
                               ),
-                              SizedBox(height: 4.h),
-                              Text(
-                                "Compared to ordering takeout.",
-                                style: TextStyle(
-                                  fontFamily: 'SF Pro',
-                                  fontSize: 14.sp,
-                                  color: const Color(0xFF7D562D).withOpacity(0.7),
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ],
-                          ),
+                            ),
+                            Image.asset(
+                              'assets/images/logo2.png',
+                              height: 47.h,
+                              width: 47.w,
+                              fit: BoxFit.contain,
+                            ),
+                          ],
                         ),
-                        Image.asset(
-                          'assets/images/logo2.png',
-                          height: 47.h,
-                          width: 47.w,
-                          fit: BoxFit.contain,
-                        ),
-                      ],
+                      ),
                     ),
                   ),
-                ),
-              ),
-              Positioned(
-                top: -10.h,
-                right: -4.w,
-                child: GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      _SavingsCard.isDismissed = true;
-                    });
-                  },
-                  child: Container(
-                    padding: EdgeInsets.all(6.r),
-                    decoration: BoxDecoration(
-                      color: Color(0xFFC83A2D),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      Icons.close_rounded,
-                      size: 20.sp,
-                      color: const Color(0xFFFFFFFF),
+                  Positioned(
+                    top: -10.h,
+                    right: -6.w,
+                    child: GestureDetector(
+                      onTap: _dismissCard,
+                      child: Container(
+                        padding: EdgeInsets.all(6.r),
+                        decoration: BoxDecoration(
+                          color: Color(0xFFC83A2D),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.close_rounded,
+                          size: 16.sp,
+                          color: const Color(0xFFFFFFFF),
+                        ),
+                      ),
                     ),
                   ),
-                ),
+                ],
               ),
-            ],
+            ),
           ),
         );
       },

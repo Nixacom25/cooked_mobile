@@ -1,28 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter/services.dart';
-
-class DietaryProfile {
-  final String title;
-  final String description;
-  final String icon;
-
-  DietaryProfile({
-    required this.title,
-    required this.description,
-    required this.icon,
-  });
-}
+import 'selection_onboarding_step.dart';
 
 class DietaryPreferencesStep extends StatefulWidget {
+  final VoidCallback? onContinue;
   final Set<String> initialSelected;
-  final Function(Set<String> selected) onChanged;
+  final Function(Set<String> selected)? onChanged;
 
   const DietaryPreferencesStep({
     super.key,
-    required this.initialSelected,
-    required this.onChanged,
+    this.onContinue,
+    this.initialSelected = const {},
+    this.onChanged,
   });
 
   @override
@@ -32,62 +21,17 @@ class DietaryPreferencesStep extends StatefulWidget {
 class _DietaryPreferencesStepState extends State<DietaryPreferencesStep> {
   late Set<String> _selectedDiet;
 
-  final List<DietaryProfile> _options = [
-    DietaryProfile(
-      title: 'No Restrictions',
-      description: 'I Eat Everything',
-      icon: 'all.svg',
-    ),
-    DietaryProfile(
-      title: 'Vegetarian',
-      description: 'No Meat/Fish/Dairy.',
-      icon: 'vegetarian.svg',
-    ),
-    DietaryProfile(
-      title: 'Vegan',
-      description: 'No Animals Products',
-      icon: 'vegan.svg',
-    ),
-    DietaryProfile(
-      title: 'Pescatarian',
-      description: 'Fish OK, No other Meat',
-      icon: 'fish.svg',
-    ),
-    DietaryProfile(
-      title: 'Gluten-Free',
-      description: 'No Wheat or Gluten',
-      icon: 'gluten.svg',
-    ),
-    DietaryProfile(
-      title: 'Halal',
-      description: 'Islamic Dietary Laws',
-      icon: 'halal.svg',
-    ),
-    DietaryProfile(
-      title: 'Kosher',
-      description: 'Jewish Dietary Laws',
-      icon: 'kosher.svg',
-    ),
-    DietaryProfile(
-      title: 'Lactose Intolerant',
-      description: 'No Dairy',
-      icon: 'dairy.svg',
-    ),
-    DietaryProfile(
-      title: 'Keto/Low-Carb',
-      description: 'High Fat, Low Carb',
-      icon: 'keto.svg',
-    ),
-    DietaryProfile(
-      title: 'Diabetic-Friendly',
-      description: 'Low GI Focus',
-      icon: 'diabetic.svg',
-    ),
-    DietaryProfile(
-      title: 'Paleo',
-      description: 'Whole Foods Only',
-      icon: 'paleo.svg',
-    ),
+  final List<Map<String, String>> _options = [
+    {'title': 'No Restrictions', 'desc': 'I eat everything', 'icon': 'all.svg'},
+    {'title': 'Vegetarian', 'desc': 'No meat or fish', 'icon': 'vegetarian.svg'},
+    {'title': 'Vegan', 'desc': 'No animal products', 'icon': 'vegan.svg'},
+    {'title': 'Pescatarian', 'desc': 'Fish OK, no other meat', 'icon': 'fish.svg'},
+    {'title': 'Gluten-Free', 'desc': 'No wheat or gluten', 'icon': 'gluten.svg'},
+    {'title': 'Dairy Free', 'desc': 'No milk or dairy', 'icon': 'dairy.svg'},
+    {'title': 'Halal', 'desc': 'Islamic dietary laws', 'icon': 'halal.svg'},
+    {'title': 'Kosher', 'desc': 'Jewish Dietary Laws', 'icon': 'kosher.svg'},
+    {'title': 'Keto/Low-Carb', 'desc': 'High fat, low carb', 'icon': 'keto.svg'},
+    {'title': 'High Protein', 'desc': 'High protein foods', 'icon': 'eggs.svg'}, // Changed to High Protein to match mockup step17.png
   ];
 
   @override
@@ -99,129 +43,37 @@ class _DietaryPreferencesStepState extends State<DietaryPreferencesStep> {
     }
   }
 
-  void _toggleOption(String title) {
+  void _handleSelectionChanged(List<String> newSelection) {
     HapticFeedback.selectionClick();
     setState(() {
-      if (title == 'No Restrictions') {
-        _selectedDiet.clear();
+      _selectedDiet = newSelection.toSet();
+      if (_selectedDiet.isEmpty) {
         _selectedDiet.add('No Restrictions');
-      } else {
-        _selectedDiet.remove('No Restrictions');
-        if (_selectedDiet.contains(title)) {
-          _selectedDiet.remove(title);
-          if (_selectedDiet.isEmpty) {
-            _selectedDiet.add('No Restrictions');
-          }
-        } else {
-          _selectedDiet.add(title);
-        }
       }
     });
-    widget.onChanged(_selectedDiet);
+
+    if (widget.onChanged != null) {
+      widget.onChanged!(_selectedDiet);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 30.h),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            "What's your dietary profile?",
-            style: TextStyle(
-              fontSize: 24.sp,
-              fontWeight: FontWeight.w900,
-              color: const Color(0xFF0D1B3E),
-              fontFamily: 'SF Pro',
-              height: 1.2,
-            ),
-          ),
-          SizedBox(height: 8.h),
-          Text(
-            'Select all that apply',
-            style: TextStyle(
-              fontSize: 14.sp,
-              color: const Color(0xFF7B8190),
-              fontFamily: 'SF Pro',
-            ),
-          ),
-          SizedBox(height: 32.h),
-          GridView.count(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            crossAxisCount: 2,
-            crossAxisSpacing: 16.w,
-            mainAxisSpacing: 16.h,
-            childAspectRatio: 1.3,
-            children: _options.map((option) {
-              final isSelected = _selectedDiet.contains(option.title);
-
-              return GestureDetector(
-                onTap: () => _toggleOption(option.title),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  padding: EdgeInsets.all(16.r),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(20.r),
-                    border: Border.all(
-                      color: isSelected
-                          ? const Color(0xFFC83A2D)
-                          : const Color(0xFFE5E7EB).withOpacity(0.5),
-                      width: isSelected ? 2 : 1.5,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.04),
-                        blurRadius: 12.r,
-                        offset: Offset(0, 4.h),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      SvgPicture.asset(
-                        'assets/icones/${option.icon}',
-                        height: 32.h,
-                        width: 32.w,
-                        placeholderBuilder: (context) => const SizedBox.shrink(),
-                      ),
-                      SizedBox(height: 6.h),
-                      Text(
-                        option.title,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 14.sp,
-                          fontWeight: FontWeight.w800,
-                          fontFamily: 'SF Pro',
-                          color: isSelected
-                              ? const Color(0xFF0D1B3E)
-                              : const Color(0xFF4B5563),
-                        ),
-                      ),
-                      SizedBox(height: 2.h),
-                      Text(
-                        option.description,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 11.sp,
-                          fontWeight: FontWeight.w500,
-                          fontFamily: 'SF Pro',
-                          color: const Color(0xFF9CA3AF),
-                          height: 1.3,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-          SizedBox(height: 24.h),
-        ],
-      ),
+    return SelectionOnboardingStep(
+      title: "What's your dietary profile?",
+      subtitle: "Select all that apply.",
+      useGrid: true,
+      maxSelections: 10,
+      initialSelected: _selectedDiet.toList(),
+      exclusiveOptionId: 'No Restrictions',
+      onContinue: widget.onContinue,
+      onSelectionChanged: _handleSelectionChanged,
+      options: _options.map((o) => SelectionOption(
+        id: o['title']!,
+        label: o['title']!,
+        subLabel: o['desc']!,
+        svgAsset: 'assets/icones/${o['icon']}',
+      )).toList(),
     );
   }
 }

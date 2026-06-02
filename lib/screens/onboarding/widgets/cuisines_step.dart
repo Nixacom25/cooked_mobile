@@ -24,11 +24,17 @@ class _CuisinesStepState extends State<CuisinesStep> {
     {'id': 'mexican', 'title': 'Mexican'},
     {'id': 'chinese', 'title': 'Chinese'},
     {'id': 'thai', 'title': 'Thai'},
-    {'id': 'middle', 'title': 'Middle Eastern'},
-    {'id': 'west', 'title': 'West African'},
-    {'id': 'east', 'title': 'East African'},
+    {'id': 'middle-eastern', 'title': 'Middle Eastern'},
+    {'id': 'west-african', 'title': 'West African'},
+    {'id': 'east-african', 'title': 'East African'},
     {'id': 'caribbean', 'title': 'Caribbean'},
     {'id': 'indian', 'title': 'Indian'},
+    {'id': 'spanish', 'title': 'Spanish'},
+    {'id': 'greek', 'title': 'Greek'},
+    {'id': 'french', 'title': 'French'},
+    {'id': 'korean', 'title': 'Korean'},
+    {'id': 'mediterranean', 'title': 'Mediterranean'},
+    {'id': 'others', 'title': 'Others'},
   ];
 
   late Set<String> _selected;
@@ -97,7 +103,7 @@ class _CuisinesStepState extends State<CuisinesStep> {
           Text(
             'Which cuisines do you love?',
             style: TextStyle(
-              fontSize: 24.sp,
+              fontSize: 25.sp,
               fontWeight: FontWeight.w900,
               color: const Color(0xFF0D1B3E),
               fontFamily: 'SF Pro',
@@ -108,11 +114,13 @@ class _CuisinesStepState extends State<CuisinesStep> {
           Text(
             'Select your favorites',
             style: TextStyle(
-              fontSize: 14.sp,
+              fontSize: 16.sp,
               color: const Color(0xFF7B8190),
               fontFamily: 'SF Pro',
             ),
           ),
+          SizedBox(height: 25.h),
+          _buildTopCard(),
           SizedBox(height: 25.h),
           GridView.builder(
             shrinkWrap: true,
@@ -130,62 +138,75 @@ class _CuisinesStepState extends State<CuisinesStep> {
             },
           ),
           
-          SizedBox(height: 24.h),
-          Text(
-            'Specify other cuisines',
-            style: TextStyle(
-              fontFamily: 'SF Pro',
-              fontSize: 14.sp,
-              fontWeight: FontWeight.w600,
-              color: const Color(0xFF7B8190),
-            ),
-          ),
-          SizedBox(height: 8.h),
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12.r),
-              border: Border.all(color: const Color(0xFFE5E7EB)),
-            ),
-            child: TextField(
-              controller: _othersController,
-              focusNode: _othersFocusNode,
-              onSubmitted: (_) => _addCustomCuisine(),
-              textCapitalization: TextCapitalization.words,
+          if (_selected.contains('Others')) ...[
+            SizedBox(height: 24.h),
+            Text(
+              'Specify other cuisines',
               style: TextStyle(
                 fontFamily: 'SF Pro',
                 fontSize: 14.sp,
-                color: const Color(0xFF1A1A1A),
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF7B8190),
               ),
-              decoration: InputDecoration(
-                hintText: 'Enter a cuisine and press Enter',
-                hintStyle: TextStyle(
+            ),
+            SizedBox(height: 8.h),
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12.r),
+                border: Border.all(color: const Color(0xFFE5E7EB)),
+              ),
+              child: TextField(
+                controller: _othersController,
+                focusNode: _othersFocusNode,
+                onSubmitted: (_) => _addCustomCuisine(),
+                textCapitalization: TextCapitalization.words,
+                style: TextStyle(
                   fontFamily: 'SF Pro',
                   fontSize: 14.sp,
-                  color: Colors.grey[400],
+                  color: const Color(0xFF1A1A1A),
                 ),
-                border: InputBorder.none,
-                contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
-                suffixIcon: IconButton(
-                  icon: const Icon(Icons.add_rounded, color: Color(0xFFC83A2D)),
-                  onPressed: _addCustomCuisine,
+                decoration: InputDecoration(
+                  hintText: 'Type a cuisine...',
+                  hintStyle: TextStyle(
+                    fontFamily: 'SF Pro',
+                    fontSize: 14.sp,
+                    color: Colors.grey[400],
+                  ),
+                  border: InputBorder.none,
+                  contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
+                  suffixIcon: Padding(
+                    padding: EdgeInsets.all(8.r),
+                    child: GestureDetector(
+                      onTap: _addCustomCuisine,
+                      child: Container(
+                        width: 36.w,
+                        height: 36.w,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFC83A2D),
+                          borderRadius: BorderRadius.circular(8.r),
+                        ),
+                        child: Icon(Icons.add_rounded, color: Colors.white, size: 24.sp),
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ),
-          ),
-          if (customCuisines.isNotEmpty) ...[
-            SizedBox(height: 12.h),
-            Wrap(
-              spacing: 8.w,
-              runSpacing: 8.h,
-              children: customCuisines.map((c) => Chip(
-                label: Text(c, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                backgroundColor: const Color(0xFFC83A2D),
-                deleteIcon: const Icon(Icons.close, size: 14, color: Colors.white),
-                onDeleted: () => _removeCuisine(c),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.r)),
-              )).toList(),
-            ),
+            if (customCuisines.isNotEmpty) ...[
+              SizedBox(height: 12.h),
+              Wrap(
+                spacing: 8.w,
+                runSpacing: 8.h,
+                children: customCuisines.map((c) => Chip(
+                  label: Text(c, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  backgroundColor: const Color(0xFFC83A2D),
+                  deleteIcon: const Icon(Icons.close, size: 14, color: Colors.white),
+                  onDeleted: () => _removeCuisine(c),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.r)),
+                )).toList(),
+              ),
+            ],
           ],
           
           SizedBox(height: MediaQuery.of(context).viewInsets.bottom + 120.h),
@@ -234,7 +255,7 @@ class _CuisinesStepState extends State<CuisinesStep> {
               child: ClipRRect(
                 borderRadius: BorderRadius.vertical(top: Radius.circular(14.r)),
                 child: Image.asset(
-                  'assets/images/${cuisine['id']}.png',
+                  'assets/cuisine/${cuisine['id']}.png',
                   fit: BoxFit.cover,
                   errorBuilder: (context, error, stackTrace) {
                     return Container(
@@ -268,3 +289,47 @@ class _CuisinesStepState extends State<CuisinesStep> {
     );
   }
 }
+
+Widget _buildTopCard() {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF7ED),
+        borderRadius: BorderRadius.circular(16.r),
+        border: Border.all(color: const Color(0xFFFBE8D0)),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: RichText(
+              text: TextSpan(
+                style: TextStyle(
+                  color: const Color(0xFF1B1C1C),
+                  fontSize: 16.sp,
+                  fontFamily: 'SF Pro',
+                ),
+                children: [
+                  const TextSpan(text: 'We found '),
+                  TextSpan(
+                    text: '800+',
+                    style: TextStyle(
+                      color: const Color(0xFFD92D20),
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18.sp,
+                    ),
+                  ),
+                  const TextSpan(text: ' recipes\nmatching your taste'),
+                ],
+              ),
+            ),
+          ),
+          Image.asset(
+            'assets/images/logo2.png', // Assuming a logo or just a general C icon here. Will test.
+            width: 40.w,
+            errorBuilder: (_, __, ___) => Icon(Icons.restaurant_menu, color: const Color(0xFFD92D20), size: 30.sp),
+          ),
+        ],
+      ),
+    );
+  }

@@ -719,6 +719,7 @@ class _RecipesGridState extends State<_RecipesGrid> {
     final validatedRecipe = r.copyWith(
       origin: r.origin ?? 'IMPORT',
       isValidated: true,
+      isSuggested: false,
     );
 
     // Update local state via notifiers

@@ -20,14 +20,18 @@ import UIKit
             DispatchQueue.main.async {
               switch resultPattern {
               case .success(let detected):
-                result(detected.contains(.probableWebURL))
+                if detected.contains(.probableWebURL) {
+                  result(UIPasteboard.general.changeCount)
+                } else {
+                  result(-1)
+                }
               case .failure(_):
-                result(false)
+                result(-1)
               }
             }
           }
         } else {
-          result(UIPasteboard.general.hasURLs)
+          result(UIPasteboard.general.hasURLs ? UIPasteboard.general.changeCount : -1)
         }
       } else {
         result(FlutterMethodNotImplemented)

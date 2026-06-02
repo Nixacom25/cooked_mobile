@@ -1,12 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import 'package:intl/intl.dart';
+import 'package:flutter/services.dart';
 import '../../../services/iap_service.dart';
-
-extension DateTimeExtension on DateTime {
-  DateTime plusDays(int days) => add(Duration(days: days));
-}
 
 class TrialStep extends StatefulWidget {
   final Function(String plan) onPlanSelected;
@@ -24,15 +19,57 @@ class TrialStep extends StatefulWidget {
   State<TrialStep> createState() => _TrialStepState();
 }
 
-class _TrialStepState extends State<TrialStep> {
+class _TrialStepState extends State<TrialStep> with SingleTickerProviderStateMixin {
   String _selectedPlan = 'yearly';
-  String _monthlyPrice = '\$9.99';
-  String _yearlyPrice = '\$2.49 / mo';
+  String _monthlyPrice = '\$9.99 /mo';
+  String _yearlyPrice = '\$2.49 /mo';
+
+  late AnimationController _controller;
+  late Animation<double> _titleOpacity;
+  late Animation<Offset> _titleSlide;
+  late Animation<double> _card1Opacity;
+  late Animation<double> _card1Scale;
+  late Animation<double> _card2Opacity;
+  late Animation<double> _card2Scale;
 
   @override
   void initState() {
     super.initState();
     _loadPrices();
+
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    );
+
+    _titleOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _controller, curve: const Interval(0.0, 0.4, curve: Curves.easeOut)),
+    );
+    _titleSlide = Tween<Offset>(begin: const Offset(0, 0.2), end: Offset.zero).animate(
+      CurvedAnimation(parent: _controller, curve: const Interval(0.0, 0.4, curve: Curves.easeOutCubic)),
+    );
+
+    _card1Opacity = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _controller, curve: const Interval(0.2, 0.5, curve: Curves.easeOut)),
+    );
+    _card1Scale = Tween<double>(begin: 0.8, end: 1.0).animate(
+      CurvedAnimation(parent: _controller, curve: const Interval(0.2, 0.8, curve: Curves.elasticOut)),
+    );
+
+    _card2Opacity = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _controller, curve: const Interval(0.3, 0.6, curve: Curves.easeOut)),
+    );
+    _card2Scale = Tween<double>(begin: 0.8, end: 1.0).animate(
+      CurvedAnimation(parent: _controller, curve: const Interval(0.3, 0.9, curve: Curves.elasticOut)),
+    );
+
+    _controller.forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
   }
 
   void _loadPrices() async {
@@ -47,7 +84,7 @@ class _TrialStepState extends State<TrialStep> {
             _monthlyPrice = p.price;
           }
           if (p.id == 'yearly_sub') {
-            _yearlyPrice = '\$2.49 / mo';
+            _yearlyPrice = '\$2.49 /mo';
           }
         }
       });
@@ -57,169 +94,72 @@ class _TrialStepState extends State<TrialStep> {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-      padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 30.h),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Start your 3-day FREE\ntrial to continue.',
-            style: TextStyle(
-              fontSize: 24.sp,
-              fontWeight: FontWeight.w900,
-              color: const Color(0xFF0D1B3E),
-              fontFamily: 'SF Pro',
-              height: 1.2,
-            ),
-          ),
-          SizedBox(height: 28.h),
-
-          // Timeline
-          _buildTimelineItem(
-            icon: 'unlock.svg',
-            title: 'Today',
-            description:
-                "Unlock unlimited recipes and get the most out of every ingredient in your fridge.",
-            isFirst: true,
-          ),
-          _buildTimelineItem(
-            icon: 'bell-part.svg',
-            title: 'In 2 Days - Reminder',
-            description:
-                "We'll send you a reminder before your trial ends.",
-          ),
-          _buildTimelineItem(
-            icon: 'crown.svg',
-            title: 'In 3 Days - Billing Starts',
-            description:
-                "You'll be charged on ${DateFormat('MMM d, yyyy').format(DateTime.now().plusDays(3))} unless you cancel anytime before.",
-            isLast: true,
-          ),
-
-          SizedBox(height: 32.h),
-
-          // Subscription Options
-          Row(
+      padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 30.h),
+      child: AnimatedBuilder(
+        animation: _controller,
+        builder: (context, child) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: _buildPlanCard(
-                  id: 'monthly',
-                  title: 'Monthly',
-                  price: _monthlyPrice,
-                  isSelected: _selectedPlan == 'monthly',
-                ),
-              ),
-              SizedBox(width: 16.w),
-              Expanded(
-                child: _buildPlanCard(
-                  id: 'yearly',
-                  title: 'Yearly',
-                  price: _yearlyPrice,
-                  isSelected: _selectedPlan == 'yearly',
-                  badge: widget.showTrialBadge ? '3 days free' : null,
-                ),
-              ),
-            ],
-          ),
-
-          if (_selectedPlan == 'yearly') ...[
-            SizedBox(height: 24.h),
-            GestureDetector(
-              onTap: widget.onSkip,
-              behavior: HitTestBehavior.opaque,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.check, color: const Color(0xFF0D1B3E), size: 16.sp),
-                  SizedBox(width: 8.w),
-                  Text(
-                    'No Payment Due Now',
+              FadeTransition(
+                opacity: _titleOpacity,
+                child: SlideTransition(
+                  position: _titleSlide,
+                  child: Text(
+                    'Unlock your full\npersonalized cooking\nsystem.',
                     style: TextStyle(
-                      fontSize: 16.sp,
-                      fontWeight: FontWeight.w700,
+                      fontSize: 32.sp,
+                      fontWeight: FontWeight.w900,
                       color: const Color(0xFF0D1B3E),
                       fontFamily: 'SF Pro',
+                      height: 1.1,
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(height: 40.h),
+
+              // Subscription Options
+              Row(
+                children: [
+                  Expanded(
+                    child: FadeTransition(
+                      opacity: _card1Opacity,
+                      child: Transform.scale(
+                        scale: _card1Scale.value,
+                        child: _buildPlanCard(
+                          id: 'monthly',
+                          title: 'Monthly',
+                          price: _monthlyPrice,
+                          isSelected: _selectedPlan == 'monthly',
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 16.w),
+                  Expanded(
+                    child: FadeTransition(
+                      opacity: _card2Opacity,
+                      child: Transform.scale(
+                        scale: _card2Scale.value,
+                        child: _buildPlanCard(
+                          id: 'yearly',
+                          title: 'Yearly',
+                          price: _yearlyPrice,
+                          isSelected: _selectedPlan == 'yearly',
+                          badge: widget.showTrialBadge ? '3 days free' : null,
+                        ),
+                      ),
                     ),
                   ),
                 ],
               ),
-            ),
-          ],
 
-          SizedBox(height: 120.h), // Space for bottom button
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTimelineItem({
-    required String icon,
-    required String title,
-    required String description,
-    bool isFirst = false,
-    bool isLast = false,
-  }) {
-    return IntrinsicHeight(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Column(
-            children: [
-              Container(
-                width: 32.r,
-                height: 32.r,
-                padding: EdgeInsets.all(6.r),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: const Color(0xFFC83A2D),
-                    width: 1.5.w,
-                  ),
-                  color: Colors.white,
-                ),
-                child: SvgPicture.asset(
-                  'assets/icones/$icon',
-                  width: double.infinity,
-                  height: double.infinity,
-                ),
-              ),
-              if (!isLast)
-                Expanded(
-                  child: Container(
-                    width: 5.w,
-                    color: const Color(0xFFC83A2D).withOpacity(0.3),
-                  ),
-                ),
+              SizedBox(height: 120.h), // Space for bottom button
             ],
-          ),
-          SizedBox(width: 16.w),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 16.sp,
-                    fontWeight: FontWeight.w900,
-                    color: const Color(0xFF0D1B3E),
-                    fontFamily: 'SF Pro',
-                  ),
-                ),
-                SizedBox(height: 2.h),
-                Text(
-                  description,
-                  style: TextStyle(
-                    fontSize: 14.sp,
-                    color: const Color(0xFF7B8190),
-                    fontFamily: 'SF Pro',
-                    height: 1.4,
-                  ),
-                ),
-                SizedBox(height: 16.h),
-              ],
-            ),
-          ),
-        ],
+          );
+        }
       ),
     );
   }
@@ -228,12 +168,12 @@ class _TrialStepState extends State<TrialStep> {
     required String id,
     required String title,
     required String price,
-    String? subPrice,
     required bool isSelected,
     String? badge,
   }) {
     return GestureDetector(
       onTap: () {
+        HapticFeedback.selectionClick();
         setState(() => _selectedPlan = id);
         widget.onPlanSelected(id);
       },
@@ -249,80 +189,72 @@ class _TrialStepState extends State<TrialStep> {
                 color: isSelected
                     ? const Color(0xFFC83A2D)
                     : const Color(0xFFE5E7EB),
-                width: isSelected ? 2.w : 1.w,
+                width: isSelected ? 1.5.w : 1.w,
               ),
+              boxShadow: [
+                if (isSelected)
+                  BoxShadow(
+                    color: const Color(0xFFC83A2D).withOpacity(0.1),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+              ],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      title,
-                      style: TextStyle(
-                        fontSize: 14.sp,
-                        color: isSelected
-                            ? const Color(0xFF0D1B3E)
-                            : const Color(0xFF7B8190),
-                        fontFamily: 'SF Pro',
-                      ),
-                    ),
-                    Container(
-                      width: 20.sp,
-                      height: 20.sp,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: isSelected
-                              ? const Color(0xFFC83A2D)
-                              : const Color(0xFFE5E7EB),
-                          width: isSelected ? 6.sp : 1.sp,
-                        ),
-                        color: isSelected ? Colors.white : Colors.transparent,
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 4.h),
                 Text(
-                  price,
+                  title,
                   style: TextStyle(
-                    fontSize: 16.sp,
-                    fontWeight: FontWeight.w900,
-                    color: const Color(0xFF0D1B3E),
+                    fontSize: 14.sp,
+                    color: const Color(0xFF7B8190),
                     fontFamily: 'SF Pro',
                   ),
                 ),
-                if (subPrice != null)
-                  Text(
-                    subPrice,
-                    style: TextStyle(
-                      fontSize: 10.sp,
-                      color: const Color(0xFF7B8190),
-                      fontFamily: 'SF Pro',
+                SizedBox(height: 4.h),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: FittedBox(
+                        alignment: Alignment.centerLeft,
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          price,
+                          style: TextStyle(
+                            fontSize: 18.sp,
+                            fontWeight: FontWeight.w800,
+                            color: const Color(0xFF0D1B3E),
+                            fontFamily: 'SF Pro',
+                          ),
+                        ),
+                      ),
                     ),
-                  ),
+                    if (isSelected)
+                      Icon(
+                        Icons.check_circle,
+                        color: const Color(0xFFC83A2D),
+                        size: 20.sp,
+                      ),
+                  ],
+                ),
               ],
             ),
           ),
           if (badge != null)
             Positioned(
               top: -12.h,
-              right: 40.w,
+              right: 12.w,
               child: Container(
-                padding: EdgeInsets.symmetric(
-                  horizontal: 12.w,
-                  vertical: 4.h,
-                ),
+                padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
                 decoration: BoxDecoration(
                   color: const Color(0xFFC83A2D),
-                  borderRadius: BorderRadius.circular(12.r),
+                  borderRadius: BorderRadius.circular(8.r),
                 ),
                 child: Text(
                   badge,
                   style: TextStyle(
-                    fontSize: 12.sp,
+                    fontSize: 10.sp,
                     fontWeight: FontWeight.w700,
                     color: Colors.white,
                     fontFamily: 'SF Pro',

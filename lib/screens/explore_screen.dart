@@ -146,7 +146,7 @@ class _ExploreScreenState extends State<ExploreScreen>
   void _updateLocalStateForValidation(Recipe r) {
     if (!mounted) return;
     
-    final validatedRecipe = r.copyWith(origin: 'MANUAL', isValidated: true);
+    final validatedRecipe = r.copyWith(origin: 'MANUAL', isValidated: true, isSuggested: false);
 
     // Update global state via notifiers
     final currentSaved = RecipeService.instance.myRecipesNotifier.value ?? [];

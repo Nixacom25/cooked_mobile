@@ -52,22 +52,36 @@ class SharingService {
   static const _clipboardChannel = MethodChannel('com.cooked.app/clipboard');
 
   Future<void> checkClipboard() async {
+    final prefs = await SharedPreferences.getInstance();
+
     if (Platform.isIOS) {
       try {
-        final hasWebUrl = await _clipboardChannel.invokeMethod<bool>('hasWebURL');
-        if (hasWebUrl != true) return;
+        final changeCount = await _clipboardChannel.invokeMethod<int>('hasWebURL');
+        if (changeCount == null || changeCount == -1) return;
+
+        final storedCount = prefs.getInt('last_clipboard_change_count');
+        if (changeCount == storedCount) return;
+        
+        await prefs.setInt('last_clipboard_change_count', changeCount);
+        
+        // Notify banner with a dummy string
+        clipboardTextNotifier.value = "DETECTED_URL";
+        return;
       } catch (e) {
         debugPrint("Clipboard channel error: $e");
         return;
       }
     }
 
+    // ANDROID fallback
     try {
+      final hasStrings = await Clipboard.hasStrings();
+      if (!hasStrings) return;
+
       final data = await Clipboard.getData(Clipboard.kTextPlain);
       final text = data?.text;
       
       if (text != null && text.isNotEmpty) {
-        final prefs = await SharedPreferences.getInstance();
         final storedLastText = prefs.getString('last_clipboard_text');
         
         // Use stored value if _lastClipboardText is null (e.g. on app restart)
@@ -79,7 +93,7 @@ class SharingService {
           
           final url = extractUrl(text);
           if (url != null && _isValidRecipeOrSocialUrl(url)) {
-            clipboardTextNotifier.value = url;
+            clipboardTextNotifier.value = "DETECTED_URL";
           }
         }
       }

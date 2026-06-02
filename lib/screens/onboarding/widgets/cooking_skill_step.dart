@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import 'package:flutter/services.dart';
+import 'selection_onboarding_step.dart';
 
 class CookingSkillStep extends StatefulWidget {
+  final VoidCallback? onContinue;
   final String? initialSelected;
-  final Function(String selected) onChanged;
+  final Function(String)? onChanged;
 
   const CookingSkillStep({
     super.key,
-    required this.initialSelected,
-    required this.onChanged,
+    this.onContinue,
+    this.initialSelected,
+    this.onChanged,
   });
 
   @override
@@ -18,141 +19,98 @@ class CookingSkillStep extends StatefulWidget {
 }
 
 class _CookingSkillStepState extends State<CookingSkillStep> {
-  String? _selectedLevel;
-
-  final List<Map<String, String>> _levels = [
-    {
-      'title': 'Total Beginner',
-      'desc': 'I can barely boil water',
-      'icon': 'frying.svg',
-    },
-    {
-      'title': 'Home Cook',
-      'desc': 'I follow recipes step by step',
-      'icon': 'cook-medium-skin.svg',
-    },
-    {
-      'title': 'Confident Cook',
-      'desc': 'I improvise and experiment',
-      'icon': 'cook-light-skin.svg',
-    },
-    {
-      'title': 'Advanced / Semi-Pro',
-      'desc': 'I want challenging recipes.',
-      'icon': 'star.svg',
-    },
-  ];
+  String _selectedValue = '';
 
   @override
   void initState() {
     super.initState();
-    _selectedLevel = widget.initialSelected;
+    _selectedValue = widget.initialSelected ?? '';
+  }
+
+  String _getHighlightText(String value) {
+    switch (value) {
+      case 'beginner': return 'overly complex';
+      case 'home_cook': return 'untested';
+      case 'confident': return 'boring';
+      case 'advanced': return 'basic';
+      default: return 'complex';
+    }
+  }
+
+  Widget _buildBottomCard(String selectedValue) {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 15.h),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF7ED),
+        borderRadius: BorderRadius.circular(16.r),
+        border: Border.all(color: const Color(0xFFFBE8D0)),
+      ),
+      child: RichText(
+        textAlign: TextAlign.center,
+        text: TextSpan(
+          style: TextStyle(
+            color: const Color(0xFF1B1C1C),
+            fontSize: 16.sp,
+            fontFamily: 'SF Pro',
+          ),
+          children: [
+            const TextSpan(text: 'Great, we\'ll avoid '),
+            TextSpan(
+              text: _getHighlightText(selectedValue),
+              style: const TextStyle(
+                color: Color(0xFFD92D20),
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const TextSpan(text: ' recipes.'),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 30.h),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            "What's your cooking skill level?",
-            style: TextStyle(
-              fontSize: 24.sp,
-              fontWeight: FontWeight.w900,
-              color: const Color(0xFF0D1B3E),
-              fontFamily: 'SF Pro',
-              height: 1.2,
-            ),
-          ),
-          SizedBox(height: 8.h),
-          Text(
-            "We'll match recipes to your experience",
-            style: TextStyle(
-              fontSize: 14.sp,
-              color: const Color(0xFF7B8190),
-              fontFamily: 'SF Pro',
-            ),
-          ),
-          SizedBox(height: 32.h),
-          ..._levels.map((level) {
-            final isSelected = _selectedLevel == level['title'];
-
-            return Padding(
-              padding: EdgeInsets.only(bottom: 15.h),
-              child: GestureDetector(
-                onTap: () {
-                  HapticFeedback.selectionClick();
-                  setState(() => _selectedLevel = level['title']);
-                  widget.onChanged(level['title']!);
-                },
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  padding: EdgeInsets.symmetric(horizontal: 14.r, vertical: 10.h),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16.r),
-                    border: Border.all(
-                      color: isSelected
-                          ? const Color(0xFFC83A2D)
-                          : const Color(0xFFE5E7EB).withOpacity(0.5),
-                      width: isSelected ? 2.w : 1.5.w,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.04),
-                        blurRadius: 10.r,
-                        offset: Offset(0, 4.h),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        child: SvgPicture.asset(
-                          'assets/icones/${level['icon']}',
-                          height: 32.sp,
-                          width: 32.sp,
-                          placeholderBuilder: (context) => const SizedBox.shrink(),
-                        ),
-                      ),
-                      SizedBox(width: 16.w),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              level['title']!,
-                              style: TextStyle(
-                                fontSize: 14.sp,
-                                fontWeight: FontWeight.w700,
-                                color: const Color(0xFF0D1B3E),
-                                fontFamily: 'SF Pro',
-                              ),
-                            ),
-                            SizedBox(height: 2.h),
-                            Text(
-                              level['desc']!,
-                              style: TextStyle(
-                                fontSize: 12.sp,
-                                fontWeight: FontWeight.w500,
-                                color: const Color(0xFF9CA3AF),
-                                fontFamily: 'SF Pro',
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          }),
-          SizedBox(height: 32.h),
-        ],
-      ),
+    return SelectionOnboardingStep(
+      title: "What's your cooking\nskill level?",
+      subtitle: "We'll match recipes to your experience.",
+      maxSelections: 1,
+      useGrid: true,
+      onContinue: widget.onContinue,
+      initialSelected: _selectedValue.isNotEmpty ? [_selectedValue] : [],
+      onSelectionChanged: (selections) {
+        final val = selections.isNotEmpty ? selections.first : '';
+        setState(() => _selectedValue = val);
+        if (widget.onChanged != null) widget.onChanged!(val);
+      },
+      bottomCardWidget: _selectedValue.isNotEmpty ? _buildBottomCard(_selectedValue) : null,
+      options: [
+        SelectionOption(
+          id: 'beginner',
+          label: 'Total Beginner',
+          subLabel: 'I can barely boil water',
+          icon: Icons.egg_alt_outlined,
+        ),
+        SelectionOption(
+          id: 'home_cook',
+          label: 'Home Cook',
+          subLabel: 'I follow recipes step by step',
+          icon: Icons.restaurant,
+        ),
+        SelectionOption(
+          id: 'confident',
+          label: 'Confident Cook',
+          subLabel: 'I improvise and experiment',
+          icon: Icons.soup_kitchen,
+        ),
+        SelectionOption(
+          id: 'advanced',
+          label: 'Advanced / Semi-Pro',
+          subLabel: 'I want challenging recipes.',
+          icon: Icons.local_fire_department_outlined,
+        ),
+      ],
     );
   }
 }

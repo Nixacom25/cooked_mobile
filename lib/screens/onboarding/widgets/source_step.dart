@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import '../../../core/extensions/string_extensions.dart';
+
 
 class DiscoverySource {
   final String label;
@@ -13,15 +13,13 @@ class DiscoverySource {
 }
 
 class SourceStep extends StatefulWidget {
-  final String userName;
-  final String? initialSource;
+  final List<String> initialSources;
   final String? initialOtherSource;
-  final Function(String source, String? otherSource) onChanged;
+  final Function(List<String> sources, String? otherSource) onChanged;
 
   const SourceStep({
     super.key,
-    required this.userName,
-    this.initialSource,
+    required this.initialSources,
     this.initialOtherSource,
     required this.onChanged,
   });
@@ -31,22 +29,25 @@ class SourceStep extends StatefulWidget {
 }
 
 class _SourceStepState extends State<SourceStep> {
-  String? _selectedSource;
+  late Set<String> _selectedSources;
   late TextEditingController _otherController;
 
   final List<DiscoverySource> _sources = [
-    DiscoverySource('Instagram', 'instagram.svg', 'Instagram'),
-    DiscoverySource('Facebook', 'facebook.svg', 'Facebook'),
     DiscoverySource('Tiktok', 'tiktok.svg', 'Tiktok'),
+    DiscoverySource('Instagram', 'instagram.svg', 'Instagram'),
+    DiscoverySource('Youtube', 'trending.svg', 'Youtube'), // No youtube.svg, using trending
     DiscoverySource('Google', 'google.svg', 'Google'),
-    DiscoverySource('Friend Referral', 'friend.svg', 'Friend Referral'),
-    DiscoverySource('Others', 'others.svg', 'Others'),
+    DiscoverySource('Recipe Websites', 'world.svg', 'Recipe Websites'), // No web.svg, using world
+    DiscoverySource('Family/Friends', 'friend.svg', 'Family/Friends'), // friend instead of friends
+    DiscoverySource('Pinterest', 'others.svg', 'Pinterest'), // No pinterest.svg, using others
+    DiscoverySource('Cookbooks', 'books.svg', 'Cookbooks'), // books instead of cookbook
+    DiscoverySource('I usually make this up', 'others.svg', 'I usually make this up'), // others instead of make_up
   ];
 
   @override
   void initState() {
     super.initState();
-    _selectedSource = widget.initialSource;
+    _selectedSources = widget.initialSources.toSet();
     _otherController = TextEditingController(text: widget.initialOtherSource);
   }
 
@@ -59,11 +60,20 @@ class _SourceStepState extends State<SourceStep> {
   void _handleSourceTap(String source) {
     HapticFeedback.selectionClick();
     setState(() {
-      _selectedSource = source;
+      if (_selectedSources.contains(source)) {
+        _selectedSources.remove(source);
+      } else {
+        _selectedSources.add(source);
+      }
     });
+    
+    // We only send the other field text if they selected something that might need it.
+    // In the new design there is no explicit 'Others' block, but let's keep the logic
+    // if 'I usually make this up' is used as a trigger, or we can just send null.
+    // Based on the screenshot, there is no "Others" option.
     widget.onChanged(
-      _selectedSource!,
-      _selectedSource == 'Others' ? _otherController.text.toTitleCase() : null,
+      _selectedSources.toList(),
+      null,
     );
   }
 
@@ -75,18 +85,19 @@ class _SourceStepState extends State<SourceStep> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Welcome! How did you find us?',
+            'Where do you usually get recipes?',
             style: TextStyle(
               fontSize: 24.sp,
               fontWeight: FontWeight.w900,
               color: const Color(0xFF0D1B3E),
               fontFamily: 'SF Pro',
               height: 1.2,
+              letterSpacing: -0.5,
             ),
           ),
           SizedBox(height: 8.h),
           Text(
-            "This helps us improve our reach",
+            "Select all that apply.",
             style: TextStyle(
               fontSize: 14.sp,
               color: const Color(0xFF7B8190),
@@ -95,22 +106,25 @@ class _SourceStepState extends State<SourceStep> {
           ),
           SizedBox(height: 32.h),
 
-          GridView.count(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            crossAxisCount: 2,
-            crossAxisSpacing: 16.w,
-            mainAxisSpacing: 16.h,
-            childAspectRatio: 1.6,
+          Wrap(
+            spacing: 16.w,
+            runSpacing: 16.h,
             children: _sources.map((source) {
-              final isSelected = _selectedSource == source.value;
+              final isSelected = _selectedSources.contains(source.value);
+
+              final isFullWidth = source.value == 'I usually make this up';
+              final itemWidth = isFullWidth 
+                  ? double.infinity 
+                  : (MediaQuery.of(context).size.width - 40.w - 16.w) / 2;
 
               return GestureDetector(
                 onTap: () => _handleSourceTap(source.value),
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
+                  width: itemWidth,
+                  height: 90.h,
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: isSelected ? const Color(0xFFFFF4F2) : Colors.white,
                     borderRadius: BorderRadius.circular(16.r),
                     border: Border.all(
                       color: isSelected
@@ -119,11 +133,12 @@ class _SourceStepState extends State<SourceStep> {
                       width: isSelected ? 2.w : 1.w,
                     ),
                     boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.03),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
+                      if (isSelected)
+                        BoxShadow(
+                          color: const Color(0xFFC83A2D).withOpacity(0.05),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
                     ],
                   ),
                   child: Column(
@@ -156,47 +171,6 @@ class _SourceStepState extends State<SourceStep> {
             }).toList(),
           ),
 
-          if (_selectedSource == 'Others') ...[
-            SizedBox(height: 24.h),
-            TextField(
-              controller: _otherController,
-              textCapitalization: TextCapitalization.words,
-              onChanged: (val) => widget.onChanged(_selectedSource!, val.toTitleCase()),
-              decoration: InputDecoration(
-                hintText: 'Please specify...',
-                hintStyle: TextStyle(
-                  color: const Color(0xFFBDC3C7),
-                  fontSize: 14.sp,
-                ),
-                filled: true,
-                fillColor: Colors.white,
-                contentPadding: EdgeInsets.symmetric(
-                  horizontal: 16.w,
-                  vertical: 12.h,
-                ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.r),
-                  borderSide: const BorderSide(color: Color(0xFFC83A2D)),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.r),
-                  borderSide: const BorderSide(color: Color(0xFFC83A2D)),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.r),
-                  borderSide: BorderSide(
-                    color: const Color(0xFFC83A2D),
-                    width: 1.5.w,
-                  ),
-                ),
-              ),
-              style: TextStyle(
-                fontFamily: 'SF Pro',
-                fontSize: 16.sp,
-                color: const Color(0xFF1A1A1A),
-              ),
-            ),
-          ],
           SizedBox(height: MediaQuery.of(context).viewInsets.bottom + 32.h),
         ],
       ),

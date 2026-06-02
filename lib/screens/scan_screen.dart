@@ -1798,7 +1798,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
   void _updateLocalStateForValidation(Recipe r) {
     if (!mounted) return;
     
-    final validatedRecipe = r.copyWith(origin: 'MANUAL', isValidated: true);
+    final validatedRecipe = r.copyWith(origin: 'MANUAL', isValidated: true, isSuggested: false);
 
     // Update local set
     _savedRecipeNames.add(r.name);

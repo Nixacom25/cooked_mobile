@@ -354,7 +354,7 @@ class _AddToCookbookSheetState extends State<AddToCookbookSheet> {
         
         // AUTO CLOSE after success (optimistic)
         widget.onSuccess?.call();
-        if (mounted) Navigator.of(context).maybePop();
+        if (mounted) Navigator.of(context).pop();
         
       } else {
         await CookbookService.instance.removeRecipeFromCookbook(cookbookId, widget.recipe.id).catchError((e) {

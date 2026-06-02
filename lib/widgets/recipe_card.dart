@@ -184,12 +184,16 @@ class RecipeCard extends StatelessWidget {
                             color: const Color(0xFF8E8E93),
                           ),
                           SizedBox(width: 4.w),
-                          Text(
-                            displayTime,
-                            style: TextStyle(
-                              fontFamily: 'SF Pro',
-                              fontSize: 11.sp,
-                              color: const Color(0xFF8E8E93),
+                          Flexible(
+                            child: Text(
+                              displayTime,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontFamily: 'SF Pro',
+                                fontSize: 11.sp,
+                                color: const Color(0xFF8E8E93),
+                              ),
                             ),
                           ),
                           if (displayKcal.isNotEmpty) ...[
@@ -200,12 +204,16 @@ class RecipeCard extends StatelessWidget {
                               color: const Color(0xFF8E8E93),
                             ),
                             SizedBox(width: 2.w),
-                            Text(
-                              displayKcal,
-                              style: TextStyle(
-                                fontFamily: 'SF Pro',
-                                fontSize: 11.sp,
-                                color: const Color(0xFF8E8E93),
+                            Flexible(
+                              child: Text(
+                                displayKcal,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontFamily: 'SF Pro',
+                                  fontSize: 11.sp,
+                                  color: const Color(0xFF8E8E93),
+                                ),
                               ),
                             ),
                           ],
