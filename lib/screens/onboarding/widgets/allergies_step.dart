@@ -27,15 +27,15 @@ class _AllergiesStepState extends State<AllergiesStep> {
 
   final List<Map<String, dynamic>> _options = [
     {'title': 'Tree nuts', 'icon': 'nut.svg'},
-    {'title': 'Peanuts', 'icon': 'peanut.svg'},
-    {'title': 'Shellfish', 'icon': 'shellfish.svg'},
-    {'title': 'Fish', 'icon': 'fish.svg'},
-    {'title': 'Eggs', 'icon': 'eggs.svg'},
-    {'title': 'Soy', 'icon': 'soy.svg'},
-    {'title': 'Dairy Milk', 'icon': 'dairy.svg'},
-    {'title': 'Wheat/Gluten', 'icon': 'gluten.svg'},
-    {'title': 'Sesame', 'icon': 'sesame.svg'},
-    {'title': 'No Allergies', 'flutterIcon': Icons.block},
+    {'title': 'Peanuts', 'icon': 'peanut2.svg'},
+    {'title': 'Shellfish', 'icon': 'shellfish2.svg'},
+    {'title': 'Fish', 'icon': 'fish2.svg'},
+    {'title': 'Eggs', 'icon': 'protein.svg'},
+    {'title': 'Soy', 'icon': 'soy2.svg'},
+    {'title': 'Dairy Milk', 'icon': 'milk.svg'},
+    {'title': 'Wheat/Gluten', 'icon': 'free.svg'},
+    {'title': 'Sesame', 'icon': 'sesame2.svg'},
+    {'title': 'No Allergies', 'icon': 'bloque2.svg'},
   ];
 
   @override
@@ -246,6 +246,7 @@ class _AllergiesStepState extends State<AllergiesStep> {
       title: "Any allergies or intolerances?",
       subtitle: "Cooked will avoid these when recommending recipes.",
       useGrid: true,
+      preserveSvgColor: true,
       gridItemDirection: Axis.horizontal,
       maxSelections: 20,
       initialSelected: _selectedAllergies.toList(),

@@ -90,7 +90,7 @@ class _CookingSkillStepState extends State<CookingSkillStep> {
           id: 'beginner',
           label: 'Total Beginner',
           subLabel: 'I can barely boil water',
-          icon: Icons.egg_alt_outlined,
+          svgAsset: 'assets/icones/beginner.svg',
         ),
         SelectionOption(
           id: 'home_cook',
@@ -102,13 +102,13 @@ class _CookingSkillStepState extends State<CookingSkillStep> {
           id: 'confident',
           label: 'Confident Cook',
           subLabel: 'I improvise and experiment',
-          icon: Icons.soup_kitchen,
+          svgAsset: 'assets/icones/chef.svg',
         ),
         SelectionOption(
           id: 'advanced',
           label: 'Advanced / Semi-Pro',
           subLabel: 'I want challenging recipes.',
-          icon: Icons.local_fire_department_outlined,
+          svgAsset: 'assets/icones/firew.svg',
         ),
       ],
     );

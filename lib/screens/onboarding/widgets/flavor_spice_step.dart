@@ -225,7 +225,7 @@ class _FlavorSpiceStepState extends State<FlavorSpiceStep> with SingleTickerProv
                                     child: SvgPicture.asset(
                                       active
                                           ? 'assets/icones/spice1.svg'
-                                          : 'assets/icones/spice2.svg',
+                                          : 'assets/icones/spice3.svg',
                                       width: 25.sp,
                                       height: 25.sp,
                                     ),

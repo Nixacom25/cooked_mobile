@@ -26,12 +26,12 @@ class _DietaryPreferencesStepState extends State<DietaryPreferencesStep> {
     {'title': 'Vegetarian', 'desc': 'No meat or fish', 'icon': 'vegetarian.svg'},
     {'title': 'Vegan', 'desc': 'No animal products', 'icon': 'vegan.svg'},
     {'title': 'Pescatarian', 'desc': 'Fish OK, no other meat', 'icon': 'fish.svg'},
-    {'title': 'Gluten-Free', 'desc': 'No wheat or gluten', 'icon': 'gluten.svg'},
-    {'title': 'Dairy Free', 'desc': 'No milk or dairy', 'icon': 'dairy.svg'},
-    {'title': 'Halal', 'desc': 'Islamic dietary laws', 'icon': 'halal.svg'},
+    {'title': 'Gluten-Free', 'desc': 'No wheat or gluten', 'icon': 'free.svg'},
+    {'title': 'Dairy Free', 'desc': 'No milk or dairy', 'icon': 'milk.svg'},
+    {'title': 'Halal', 'desc': 'Islamic dietary laws', 'icon': 'halal2.svg'},
     {'title': 'Kosher', 'desc': 'Jewish Dietary Laws', 'icon': 'kosher.svg'},
     {'title': 'Keto/Low-Carb', 'desc': 'High fat, low carb', 'icon': 'keto.svg'},
-    {'title': 'High Protein', 'desc': 'High protein foods', 'icon': 'eggs.svg'}, // Changed to High Protein to match mockup step17.png
+    {'title': 'High Protein', 'desc': 'High protein foods', 'icon': 'protein.svg'}, // Changed to High Protein to match mockup step17.png
   ];
 
   @override
@@ -63,6 +63,7 @@ class _DietaryPreferencesStepState extends State<DietaryPreferencesStep> {
       title: "What's your dietary profile?",
       subtitle: "Select all that apply.",
       useGrid: true,
+      preserveSvgColor: true,
       maxSelections: 10,
       initialSelected: _selectedDiet.toList(),
       exclusiveOptionId: 'No Restrictions',

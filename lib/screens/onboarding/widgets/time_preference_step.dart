@@ -24,31 +24,31 @@ class _TimePreferenceStepState extends State<TimePreferenceStep> {
     {
       'title': 'Under 15 minutes',
       'desc': 'Ultra-fast meals',
-      'icon': 'electric.svg',
+      'icon': 'flash.svg',
       'summary': 'For when you need food instantly.',
     },
     {
       'title': '15–30 minutes',
       'desc': 'Quick but not rushed',
-      'icon': 'timer.svg',
+      'icon': 'minute.svg',
       'summary': 'Perfect for quick weekday meals.',
     },
     {
       'title': '30–60 minutes',
       'desc': 'A normal cooking window',
-      'icon': 'clock.svg',
+      'icon': 'minute2.svg',
       'summary': 'Great for relaxed dinners.',
     },
     {
       'title': '1–2 hours',
       'desc': 'I enjoy the cooking process',
-      'icon': 'pizza.svg', // Fallback if hourglass is missing
+      'icon': 'hours.svg', // Fallback if hourglass is missing
       'summary': 'For weekend cooking sessions.',
     },
     {
       'title': 'Any amount of time',
       'desc': 'Show me everything',
-      'icon': 'star.svg', // Fallback for infinity
+      'icon': 'pipeline.svg', // Fallback for infinity
       'summary': 'All recipes are on the table.',
     },
   ];

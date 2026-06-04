@@ -190,6 +190,7 @@ class _HomeScreenState extends State<HomeScreen>
   void didChangeDependencies() {
     super.didChangeDependencies();
     routeObserver.subscribe(this, ModalRoute.of(context)!);
+    precacheImage(const AssetImage('assets/images/home.png'), context);
   }
 
   @override
@@ -2209,7 +2210,6 @@ class _SavingsCardState extends State<_SavingsCard>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
-  late Animation<Offset> _slideAnimation;
   bool _hasTriggeredAnimation = false;
 
   @override
@@ -2217,22 +2217,14 @@ class _SavingsCardState extends State<_SavingsCard>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 700),
-      reverseDuration: const Duration(milliseconds: 400),
+      duration: const Duration(milliseconds: 800),
+      reverseDuration: const Duration(milliseconds: 500),
     );
     _scaleAnimation = CurvedAnimation(
       parent: _controller,
-      curve: Curves.elasticOut,
-      reverseCurve: Curves.easeInBack,
+      curve: Curves.easeOutCubic,
+      reverseCurve: Curves.easeInCubic,
     );
-    _slideAnimation =
-        Tween<Offset>(begin: const Offset(0, 0.5), end: Offset.zero).animate(
-          CurvedAnimation(
-            parent: _controller,
-            curve: Curves.elasticOut,
-            reverseCurve: Curves.easeInBack,
-          ),
-        );
   }
 
   @override
@@ -2272,135 +2264,145 @@ class _SavingsCardState extends State<_SavingsCard>
 
         if (!_hasTriggeredAnimation && !_SavingsCard.isDismissed) {
           _hasTriggeredAnimation = true;
-          Future.microtask(() {
-            if (mounted) _controller.forward();
+          Future.delayed(const Duration(seconds: 5), () {
+            if (mounted && !_SavingsCard.isDismissed) {
+              _controller.forward();
+            }
           });
         }
 
-        return SlideTransition(
-          position: _slideAnimation,
+        return AnimatedBuilder(
+          animation: _scaleAnimation,
+          builder: (context, child) {
+            return Align(
+              alignment: Alignment.topCenter,
+              heightFactor: _scaleAnimation.value < 0 ? 0.0 : _scaleAnimation.value,
+              child: child,
+            );
+          },
           child: ScaleTransition(
+            alignment: Alignment.center,
             scale: _scaleAnimation,
             child: Padding(
-              padding: EdgeInsets.only(
-                left: 22.w,
-                right: 22.w,
-                bottom: 20.h,
-                top: 0.h,
-              ),
-              child: Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  Container(
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFEF8F0),
-                      borderRadius: BorderRadius.circular(16.r),
-                      border: Border.all(
-                        color: const Color(0xFFF3EBE0),
-                        width: 1,
-                      ),
+            padding: EdgeInsets.only(
+              left: 22.w,
+              right: 22.w,
+              bottom: 20.h,
+              top: 0.h,
+            ),
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Container(
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFEF8F0),
+                    borderRadius: BorderRadius.circular(16.r),
+                    border: Border.all(
+                      color: const Color(0xFFF3EBE0),
+                      width: 1,
                     ),
-                    child: GestureDetector(
-                      onTap: () {
-                        Navigator.pushNamed(context, AppRoutes.savingsDetails);
-                      },
-                      behavior: HitTestBehavior.opaque,
-                      child: Padding(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 20.w,
-                          vertical: 16.h,
-                        ),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    "You've saved",
-                                    style: TextStyle(
-                                      fontFamily: 'SF Pro',
-                                      fontSize: 14.sp,
-                                      color: const Color(0xFF7D562D),
-                                      fontWeight: FontWeight.w500,
-                                    ),
+                  ),
+                  child: GestureDetector(
+                    onTap: () {
+                      Navigator.pushNamed(context, AppRoutes.savingsDetails);
+                    },
+                    behavior: HitTestBehavior.opaque,
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 20.w,
+                        vertical: 16.h,
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "You've saved",
+                                  style: TextStyle(
+                                    fontFamily: 'SF Pro',
+                                    fontSize: 14.sp,
+                                    color: const Color(0xFF7D562D),
+                                    fontWeight: FontWeight.w500,
                                   ),
-                                  SizedBox(height: 4.h),
-                                  Row(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.baseline,
-                                    textBaseline: TextBaseline.alphabetic,
-                                    children: [
-                                      Text(
-                                        "~\$${totalSaved.toStringAsFixed(0)}",
-                                        style: TextStyle(
-                                          fontFamily: 'SF Pro',
-                                          fontSize: 28.sp,
-                                          color: const Color(0xFF00C40A),
-                                          fontWeight: FontWeight.w800,
-                                        ),
+                                ),
+                                SizedBox(height: 4.h),
+                                Row(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.baseline,
+                                  textBaseline: TextBaseline.alphabetic,
+                                  children: [
+                                    Text(
+                                      "~\$${totalSaved.toStringAsFixed(0)}",
+                                      style: TextStyle(
+                                        fontFamily: 'SF Pro',
+                                        fontSize: 28.sp,
+                                        color: const Color(0xFF00C40A),
+                                        fontWeight: FontWeight.w800,
                                       ),
-                                      SizedBox(width: 6.w),
-                                      Text(
-                                        "this month",
-                                        style: TextStyle(
-                                          fontFamily: 'SF Pro',
-                                          fontSize: 16.sp,
-                                          color: const Color(0xFF1A1A1A),
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  SizedBox(height: 4.h),
-                                  Text(
-                                    "Compared to ordering takeout.",
-                                    style: TextStyle(
-                                      fontFamily: 'SF Pro',
-                                      fontSize: 14.sp,
-                                      color: const Color(
-                                        0xFF7D562D,
-                                      ).withOpacity(0.7),
-                                      fontWeight: FontWeight.w500,
                                     ),
+                                    SizedBox(width: 6.w),
+                                    Text(
+                                      "this month",
+                                      style: TextStyle(
+                                        fontFamily: 'SF Pro',
+                                        fontSize: 16.sp,
+                                        color: const Color(0xFF1A1A1A),
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                SizedBox(height: 4.h),
+                                Text(
+                                  "Compared to ordering takeout.",
+                                  style: TextStyle(
+                                    fontFamily: 'SF Pro',
+                                    fontSize: 14.sp,
+                                    color: const Color(
+                                      0xFF7D562D,
+                                    ).withOpacity(0.7),
+                                    fontWeight: FontWeight.w500,
                                   ),
-                                ],
-                              ),
+                                ),
+                              ],
                             ),
-                            Image.asset(
-                              'assets/images/logo2.png',
-                              height: 47.h,
-                              width: 47.w,
-                              fit: BoxFit.contain,
-                            ),
-                          ],
-                        ),
+                          ),
+                          Image.asset(
+                            'assets/images/logo2.png',
+                            height: 47.h,
+                            width: 47.w,
+                            fit: BoxFit.contain,
+                          ),
+                        ],
                       ),
                     ),
                   ),
-                  Positioned(
-                    top: -10.h,
-                    right: -6.w,
-                    child: GestureDetector(
-                      onTap: _dismissCard,
-                      child: Container(
-                        padding: EdgeInsets.all(6.r),
-                        decoration: BoxDecoration(
-                          color: Color(0xFFC83A2D),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          Icons.close_rounded,
-                          size: 16.sp,
-                          color: const Color(0xFFFFFFFF),
-                        ),
+                ),
+                Positioned(
+                  top: -10.h,
+                  right: -6.w,
+                  child: GestureDetector(
+                    onTap: _dismissCard,
+                    child: Container(
+                      padding: EdgeInsets.all(6.r),
+                      decoration: BoxDecoration(
+                        color: Color(0xFFC83A2D),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.close_rounded,
+                        size: 16.sp,
+                        color: const Color(0xFFFFFFFF),
                       ),
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
+        ),
         );
       },
     );

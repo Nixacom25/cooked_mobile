@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_svg/svg.dart';
 
 class ExcitedFeature {
   final String title;
   final String description;
-  final IconData iconData;
+  final String svgAsset;
 
-  ExcitedFeature(this.title, this.description, this.iconData);
+  ExcitedFeature(this.title, this.description, this.svgAsset);
 }
 
 class ExcitedFeaturesStep extends StatefulWidget {
@@ -31,22 +32,22 @@ class _ExcitedFeaturesStepState extends State<ExcitedFeaturesStep> {
     ExcitedFeature(
       'Scan Ingredients',
       'Find recipes from what you already have',
-      Icons.center_focus_weak_rounded, // or any scanner icon
+       'scan1.svg', // or any scanner icon
     ),
     ExcitedFeature(
       'Import Recipes',
       'Save recipes from TikTok, Instagram, YouTube, or websites',
-      Icons.download_rounded,
+      'import1.svg',
     ),
     ExcitedFeature(
       'Grocery List',
       'Turn recipes into shopping lists',
-      Icons.shopping_cart_outlined,
+      'grocery.svg',
     ),
     ExcitedFeature(
       'Meal Planing',
       'Plan meal of the week',
-      Icons.calendar_today_outlined,
+      'planning.svg',
     ),
   ];
 
@@ -124,10 +125,9 @@ class _ExcitedFeaturesStepState extends State<ExcitedFeaturesStep> {
                   ),
                   child: Row(
                     children: [
-                      Icon(
-                        feature.iconData,
-                        color: isSelected ? const Color(0xFFC83A2D) : const Color(0xFF9CA3AF),
-                        size: 24.sp,
+                      SvgPicture.asset(
+                        'assets/icones/${feature.svgAsset}',
+                        height: 24.h,
                       ),
                       SizedBox(width: 16.w),
                       Expanded(

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'selection_onboarding_step.dart';
 
 class HealthGoalsStep extends StatefulWidget {
@@ -96,14 +95,14 @@ class _HealthGoalsStepState extends State<HealthGoalsStep> {
       },
       bottomCardWidget: _selectedValue.isNotEmpty ? _buildBottomCard(_selectedValue) : null,
       options: [
-        SelectionOption(id: 'weight_loss', label: 'Weight loss', icon: FontAwesomeIcons.leaf),
-        SelectionOption(id: 'muscle_gain', label: 'Muscle gain', icon: Icons.fitness_center),
-        SelectionOption(id: 'high_protein', label: 'High protein', icon: Icons.egg_alt_outlined),
-        SelectionOption(id: 'healthy_heart', label: 'Healthy heart', icon: Icons.monitor_heart_outlined),
-        SelectionOption(id: 'quick_meals', label: 'Quick meals', icon: Icons.timer_outlined),
-        SelectionOption(id: 'budget_friendly', label: 'Budget friendly', icon: FontAwesomeIcons.moneyBill1Wave),
-        SelectionOption(id: 'eat_healthier', label: 'Eat healthier', icon: FontAwesomeIcons.solidHeart),
-        SelectionOption(id: 'no_goal', label: 'No specific goal', icon: Icons.block),
+        SelectionOption(id: 'weight_loss', label: 'Weight loss', svgAsset: 'assets/icones/feuille.svg'),
+        SelectionOption(id: 'muscle_gain', label: 'Muscle gain', svgAsset: 'assets/icones/muscle.svg'),
+        SelectionOption(id: 'high_protein', label: 'High protein', svgAsset: 'assets/icones/protein1.svg'),
+        SelectionOption(id: 'healthy_heart', label: 'Healthy heart', svgAsset: 'assets/icones/healt.svg'),
+        SelectionOption(id: 'quick_meals', label: 'Quick meals', svgAsset: 'assets/icones/minute2.svg'),
+        SelectionOption(id: 'budget_friendly', label: 'Budget friendly', svgAsset: 'assets/icones/eating.svg'),
+        SelectionOption(id: 'eat_healthier', label: 'Eat healthier', svgAsset: 'assets/icones/coeur.svg'),
+        SelectionOption(id: 'no_goal', label: 'No specific goal', svgAsset: 'assets/icones/bloque.svg'),
       ],
     );
   }

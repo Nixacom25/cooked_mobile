@@ -56,7 +56,6 @@ class _RecipeGenerationLoadingStepState
 
   @override
   Widget build(BuildContext context) {
-    bool isComplete = _progressAnimation.value >= 99;
 
     return Column(
       children: [

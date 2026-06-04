@@ -3,7 +3,6 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
-
 class DiscoverySource {
   final String label;
   final String iconAsset;
@@ -35,13 +34,13 @@ class _SourceStepState extends State<SourceStep> {
   final List<DiscoverySource> _sources = [
     DiscoverySource('Tiktok', 'tiktok.svg', 'Tiktok'),
     DiscoverySource('Instagram', 'instagram.svg', 'Instagram'),
-    DiscoverySource('Youtube', 'trending.svg', 'Youtube'), // No youtube.svg, using trending
+    DiscoverySource('Youtube', 'you.svg', 'Youtube'), // No youtube.svg, using trending
     DiscoverySource('Google', 'google.svg', 'Google'),
-    DiscoverySource('Recipe Websites', 'world.svg', 'Recipe Websites'), // No web.svg, using world
-    DiscoverySource('Family/Friends', 'friend.svg', 'Family/Friends'), // friend instead of friends
-    DiscoverySource('Pinterest', 'others.svg', 'Pinterest'), // No pinterest.svg, using others
-    DiscoverySource('Cookbooks', 'books.svg', 'Cookbooks'), // books instead of cookbook
-    DiscoverySource('I usually make this up', 'others.svg', 'I usually make this up'), // others instead of make_up
+    DiscoverySource('Recipe Websites', 'web.png', 'Recipe Websites'), // Extracted PNG
+    DiscoverySource('Family/Friends', 'friend1.svg', 'Family/Friends'), // friend instead of friends
+    DiscoverySource('Pinterest', 'printerest.png', 'Pinterest'), // Extracted PNG
+    DiscoverySource('Cookbooks', 'cookbook.svg', 'Cookbooks'), // books instead of cookbook
+    DiscoverySource('I usually make this up', 'reflex.svg', 'I usually make this up'), // others instead of make_up
   ];
 
   @override
@@ -145,12 +144,19 @@ class _SourceStepState extends State<SourceStep> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       if (source.iconAsset.isNotEmpty) ...[
-                        SvgPicture.asset(
-                          'assets/icones/${source.iconAsset}',
-                          height: 26.h,
-                          width: 26.w,
-                          placeholderBuilder: (BuildContext context) => const SizedBox.shrink(),
-                        ),
+                        source.iconAsset.endsWith('.svg')
+                            ? SvgPicture.asset(
+                                'assets/icones/${source.iconAsset}',
+                                height: 26.h,
+                                width: 26.w,
+                                placeholderBuilder: (BuildContext context) => const SizedBox.shrink(),
+                              )
+                            : Image.asset(
+                                'assets/icones/${source.iconAsset}',
+                                height: 32.h,
+                                width: 32.w,
+                                errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
+                              ),
                         SizedBox(height: 8.h),
                       ],
                       Text(

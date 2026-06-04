@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'selection_onboarding_step.dart';
 
 class GoalsStep extends StatefulWidget {
@@ -29,14 +28,14 @@ class _GoalsStepState extends State<GoalsStep> {
       initialSelected: widget.initialSelected,
       onSelectionChanged: widget.onChanged,
       options: [
-        SelectionOption(id: 'save_money', label: 'Save money', icon: FontAwesomeIcons.moneyBill1Wave),
-        SelectionOption(id: 'eat_healthier', label: 'Eat healthier', icon: FontAwesomeIcons.solidHeart),
-        SelectionOption(id: 'gain_muscle', label: 'Gain muscle', icon: Icons.fitness_center),
-        SelectionOption(id: 'lose_weight', label: 'Lose Weight', icon: FontAwesomeIcons.leaf),
-        SelectionOption(id: 'waste_less', label: 'Waste less food', icon: Icons.delete_outline),
-        SelectionOption(id: 'learn_cook', label: 'Learn to cook', icon: Icons.soup_kitchen),
-        SelectionOption(id: 'discover_recipes', label: 'Discover recipes', icon: Icons.search),
-        SelectionOption(id: 'meal_prep', label: 'Meal prep easier', icon: Icons.assignment_outlined),
+        SelectionOption(id: 'save_money', label: 'Save money', svgAsset: 'assets/icones/eating.svg'),
+        SelectionOption(id: 'eat_healthier', label: 'Eat healthier', svgAsset: 'assets/icones/coeur.svg'),
+        SelectionOption(id: 'gain_muscle', label: 'Gain muscle', svgAsset: 'assets/icones/muscle.svg'),
+        SelectionOption(id: 'lose_weight', label: 'Lose Weight', svgAsset: 'assets/icones/feuille.svg'),
+        SelectionOption(id: 'waste_less', label: 'Waste less food', svgAsset: 'assets/icones/waste.svg'),
+        SelectionOption(id: 'learn_cook', label: 'Learn to cook', svgAsset: 'assets/icones/knowing.svg'),
+        SelectionOption(id: 'discover_recipes', label: 'Discover recipes', svgAsset: 'assets/icones/ordering.svg'),
+        SelectionOption(id: 'meal_prep', label: 'Meal prep easier', svgAsset: 'assets/icones/saving.svg'),
       ],
     );
   }

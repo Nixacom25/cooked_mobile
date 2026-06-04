@@ -184,10 +184,10 @@ class _SocialProofStepState extends State<SocialProofStep> with SingleTickerProv
                       child: SlideTransition(
                         position: _reviewSlides[0],
                         child: _buildReviewCard(
-                          img: 'assets/images/apple.png',
+                          img: 'assets/images/sarah.png',
                           name: 'Sarah M.',
                           initials: 'SM',
-                          quote: '"Cooked helped me stop ordering dinner every night."',
+                          quote: '"Cooked helped me stop\nordering dinner every night."',
                         ),
                       ),
                     ),
@@ -196,10 +196,10 @@ class _SocialProofStepState extends State<SocialProofStep> with SingleTickerProv
                       child: SlideTransition(
                         position: _reviewSlides[1],
                         child: _buildReviewCard(
-                          img: 'assets/images/apple.png',
+                          img: 'assets/images/david.png',
                           name: 'David K.',
                           initials: 'DK',
-                          quote: '"I finally use the groceries I already have."',
+                          quote: '"I finally use the groceries I\nalready have."',
                         ),
                       ),
                     ),
@@ -208,10 +208,10 @@ class _SocialProofStepState extends State<SocialProofStep> with SingleTickerProv
                       child: SlideTransition(
                         position: _reviewSlides[2],
                         child: _buildReviewCard(
-                          img: 'assets/images/apple.png',
+                          img: 'assets/images/elena.png',
                           name: 'Elena R.',
                           initials: 'ER',
-                          quote: '"Meal ideas feel personalized instead of random."',
+                          quote: '"Meal ideas feel personalized\ninstead of random."',
                         ),
                       ),
                     ),
@@ -291,61 +291,46 @@ class _SocialProofStepState extends State<SocialProofStep> with SingleTickerProv
   Widget _buildReviewCard({required String img, required String name, required String initials, required String quote}) {
     return Container(
       margin: EdgeInsets.only(bottom: 16.h),
-      padding: EdgeInsets.all(20.r),
+      padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 20.h),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16.r),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-        border: Border.all(color: const Color(0xFFF3F4F6)),
+        color: const Color(0xFFFFF7ED),
+        borderRadius: BorderRadius.circular(100.r),
+        border: Border.all(color: const Color(0xFFFBE8D0)),
       ),
-      child: Column(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Row(
-            children: [
-              CircleAvatar(
-                radius: 16.r,
-                backgroundColor: const Color(0xFFFDE68A), // Light Yellow
-                child: Text(
-                  initials,
+          CircleAvatar(
+            radius: 28.r,
+            backgroundImage: AssetImage(img),
+            backgroundColor: Colors.transparent,
+          ),
+          SizedBox(width: 16.w),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  quote,
                   style: TextStyle(
-                    fontSize: 12.sp,
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xFF92400E), // Dark Amber
+                    fontSize: 14.sp,
+                    fontWeight: FontWeight.w500,
+                    color: const Color(0xFF1B1C1C),
+                    fontFamily: 'SF Pro',
+                    height: 1.4,
+                  ),
+                ),
+                SizedBox(height: 8.h),
+                Text(
+                  '— $name',
+                  style: TextStyle(
+                    fontSize: 14.sp,
+                    fontWeight: FontWeight.w400,
+                    color: const Color(0xFF6B7280),
                     fontFamily: 'SF Pro',
                   ),
                 ),
-              ),
-              SizedBox(width: 12.w),
-              Text(
-                name,
-                style: TextStyle(
-                  fontSize: 15.sp,
-                  fontWeight: FontWeight.w700,
-                  color: const Color(0xFF111827),
-                  fontFamily: 'SF Pro',
-                ),
-              ),
-              const Spacer(),
-              Row(
-                children: List.generate(5, (index) => Icon(Icons.star, color: const Color(0xFFFFB800), size: 14.sp)),
-              ),
-            ],
-          ),
-          SizedBox(height: 12.h),
-          Text(
-            quote,
-            style: TextStyle(
-              fontSize: 15.sp,
-              fontWeight: FontWeight.w500,
-              color: const Color(0xFF4B5563),
-              fontFamily: 'SF Pro',
-              height: 1.4,
+              ],
             ),
           ),
         ],

@@ -288,7 +288,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     });
 
     if (_currentPage > 0) {
-      _pageController = PageController(initialPage: _currentPage);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_pageController.hasClients) {
+          _pageController.jumpToPage(_currentPage);
+        }
+      });
     }
   }
 
@@ -753,13 +757,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       AgeStep(onContinue: _onContinue),
                       GoalsStep(
                         onContinue: _onContinue,
-                        initialSelected: _onboardingGoals,
+                        initialSelected: _onboardingGoals.where((g) => [
+                          'save_money', 'eat_healthier', 'gain_muscle', 'lose_weight',
+                          'waste_less', 'learn_cook', 'discover_recipes', 'meal_prep'
+                        ].contains(g)).toList(),
                         onChanged: (selections) {
                           setState(() {
-                            // Filter out previous GoalsStep selections (we assume they match some known list or just append)
-                            // But since we merge both, let's just append/remove or replace. 
-                            // Actually, it's safer to just set it, but they might overwrite each other if not careful.
-                            // Let's add them to the set.
+                            // Filter out previous GoalsStep selections
                             final healthGoals = _onboardingGoals.where((g) => [
                               'weight_loss', 'muscle_gain', 'high_protein', 'healthy_heart', 
                               'quick_meals', 'budget_friendly', 'no_goal'
@@ -770,7 +774,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       ),
                       HealthGoalsStep(
                         onContinue: _onContinue,
-                        initialSelected: _onboardingGoals,
+                        initialSelected: _onboardingGoals.where((g) => [
+                          'weight_loss', 'muscle_gain', 'high_protein', 'healthy_heart', 
+                          'quick_meals', 'budget_friendly', 'no_goal'
+                        ].contains(g)).toList(),
                         onChanged: (selections) {
                           setState(() {
                             final mainGoals = _onboardingGoals.where((g) => [
@@ -960,7 +967,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           }
                         },
                       ),
-                    ].map((step) => Container(color: Colors.white, child: step)).toList(),
+                    ].map((step) => Container(child: step)).toList(),
                   ),
                 ),
 

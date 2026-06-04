@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'selection_onboarding_step.dart';
 
 class FrustrationsStep extends StatelessWidget {
@@ -18,27 +17,27 @@ class FrustrationsStep extends StatelessWidget {
         SelectionOption(
             id: 'spending',
             label: 'Spending too much eating out',
-            icon: FontAwesomeIcons.moneyBill1),
+            svgAsset: 'assets/icones/eating.svg'),
         SelectionOption(
             id: 'groceries',
             label: 'Groceries going bad',
-            icon: FontAwesomeIcons.faceFrown),
+            svgAsset: 'assets/icones/triste.svg'),
         SelectionOption(
             id: 'unhealthy',
             label: 'Eating unhealthy',
-            icon: FontAwesomeIcons.solidHeart),
+            svgAsset: 'assets/icones/coeur.svg'),
         SelectionOption(
             id: 'dont_know',
             label: 'Never knowing what to cook',
-            icon: FontAwesomeIcons.bowlFood),
+            svgAsset: 'assets/icones/knowing.svg'),
         SelectionOption(
             id: 'takeout',
             label: 'Ordering takeout too often',
-            icon: FontAwesomeIcons.bagShopping),
+            svgAsset: 'assets/icones/ordering.svg'),
         SelectionOption(
             id: 'recipes',
             label: 'Saving recipes but never using them',
-            icon: FontAwesomeIcons.fileLines),
+            svgAsset: 'assets/icones/saving.svg'),
       ],
     );
   }

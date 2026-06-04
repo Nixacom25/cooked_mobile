@@ -27,6 +27,7 @@ class SelectionOnboardingStep extends StatefulWidget {
   final List<String> initialSelected;
   final String? exclusiveOptionId;
   final Axis gridItemDirection;
+  final bool preserveSvgColor;
 
   const SelectionOnboardingStep({
     super.key,
@@ -42,6 +43,7 @@ class SelectionOnboardingStep extends StatefulWidget {
     this.initialSelected = const [],
     this.exclusiveOptionId,
     this.gridItemDirection = Axis.vertical,
+    this.preserveSvgColor = false,
   });
 
   @override
@@ -274,7 +276,15 @@ class _SelectionOnboardingStepState extends State<SelectionOnboardingStep> with 
                                               Image.asset(option.imageAsset!, height: 28.h, fit: BoxFit.contain),
                                               SizedBox(width: 8.w),
                                             ] else if (option.svgAsset != null) ...[
-                                              SvgPicture.asset(option.svgAsset!, height: 20.h, width: 20.w),
+                                              SvgPicture.asset(
+                                                option.svgAsset!, 
+                                                height: 20.h, 
+                                                width: 20.w,
+                                                colorFilter: widget.preserveSvgColor ? null : ColorFilter.mode(
+                                                  isSelected ? const Color(0xFFD92D20) : const Color(0xFF9CA3AF),
+                                                  BlendMode.srcIn,
+                                                ),
+                                              ),
                                               SizedBox(width: 8.w),
                                             ] else if (option.icon != null) ...[
                                               Icon(option.icon, color: isSelected ? const Color(0xFFD92D20) : const Color(0xFF9CA3AF), size: 24.sp),
@@ -313,8 +323,12 @@ class _SelectionOnboardingStepState extends State<SelectionOnboardingStep> with 
                                                 padding: EdgeInsets.only(bottom: 8.h),
                                                 child: SvgPicture.asset(
                                                   option.svgAsset!,
-                                                  height: 32.h,
-                                                  width: 32.w,
+                                                  height: 24.h,
+                                                  width: 24.w,
+                                                  colorFilter: widget.preserveSvgColor ? null : ColorFilter.mode(
+                                                    isSelected ? const Color(0xFFD92D20) : const Color(0xFF9CA3AF),
+                                                    BlendMode.srcIn,
+                                                  ),
                                                 ),
                                               ),
                                             ] else if (option.icon != null) ...[
@@ -390,7 +404,21 @@ class _SelectionOnboardingStepState extends State<SelectionOnboardingStep> with 
                                   ),
                                   child: Row(
                                     children: [
-                                      if (option.icon != null) ...[
+                                      if (option.imageAsset != null) ...[
+                                        Image.asset(option.imageAsset!, height: 24.h, fit: BoxFit.contain),
+                                        SizedBox(width: 10.w),
+                                      ] else if (option.svgAsset != null) ...[
+                                        SvgPicture.asset(
+                                          option.svgAsset!, 
+                                          height: 20.h, 
+                                          width: 20.w,
+                                          colorFilter: widget.preserveSvgColor ? null : ColorFilter.mode(
+                                            isSelected ? const Color(0xFFD92D20) : const Color(0xFF9CA3AF),
+                                            BlendMode.srcIn,
+                                          ),
+                                        ),
+                                        SizedBox(width: 10.w),
+                                      ] else if (option.icon != null) ...[
                                         Icon(
                                           option.icon,
                                           color: isSelected ? const Color(0xFFD92D20) : const Color(0xFF9CA3AF),

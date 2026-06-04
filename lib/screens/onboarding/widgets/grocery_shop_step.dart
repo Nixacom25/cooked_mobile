@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_svg/svg.dart';
 
 class GroceryShopStep extends StatefulWidget {
   final String? initialFrequency;
@@ -38,11 +39,11 @@ class _GroceryShopStepState extends State<GroceryShopStep> {
     {'name': 'Walmart', 'icon': 'walmart.png'},
     {'name': 'Target', 'icon': 'target.png'},
     {'name': 'Costco', 'icon': 'costco.png'},
-    {'name': 'Trader Joe\'s', 'icon': 'traderjoes.png'},
-    {'name': 'Whole Foods', 'icon': 'wholefoods.png'},
+    {'name': 'Trader Joe\'s', 'icon': 'trader_joe.png'},
+    {'name': 'Whole Foods', 'icon': 'whole_foods.png'},
     {'name': 'Kroger', 'icon': 'kroger.png'},
     {'name': 'Aldi', 'icon': 'aldi.png'},
-    {'name': 'Local Markets', 'icon': 'localmarkets.png'},
+    {'name': 'Local Markets', 'icon': 'local_markets.png'},
     {'name': 'Instacart', 'icon': 'instacart.png'},
     {'name': 'Others', 'icon': ''},
   ];
@@ -134,7 +135,7 @@ class _GroceryShopStepState extends State<GroceryShopStep> {
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
                   width: itemWidth,
-                  padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 14.h),
+                  padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(12.r),
@@ -152,15 +153,22 @@ class _GroceryShopStepState extends State<GroceryShopStep> {
                     ],
                   ),
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.start,
                     children: [
                       if (store['icon']!.isNotEmpty) ...[
-                        Image.asset(
-                          'assets/icones/${store['icon']}',
-                          height: 20.h,
-                          width: 20.w,
-                          errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
-                        ),
+                        store['icon']!.endsWith('.svg')
+                            ? SvgPicture.asset(
+                                'assets/icones/${store['icon']}',
+                                height: 24.h,
+                                width: 24.w,
+                                errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
+                              )
+                            : Image.asset(
+                                'assets/images/${store['icon']}',
+                                height: 28.h,
+                                width: 28.w,
+                                errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
+                              ),
                         SizedBox(width: 8.w),
                       ],
                       Flexible(
