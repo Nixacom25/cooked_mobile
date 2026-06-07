@@ -457,7 +457,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     if (!isGuest &&
         !isSocial &&
         (_email.isEmpty || _password.isEmpty || !_acceptedTerms)) {
-      _pageController.jumpToPage(30);
+      _pageController.jumpToPage(33);
       IosToast.show(
         context,
         message: 'Please complete account info to save your profile',
@@ -603,9 +603,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
       // Navigation logic ONLY after success
       if (isGuest || isSocial) {
-        _pageController.nextPage(duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
+        _pageController.jumpToPage(35); // Jump to FreeTrialGuideStep directly
       } else {
-        _pageController.jumpToPage(32);
+        _pageController.jumpToPage(34); // Jump to OtpStep for local auth
       }
     } catch (e) {
       if (!mounted) return;

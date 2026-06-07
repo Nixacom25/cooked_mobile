@@ -10,6 +10,18 @@ import 'package:cooked/services/auth_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+// Top-level parsing functions for compute()
+List<Recipe> _parseRecipesList(String responseBody) {
+  final List<dynamic> data = jsonDecode(responseBody);
+  return data.map((json) => Recipe.fromJson(json)).toList();
+}
+
+List<Recipe> _parseExploreRecipesData(String responseBody) {
+  final Map<String, dynamic> data = jsonDecode(responseBody);
+  final List<dynamic> content = data['content'];
+  return content.map((json) => Recipe.fromJson(json)).toList();
+}
+
 class RecipeService {
   RecipeService._privateConstructor();
   static final RecipeService instance = RecipeService._privateConstructor();
@@ -148,8 +160,7 @@ class RecipeService {
     );
 
     if (response.statusCode == 200) {
-      final List<dynamic> data = jsonDecode(response.body);
-      return data.map((json) => Recipe.fromJson(json)).toList();
+      return await compute(_parseRecipesList, response.body);
     } else {
       String errorMessage = 'Failed to generate recipes. Please try again.';
       try {
@@ -189,8 +200,7 @@ class RecipeService {
     final response = await http.get(url, headers: await _getHeaders());
 
     if (response.statusCode == 200) {
-      final List<dynamic> data = jsonDecode(response.body);
-      final recipes = data.map((json) => Recipe.fromJson(json)).toList();
+      final recipes = await compute(_parseRecipesList, response.body);
       myRecipesNotifier.value = recipes;
       
       try {
@@ -312,11 +322,14 @@ class RecipeService {
     final response = await http.get(url, headers: await _getHeaders());
 
     if (response.statusCode == 200) {
-      final Map<String, dynamic> data = jsonDecode(response.body);
-      final List<dynamic> content = data['content'];
-      final results = content.map((json) => Recipe.fromJson(json)).toList();
+      final results = await compute(_parseExploreRecipesData, response.body);
       _cache[cacheKey] = results;
-      await _writeToPersistentCache(cacheKey, content);
+      
+      try {
+        final Map<String, dynamic> data = jsonDecode(response.body);
+        await _writeToPersistentCache(cacheKey, data['content']);
+      } catch (_) {}
+      
       return results;
     } else {
       throw Exception('Unable to load explore recipes.');
@@ -337,8 +350,7 @@ class RecipeService {
     final response = await http.get(url, headers: await _getHeaders());
 
     if (response.statusCode == 200) {
-      final List<dynamic> data = jsonDecode(response.body);
-      final results = data.map((json) => Recipe.fromJson(json)).toList();
+      final results = await compute(_parseRecipesList, response.body);
       
       // Merge with temporary local suggestions
       final merged = await _mergeTemporarySuggestions(results);
@@ -569,11 +581,14 @@ class RecipeService {
     final response = await http.get(url, headers: await _getHeaders());
 
     if (response.statusCode == 200) {
-      final Map<String, dynamic> data = jsonDecode(response.body);
-      final List<dynamic> content = data['content'];
-      final results = content.map((json) => Recipe.fromJson(json)).toList();
+      final results = await compute(_parseExploreRecipesData, response.body);
       _cache[cacheKey] = results;
-      await _writeToPersistentCache(cacheKey, content);
+      
+      try {
+        final Map<String, dynamic> data = jsonDecode(response.body);
+        await _writeToPersistentCache(cacheKey, data['content']);
+      } catch (_) {}
+      
       return results;
     } else {
       throw Exception('Unable to load popular recipes.');
@@ -714,9 +729,7 @@ class RecipeService {
     final response = await http.get(url, headers: await _getHeaders());
 
     if (response.statusCode == 200) {
-      final Map<String, dynamic> data = jsonDecode(response.body);
-      final List<dynamic> content = data['content'];
-      final recipes = content.map((json) => Recipe.fromJson(json)).toList();
+      final recipes = await compute(_parseExploreRecipesData, response.body);
       recentImportsNotifier.value = recipes;
       return recipes;
     } else {

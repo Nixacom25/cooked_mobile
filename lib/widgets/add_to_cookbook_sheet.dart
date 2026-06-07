@@ -307,13 +307,8 @@ class _AddToCookbookSheetState extends State<AddToCookbookSheet> {
       onCancel: () => setState(() => _mode = _SheetMode.list),
       onComplete: (cb) {
         if (mounted) {
-          setState(() {
-            _mode = _SheetMode.list;
-            _selectedIds.add(cb.id);
-          });
-          // Also trigger the success callback if needed, 
-          // but we stay in the sheet to show the new cookbook selected
           widget.onSuccess?.call();
+          Navigator.of(context).pop();
         }
       },
     );

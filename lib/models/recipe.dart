@@ -67,10 +67,16 @@ class Recipe {
       final equipmentList = (json['equipment'] as List?)?.map((e) => e.toString()).toList() ?? [];
       debugPrint('📦 [Recipe.fromJson] parsing ${json['name']}: steps=${stepsList.length}, equipment=${equipmentList.length}');
 
+      String? cleanImage;
+      if (json['image'] != null) {
+        cleanImage = json['image'].toString().replaceAll('"', '').trim();
+        if (cleanImage.isEmpty) cleanImage = null;
+      }
+
       return Recipe(
         id: json['id']?.toString() ?? '',
         name: json['name']?.toString() ?? 'Recipe',
-        image: json['image']?.toString(),
+        image: cleanImage,
         cookTime: (json['cookTime'] as num?)?.toInt() ?? 0,
         kcal: (json['kcal'] as num?)?.toInt() ?? 0,
         steps: stepsList,

@@ -295,13 +295,15 @@ class RecipeCard extends StatelessWidget {
   }
 
   Widget _buildImage(String path) {
-    if (path.isEmpty || path == 'null') {
+    final cleanPath = path.replaceAll('"', '').trim();
+
+    if (cleanPath.isEmpty || cleanPath == 'null') {
       return Image.asset('assets/images/recipes.png', fit: BoxFit.cover);
     }
 
-    if (path.startsWith('http')) {
+    if (cleanPath.startsWith('http')) {
       return CachedNetworkImage(
-        imageUrl: path,
+        imageUrl: cleanPath,
         fit: BoxFit.cover,
         errorWidget: (_, __, ___) =>
             Image.asset('assets/images/recipes.png', fit: BoxFit.cover),
@@ -314,7 +316,7 @@ class RecipeCard extends StatelessWidget {
 
     // Assume asset path
     return Image.asset(
-      path,
+      cleanPath,
       fit: BoxFit.cover,
       errorBuilder: (_, __, ___) =>
           Image.asset('assets/images/recipes.png', fit: BoxFit.cover),

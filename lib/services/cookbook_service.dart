@@ -5,6 +5,19 @@ import '../models/cookbook.dart';
 import 'package:flutter/foundation.dart';
 import 'auth_service.dart';
 
+List<Cookbook> _parseCookbooks(String responseBody) {
+  final List<dynamic> data = jsonDecode(responseBody);
+  final cookbooks = <Cookbook>[];
+  for (var item in data) {
+    try {
+      cookbooks.add(Cookbook.fromJson(item));
+    } catch (e) {
+      debugPrint('Error parsing individual cookbook: $e');
+    }
+  }
+  return cookbooks;
+}
+
 class CookbookService {
   CookbookService._privateConstructor();
   static final CookbookService instance = CookbookService._privateConstructor();
@@ -39,16 +52,7 @@ class CookbookService {
 
     if (response.statusCode == 200) {
       try {
-        final List<dynamic> data = jsonDecode(response.body);
-        final cookbooks = <Cookbook>[];
-        for (var item in data) {
-          try {
-            cookbooks.add(Cookbook.fromJson(item));
-          } catch (e) {
-            debugPrint('Error parsing individual cookbook: $e');
-            // Skip this one
-          }
-        }
+        final cookbooks = await compute(_parseCookbooks, response.body);
         myCookbooksNotifier.value = cookbooks;
         return cookbooks;
       } catch (e) {

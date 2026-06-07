@@ -70,6 +70,9 @@ jobs:
     - name: Install dependencies
       run: flutter pub get
 
+    - name: Run tests
+      run: flutter test
+
     - name: Restore iOS Google Service Info
       env:
         IOS_GOOGLE_SERVICE_INFO_BASE64: ${{ secrets.IOS_GOOGLE_SERVICE_INFO_BASE64 }}
