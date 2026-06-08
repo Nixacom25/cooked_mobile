@@ -1,6 +1,8 @@
 name: Build iOS IPA (Unsigned)
 
 on:
+  push:
+    branches: [ "main" ]
   workflow_dispatch: # Permet de lancer le build manuellement depuis GitHub
 
 jobs:
