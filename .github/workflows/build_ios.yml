@@ -24,7 +24,6 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
-          flutter-version: '3.19.0' # Ou la version exacte utilisée dans le projet
           architecture: x64
 
       - name: Install dependencies
