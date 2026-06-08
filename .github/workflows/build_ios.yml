@@ -1,0 +1,51 @@
+name: Build iOS IPA (Unsigned)
+
+on:
+  workflow_dispatch: # Permet de lancer le build manuellement depuis GitHub
+
+jobs:
+  build-ios:
+    name: Build iOS App
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          flutter-version: '3.19.0' # Ou la version exacte utilisée dans le projet
+          architecture: x64
+
+      - name: Install dependencies
+        run: flutter pub get
+        working-directory: ./mobile
+
+      - name: Install CocoaPods
+        run: cd mobile/ios && pod install
+        
+      - name: Build iOS App (Unsigned)
+        run: flutter build ios --release --no-codesign
+        working-directory: ./mobile
+
+      - name: Package into IPA
+        run: |
+          mkdir -p Payload
+          mv build/ios/iphoneos/Runner.app Payload/
+          zip -qq -r Cooked_iOS_Unsigned.ipa Payload
+        working-directory: ./mobile
+
+      - name: Upload IPA Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: cooked-ios-ipa
+          path: mobile/Cooked_iOS_Unsigned.ipa
+          retention-days: 7
