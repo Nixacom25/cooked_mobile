@@ -392,35 +392,36 @@ class _CookbookDetailScreenState extends State<CookbookDetailScreen> {
                                   }
                                 }
                               },
-                              onRemoveFromCookbookTap: () async {
-                                final updatedCookbook = await CookbookService
-                                    .instance
-                                    .removeRecipeFromCookbook(
-                                      _cookbook!.id,
-                                      r.id,
+                              onRemoveFromCookbookTap: () {
+                                // Optimistic action
+                                CookbookService.instance.removeRecipeFromCookbook(
+                                  _cookbook!.id,
+                                  r.id,
+                                ).catchError((e) {
+                                  if (mounted) {
+                                    IosToast.show(
+                                      context,
+                                      message: ErrorHelper.getFriendlyMessage(e),
+                                      type: ToastType.error,
                                     );
-                                if (mounted) {
-                                  setState(() {
-                                    _cookbook = updatedCookbook;
-                                  });
-                                  IosToast.show(
-                                    context,
-                                    message: 'Removed from cookbook',
-                                    type: ToastType.success,
-                                  );
-                                }
+                                  }
+                                  return _cookbook!;
+                                });
+                                
+                                IosToast.show(
+                                  context,
+                                  message: 'Removed from cookbook',
+                                  type: ToastType.success,
+                                );
                               },
-                              onDeleteTap: () async {
-                                final success = await RecipeService.instance
-                                    .deleteRecipe(r.id);
-                                if (success && mounted) {
-                                  _load();
-                                  IosToast.show(
-                                    context,
-                                    message: 'Recipe deleted',
-                                    type: ToastType.success,
-                                  );
-                                }
+                              onDeleteTap: () {
+                                // Optimistic deletion
+                                RecipeService.instance.deleteRecipe(r.id).catchError((_) => false);
+                                IosToast.show(
+                                  context,
+                                  message: 'Recipe deleted',
+                                  type: ToastType.success,
+                                );
                               },
                             );
                           },

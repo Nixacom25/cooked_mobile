@@ -333,38 +333,29 @@ class _AddToCookbookSheetState extends State<AddToCookbookSheet> {
 
     try {
       if (!isSelected) {
-        await CookbookService.instance.addRecipeToCookbook(cookbookId, widget.recipe.id).catchError((e) {
-           // Revert UI on error
-           if (mounted) {
-             setState(() {
-              _selectedIds.remove(cookbookId);
-            });
-            IosToast.show(context, message: ErrorHelper.getFriendlyMessage(e), type: ToastType.error);
-           }
-           throw e;
+        // OPTIMISTIC UI: Close the sheet and notify immediately!
+        widget.onSuccess?.call();
+        if (mounted) Navigator.of(context).pop();
+
+        CookbookService.instance.addRecipeToCookbook(cookbookId, widget.recipe.id).catchError((e) {
+           // On background error, we just swallow or show a global toast if we had context
+           debugPrint('Background add to cookbook failed: $e');
+           return Cookbook(id: '', name: '', recipes: [], createdAt: DateTime.now(), updatedAt: DateTime.now(), isPlaceholder: true);
         });
+        
         if (widget.recipe.isSuggested) {
           RecipeService.instance.validateRecipe(widget.recipe.id).catchError((_) => widget.recipe);
         }
-        
-        // AUTO CLOSE after success (optimistic)
-        widget.onSuccess?.call();
-        if (mounted) Navigator.of(context).pop();
-        
       } else {
         await CookbookService.instance.removeRecipeFromCookbook(cookbookId, widget.recipe.id).catchError((e) {
-           // Revert UI on error
            if (mounted) {
-             setState(() {
-              _selectedIds.add(cookbookId);
-            });
-            IosToast.show(context, message: ErrorHelper.getFriendlyMessage(e), type: ToastType.error);
+             setState(() => _selectedIds.add(cookbookId));
+             IosToast.show(context, message: ErrorHelper.getFriendlyMessage(e), type: ToastType.error);
            }
            throw e;
         });
       }
     } catch (e) {
-       // Revert UI on error
        if (mounted) {
          setState(() {
           if (!isSelected) {
@@ -373,10 +364,11 @@ class _AddToCookbookSheetState extends State<AddToCookbookSheet> {
             _selectedIds.add(cookbookId);
           }
         });
-        IosToast.show(context, message: ErrorHelper.getFriendlyMessage(e), type: ToastType.error);
-       }
+      }
     } finally {
-      _isProcessing = false;
+      if (mounted) {
+        _isProcessing = false;
+      }
     }
   }
 }

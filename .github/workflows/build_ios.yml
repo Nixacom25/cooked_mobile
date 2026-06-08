@@ -29,25 +29,22 @@ jobs:
 
       - name: Install dependencies
         run: flutter pub get
-        working-directory: ./mobile
 
       - name: Install CocoaPods
-        run: cd mobile/ios && pod install
+        run: cd ios && pod install
         
       - name: Build iOS App (Unsigned)
         run: flutter build ios --release --no-codesign
-        working-directory: ./mobile
 
       - name: Package into IPA
         run: |
           mkdir -p Payload
           mv build/ios/iphoneos/Runner.app Payload/
           zip -qq -r Cooked_iOS_Unsigned.ipa Payload
-        working-directory: ./mobile
 
       - name: Upload IPA Artifact
         uses: actions/upload-artifact@v4
         with:
           name: cooked-ios-ipa
-          path: mobile/Cooked_iOS_Unsigned.ipa
+          path: Cooked_iOS_Unsigned.ipa
           retention-days: 7
