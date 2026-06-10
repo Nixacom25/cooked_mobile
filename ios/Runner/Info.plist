@@ -62,13 +62,13 @@
 		<key>UIStatusBarHidden</key>
 		<false/>
 		<key>NSCameraUsageDescription</key>
-		<string>Nous avons besoin d'accéder à votre caméra pour scanner vos ingrédients et vous proposer des recettes.</string>
+		<string>Cooked needs access to your camera to scan ingredients and suggest recipes.</string>
 		<key>NSPhotoLibraryUsageDescription</key>
-		<string>Nous avons besoin d'accéder à votre galerie pour que vous puissiez importer des photos de vos ingrédients.</string>
+		<string>Cooked needs access to your photo library to import ingredient photos.</string>
 		<key>NSMicrophoneUsageDescription</key>
-		<string>L'accès au micro est requis par le module caméra, bien qu'aucune vidéo ne soit enregistrée.</string>
+		<string>Microphone access is required by the camera module, although no audio is recorded.</string>
 		<key>NSPhotoLibraryAddUsageDescription</key>
-		<string>Nous avons besoin d'accéder à votre galerie pour enregistrer vos photos de recettes.</string>
+		<string>Cooked needs access to your photo library to save recipe photos.</string>
 		<key>NSAppTransportSecurity</key>
 		<dict>
 			<key>NSAllowsArbitraryLoads</key>

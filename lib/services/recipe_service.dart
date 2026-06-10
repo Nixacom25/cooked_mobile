@@ -8,7 +8,7 @@ import '../models/recipe.dart';
 import '../models/creator.dart';
 import 'package:cooked/services/auth_service.dart';
 import 'package:flutter/foundation.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:cooked/services/database_service.dart';
 
 // Top-level parsing functions for compute()
 List<Recipe> _parseRecipesList(String responseBody) {
@@ -33,49 +33,19 @@ class RecipeService {
   // Cache for explore data
   final Map<String, dynamic> _cache = {};
 
-  static const String _persistentCachePrefix = 'persistent_cache_v2_';
+  static const String _persistentCachePrefix = 'persistent_cache_v3_';
 
   Future<void> _writeToPersistentCache(String key, dynamic data) async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final cacheData = {
-        'timestamp': DateTime.now().millisecondsSinceEpoch,
-        'data': data,
-      };
-      await prefs.setString('$_persistentCachePrefix$key', jsonEncode(cacheData));
-    } catch (_) {}
+    await DatabaseService.instance.writeCache('$_persistentCachePrefix$key', data);
   }
 
   Future<dynamic> _readFromPersistentCache(String key, Duration ttl) async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final String? jsonStr = prefs.getString('$_persistentCachePrefix$key');
-      if (jsonStr == null) return null;
-
-      final decoded = jsonDecode(jsonStr);
-      final int timestamp = decoded['timestamp'] as int;
-      final cachedTime = DateTime.fromMillisecondsSinceEpoch(timestamp);
-      
-      if (DateTime.now().difference(cachedTime) > ttl) {
-        await prefs.remove('$_persistentCachePrefix$key');
-        return null;
-      }
-      return decoded['data'];
-    } catch (_) {
-      return null;
-    }
+    return DatabaseService.instance.readCache('$_persistentCachePrefix$key', ttl);
   }
 
   void clearCache() {
     _cache.clear();
-    SharedPreferences.getInstance().then((prefs) {
-      final keys = prefs.getKeys();
-      for (final key in keys) {
-        if (key.startsWith(_persistentCachePrefix)) {
-          prefs.remove(key);
-        }
-      }
-    }).catchError((_) {});
+    DatabaseService.instance.clearCache();
   }
 
   Future<Map<String, String>> _getHeaders() async {
@@ -182,11 +152,10 @@ class RecipeService {
       return myRecipesNotifier.value!;
     }
 
-    // Fast disk cache load
+    // Fast Hive cache load
     if (myRecipesNotifier.value == null) {
       try {
-        final prefs = await SharedPreferences.getInstance();
-        final cachedStr = prefs.getString('my_recipes_cache_v2');
+        final cachedStr = DatabaseService.instance.readCacheRaw('my_recipes_cache_v3');
         if (cachedStr != null) {
           final List<dynamic> data = jsonDecode(cachedStr);
           myRecipesNotifier.value = data.map((json) => Recipe.fromJson(json)).toList();
@@ -204,8 +173,7 @@ class RecipeService {
       myRecipesNotifier.value = recipes;
       
       try {
-        final prefs = await SharedPreferences.getInstance();
-        prefs.setString('my_recipes_cache_v2', response.body);
+        await DatabaseService.instance.writeCacheRaw('my_recipes_cache_v3', response.body);
       } catch (_) {}
 
       return recipes;
@@ -368,8 +336,7 @@ class RecipeService {
   Future<void> saveScanResults(List<Recipe> recipes) async {
     if (recipes.isEmpty) return;
     
-    final prefs = await SharedPreferences.getInstance();
-    final String? existingJson = prefs.getString(_tempSuggestionsKey);
+    final String? existingJson = DatabaseService.instance.readCacheRaw(_tempSuggestionsKey);
     List<Recipe> current = [];
     
     if (existingJson != null) {
@@ -418,7 +385,7 @@ class RecipeService {
     }
 
     // Save back
-    await prefs.setString(_tempSuggestionsKey, jsonEncode(current.map((r) => r.toJson()).toList()));
+    await DatabaseService.instance.writeCacheRaw(_tempSuggestionsKey, jsonEncode(current.map((r) => r.toJson()).toList()));
     
     // Refresh notifier if already has data
     if (homeSuggestionsNotifier.value != null) {
@@ -427,8 +394,7 @@ class RecipeService {
   }
 
   Future<void> _removeTemporarySuggestion(String name) async {
-    final prefs = await SharedPreferences.getInstance();
-    final String? existingJson = prefs.getString(_tempSuggestionsKey);
+    final String? existingJson = DatabaseService.instance.readCacheRaw(_tempSuggestionsKey);
     if (existingJson == null) return;
 
     try {
@@ -437,7 +403,7 @@ class RecipeService {
       final filtered = local.where((r) => r.name.toLowerCase() != name.toLowerCase()).toList();
       
       if (filtered.length != local.length) {
-        await prefs.setString(_tempSuggestionsKey, jsonEncode(filtered.map((r) => r.toJson()).toList()));
+        await DatabaseService.instance.writeCacheRaw(_tempSuggestionsKey, jsonEncode(filtered.map((r) => r.toJson()).toList()));
         if (homeSuggestionsNotifier.value != null) {
           await getHomeSuggestions(forceRefresh: true);
         }
@@ -446,8 +412,7 @@ class RecipeService {
   }
 
   Future<List<Recipe>> _mergeTemporarySuggestions(List<Recipe> backendResults) async {
-    final prefs = await SharedPreferences.getInstance();
-    final String? existingJson = prefs.getString(_tempSuggestionsKey);
+    final String? existingJson = DatabaseService.instance.readCacheRaw(_tempSuggestionsKey);
     if (existingJson == null) return backendResults;
 
     try {
@@ -460,7 +425,7 @@ class RecipeService {
       
       // If some expired, update storage
       if (validLocal.length != local.length) {
-        await prefs.setString(_tempSuggestionsKey, jsonEncode(validLocal.map((r) => r.toJson()).toList()));
+        await DatabaseService.instance.writeCacheRaw(_tempSuggestionsKey, jsonEncode(validLocal.map((r) => r.toJson()).toList()));
       }
 
       if (validLocal.isEmpty) return backendResults;

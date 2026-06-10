@@ -12,6 +12,8 @@ import '../../core/api_config.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
 import '../../core/widgets/ios_toast.dart';
 import '../../core/utils/error_helper.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 
 // ══════════════════════════════════════════════════════════════════════════════
 // MY ACCOUNT SCREEN — HelpCenter-style header, avatar inside the form
@@ -119,8 +121,15 @@ class _MyAccountScreenState extends State<MyAccountScreen> {
     final picker = ImagePicker();
     final picked = await picker.pickImage(source: ImageSource.gallery);
     if (picked != null) {
-      final bytes = await picked.readAsBytes();
-      setState(() => _selectedImageBytes = bytes);
+      final compressed = await FlutterImageCompress.compressWithFile(
+        picked.path,
+        minWidth: 500,
+        minHeight: 500,
+        quality: 70,
+      );
+      if (compressed != null) {
+        setState(() => _selectedImageBytes = compressed);
+      }
     }
   }
 
@@ -219,10 +228,10 @@ class _MyAccountScreenState extends State<MyAccountScreen> {
                                 fit: BoxFit.cover,
                               )
                             : _photoUrl != null && _photoUrl!.isNotEmpty
-                            ? Image.network(
-                                _photoUrl!,
+                            ? CachedNetworkImage(
+                                imageUrl: _photoUrl!,
                                 fit: BoxFit.cover,
-                                errorBuilder: (_, __, ___) => _defaultAvatar(),
+                                errorWidget: (_, __, ___) => _defaultAvatar(),
                               )
                             : _defaultAvatar(),
                       ),

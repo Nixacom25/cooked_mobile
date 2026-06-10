@@ -2,7 +2,9 @@ import java.util.Properties
 
 plugins {
     id("com.android.application")
-    // id("com.google.gms.google-services")
+    id("com.google.gms.google-services")
+    id("com.google.firebase.crashlytics")
+    id("com.google.firebase.firebase-perf")
     id("kotlin-android")
     id("dev.flutter.flutter-gradle-plugin")
 }

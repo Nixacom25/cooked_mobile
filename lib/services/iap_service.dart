@@ -59,9 +59,12 @@ class IapService {
         // Handle pending status if needed
       } else {
         if (purchaseDetails.status == PurchaseStatus.error) {
-          onPurchaseError?.call(
-            purchaseDetails.error?.message ?? 'Purchase error',
-          );
+          final errorCode = purchaseDetails.error?.code.toLowerCase() ?? '';
+          if (!errorCode.contains('cancel') && !errorCode.contains('storekit_payment_cancelled') && errorCode != 'purchase_cancel') {
+            onPurchaseError?.call(
+              purchaseDetails.error?.message ?? 'Purchase error',
+            );
+          }
         } else if (purchaseDetails.status == PurchaseStatus.purchased ||
             purchaseDetails.status == PurchaseStatus.restored) {
           // Verify the purchase on the backend

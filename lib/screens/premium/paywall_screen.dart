@@ -8,6 +8,8 @@ import '../../core/utils/error_helper.dart';
 import '../../services/user_service.dart';
 import '../../widgets/red_button.dart';
 import '../../widgets/skeleton_loader.dart';
+import '../../core/widgets/legal_content_modal.dart';
+import '../../core/widgets/terms_validation_modal.dart' show dummyTerms, dummyPrivacy;
 
 enum PaywallFlowType { standard, offer }
 
@@ -365,6 +367,27 @@ class _PaywallScreenState extends State<PaywallScreen> {
                           ),
                         ),
                       ],
+                      SizedBox(height: 12.h),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          GestureDetector(
+                            onTap: () => LegalContentModal.show(context, title: 'Terms of Use', content: dummyTerms),
+                            child: Text(
+                              'Terms of Use',
+                              style: TextStyle(fontSize: 12.sp, color: const Color(0xFF7B8190), decoration: TextDecoration.underline),
+                            ),
+                          ),
+                          Text('  •  ', style: TextStyle(fontSize: 12.sp, color: const Color(0xFF7B8190))),
+                          GestureDetector(
+                            onTap: () => LegalContentModal.show(context, title: 'Privacy Policy', content: dummyPrivacy),
+                            child: Text(
+                              'Privacy Policy',
+                              style: TextStyle(fontSize: 12.sp, color: const Color(0xFF7B8190), decoration: TextDecoration.underline),
+                            ),
+                          ),
+                        ],
+                      ),
                     ],
                   );
                 }

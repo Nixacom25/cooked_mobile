@@ -38,9 +38,26 @@ import 'package:cooked/widgets/clipboard_banner.dart';
 import 'package:cooked/widgets/floating_heart.dart';
 import 'package:cooked/core/widgets/ios_toast.dart';
 
-void main() {
+import 'package:cooked/services/database_service.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'dart:ui';
+
+import 'package:firebase_analytics/firebase_analytics.dart';
+
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  await Firebase.initializeApp();
+
+  FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
+
+  PlatformDispatcher.instance.onError = (error, stack) {
+    FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+    return true;
+  };
   
+  await DatabaseService.instance.init();
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
@@ -326,7 +343,10 @@ class _CookedAppState extends State<CookedApp> with WidgetsBindingObserver {
                 ),
               );
             },
-            navigatorObservers: [routeObserver],
+            navigatorObservers: [
+              routeObserver,
+              FirebaseAnalyticsObserver(analytics: FirebaseAnalytics.instance),
+            ],
             initialRoute: AppRoutes.splash,
             onGenerateRoute: (settings) {
               final isLoggedIn = AuthService.instance.isLoggedIn;

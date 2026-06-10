@@ -7,6 +7,8 @@ import '../../core/api_config.dart';
 import '../../models/view_all_type.dart';
 import '../../widgets/skeleton_loader.dart';
 
+import 'package:cached_network_image/cached_network_image.dart';
+
 // ══════════════════════════════════════════════════════════════════════════════
 // PROFILE SCREEN
 // ══════════════════════════════════════════════════════════════════════════════
@@ -175,10 +177,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       padding: const EdgeInsets.all(2),
                       child: ClipOval(
                         child: _photoUrl != null && _photoUrl!.isNotEmpty
-                            ? Image.network(
-                                _photoUrl!,
+                            ? CachedNetworkImage(
+                                imageUrl: _photoUrl!,
                                 fit: BoxFit.cover,
-                                errorBuilder: (_, __, ___) => _defaultAvatar(),
+                                errorWidget: (_, __, ___) => _defaultAvatar(),
                               )
                             : _defaultAvatar(),
                       ),

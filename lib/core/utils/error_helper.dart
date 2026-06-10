@@ -33,6 +33,7 @@ class ErrorHelper {
         str.contains('Code sent') ||
         str.contains('Subscription activated') ||
         str.contains('Could not initiate purchase') ||
+        str.contains('storekit') ||
         str.contains('Store not available')) {
       return str.replaceAll('Exception: ', '');
     }
