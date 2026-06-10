@@ -39,7 +39,29 @@ jobs:
         run: |
           mkdir -p Payload
           mv build/ios/iphoneos/Runner.app Payload/
-          zip -qq -y -r Cooked_iOS_Unsigned.ipa Payload
+          
+          # Fix for Linux Sideloaders (zsign/sideloader-gtk)
+          # 1. Remove all existing broken signatures
+          rm -rf Payload/Runner.app/_CodeSignature
+          rm -rf Payload/Runner.app/Frameworks/*/_CodeSignature
+          
+          # 2. Create minimal valid plist
+          cat << 'EOF' > minimal.plist
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict/>
+          </plist>
+          EOF
+          
+          # 3. Inject minimal plist into every framework
+          for fw in Payload/Runner.app/Frameworks/*.framework; do
+            mkdir -p "$fw/_CodeSignature"
+            cp minimal.plist "$fw/_CodeSignature/CodeResources"
+          done
+          
+          # Use standard zip without -y to dereference symlinks into flat files
+          zip -qq -r Cooked_iOS_Unsigned.ipa Payload
 
       - name: Upload IPA Artifact
         uses: actions/upload-artifact@v4
