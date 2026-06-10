@@ -1,23 +1,29 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:cooked/services/recipe_service.dart';
+import 'package:cooked/services/database_service.dart';
+import 'dart:io';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  setUp(() {
-    SharedPreferences.setMockInitialValues({});
+  setUp(() async {
+    final tempPath = Directory.systemTemp.createTempSync('hive_test').path;
+    Hive.init(tempPath);
+    await Hive.openBox<String>(DatabaseService.cacheBoxName);
   });
 
-  test('RecipeService cache is cleared on logout or clearCache', () async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('persistent_cache_v2_test_key', '{"timestamp":123,"data":[]}');
+  tearDown(() async {
+    await Hive.deleteFromDisk();
+  });
 
-    RecipeService.instance.clearCache();
+  test('RecipeService cache is cleared on clearCache', () async {
+    await DatabaseService.instance.writeCacheRaw('persistent_cache_v3_test', 'some_data');
+    
+    expect(DatabaseService.instance.readCacheRaw('persistent_cache_v3_test'), 'some_data');
 
-    // Since clearCache has async shared_prefs internally, wait a bit
-    await Future.delayed(const Duration(milliseconds: 100));
+    await RecipeService.instance.clearCache();
 
-    expect(prefs.containsKey('persistent_cache_v2_test_key'), false);
+    expect(DatabaseService.instance.readCacheRaw('persistent_cache_v3_test'), null);
   });
 }

@@ -82,10 +82,12 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
     _importSearchController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1200),
+      reverseDuration: const Duration(milliseconds: 300),
     );
     _importSearchAnimation = CurvedAnimation(
       parent: _importSearchController,
       curve: Curves.easeOutQuart,
+      reverseCurve: Curves.easeInQuad,
     );
 
     _overlaySearchCtrl.addListener(() {

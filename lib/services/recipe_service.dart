@@ -43,9 +43,9 @@ class RecipeService {
     return DatabaseService.instance.readCache('$_persistentCachePrefix$key', ttl);
   }
 
-  void clearCache() {
+  Future<void> clearCache() async {
     _cache.clear();
-    DatabaseService.instance.clearCache();
+    await DatabaseService.instance.clearCache();
   }
 
   Future<Map<String, String>> _getHeaders() async {
