@@ -41,12 +41,12 @@ jobs:
         EXT_PP_PATH=$RUNNER_TEMP/ext_pp.mobileprovision
         KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
         
-        echo -n "$P12_DISTRIBUTION_BASE64" | base64 --decode -o $CERTIFICATE_PATH
-        echo -n "$PROVISIONING_PROFILE_BASE64" | base64 --decode -o $PP_PATH
+        echo "$P12_DISTRIBUTION_BASE64" | tr -d '\n\r ' | base64 --decode > $CERTIFICATE_PATH
+        echo "$PROVISIONING_PROFILE_BASE64" | tr -d '\n\r ' | base64 --decode > $PP_PATH
         
         # Extension profile (optional for now, but recommended)
         if [ ! -z "$EXTENSION_PROVISIONING_PROFILE_BASE64" ]; then
-          echo -n "$EXTENSION_PROVISIONING_PROFILE_BASE64" | base64 --decode -o $EXT_PP_PATH
+          echo "$EXTENSION_PROVISIONING_PROFILE_BASE64" | tr -d '\n\r ' | base64 --decode > $EXT_PP_PATH
         fi
 
         security create-keychain -p "" $KEYCHAIN_PATH
@@ -58,11 +58,13 @@ jobs:
         mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
         
         # Extract UUID and copy main profile
-        UUID=$(/usr/libexec/PlistBuddy -c 'Print :UUID' /dev/stdin <<< $(security cms -D -i $PP_PATH))
+        security cms -D -i $PP_PATH > profile.plist
+        UUID=$(/usr/libexec/PlistBuddy -c 'Print :UUID' profile.plist)
         cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles/$UUID.mobileprovision
         
         if [ -f "$EXT_PP_PATH" ]; then
-          EXT_UUID=$(/usr/libexec/PlistBuddy -c 'Print :UUID' /dev/stdin <<< $(security cms -D -i $EXT_PP_PATH))
+          security cms -D -i $EXT_PP_PATH > ext_profile.plist
+          EXT_UUID=$(/usr/libexec/PlistBuddy -c 'Print :UUID' ext_profile.plist)
           cp $EXT_PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles/$EXT_UUID.mobileprovision
         fi
 
