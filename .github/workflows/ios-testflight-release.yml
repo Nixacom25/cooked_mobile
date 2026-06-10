@@ -56,10 +56,14 @@ jobs:
         security list-keychain -d user -s $KEYCHAIN_PATH
         
         mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-        cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles/
+        
+        # Extract UUID and copy main profile
+        UUID=$(/usr/libexec/PlistBuddy -c 'Print :UUID' /dev/stdin <<< $(security cms -D -i $PP_PATH))
+        cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles/$UUID.mobileprovision
         
         if [ -f "$EXT_PP_PATH" ]; then
-          cp $EXT_PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles/
+          EXT_UUID=$(/usr/libexec/PlistBuddy -c 'Print :UUID' /dev/stdin <<< $(security cms -D -i $EXT_PP_PATH))
+          cp $EXT_PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles/$EXT_UUID.mobileprovision
         fi
 
     - name: Set up Flutter
