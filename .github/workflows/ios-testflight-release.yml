@@ -84,6 +84,17 @@ jobs:
         IOS_GOOGLE_SERVICE_INFO_BASE64: ${{ secrets.IOS_GOOGLE_SERVICE_INFO_BASE64 }}
       run: |
         echo "$IOS_GOOGLE_SERVICE_INFO_BASE64" | base64 --decode > ios/Runner/GoogleService-Info.plist
+        
+        gem install xcodeproj
+        ruby -e "require 'xcodeproj'; \
+        project = Xcodeproj::Project.open('ios/Runner.xcodeproj'); \
+        group = project.main_group.find_subpath(File.join('Runner'), true); \
+        file = group.new_file('GoogleService-Info.plist'); \
+        target = project.targets.first; \
+        unless target.resources_build_phase.files_references.include?(file); \
+          target.add_resources([file]); \
+        end; \
+        project.save"
 
     - name: Flutter Precache iOS
       run: flutter precache --ios
