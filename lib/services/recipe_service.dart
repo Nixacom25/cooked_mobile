@@ -364,7 +364,7 @@ class RecipeService {
         isFavorite: r.isFavorite,
         createdAt: r.createdAt,
         updatedAt: r.updatedAt,
-        category: r.category,
+        categories: r.categories,
         creator: r.creator,
         sourceUrl: r.sourceUrl,
         servings: r.servings,

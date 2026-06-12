@@ -14,7 +14,7 @@ class Recipe {
   bool isFavorite;
   final DateTime createdAt;
   final DateTime updatedAt;
-  final String? category;
+  final List<String>? categories;
   final RecipeCreator? creator;
   final String? sourceUrl;
   final int? servings;
@@ -44,7 +44,7 @@ class Recipe {
     required this.isFavorite,
     required this.createdAt,
     required this.updatedAt,
-    this.category,
+    this.categories,
     this.creator,
     this.sourceUrl,
     this.servings,
@@ -93,7 +93,7 @@ class Recipe {
         updatedAt: json['updatedAt'] != null
             ? (DateTime.tryParse(json['updatedAt'].toString()) ?? DateTime.now())
             : DateTime.now(),
-        category: json['category']?.toString(),
+        categories: json['categories'] != null ? List<String>.from(json['categories']) : null,
         creator: json['creator'] != null
             ? RecipeCreator.fromJson(Map<String, dynamic>.from(json['creator']))
             : null,
@@ -146,7 +146,7 @@ class Recipe {
       'isFavorite': isFavorite,
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
-      'category': category,
+      'categories': categories,
       'creator': creator?.toJson(),
       'sourceUrl': sourceUrl,
       'servings': servings,
@@ -179,7 +179,7 @@ class Recipe {
     bool? isFavorite,
     DateTime? createdAt,
     DateTime? updatedAt,
-    String? category,
+    List<String>? categories,
     RecipeCreator? creator,
     String? sourceUrl,
     int? servings,
@@ -206,7 +206,7 @@ class Recipe {
       isFavorite: isFavorite ?? this.isFavorite,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
-      category: category ?? this.category,
+      categories: categories ?? this.categories,
       creator: creator ?? this.creator,
       sourceUrl: sourceUrl ?? this.sourceUrl,
       servings: servings ?? this.servings,
