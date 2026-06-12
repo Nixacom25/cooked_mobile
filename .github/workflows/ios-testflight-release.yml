@@ -90,7 +90,7 @@ jobs:
         project = Xcodeproj::Project.open('ios/Runner.xcodeproj'); \
         group = project.main_group.find_subpath(File.join('Runner'), true); \
         file = group.new_file('GoogleService-Info.plist'); \
-        target = project.targets.first; \
+        target = project.targets.find { |t| t.name == 'Runner' }; \
         unless target.resources_build_phase.files_references.include?(file); \
           target.add_resources([file]); \
         end; \
