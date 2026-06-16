@@ -99,26 +99,62 @@ class _TrialStepState extends State<TrialStep> with SingleTickerProviderStateMix
         animation: _controller,
         builder: (context, child) {
           return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               FadeTransition(
                 opacity: _titleOpacity,
                 child: SlideTransition(
                   position: _titleSlide,
-                  child: Text(
-                    'Unlock your full\npersonalized cooking\nsystem.',
-                    style: TextStyle(
-                      fontSize: 32.sp,
-                      fontWeight: FontWeight.w900,
-                      color: const Color(0xFF0D1B3E),
-                      fontFamily: 'SF Pro',
-                      height: 1.1,
-                      letterSpacing: -0.5,
+                  child: Column(
+                    children: [
+                      Text(
+                        'Unlock your full\npersonalized\ncooking system.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 32.sp,
+                          fontWeight: FontWeight.w900,
+                          color: const Color(0xFF0D1B3E),
+                          fontFamily: 'SF Pro',
+                          height: 1.1,
+                          letterSpacing: -0.5,
+                        ),
+                      ),
+                      SizedBox(height: 12.h),
+                      Text(
+                        'Built around your goals, schedule,\nand taste.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 16.sp,
+                          color: const Color(0xFF4B5563),
+                          fontFamily: 'SF Pro',
+                          height: 1.3,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              SizedBox(height: 32.h),
+
+              // Image
+              FadeTransition(
+                opacity: _titleOpacity, // Just reuse title opacity
+                child: Center(
+                  child: Image.asset(
+                    'assets/images/step27.png',
+                    height: 220.h,
+                    fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) => Container(
+                      height: 220.h,
+                      width: 200.w,
+                      color: Colors.grey[200],
+                      alignment: Alignment.center,
+                      child: const Text('assets/images/step27.png missing'),
                     ),
                   ),
                 ),
               ),
-              SizedBox(height: 40.h),
+              SizedBox(height: 32.h),
 
               // Subscription Options
               Row(
@@ -155,8 +191,61 @@ class _TrialStepState extends State<TrialStep> with SingleTickerProviderStateMix
                   ),
                 ],
               ),
+              SizedBox(height: 32.h),
 
-              SizedBox(height: 120.h), // Space for bottom button
+              // Bottom Button Area
+              FadeTransition(
+                opacity: _card2Opacity,
+                child: Column(
+                  children: [
+                    Text(
+                      'No payment due today',
+                      style: TextStyle(
+                        fontFamily: 'SF Pro',
+                        fontSize: 14.sp,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFFC83A2D),
+                      ),
+                    ),
+                    SizedBox(height: 16.h),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 55.h,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          widget.onPlanSelected(_selectedPlan);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFC83A2D),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(50.r),
+                          ),
+                          elevation: 0,
+                        ),
+                        child: Text(
+                          'Try for Free',
+                          style: TextStyle(
+                            fontFamily: 'SF Pro',
+                            fontSize: 18.sp,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 16.h),
+                    Text(
+                      '3 days free, then \$29.99/year. Cancel anytime.',
+                      style: TextStyle(
+                        fontFamily: 'SF Pro',
+                        fontSize: 12.sp,
+                        color: const Color(0xFF7B8190),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(height: 30.h),
             ],
           );
         }
@@ -175,13 +264,12 @@ class _TrialStepState extends State<TrialStep> with SingleTickerProviderStateMix
       onTap: () {
         HapticFeedback.selectionClick();
         setState(() => _selectedPlan = id);
-        widget.onPlanSelected(id);
       },
       child: Stack(
         clipBehavior: Clip.none,
         children: [
           Container(
-            padding: EdgeInsets.all(16.r),
+            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 20.h),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(16.r),
@@ -194,29 +282,29 @@ class _TrialStepState extends State<TrialStep> with SingleTickerProviderStateMix
               boxShadow: [
                 if (isSelected)
                   BoxShadow(
-                    color: const Color(0xFFC83A2D).withOpacity(0.1),
+                    color: const Color(0xFFC83A2D).withOpacity(0.05),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
               ],
             ),
-            child: Column(
+            child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 14.sp,
-                    color: const Color(0xFF7B8190),
-                    fontFamily: 'SF Pro',
-                  ),
-                ),
-                SizedBox(height: 4.h),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: FittedBox(
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: TextStyle(
+                          fontSize: 14.sp,
+                          color: const Color(0xFF7B8190),
+                          fontFamily: 'SF Pro',
+                        ),
+                      ),
+                      SizedBox(height: 4.h),
+                      FittedBox(
                         alignment: Alignment.centerLeft,
                         fit: BoxFit.scaleDown,
                         child: Text(
@@ -229,14 +317,24 @@ class _TrialStepState extends State<TrialStep> with SingleTickerProviderStateMix
                           ),
                         ),
                       ),
+                    ],
+                  ),
+                ),
+                SizedBox(width: 8.w),
+                Container(
+                  width: 24.w,
+                  height: 24.w,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: isSelected ? const Color(0xFFC83A2D) : Colors.transparent,
+                    border: Border.all(
+                      color: isSelected ? const Color(0xFFC83A2D) : const Color(0xFFE5E7EB),
+                      width: 1.5.w,
                     ),
-                    if (isSelected)
-                      Icon(
-                        Icons.check_circle,
-                        color: const Color(0xFFC83A2D),
-                        size: 20.sp,
-                      ),
-                  ],
+                  ),
+                  child: isSelected
+                      ? Icon(Icons.check, color: Colors.white, size: 16.sp)
+                      : null,
                 ),
               ],
             ),
@@ -244,20 +342,23 @@ class _TrialStepState extends State<TrialStep> with SingleTickerProviderStateMix
           if (badge != null)
             Positioned(
               top: -12.h,
-              right: 12.w,
-              child: Container(
-                padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFC83A2D),
-                  borderRadius: BorderRadius.circular(8.r),
-                ),
-                child: Text(
-                  badge,
-                  style: TextStyle(
-                    fontSize: 10.sp,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
-                    fontFamily: 'SF Pro',
+              left: 0,
+              right: 0,
+              child: Center(
+                child: Container(
+                  padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFC83A2D),
+                    borderRadius: BorderRadius.circular(50.r),
+                  ),
+                  child: Text(
+                    badge,
+                    style: TextStyle(
+                      fontSize: 12.sp,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                      fontFamily: 'SF Pro',
+                    ),
                   ),
                 ),
               ),

@@ -11,11 +11,15 @@ import 'widgets/meals_step.dart';
 import 'widgets/frustrations_step.dart';
 import 'widgets/spend_eating_out_step.dart';
 import 'widgets/groceries_bad_step.dart';
-import 'widgets/fridge_scanner_step.dart';
+import 'widgets/eating_out_budget_step.dart';
 import 'widgets/takeout_spending_step.dart';
 import 'widgets/cook_more_save_money_step.dart';
 import 'widgets/cooking_system_step.dart';
 import 'widgets/age_step.dart';
+import 'widgets/healthy_eating_intro_step.dart';
+import 'widgets/meal_repetition_intro_step.dart';
+import 'widgets/cooked_handles_meals_step.dart';
+import 'widgets/features_excited_step.dart';
 import 'widgets/goals_step.dart';
 import 'widgets/health_goals_step.dart';
 import 'widgets/frustrations_intro_step.dart';
@@ -104,6 +108,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   List<String> _kitchenAppliances = [];
   List<String> _notificationPreferences = [];
   List<String> _onboardingGoals = [];
+  List<String> _featuresExcited = [];
 
   @override
   void initState() {
@@ -745,17 +750,16 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     physics: const NeverScrollableScrollPhysics(),
                     onPageChanged: _onStepChanged,
                     children: [
-                      SavingsStep(onContinue: _onContinue),
-                      MealsStep(onContinue: _onContinue),
-                      FrustrationsStep(onContinue: _onContinue),
-                      SpendEatingOutStep(onContinue: _onContinue),
-                      GroceriesBadStep(onContinue: _onContinue),
-                      FridgeScannerStep(onContinue: _onContinue),
-                      TakeoutSpendingStep(onContinue: _onContinue),
-                      CookMoreSaveMoneyStep(onContinue: _onContinue),
-                      CookingSystemStep(onContinue: _onContinue),
-                      AgeStep(onContinue: _onContinue),
-                      GoalsStep(
+                      MealsStep(onContinue: _onContinue), // Step 1
+                      FrustrationsStep(onContinue: _onContinue), // Step 2
+                      SavingsStep(onContinue: _onContinue), // Step 3
+                      SpendEatingOutStep(onContinue: _onContinue), // Step 4
+                      EatingOutBudgetStep(onContinue: _onContinue), // Step 5
+                      GroceriesBadStep(onContinue: _onContinue), // Step 6
+                      TakeoutSpendingStep(onContinue: _onContinue), // Step 7
+                      CookMoreSaveMoneyStep(onContinue: _onContinue), // Step 8
+                      CookingSystemStep(onContinue: _onContinue), // Step 9
+                      GoalsStep( // Step 10
                         onContinue: _onContinue,
                         initialSelected: _onboardingGoals.where((g) => [
                           'save_money', 'eat_healthier', 'gain_muscle', 'lose_weight',
@@ -763,7 +767,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         ].contains(g)).toList(),
                         onChanged: (selections) {
                           setState(() {
-                            // Filter out previous GoalsStep selections
                             final healthGoals = _onboardingGoals.where((g) => [
                               'weight_loss', 'muscle_gain', 'high_protein', 'healthy_heart', 
                               'quick_meals', 'budget_friendly', 'no_goal'
@@ -772,6 +775,54 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           });
                         },
                       ),
+                      AgeStep(onContinue: _onContinue), // Step 11
+                      CuisinesStep( // Step 12
+                        initialSelected: _favoriteCuisines,
+                        onChanged: (val) => setState(() => _favoriteCuisines = val),
+                        onContinue: _onContinue,
+                      ),
+                      AllergiesStep( // Step 13
+                        initialSelected: _selectedAllergy,
+                        onChanged: (selected) =>
+                            setState(() => _selectedAllergy = selected),
+                        onContinue: _onContinue,
+                      ),
+                      DislikesStep( // Step 14
+                        initialSelected: _selectedDislikes,
+                        onChanged: (selected) =>
+                            setState(() => _selectedDislikes = selected),
+                        onContinue: _onContinue,
+                      ),
+                      TimePreferenceStep( // Step 15
+                        initialSelected: _cookingTime,
+                        onChanged: (selected) =>
+                            setState(() => _cookingTime = selected),
+                        onContinue: _onContinue,
+                      ),
+                      CookingTargetStep( // Step 16
+                        initialTarget: _cookingTarget,
+                        onChanged: (target) =>
+                            setState(() => _cookingTarget = target),
+                        onContinue: _onContinue,
+                      ),
+                      
+                      HealthyEatingIntroStep( // Step 17
+                        onContinue: _onContinue,
+                      ),
+                      MealRepetitionIntroStep( // Step 18
+                        onContinue: _onContinue,
+                      ),
+                      CookedHandlesMealsStep( // Step 19
+                        onContinue: _onContinue,
+                      ),
+                      FeaturesExcitedStep( // Step 20
+                        initialSelected: _featuresExcited,
+                        onChanged: (selected) =>
+                            setState(() => _featuresExcited = selected),
+                        onContinue: _onContinue,
+                      ),
+                      
+                      // Moved subsequent steps down
                       HealthGoalsStep(
                         onContinue: _onContinue,
                         initialSelected: _onboardingGoals.where((g) => [
@@ -790,25 +841,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       ),
                       FrustrationsIntroStep(onContinue: _onContinue),
                       CookingSkillStep(onContinue: _onContinue),
-                      CuisinesStep(
-                        initialSelected: _favoriteCuisines,
-                        onChanged: (val) => setState(() => _favoriteCuisines = val),
-                      ),
                       MealRepetitionStep(onContinue: _onContinue),
                       DietaryPreferencesStep(
                         initialSelected: _selectedDiet,
                         onChanged: (selected) =>
                             setState(() => _selectedDiet = selected),
-                      ),
-                      AllergiesStep(
-                        initialSelected: _selectedAllergy,
-                        onChanged: (selected) =>
-                            setState(() => _selectedAllergy = selected),
-                      ),
-                      DislikesStep(
-                        initialSelected: _selectedDislikes,
-                        onChanged: (selected) =>
-                            setState(() => _selectedDislikes = selected),
                       ),
                       FlavorSpiceStep(
                         initialDna: _flavorDna,
@@ -819,16 +856,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             _spiceLevel = spice;
                           });
                         },
-                      ),
-                      TimePreferenceStep(
-                        initialSelected: _cookingTime,
-                        onChanged: (selected) =>
-                            setState(() => _cookingTime = selected),
-                      ),
-                      CookingTargetStep(
-                        initialTarget: _cookingTarget,
-                        onChanged: (target) =>
-                            setState(() => _cookingTarget = target),
                       ),
 
                       GroceryShopStep(
@@ -944,8 +971,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       TrialStep(
                         onPlanSelected: (plan) {
                           setState(() => _selectedPlanId = plan);
+                          _pageController.nextPage(duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
                         },
-                        onSkip: () {},
+                        onSkip: () {
+                          _pageController.nextPage(duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
+                        },
                       ),
                       PerfectMealStep(
                         onStartCooking: () {
@@ -984,14 +1014,19 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     _currentPage != 9 && // AgeStep
                     _currentPage != 10 && // GoalsStep
                     _currentPage != 11 && // HealthGoalsStep
-                    _currentPage != 12 && // FrustrationsIntroStep
-                    _currentPage != 13 && // CookingSkillStep
-                    _currentPage != 15 && // MealRepetitionStep
-                    _currentPage != 27 && // ProfileLoading
-                    _currentPage != 28 && // ProfileSummary (uses own button)
-                    _currentPage != 29 && // SocialProof (uses own button)
-                    _currentPage != 30 && // SavingsPitch
-                    _currentPage != 31 && // RecipeGenLoading
+                    _currentPage != 12 && // AllergiesStep
+                    _currentPage != 13 && // DislikesStep
+                    _currentPage != 14 && // TimePreferenceStep
+                    _currentPage != 15 && // CookingTargetStep
+                    _currentPage != 16 && // HealthyEatingIntroStep
+                    _currentPage != 17 && // MealRepetitionIntroStep
+                    _currentPage != 18 && // CookedHandlesMealsStep
+                    _currentPage != 19 && // FeaturesExcitedStep
+                    _currentPage != 31 && // ProfileLoading
+                    _currentPage != 32 && // ProfileSummary
+                    _currentPage != 33 && // SocialProof
+                    _currentPage != 34 && // SavingsPitch
+                    _currentPage != 35 && // RecipeGenLoading
                     _currentPage != 32 && // ProfileSignup
                     _currentPage != 34 && // Otp
                     _currentPage != 35 && // FreeTrialGuideStep

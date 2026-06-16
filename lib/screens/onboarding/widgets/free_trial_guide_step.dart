@@ -102,91 +102,123 @@ class _FreeTrialGuideStepState extends State<FreeTrialGuideStep> with SingleTick
                         ),
                       ),
                     ),
-                    SizedBox(height: 40.h),
-
-                    // Guide Container
+                    SizedBox(height: 8.h),
                     FadeTransition(
-                      opacity: _containerOpacity,
+                      opacity: _titleOpacity,
                       child: SlideTransition(
-                        position: _containerSlide,
-                        child: Container(
-                          padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 24.h),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(20.r),
-                            border: Border.all(color: const Color(0xFFFBE8E7), width: 1.5.w),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.02),
-                                blurRadius: 10,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: Stack(
-                            children: [
-                              // Timeline line
-                              Positioned(
-                                left: 12.w, // Center of the icons
-                                top: 20.h,
-                                bottom: 40.h,
-                                child: Container(
-                                  width: 2.w,
-                                  color: const Color(0xFFF3F4F6),
-                                ),
-                              ),
-                              
-                              Column(
-                                children: [
-                                  FadeTransition(
-                                    opacity: _itemOpacities[0],
-                                    child: SlideTransition(
-                                      position: _itemSlides[0],
-                                      child: _buildTimelineItem(
-                                        icon: Icons.calendar_today_outlined,
-                                        iconColor: const Color(0xFFC83A2D),
-                                        dotColor: const Color(0xFFC83A2D),
-                                        title: 'Today',
-                                        description: 'Unlock personalized recipes, meal suggestions, and ingredient scanning.',
-                                      ),
-                                    ),
-                                  ),
-                                  SizedBox(height: 30.h),
-                                  FadeTransition(
-                                    opacity: _itemOpacities[1],
-                                    child: SlideTransition(
-                                      position: _itemSlides[1],
-                                      child: _buildTimelineItem(
-                                        icon: Icons.notifications_active_outlined,
-                                        iconColor: const Color(0xFFC83A2D),
-                                        dotColor: const Color(0xFFF4C459), // Yellow/Orange
-                                        title: 'In 2 days',
-                                        description: 'We\'ll send you a reminder before your trial ends.',
-                                      ),
-                                    ),
-                                  ),
-                                  SizedBox(height: 30.h),
-                                  FadeTransition(
-                                    opacity: _itemOpacities[2],
-                                    child: SlideTransition(
-                                      position: _itemSlides[2],
-                                      child: _buildTimelineItem(
-                                        icon: Icons.receipt_long_outlined,
-                                        iconColor: const Color(0xFFC83A2D),
-                                        dotColor: const Color(0xFFD1D5DB), // Grey
-                                        title: 'In 3 days',
-                                        description: 'Billing starts unless you cancel anytime before.',
-                                        isLast: true,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
+                        position: _titleSlide,
+                        child: Text(
+                          'Get the most out of your Cooked trial.',
+                          style: TextStyle(
+                            fontSize: 16.sp,
+                            color: const Color(0xFF7B8190),
+                            fontFamily: 'SF Pro',
+                            height: 1.3,
                           ),
                         ),
                       ),
                     ),
+                    SizedBox(height: 40.h),
+
+                    // Guide Container (Timeline)
+                    FadeTransition(
+                      opacity: _containerOpacity,
+                      child: SlideTransition(
+                        position: _containerSlide,
+                        child: Stack(
+                          children: [
+                            // Timeline line
+                            Positioned(
+                              left: 36.w, // Center of the cards (width 72)
+                              top: 40.h,
+                              bottom: 40.h,
+                              child: Container(
+                                width: 2.w,
+                                color: const Color(0xFFFDE8E8), // Light red line
+                              ),
+                            ),
+                            
+                            Column(
+                              children: [
+                                FadeTransition(
+                                  opacity: _itemOpacities[0],
+                                  child: SlideTransition(
+                                    position: _itemSlides[0],
+                                    child: _buildTimelineCard(
+                                      label: 'Today',
+                                      icon: Icons.lock_open,
+                                      color: const Color(0xFFC83A2D), // Red
+                                      bgColor: const Color(0xFFFFF1F2), // Light red
+                                      description: 'Unlock personalized recipes, meal suggestions, and ingredient scanning.',
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(height: 32.h),
+                                FadeTransition(
+                                  opacity: _itemOpacities[1],
+                                  child: SlideTransition(
+                                    position: _itemSlides[1],
+                                    child: _buildTimelineCard(
+                                      label: 'Day 2',
+                                      icon: Icons.notifications_none,
+                                      color: const Color(0xFF0284C7), // Blue
+                                      bgColor: const Color(0xFFF0F9FF), // Light blue
+                                      description: 'We\'ll send you a reminder before your trial ends.',
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(height: 32.h),
+                                FadeTransition(
+                                  opacity: _itemOpacities[2],
+                                  child: SlideTransition(
+                                    position: _itemSlides[2],
+                                    child: _buildTimelineCard(
+                                      label: 'Day 3',
+                                      icon: Icons.star_border,
+                                      color: const Color(0xFFD97706), // Yellow
+                                      bgColor: const Color(0xFFFEF3C7), // Light yellow
+                                      description: 'Full access starts. Cancel in advance to avoid payment.',
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 40.h),
+                    
+                    FadeTransition(
+                      opacity: _buttonOpacity,
+                      child: SlideTransition(
+                        position: _buttonSlide,
+                        child: Column(
+                          children: [
+                            Text(
+                              '3 days free, then \$29.99/year',
+                              style: TextStyle(
+                                fontFamily: 'SF Pro',
+                                fontSize: 16.sp,
+                                fontWeight: FontWeight.w800,
+                                color: const Color(0xFF1B1C1C),
+                              ),
+                            ),
+                            SizedBox(height: 12.h),
+                            Text(
+                              'View other plans',
+                              style: TextStyle(
+                                fontFamily: 'SF Pro',
+                                fontSize: 14.sp,
+                                fontWeight: FontWeight.w500,
+                                color: const Color(0xFF7B8190),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 20.h),
                   ],
                 ),
               ),
@@ -213,21 +245,14 @@ class _FreeTrialGuideStepState extends State<FreeTrialGuideStep> with SingleTick
                           ),
                           elevation: 0,
                         ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              'Continue',
-                              style: TextStyle(
-                                fontFamily: 'SF Pro',
-                                fontSize: 18.sp,
-                                fontWeight: FontWeight.w700,
-                                color: Colors.white,
-                              ),
-                            ),
-                            SizedBox(width: 8.w),
-                            Icon(Icons.arrow_forward, color: Colors.white, size: 20.sp),
-                          ],
+                        child: Text(
+                          'Continue',
+                          style: TextStyle(
+                            fontFamily: 'SF Pro',
+                            fontSize: 18.sp,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
                     ),
@@ -241,66 +266,66 @@ class _FreeTrialGuideStepState extends State<FreeTrialGuideStep> with SingleTick
     );
   }
 
-  Widget _buildTimelineItem({
+  Widget _buildTimelineCard({
+    required String label,
     required IconData icon,
-    required Color iconColor,
-    required Color dotColor,
-    required String title,
+    required Color color,
+    required Color bgColor,
     required String description,
-    bool isLast = false,
   }) {
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        // Timeline Dot
+        // Card Icon
         Container(
-          width: 26.w,
-          alignment: Alignment.topCenter,
-          margin: EdgeInsets.only(top: 2.h),
-          child: Container(
-            width: 14.w,
-            height: 14.w,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.white,
-              border: Border.all(color: dotColor, width: 4.w),
-            ),
+          width: 72.w,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12.r),
+            border: Border.all(color: color.withOpacity(0.5)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: double.infinity,
+                padding: EdgeInsets.symmetric(vertical: 6.h),
+                decoration: BoxDecoration(
+                  color: bgColor,
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(11.r)),
+                  border: Border(bottom: BorderSide(color: color.withOpacity(0.2))),
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    fontFamily: 'SF Pro',
+                    fontSize: 12.sp,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF1B1C1C),
+                  ),
+                ),
+              ),
+              Padding(
+                padding: EdgeInsets.symmetric(vertical: 12.h),
+                child: Icon(icon, color: color, size: 28.sp),
+              ),
+            ],
           ),
         ),
-        SizedBox(width: 16.w),
+        SizedBox(width: 24.w),
         
         // Content
         Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    title,
-                    style: TextStyle(
-                      fontFamily: 'SF Pro',
-                      fontSize: 16.sp,
-                      fontWeight: FontWeight.w700,
-                      color: const Color(0xFF0D1B3E),
-                    ),
-                  ),
-                  Icon(icon, color: iconColor, size: 22.sp),
-                ],
-              ),
-              SizedBox(height: 8.h),
-              Text(
-                description,
-                style: TextStyle(
-                  fontFamily: 'SF Pro',
-                  fontSize: 14.sp,
-                  fontWeight: FontWeight.w400,
-                  color: const Color(0xFF4B5563),
-                  height: 1.4,
-                ),
-              ),
-            ],
+          child: Text(
+            description,
+            style: TextStyle(
+              fontFamily: 'SF Pro',
+              fontSize: 15.sp,
+              fontWeight: FontWeight.w500,
+              color: const Color(0xFF374151),
+              height: 1.4,
+            ),
           ),
         ),
       ],

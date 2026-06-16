@@ -101,7 +101,7 @@ class _PerfectMealStepState extends State<PerfectMealStep> with SingleTickerProv
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Perfect meal to get\nstarted.',
+                              'Perfect meal for you',
                               style: TextStyle(
                                 fontSize: 32.sp,
                                 fontWeight: FontWeight.w900,
@@ -124,7 +124,7 @@ class _PerfectMealStepState extends State<PerfectMealStep> with SingleTickerProv
                         ),
                       ),
                     ),
-                    SizedBox(height: 30.h),
+                    SizedBox(height: 40.h),
 
                     // Center Image with floating tags
                     Center(
@@ -137,57 +137,88 @@ class _PerfectMealStepState extends State<PerfectMealStep> with SingleTickerProv
                             child: Transform.scale(
                               scale: _imageScale.value,
                               child: Image.asset(
-                                'assets/images/step35.png',
-                                width: 250.w,
+                                'assets/images/step28.png',
+                                width: 300.w,
                                 fit: BoxFit.contain,
+                                errorBuilder: (context, error, stackTrace) => Container(
+                                  height: 300.h,
+                                  width: 300.w,
+                                  color: Colors.grey[200],
+                                  alignment: Alignment.center,
+                                  child: const Text('assets/images/step28.png missing'),
+                                ),
                               ),
                             ),
                           ),
                           
-                          // Floating Tag 1: 20 min
+                          // The mockup implies the tags are part of the image or positioned around it.
+                          // We'll leave the image to handle the lines if any, and overlay tags if needed.
+                          // But if the tags are part of the image in step28.png, maybe we don't need these?
+                          // Let's assume we need to render the tags.
+                          
+                          // Left Top: Uses your ingredients
                           Positioned(
                             top: 40.h,
-                            left: -10.w,
+                            left: -20.w,
                             child: Transform.scale(
                               scale: _tag1Scale.value,
                               child: _buildFloatingTag(
-                                icon: Icons.access_time,
-                                text: '20 min',
-                                color: const Color(0xFF86B971), // Green
+                                icon: Icons.energy_savings_leaf_outlined,
+                                text: 'Uses your\ningredients',
+                                color: const Color(0xFFD1FAE5), // Light green
+                                iconColor: const Color(0xFF059669),
                               ),
                             ),
                           ),
 
-                          // Floating Tag 2: High Protein
+                          // Right Top: High protein
                           Positioned(
-                            top: 100.h,
-                            right: -30.w,
+                            top: 60.h,
+                            right: -20.w,
                             child: Transform.scale(
                               scale: _tag2Scale.value,
                               child: _buildFloatingTag(
-                                text: 'High Protein',
-                                color: const Color(0xFF5A8DD4), // Blue
+                                icon: Icons.fitness_center,
+                                text: 'High protein',
+                                color: const Color(0xFFDBEAFE), // Light blue
+                                iconColor: const Color(0xFF2563EB),
                               ),
                             ),
                           ),
 
-                          // Floating Tag 3: Uses your ingredients
+                          // Left Bottom: 20 min
                           Positioned(
-                            bottom: 30.h,
-                            left: -20.w,
+                            bottom: 60.h,
+                            left: -10.w,
                             child: Transform.scale(
                               scale: _tag3Scale.value,
                               child: _buildFloatingTag(
-                                icon: Icons.shopping_bag_outlined,
-                                text: 'Uses your\ningredients',
-                                color: const Color(0xFF86B971), // Green
+                                icon: Icons.access_time,
+                                text: '20 min',
+                                color: const Color(0xFFFEF3C7), // Light yellow
+                                iconColor: const Color(0xFFD97706),
+                              ),
+                            ),
+                          ),
+
+                          // Right Bottom: Budget-friendly
+                          Positioned(
+                            bottom: 40.h,
+                            right: -20.w,
+                            child: Transform.scale(
+                              scale: _tag1Scale.value, // Reusing animation
+                              child: _buildFloatingTag(
+                                icon: Icons.local_offer_outlined,
+                                text: 'Budget-friendly',
+                                color: const Color(0xFFFCE7F3), // Light pink
+                                iconColor: const Color(0xFFDB2777),
                               ),
                             ),
                           ),
                         ],
                       ),
                     ),
-                    SizedBox(height: 40.h),
+                    SizedBox(height: 60.h),
 
                     // Bottom info and chips
                     FadeTransition(
@@ -197,46 +228,6 @@ class _PerfectMealStepState extends State<PerfectMealStep> with SingleTickerProv
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // Insight Box
-                            Container(
-                              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFFFF9EB), // Light yellow
-                                borderRadius: BorderRadius.circular(16.r),
-                                border: Border.all(color: const Color(0xFFFDE6B0), width: 1.w),
-                              ),
-                              child: Row(
-                                children: [
-                                  Text('💡', style: TextStyle(fontSize: 24.sp)),
-                                  SizedBox(width: 12.w),
-                                  Expanded(
-                                    child: RichText(
-                                      text: TextSpan(
-                                        style: TextStyle(
-                                          fontSize: 15.sp,
-                                          color: const Color(0xFF4B5563),
-                                          fontFamily: 'SF Pro',
-                                          height: 1.3,
-                                        ),
-                                        children: [
-                                          const TextSpan(text: 'Great for your '),
-                                          TextSpan(
-                                            text: 'high-protein',
-                                            style: TextStyle(
-                                              fontWeight: FontWeight.w700,
-                                              color: const Color(0xFFC83A2D),
-                                            ),
-                                          ),
-                                          const TextSpan(text: ' quick\ndinner goals.'),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            SizedBox(height: 32.h),
-
                             // Why We Picked This Section
                             Text(
                               'WHY WE PICKED THIS',
@@ -252,13 +243,14 @@ class _PerfectMealStepState extends State<PerfectMealStep> with SingleTickerProv
 
                             SingleChildScrollView(
                               scrollDirection: Axis.horizontal,
+                              clipBehavior: Clip.none,
                               child: Row(
                                 children: [
-                                  _buildReasonChip('👍', 'Matches your taste'),
+                                  _buildReasonChip(Icons.thumb_up_outlined, 'Matches your taste'),
                                   SizedBox(width: 12.w),
-                                  _buildReasonChip('⚡', 'Quick dinner'),
+                                  _buildReasonChip(Icons.bolt, 'Quick dinner'),
                                   SizedBox(width: 12.w),
-                                  _buildReasonChip('📦', 'Uses your ingredients'),
+                                  _buildReasonChip(Icons.inventory_2_outlined, 'Uses your ingredients'),
                                 ],
                               ),
                             ),
@@ -314,26 +306,6 @@ class _PerfectMealStepState extends State<PerfectMealStep> with SingleTickerProv
                             ),
                           ),
                         ),
-                        SizedBox(height: 16.h),
-                        GestureDetector(
-                          onTap: widget.onViewMore,
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                'View More Recipes',
-                                style: TextStyle(
-                                  fontSize: 14.sp,
-                                  fontWeight: FontWeight.w600,
-                                  color: const Color(0xFF7B8190),
-                                  fontFamily: 'SF Pro',
-                                ),
-                              ),
-                              SizedBox(width: 4.w),
-                              Icon(Icons.arrow_forward, color: const Color(0xFF7B8190), size: 16.sp),
-                            ],
-                          ),
-                        ),
                       ],
                     ),
                   ),
@@ -346,16 +318,16 @@ class _PerfectMealStepState extends State<PerfectMealStep> with SingleTickerProv
     );
   }
 
-  Widget _buildFloatingTag({IconData? icon, required String text, required Color color}) {
+  Widget _buildFloatingTag({required IconData icon, required String text, required Color color, required Color iconColor}) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
       decoration: BoxDecoration(
-        color: color,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(20.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 8,
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
             offset: const Offset(0, 4),
           ),
         ],
@@ -363,19 +335,23 @@ class _PerfectMealStepState extends State<PerfectMealStep> with SingleTickerProv
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (icon != null) ...[
-            Icon(icon, color: Colors.white, size: 14.sp),
-            SizedBox(width: 6.w),
-          ],
+          Container(
+            padding: EdgeInsets.all(4.r),
+            decoration: BoxDecoration(
+              color: color,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: iconColor, size: 14.sp),
+          ),
+          SizedBox(width: 8.w),
           Text(
             text,
-            textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: 12.sp,
+              fontSize: 11.sp,
               fontWeight: FontWeight.w600,
-              color: Colors.white,
+              color: const Color(0xFF1B1C1C),
               fontFamily: 'SF Pro',
-              height: 1.2,
+              height: 1.1,
             ),
           ),
         ],
@@ -383,24 +359,24 @@ class _PerfectMealStepState extends State<PerfectMealStep> with SingleTickerProv
     );
   }
 
-  Widget _buildReasonChip(String emoji, String text) {
+  Widget _buildReasonChip(IconData icon, String text) {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFF9EB), // Light yellow
+        color: const Color(0xFFFFF9EB), // Light yellow bg from mockup
         borderRadius: BorderRadius.circular(30.r),
         border: Border.all(color: const Color(0xFFFDE6B0), width: 1.w),
       ),
       child: Row(
         children: [
-          Text(emoji, style: TextStyle(fontSize: 16.sp)),
+          Icon(icon, color: const Color(0xFFC83A2D), size: 18.sp),
           SizedBox(width: 8.w),
           Text(
             text,
             style: TextStyle(
               fontSize: 14.sp,
               fontWeight: FontWeight.w600,
-              color: const Color(0xFF4B5563),
+              color: const Color(0xFF1B1C1C),
               fontFamily: 'SF Pro',
             ),
           ),

@@ -104,25 +104,19 @@ class _SavingsPitchStepState extends State<SavingsPitchStep> with SingleTickerPr
                         child: RichText(
                           text: TextSpan(
                             style: TextStyle(
-                              fontSize: 25.sp,
+                              fontSize: 34.sp,
                               fontWeight: FontWeight.w900,
                               color: const Color(0xFF0D1B3E),
                               fontFamily: 'SF Pro',
-                              height: 1.2,
+                              height: 1.1,
                               letterSpacing: -0.5,
                             ),
                             children: [
-                              const TextSpan(text: 'Save '),
+                              const TextSpan(text: 'We want you to try\nCooked for '),
                               TextSpan(
-                                text: 'Money',
+                                text: 'free',
                                 style: TextStyle(color: const Color(0xFFC83A2D)),
                               ),
-                              const TextSpan(text: '. Save '),
-                              TextSpan(
-                                text: 'Time\n',
-                                style: TextStyle(color: const Color(0xFFE48E88)), // Lighter red
-                              ),
-                              const TextSpan(text: 'Every Week'),
                             ],
                           ),
                         ),
@@ -135,41 +129,35 @@ class _SavingsPitchStepState extends State<SavingsPitchStep> with SingleTickerPr
                       opacity: _subtitleOpacity,
                       child: SlideTransition(
                         position: _subtitleSlide,
-                        child: RichText(
-                          text: TextSpan(
-                            style: TextStyle(
-                              fontSize: 16.sp,
-                              color: const Color(0xFF7B8190),
-                              fontFamily: 'SF Pro',
-                              height: 1.3,
-                            ),
-                            children: [
-                              const TextSpan(text: 'The average user saves '),
-                              TextSpan(
-                                text: '\$65/month',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w700,
-                                  color: const Color(0xFF111827),
-                                ),
-                              ),
-                              const TextSpan(text: ' on food'),
-                            ],
+                        child: Text(
+                          'Create your account to keep your recipes, meal plans, grocery lists, and savings tracker.',
+                          style: TextStyle(
+                            fontSize: 16.sp,
+                            color: const Color(0xFF4B5563),
+                            fontFamily: 'SF Pro',
+                            height: 1.3,
                           ),
                         ),
                       ),
                     ),
-                    SizedBox(height: 40.h),
+                    SizedBox(height: 32.h),
 
-                    // Center Image (step31.png)
+                    // Center Image (step25.png)
                     FadeTransition(
                       opacity: _imageOpacity,
                       child: Transform.scale(
                         scale: _imageScale.value,
                         child: Center(
                           child: Image.asset(
-                            'assets/images/step31.png',
+                            'assets/images/step25.png',
                             width: double.infinity,
                             fit: BoxFit.contain,
+                            errorBuilder: (context, error, stackTrace) => Container(
+                              height: 250.h,
+                              color: Colors.grey[200],
+                              alignment: Alignment.center,
+                              child: const Text('assets/images/step25.png missing'),
+                            ),
                           ),
                         ),
                       ),
@@ -181,21 +169,21 @@ class _SavingsPitchStepState extends State<SavingsPitchStep> with SingleTickerPr
                       opacity: _featureOpacities[0],
                       child: SlideTransition(
                         position: _featureSlides[0],
-                        child: _buildFeatureItem(Icons.shopping_cart_outlined, 'Spend less on groceries'),
+                        child: _buildFeatureItem('Full access to 10,000+ chef-curated recipes'),
                       ),
                     ),
                     FadeTransition(
                       opacity: _featureOpacities[1],
                       child: SlideTransition(
                         position: _featureSlides[1],
-                        child: _buildFeatureItem(Icons.ramen_dining_outlined, 'Fewer takeouts, more home\ncooked meals'),
+                        child: _buildFeatureItem('Personalized meal plans'),
                       ),
                     ),
                     FadeTransition(
                       opacity: _featureOpacities[2],
                       child: SlideTransition(
                         position: _featureSlides[2],
-                        child: _buildFeatureItem(Icons.receipt_long_outlined, 'Better planning, less waste', isLast: true),
+                        child: _buildFeatureItem('Smart grocery lists that save you money', isLast: true),
                       ),
                     ),
                     SizedBox(height: 20.h),
@@ -226,7 +214,7 @@ class _SavingsPitchStepState extends State<SavingsPitchStep> with SingleTickerPr
                           elevation: 0,
                         ),
                         child: Text(
-                          'Start Saving',
+                          'Try for \$0.00',
                           style: TextStyle(
                             fontFamily: 'SF Pro',
                             fontSize: 18.sp,
@@ -246,22 +234,22 @@ class _SavingsPitchStepState extends State<SavingsPitchStep> with SingleTickerPr
     );
   }
 
-  Widget _buildFeatureItem(IconData icon, String text, {bool isLast = false}) {
+  Widget _buildFeatureItem(String text, {bool isLast = false}) {
     return Padding(
-      padding: EdgeInsets.only(bottom: isLast ? 0 : 24.h),
+      padding: EdgeInsets.only(bottom: isLast ? 0 : 16.h),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Icon(icon, color: const Color(0xFFC83A2D), size: 24.sp),
-          SizedBox(width: 16.w),
+          Icon(Icons.check_circle, color: const Color(0xFFC83A2D), size: 24.sp),
+          SizedBox(width: 12.w),
           Expanded(
             child: Text(
               text,
               style: TextStyle(
                 fontFamily: 'SF Pro',
-                fontSize: 16.sp,
-                fontWeight: FontWeight.w500,
-                color: const Color(0xFF111827),
+                fontSize: 14.sp,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF1B1C1C),
                 height: 1.3,
               ),
             ),
