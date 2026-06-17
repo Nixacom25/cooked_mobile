@@ -10,11 +10,12 @@ import 'widgets/savings_step.dart';
 import 'widgets/meals_step.dart';
 import 'widgets/dinner_figured_out_step.dart';
 import 'widgets/frustrations_step.dart';
+import 'widgets/costing_more_step.dart';
 import 'widgets/groceries_bad_step.dart';
 import 'widgets/eating_out_budget_step.dart';
-import 'widgets/takeout_spending_step.dart';
-import 'widgets/cook_more_save_money_step.dart';
-import 'widgets/cooking_system_step.dart';
+import 'widgets/total_savings_step.dart';
+import 'widgets/cooking_system_loading_step.dart';
+import 'widgets/profile_loading_step.dart';
 import 'widgets/age_step.dart';
 import 'widgets/healthy_eating_intro_step.dart';
 import 'widgets/meal_repetition_intro_step.dart';
@@ -38,7 +39,6 @@ import 'widgets/cuisines_step.dart';
 import 'widgets/kitchen_step.dart';
 import 'widgets/meal_repetition_step.dart';
 import 'widgets/notifications_step.dart';
-import 'widgets/profile_loading_step.dart';
 import 'widgets/savings_pitch_step.dart';
 import 'widgets/profile_summary_step.dart';
 import 'widgets/social_proof_step.dart';
@@ -109,6 +109,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   List<String> _notificationPreferences = [];
   List<String> _onboardingGoals = [];
   List<String> _featuresExcited = [];
+
+  int _eatingOutSavings = 0;
+  int _grocerySavings = 0;
 
   @override
   void initState() {
@@ -302,10 +305,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   int _getEffectiveStep() {
-    if (_currentPage < 27) return _currentPage + 1;
-    if (_currentPage == 27) return 27; // Freeze during ProfileLoadingStep
-    if (_currentPage > 27 && _currentPage < 37) return _currentPage;
-    return 37;
+    if (_currentPage == 8 || _currentPage == 20) return _currentPage;
+    return _currentPage < 23 ? _currentPage + 1 : 23;
   }
 
   int _calculateRecipeCount() {
@@ -356,13 +357,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       // MealRepetitionStep
     }
 
-    if (_currentPage < 32) {
+    if (_currentPage < 21) {
       _pageController.nextPage(
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
       );
-    } else if (_currentPage == 32) {
-      // ProfileSignupStep handles its own navigation via callbacks
+    } else if (_currentPage == 21) {
+      // ProfileSummaryStep handles its own navigation via callbacks
     } else if (_currentPage == 33) {
       // AccountStep -> Submit and potentially OTP
       _submitPreferences(isGuest: false);
@@ -409,17 +410,17 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   void _onBack() {
     HapticFeedback.selectionClick();
     FocusScope.of(context).unfocus();
-    if (_currentPage == 36) return; // Prevent going back during final loading
+    if (_currentPage == 20 || _currentPage == 8) return; // Prevent going back during loading steps
     
-    if (_currentPage == 32) {
-      // Skip RecipeGenerationLoadingStep (31) when going back from ProfileSignupStep
-      _pageController.jumpToPage(30);
+    if (_currentPage == 21) {
+      // Skip ProfileLoadingStep (20) when going back from ProfileSummaryStep
+      _pageController.jumpToPage(19);
       return;
     }
 
-    if (_currentPage == 28) {
-      // Skip ProfileLoadingStep (27) when going back from ProfileSummaryStep
-      _pageController.jumpToPage(26);
+    if (_currentPage == 9) {
+      // Skip CookingSystemLoadingStep (8) when going back from GoalsStep
+      _pageController.jumpToPage(7);
       return;
     }
     
@@ -694,7 +695,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             child: Column(
               children: [
                 // Header: Progress & Skip
-                if (_currentPage != 31)
+                if (_currentPage != 8 && _currentPage != 20)
                   Padding(
                     padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 0),
                   child: Row(
@@ -729,7 +730,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                               ),
                               AnimatedFractionallySizedBox(
                                 duration: const Duration(milliseconds: 400),
-                                widthFactor: (_getEffectiveStep() / 37).clamp(0.0, 1.0),
+                                widthFactor: (_getEffectiveStep() / 23).clamp(0.0, 1.0),
                                 child: Container(
                                   height: 6.h,
                                   color: const Color(0xFFC83A2D),
@@ -754,12 +755,22 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       MealsStep(onContinue: _onContinue), // Step 1
                       DinnerFiguredOutStep(onContinue: _onContinue), // Step 2
                       FrustrationsStep(onContinue: _onContinue), // Step 3
-                      SavingsStep(onContinue: _onContinue), // Step 5 (4th index)
-                      EatingOutBudgetStep(onContinue: _onContinue), // Step 6
-                      GroceriesBadStep(onContinue: _onContinue), // Step 7
-                      TakeoutSpendingStep(onContinue: _onContinue), // Step 8
-                      CookMoreSaveMoneyStep(onContinue: _onContinue), // Step 9
-                      CookingSystemStep(onContinue: _onContinue), // Step 10
+                      SavingsStep(onContinue: _onContinue), // Step 4
+                      CostingMoreStep(onContinue: _onContinue), // Step 5
+                      EatingOutBudgetStep(onContinue: (savings) {
+                        setState(() => _eatingOutSavings = savings);
+                        _onContinue();
+                      }), // Step 6
+                      GroceriesBadStep(onContinue: (savings) {
+                        setState(() => _grocerySavings = savings);
+                        _onContinue();
+                      }), // Step 7
+                      TotalSavingsStep(
+                        eatingOutSavings: _eatingOutSavings,
+                        grocerySavings: _grocerySavings,
+                        onContinue: _onContinue,
+                      ), // Step 8
+                      CookingSystemLoadingStep(onContinue: _onContinue), // Step 9
                       GoalsStep( // Step 10
                         onContinue: _onContinue,
                         initialSelected: _onboardingGoals.where((g) => [
@@ -822,100 +833,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             setState(() => _featuresExcited = selected),
                         onContinue: _onContinue,
                       ),
-                      
-                      // Moved subsequent steps down
-                      HealthGoalsStep(
-                        onContinue: _onContinue,
-                        initialSelected: _onboardingGoals.where((g) => [
-                          'weight_loss', 'muscle_gain', 'high_protein', 'healthy_heart', 
-                          'quick_meals', 'budget_friendly', 'no_goal'
-                        ].contains(g)).toList(),
-                        onChanged: (selections) {
-                          setState(() {
-                            final mainGoals = _onboardingGoals.where((g) => [
-                              'save_money', 'eat_healthier', 'gain_muscle', 'lose_weight',
-                              'waste_less', 'learn_cook', 'discover_recipes', 'meal_prep'
-                            ].contains(g)).toList();
-                            _onboardingGoals = [...mainGoals, ...selections];
-                          });
-                        },
-                      ),
-                      FrustrationsIntroStep(onContinue: _onContinue),
-                      CookingSkillStep(onContinue: _onContinue),
-                      MealRepetitionStep(onContinue: _onContinue),
-                      DietaryPreferencesStep(
-                        initialSelected: _selectedDiet,
-                        onChanged: (selected) =>
-                            setState(() => _selectedDiet = selected),
-                      ),
-                      FlavorSpiceStep(
-                        initialDna: _flavorDna,
-                        initialSpice: _spiceLevel,
-                        onChanged: ({required dna, required spice}) {
-                          setState(() {
-                            _flavorDna = dna;
-                            _spiceLevel = spice;
-                          });
-                        },
-                      ),
-
-                      GroceryShopStep(
-                        initialFrequency: _groceryFrequency,
-                        initialStores: _groceryStores,
-                        initialBudget: _groceryBudget,
-                        onChanged: (frequency, stores, budget) {
-                          setState(() {
-                            _groceryFrequency = frequency;
-                            _groceryStores = stores;
-                            _groceryBudget = budget;
-                          });
-                        },
-                      ),
-                      KitchenStep(
-                        initialSelected: _kitchenAppliances,
-                        onChanged: (selected) =>
-                            setState(() => _kitchenAppliances = selected),
-                      ),
-                      SourceStep(
-                        initialSources: _recipeSources,
-                        initialOtherSource: _otherSource,
-                        onChanged: (sources, other) {
-                          setState(() {
-                            _recipeSources = sources;
-                            _otherSource = other;
-                          });
-                        },
-                      ),
-                      ExcitedFeaturesStep(
-                        initialFeatures: _excitedFeatures,
-                        onChanged: (features) {
-                          setState(() => _excitedFeatures = features);
-                        },
-                      ),
-
-                      NotificationsStep(
-                        initialSelected: _notificationPreferences,
-                        onChanged: (selected) =>
-                            setState(() => _notificationPreferences = selected),
-                      ),
                       ProfileLoadingStep(onComplete: _onContinue),
                       ProfileSummaryStep(
                         favoriteCuisines: _favoriteCuisines,
                         flavorDna: _flavorDna.keys.toList(),
                         recipeCount: _calculateRecipeCount(),
                         onContinue: _onContinue,
-                      ),
-                      SocialProofStep(
-                        favoriteCuisines: _favoriteCuisines,
-                        onContinue: _onContinue,
-                      ),
-                      SavingsPitchStep(
-                        onContinue: _onContinue,
-                      ),
-                      RecipeGenerationLoadingStep(
-                        onContinue: () {
-                          _pageController.nextPage(duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
-                        },
                       ),
                       ProfileSignupStep(
                         onSignupEmail: () {
@@ -1003,16 +926,16 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 ),
 
                 // Footer: Continue Button
-                if (_currentPage != 0 && // SavingsStep
-                    _currentPage != 1 && // MealsStep
+                if (_currentPage != 0 && // MealsStep
+                    _currentPage != 1 && // DinnerFiguredOutStep
                     _currentPage != 2 && // FrustrationsStep
-                    _currentPage != 3 && // SpendEatingOutStep
-                    _currentPage != 4 && // GroceriesBadStep
-                    _currentPage != 5 && // FridgeScannerStep
-                    _currentPage != 6 && // TakeoutSpendingStep
-                    _currentPage != 7 && // CookMoreSaveMoneyStep
-                    _currentPage != 8 && // CookingSystemStep
-                    _currentPage != 9 && // AgeStep
+                    _currentPage != 3 && // SavingsStep
+                    _currentPage != 4 && // CostingMoreStep
+                    _currentPage != 5 && // EatingOutBudgetStep
+                    _currentPage != 6 && // GroceriesBadStep
+                    _currentPage != 7 && // TotalSavingsStep
+                    _currentPage != 8 && // CookMoreSaveMoneyStep
+                    _currentPage != 9 && // CookingSystemStep
                     _currentPage != 10 && // GoalsStep
                     _currentPage != 11 && // HealthGoalsStep
                     _currentPage != 12 && // AllergiesStep
