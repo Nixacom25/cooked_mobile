@@ -203,18 +203,18 @@ class _SelectionOnboardingStepState extends State<SelectionOnboardingStep> with 
                         child: Text(
                           widget.title,
                           style: TextStyle(
-                            fontSize: 25.sp,
-                            fontWeight: FontWeight.w800,
-                            color: const Color(0xFF0D1B36),
-                            fontFamily: 'SF Pro',
-                            height: 1.2,
-                            letterSpacing: -0.5,
+                            fontSize: 34.sp,
+                            fontWeight: FontWeight.w400,
+                            color: const Color(0xFF111827),
+                            fontFamily: 'Larken',
+                            height: 1.149,
+                            letterSpacing: 0,
                           ),
                         ),
                       ),
                     ),
                     if (widget.subtitle != null) ...[
-                      SizedBox(height: 8.h),
+                      SizedBox(height: 16.h),
                       FadeTransition(
                         opacity: _subtitleOpacity,
                         child: SlideTransition(
@@ -223,8 +223,9 @@ class _SelectionOnboardingStepState extends State<SelectionOnboardingStep> with 
                             widget.subtitle!,
                             style: TextStyle(
                               fontSize: 16.sp,
-                              color: const Color(0xFF7B8190),
+                              color: const Color(0xFF4B5563),
                               fontFamily: 'SF Pro',
+                              height: 1.3,
                             ),
                           ),
                         ),
