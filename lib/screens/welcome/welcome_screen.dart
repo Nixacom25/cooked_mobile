@@ -72,19 +72,20 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        'Cooking should\nfeel easier.',
+                        'Cook More. Spend\nLess. Eat Better.',
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          fontSize: 32.sp,
-                          fontWeight: FontWeight.w700,
+                          fontSize: 34.sp,
+                          fontWeight: FontWeight.w400,
                           color: AppColors.textDark,
-                          fontFamily: 'SF Pro',
-                          letterSpacing: 0.5,
+                          fontFamily: 'LarkenVariable',
+                          height: 1.149,
+                          letterSpacing: 0,
                         ),
                       ),
                       SizedBox(height: 5.h),
                       Text(
-                        'Cooked turns ingredients, saved videos,\nand recipe ideas into meals you’ll actually\nwant to make.',
+                        'Personalized recipes, meal plans, and\ngrocery lists built around you.',
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 16.sp,
@@ -110,7 +111,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            'Have an account? ',
+                            'Already have an account? ',
                             style: TextStyle(
                               color: AppColors.textMuted,
                               fontFamily: 'SF Pro',
