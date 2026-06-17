@@ -106,7 +106,7 @@ class _PerfectMealStepState extends State<PerfectMealStep> with SingleTickerProv
                                 fontSize: 32.sp,
                                 fontWeight: FontWeight.w900,
                                 color: const Color(0xFF0D1B3E),
-                                fontFamily: 'SF Pro',
+                                fontFamily: 'Larken',
                                 height: 1.1,
                                 letterSpacing: -0.5,
                               ),
@@ -137,7 +137,7 @@ class _PerfectMealStepState extends State<PerfectMealStep> with SingleTickerProv
                             child: Transform.scale(
                               scale: _imageScale.value,
                               child: Image.asset(
-                                'assets/images/step28.png',
+                                'assets/images/step31.png',
                                 width: 300.w,
                                 fit: BoxFit.contain,
                                 errorBuilder: (context, error, stackTrace) => Container(
@@ -145,7 +145,7 @@ class _PerfectMealStepState extends State<PerfectMealStep> with SingleTickerProv
                                   width: 300.w,
                                   color: Colors.grey[200],
                                   alignment: Alignment.center,
-                                  child: const Text('assets/images/step28.png missing'),
+                                  child: const Text('assets/images/step31.png missing'),
                                 ),
                               ),
                             ),
@@ -326,7 +326,7 @@ class _PerfectMealStepState extends State<PerfectMealStep> with SingleTickerProv
         borderRadius: BorderRadius.circular(20.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withAlpha(12),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
