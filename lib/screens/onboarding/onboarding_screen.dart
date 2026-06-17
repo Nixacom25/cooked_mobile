@@ -8,8 +8,8 @@ import '../../services/user_service.dart';
 import '../../core/widgets/ios_toast.dart';
 import 'widgets/savings_step.dart';
 import 'widgets/meals_step.dart';
+import 'widgets/dinner_figured_out_step.dart';
 import 'widgets/frustrations_step.dart';
-import 'widgets/spend_eating_out_step.dart';
 import 'widgets/groceries_bad_step.dart';
 import 'widgets/eating_out_budget_step.dart';
 import 'widgets/takeout_spending_step.dart';
@@ -688,7 +688,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         child: Stack(
           fit: StackFit.expand,
           children: [
-          Image.asset('assets/images/fond.png', fit: BoxFit.cover),
+          // Image.asset('assets/images/fond.png', fit: BoxFit.cover),
+          Container(color: Colors.white),
           SafeArea(
             child: Column(
               children: [
@@ -751,14 +752,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     onPageChanged: _onStepChanged,
                     children: [
                       MealsStep(onContinue: _onContinue), // Step 1
-                      FrustrationsStep(onContinue: _onContinue), // Step 2
-                      SavingsStep(onContinue: _onContinue), // Step 3
-                      SpendEatingOutStep(onContinue: _onContinue), // Step 4
-                      EatingOutBudgetStep(onContinue: _onContinue), // Step 5
-                      GroceriesBadStep(onContinue: _onContinue), // Step 6
-                      TakeoutSpendingStep(onContinue: _onContinue), // Step 7
-                      CookMoreSaveMoneyStep(onContinue: _onContinue), // Step 8
-                      CookingSystemStep(onContinue: _onContinue), // Step 9
+                      DinnerFiguredOutStep(onContinue: _onContinue), // Step 2
+                      FrustrationsStep(onContinue: _onContinue), // Step 3
+                      SavingsStep(onContinue: _onContinue), // Step 5 (4th index)
+                      EatingOutBudgetStep(onContinue: _onContinue), // Step 6
+                      GroceriesBadStep(onContinue: _onContinue), // Step 7
+                      TakeoutSpendingStep(onContinue: _onContinue), // Step 8
+                      CookMoreSaveMoneyStep(onContinue: _onContinue), // Step 9
+                      CookingSystemStep(onContinue: _onContinue), // Step 10
                       GoalsStep( // Step 10
                         onContinue: _onContinue,
                         initialSelected: _onboardingGoals.where((g) => [
