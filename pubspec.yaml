@@ -1,7 +1,7 @@
 name: cooked
 description: "A new Flutter project."
 publish_to: 'none' 
-version: 1.0.0+41
+version: 1.0.0+42
 
 environment:
   sdk: ^3.8.1
@@ -72,3 +72,19 @@ flutter:
     - assets/favicon/
     - assets/nav/
     - assets/cuisine/
+    - assets/onboarding/
+
+  fonts:
+    - family: LarkenVariable
+      fonts:
+        - asset: 'assets/fonts/Larken/Larken Regular.ttf'
+          weight: 400
+        - asset: 'assets/fonts/Larken/Larken Medium.ttf'
+          weight: 500
+        - asset: 'assets/fonts/Larken/Larken Bold.ttf'
+          weight: 700
+        - asset: 'assets/fonts/Larken/Larken Extra Bold.ttf'
+          weight: 800
+        - asset: 'assets/fonts/Larken/Larken Black.ttf'
+          weight: 900
+        - asset: 'assets/fonts/Larken/Larken Variable.ttf'
