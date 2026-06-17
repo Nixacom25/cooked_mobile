@@ -205,7 +205,7 @@ class _SelectionOnboardingStepState extends State<SelectionOnboardingStep> with 
                           style: TextStyle(
                             fontSize: 34.sp,
                             fontWeight: FontWeight.w400,
-                            color: const Color(0xFF111827),
+                            color: const Color(0xFF0D1B3E),
                             fontFamily: 'Larken',
                             height: 1.149,
                             letterSpacing: 0,
@@ -214,7 +214,7 @@ class _SelectionOnboardingStepState extends State<SelectionOnboardingStep> with 
                       ),
                     ),
                     if (widget.subtitle != null) ...[
-                      SizedBox(height: 16.h),
+                      SizedBox(height: 8.h),
                       FadeTransition(
                         opacity: _subtitleOpacity,
                         child: SlideTransition(
@@ -223,9 +223,8 @@ class _SelectionOnboardingStepState extends State<SelectionOnboardingStep> with 
                             widget.subtitle!,
                             style: TextStyle(
                               fontSize: 16.sp,
-                              color: const Color(0xFF4B5563),
+                              color: const Color(0xFF7B8190),
                               fontFamily: 'SF Pro',
-                              height: 1.3,
                             ),
                           ),
                         ),
@@ -385,55 +384,53 @@ class _SelectionOnboardingStepState extends State<SelectionOnboardingStep> with 
                               child: GestureDetector(
                                 onTap: () => _toggleOption(option.id),
                                 child: Container(
-                                  padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 12.h),
+                                  padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 18.h),
                                   decoration: BoxDecoration(
                                     color: Colors.white,
-                                    borderRadius: BorderRadius.circular(12.r),
+                                    borderRadius: BorderRadius.circular(24.r),
                                     border: Border.all(
-                                      color: isSelected ? const Color(0xFFD92D20) : const Color(0xFFE5E7EB),
+                                      color: isSelected ? const Color(0xFFC83A2D) : const Color(0xFFF3F4F6),
                                       width: 1.5,
                                     ),
-                                    boxShadow: isSelected
-                                        ? [
-                                            BoxShadow(
-                                              color: const Color(0xFFD92D20).withOpacity(0.1),
-                                              blurRadius: 10,
-                                              offset: const Offset(0, 4),
-                                            )
-                                          ]
-                                        : [],
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.04),
+                                        blurRadius: 15,
+                                        offset: const Offset(0, 4),
+                                      )
+                                    ],
                                   ),
                                   child: Row(
                                     children: [
                                       if (option.imageAsset != null) ...[
-                                        Image.asset(option.imageAsset!, height: 24.h, fit: BoxFit.contain),
-                                        SizedBox(width: 10.w),
+                                        Image.asset(option.imageAsset!, height: 28.h, fit: BoxFit.contain),
+                                        SizedBox(width: 16.w),
                                       ] else if (option.svgAsset != null) ...[
                                         SvgPicture.asset(
                                           option.svgAsset!, 
-                                          height: 20.h, 
-                                          width: 20.w,
+                                          height: 24.h, 
+                                          width: 24.w,
                                           colorFilter: widget.preserveSvgColor ? null : ColorFilter.mode(
-                                            isSelected ? const Color(0xFFD92D20) : const Color(0xFF9CA3AF),
+                                            isSelected ? const Color(0xFFC83A2D) : const Color(0xFF9CA3AF),
                                             BlendMode.srcIn,
                                           ),
                                         ),
-                                        SizedBox(width: 10.w),
+                                        SizedBox(width: 16.w),
                                       ] else if (option.icon != null) ...[
                                         Icon(
                                           option.icon,
-                                          color: isSelected ? const Color(0xFFD92D20) : const Color(0xFF9CA3AF),
-                                          size: 20.sp,
+                                          color: isSelected ? const Color(0xFFC83A2D) : const Color(0xFF9CA3AF),
+                                          size: 24.sp,
                                         ),
-                                        SizedBox(width: 10.w),
+                                        SizedBox(width: 16.w),
                                       ],
                                       Expanded(
                                         child: Text(
                                           option.label,
                                           style: TextStyle(
-                                            fontSize: 14.sp,
+                                            fontSize: 16.sp,
                                             fontWeight: FontWeight.w600,
-                                            color: const Color(0xFF0D1B36),
+                                            color: isSelected ? const Color(0xFFC83A2D) : const Color(0xFF0D1B3E),
                                             fontFamily: 'SF Pro',
                                           ),
                                         ),
@@ -441,18 +438,18 @@ class _SelectionOnboardingStepState extends State<SelectionOnboardingStep> with 
                                       if (isSelected)
                                         Icon(
                                           Icons.check_circle,
-                                          color: const Color(0xFFD92D20),
-                                          size: 20.sp,
+                                          color: const Color(0xFFC83A2D),
+                                          size: 24.sp,
                                         )
                                       else
                                         Container(
-                                          width: 20.sp,
-                                          height: 20.sp,
+                                          width: 24.sp,
+                                          height: 24.sp,
                                           decoration: BoxDecoration(
                                             shape: BoxShape.circle,
                                             border: Border.all(
                                               color: const Color(0xFFE5E7EB),
-                                              width: 1.5,
+                                              width: 2,
                                             ),
                                           ),
                                         ),
