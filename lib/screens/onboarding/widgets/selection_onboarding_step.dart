@@ -42,7 +42,7 @@ class SelectionOnboardingStep extends StatefulWidget {
     this.onSelectionChanged,
     this.initialSelected = const [],
     this.exclusiveOptionId,
-    this.gridItemDirection = Axis.vertical,
+    this.gridItemDirection = Axis.horizontal,
     this.preserveSvgColor = false,
   });
 
@@ -205,7 +205,7 @@ class _SelectionOnboardingStepState extends State<SelectionOnboardingStep> with 
                           style: TextStyle(
                             fontSize: 34.sp,
                             fontWeight: FontWeight.w400,
-                            color: const Color(0xFF0D1B3E),
+                            color: const Color(0xFF111827),
                             fontFamily: 'Larken',
                             height: 1.149,
                             letterSpacing: 0,
@@ -248,7 +248,11 @@ class _SelectionOnboardingStepState extends State<SelectionOnboardingStep> with 
                         children: List.generate(widget.options.length, (index) {
                           final option = widget.options[index];
                           final isSelected = _selectedIds.contains(option.id);
-                          final itemWidth = (MediaQuery.of(context).size.width - 48.w - 12.w) / 2;
+                          final isLastOdd = index == widget.options.length - 1 && widget.options.length % 2 != 0;
+                          final itemWidth = isLastOdd 
+                              ? (MediaQuery.of(context).size.width - 48.w)
+                              : (MediaQuery.of(context).size.width - 48.w - 12.w) / 2;
+                              
                           return FadeTransition(
                             opacity: _itemOpacities[index],
                             child: SlideTransition(
@@ -257,114 +261,132 @@ class _SelectionOnboardingStepState extends State<SelectionOnboardingStep> with 
                                 onTap: () => _toggleOption(option.id),
                                 child: Container(
                                   width: itemWidth,
-                                  padding: widget.gridItemDirection == Axis.horizontal
-                                      ? EdgeInsets.symmetric(horizontal: 12.w, vertical: 14.h)
-                                      : EdgeInsets.symmetric(horizontal: 16.w, vertical: 20.h),
+                                  height: widget.gridItemDirection == Axis.vertical ? 100.h : 70.h,
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: 16.w, 
+                                    vertical: widget.gridItemDirection == Axis.vertical ? 16.h : 12.h
+                                  ),
                                   decoration: BoxDecoration(
                                     color: Colors.white,
-                                    borderRadius: BorderRadius.circular(12.r),
+                                    borderRadius: BorderRadius.circular(20.r),
                                     border: Border.all(
-                                      color: isSelected ? const Color(0xFFD92D20) : const Color(0xFFE5E7EB),
+                                      color: isSelected ? const Color(0xFFC83A2D) : const Color(0xFFF3F4F6),
                                       width: 1.5,
                                     ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.04),
+                                        blurRadius: 15,
+                                        offset: const Offset(0, 4),
+                                      )
+                                    ],
                                   ),
-                                  child: widget.gridItemDirection == Axis.horizontal
-                                      ? Row(
-                                          mainAxisAlignment: MainAxisAlignment.center,
-                                          children: [
-                                            if (option.imageAsset != null) ...[
-                                              Image.asset(option.imageAsset!, height: 28.h, fit: BoxFit.contain),
-                                              SizedBox(width: 8.w),
-                                            ] else if (option.svgAsset != null) ...[
-                                              SvgPicture.asset(
-                                                option.svgAsset!, 
-                                                height: 20.h, 
-                                                width: 20.w,
-                                                colorFilter: widget.preserveSvgColor ? null : ColorFilter.mode(
-                                                  isSelected ? const Color(0xFFD92D20) : const Color(0xFF9CA3AF),
-                                                  BlendMode.srcIn,
-                                                ),
-                                              ),
-                                              SizedBox(width: 8.w),
-                                            ] else if (option.icon != null) ...[
-                                              Icon(option.icon, color: isSelected ? const Color(0xFFD92D20) : const Color(0xFF9CA3AF), size: 24.sp),
-                                              SizedBox(width: 8.w),
-                                            ],
-                                            Flexible(
-                                              child: Text(
-                                                option.label,
-                                                style: TextStyle(
-                                                  fontSize: 14.sp,
-                                                  fontWeight: FontWeight.w700,
-                                                  color: const Color(0xFF0D1B36),
-                                                  fontFamily: 'SF Pro',
-                                                  height: 1.2,
-                                                ),
-                                                textAlign: TextAlign.center,
-                                              ),
-                                            ),
-                                          ],
-                                        )
-                                      : Column(
-                                          mainAxisSize: MainAxisSize.min,
-                                          mainAxisAlignment: MainAxisAlignment.center,
-                                          children: [
-                                            if (option.imageAsset != null) ...[
-                                              Padding(
-                                                padding: EdgeInsets.only(bottom: 8.h),
-                                                child: Image.asset(
-                                                  option.imageAsset!,
-                                                  height: 80.h,
-                                                  fit: BoxFit.contain,
-                                                ),
-                                              ),
-                                            ] else if (option.svgAsset != null) ...[
-                                              Padding(
-                                                padding: EdgeInsets.only(bottom: 8.h),
-                                                child: SvgPicture.asset(
-                                                  option.svgAsset!,
-                                                  height: 24.h,
-                                                  width: 24.w,
+                                  child: Stack(
+                                    children: [
+                                      if (widget.gridItemDirection == Axis.vertical)
+                                        Align(
+                                          alignment: Alignment.center,
+                                          child: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              if (option.svgAsset != null)
+                                                SvgPicture.asset(
+                                                  option.svgAsset!, 
+                                                  height: 28.h, 
+                                                  width: 28.w,
                                                   colorFilter: widget.preserveSvgColor ? null : ColorFilter.mode(
-                                                    isSelected ? const Color(0xFFD92D20) : const Color(0xFF9CA3AF),
+                                                    isSelected ? const Color(0xFFC83A2D) : const Color(0xFF9CA3AF),
                                                     BlendMode.srcIn,
                                                   ),
+                                                )
+                                              else if (option.icon != null)
+                                                Icon(
+                                                  option.icon,
+                                                  color: isSelected ? const Color(0xFFC83A2D) : const Color(0xFF9CA3AF),
+                                                  size: 28.sp,
                                                 ),
-                                              ),
-                                            ] else if (option.icon != null) ...[
-                                              Icon(
-                                                option.icon,
-                                                color: isSelected ? const Color(0xFFD92D20) : const Color(0xFF9CA3AF),
-                                                size: 20.sp,
-                                              ),
-                                              SizedBox(height: 8.h),
-                                            ],
-                                            Text(
-                                              option.label,
-                                              textAlign: TextAlign.center,
-                                              style: TextStyle(
-                                                fontSize: 14.sp,
-                                                fontWeight: FontWeight.w700,
-                                                color: const Color(0xFF0D1B36),
-                                                fontFamily: 'SF Pro',
-                                                height: 1.2,
-                                              ),
-                                            ),
-                                            if (option.subLabel != null) ...[
-                                              SizedBox(height: 6.h),
+                                              SizedBox(height: 12.h),
                                               Text(
-                                                option.subLabel!,
+                                                option.label,
                                                 textAlign: TextAlign.center,
                                                 style: TextStyle(
-                                                  fontSize: 12.sp,
-                                                  color: const Color(0xFF7B8190),
+                                                  fontSize: 14.sp,
+                                                  fontWeight: FontWeight.w500,
+                                                  color: isSelected ? const Color(0xFFC83A2D) : const Color(0xFF111827),
                                                   fontFamily: 'SF Pro',
                                                   height: 1.2,
                                                 ),
                                               ),
                                             ],
+                                          ),
+                                        )
+                                      else
+                                        Align(
+                                          alignment: Alignment.centerLeft,
+                                          child: Row(
+                                            mainAxisAlignment: MainAxisAlignment.start,
+                                            crossAxisAlignment: CrossAxisAlignment.center,
+                                            children: [
+                                              if (option.svgAsset != null)
+                                                SvgPicture.asset(
+                                                  option.svgAsset!, 
+                                                  height: 24.h, 
+                                                  width: 24.w,
+                                                  colorFilter: widget.preserveSvgColor ? null : ColorFilter.mode(
+                                                    isSelected ? const Color(0xFFC83A2D) : const Color(0xFF9CA3AF),
+                                                    BlendMode.srcIn,
+                                                  ),
+                                                )
+                                              else if (option.icon != null)
+                                                Icon(
+                                                  option.icon,
+                                                  color: isSelected ? const Color(0xFFC83A2D) : const Color(0xFF9CA3AF),
+                                                  size: 24.sp,
+                                                ),
+                                              if (option.svgAsset != null || option.icon != null)
+                                                SizedBox(width: 12.w),
+                                              Expanded(
+                                                child: Text(
+                                                  option.label,
+                                                  textAlign: TextAlign.start,
+                                                  style: TextStyle(
+                                                    fontSize: 14.sp,
+                                                  fontWeight: FontWeight.w500,
+                                                  color: isSelected ? const Color(0xFFC83A2D) : const Color(0xFF111827),
+                                                  fontFamily: 'SF Pro',
+                                                  height: 1.2,
+                                                ),
+                                              ),
+                                            ),
                                           ],
                                         ),
+                                      ),
+                                      if (widget.gridItemDirection == Axis.vertical || isSelected)
+                                        Positioned(
+                                          top: 0,
+                                          right: 0,
+                                          child: isSelected
+                                              ? Icon(
+                                                  Icons.check_circle,
+                                                  color: const Color(0xFFC83A2D),
+                                                  size: 20.sp,
+                                                )
+                                              : (widget.gridItemDirection == Axis.vertical
+                                                  ? Container(
+                                                      width: 20.sp,
+                                                      height: 20.sp,
+                                                      decoration: BoxDecoration(
+                                                        shape: BoxShape.circle,
+                                                        border: Border.all(
+                                                          color: const Color(0xFFF3F4F6),
+                                                          width: 1.5,
+                                                        ),
+                                                      ),
+                                                    )
+                                                  : const SizedBox.shrink()),
+                                        ),
+                                    ],
+                                  ),
                                 ),
                               ),
                             ),
@@ -428,8 +450,8 @@ class _SelectionOnboardingStepState extends State<SelectionOnboardingStep> with 
                                         child: Text(
                                           option.label,
                                           style: TextStyle(
-                                            fontSize: 16.sp,
-                                            fontWeight: FontWeight.w600,
+                                            fontSize: 15.sp,
+                                            fontWeight: FontWeight.w500,
                                             color: isSelected ? const Color(0xFFC83A2D) : const Color(0xFF0D1B3E),
                                             fontFamily: 'SF Pro',
                                           ),
@@ -476,7 +498,7 @@ class _SelectionOnboardingStepState extends State<SelectionOnboardingStep> with 
                 child: SlideTransition(
                   position: _buttonSlide,
                   child: Padding(
-                    padding: EdgeInsets.fromLTRB(24.w, 0, 24.w, 10.h),
+                    padding: EdgeInsets.fromLTRB(24.w, 0, 24.w, 20.h),
                     child: widget.bottomCardWidget!,
                   ),
                 ),

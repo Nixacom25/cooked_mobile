@@ -4,15 +4,19 @@ import '../../../widgets/red_button.dart';
 
 class AnimatedOnboardingStep extends StatefulWidget {
   final String imagePath;
-  final String title;
+  final String? title;
+  final Widget? titleWidget;
   final String subtitle;
+  final String buttonLabel;
   final VoidCallback onContinue;
 
   const AnimatedOnboardingStep({
     super.key,
     required this.imagePath,
-    required this.title,
+    this.title,
+    this.titleWidget,
     required this.subtitle,
+    this.buttonLabel = 'Continue',
     required this.onContinue,
   });
 
@@ -116,11 +120,11 @@ class _AnimatedOnboardingStepState extends State<AnimatedOnboardingStep> with Si
                 opacity: _titleOpacity,
                 child: SlideTransition(
                   position: _titleSlide,
-                  child: Text(
-                    widget.title,
+                  child: widget.titleWidget ?? Text(
+                    widget.title ?? '',
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      fontSize: 25.sp,
+                      fontSize: 32.sp,
                       fontWeight: FontWeight.w800,
                       color: const Color(0xFF0D1B36),
                       fontFamily: 'SF Pro',
@@ -153,7 +157,7 @@ class _AnimatedOnboardingStepState extends State<AnimatedOnboardingStep> with Si
                 child: SlideTransition(
                   position: _buttonSlide,
                   child: RedButton(
-                    label: 'Continue',
+                    label: widget.buttonLabel,
                     onTap: widget.onContinue,
                     height: 55.h,
                     fontSize: 18.sp,

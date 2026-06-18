@@ -3,7 +3,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../widgets/red_button.dart';
 
 class ImageInfoOnboardingStep extends StatefulWidget {
-  final String title;
+  final String? title;
+  final Widget? titleWidget;
   final String? subtitle;
   final String imagePath;
   final String buttonLabel;
@@ -11,7 +12,8 @@ class ImageInfoOnboardingStep extends StatefulWidget {
 
   const ImageInfoOnboardingStep({
     super.key,
-    required this.title,
+    this.title,
+    this.titleWidget,
     this.subtitle,
     required this.imagePath,
     this.buttonLabel = 'Continue',
@@ -103,10 +105,10 @@ class _ImageInfoOnboardingStepState extends State<ImageInfoOnboardingStep> with 
                     opacity: _titleOpacity,
                     child: SlideTransition(
                       position: _titleSlide,
-                      child: Text(
-                        widget.title,
+                      child: widget.titleWidget ?? Text(
+                        widget.title ?? '',
                         style: TextStyle(
-                          fontSize: 25.sp,
+                          fontSize: 32.sp,
                           fontWeight: FontWeight.w800,
                           color: const Color(0xFF0D1B36),
                           fontFamily: 'SF Pro',

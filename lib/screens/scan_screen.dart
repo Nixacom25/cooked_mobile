@@ -23,6 +23,7 @@ import '../core/services/tutorial_service.dart';
 import '../core/utils/tutorial_helper.dart';
 import '../core/extensions/string_extensions.dart';
 import '../utils/paywall_helper.dart';
+import '../widgets/scan_animation_overlay.dart';
 
 enum ScanState { scan, type, saved, results }
 
@@ -86,6 +87,11 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
   // Analysis Loading state
   int _analysisDotCount = 0;
   Timer? _analysisTimer;
+
+  // Scan Animation Overlay state
+  bool _showAnimationOverlay = false;
+  List<RecipeIngredient>? _overlayDetectedIngredients;
+  List<Recipe>? _overlayGeneratedRecipes;
 
   void _updateState(ScanState newState) {
     if (!mounted) return;
@@ -244,47 +250,57 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
     }
 
     setState(() {
-      _startAnalysisLoading("Analyzing...");
+      _showAnimationOverlay = true;
+      _overlayDetectedIngredients = null;
+      _overlayGeneratedRecipes = null;
+      _capturedImagePath = null;
     });
 
     try {
-      final response = await RecipeService.instance.scanTyped(allIngredients);
+      // Step 1: Validate/Detect typed ingredients from DB
+      final detectResult = await RecipeService.instance.validateTypedIngredients(allIngredients);
 
       final List<RecipeIngredient> allowed =
-          (response['allowed_ingredients'] as List)
+          (detectResult['allowed_ingredients'] as List? ?? [])
               .map((i) => RecipeIngredient.fromJson(i))
               .toList();
-      final List<RecipeIngredient> restricted =
-          (response['restricted_ingredients'] as List)
-              .map((i) => RecipeIngredient.fromJson(i))
-              .toList();
-      final List<Recipe> recipes = (response['recipes'] as List)
-          .map((r) => Recipe.fromJson(r))
-          .toList();
 
       if (mounted) {
         setState(() {
           _ingredients.clear();
           _ingredients.addAll(allowed);
           _restrictedIngredients.clear();
-          _restrictedIngredients.addAll(restricted);
-          _recipes.clear();
-          _recipes.addAll(recipes);
-          _stopAnalysisLoading();
-          _typedIngredients.clear();
-          _updateState(ScanState.results);
+          
+          _overlayDetectedIngredients = allowed;
         });
-        
-        // Save to temporary home suggestions for 3 days
-        RecipeService.instance.saveScanResults(recipes);
       }
+
+      // Step 2: Generate Recipes
+      final List<String> ingredientNames = allowed.map((i) => i.name).toList();
+      final generatedRecipes = await RecipeService.instance.generateAiRecipes(ingredientNames);
+
+      if (mounted) {
+        setState(() {
+          _recipes.clear();
+          _recipes.addAll(generatedRecipes);
+          _typedIngredients.clear();
+          
+          _overlayGeneratedRecipes = generatedRecipes;
+        });
+      }
+
+      // Save to temporary home suggestions for 3 days
+      RecipeService.instance.saveScanResults(generatedRecipes);
+
     } catch (e) {
       if (mounted) {
-        setState(() => _stopAnalysisLoading());
+        setState(() {
+          _showAnimationOverlay = false;
+        });
         if (!PaywallHelper.handleError(context, e)) {
           IosToast.show(
             context,
-            message: ErrorHelper.getFriendlyMessage(e),
+            message: e.toString().replaceAll("Exception: ", ""),
             type: ToastType.error,
           );
         }
@@ -583,6 +599,21 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
               left: 22.w,
               right: 22.w,
               child: SafeArea(top: false, child: _buildBottomPillNav()),
+            ),
+
+          // 7. New Scan Animation Overlay
+          if (_showAnimationOverlay)
+            Positioned.fill(
+              child: ScanAnimationOverlay(
+                detectedIngredients: _overlayDetectedIngredients,
+                generatedRecipes: _overlayGeneratedRecipes,
+                onAnimationComplete: () {
+                  setState(() {
+                    _showAnimationOverlay = false;
+                  });
+                  _updateState(ScanState.results);
+                },
+              ),
             ),
         ],
       ),
@@ -1712,54 +1743,75 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
 
     if (photo == null) return;
     HapticFeedback.mediumImpact();
+    
+    // Instead of old loading, we use the new overlay
     setState(() {
-      _startAnalysisLoading("Analyzing...");
+      _showAnimationOverlay = true;
+      _overlayDetectedIngredients = null;
+      _overlayGeneratedRecipes = null;
       _capturedImagePath = photo!.path;
     });
 
     try {
-      final result = await RecipeService.instance.scan(photo);
-      final recipes = (result['recipes'] as List? ?? [])
-          .map((j) => Recipe.fromJson(j))
-          .toList();
-
-      setState(() {
-        _recipes.clear();
-        _recipes.addAll(recipes);
-
-        _ingredients.clear();
-        _ingredients.addAll(
-          (result['allowed_ingredients'] as List? ?? [])
+      // Step 1: Detect ingredients
+      final detectResult = await RecipeService.instance.detectIngredients(photo);
+      
+      final List<RecipeIngredient> detectedAllowed = 
+          (detectResult['allowed_ingredients'] as List? ?? [])
               .map((j) => RecipeIngredient.fromJson(j))
-              .toList(),
-        );
-
-        _restrictedIngredients.clear();
-        _restrictedIngredients.addAll(
-          (result['restricted_ingredients'] as List? ?? [])
+              .toList();
+      
+      final List<RecipeIngredient> detectedRestricted = 
+          (detectResult['restricted_ingredients'] as List? ?? [])
               .map((j) => RecipeIngredient.fromJson(j))
-              .toList(),
-        );
+              .toList();
 
-        _analysisTimer?.cancel();
-        _stopAnalysisLoading();
-        _capturedImagePath = null;
-        _updateState(ScanState.results);
-      });
+      if (mounted) {
+        setState(() {
+          _ingredients.clear();
+          _ingredients.addAll(detectedAllowed);
+          
+          _restrictedIngredients.clear();
+          _restrictedIngredients.addAll(detectedRestricted);
+          
+          _overlayDetectedIngredients = detectedAllowed;
+        });
+      }
+
+      // Step 2: Generate Recipes
+      // We pass the names of allowed ingredients to generateAiRecipes
+      final List<String> ingredientNames = detectedAllowed.map((i) => i.name).toList();
+      
+      // We still need to call generateAiRecipes. 
+      // But wait, the backend `/detect-ingredients` returns ingredients, not recipes.
+      // So we call `/generate-ai-recipes` here:
+      final generatedRecipes = await RecipeService.instance.generateAiRecipes(ingredientNames);
+
+      if (mounted) {
+        setState(() {
+          _recipes.clear();
+          _recipes.addAll(generatedRecipes);
+          
+          _overlayGeneratedRecipes = generatedRecipes;
+        });
+      }
       
       // Save to temporary home suggestions for 3 days
-      RecipeService.instance.saveScanResults(recipes);
+      RecipeService.instance.saveScanResults(generatedRecipes);
+
     } catch (e) {
-      setState(() {
-        _stopAnalysisLoading();
-        _capturedImagePath = null;
-      });
-      if (!PaywallHelper.handleError(context, e)) {
-        IosToast.show(
-          context,
-          message: ErrorHelper.getFriendlyMessage(e),
-          type: ToastType.error,
-        );
+      if (mounted) {
+        setState(() {
+          _showAnimationOverlay = false;
+          _capturedImagePath = null;
+        });
+        if (!PaywallHelper.handleError(context, e)) {
+          IosToast.show(
+            context,
+            message: ErrorHelper.getFriendlyMessage(e),
+            type: ToastType.error,
+          );
+        }
       }
     }
   }

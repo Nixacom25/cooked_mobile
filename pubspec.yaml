@@ -75,16 +75,6 @@ flutter:
     - assets/onboarding/
 
   fonts:
-    - family: LarkenVariable
+    - family: Larken
       fonts:
-        - asset: 'assets/fonts/Larken/Larken Regular.ttf'
-          weight: 400
-        - asset: 'assets/fonts/Larken/Larken Medium.ttf'
-          weight: 500
-        - asset: 'assets/fonts/Larken/Larken Bold.ttf'
-          weight: 700
-        - asset: 'assets/fonts/Larken/Larken Extra Bold.ttf'
-          weight: 800
-        - asset: 'assets/fonts/Larken/Larken Black.ttf'
-          weight: 900
-        - asset: 'assets/fonts/Larken/Larken Variable.ttf'
+        - asset: assets/fonts/Larken/Larken-Variable.ttf

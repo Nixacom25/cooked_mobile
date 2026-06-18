@@ -3,24 +3,56 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'selection_onboarding_step.dart';
 
 class GroceriesBadStep extends StatefulWidget {
-  final VoidCallback onContinue;
+  final ValueChanged<int> onContinue;
+  final String? initialSelected;
+  final ValueChanged<String>? onChanged;
 
-  const GroceriesBadStep({super.key, required this.onContinue});
+  const GroceriesBadStep({
+    super.key, 
+    required this.onContinue,
+    this.initialSelected,
+    this.onChanged,
+  });
 
   @override
   State<GroceriesBadStep> createState() => _GroceriesBadStepState();
 }
 
 class _GroceriesBadStepState extends State<GroceriesBadStep> {
-  String _selectedValue = '';
+  late String _selectedValue;
 
-  Widget _buildBottomCard() {
+  @override
+  void initState() {
+    super.initState();
+    _selectedValue = widget.initialSelected ?? '';
+  }
+
+  int _calculateSavings(String value) {
+    switch (value) {
+      case 'never': return 200;
+      case 'sometimes': return 500;
+      case 'weekly': return 1000;
+      case 'constantly': return 1500;
+      default: return 0;
+    }
+  }
+
+  Widget _buildBottomCard(int savings) {
+    final formattedSavings = savings.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},');
+
     return Container(
-      padding: EdgeInsets.all(18.w),
+      padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 20.h),
       decoration: BoxDecoration(
         color: const Color(0xFFFFF7ED),
-        borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(color: const Color(0xFFFBE8D0)),
+        borderRadius: BorderRadius.circular(20.r),
+        border: Border.all(color: const Color(0xFFFBE8D0), width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withAlpha(12),
+            blurRadius: 15,
+            offset: const Offset(0, 4),
+          )
+        ],
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -28,16 +60,22 @@ class _GroceriesBadStepState extends State<GroceriesBadStep> {
           Expanded(
             child: RichText(
               text: TextSpan(
-                style: TextStyle(color: const Color(0xFF1B1C1C), fontSize: 16.sp, fontFamily: 'SF Pro'),
+                style: TextStyle(color: const Color(0xFF111827), fontSize: 16.sp, fontFamily: 'SF Pro'),
                 children: [
-                  const TextSpan(text: 'The average household wastes over '),
-                  TextSpan(text: '\$1,500', style: TextStyle(color: const Color(0xFF00C40A), fontSize: 32.sp, fontWeight: FontWeight.bold)),
-                  const TextSpan(text: ' /year in food'),
+                  const TextSpan(text: 'The average household wastes over\n'),
+                  TextSpan(
+                    text: '\$$formattedSavings', 
+                    style: TextStyle(color: const Color(0xFF00C40A), fontSize: 32.sp, fontWeight: FontWeight.w800, height: 1.2),
+                  ),
+                  TextSpan(
+                    text: ' /year in food', 
+                    style: TextStyle(fontSize: 14.sp),
+                  ),
                 ],
               ),
             ),
           ),
-          Image.asset('assets/images/logo2.png', width: 40.w, height: 40.w),
+          Image.asset('assets/images/logo2.png', width: 48.w, height: 48.w),
         ],
       ),
     );
@@ -46,18 +84,22 @@ class _GroceriesBadStepState extends State<GroceriesBadStep> {
   @override
   Widget build(BuildContext context) {
     return SelectionOnboardingStep(
-      title: 'How often do groceries go bad before you use them?',
+      title: 'How often do groceries go unused?',
+      subtitle: 'Food waste adds up faster than most people realize.',
       maxSelections: 1,
       useGrid: true,
-      onContinue: widget.onContinue,
+      initialSelected: _selectedValue.isNotEmpty ? [_selectedValue] : [],
+      onContinue: () {
+        widget.onContinue(_calculateSavings(_selectedValue));
+      },
       onSelectionChanged: (selections) {
-        if (selections.isNotEmpty) {
-          setState(() => _selectedValue = selections.first);
-        } else {
-          setState(() => _selectedValue = '');
+        final newVal = selections.isNotEmpty ? selections.first : '';
+        setState(() => _selectedValue = newVal);
+        if (widget.onChanged != null) {
+          widget.onChanged!(newVal);
         }
       },
-      bottomCardWidget: _selectedValue.isEmpty ? null : _buildBottomCard(),
+      bottomCardWidget: _selectedValue.isEmpty ? null : _buildBottomCard(_calculateSavings(_selectedValue)),
       options: [
         SelectionOption(id: 'never', label: 'Almost never'),
         SelectionOption(id: 'sometimes', label: 'Sometimes'),

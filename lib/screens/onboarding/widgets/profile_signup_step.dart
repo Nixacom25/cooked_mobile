@@ -22,9 +22,10 @@ class ProfileSignupStep extends StatefulWidget {
   State<ProfileSignupStep> createState() => _ProfileSignupStepState();
 }
 
-class _ProfileSignupStepState extends State<ProfileSignupStep> with SingleTickerProviderStateMixin {
+class _ProfileSignupStepState extends State<ProfileSignupStep>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
-  
+
   late Animation<double> _titleOpacity;
   late Animation<Offset> _titleSlide;
 
@@ -44,13 +45,26 @@ class _ProfileSignupStepState extends State<ProfileSignupStep> with SingleTicker
 
     Animation<double> createOpacity(double start, double end) {
       return Tween<double>(begin: 0.0, end: 1.0).animate(
-        CurvedAnimation(parent: _controller, curve: Interval(start, end.clamp(0.0, 1.0), curve: Curves.easeOut)),
+        CurvedAnimation(
+          parent: _controller,
+          curve: Interval(start, end.clamp(0.0, 1.0), curve: Curves.easeOut),
+        ),
       );
     }
 
     Animation<Offset> createSlide(double start, double end) {
-      return Tween<Offset>(begin: const Offset(0, 0.2), end: Offset.zero).animate(
-        CurvedAnimation(parent: _controller, curve: Interval(start, end.clamp(0.0, 1.0), curve: Curves.easeOutCubic)),
+      return Tween<Offset>(
+        begin: const Offset(0, 0.2),
+        end: Offset.zero,
+      ).animate(
+        CurvedAnimation(
+          parent: _controller,
+          curve: Interval(
+            start,
+            end.clamp(0.0, 1.0),
+            curve: Curves.easeOutCubic,
+          ),
+        ),
       );
     }
 
@@ -96,22 +110,24 @@ class _ProfileSignupStepState extends State<ProfileSignupStep> with SingleTicker
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Save your profile,',
+                        'Save your\npersonalized plan',
                         style: TextStyle(
-                          fontSize: 24.sp,
+                          fontSize: 34.sp,
                           fontWeight: FontWeight.w900,
                           color: const Color(0xFF0D1B3E),
                           fontFamily: 'SF Pro',
-                          height: 1.2,
+                          height: 1.1,
+                          letterSpacing: -0.5,
                         ),
                       ),
-                      SizedBox(height: 8.h),
+                      SizedBox(height: 12.h),
                       Text(
-                        'Your 22-step profile is ready to save',
+                        'Create your account to keep your recipes, meal plans, grocery lists, and savings tracker.',
                         style: TextStyle(
-                          fontSize: 14.sp,
-                          color: const Color(0xFF7B8190),
+                          fontSize: 16.sp,
+                          color: const Color(0xFF4B5563),
                           fontFamily: 'SF Pro',
+                          height: 1.3,
                         ),
                       ),
                     ],
@@ -120,35 +136,27 @@ class _ProfileSignupStepState extends State<ProfileSignupStep> with SingleTicker
               ),
               SizedBox(height: 32.h),
 
-              FadeTransition(
-                opacity: _infoOpacity,
-                child: SlideTransition(
-                  position: _infoSlide,
-                  child: Container(
-                    padding: EdgeInsets.all(12.r),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16.r),
-                      border: Border.all(color: const Color(0xFFEEEEEE)),
-                    ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            'Pick up exactly where you left off on any device',
-                            style: TextStyle(
-                              fontSize: 13.sp,
-                              color: const Color(0xFF6B7280),
-                              fontFamily: 'SF Pro',
-                            ),
-                          ),
+              Expanded(
+                child: FadeTransition(
+                  opacity: _infoOpacity,
+                  child: SlideTransition(
+                    position: _infoSlide,
+                    child: Center(
+                      child: Image.asset(
+                        'assets/images/step24.png',
+                        fit: BoxFit.contain,
+                        errorBuilder: (context, error, stackTrace) => Container(
+                          height: 200.h,
+                          color: Colors.grey[200],
+                          alignment: Alignment.center,
+                          child: const Text('assets/images/step24.png missing'),
                         ),
-                      ],
+                      ),
                     ),
                   ),
                 ),
               ),
-              SizedBox(height: 28.h),
+              SizedBox(height: 32.h),
 
               FadeTransition(
                 opacity: _btnOpacities[0],
@@ -191,7 +199,7 @@ class _ProfileSignupStepState extends State<ProfileSignupStep> with SingleTicker
             ],
           ),
         );
-      }
+      },
     );
   }
 
@@ -214,7 +222,8 @@ class _ProfileSignupStepState extends State<ProfileSignupStep> with SingleTicker
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(50.r),
               side: BorderSide(
-                color: isEnabled ? const Color(0xFFC83A2D) : Colors.grey,
+                color: const Color(0xFFE5E7EB), // Grey border
+                width: 1.5,
               ),
             ),
             elevation: 0,
@@ -235,7 +244,7 @@ class _ProfileSignupStepState extends State<ProfileSignupStep> with SingleTicker
                   fontSize: 16.sp,
                   fontWeight: FontWeight.w700,
                   fontFamily: 'SF Pro',
-                  color: isEnabled ? Colors.black : Colors.grey,
+                  color: isEnabled ? const Color(0xFF1B1C1C) : Colors.grey,
                 ),
               ),
             ],

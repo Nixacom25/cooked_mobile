@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../../../widgets/red_button.dart';
 
 class SavingsStep extends StatefulWidget {
@@ -103,8 +104,8 @@ class _SavingsStepState extends State<SavingsStep> with SingleTickerProviderStat
                         text: TextSpan(
                           style: TextStyle(
                             fontSize: 34.sp,
-                            fontWeight: FontWeight.w900,
-                            color: const Color(0xFF0D1B3E),
+                            fontWeight: FontWeight.w400,
+                            color: const Color(0xFF111827),
                             fontFamily: 'Larken',
                             height: 1.149,
                             letterSpacing: 0,
@@ -120,7 +121,7 @@ class _SavingsStepState extends State<SavingsStep> with SingleTickerProviderStat
                       ),
                     ),
                   ),
-                  SizedBox(height: 12.h),
+                  SizedBox(height: 8.h),
                   FadeTransition(
                     opacity: _subtitleOpacity,
                     child: SlideTransition(
@@ -148,7 +149,7 @@ class _SavingsStepState extends State<SavingsStep> with SingleTickerProviderStat
                   scale: _imageScale.value,
                   child: Center(
                     child: Image.asset(
-                      'assets/onboarding/step5.png',
+                      'assets/onboarding/step4.png',
                       width: double.infinity,
                       fit: BoxFit.contain,
                       errorBuilder: (context, error, stackTrace) => Container(
@@ -175,7 +176,7 @@ class _SavingsStepState extends State<SavingsStep> with SingleTickerProviderStat
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          Icon(Icons.schedule, size: 40.sp, color: const Color(0xFF9CA3AF)),
+                          SvgPicture.asset('assets/icones/minute1.svg', width: 55.sp, height: 55.sp),
                           SizedBox(width: 8.w),
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.center,
@@ -184,7 +185,7 @@ class _SavingsStepState extends State<SavingsStep> with SingleTickerProviderStat
                                 '200',
                                 style: TextStyle(
                                   fontSize: 32.sp,
-                                  fontWeight: FontWeight.w900,
+                                  fontWeight: FontWeight.w500,
                                   color: const Color(0xFFC83A2D),
                                   fontFamily: 'Larken',
                                   height: 1,
@@ -235,7 +236,7 @@ class _SavingsStepState extends State<SavingsStep> with SingleTickerProviderStat
                                 '8.3',
                                 style: TextStyle(
                                   fontSize: 32.sp,
-                                  fontWeight: FontWeight.w900,
+                                  fontWeight: FontWeight.w500,
                                   color: const Color(0xFFC83A2D),
                                   fontFamily: 'Larken',
                                   height: 1,
@@ -263,7 +264,7 @@ class _SavingsStepState extends State<SavingsStep> with SingleTickerProviderStat
                             ],
                           ),
                           SizedBox(width: 8.w),
-                          Icon(Icons.calendar_today_outlined, size: 40.sp, color: const Color(0xFF9CA3AF)),
+                          SvgPicture.asset('assets/icones/calendar2.svg', width: 55.sp, height: 55.sp),
                         ],
                       ),
                     ],

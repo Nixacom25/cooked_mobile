@@ -96,17 +96,17 @@ class _MealsStepState extends State<MealsStep> with SingleTickerProviderStateMix
                         textAlign: TextAlign.left,
                         text: TextSpan(
                           style: TextStyle(
-                            fontSize: 32.sp,
-                            fontWeight: FontWeight.w900,
-                            color: const Color(0xFF0D1B3E),
-                            fontFamily: 'SF Pro',
-                            height: 1.1,
-                            letterSpacing: -0.5,
+                            fontSize: 34.sp,
+                            fontWeight: FontWeight.w400,
+                            color: const Color(0xFF111827),
+                            fontFamily: 'Larken',
+                            height: 1.149,
+                            letterSpacing: 0,
                           ),
                           children: const [
                             TextSpan(text: 'Never wonder '),
                             TextSpan(
-                              text: 'what\nto cook ',
+                              text: 'what to cook ',
                               style: TextStyle(color: Color(0xFFC83A2D)),
                             ),
                             TextSpan(text: 'again.'),
@@ -115,13 +115,13 @@ class _MealsStepState extends State<MealsStep> with SingleTickerProviderStateMix
                       ),
                     ),
                   ),
-                  SizedBox(height: 16.h),
+                  SizedBox(height: 8.h),
                   FadeTransition(
                     opacity: _subtitleOpacity,
                     child: SlideTransition(
                       position: _subtitleSlide,
                       child: Text(
-                        'Dinner shouldn\'t be the hardest\ndecision of your day.',
+                        'Dinner shouldn\'t be the hardest decision of your day.',
                         textAlign: TextAlign.left,
                         style: TextStyle(
                           fontSize: 16.sp,
@@ -143,13 +143,13 @@ class _MealsStepState extends State<MealsStep> with SingleTickerProviderStateMix
                   scale: _imageScale.value,
                   child: Center(
                     child: Image.asset(
-                      'assets/images/step1.png',
+                      'assets/onboarding/step1.png',
                       width: double.infinity,
                       fit: BoxFit.contain,
                       errorBuilder: (context, error, stackTrace) => Container(
                         color: Colors.grey[200],
                         alignment: Alignment.center,
-                        child: const Text('assets/images/step1.png missing'),
+                        child: const Text('assets/onboarding/step1.png missing'),
                       ),
                     ),
                   ),

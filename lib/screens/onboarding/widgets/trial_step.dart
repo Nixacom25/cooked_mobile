@@ -101,6 +101,29 @@ class _TrialStepState extends State<TrialStep> with SingleTickerProviderStateMix
           return Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
+                    // The image is now moved up, this block is removed here.
+
+              // Image First
+              FadeTransition(
+                opacity: _titleOpacity,
+                child: Center(
+                  child: Image.asset(
+                    'assets/images/step27.png', // Fallback, could be step27.png
+                    height: 280.h,
+                    fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) => Container(
+                      height: 280.h,
+                      width: double.infinity,
+                      color: Colors.grey[200],
+                      alignment: Alignment.center,
+                      child: const Text('assets/images/step27.png missing'),
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(height: 24.h),
+
+              // Title & Subtitle Below Image
               FadeTransition(
                 opacity: _titleOpacity,
                 child: SlideTransition(
@@ -114,7 +137,7 @@ class _TrialStepState extends State<TrialStep> with SingleTickerProviderStateMix
                           fontSize: 32.sp,
                           fontWeight: FontWeight.w900,
                           color: const Color(0xFF0D1B3E),
-                          fontFamily: 'SF Pro',
+                          fontFamily: 'Larken',
                           height: 1.1,
                           letterSpacing: -0.5,
                         ),
@@ -131,26 +154,6 @@ class _TrialStepState extends State<TrialStep> with SingleTickerProviderStateMix
                         ),
                       ),
                     ],
-                  ),
-                ),
-              ),
-              SizedBox(height: 32.h),
-
-              // Image
-              FadeTransition(
-                opacity: _titleOpacity, // Just reuse title opacity
-                child: Center(
-                  child: Image.asset(
-                    'assets/images/step27.png',
-                    height: 220.h,
-                    fit: BoxFit.contain,
-                    errorBuilder: (context, error, stackTrace) => Container(
-                      height: 220.h,
-                      width: 200.w,
-                      color: Colors.grey[200],
-                      alignment: Alignment.center,
-                      child: const Text('assets/images/step27.png missing'),
-                    ),
                   ),
                 ),
               ),

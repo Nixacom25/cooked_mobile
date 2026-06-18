@@ -2,15 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter/services.dart';
+import '../../../widgets/red_button.dart';
 
 class CookingTargetStep extends StatefulWidget {
   final String initialTarget;
   final Function(String target) onChanged;
+  final VoidCallback? onContinue;
 
   const CookingTargetStep({
     super.key,
     required this.initialTarget,
     required this.onChanged,
+    this.onContinue,
   });
 
   @override
@@ -20,23 +23,11 @@ class CookingTargetStep extends StatefulWidget {
 class _CookingTargetStepState extends State<CookingTargetStep> {
   final List<Map<String, String>> _options = [
     {'title': 'Just me', 'subtitle': '1 person', 'icon': 'people1.svg'},
-    {
-      'title': 'Two people',
-      'subtitle': 'Couple or pair',
-      'icon': 'people2.svg',
-    },
+    {'title': 'Two people', 'subtitle': 'Couple or pair', 'icon': 'people2.svg'},
     {'title': '3–4 people', 'subtitle': 'Small family', 'icon': 'people3.svg'},
     {'title': '5–6 people', 'subtitle': 'Larger family', 'icon': 'people5.svg'},
-    {
-      'title': '7+ people',
-      'subtitle': 'Large family or group',
-      'icon': 'people4.svg',
-    },
-    {
-      'title': 'It varies',
-      'subtitle': "I'll adjust per recipe",
-      'icon': 'varies.svg',
-    },
+    {'title': '7+ people', 'subtitle': 'Large family or group', 'icon': 'people4.svg'},
+    {'title': 'It varies', 'subtitle': "I'll adjust per recipe", 'icon': 'varies.svg'},
   ];
 
   late String _selected;
@@ -49,78 +40,98 @@ class _CookingTargetStepState extends State<CookingTargetStep> {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 30.h),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Who are you cooking for?',
-            style: TextStyle(
-              fontSize: 24.sp,
-              fontWeight: FontWeight.w900,
-              color: const Color(0xFF0D1B3E),
-              fontFamily: 'SF Pro',
-              height: 1.2,
+    return Column(
+      children: [
+        Expanded(
+          child: SingleChildScrollView(
+            padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 30.h),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Who are you usually\ncooking for?',
+                  style: TextStyle(
+                    fontSize: 34.sp,
+                    fontWeight: FontWeight.w400,
+                    color: const Color(0xFF111827),
+                    fontFamily: 'Larken',
+                    height: 1.149,
+                    letterSpacing: 0,
+                  ),
+                ),
+                SizedBox(height: 12.h),
+                Text(
+                  "This helps us recommend the right portions.",
+                  style: TextStyle(
+                    fontSize: 16.sp,
+                    color: const Color(0xFF4B5563),
+                    fontFamily: 'SF Pro',
+                    height: 1.3,
+                  ),
+                ),
+                SizedBox(height: 32.h),
+                ..._options.map((opt) => _buildOption(opt)),
+                SizedBox(height: MediaQuery.of(context).viewInsets.bottom + 20.h),
+              ],
             ),
           ),
-          SizedBox(height: 8.h),
-          Text(
-            "We'll auto-adjust serving sizes",
-            style: TextStyle(
-              fontSize: 14.sp,
-              color: const Color(0xFF7B8190),
-              fontFamily: 'SF Pro',
+        ),
+        if (widget.onContinue != null)
+          Padding(
+            padding: EdgeInsets.fromLTRB(24.w, 16.h, 24.w, 20.h),
+            child: SafeArea(
+              top: false,
+              child: RedButton(
+                label: 'Continue',
+                onTap: widget.onContinue!,
+                height: 55.h,
+                fontSize: 18.sp,
+              ),
             ),
           ),
-          SizedBox(height: 32.h),
-          ..._options.map((opt) => _buildOption(opt)),
-        ],
-      ),
+      ],
     );
   }
 
   Widget _buildOption(Map<String, String> opt) {
     final bool isSelected = _selected == opt['title'];
     return Padding(
-      padding: EdgeInsets.only(bottom: 16.h),
-      child: InkWell(
+      padding: EdgeInsets.only(bottom: 12.h),
+      child: GestureDetector(
         onTap: () {
           HapticFeedback.selectionClick();
           setState(() => _selected = opt['title']!);
           widget.onChanged(_selected);
         },
-        borderRadius: BorderRadius.circular(16.r),
-        child: Container(
-          padding: EdgeInsets.symmetric(horizontal: 14.r, vertical: 10.h),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(16.r),
+            borderRadius: BorderRadius.circular(20.r),
             border: Border.all(
-              color: isSelected
-                  ? const Color(0xFFC83A2D)
-                  : const Color(0xFFE5E7EB),
-              width: isSelected ? 1.5.w : 1.w,
+              color: isSelected ? const Color(0xFFC83A2D) : const Color(0xFFF3F4F6),
+              width: 1.5,
             ),
-            boxShadow: isSelected
-                ? [
-                    BoxShadow(
-                      color: const Color(0xFFC83A2D).withOpacity(0.05),
-                      blurRadius: 10.r,
-                      offset: Offset(0, 4.h),
-                    ),
-                  ]
-                : null,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.04),
+                blurRadius: 15,
+                offset: const Offset(0, 4),
+              )
+            ]
           ),
           child: Row(
             children: [
-              Container(
-                child: SvgPicture.asset(
-                  'assets/icones/${opt['icon']}',
-                  height: 32.sp,
-                  width: 32.sp,
-                  placeholderBuilder: (context) => const SizedBox.shrink(),
+              SvgPicture.asset(
+                'assets/icones/${opt['icon']}',
+                height: 24.sp,
+                width: 24.sp,
+                colorFilter: ColorFilter.mode(
+                  isSelected ? const Color(0xFFC83A2D) : const Color(0xFF9CA3AF),
+                  BlendMode.srcIn,
                 ),
+                placeholderBuilder: (context) => const SizedBox.shrink(),
               ),
               SizedBox(width: 16.w),
               Expanded(
@@ -131,9 +142,9 @@ class _CookingTargetStepState extends State<CookingTargetStep> {
                       opt['title']!,
                       style: TextStyle(
                         fontFamily: 'SF Pro',
-                        fontSize: 14.sp,
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFF1A1A1A),
+                        fontSize: 15.sp,
+                        fontWeight: FontWeight.w600,
+                        color: isSelected ? const Color(0xFFC83A2D) : const Color(0xFF111827),
                       ),
                     ),
                     SizedBox(height: 2.h),
@@ -142,12 +153,30 @@ class _CookingTargetStepState extends State<CookingTargetStep> {
                       style: TextStyle(
                         fontFamily: 'SF Pro',
                         fontSize: 12.sp,
-                        color: const Color(0xFF7B8190),
+                        color: const Color(0xFF9CA3AF),
                       ),
                     ),
                   ],
                 ),
               ),
+              if (isSelected)
+                Icon(
+                  Icons.check_circle,
+                  color: const Color(0xFFC83A2D),
+                  size: 24.sp,
+                )
+              else
+                Container(
+                  width: 24.sp,
+                  height: 24.sp,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: const Color(0xFFE5E7EB),
+                      width: 1.5,
+                    ),
+                  ),
+                ),
             ],
           ),
         ),

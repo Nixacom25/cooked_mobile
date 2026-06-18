@@ -83,6 +83,7 @@ class _HealthGoalsStepState extends State<HealthGoalsStep> {
       useGrid: true,
       initialSelected: widget.initialSelected,
       onContinue: widget.onContinue,
+      gridItemDirection: Axis.vertical,
       onSelectionChanged: (selections) {
         if (selections.isNotEmpty) {
           setState(() => _selectedValue = selections.first);

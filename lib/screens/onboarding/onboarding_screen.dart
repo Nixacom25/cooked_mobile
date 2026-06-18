@@ -22,31 +22,18 @@ import 'widgets/meal_repetition_intro_step.dart';
 import 'widgets/cooked_handles_meals_step.dart';
 import 'widgets/features_excited_step.dart';
 import 'widgets/goals_step.dart';
-import 'widgets/health_goals_step.dart';
-import 'widgets/frustrations_intro_step.dart';
-
-import 'widgets/source_step.dart';
-import 'widgets/grocery_shop_step.dart';
-import 'widgets/excited_features_step.dart';
-import 'widgets/dietary_preferences_step.dart';
 import 'widgets/allergies_step.dart';
 import 'widgets/dislikes_step.dart';
-import 'widgets/flavor_spice_step.dart';
-import 'widgets/cooking_skill_step.dart';
 import 'widgets/time_preference_step.dart';
 import 'widgets/cooking_target_step.dart';
 import 'widgets/cuisines_step.dart';
-import 'widgets/kitchen_step.dart';
-import 'widgets/meal_repetition_step.dart';
-import 'widgets/notifications_step.dart';
-import 'widgets/savings_pitch_step.dart';
 import 'widgets/profile_summary_step.dart';
 import 'widgets/social_proof_step.dart';
 import 'widgets/trial_step.dart';
 import 'widgets/profile_signup_step.dart';
 import 'widgets/account_step.dart';
 import 'widgets/otp_step.dart';
-import 'widgets/recipe_generation_loading_step.dart';
+import 'widgets/free_trial_intro_step.dart';
 import 'widgets/free_trial_guide_step.dart';
 import 'widgets/perfect_meal_step.dart';
 
@@ -112,6 +99,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   int _eatingOutSavings = 0;
   int _grocerySavings = 0;
+  String _eatingOutSelection = '';
+  String _grocerySelection = '';
+  List<String> _frustrations = [];
+  String _ageSelection = '';
 
   @override
   void initState() {
@@ -306,7 +297,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   int _getEffectiveStep() {
     if (_currentPage == 8 || _currentPage == 20) return _currentPage;
-    return _currentPage < 23 ? _currentPage + 1 : 23;
+    return _currentPage < 29 ? _currentPage + 1 : 29;
   }
 
   int _calculateRecipeCount() {
@@ -357,21 +348,23 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       // MealRepetitionStep
     }
 
-    if (_currentPage < 21) {
+    if (_currentPage < 22) {
       _pageController.nextPage(
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
       );
-    } else if (_currentPage == 21) {
+    } else if (_currentPage == 22) {
       // ProfileSummaryStep handles its own navigation via callbacks
-    } else if (_currentPage == 33) {
+    } else if (_currentPage == 23) {
+      // ProfileSignupStep handles its own navigation via callbacks
+    } else if (_currentPage == 24) {
       // AccountStep -> Submit and potentially OTP
       _submitPreferences(isGuest: false);
-    } else if (_currentPage == 34) {
+    } else if (_currentPage == 25) {
       // OtpStep handles its own navigation via onComplete
-    } else if (_currentPage == 35) {
-      // FreeTrialGuideStep handles its own navigation
-    } else if (_currentPage == 36) {
+    } else if (_currentPage == 26 || _currentPage == 27) {
+      // FreeTrialIntroStep and FreeTrialGuideStep handle their own navigation
+    } else if (_currentPage == 28) {
       // TrialStep Payment Trigger
       if (!_isIapAvailable || _products.isEmpty) {
         // Fallback or dev: skip billing if store is unavailable
@@ -398,11 +391,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         await IapService.instance.buyProduct(product);
       } catch (e) {
         setState(() => _isLoading = false);
-        IosToast.show(
-          context,
-          message: 'Could not initiate purchase',
-          type: ToastType.error,
-        );
+        if (mounted) {
+          IosToast.show(
+            context,
+            message: 'Could not initiate purchase',
+            type: ToastType.error,
+          );
+        }
       }
     }
   }
@@ -412,8 +407,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     FocusScope.of(context).unfocus();
     if (_currentPage == 20 || _currentPage == 8) return; // Prevent going back during loading steps
     
-    if (_currentPage == 21) {
-      // Skip ProfileLoadingStep (20) when going back from ProfileSummaryStep
+    if (_currentPage == 22) {
+      // Skip ProfileLoadingStep (20) and SocialProofStep (21) when going back from ProfileSummaryStep
       _pageController.jumpToPage(19);
       return;
     }
@@ -730,7 +725,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                               ),
                               AnimatedFractionallySizedBox(
                                 duration: const Duration(milliseconds: 400),
-                                widthFactor: (_getEffectiveStep() / 23).clamp(0.0, 1.0),
+                                widthFactor: (_getEffectiveStep() / 29).clamp(0.0, 1.0),
                                 child: Container(
                                   height: 6.h,
                                   color: const Color(0xFFC83A2D),
@@ -754,17 +749,29 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     children: [
                       MealsStep(onContinue: _onContinue), // Step 1
                       DinnerFiguredOutStep(onContinue: _onContinue), // Step 2
-                      FrustrationsStep(onContinue: _onContinue), // Step 3
+                      FrustrationsStep(
+                        initialSelected: _frustrations,
+                        onChanged: (val) => setState(() => _frustrations = val),
+                        onContinue: _onContinue,
+                      ), // Step 3
                       SavingsStep(onContinue: _onContinue), // Step 4
                       CostingMoreStep(onContinue: _onContinue), // Step 5
-                      EatingOutBudgetStep(onContinue: (savings) {
-                        setState(() => _eatingOutSavings = savings);
-                        _onContinue();
-                      }), // Step 6
-                      GroceriesBadStep(onContinue: (savings) {
-                        setState(() => _grocerySavings = savings);
-                        _onContinue();
-                      }), // Step 7
+                      EatingOutBudgetStep(
+                        initialSelected: _eatingOutSelection,
+                        onChanged: (val) => setState(() => _eatingOutSelection = val),
+                        onContinue: (savings) {
+                          setState(() => _eatingOutSavings = savings);
+                          _onContinue();
+                        },
+                      ), // Step 6
+                      GroceriesBadStep(
+                        initialSelected: _grocerySelection,
+                        onChanged: (val) => setState(() => _grocerySelection = val),
+                        onContinue: (savings) {
+                          setState(() => _grocerySavings = savings);
+                          _onContinue();
+                        },
+                      ), // Step 7
                       TotalSavingsStep(
                         eatingOutSavings: _eatingOutSavings,
                         grocerySavings: _grocerySavings,
@@ -787,7 +794,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           });
                         },
                       ),
-                      AgeStep(onContinue: _onContinue), // Step 11
+                      AgeStep(
+                        initialSelected: _ageSelection,
+                        onChanged: (val) => setState(() => _ageSelection = val),
+                        onContinue: _onContinue,
+                      ), // Step 11
                       CuisinesStep( // Step 12
                         initialSelected: _favoriteCuisines,
                         onChanged: (val) => setState(() => _favoriteCuisines = val),
@@ -833,13 +844,17 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             setState(() => _featuresExcited = selected),
                         onContinue: _onContinue,
                       ),
-                      ProfileLoadingStep(onComplete: _onContinue),
+                      ProfileLoadingStep(onComplete: _onContinue), // step 21
+                      SocialProofStep(
+                        favoriteCuisines: _favoriteCuisines,
+                        onContinue: _onContinue,
+                      ), // step 22
                       ProfileSummaryStep(
                         favoriteCuisines: _favoriteCuisines,
                         flavorDna: _flavorDna.keys.toList(),
                         recipeCount: _calculateRecipeCount(),
                         onContinue: _onContinue,
-                      ),
+                      ), // step 23
                       ProfileSignupStep(
                         onSignupEmail: () {
                           TermsValidationModal.show(
@@ -855,7 +870,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         onSignupApple: () =>
                             _submitPreferences(provider: 'APPLE'),
                         onGuest: () => _submitPreferences(isGuest: true),
-                      ),
+                      ), // step 24
                       AccountStep(
                         initialEmail: _email,
                         initialPassword: _password,
@@ -887,11 +902,16 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           _pageController.nextPage(duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
                         },
                       ),
-                      FreeTrialGuideStep(
+                      FreeTrialIntroStep(
                         onContinue: () {
                           _pageController.nextPage(duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
                         },
                       ),
+                      FreeTrialGuideStep(
+                        onContinue: () {
+                          _pageController.nextPage(duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
+                        },  
+                      ), // step 25
                       TrialStep(
                         onPlanSelected: (plan) {
                           setState(() => _selectedPlanId = plan);
@@ -900,7 +920,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         onSkip: () {
                           _pageController.nextPage(duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
                         },
-                      ),
+                      ), // step 26
                       PerfectMealStep(
                         onStartCooking: () {
                           if (mounted) {
@@ -920,7 +940,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             );
                           }
                         },
-                      ),
+                      ),  // step 27
                     ].map((step) => Container(child: step)).toList(),
                   ),
                 ),
@@ -944,17 +964,18 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     _currentPage != 15 && // CookingTargetStep
                     _currentPage != 16 && // HealthyEatingIntroStep
                     _currentPage != 17 && // MealRepetitionIntroStep
-                    _currentPage != 18 && // CookedHandlesMealsStep
-                    _currentPage != 19 && // FeaturesExcitedStep
-                    _currentPage != 31 && // ProfileLoading
-                    _currentPage != 32 && // ProfileSummary
-                    _currentPage != 33 && // SocialProof
-                    _currentPage != 34 && // SavingsPitch
-                    _currentPage != 35 && // RecipeGenLoading
-                    _currentPage != 32 && // ProfileSignup
-                    _currentPage != 34 && // Otp
-                    _currentPage != 35 && // FreeTrialGuideStep
-                    _currentPage != 37)  // PerfectMealStep
+                    _currentPage != 18 && // MealRepetitionStep
+                    _currentPage != 19 && // Loading transition before features
+                    _currentPage != 20 && // ProfileLoadingStep
+                    _currentPage != 21 && // SocialProofStep
+                    _currentPage != 22 && // ProfileSummaryStep
+                    _currentPage != 23 && // ProfileSignupStep
+                    _currentPage != 24 && // AccountStep
+                    _currentPage != 25 && // OtpStep
+                    _currentPage != 26 && // FreeTrialIntroStep
+                    _currentPage != 27 && // FreeTrialGuideStep
+                    _currentPage != 28 && // TrialStep
+                    _currentPage != 29)  // PerfectMealStep
                   SafeArea(
                     top: false,
                     child: Padding(

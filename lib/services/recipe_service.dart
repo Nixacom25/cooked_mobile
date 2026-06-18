@@ -56,6 +56,41 @@ class RecipeService {
     };
   }
 
+  Future<Map<String, dynamic>> detectIngredients(XFile image) async {
+    final url = Uri.parse('${ApiConfig.baseUrl}/recipes/detect-ingredients');
+    final token = await AuthService.instance.getToken();
+
+    final request = http.MultipartRequest('POST', url);
+    if (token != null) {
+      request.headers['Authorization'] = 'Bearer $token';
+    }
+
+    final bytes = await image.readAsBytes();
+    request.files.add(
+      http.MultipartFile.fromBytes('file', bytes, filename: image.name),
+    );
+
+    final streamedResponse = await request.send();
+    final response = await http.Response.fromStream(streamedResponse);
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      String errorMessage = 'Ingredient detection failed. Please try again.';
+      try {
+        final errorData = jsonDecode(response.body);
+        if (errorData['message'] != null) {
+          errorMessage = errorData['message'];
+        }
+      } catch (_) {}
+      
+      if (response.statusCode == 402) {
+        throw Exception('402: $errorMessage');
+      }
+      throw Exception(errorMessage);
+    }
+  }
+
   Future<Map<String, dynamic>> scan(XFile image) async {
     final url = Uri.parse('${ApiConfig.baseUrl}/recipes/scan');
     final token = await AuthService.instance.getToken();
@@ -87,6 +122,31 @@ class RecipeService {
       if (response.statusCode == 402) {
         throw Exception('402: $errorMessage');
       }
+      throw Exception(errorMessage);
+    }
+  }
+
+
+  Future<Map<String, dynamic>> validateTypedIngredients(List<String> ingredients) async {
+    final url = Uri.parse('${ApiConfig.baseUrl}/recipes/validate-typed-ingredients');
+    final response = await http.post(
+      url,
+      headers: await _getHeaders(),
+      body: jsonEncode({
+        'ingredients': ingredients,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      String errorMessage = 'Validation failed. Please try again.';
+      try {
+        final errorData = jsonDecode(response.body);
+        if (errorData['message'] != null) {
+          errorMessage = errorData['message'];
+        }
+      } catch (_) {}
       throw Exception(errorMessage);
     }
   }

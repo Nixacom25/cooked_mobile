@@ -95,7 +95,7 @@ class _FreeTrialGuideStepState extends State<FreeTrialGuideStep> with SingleTick
                             fontSize: 32.sp,
                             fontWeight: FontWeight.w900,
                             color: const Color(0xFF0D1B3E),
-                            fontFamily: 'SF Pro',
+                            fontFamily: 'Larken',
                             height: 1.2,
                             letterSpacing: -0.5,
                           ),
