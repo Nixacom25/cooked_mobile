@@ -27,18 +27,21 @@ class _EatingOutBudgetStepState extends State<EatingOutBudgetStep> {
     _selectedValue = widget.initialSelected ?? '';
   }
 
-  int _calculateSavings(String value) {
+  int _calculateSpend(String value) {
     switch (value) {
-      case 'under_50': return 120;
-      case '50_100': return 214;
-      case '100_250': return 520;
-      case '250_500': return 1040;
-      case 'over_500': return 2600;
+      case 'under_50': return 40;
+      case '50_100': return 75;
+      case '100_250': return 175;
+      case '250_500': return 375;
+      case 'over_500': return 650;
       default: return 0;
     }
   }
 
-  Widget _buildBottomCard(int savings) {
+  Widget _buildBottomCard(int spend) {
+    final savings = (spend * 52 * 0.30).round();
+    final formattedSavings = savings.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},');
+
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 20.h),
       decoration: BoxDecoration(
@@ -71,7 +74,7 @@ class _EatingOutBudgetStepState extends State<EatingOutBudgetStep> {
                     children: [
                       const TextSpan(text: 'That could be over\n'),
                       TextSpan(
-                        text: '\$$savings', 
+                        text: '\$$formattedSavings', 
                         style: TextStyle(color: const Color(0xFF00C40A), fontSize: 32.sp, fontWeight: FontWeight.w800, height: 1.2),
                       ),
                       TextSpan(
@@ -99,7 +102,8 @@ class _EatingOutBudgetStepState extends State<EatingOutBudgetStep> {
       useGrid: true,
       initialSelected: _selectedValue.isNotEmpty ? [_selectedValue] : [],
       onContinue: () {
-        widget.onContinue(_calculateSavings(_selectedValue));
+        final spend = _calculateSpend(_selectedValue);
+        widget.onContinue((spend * 52 * 0.30).round());
       },
       onSelectionChanged: (selections) {
         final newVal = selections.isNotEmpty ? selections.first : '';
@@ -108,7 +112,7 @@ class _EatingOutBudgetStepState extends State<EatingOutBudgetStep> {
           widget.onChanged!(newVal);
         }
       },
-      bottomCardWidget: _selectedValue.isEmpty ? null : _buildBottomCard(_calculateSavings(_selectedValue)),
+      bottomCardWidget: _selectedValue.isEmpty ? null : _buildBottomCard(_calculateSpend(_selectedValue)),
       options: [
         SelectionOption(id: 'under_50', label: 'Under \$50'),
         SelectionOption(id: '50_100', label: '\$50–100'),

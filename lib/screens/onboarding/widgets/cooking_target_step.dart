@@ -23,11 +23,23 @@ class CookingTargetStep extends StatefulWidget {
 class _CookingTargetStepState extends State<CookingTargetStep> {
   final List<Map<String, String>> _options = [
     {'title': 'Just me', 'subtitle': '1 person', 'icon': 'people1.svg'},
-    {'title': 'Two people', 'subtitle': 'Couple or pair', 'icon': 'people2.svg'},
+    {
+      'title': 'Two people',
+      'subtitle': 'Couple or pair',
+      'icon': 'people2.svg',
+    },
     {'title': '3–4 people', 'subtitle': 'Small family', 'icon': 'people3.svg'},
     {'title': '5–6 people', 'subtitle': 'Larger family', 'icon': 'people5.svg'},
-    {'title': '7+ people', 'subtitle': 'Large family or group', 'icon': 'people4.svg'},
-    {'title': 'It varies', 'subtitle': "I'll adjust per recipe", 'icon': 'varies.svg'},
+    {
+      'title': '7+ people',
+      'subtitle': 'Large family or group',
+      'icon': 'people4.svg',
+    },
+    {
+      'title': 'It varies',
+      'subtitle': "I'll adjust per recipe",
+      'icon': 'varies.svg',
+    },
   ];
 
   late String _selected;
@@ -43,37 +55,52 @@ class _CookingTargetStepState extends State<CookingTargetStep> {
     return Column(
       children: [
         Expanded(
-          child: SingleChildScrollView(
-            padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 30.h),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Who are you usually\ncooking for?',
-                  style: TextStyle(
-                    fontSize: 34.sp,
-                    fontWeight: FontWeight.w400,
-                    color: const Color(0xFF111827),
-                    fontFamily: 'Larken',
-                    height: 1.149,
-                    letterSpacing: 0,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              return SingleChildScrollView(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                  child: IntrinsicHeight(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 30.h),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Who are you usually\ncooking for?',
+                            style: TextStyle(
+                              fontSize: 34.sp,
+                              fontWeight: FontWeight.w400,
+                              color: const Color(0xFF111827),
+                              fontFamily: 'Larken',
+                              height: 1.149,
+                              letterSpacing: 0,
+                            ),
+                          ),
+                          SizedBox(height: 12.h),
+                          Text(
+                            "This helps us recommend the right portions.",
+                            style: TextStyle(
+                              fontSize: 16.sp,
+                              color: const Color(0xFF4B5563),
+                              fontFamily: 'SF Pro',
+                              height: 1.3,
+                            ),
+                          ),
+                          SizedBox(height: 24.h),
+                          Column(
+                            children: _options.map((opt) => _buildOption(opt)).toList(),
+                          ),
+                          SizedBox(
+                            height: MediaQuery.of(context).viewInsets.bottom,
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
-                SizedBox(height: 12.h),
-                Text(
-                  "This helps us recommend the right portions.",
-                  style: TextStyle(
-                    fontSize: 16.sp,
-                    color: const Color(0xFF4B5563),
-                    fontFamily: 'SF Pro',
-                    height: 1.3,
-                  ),
-                ),
-                SizedBox(height: 32.h),
-                ..._options.map((opt) => _buildOption(opt)),
-                SizedBox(height: MediaQuery.of(context).viewInsets.bottom + 20.h),
-              ],
-            ),
+              );
+            },
           ),
         ),
         if (widget.onContinue != null)
@@ -96,7 +123,7 @@ class _CookingTargetStepState extends State<CookingTargetStep> {
   Widget _buildOption(Map<String, String> opt) {
     final bool isSelected = _selected == opt['title'];
     return Padding(
-      padding: EdgeInsets.only(bottom: 12.h),
+      padding: EdgeInsets.only(bottom: 6.h),
       child: GestureDetector(
         onTap: () {
           HapticFeedback.selectionClick();
@@ -105,12 +132,14 @@ class _CookingTargetStepState extends State<CookingTargetStep> {
         },
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
-          padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
+          padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(20.r),
             border: Border.all(
-              color: isSelected ? const Color(0xFFC83A2D) : const Color(0xFFF3F4F6),
+              color: isSelected
+                  ? const Color(0xFFC83A2D)
+                  : const Color(0xFFF3F4F6),
               width: 1.5,
             ),
             boxShadow: [
@@ -118,8 +147,8 @@ class _CookingTargetStepState extends State<CookingTargetStep> {
                 color: Colors.black.withOpacity(0.04),
                 blurRadius: 15,
                 offset: const Offset(0, 4),
-              )
-            ]
+              ),
+            ],
           ),
           child: Row(
             children: [
@@ -128,7 +157,9 @@ class _CookingTargetStepState extends State<CookingTargetStep> {
                 height: 24.sp,
                 width: 24.sp,
                 colorFilter: ColorFilter.mode(
-                  isSelected ? const Color(0xFFC83A2D) : const Color(0xFF9CA3AF),
+                  isSelected
+                      ? const Color(0xFFC83A2D)
+                      : const Color(0xFF9CA3AF),
                   BlendMode.srcIn,
                 ),
                 placeholderBuilder: (context) => const SizedBox.shrink(),
@@ -144,7 +175,9 @@ class _CookingTargetStepState extends State<CookingTargetStep> {
                         fontFamily: 'SF Pro',
                         fontSize: 15.sp,
                         fontWeight: FontWeight.w600,
-                        color: isSelected ? const Color(0xFFC83A2D) : const Color(0xFF111827),
+                        color: isSelected
+                            ? const Color(0xFFC83A2D)
+                            : const Color(0xFF111827),
                       ),
                     ),
                     SizedBox(height: 2.h),

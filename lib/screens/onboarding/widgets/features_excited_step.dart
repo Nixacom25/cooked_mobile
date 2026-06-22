@@ -28,25 +28,25 @@ class _FeaturesExcitedStepState extends State<FeaturesExcitedStep> {
       'id': 'scan_ingredients',
       'title': 'Scan Ingredients',
       'desc': 'Take a photo and get recipes from what you already have.',
-      'icon': 'scan.svg', // Assuming you have an icon like this, or use a generic one
+      'icon': 'scan1.svg', // Assuming you have an icon like this, or use a generic one
     },
     {
       'id': 'meal_planning',
       'title': 'Meal Planning',
       'desc': 'Plan your meals for the week without starting from scratch.',
-      'icon': 'calendar.svg', // Or similar
+      'icon': 'calendar2.svg', // Or similar
     },
     {
       'id': 'import_recipes',
       'title': 'Import Recipes',
       'desc': 'Save recipes from TikTok, Instagram, YouTube, or websites.',
-      'icon': 'download.svg', // Or similar
+      'icon': 'import1.svg', // Or similar
     },
     {
       'id': 'grocery_lists',
       'title': 'Grocery Lists',
       'desc': 'Turn recipes into shopping lists automatically.',
-      'icon': 'cart.svg', // Or similar
+      'icon': 'grocery.svg', // Or similar
     },
   ];
 

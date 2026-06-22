@@ -117,7 +117,7 @@ class _SocialProofStepState extends State<SocialProofStep>
                               style: TextStyle(
                                 fontSize: 80.sp,
                                 fontWeight: FontWeight.w900,
-                                color: const Color(0xFF0EA5E9),
+                                color: const Color(0xFF00C40A),
                                 fontFamily: 'SF Pro',
                                 height: 1.0,
                                 letterSpacing: -2.0,
@@ -133,7 +133,7 @@ class _SocialProofStepState extends State<SocialProofStep>
                                   ),
                                   child: Icon(
                                     Icons.star,
-                                    color: const Color(0xFFFACC15),
+                                    color: const Color(0xFFFFB800),
                                     size: 28.sp,
                                   ),
                                 );
@@ -301,11 +301,6 @@ class _SocialProofStepState extends State<SocialProofStep>
                 fit: BoxFit.cover,
                 onError: (e, s) => null,
               ),
-            ),
-            child: Icon(
-              Icons.person,
-              color: const Color(0xFF9CA3AF),
-              size: 24.sp,
             ),
           ),
           SizedBox(width: 16.w),

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
@@ -288,6 +289,26 @@ class _HomeScreenState extends State<HomeScreen>
       backgroundColor: Colors.white,
       resizeToAvoidBottomInset: false,
       extendBody: true,
+      /* floatingActionButton: kDebugMode
+          ? FloatingActionButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => Scaffold(
+                    body: ScanAnimationOverlay(
+                      imagePath: 'assets/images/fridge_mockup.png', // Fallback mockup
+                      detectedIngredients: const [],
+                      generatedRecipes: const [],
+                      onAnimationComplete: () {
+                        Navigator.pop(context);
+                      },
+                    ),
+                  )),
+                );
+              },
+              child: const Icon(Icons.animation),
+            )
+          : null, */
       body: NotificationListener<ScrollNotification>(
         onNotification: _handleScroll,
         child: Stack(

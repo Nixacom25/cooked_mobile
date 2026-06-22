@@ -27,18 +27,18 @@ class _GroceriesBadStepState extends State<GroceriesBadStep> {
     _selectedValue = widget.initialSelected ?? '';
   }
 
-  int _calculateSavings(String value) {
+  int _calculateWaste(String value) {
     switch (value) {
-      case 'never': return 200;
-      case 'sometimes': return 500;
-      case 'weekly': return 1000;
-      case 'constantly': return 1500;
+      case 'never': return 300;
+      case 'sometimes': return 900;
+      case 'weekly': return 1500;
+      case 'constantly': return 2500;
       default: return 0;
     }
   }
 
-  Widget _buildBottomCard(int savings) {
-    final formattedSavings = savings.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},');
+  Widget _buildBottomCard(int waste) {
+    final formattedWaste = waste.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},');
 
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 20.h),
@@ -64,7 +64,7 @@ class _GroceriesBadStepState extends State<GroceriesBadStep> {
                 children: [
                   const TextSpan(text: 'The average household wastes over\n'),
                   TextSpan(
-                    text: '\$$formattedSavings', 
+                    text: '\$$formattedWaste', 
                     style: TextStyle(color: const Color(0xFF00C40A), fontSize: 32.sp, fontWeight: FontWeight.w800, height: 1.2),
                   ),
                   TextSpan(
@@ -90,7 +90,8 @@ class _GroceriesBadStepState extends State<GroceriesBadStep> {
       useGrid: true,
       initialSelected: _selectedValue.isNotEmpty ? [_selectedValue] : [],
       onContinue: () {
-        widget.onContinue(_calculateSavings(_selectedValue));
+        final waste = _calculateWaste(_selectedValue);
+        widget.onContinue((waste * 0.40).round());
       },
       onSelectionChanged: (selections) {
         final newVal = selections.isNotEmpty ? selections.first : '';
@@ -99,7 +100,7 @@ class _GroceriesBadStepState extends State<GroceriesBadStep> {
           widget.onChanged!(newVal);
         }
       },
-      bottomCardWidget: _selectedValue.isEmpty ? null : _buildBottomCard(_calculateSavings(_selectedValue)),
+      bottomCardWidget: _selectedValue.isEmpty ? null : _buildBottomCard(_calculateWaste(_selectedValue)),
       options: [
         SelectionOption(id: 'never', label: 'Almost never'),
         SelectionOption(id: 'sometimes', label: 'Sometimes'),

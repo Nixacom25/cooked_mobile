@@ -57,7 +57,7 @@ class _ProfileLoadingStepState extends State<ProfileLoadingStep> with TickerProv
         }
       })..repeat();
 
-    _pageController = PageController(viewportFraction: 0.45);
+    _pageController = PageController(viewportFraction: 0.45, initialPage: 1);
 
     // Carousel timer
     _carouselTimer = Timer.periodic(const Duration(seconds: 2), (timer) {
@@ -206,7 +206,7 @@ class _ProfileLoadingStepState extends State<ProfileLoadingStep> with TickerProv
                   if (_pageController.position.haveDimensions) {
                     value = _pageController.page! - index;
                   } else {
-                    value = (0 - index).toDouble();
+                    value = (1 - index).toDouble();
                   }
 
                   value = value.clamp(-2.0, 2.0);

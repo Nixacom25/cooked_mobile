@@ -13,9 +13,7 @@ import '../services/ingredient_service.dart';
 import '../services/recipe_service.dart';
 import '../widgets/skeleton_loader.dart';
 import '../widgets/loading_text.dart';
-import '../widgets/recipe_grid_skeleton.dart';
 import '../widgets/skeleton_list.dart';
-import '../widgets/recipe_card.dart';
 import '../widgets/add_to_cookbook_sheet.dart';
 import '../models/recipe.dart';
 import '../core/widgets/ios_toast.dart';
@@ -85,7 +83,6 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
   String? _capturedImagePath;
 
   // Analysis Loading state
-  int _analysisDotCount = 0;
   Timer? _analysisTimer;
 
   // Scan Animation Overlay state
@@ -93,18 +90,30 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
   List<RecipeIngredient>? _overlayDetectedIngredients;
   List<Recipe>? _overlayGeneratedRecipes;
 
+  // Carousel State
+  final PageController _recipesPageController = PageController(viewportFraction: 0.88);
+  int _currentRecipeIndex = 0;
+  late final AnimationController _scannerController;
+
   void _updateState(ScanState newState) {
     if (!mounted) return;
     if (_state != newState) HapticFeedback.selectionClick();
     setState(() {
       _state = newState;
     });
+    if (newState == ScanState.scan && _isCameraInitialized && _cameraController != null) {
+      _cameraController!.resumePreview().catchError((_) {});
+    }
     widget.isResultsModeNotifier?.value = (newState == ScanState.results);
   }
 
   @override
   void initState() {
     super.initState();
+    _scannerController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    )..repeat(reverse: true);
     widget.isActiveNotifier.addListener(_onActiveStateChanged);
     _ingCtrl.addListener(_onIngChanged);
     _fetchSavedIngredients();
@@ -187,25 +196,6 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
     } catch (e) {
       if (mounted) setState(() => _isLoadingSaved = false);
     }
-  }
-
-  void _startAnalysisLoading(String status) {
-    _showingSuccessMessage = true;
-    _cameraStatus = status;
-    _analysisDotCount = 0;
-    _analysisTimer?.cancel();
-    _analysisTimer = Timer.periodic(const Duration(milliseconds: 500), (timer) {
-      if (mounted) {
-        setState(() {
-          _analysisDotCount = (_analysisDotCount + 1) % 4;
-        });
-      }
-    });
-  }
-
-  void _stopAnalysisLoading() {
-    _analysisTimer?.cancel();
-    _showingSuccessMessage = false;
   }
 
   Future<void> _toggleSaveIngredient(String name) async {
@@ -420,6 +410,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
         backCam,
         ResolutionPreset.medium, // Stable resolution
         enableAudio: false,
+        imageFormatGroup: ImageFormatGroup.jpeg, // Fixes ImageReader_JNI buffer spam on Android
       );
 
       debugPrint("CAMERA_LOG: Stabilization delay 2...");
@@ -542,6 +533,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
 
   @override
   void dispose() {
+    _scannerController.dispose();
     widget.isActiveNotifier.removeListener(_onActiveStateChanged);
     RecipeService.instance.myRecipesNotifier.removeListener(_onRecipesChanged);
     _disposeCamera();
@@ -607,6 +599,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
               child: ScanAnimationOverlay(
                 detectedIngredients: _overlayDetectedIngredients,
                 generatedRecipes: _overlayGeneratedRecipes,
+                imagePath: _capturedImagePath,
                 onAnimationComplete: () {
                   setState(() {
                     _showAnimationOverlay = false;
@@ -868,12 +861,40 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
       child: SizedBox(
         width: 300.w,
         height: 250.h,
-        child: CustomPaint(
-          painter: _FramePainter(
-            corner: 30.r,
-            thick: 3.w,
-            color: const Color(0xFFC83A2D),
-          ),
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: CustomPaint(
+                painter: _FramePainter(
+                  corner: 30.r,
+                  thick: 3.w,
+                  color: const Color(0xFFC83A2D),
+                ),
+              ),
+            ),
+            AnimatedBuilder(
+              animation: _scannerController,
+              builder: (context, child) {
+                return Align(
+                  alignment: Alignment(0, -1.0 + (_scannerController.value * 2.0)),
+                  child: Container(
+                    height: 4.h,
+                    margin: EdgeInsets.symmetric(horizontal: 10.w),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFC83A2D).withOpacity(0.9), // Red line
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFFC83A2D).withOpacity(0.5),
+                          blurRadius: 15.r,
+                          spreadRadius: 3.r,
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ],
         ),
       ),
     );
@@ -905,7 +926,20 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
     if (_state == ScanState.results) {
       actionBtn = SizedBox(
         key: _scanMoreKey,
-        child: _buildWideBtn("Show Updated Recipes", _reprocessFromResults),
+        child: _buildWideBtn("View Recipe", () {
+          if (_recipes.isNotEmpty) {
+            final int maxLen = _recipes.length > 10 ? 10 : _recipes.length;
+            if (_currentRecipeIndex < maxLen) {
+              final recipe = _recipes[_currentRecipeIndex];
+              // Assuming AppRoutes.recipeDetail is '/recipe_detail'
+              Navigator.pushNamed(
+                context,
+                '/recipe_detail',
+                arguments: {'recipe': recipe, 'isPreview': true},
+              );
+            }
+          }
+        }),
       );
     } else {
       actionBtn = _buildWideBtn("Get Recipes", _generateFromTyped);
@@ -1415,265 +1449,353 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
     if (success) _fetchSavedIngredients();
   }
 
-  // ── Results Page ──────────────────────────────────────────────────────────
   Widget _buildResultsPage() {
-    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
-    return ListView(
-      padding: EdgeInsets.fromLTRB(22.w, 10.h, 22.w, bottomInset + 120.h),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Image.asset(
-              'assets/images/logo2.png',
-              width: 40.w,
-              fit: BoxFit.contain,
-            ),
-            GestureDetector(
-              onTap: () {
-                _updateState(ScanState.scan);
-                if (widget.onClose != null) widget.onClose!();
-              },
-              child: Container(
-                padding: EdgeInsets.all(6.r),
-                decoration: BoxDecoration(
-                  color: Colors.grey[100],
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.close_rounded,
-                  size: 20.sp,
-                  color: Colors.grey[700],
-                ),
-              ),
-            ),
-          ],
-        ),
-        SizedBox(height: 20.h),
-        Text(
-          "Recipes You Can Cook Now",
-          style: TextStyle(
-            fontWeight: FontWeight.w800,
-            fontSize: 20.sp,
-            color: const Color(0xFF1E293B),
-          ),
-        ),
-        SizedBox(height: 20.h),
-        GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: _recipes.isNotEmpty
-              ? (_recipes.length > 10 ? 10 : _recipes.length)
-              : 6,
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            mainAxisSpacing: 14.h,
-            crossAxisSpacing: 14.w,
-            childAspectRatio: 0.72,
-          ),
-          itemBuilder: (_, i) {
-            if (_recipes.isEmpty) return const RecipeGridSkeleton(itemCount: 1, padding: EdgeInsets.zero);
-            final recipe = _recipes[i];
-            
-            return ValueListenableBuilder<List<Recipe>?>(
-              valueListenable: RecipeService.instance.myRecipesNotifier,
-              builder: (context, savedRecipes, _) {
-                final savedIds = (savedRecipes ?? []).map((r) => r.id).toSet();
-                final savedNames = (savedRecipes ?? []).map((r) => r.name.toLowerCase()).toSet();
-                
-                final isSaved = _savedRecipeNames.contains(recipe.name) || 
-                                (recipe.id.isNotEmpty && savedIds.contains(recipe.id)) ||
-                                (recipe.name.isNotEmpty && savedNames.contains(recipe.name.toLowerCase()));
-
-                return RecipeCard(
-                  recipe: recipe,
-                  useValidationIcon: true,
-                  isValidated: isSaved,
-                  useScanButton: true,
-                  onValidateTap: () => _handleValidation(recipe),
-                  onTap: () {
-                    Navigator.pushNamed(
-                      context,
-                      AppRoutes.recipeDetail,
-                      arguments: {'recipe': recipe, 'isPreview': !isSaved},
-                    );
-                  },
-                );
-              },
-            );
-          },
-        ),
-        Text(
-          "Your Ingredients",
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20.sp),
-        ),
-        Text(
-          "We found ${(_ingredients.length + _restrictedIngredients.length) > 0 ? (_ingredients.length + _restrictedIngredients.length) : 0} items in your kitchen",
-          style: TextStyle(color: Color(0xFF6B7280), fontSize: 14.sp),
-        ),
-        SizedBox(height: 12.h),
-        // Add Ingredient Input
-        Container(
-          decoration: BoxDecoration(
-            color: const Color(0xFFF8FAFC),
-            borderRadius: BorderRadius.circular(12.r),
-            border: Border.all(color: const Color(0xFFE2E8F0)),
-          ),
-          child: TextField(
-            controller: _ingCtrl,
-            textCapitalization: TextCapitalization.words,
-            onSubmitted: (val) {
-              if (val.trim().isNotEmpty) {
-                _addIngredientToResults(val.trim());
-              }
-            },
-            decoration: InputDecoration(
-              hintText: "Add missing ingredient...",
-              hintStyle: TextStyle(
-                fontSize: 13.sp,
-                color: const Color(0xFF94A3B8),
-              ),
-              border: InputBorder.none,
-              prefixIcon: Icon(
-                Icons.add_rounded,
-                color: const Color(0xFFC83A2D),
-                size: 20.sp,
-              ),
-              contentPadding: EdgeInsets.symmetric(
-                horizontal: 12.w,
-                vertical: 10.h,
-              ),
-            ),
-          ),
-        ),
-        if (_suggestedIngredients.isNotEmpty && _state == ScanState.results)
-          Padding(
-            padding: EdgeInsets.only(top: 4.h),
-            child: Material(
-              elevation: 4,
-              borderRadius: BorderRadius.circular(12.r),
-              child: Container(
-                constraints: BoxConstraints(maxHeight: 180.h),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12.r),
-                  border: Border.all(color: const Color(0xFFE2E8F0)),
-                ),
-                child: ListView.separated(
-                  shrinkWrap: true,
-                  padding: EdgeInsets.zero,
-                  itemCount: _suggestedIngredients.length,
-                  separatorBuilder: (_, __) =>
-                      Divider(height: 1, color: Colors.grey[100]),
-                  itemBuilder: (context, i) {
-                    final item = _suggestedIngredients[i];
-                    return ListTile(
-                      dense: true,
-                      title: Text(_capitalize(item['name'] ?? '')),
-                      onTap: () {
-                        _addIngredientToResults(
-                          _capitalize(item['name'] ?? ''),
-                        );
-                      },
-                    );
-                  },
-                ),
-              ),
-            ),
-          ),
-        SizedBox(height: 16.h),
-        if (_ingredients.isEmpty && _restrictedIngredients.isEmpty)
-          Text(
-            "No items detected.",
-            style: TextStyle(color: Colors.grey, fontSize: 13.sp),
-          )
-        else
-          Wrap(
-            spacing: 8.w,
-            runSpacing: 10.h,
+        Padding(
+          padding: EdgeInsets.fromLTRB(22.w, 10.h, 22.w, 0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              ..._ingredients.map(
-                (ing) => _buildYellowChip(
-                  ing.name,
-                  icon: ing.icon,
-                  onDelete: () => _removeIngredientFromResults(ing, false),
-                ),
+              Image.asset(
+                'assets/images/logo2.png',
+                width: 40.w,
+                fit: BoxFit.contain,
               ),
-              ..._restrictedIngredients.map(
-                (ing) => _buildYellowChip(
-                  ing.name,
-                  icon: ing.icon,
-                  isRestricted: true,
-                  onDelete: () => _removeIngredientFromResults(ing, true),
+              GestureDetector(
+                onTap: () {
+                  _updateState(ScanState.scan);
+                  if (widget.onClose != null) widget.onClose!();
+                },
+                child: Container(
+                  padding: EdgeInsets.all(6.r),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[200],
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.close_rounded,
+                    size: 20.sp,
+                    color: Colors.grey[700],
+                  ),
                 ),
               ),
             ],
           ),
-        if (_restrictedIngredients.isNotEmpty)
-          Padding(
-            padding: EdgeInsets.only(top: 10.h),
-            child: Row(
+        ),
+        SizedBox(height: 15.h),
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: 22.w),
+          child: RichText(
+            text: TextSpan(
+              text: "Recipes You\n",
+              style: TextStyle(
+                fontFamily: 'Larken',
+                fontWeight: FontWeight.w900,
+                fontSize: 38.sp,
+                height: 1.1,
+                color: const Color(0xFF1E293B),
+              ),
               children: [
-                Icon(
-                  Icons.info_outline_rounded,
-                  size: 14.sp,
-                  color: Colors.red[400],
-                ),
-                SizedBox(width: 6.w),
-                Expanded(
-                  child: Text(
-                    "Some ingredients may not match your dietary preferences.",
-                    style: TextStyle(
-                      color: Colors.red[600],
-                      fontSize: 12.sp,
-                      fontWeight: FontWeight.w500,
-                    ),
+                TextSpan(
+                  text: "Can Cook Now",
+                  style: TextStyle(
+                    color: const Color(0xFFC83A2D),
                   ),
                 ),
               ],
             ),
           ),
-        SizedBox(height: 40.h),
+        ),
+        SizedBox(height: 10.h),
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: 22.w),
+          child: Text(
+            "Delicious recipes made with what you have.",
+            style: TextStyle(
+              fontSize: 15.sp,
+              color: Colors.grey[600],
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+        SizedBox(height: 20.h),
+        Expanded(
+          child: _recipes.isEmpty
+              ? Center(child: CircularProgressIndicator())
+              : PageView.builder(
+                  controller: _recipesPageController,
+                  onPageChanged: (idx) {
+                    setState(() {
+                      _currentRecipeIndex = idx;
+                    });
+                  },
+                  itemCount: _recipes.length > 10 ? 10 : _recipes.length,
+                  itemBuilder: (context, i) {
+                    final recipe = _recipes[i];
+                    return Padding(
+                      padding: EdgeInsets.only(right: 15.w, bottom: 20.h),
+                      child: GestureDetector(
+                        onTap: () {
+                           Navigator.pushNamed(
+                             context,
+                             AppRoutes.recipeDetail,
+                             arguments: {'recipe': recipe, 'isPreview': true},
+                           );
+                        },
+                        child: _buildMockupRecipeCard(recipe),
+                      ),
+                    );
+                  },
+                ),
+        ),
+        if (_recipes.isNotEmpty)
+          Padding(
+            padding: EdgeInsets.only(bottom: 10.h),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(
+                _recipes.length > 10 ? 10 : _recipes.length,
+                (index) => Container(
+                  margin: EdgeInsets.symmetric(horizontal: 4.w),
+                  width: 8.r,
+                  height: 8.r,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: _currentRecipeIndex == index
+                        ? const Color(0xFFC83A2D)
+                        : Colors.grey[300],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        SizedBox(height: 10.h), // Reduced from 80.h to give cards more space
       ],
     );
   }
 
+  Future<void> _handleSaveRecipe(Recipe r) async {
+    HapticFeedback.mediumImpact();
+    try {
+      showDialog(
+        context: context,
+        barrierColor: Colors.black26,
+        barrierDismissible: false,
+        builder: (context) => const Center(
+          child: CircularProgressIndicator(color: Color(0xFFC83A2D)),
+        ),
+      );
+      
+      Recipe finalRecipe = r;
+      if (r.id.isEmpty) {
+        finalRecipe = await RecipeService.instance.createRecipe(r);
+        int idx = _recipes.indexWhere((element) => element == r);
+        if (idx != -1) {
+          setState(() {
+            _recipes[idx] = finalRecipe;
+          });
+        }
+      }
 
-  Widget _buildYellowChip(
-    String label, {
-    String? icon,
-    bool isRestricted = false,
-    VoidCallback? onDelete,
-  }) {
+      if (mounted) Navigator.pop(context); // Hide loading
+
+      if (mounted) {
+        showModalBottomSheet(
+          context: context,
+          backgroundColor: Colors.transparent,
+          isScrollControlled: true,
+          builder: (_) => AddToCookbookSheet(
+            recipe: finalRecipe,
+            onSuccess: () {},
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) Navigator.pop(context); // Hide loading
+      if (mounted) {
+        IosToast.show(
+          context,
+          message: ErrorHelper.getFriendlyMessage(e),
+          type: ToastType.error,
+        );
+      }
+    }
+  }
+
+  Widget _buildMockupRecipeCard(Recipe recipe) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24.r),
+        border: Border.all(color: const Color(0xFFF1F5F9), width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 15,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Image with exact padding and border radius
+          Expanded(
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(14.w, 14.h, 14.w, 0),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(16.r),
+                child: recipe.image != null
+                    ? Image.network(
+                        recipe.image!,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                      )
+                    : Container(
+                        width: double.infinity,
+                        color: Colors.grey[200],
+                        child: Icon(Icons.restaurant, color: Colors.grey[400]),
+                      ),
+              ),
+            ),
+          ),
+          Padding(
+            padding: EdgeInsets.fromLTRB(14.w, 16.h, 14.w, 16.h),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min, // Takes only the space it needs
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        recipe.name,
+                        style: TextStyle(
+                          fontSize: 24.sp,
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFF0F172A),
+                          height: 1.15,
+                          letterSpacing: -0.3,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    SizedBox(width: 10.w),
+                    ValueListenableBuilder<List<Recipe>?>(
+                      valueListenable: RecipeService.instance.myRecipesNotifier,
+                      builder: (context, savedRecipes, _) {
+                        final isSaved = (savedRecipes ?? []).any(
+                          (r) => (r.id == recipe.id && recipe.id.isNotEmpty) || r.name == recipe.name
+                        );
+                        return GestureDetector(
+                          onTap: () => _handleSaveRecipe(recipe),
+                          child: Padding(
+                            padding: EdgeInsets.only(top: 4.h),
+                            child: Icon(
+                              Icons.favorite,
+                              color: isSaved ? const Color(0xFFC83A2D) : const Color(0xFFE2E8F0),
+                              size: 32.sp,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+                SizedBox(height: 16.h),
+                Row(
+                  children: [
+                    _buildPill(Icons.access_time, "${recipe.cookTime} min"),
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 10.w),
+                      child: Text("|", style: TextStyle(color: const Color(0xFFE2E8F0), fontSize: 16.sp)),
+                    ),
+                    _buildPill(Icons.local_fire_department, "${recipe.kcal} cal", iconColor: const Color(0xFFF59E0B)),
+                  ],
+                ),
+                SizedBox(height: 16.h),
+                Text(
+                  "USES YOUR INGREDIENTS",
+                  style: TextStyle(
+                    fontSize: 12.sp,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF64748B),
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                SizedBox(height: 12.h),
+                Wrap(
+                  spacing: 8.w,
+                  runSpacing: 10.h,
+                  children: [
+                    ...recipe.ingredients.take(3).map((ing) {
+                      return _buildIngredientChip(ing.name, ing.icon);
+                    }).toList(),
+                    if (recipe.ingredients.length > 3)
+                      _buildIngredientChip("+${recipe.ingredients.length - 3}", null),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPill(IconData icon, String text, {Color? iconColor}) {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
       decoration: BoxDecoration(
-        color: isRestricted ? Colors.red[50] : const Color(0xFFF2C94C),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(20.r),
-        border: isRestricted ? Border.all(color: Colors.red[200]!) : null,
+        border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
+          Icon(icon, size: 18.sp, color: iconColor ?? const Color(0xFF94A3B8)),
+          SizedBox(width: 6.w),
           Text(
-            _capitalize(label),
+            text,
             style: TextStyle(
+              fontSize: 15.sp,
               fontWeight: FontWeight.w600,
-              fontSize: 12.sp,
-              color: Colors.black,
+              color: const Color(0xFF475569),
             ),
           ),
-          if (onDelete != null) ...[
-            SizedBox(width: 4.w),
-            GestureDetector(
-              onTap: onDelete,
-              child: Icon(
-                Icons.close_rounded,
-                size: 14.sp,
-                color: isRestricted ? Colors.red[400] : const Color(0xFF755F0E),
-              ),
-            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildIngredientChip(String name, String? icon) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF8E7), // Light yellow background
+        borderRadius: BorderRadius.circular(24.r),
+        border: Border.all(color: const Color(0xFFFFD579), width: 1), // Yellow/Orange border
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (icon != null) ...[
+            Text(icon, style: TextStyle(fontSize: 15.sp)),
+            SizedBox(width: 6.w),
           ],
+          Text(
+            name.toTitleCase(),
+            style: TextStyle(
+              fontSize: 15.sp,
+              fontWeight: FontWeight.w600,
+              color: const Color(0xFF0F172A),
+            ),
+          ),
         ],
       ),
     );
@@ -1732,6 +1854,8 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
         _cameraController != null) {
       try {
         photo = await _cameraController!.takePicture();
+        // Pause preview to stop background buffer spam while processing
+        await _cameraController!.pausePreview();
       } catch (e) {
         debugPrint('Error taking picture: $e');
         return;
@@ -1739,6 +1863,9 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
     } else {
       final picker = ImagePicker();
       photo = await picker.pickImage(source: source, imageQuality: 70);
+      if (_cameraController != null && _isCameraInitialized) {
+        await _cameraController!.pausePreview();
+      }
     }
 
     if (photo == null) return;
@@ -1816,57 +1943,6 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
     }
   }
 
-  void _handleValidation(Recipe r) {
-    final isSaved = _savedRecipeNames.contains(r.name);
-    if (isSaved) {
-      IosToast.show(
-        context,
-        message: "This recipe is already present in your recipes",
-        type: ToastType.success,
-      );
-      return;
-    }
-
-    // 1. Optimistic Save immediately 'In Direct'
-    RecipeService.instance.createRecipe(r).catchError((e) {
-      if (mounted) {
-        IosToast.show(context, message: ErrorHelper.getFriendlyMessage(e), type: ToastType.error);
-      }
-      return r;
-    });
-    _updateLocalStateForValidation(r);
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => AddToCookbookSheet(
-        recipe: r,
-        onSuccess: () => _updateLocalStateForValidation(r),
-      ),
-    );
-  }
-
-  void _updateLocalStateForValidation(Recipe r) {
-    if (!mounted) return;
-    
-    final validatedRecipe = r.copyWith(origin: 'MANUAL', isValidated: true, isSuggested: false);
-
-    // Update local set
-    _savedRecipeNames.add(r.name);
-
-    // Update global state via notifiers
-    final currentSaved = RecipeService.instance.myRecipesNotifier.value ?? [];
-    if (!currentSaved.any((item) => item.id == r.id)) {
-      RecipeService.instance.myRecipesNotifier.value = [validatedRecipe, ...currentSaved];
-    }
-
-    // Refresh backgrounds
-    RecipeService.instance.getMyRecipes(forceRefresh: true).catchError((_) => <Recipe>[]);
-    
-    setState(() {}); // Local refresh
-  }
-
   Widget _buildSuccessOverlay() {
     return Container(
       color: Colors.black.withValues(alpha: 0.7),
@@ -1893,92 +1969,6 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
         ),
       ),
     );
-  }
-
-
-
-
-  void _removeIngredientFromResults(RecipeIngredient ing, bool isRestricted) {
-    setState(() {
-      if (isRestricted) {
-        _restrictedIngredients.remove(ing);
-      } else {
-        _ingredients.remove(ing);
-      }
-    });
-  }
-
-  void _addIngredientToResults(String name) {
-    setState(() {
-      _ingredients.add(
-        RecipeIngredient(
-          id: DateTime.now().toString(),
-          name: name,
-          amount: 1.0,
-          unit: "",
-          quantity: "1",
-        ),
-      );
-      _ingCtrl.clear();
-      _suggestedIngredients = [];
-    });
-  }
-
-  Future<void> _reprocessFromResults() async {
-    final allNames = [
-      ..._ingredients.map((i) => i.name),
-      ..._restrictedIngredients.map((i) => i.name),
-    ];
-
-    if (allNames.isEmpty) {
-      IosToast.show(
-        context,
-        message: "Please keep at least one ingredient",
-        type: ToastType.error,
-      );
-      return;
-    }
-
-    setState(() {
-      _startAnalysisLoading("Analyzing...");
-    });
-
-    try {
-      final response = await RecipeService.instance.scanTyped(allNames);
-
-      final List<RecipeIngredient> allowed =
-          (response['allowed_ingredients'] as List)
-              .map((i) => RecipeIngredient.fromJson(i))
-              .toList();
-      final List<RecipeIngredient> restricted =
-          (response['restricted_ingredients'] as List)
-              .map((i) => RecipeIngredient.fromJson(i))
-              .toList();
-      final List<Recipe> recipes = (response['recipes'] as List)
-          .map((r) => Recipe.fromJson(r))
-          .toList();
-
-      if (mounted) {
-        setState(() {
-          _ingredients.clear();
-          _ingredients.addAll(allowed);
-          _restrictedIngredients.clear();
-          _restrictedIngredients.addAll(restricted);
-          _recipes.clear();
-          _recipes.addAll(recipes);
-          _stopAnalysisLoading();
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() => _stopAnalysisLoading());
-        IosToast.show(
-          context,
-          message: ErrorHelper.getFriendlyMessage(e),
-          type: ToastType.error,
-        );
-      }
-    }
   }
 }
 

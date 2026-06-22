@@ -77,6 +77,10 @@ class AuthService {
     List<String>? excitedFeatures,
     List<String>? notificationPreferences,
     List<String>? onboardingGoals,
+    List<String>? frustrations,
+    String? ageSelection,
+    String? eatingOutSelection,
+    String? grocerySelection,
   }) async {
     final url = Uri.parse('${ApiConfig.baseUrl}/auth/register');
     
@@ -118,6 +122,10 @@ class AuthService {
         'excitedFeatures': excitedFeatures,
         'notificationPreferences': notificationPreferences,
         'onboardingGoals': onboardingGoals,
+        'frustrations': frustrations,
+        'ageSelection': ageSelection,
+        'eatingOutSelection': eatingOutSelection,
+        'grocerySelection': grocerySelection,
       }),
     );
 

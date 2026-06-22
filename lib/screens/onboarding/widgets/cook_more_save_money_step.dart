@@ -4,8 +4,9 @@ import '../../../widgets/red_button.dart';
 
 class CookMoreSaveMoneyStep extends StatelessWidget {
   final VoidCallback onContinue;
+  final int totalSavings;
 
-  const CookMoreSaveMoneyStep({super.key, required this.onContinue});
+  const CookMoreSaveMoneyStep({super.key, required this.onContinue, required this.totalSavings});
 
   @override
   Widget build(BuildContext context) {
@@ -30,7 +31,7 @@ class CookMoreSaveMoneyStep extends StatelessWidget {
               ),
               SizedBox(height: 12.h),
               Text(
-                '\$2,496',
+                '\$${totalSavings.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}',
                 style: TextStyle(
                   fontSize: 48.sp,
                   fontWeight: FontWeight.w800,

@@ -143,13 +143,13 @@ class _ProfileSignupStepState extends State<ProfileSignupStep>
                     position: _infoSlide,
                     child: Center(
                       child: Image.asset(
-                        'assets/images/step24.png',
+                        'assets/onboarding/step24.png',
                         fit: BoxFit.contain,
                         errorBuilder: (context, error, stackTrace) => Container(
                           height: 200.h,
                           color: Colors.grey[200],
                           alignment: Alignment.center,
-                          child: const Text('assets/images/step24.png missing'),
+                          child: const Text('assets/onboarding/step24.png missing'),
                         ),
                       ),
                     ),

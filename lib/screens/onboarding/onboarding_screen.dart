@@ -228,6 +228,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       'kitchenAppliances': _kitchenAppliances,
       'notificationPreferences': _notificationPreferences,
       'onboardingGoals': _onboardingGoals,
+      'featuresExcited': _featuresExcited,
+      'frustrations': _frustrations,
+      'ageSelection': _ageSelection,
+      'eatingOutSelection': _eatingOutSelection,
+      'grocerySelection': _grocerySelection,
+      'eatingOutSavings': _eatingOutSavings,
+      'grocerySavings': _grocerySavings,
     };
     await OnboardingStorage.saveProgress(_currentPage, data);
   }
@@ -284,6 +291,17 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       if (progress['onboardingGoals'] != null) {
         _onboardingGoals = (progress['onboardingGoals'] as List).cast<String>();
       }
+      if (progress['featuresExcited'] != null) {
+        _featuresExcited = (progress['featuresExcited'] as List).cast<String>();
+      }
+      if (progress['frustrations'] != null) {
+        _frustrations = (progress['frustrations'] as List).cast<String>();
+      }
+      _ageSelection = progress['ageSelection'] ?? '';
+      _eatingOutSelection = progress['eatingOutSelection'] ?? '';
+      _grocerySelection = progress['grocerySelection'] ?? '';
+      _eatingOutSavings = progress['eatingOutSavings'] ?? 0;
+      _grocerySavings = progress['grocerySavings'] ?? 0;
     });
 
     if (_currentPage > 0) {
@@ -348,13 +366,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       // MealRepetitionStep
     }
 
-    if (_currentPage < 22) {
+    if (_currentPage <= 22) {
       _pageController.nextPage(
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
       );
-    } else if (_currentPage == 22) {
-      // ProfileSummaryStep handles its own navigation via callbacks
     } else if (_currentPage == 23) {
       // ProfileSignupStep handles its own navigation via callbacks
     } else if (_currentPage == 24) {
@@ -406,9 +422,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     HapticFeedback.selectionClick();
     FocusScope.of(context).unfocus();
     if (_currentPage == 20 || _currentPage == 8) return; // Prevent going back during loading steps
-    
-    if (_currentPage == 22) {
-      // Skip ProfileLoadingStep (20) and SocialProofStep (21) when going back from ProfileSummaryStep
+    if (_currentPage == 21) {
+      // Skip ProfileLoadingStep (20) when going back from SocialProofStep (21)
       _pageController.jumpToPage(19);
       return;
     }
@@ -509,9 +524,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             groceryFrequency: _groceryFrequency,
             groceryStores: _groceryStores,
             groceryBudget: _groceryBudget,
-            excitedFeatures: _excitedFeatures,
+            excitedFeatures: _featuresExcited, // Use correct list
             notificationPreferences: _notificationPreferences,
             onboardingGoals: _onboardingGoals,
+            frustrations: _frustrations,
+            ageSelection: _ageSelection,
+            eatingOutSelection: _eatingOutSelection,
+            grocerySelection: _grocerySelection,
           );
         } else {
           // Atomic Social Registration Flow
@@ -584,9 +603,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             groceryFrequency: _groceryFrequency,
             groceryStores: _groceryStores,
             groceryBudget: _groceryBudget,
-            excitedFeatures: _excitedFeatures,
+            excitedFeatures: _featuresExcited, // Use correct list
             notificationPreferences: _notificationPreferences,
             onboardingGoals: _onboardingGoals,
+            frustrations: _frustrations,
+            ageSelection: _ageSelection,
+            eatingOutSelection: _eatingOutSelection,
+            grocerySelection: _grocerySelection,
           );
         }
       } else {
@@ -853,6 +876,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         favoriteCuisines: _favoriteCuisines,
                         flavorDna: _flavorDna.keys.toList(),
                         recipeCount: _calculateRecipeCount(),
+                        totalSavings: _eatingOutSavings + _grocerySavings,
+                        goals: _onboardingGoals,
                         onContinue: _onContinue,
                       ), // step 23
                       ProfileSignupStep(
@@ -922,6 +947,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         },
                       ), // step 26
                       PerfectMealStep(
+                        favoriteCuisines: _favoriteCuisines,
+                        goals: _onboardingGoals,
+                        cookingTime: _cookingTime,
                         onStartCooking: () {
                           if (mounted) {
                             Navigator.pushReplacementNamed(

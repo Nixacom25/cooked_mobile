@@ -271,6 +271,7 @@ class RecipeIngredient {
   final String unit;
   final String quantity;
   final String? icon;
+  final String? image;
   final double? price;
 
   RecipeIngredient({
@@ -280,6 +281,7 @@ class RecipeIngredient {
     required this.unit,
     required this.quantity,
     this.icon,
+    this.image,
     this.price,
   });
 
@@ -312,6 +314,7 @@ class RecipeIngredient {
       unit: unit,
       quantity: quantity.isEmpty ? '1' : quantity,
       icon: json['icon'], 
+      image: json['image'],
       price: (json['price'] as num?)?.toDouble(),
     );
   }
@@ -324,6 +327,7 @@ class RecipeIngredient {
       'unit': unit,
       'quantity': quantity,
       'icon': icon,
+      'image': image,
       'price': price,
     };
   }
