@@ -73,7 +73,6 @@ flutter:
     - assets/nav/
     - assets/cuisine/
     - assets/onboarding/
-    - assets/videos/
 
   fonts:
     - family: Larken
