@@ -9,6 +9,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../../services/auth_service.dart';
 import '../../services/user_service.dart';
 import '../../routes/app_routes.dart';
+import '../../widgets/scan_animation_overlay.dart';
 import '../explore_screen.dart';
 import '../grocery_screen.dart';
 import '../import_screen.dart';
@@ -289,16 +290,66 @@ class _HomeScreenState extends State<HomeScreen>
       backgroundColor: Colors.white,
       resizeToAvoidBottomInset: false,
       extendBody: true,
-      /* floatingActionButton: kDebugMode
+      floatingActionButton: (kDebugMode && _currentTab == 0)
           ? FloatingActionButton(
               onPressed: () {
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (_) => Scaffold(
                     body: ScanAnimationOverlay(
+                      showTestControls: true,
                       imagePath: 'assets/images/fridge_mockup.png', // Fallback mockup
-                      detectedIngredients: const [],
-                      generatedRecipes: const [],
+                      detectedIngredients: [
+                        RecipeIngredient(id: 'i1', name: "Tomates", amount: 2.0, unit: "pcs", quantity: "2 pcs", image: "assets/images/ing1.png"),
+                        RecipeIngredient(id: 'i2', name: "Oignons", amount: 1.0, unit: "pc", quantity: "1 pc", image: "assets/images/ing2.png"),
+                        RecipeIngredient(id: 'i3', name: "Ail", amount: 3.0, unit: "gousses", quantity: "3 gousses", image: "assets/images/ing3.png"),
+                        RecipeIngredient(id: 'i4', name: "Poulet", amount: 500.0, unit: "g", quantity: "500 g", image: "assets/images/ing4.png"),
+                        RecipeIngredient(id: 'i5', name: "Carottes", amount: 2.0, unit: "pcs", quantity: "2 pcs", image: "assets/images/ing5.png"),
+                      ],
+                      generatedRecipes: [
+                        Recipe(
+                          id: 'r1',
+                          name: 'Poulet rôti aux légumes',
+                          cookTime: 45,
+                          kcal: 450,
+                          steps: [],
+                          equipment: [],
+                          isPublic: true,
+                          isFavorite: false,
+                          createdAt: DateTime.now(),
+                          updatedAt: DateTime.now(),
+                          image: 'assets/images/plat1.png',
+                          ingredients: [],
+                        ),
+                        Recipe(
+                          id: 'r2',
+                          name: 'Salade fraîcheur',
+                          cookTime: 0,
+                          kcal: 200,
+                          steps: [],
+                          equipment: [],
+                          isPublic: true,
+                          isFavorite: false,
+                          createdAt: DateTime.now(),
+                          updatedAt: DateTime.now(),
+                          image: 'assets/images/plat2.png',
+                          ingredients: [],
+                        ),
+                        Recipe(
+                          id: 'r3',
+                          name: 'Mijoté de poulet',
+                          cookTime: 60,
+                          kcal: 550,
+                          steps: [],
+                          equipment: [],
+                          isPublic: true,
+                          isFavorite: false,
+                          createdAt: DateTime.now(),
+                          updatedAt: DateTime.now(),
+                          image: 'assets/images/plat3.png',
+                          ingredients: [],
+                        ),
+                      ],
                       onAnimationComplete: () {
                         Navigator.pop(context);
                       },
@@ -308,7 +359,7 @@ class _HomeScreenState extends State<HomeScreen>
               },
               child: const Icon(Icons.animation),
             )
-          : null, */
+          : null,
       body: NotificationListener<ScrollNotification>(
         onNotification: _handleScroll,
         child: Stack(

@@ -5,14 +5,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../models/recipe.dart';
-import 'confetti_animation.dart';
-
 
 class ScanAnimationOverlay extends StatefulWidget {
   final List<RecipeIngredient>? detectedIngredients;
   final List<Recipe>? generatedRecipes;
   final VoidCallback onAnimationComplete;
   final String? imagePath;
+  final bool showTestControls;
 
   const ScanAnimationOverlay({
     Key? key,
@@ -20,6 +19,7 @@ class ScanAnimationOverlay extends StatefulWidget {
     required this.generatedRecipes,
     required this.onAnimationComplete,
     this.imagePath,
+    this.showTestControls = false,
   }) : super(key: key);
 
   @override
@@ -29,25 +29,31 @@ class ScanAnimationOverlay extends StatefulWidget {
 class _ScanAnimationOverlayState extends State<ScanAnimationOverlay>
     with TickerProviderStateMixin {
   int _currentStep =
-      0; // 0: Detecting, 1: Falling, 2: Cooking, 3: Recipes Ready
+      0; 
 
   // Cooking step checklist
   final List<String> _checklist = [
-    "Finding quick meals",
-    "Matching your preferences",
     "Checking ingredients",
-    "Finalizing your picks",
+    "Matching preferences",
+    "Finding meals",
+    "Finalizing picks",
   ];
   int _checkedCount = 0;
   Timer? _checklistTimer;
-
-
+  final List<Timer> _activeTimers = [];
+  bool _autoPlay =
+      true;
+  bool _isShaking =
+      false;
+  bool _showCreatingContent =
+      false;
+  bool _isScannerTransitioning =
+      false; // Prevents restarting the final laser scan descent animation multiple times
+  bool _didTriggerStep2Transition =
+      false; // Prevents double-triggering step 2 transition during falling animation
 
   // Animation controllers
   late AnimationController _fallingController;
-  late AnimationController _steamController;
-  late AnimationController _recipesController;
-  late AnimationController _gatherController;
   late AnimationController _scannerController;
   late AnimationController _shakeController;
 
@@ -57,23 +63,19 @@ class _ScanAnimationOverlayState extends State<ScanAnimationOverlay>
 
     _fallingController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 5000), // Longer for full rotation and drop
-    );
-
-    _steamController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 2),
-    )..repeat(reverse: true);
-
-    _recipesController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1500),
-    );
-
-    _gatherController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1500), // Gather fly animation
-    );
+      duration: const Duration(
+        milliseconds: 2000,
+      ), // Slightly slower for a more measured (dosé) natural cascade
+    )..addListener(() {
+        if (mounted && _currentStep == 1 && !_didTriggerStep2Transition) {
+          final totalCount = widget.detectedIngredients?.length ?? 1;
+          final double triggerValue = 1.0 - 0.5 / totalCount;
+          if (_fallingController.value >= triggerValue) {
+            _didTriggerStep2Transition = true;
+            _transitionToStep2();
+          }
+        }
+      });
 
     _scannerController = AnimationController(
       vsync: this,
@@ -83,7 +85,7 @@ class _ScanAnimationOverlayState extends State<ScanAnimationOverlay>
     _shakeController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 100),
-    )..repeat(reverse: true);
+    ); // Do NOT start repeating in initState to save CPU/battery
 
     // Initial check to see if we already have ingredients (which we might not at ms 0)
     _checkStateTransitions();
@@ -93,99 +95,220 @@ class _ScanAnimationOverlayState extends State<ScanAnimationOverlay>
   void didUpdateWidget(ScanAnimationOverlay oldWidget) {
     super.didUpdateWidget(oldWidget);
     _checkStateTransitions();
+
+    if (!widget.showTestControls &&
+        _currentStep == 2 &&
+        _checkedCount == 3 &&
+        widget.generatedRecipes != null &&
+        widget.generatedRecipes!.isNotEmpty) {
+      _completeFinalizingPicks();
+    }
+  }
+
+  void _transitionToStep2() {
+    if (!mounted || _currentStep != 1) return;
+    HapticFeedback.mediumImpact();
+    setState(() {
+      _currentStep = 2;
+      _isShaking = false;
+      _showCreatingContent = true;
+    });
+    _shakeController.stop();
+    _shakeController.reset();
+
+    // Wait 300ms (until lid closes) before starting loading/shaking
+    Future.delayed(const Duration(milliseconds: 300), () {
+      if (mounted && _currentStep == 2) {
+        _startChecklistTimer();
+        setState(() {
+          _isShaking = true;
+        });
+        _shakeController.repeat(reverse: true);
+      }
+    });
   }
 
   void _checkStateTransitions() {
-    if (_currentStep == 0 && widget.detectedIngredients != null) {
-      // Step 0 -> Step 1 (Wait 2 seconds to show ingredients, then drop them)
-      Future.delayed(const Duration(seconds: 2), () {
-        if (mounted && _currentStep == 0) {
+    if (!_autoPlay) return;
+
+    if (_currentStep == 0 && widget.detectedIngredients != null && !_isScannerTransitioning) {
+      _isScannerTransitioning = true;
+      _scannerController.stop();
+      _scannerController.value = 0.0;
+      _scannerController.animateTo(1.0, duration: const Duration(milliseconds: 1000), curve: Curves.easeInOut).then((_) {
+        if (mounted && _currentStep == 0 && _autoPlay) {
           HapticFeedback.mediumImpact();
           setState(() {
             _currentStep = 1;
+            _isShaking = false;
+            _showCreatingContent = false;
           });
-          // First, gather ingredients to the center
-          _gatherController.forward().then((_) {
-            if (mounted && _currentStep == 1) {
-              // Automatically drop them after a short delay
-              Future.delayed(const Duration(milliseconds: 500), () {
-                if (mounted && _currentStep == 1) {
-                  _fallingController.forward().then((_) {
-                    if (mounted && _currentStep == 1) {
-                      // Automatically transition to Step 2
-                      Future.delayed(const Duration(milliseconds: 500), () {
-                        if (mounted && _currentStep == 1) {
-                          HapticFeedback.mediumImpact();
-                          setState(() {
-                            _currentStep = 2; // Move to Cook phase
-                          });
-                          _startChecklistTimer();
-                        }
-                      });
-                    }
-                  });
-                }
-              });
-            }
-          });
+          _scannerController.stop();
+          _shakeController.stop();
+          _shakeController.reset();
+
+          // Start falling immediately
+          if (mounted && _currentStep == 1 && _autoPlay) {
+            _didTriggerStep2Transition = false;
+            _fallingController.forward();
+          }
         }
       });
     }
   }
 
-  void _transitionToStep3() {
-    HapticFeedback.heavyImpact();
-    setState(() {
-      _currentStep = 3;
-    });
-    _recipesController.forward().then((_) {
-      // The automatic transition to home has been disabled for adjustments.
-      // The user must click the "View Recipes" button to complete the flow.
-      /*
-      Future.delayed(const Duration(milliseconds: 2500), () {
-        if (mounted && _currentStep == 3) {
-          widget.onAnimationComplete();
+  void _goToNextStep() {
+    if (_currentStep == 0) {
+      if (_isScannerTransitioning) return;
+      _isScannerTransitioning = true;
+      HapticFeedback.mediumImpact();
+      _scannerController.stop();
+      _scannerController.value = 0.0;
+      _scannerController.animateTo(1.0, duration: const Duration(milliseconds: 1000), curve: Curves.easeInOut).then((_) {
+        if (mounted && _currentStep == 0) {
+          setState(() {
+            _currentStep = 1;
+            _isShaking = false;
+            _showCreatingContent = false;
+          });
+          _scannerController.stop();
+          _shakeController.stop();
+          _shakeController.reset();
+
+          // Start falling immediately
+          if (mounted && _currentStep == 1) {
+            _didTriggerStep2Transition = false;
+            _fallingController.forward();
+          }
         }
       });
-      */
+    } else if (_currentStep == 1) {
+      _didTriggerStep2Transition = true;
+      _transitionToStep2();
+    } else if (_currentStep == 2) {
+      widget.onAnimationComplete();
+    }
+  }
+
+  void _resetAnimation() {
+    _clearActiveTimers();
+    _fallingController.reset();
+    _shakeController.stop();
+    _shakeController.reset();
+    _scannerController.stop();
+    _scannerController.reset();
+
+    setState(() {
+      _currentStep = 0;
+      _checkedCount = 0;
+      _isShaking = false;
+      _showCreatingContent = false;
+      _isScannerTransitioning = false;
+      _didTriggerStep2Transition = false;
     });
+
+    _scannerController.repeat(reverse: true);
+
+    if (_autoPlay) {
+      _checkStateTransitions();
+    }
+  }
+
+  void _clearActiveTimers() {
+    _checklistTimer?.cancel();
+    for (var t in _activeTimers) {
+      t.cancel();
+    }
+    _activeTimers.clear();
+  }
+
+  void _completeFinalizingPicks() {
+    if (!mounted || _currentStep != 2 || _checkedCount >= 4) return;
+
+    // Timer to set checkedCount = 4 (1s delay so they see the checkmark check)
+    _activeTimers.add(
+      Timer(const Duration(seconds: 1), () {
+        if (!mounted || _currentStep != 2) return;
+        setState(() {
+          _checkedCount = 4;
+        });
+
+        // Final completion timer: 1s
+        _activeTimers.add(
+          Timer(const Duration(seconds: 1), () {
+            if (mounted && _currentStep == 2) {
+              widget.onAnimationComplete();
+            }
+          }),
+        );
+      }),
+    );
   }
 
   void _startChecklistTimer() {
-    _checklistTimer?.cancel();
-    _checklistTimer = Timer.periodic(const Duration(seconds: 5), (
-      timer,
-    ) {
-      if (!mounted) {
-        timer.cancel();
-        return;
-      }
+    _clearActiveTimers();
+    _checkedCount = 0;
 
-      if (_checkedCount < _checklist.length) {
+    // Timer 1: 1s -> Checked count = 1
+    _activeTimers.add(
+      Timer(const Duration(seconds: 1), () {
+        if (!mounted || _currentStep != 2) return;
         setState(() {
-          _checkedCount++;
+          _checkedCount = 1;
         });
-      }
 
-      if (_checkedCount >= _checklist.length) {
-        timer.cancel();
-        // Automatically transition to step 3 when checklist is done
-        Future.delayed(const Duration(milliseconds: 1000), () {
-          if (mounted && _currentStep == 2) {
-            _transitionToStep3();
-          }
-        });
-      }
-    });
+        // Timer 2: 1s (total 2s) -> Checked count = 2
+        _activeTimers.add(
+          Timer(const Duration(seconds: 1), () {
+            if (!mounted || _currentStep != 2) return;
+            setState(() {
+              _checkedCount = 2;
+            });
+
+            // Timer 3: 1s (total 3s) -> Checked count = 3
+            _activeTimers.add(
+              Timer(const Duration(seconds: 1), () {
+                if (!mounted || _currentStep != 2) return;
+                setState(() {
+                  _checkedCount = 3;
+                });
+
+                if (widget.showTestControls) {
+                  // In test mode: lasts exactly 5 seconds
+                  _activeTimers.add(
+                    Timer(const Duration(seconds: 5), () {
+                      if (!mounted || _currentStep != 2) return;
+                      setState(() {
+                        _checkedCount = 4;
+                      });
+
+                      _activeTimers.add(
+                        Timer(const Duration(seconds: 1), () {
+                          if (mounted && _currentStep == 2) {
+                            widget.onAnimationComplete();
+                          }
+                        }),
+                      );
+                    }),
+                  );
+                } else {
+                  // In production mode: validate last check only if recipes are generated & ready
+                  if (widget.generatedRecipes != null && widget.generatedRecipes!.isNotEmpty) {
+                    _completeFinalizingPicks();
+                  }
+                }
+              }),
+            );
+          }),
+        );
+      }),
+    );
   }
 
   @override
   void dispose() {
-    _checklistTimer?.cancel();
-    _gatherController.dispose();
+    _clearActiveTimers();
     _fallingController.dispose();
-    _steamController.dispose();
-    _recipesController.dispose();
     _scannerController.dispose();
     _shakeController.dispose();
     super.dispose();
@@ -193,23 +316,29 @@ class _ScanAnimationOverlayState extends State<ScanAnimationOverlay>
 
   @override
   Widget build(BuildContext context) {
-    bool isScanning = _currentStep == 0 && widget.detectedIngredients == null;
+    bool isScanning = _currentStep == 0;
 
     Widget mainContent = Container(
       width: double.infinity,
       height: double.infinity,
       color: Colors.white, // Always white background
-      child: isScanning && widget.imagePath != null
-          ? _buildScanningFrame()
-          : SafeArea(
-              child: Stack(
-                children: [
-                  Column(
+      child: Stack(
+        children: [
+          isScanning
+              ? _buildScanningFrame()
+              : SafeArea(
+                  child: Column(
                     children: [
                       SizedBox(height: 30.h),
                       _buildHeaderLogo(),
                       SizedBox(height: 40.h),
-                      _buildTitles(),
+                      AnimatedOpacity(
+                        duration: const Duration(milliseconds: 300),
+                        opacity: (_currentStep == 1 || _currentStep == 2)
+                            ? (_showCreatingContent ? 1.0 : 0.0)
+                            : 1.0,
+                        child: _buildTitles(),
+                      ),
                       SizedBox(height: 30.h),
                       Expanded(
                         child: LayoutBuilder(
@@ -226,63 +355,376 @@ class _ScanAnimationOverlayState extends State<ScanAnimationOverlay>
                       SizedBox(height: 32.h),
                     ],
                   ),
+                ),
+          if (widget.showTestControls)
+            Positioned(
+              top: MediaQuery.of(context).padding.top + 10.h,
+              right: 20.w,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _autoPlay = !_autoPlay;
+                        if (_autoPlay) {
+                          _checkStateTransitions();
+                          if (_currentStep == 2) {
+                            _startChecklistTimer();
+                          }
+                        } else {
+                          _checklistTimer?.cancel();
+                        }
+                      });
+                    },
+                    child: Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 10.w,
+                        vertical: 6.h,
+                      ),
+                      decoration: BoxDecoration(
+                        color: _autoPlay
+                            ? const Color(0xFFC83A2D)
+                            : Colors.grey[700],
+                        borderRadius: BorderRadius.circular(12.r),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black12,
+                            blurRadius: 4.r,
+                            offset: Offset(0, 2.h),
+                          ),
+                        ],
+                      ),
+                      child: Text(
+                        _autoPlay ? "Auto: ON" : "Auto: OFF",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 11.sp,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: 'SF Pro',
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 8.w),
+                  GestureDetector(
+                    onTap: _goToNextStep,
+                    child: Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 10.w,
+                        vertical: 6.h,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.black87,
+                        borderRadius: BorderRadius.circular(12.r),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black12,
+                            blurRadius: 4.r,
+                            offset: Offset(0, 2.h),
+                          ),
+                        ],
+                      ),
+                      child: Text(
+                        "Next",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 11.sp,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: 'SF Pro',
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 8.w),
+                  GestureDetector(
+                    onTap: _resetAnimation,
+                    child: Container(
+                      padding: EdgeInsets.all(6.r),
+                      decoration: BoxDecoration(
+                        color: Colors.black87,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black12,
+                            blurRadius: 4.r,
+                            offset: Offset(0, 2.h),
+                          ),
+                        ],
+                      ),
+                      child: Icon(
+                        Icons.refresh,
+                        color: Colors.white,
+                        size: 14.sp,
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
+        ],
+      ),
     );
-
-    if (_currentStep == 3) {
-      return ConfettiAnimation(
-        ingredients: widget.detectedIngredients,
-        child: mainContent,
-      );
-    }
-
     return mainContent;
   }
 
   Widget _buildScanningFrame() {
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        Image.file(
-          File(widget.imagePath!),
-          fit: BoxFit.cover,
-        ),
-        AnimatedBuilder(
-          animation: _scannerController,
-          builder: (context, child) {
-            return Align(
-              alignment: Alignment(0, -1.0 + (_scannerController.value * 2.0)),
-              child: Container(
-                height: 4.h,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFC83A2D).withOpacity(0.9), // Red line
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFFC83A2D).withOpacity(0.5),
-                      blurRadius: 15.r,
-                      spreadRadius: 3.r,
-                    ),
-                  ],
+    return Container(
+      color: Colors.white, // Solid white background matching Figma mock
+      child: Stack(
+        children: [
+          // Content Layout
+          SafeArea(
+            child: Column(
+              children: [
+                SizedBox(height: 20.h),
+                _buildHeaderLogo(),
+                SizedBox(height: 30.h),
+                _buildTitles(),
+                // No spacing here to let the image start immediately after description text
+                Expanded(
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      // Actual photo or fallback mockup photo
+                      if (widget.imagePath != null &&
+                          widget.imagePath!.isNotEmpty &&
+                          widget.imagePath!.startsWith('/'))
+                        Image.file(File(widget.imagePath!), fit: BoxFit.cover)
+                      else
+                        Image.asset(
+                          'assets/images/onboarding_scan_1.png',
+                          fit: BoxFit.cover,
+                        ),
+
+                      // Camera 3x3 Grid Overlay
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Container(
+                              decoration: BoxDecoration(
+                                border: Border(
+                                  right: BorderSide(
+                                    color: Colors.white.withOpacity(0.2),
+                                    width: 0.8,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            child: Container(
+                              decoration: BoxDecoration(
+                                border: Border(
+                                  right: BorderSide(
+                                    color: Colors.white.withOpacity(0.2),
+                                    width: 0.8,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          Expanded(child: const SizedBox()),
+                        ],
+                      ),
+                      Column(
+                        children: [
+                          Expanded(
+                            child: Container(
+                              decoration: BoxDecoration(
+                                border: Border(
+                                  bottom: BorderSide(
+                                    color: Colors.white.withOpacity(0.2),
+                                    width: 0.8,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            child: Container(
+                              decoration: BoxDecoration(
+                                border: Border(
+                                  bottom: BorderSide(
+                                    color: Colors.white.withOpacity(0.2),
+                                    width: 0.8,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          Expanded(child: const SizedBox()),
+                        ],
+                      ),
+
+                      // Top Fade Overlay (blends image edge with white background)
+                      Positioned(
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        height: 90.h,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                Colors.white,
+                                Colors.white.withOpacity(0.0),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      // Bottom Fade Overlay (blends image edge with white background and covers pagination area)
+                      Positioned(
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        height: 140.h,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.bottomCenter,
+                              end: Alignment.topCenter,
+                              colors: [
+                                Colors.white,
+                                Colors.white.withOpacity(0.0),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      // Scanning Laser Bar (moves within image box)
+                      AnimatedBuilder(
+                        animation: _scannerController,
+                        builder: (context, child) {
+                          return Align(
+                            alignment: Alignment(
+                              0,
+                              -1.0 + (_scannerController.value * 2.0),
+                            ),
+                            child: Container(
+                              height: 6.h,
+                              decoration: BoxDecoration(
+                                color: Colors.white, // Glowing white core
+                                borderRadius: BorderRadius.circular(3.r),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: const Color(
+                                      0xFFC83A2D,
+                                    ), // Neon red aura
+                                    blurRadius: 12.r,
+                                    spreadRadius: 4.r,
+                                  ),
+                                  BoxShadow(
+                                    color: const Color(
+                                      0xFFC83A2D,
+                                    ).withOpacity(0.8),
+                                    blurRadius: 4.r,
+                                    spreadRadius: 1.r,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+
+                      // Ambient red glow on the bottom half of the image when laser is low
+                      AnimatedBuilder(
+                        animation: _scannerController,
+                        builder: (context, child) {
+                          return Positioned(
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            height: 180.h,
+                            child: Opacity(
+                              opacity: (_scannerController.value * 0.12).clamp(
+                                0.0,
+                                0.12,
+                              ),
+                              child: Container(
+                                decoration: const BoxDecoration(
+                                  gradient: LinearGradient(
+                                    begin: Alignment.bottomCenter,
+                                    end: Alignment.topCenter,
+                                    colors: [
+                                      Color(0xFFC83A2D),
+                                      Colors.transparent,
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+
+                      // Pagination Dots Row positioned on top of the bottom fade overlay
+                      Positioned(
+                        bottom: 24.h,
+                        left: 0,
+                        right: 0,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              width: 8.w,
+                              height: 8.w,
+                              decoration: const BoxDecoration(
+                                color: Color(0xFFC83A2D), // Active red dot
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                            SizedBox(width: 8.w),
+                            Container(
+                              width: 8.w,
+                              height: 8.w,
+                              decoration: const BoxDecoration(
+                                color: Color(0xFFE2E8F0), // Inactive dot
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                            SizedBox(width: 8.w),
+                            Container(
+                              width: 8.w,
+                              height: 8.w,
+                              decoration: const BoxDecoration(
+                                color: Color(0xFFE2E8F0), // Inactive dot
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            );
-          },
-        ),
-        Positioned(
-          top: MediaQuery.of(context).padding.top + 10.h,
-          left: 10.w,
-          child: IconButton(
-            icon: Icon(Icons.close, color: Colors.white, size: 30.sp),
-            onPressed: () => Navigator.pop(context),
+              ],
+            ),
           ),
-        ),
-      ],
+          // Top Left floating close button (matches camera screen back navigation)
+          if (widget.showTestControls)
+            Positioned(
+              top: MediaQuery.of(context).padding.top + 10.h,
+              left: 10.w,
+              child: IconButton(
+                icon: Icon(
+                  Icons.close,
+                  color: const Color(0xFF1E293B),
+                  size: 28.sp,
+                ),
+                onPressed: () => Navigator.pop(context),
+              ),
+            ),
+        ],
+      ),
     );
   }
-
-
 
   Widget _buildHeaderLogo() {
     // Cooked logo placeholder or real image
@@ -334,9 +776,54 @@ class _ScanAnimationOverlayState extends State<ScanAnimationOverlay>
               ],
             ),
           ),
+          Text(
+            "Analyzing your photo",
+            style: TextStyle(
+              fontSize: 16.sp,
+              color: const Color(0xFF6B7280), // Perfect Figma grey description
+              fontFamily: 'SF Pro',
+              fontWeight: FontWeight.w400, // Lighter, clean look
+            ),
+          ),
+        ],
+      );
+    }
+
+    if (_currentStep == 3) {
+      return Column(
+        children: [
+          RichText(
+            textAlign: TextAlign.center,
+            text: TextSpan(
+              children: [
+                TextSpan(
+                  text: "Recipes ",
+                  style: TextStyle(
+                    fontSize: 34.sp,
+                    fontWeight: FontWeight.w400,
+                    color: const Color(0xFF1E293B),
+                    fontFamily: 'Larken',
+                    height: 1.1,
+                    letterSpacing: -0.5,
+                  ),
+                ),
+                TextSpan(
+                  text: "ready!",
+                  style: TextStyle(
+                    fontSize: 34.sp,
+                    fontWeight: FontWeight.w400,
+                    color: const Color(0xFFC83A2D),
+                    fontFamily: 'Larken',
+                    height: 1.1,
+                    letterSpacing: -0.5,
+                  ),
+                ),
+              ],
+            ),
+          ),
           SizedBox(height: 12.h),
           Text(
-            "We're identifying what you have.",
+            "Your personalized meals are ready to cook.",
             style: TextStyle(
               fontSize: 16.sp,
               color: const Color(0xFF4B5563),
@@ -348,7 +835,7 @@ class _ScanAnimationOverlayState extends State<ScanAnimationOverlay>
       );
     }
 
-    if (_currentStep == 2) {
+    if (_currentStep == 1 || _currentStep == 2) {
       return Column(
         children: [
           RichText(
@@ -356,11 +843,11 @@ class _ScanAnimationOverlayState extends State<ScanAnimationOverlay>
             text: TextSpan(
               children: [
                 TextSpan(
-                  text: "Building\n",
+                  text: "Creating\n",
                   style: TextStyle(
                     fontSize: 34.sp,
                     fontWeight: FontWeight.w400,
-                    color: const Color(0xFFC83A2D),
+                    color: const Color(0xFF1E293B),
                     fontFamily: 'Larken',
                     height: 1.1,
                     letterSpacing: -0.5,
@@ -371,7 +858,7 @@ class _ScanAnimationOverlayState extends State<ScanAnimationOverlay>
                   style: TextStyle(
                     fontSize: 34.sp,
                     fontWeight: FontWeight.w400,
-                    color: const Color(0xFF1E293B),
+                    color: const Color(0xFFC83A2D),
                     fontFamily: 'Larken',
                     height: 1.1,
                     letterSpacing: -0.5,
@@ -382,7 +869,7 @@ class _ScanAnimationOverlayState extends State<ScanAnimationOverlay>
           ),
           SizedBox(height: 12.h),
           Text(
-            "Balancing taste, time, and nutrition.",
+            "Turning your ingredients into meals you’ll love.",
             style: TextStyle(
               fontSize: 16.sp,
               color: const Color(0xFF4B5563),
@@ -394,383 +881,140 @@ class _ScanAnimationOverlayState extends State<ScanAnimationOverlay>
       );
     }
 
-
-
-    if (_currentStep == 3) {
-      return Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                "Recipes ready!",
-                style: TextStyle(
-                  fontSize: 34.sp,
-                  fontWeight: FontWeight.w600,
-                  color: const Color(0xFF1E293B), // Dark blue like the design
-                  fontFamily: 'Larken',
-                  height: 1.1,
-                  letterSpacing: -0.5,
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: 12.h),
-          Text(
-            "Your personalized recipes are ready to enjoy.",
-            style: TextStyle(
-              fontSize: 16.sp,
-              color: const Color(0xFF6B7280),
-              fontFamily: 'SF Pro',
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      );
-    }
-
-    String titleLine1 = "";
-    String titleLine2 = "";
-    String subtitle = "";
-
-    switch (_currentStep) {
-      case 1:
-        titleLine1 = "Matching\n";
-        titleLine2 = "recipes";
-        subtitle = "Finding meals that fit your taste.";
-        break;
-    }
-
-    return Column(
-      children: [
-        RichText(
-          textAlign: TextAlign.center,
-          text: TextSpan(
-            children: [
-              TextSpan(
-                text: titleLine1,
-                style: TextStyle(
-                  fontSize: 34.sp,
-                  fontWeight: FontWeight.w400,
-                  color: const Color(0xFF1E293B),
-                  fontFamily: 'Larken',
-                  height: 1.1,
-                  letterSpacing: -0.5,
-                ),
-              ),
-              TextSpan(
-                text: titleLine2,
-                style: TextStyle(
-                  fontSize: 34.sp,
-                  fontWeight: FontWeight.w400,
-                  color: const Color(0xFFC83A2D), // Red color
-                  fontFamily: 'Larken',
-                  height: 1.1,
-                  letterSpacing: -0.5,
-                ),
-              ),
-            ],
-          ),
-        ),
-        SizedBox(height: 12.h),
-        Text(
-          subtitle,
-          style: TextStyle(
-            fontSize: 16.sp,
-            color: const Color(0xFF4B5563),
-            fontFamily: 'SF Pro',
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-      ],
-    );
+    return const SizedBox();
   }
 
   Widget _buildIngredientsChoreography(
     BoxConstraints constraints,
     double potTopLine,
   ) {
-    if (widget.detectedIngredients == null) {
-      if (_currentStep == 0) {
-        return const Center(
-          child: CircularProgressIndicator(color: Color(0xFFC83A2D)),
-        );
-      }
+    if (widget.detectedIngredients == null || _currentStep < 1) {
       return const SizedBox();
     }
 
-    return AnimatedBuilder(
-      animation: Listenable.merge([_gatherController, _fallingController]),
-      builder: (context, child) {
-        final double gatherProgress = Curves.easeInOutCubic.transform(
-          _gatherController.value,
-        );
-        final double gatherOpacity = 1.0 - gatherProgress.clamp(0.0, 1.0);
+    final int totalCount = widget.detectedIngredients!.length;
 
-        List<Widget> gatheringWidgets = [];
+    // Falling Ingredients (Images/Icons)
+    return AnimatedBuilder(
+      animation: _fallingController,
+      builder: (context, child) {
         List<Widget> fallingWidgets = [];
 
-        final int baseCount = widget.detectedIngredients!.length;
-        final int copies = 3;
-        final int totalCount = baseCount * copies;
-        final double delta = 2 * pi / totalCount;
+        if (_fallingController.value > 0.0) {
+          final double fallDuration = 0.5;
 
-        for (int circleIndex = 0; circleIndex < totalCount; circleIndex++) {
-          // Interleave to mix the ingredients evenly around the circle
-          int index = circleIndex % baseCount;
-          final ing = widget.detectedIngredients![index];
+          for (int i = 0; i < totalCount; i++) {
+            final ing = widget.detectedIngredients![i];
+            double startTime = (0.5 / totalCount) * i;
 
-          String formattedName = ing.name;
-          if (formattedName.isNotEmpty) {
-            formattedName =
-                formattedName[0].toUpperCase() +
-                formattedName.substring(1).toLowerCase();
-          }
-
-          // GATHER PHASE POSITIONS (All copies of the same ingredient start from the same list position)
-          final double initialTop = 24.h + index * 76.h;
-          final double initialLeft = 24.w;
-
-          // Target circular positions (for 50.sp size)
-          final double centerX = (constraints.maxWidth / 2) - 25.sp; 
-          final double centerY = 80.h; // Moved down to not touch the text
-          final double radius = 70.w; 
-          
-          final double theta = pi / 2 - circleIndex * delta; 
-
-          double spinProgress = (_fallingController.value / 0.7).clamp(0.0, 1.0);
-          double fallProgress = 0.0;
-          if (_fallingController.value > 0.7) {
-            fallProgress = ((_fallingController.value - 0.7) / 0.3).clamp(0.0, 1.0);
-          }
-
-          final double R = spinProgress * 2 * pi;
-          double currentAngle = theta + R;
-
-          final double targetTop = centerY + radius * sin(currentAngle);
-          final double targetLeft = centerX + radius * cos(currentAngle);
-
-          double currentTop = initialTop + (targetTop - initialTop) * gatherProgress;
-          double currentLeft = initialLeft + (targetLeft - initialLeft) * gatherProgress;
-
-          // Decrease size smoothly from 80.sp (list size) down to 50.sp (circle size)
-          double size = 80.sp - (30.sp * gatherProgress);
-
-          if (fallProgress > 0) {
-            final double releaseTop = targetTop;
-            final double releaseLeft = targetLeft;
-            final double endY = constraints.maxHeight - 60.h; // Lowered so they fall deeper into the pot
-
-            // RACE EFFECT: staggered fall delay based on circleIndex pseudo-randomly
-            double delay = ((circleIndex * 7) % totalCount) / totalCount * 0.4;
-            double duration = 0.6; // Quick fall
-            
-            double itemFallProgress = 0.0;
-            if (fallProgress > delay) {
-              itemFallProgress = ((fallProgress - delay) / duration).clamp(0.0, 1.0);
+            double progress = 0.0;
+            if (_fallingController.value >= startTime) {
+              progress = ((_fallingController.value - startTime) / fallDuration)
+                  .clamp(0.0, 1.0);
             }
 
-            final double curvedFall = Curves.easeInCubic.transform(itemFallProgress);
-            double itemCurrentTop = releaseTop + (endY - releaseTop) * curvedFall;
-            // Converge slightly to center
-            double itemCurrentLeft = releaseLeft + (centerX - releaseLeft) * curvedFall * 0.4;
+            if (progress == 0.0 || progress == 1.0) continue;
 
-            double opacity = 1.0;
-            if (itemFallProgress > 0.9) {
-              opacity = (1.0 - itemFallProgress) / 0.1;
-            }
+            List<double> horizontalPositions = [
+              0.38,
+              0.62,
+              0.45,
+              0.55,
+              0.5,
+              0.4,
+              0.6,
+            ];
+            double hFactor =
+                horizontalPositions[i % horizontalPositions.length];
+            double leftPos = constraints.maxWidth * hFactor - 32.5.w;
+
+            // Start from high above the screen top
+            double topStart = -300.h;
+            double topEnd = potTopLine + 60.h;
+
+            double currentTop =
+                topStart +
+                (topEnd - topStart) * Curves.easeIn.transform(progress);
+            double rotation = progress * pi * 2 * (i % 2 == 0 ? 1 : -1);
+            final double size = 65.sp;
+            final double iconSize = 48.sp;
 
             fallingWidgets.add(
               Positioned(
-                top: itemCurrentTop,
-                left: itemCurrentLeft,
-                child: Opacity(
-                  opacity: opacity,
+                top: currentTop,
+                left: leftPos,
+                child: Transform.rotate(
+                  angle: rotation,
                   child: (ing.image != null && ing.image!.isNotEmpty)
                       ? Image.asset(
                           ing.image!,
-                          width: 50.sp, // They are already 50.sp on the circle
-                          height: 50.sp,
+                          width: size,
+                          height: size,
                           fit: BoxFit.contain,
                           errorBuilder: (_, __, ___) => Text(
                             ing.icon ?? "🥘",
-                            style: TextStyle(fontSize: 25.sp),
+                            style: TextStyle(fontSize: iconSize),
                           ),
                         )
                       : Text(
                           ing.icon ?? "🥘",
-                          style: TextStyle(fontSize: 25.sp),
+                          style: TextStyle(fontSize: iconSize),
                         ),
                 ),
               ),
             );
-          } else {
-            // Gathering phase
-            if (gatherProgress == 1.0) {
-              gatheringWidgets.add(
-                Positioned(
-                  top: currentTop,
-                  left: currentLeft,
-                  child: (ing.image != null && ing.image!.isNotEmpty)
-                      ? Image.asset(
-                          ing.image!,
-                          width: 50.sp,
-                          height: 50.sp,
-                          fit: BoxFit.contain,
-                          errorBuilder: (_, __, ___) => Text(
-                            ing.icon ?? "🥘",
-                            style: TextStyle(fontSize: 25.sp),
-                          ),
-                        )
-                      : Text(
-                          ing.icon ?? "🥘",
-                          style: TextStyle(fontSize: 25.sp),
-                        ),
-                ),
-              );
-            } else {
-              // During transition from list to circle
-              // Draw the text container ONLY ONCE per ingredient (using circleIndex < baseCount)
-              if (circleIndex < baseCount) {
-                gatheringWidgets.add(
-                  Positioned(
-                    top: currentTop,
-                    left: currentLeft,
-                    right: gatherProgress > 0 ? null : 24.w,
-                    child: Container(
-                      margin: EdgeInsets.only(bottom: 16.h),
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 16.w,
-                        vertical: 10.h,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(gatherOpacity),
-                        borderRadius: BorderRadius.circular(24.r),
-                        border: Border.all(
-                          color: Colors.grey.shade100.withOpacity(gatherOpacity),
-                          width: 1,
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          Transform.scale(
-                            scale: 1.0 + ((size / 40.w) - 1.0) * gatherProgress,
-                            child: (ing.image != null && ing.image!.isNotEmpty)
-                                ? Image.asset(
-                                    ing.image!,
-                                    width: 40.w,
-                                    height: 40.h,
-                                    fit: BoxFit.contain,
-                                    errorBuilder: (_, __, ___) => Text(
-                                      ing.icon ?? "🥘",
-                                      style: TextStyle(fontSize: 28.sp),
-                                    ),
-                                  )
-                                : Text(
-                                    ing.icon ?? "🥘",
-                                    style: TextStyle(fontSize: 28.sp),
-                                  ),
-                          ),
-                          if (gatherProgress == 0) ...[
-                            SizedBox(width: 10.w),
-                            Expanded(
-                              child: Text(
-                                formattedName,
-                                style: TextStyle(
-                                  fontSize: 16.sp,
-                                  fontWeight: FontWeight.w600,
-                                  color: const Color(
-                                    0xFF1E293B,
-                                  ).withOpacity(gatherOpacity),
-                                  fontFamily: 'SF Pro',
-                                ),
-                              ),
-                            ),
-                            Container(
-                              padding: EdgeInsets.all(4.r),
-                              decoration: BoxDecoration(
-                                color: const Color(
-                                  0xFFC83A2D,
-                                ).withOpacity(gatherOpacity),
-                                shape: BoxShape.circle,
-                              ),
-                              child: Icon(
-                                Icons.check,
-                                color: Colors.white.withOpacity(gatherOpacity),
-                                size: 14.sp,
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
-                  ),
-                );
-              } else {
-                // For copies (circleIndex >= baseCount), just fly the icon!
-                // It will fade in as it leaves the list
-                // To avoid it snapping to the top left of the text container, we offset it roughly to where the image is
-                gatheringWidgets.add(
-                  Positioned(
-                    top: currentTop + 10.h * (1.0 - gatherProgress),
-                    left: currentLeft + 16.w * (1.0 - gatherProgress),
-                    child: Opacity(
-                      opacity: gatherProgress, // Fades in!
-                      child: (ing.image != null && ing.image!.isNotEmpty)
-                          ? Image.asset(
-                              ing.image!,
-                              width: size,
-                              height: size,
-                              fit: BoxFit.contain,
-                              errorBuilder: (_, __, ___) => Text(
-                                ing.icon ?? "🥘",
-                                style: TextStyle(fontSize: size / 2),
-                              ),
-                            )
-                          : Text(
-                              ing.icon ?? "🥘",
-                              style: TextStyle(fontSize: size / 2),
-                            ),
-                    ),
-                  ),
-                );
-              }
-            }
           }
         }
 
-        return Stack(
-          clipBehavior: Clip.none,
-          children: [
-            Stack(clipBehavior: Clip.none, children: gatheringWidgets),
-            ClipPath(
-              clipper: PotClipper(potTopLine),
-              child: Stack(clipBehavior: Clip.none, children: fallingWidgets),
-            ),
-          ],
+        return ClipPath(
+          clipper: PotClipper(potTopLine),
+          child: Stack(clipBehavior: Clip.none, children: fallingWidgets),
         );
       },
     );
   }
 
   Widget _buildPotAndContent(BoxConstraints constraints) {
-    // Calculate the front rim position based on current step
-    final double potTopLine = constraints.maxHeight - 115.h; // Pot is lowered for all visible steps now
+    final double disappearanceLineHeight = 330.h;
+
+    final double potTopLine = _currentStep >= 1 && _currentStep < 3
+        ? constraints.maxHeight - disappearanceLineHeight
+        : constraints.maxHeight - 115.h;
 
     Widget potStack = Stack(
       clipBehavior: Clip.none,
       children: [
-        // Glow Rays from pot
-
-        // (Fire and Steam removed per boss request)
-
-        // 3. The Pot Image (Always at bottom)
+        AnimatedPositioned(
+          duration: const Duration(milliseconds: 800),
+          curve: Curves.easeInOut,
+          bottom: _currentStep == 2 ? 175.h : -400.h,
+          left: 0,
+          right: 0,
+          child: AnimatedOpacity(
+            duration: const Duration(milliseconds: 1000),
+            opacity: (_currentStep == 2 && _isShaking) ? 0.6 : 0.0,
+            child: Container(
+              height: 200.h,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFFC83A2D).withOpacity(0.4),
+                    blurRadius: 100,
+                    spreadRadius: 20,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        // 3. The Pot Image
         AnimatedPositioned(
           duration: const Duration(milliseconds: 800),
           curve: Curves.easeInOutBack,
           bottom: _currentStep == 0
               ? -400.h
-              : -30.h, // Lowered in all visible steps
+              : (_currentStep >= 1 && _currentStep < 3 ? 185.h : -30.h),
           left: 0,
           right: 0,
           child: AnimatedSwitcher(
@@ -778,32 +1022,21 @@ class _ScanAnimationOverlayState extends State<ScanAnimationOverlay>
             transitionBuilder: (child, animation) {
               return FadeTransition(opacity: animation, child: child);
             },
-            child: Image.asset(
-              _currentStep <= 1 
-                  ? 'assets/images/pot3.png' 
-                  : (_currentStep == 2 ? 'assets/images/pot2.png' : 'assets/images/pot1.png'),
-              key: ValueKey(_currentStep),
-              height: 300.h,
-              fit: BoxFit.contain,
-              errorBuilder: (_, __, ___) => Container(
-                key: ValueKey('error_$_currentStep'),
-                height: 300.h,
-                margin: EdgeInsets.symmetric(horizontal: 20.w),
-                decoration: BoxDecoration(
-                  color: Colors.amber.shade100,
-                  borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(80.r),
-                    bottomRight: Radius.circular(80.r),
-                  ),
-                ),
-                child: Center(
-                  child: Text(
-                    "pot${_currentStep <= 1 ? 1 : (_currentStep == 2 ? 2 : 3)}.png",
-                    style: TextStyle(color: Colors.black54),
-                  ),
-                ),
-              ),
-            ),
+            child: _currentStep <= 1
+                ? Image.asset(
+                    'assets/images/pot2_b.png',
+                    key: const ValueKey(1),
+                    width: 300.h, // Using width to enforce proportional scale
+                    fit: BoxFit.contain,
+                  )
+                : (_currentStep == 2
+                      ? _buildAnimatedPot2()
+                      : Image.asset(
+                          'assets/images/pot1.png',
+                          key: const ValueKey(3),
+                          width: 300.h,
+                          fit: BoxFit.contain,
+                        )),
           ),
         ),
 
@@ -812,27 +1045,13 @@ class _ScanAnimationOverlayState extends State<ScanAnimationOverlay>
           child: Stack(
             clipBehavior: Clip.none,
             children: [
-              if (_currentStep <= 1)
+              if (_currentStep == 1)
                 _buildIngredientsChoreography(constraints, potTopLine),
-              ClipPath(
-                clipper: PotClipper(potTopLine),
-                child: Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    if (_currentStep == 3) _buildRisingRecipes(constraints),
-                  ],
-                ),
-              ),
             ],
           ),
         ),
 
-        // Debug Line: Limit of falling ingredients (Curved to match pot rim)
-        Positioned.fill(
-          child: CustomPaint(
-            painter: PotRimPainter(potTopLine),
-          ),
-        ),
+        Positioned.fill(child: CustomPaint(painter: PotRimPainter(potTopLine))),
       ],
     );
 
@@ -843,8 +1062,7 @@ class _ScanAnimationOverlayState extends State<ScanAnimationOverlay>
           animation: _shakeController,
           builder: (context, child) {
             double offsetX = 0;
-            // Slight side-to-side vibration when check 3 is reached
-            if (_currentStep == 2 && _checkedCount >= 3) {
+            if (_currentStep == 2 && _isShaking) {
               offsetX = sin(_shakeController.value * pi * 2) * 2.w;
             }
             return Transform.translate(
@@ -854,299 +1072,148 @@ class _ScanAnimationOverlayState extends State<ScanAnimationOverlay>
           },
           child: potStack,
         ),
-
-        // Checklist for step 2 (Above the pot, does not shake)
-        if (_currentStep == 2)
-          Positioned(
-            top: 30.h,
-            left: 20.w,
-            right: 20.w,
+        AnimatedPositioned(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOutQuint,
+          bottom: _currentStep >= 1 && _currentStep < 3 ? 20.h : -400.h,
+          left: 0,
+          right: 0,
+          child: AnimatedOpacity(
+            duration: const Duration(milliseconds: 300),
+            opacity: _showCreatingContent ? 1.0 : 0.0,
             child: _buildChecklist(),
           ),
+        ),
       ],
     );
   }
 
   Widget _buildChecklist() {
-    return Padding(
-      padding: EdgeInsets.symmetric(
-        horizontal: 60.w,
-      ), // Center the checklist nicely
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: List.generate(_checklist.length, (index) {
-          bool isChecked = index < _checkedCount;
-          bool isCurrent = index == _checkedCount;
-          bool isLast = index == _checklist.length - 1;
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal: 20.w),
+      padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 24.h),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24.r),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Stack(
+        children: [
+          // Dashed connector line positioned in the center of the indicators (12.w)
+          Positioned(
+            left: 12.w,
+            top: 0,
+            bottom: 0,
+            child: CustomPaint(
+              size: Size(1.5, double.infinity),
+              painter: DashedLinePainter(
+                count: _checklist.length,
+                checkedCount: _checkedCount,
+              ),
+            ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            mainAxisSize: MainAxisSize.min,
+            children: List.generate(_checklist.length, (index) {
+              bool isChecked = index < _checkedCount;
+              bool isCurrent = index == _checkedCount;
+              bool isLast = index == _checklist.length - 1;
 
-          Widget leading;
-          if (isChecked) {
-            leading = Container(
-              width: 24.w,
-              height: 24.w,
-              decoration: const BoxDecoration(
-                color: Color(0xFFC83A2D),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(Icons.check, color: Colors.white, size: 16.sp),
-            );
-          } else if (isCurrent) {
-            leading = SizedBox(
-              width: 24.w,
-              height: 24.w,
-              child: CircularProgressIndicator(
-                strokeWidth: 2.5,
-                valueColor: const AlwaysStoppedAnimation<Color>(
-                  Color(0xFFC83A2D),
-                ),
-                backgroundColor: const Color(0xFFE5E7EB),
-              ),
-            );
-          } else {
-            leading = Container(
-              width: 24.w,
-              height: 24.w,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(color: const Color(0xFF9CA3AF), width: 1.5),
-              ),
-            );
-          }
-
-          return IntrinsicHeight(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Left side: Circle and Line
-                SizedBox(
+              Widget leading;
+              if (isChecked) {
+                leading = Container(
                   width: 24.w,
-                  child: Column(
-                    children: [
-                      leading,
-                      // Line connecting to next item
-                      if (!isLast)
-                        Expanded(
-                          child: Padding(
-                            padding: EdgeInsets.symmetric(vertical: 6.h),
-                            child: Container(
-                              width: 2.w,
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFE5E7EB),
-                                borderRadius: BorderRadius.circular(1.r),
-                              ),
-                            ),
-                          ),
-                        ),
-                    ],
+                  height: 24.w,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFC83A2D),
+                    shape: BoxShape.circle,
                   ),
-                ),
-                SizedBox(width: 16.w),
-                // Right side: Text
-                Expanded(
-                  child: Padding(
-                    padding: EdgeInsets.only(
-                      top: 2.h,
-                      bottom: !isLast ? 24.h : 0,
+                  child: Icon(Icons.check, color: Colors.white, size: 16.sp),
+                );
+              } else if (isCurrent) {
+                leading = Container(
+                  width: 24.w,
+                  height: 24.w,
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                  ),
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.5,
+                    valueColor: const AlwaysStoppedAnimation<Color>(
+                      Color(0xFFC83A2D),
                     ),
-                    child: Text(
-                      _checklist[index],
-                      style: TextStyle(
-                        fontSize: 16.sp,
-                        fontFamily: 'SF Pro',
-                        fontWeight: isChecked || isCurrent
-                            ? FontWeight.w500
-                            : FontWeight.w400,
-                        color: isChecked || isCurrent
-                            ? const Color(0xFF1E293B)
-                            : const Color(0xFF6B7280),
+                    backgroundColor: const Color(0xFFE5E7EB),
+                  ),
+                );
+              } else {
+                leading = Container(
+                  width: 24.w,
+                  height: 24.w,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: const Color(0xFF9CA3AF),
+                      width: 1.5,
+                    ),
+                  ),
+                );
+              }
+
+              return Padding(
+                padding: EdgeInsets.only(bottom: isLast ? 0 : 16.h),
+                child: Row(
+                  children: [
+                    leading,
+                    SizedBox(width: 16.w),
+                    Expanded(
+                      child: Text(
+                        _checklist[index],
+                        style: TextStyle(
+                          fontSize: 16.sp,
+                          fontFamily: 'SF Pro',
+                          fontWeight: isChecked || isCurrent
+                              ? FontWeight.w500
+                              : FontWeight.w400,
+                          color: isChecked || isCurrent
+                              ? const Color(0xFF1E293B)
+                              : const Color(0xFF6B7280),
+                        ),
                       ),
                     ),
-                  ),
+                    if (isChecked)
+                      Text(
+                        "Done",
+                        style: TextStyle(
+                          fontSize: 14.sp,
+                          fontFamily: 'SF Pro',
+                          fontWeight: FontWeight.w500,
+                          color: const Color(0xFF10B981),
+                        ),
+                      ),
+                  ],
                 ),
-              ],
-            ),
-          );
-        }),
+              );
+            }),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildRisingRecipes(BoxConstraints constraints) {
-    if (widget.generatedRecipes == null || widget.generatedRecipes!.isEmpty)
-      return const SizedBox();
-
-    return AnimatedBuilder(
-      animation: _recipesController,
-      builder: (context, child) {
-        final int count = widget.generatedRecipes!.length.clamp(0, 3);
-        List<Widget> cards = List.generate(count, (i) {
-          final recipe = widget.generatedRecipes![i];
-          final String imgPath =
-              (recipe.image != null && recipe.image!.isNotEmpty)
-              ? recipe.image!
-              : 'assets/images/plat${i + 1}.png';
-          final bool isNetworkImage = imgPath.startsWith('http');
-
-          final double startY = constraints.maxHeight - 150.h;
-
-          // Layout based on count
-          double endY = 100.h;
-          double angle = 0.0;
-          double leftOffset = constraints.maxWidth / 2 - 60.w;
-
-          if (count == 1) {
-            // Just one card in center
-            endY = 80.h;
-            angle = 0.0;
-          } else if (count == 2) {
-            // Two cards side by side
-            endY = 100.h;
-            if (i == 0) {
-              angle = 0.0;
-              leftOffset -= 65.w;
-            } else {
-              angle = 0.0;
-              leftOffset += 65.w;
-            }
-          } else {
-            // Three cards arc
-            if (i == 1) {
-              endY = 30.h; // Center highest (monté encore plus)
-              leftOffset = constraints.maxWidth / 2 - 60.w; // Exactly center
-              angle = 0.0;
-            } else if (i == 0) {
-              endY = 130.h; // Left lower (descendu encore plus)
-              leftOffset = constraints.maxWidth / 2 - 140.w; // Adjusted to overlap nicely
-              angle = 0.0;
-            } else if (i == 2) {
-              endY = 130.h; // Right lower (descendu encore plus)
-              leftOffset = constraints.maxWidth / 2 + 20.w; // Adjusted to overlap nicely
-              angle = 0.0;
-            }
-          }
-
-          double baseScale = 1.0;
-
-          // Stagger the animation so they pop out rapidly one by one
-          final double delay = i * 0.15;
-          double localProgress = (_recipesController.value - delay) / 0.7;
-          localProgress = localProgress.clamp(0.0, 1.0);
-
-          final double progress = Curves.easeOutBack.transform(localProgress);
-          final double scale =
-              (0.5 + (0.5 * Curves.easeOutCubic.transform(localProgress))) * baseScale;
-          final double opacity = Curves.easeIn.transform(localProgress);
-
-          final double currentY = startY + (endY - startY) * progress;
-
-          return Positioned(
-            top: currentY,
-            left: leftOffset,
-            child: Opacity(
-              opacity: opacity,
-              child: Transform.scale(
-                scale: scale,
-                child: Transform.rotate(
-                  angle: angle * progress,
-                  child: Container(
-                    width: 110.w,
-                    height: 110.w, // Make it a perfect circle
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle, // Circular cards
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black12,
-                          blurRadius: 10,
-                          offset: const Offset(0, 5),
-                        ),
-                      ],
-                    ),
-                    child: ClipOval(
-                      child: isNetworkImage
-                          ? Image.network(
-                              imgPath,
-                              fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) =>
-                                  _buildFallbackIcon(),
-                            )
-                          : Image.asset(
-                              imgPath,
-                              fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) =>
-                                  _buildFallbackIcon(),
-                            ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          );
-        });
-
-        // Reorder so that the center one (index 1) is rendered LAST (on top)
-        if (cards.length == 3) {
-          Widget centerCard = cards[1];
-          cards.removeAt(1);
-          cards.add(centerCard);
-        } else if (cards.length == 2) {
-          // Both are equal, rendering order is fine (0 then 1)
-        }
-
-        return Stack(children: cards);
-      },
-    );
-  }
-
-  Widget _buildFallbackIcon() {
-    return Center(
-      child: Icon(Icons.fastfood, color: Colors.grey, size: 40.sp),
-    );
-  }
-
   Widget _buildFooterIndicator() {
-    if (_currentStep == 3) {
-      return Column(
-        children: [
-          Text(
-            "${widget.generatedRecipes?.length ?? 3} recipes ready",
-            style: TextStyle(
-              color: const Color(0xFFC83A2D),
-              fontSize: 16.sp,
-              fontWeight: FontWeight.w600,
-              fontFamily: 'SF Pro',
-            ),
-          ),
-          SizedBox(height: 16.h),
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 24.w),
-            child: ElevatedButton(
-          onPressed: widget.onAnimationComplete,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFFC83A2D), // Cooked Red
-            minimumSize: Size(double.infinity, 56.h),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(28.r),
-            ),
-          ),
-          child: Text(
-            "View Recipes",
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 18.sp,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-            ),
-          ),
-        ],
-      );
-    }
-
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: List.generate(3, (index) {
-        int activeIndex = _currentStep == 0 ? 0 : (_currentStep == 1 ? 1 : 2);
+        int activeIndex = _currentStep == 0 ? 0 : 1;
         bool isActive = index == activeIndex;
         return AnimatedContainer(
           duration: const Duration(milliseconds: 300),
@@ -1161,6 +1228,48 @@ class _ScanAnimationOverlayState extends State<ScanAnimationOverlay>
       }),
     );
   }
+
+  Widget _buildAnimatedPot2() {
+    final double lidFinalRestingPosition = -25.h;
+
+    return Stack(
+      key: const ValueKey(2),
+      clipBehavior: Clip.none,
+      alignment: Alignment.center,
+      children: [
+        Image.asset(
+          'assets/images/pot2_b.png',
+          width: 300.h,
+          fit: BoxFit.contain,
+        ),
+        TweenAnimationBuilder<double>(
+          tween: Tween(begin: 0.0, end: 1.0),
+          duration: const Duration(
+            milliseconds: 300,
+          ), // Snappy bouncy closed lid drop
+          curve: Curves.bounceOut, // Realistic bouncy drop
+          builder: (context, value, child) {
+            return Transform.translate(
+              // Drops from high up down to the lidFinalRestingPosition
+              offset: Offset(
+                0,
+                lidFinalRestingPosition - 150.h * (1.0 - value),
+              ),
+              child: Transform.rotate(
+                angle: -0.3 * (1.0 - value), // Slight tilt while falling
+                child: child,
+              ),
+            );
+          },
+          child: Image.asset(
+            'assets/images/pot2_l.png',
+            width: 300.h,
+            fit: BoxFit.contain,
+          ),
+        ),
+      ],
+    );
+  }
 }
 
 class PotRimPainter extends CustomPainter {
@@ -1172,7 +1281,8 @@ class PotRimPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final double depth = 20.0;
     final paint = Paint()
-      ..color = Colors.transparent
+      ..color = Colors
+          .transparent // Hidden in production/mockup design presentation
       ..strokeWidth = 3.0
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
@@ -1236,13 +1346,12 @@ class PotClipper extends CustomClipper<Path> {
       oldClipper.clipY != clipY;
 }
 
-
-
 class RaysPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = const Color(0xFFFFE0B2).withOpacity(0.4) // Light warm glow
+      ..color = const Color(0xFFFFE0B2)
+          .withOpacity(0.4) // Light warm glow
       ..style = PaintingStyle.fill
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 20.0);
 
@@ -1254,20 +1363,52 @@ class RaysPainter extends CustomPainter {
       final path = Path();
       // Start from the pot rim area
       path.moveTo(centerX - 20.w + (i * 10.w), bottomY);
-      
+
       // Expand outwards and upwards
       double endX = centerX + (i - 2) * 100.w; // spread from -200 to +200
       double endY = 0; // top of the box
-      
+
       path.lineTo(endX - 30.w, endY);
       path.lineTo(endX + 30.w, endY);
       path.lineTo(centerX + 20.w + (i * 10.w), bottomY);
       path.close();
-      
+
       canvas.drawPath(path, paint);
     }
   }
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+class DashedLinePainter extends CustomPainter {
+  final int count;
+  final int checkedCount;
+
+  DashedLinePainter({required this.count, required this.checkedCount});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = const Color(0xFFC83A2D)
+          .withOpacity(0.3) // Light red dashed line to match design perfectly
+      ..strokeWidth = 1.5
+      ..style = PaintingStyle.stroke;
+
+    final double startY = 12.w; // Center of first circle
+    final double endY = size.height - 12.w; // Center of last circle
+
+    double y = startY;
+    const double dashHeight = 4.0;
+    const double dashSpace = 4.0;
+
+    while (y < endY) {
+      canvas.drawLine(Offset(0, y), Offset(0, y + dashHeight), paint);
+      y += dashHeight + dashSpace;
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant DashedLinePainter oldDelegate) =>
+      oldDelegate.checkedCount != checkedCount || oldDelegate.count != count;
 }
