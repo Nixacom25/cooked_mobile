@@ -24,15 +24,15 @@ class _AllergiesStepState extends State<AllergiesStep> {
   final List<String> _customAllergies = [];
 
   final List<Map<String, dynamic>> _options = [
-    {'title': 'Tree nuts', 'icon': 'nut.svg'},
-    {'title': 'Peanuts', 'icon': 'peanut2.svg'},
-    {'title': 'Shellfish', 'icon': 'shellfish2.svg'},
-    {'title': 'Fish', 'icon': 'fish2.svg'},
-    {'title': 'Eggs', 'icon': 'protein.svg'},
-    {'title': 'Soy', 'icon': 'soy2.svg'},
-    {'title': 'Dairy Milk', 'icon': 'milk.svg'},
-    {'title': 'Wheat/Gluten', 'icon': 'free.svg'},
-    {'title': 'Sesame', 'icon': 'sesame2.svg'},
+    {'title': 'Tree nuts', 'icon': 'nuts.svg'},
+    {'title': 'Peanuts', 'icon': 'peanut1.svg'},
+    {'title': 'Shellfish', 'icon': 'shellfish1.svg'},
+    {'title': 'Fish', 'icon': 'fish1.svg'},
+    {'title': 'Eggs', 'icon': 'eggs1.svg'},
+    {'title': 'Soy', 'icon': 'soy1.svg'},
+    {'title': 'Dairy Milk', 'icon': 'milk1.svg'},
+    {'title': 'Wheat/Gluten', 'icon': 'gluten1.svg'},
+    {'title': 'Sesame', 'icon': 'sesame1.svg'},
     {'title': 'No Allergies', 'icon': 'bloque2.svg'},
   ];
 
@@ -123,7 +123,7 @@ class _AllergiesStepState extends State<AllergiesStep> {
       title: "Do you have any dietary restrictions or allergies?",
       subtitle: "We'll automatically filter recipes for you.",
       useGrid: true,
-      preserveSvgColor: true,
+      preserveSvgColor: false,
       gridItemDirection: Axis.horizontal,
       maxSelections: 20,
       initialSelected: _selectedAllergies.toList(),

@@ -31,16 +31,16 @@ class _ProfileLoadingStepState extends State<ProfileLoadingStep> with TickerProv
   ];
 
   final List<String> _recipeImages = [
-    'assets/images/chinese.png',
     'assets/images/cookbook_dessert.png',
+    'assets/cuisine/chinese.png',
+    'assets/cuisine/mexican.png',
+    'assets/cuisine/japanese.png',
+    'assets/cuisine/west-african.png',
+    'assets/cuisine/caribbean.png',
+    'assets/cuisine/italian.png',
+    'assets/cuisine/indian.png',
+    'assets/cuisine/thai.png',
     'assets/images/caribbean.png',
-    'assets/images/french1.png',
-    'assets/images/higth-proteins.png',
-    'assets/images/greek1.png',
-    'assets/images/indian.png',
-    'assets/images/japanese.png',
-    'assets/images/korean.png',
-    'assets/images/mediterranean.png',
   ];
 
   @override

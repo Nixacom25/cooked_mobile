@@ -144,6 +144,17 @@ class _SelectionOnboardingStepState extends State<SelectionOnboardingStep> with 
     super.dispose();
   }
 
+  @override
+  void didUpdateWidget(covariant SelectionOnboardingStep oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!identical(widget.initialSelected, _selectedIds)) {
+      setState(() {
+        _selectedIds.clear();
+        _selectedIds.addAll(widget.initialSelected);
+      });
+    }
+  }
+
   void _toggleOption(String id) {
     setState(() {
       if (_selectedIds.contains(id)) {
@@ -178,7 +189,7 @@ class _SelectionOnboardingStepState extends State<SelectionOnboardingStep> with 
       }
     });
     if (widget.onSelectionChanged != null) {
-      widget.onSelectionChanged!(_selectedIds);
+      widget.onSelectionChanged!(List<String>.from(_selectedIds));
     }
   }
 
@@ -259,131 +270,131 @@ class _SelectionOnboardingStepState extends State<SelectionOnboardingStep> with 
                               position: _itemSlides[index],
                               child: GestureDetector(
                                 onTap: () => _toggleOption(option.id),
-                                child: Container(
+                                child: SizedBox(
                                   width: itemWidth,
                                   height: widget.gridItemDirection == Axis.vertical ? 100.h : 70.h,
-                                  padding: EdgeInsets.symmetric(
-                                    horizontal: 16.w, 
-                                    vertical: widget.gridItemDirection == Axis.vertical ? 16.h : 12.h
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(20.r),
-                                    border: Border.all(
-                                      color: isSelected ? const Color(0xFFC83A2D) : const Color(0xFFF3F4F6),
-                                      width: 1.5,
-                                    ),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withOpacity(0.04),
-                                        blurRadius: 15,
-                                        offset: const Offset(0, 4),
-                                      )
-                                    ],
-                                  ),
                                   child: Stack(
+                                    clipBehavior: Clip.none,
                                     children: [
-                                      if (widget.gridItemDirection == Axis.vertical)
-                                        Align(
-                                          alignment: Alignment.center,
-                                          child: Column(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              if (option.svgAsset != null)
-                                                SvgPicture.asset(
-                                                  option.svgAsset!, 
-                                                  height: 28.h, 
-                                                  width: 28.w,
-                                                  colorFilter: widget.preserveSvgColor ? null : ColorFilter.mode(
-                                                    isSelected ? const Color(0xFFC83A2D) : const Color(0xFF9CA3AF),
-                                                    BlendMode.srcIn,
-                                                  ),
-                                                )
-                                              else if (option.icon != null)
-                                                Icon(
-                                                  option.icon,
-                                                  color: isSelected ? const Color(0xFFC83A2D) : const Color(0xFF9CA3AF),
-                                                  size: 28.sp,
-                                                ),
-                                              SizedBox(height: 12.h),
-                                              Text(
-                                                option.label,
-                                                textAlign: TextAlign.center,
-                                                style: TextStyle(
-                                                  fontSize: 14.sp,
-                                                  fontWeight: FontWeight.w500,
-                                                  color: isSelected ? const Color(0xFFC83A2D) : const Color(0xFF111827),
-                                                  fontFamily: 'SF Pro',
-                                                  height: 1.2,
-                                                ),
-                                              ),
-                                            ],
+                                      Container(
+                                        width: itemWidth,
+                                        height: widget.gridItemDirection == Axis.vertical ? 100.h : 70.h,
+                                        padding: EdgeInsets.symmetric(
+                                          horizontal: 16.w, 
+                                          vertical: widget.gridItemDirection == Axis.vertical ? 16.h : 12.h
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white,
+                                          borderRadius: BorderRadius.circular(20.r),
+                                          border: Border.all(
+                                            color: isSelected ? const Color(0xFFC83A2D) : const Color(0xFFF3F4F6),
+                                            width: 1.5,
                                           ),
-                                        )
-                                      else
-                                        Align(
-                                          alignment: Alignment.centerLeft,
-                                          child: Row(
-                                            mainAxisAlignment: MainAxisAlignment.start,
-                                            crossAxisAlignment: CrossAxisAlignment.center,
-                                            children: [
-                                              if (option.svgAsset != null)
-                                                SvgPicture.asset(
-                                                  option.svgAsset!, 
-                                                  height: 24.h, 
-                                                  width: 24.w,
-                                                  colorFilter: widget.preserveSvgColor ? null : ColorFilter.mode(
-                                                    isSelected ? const Color(0xFFC83A2D) : const Color(0xFF9CA3AF),
-                                                    BlendMode.srcIn,
-                                                  ),
-                                                )
-                                              else if (option.icon != null)
-                                                Icon(
-                                                  option.icon,
-                                                  color: isSelected ? const Color(0xFFC83A2D) : const Color(0xFF9CA3AF),
-                                                  size: 24.sp,
-                                                ),
-                                              if (option.svgAsset != null || option.icon != null)
-                                                SizedBox(width: 12.w),
-                                              Expanded(
-                                                child: Text(
-                                                  option.label,
-                                                  textAlign: TextAlign.start,
-                                                  style: TextStyle(
-                                                    fontSize: 14.sp,
-                                                  fontWeight: FontWeight.w500,
-                                                  color: isSelected ? const Color(0xFFC83A2D) : const Color(0xFF111827),
-                                                  fontFamily: 'SF Pro',
-                                                  height: 1.2,
-                                                ),
-                                              ),
-                                            ),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: Colors.black.withOpacity(0.04),
+                                              blurRadius: 15,
+                                              offset: const Offset(0, 4),
+                                            )
                                           ],
                                         ),
-                                      ),
-                                      if (widget.gridItemDirection == Axis.vertical || isSelected)
-                                        Positioned(
-                                          top: 0,
-                                          right: 0,
-                                          child: isSelected
-                                              ? Icon(
-                                                  Icons.check_circle,
-                                                  color: const Color(0xFFC83A2D),
-                                                  size: 20.sp,
-                                                )
-                                              : (widget.gridItemDirection == Axis.vertical
-                                                  ? Container(
-                                                      width: 20.sp,
-                                                      height: 20.sp,
-                                                      decoration: BoxDecoration(
-                                                        shape: BoxShape.circle,
-                                                        border: Border.all(
-                                                          color: const Color(0xFFF3F4F6),
-                                                          width: 1.5,
-                                                        ),
+                                        child: widget.gridItemDirection == Axis.vertical
+                                            ? Column(
+                                                mainAxisAlignment: MainAxisAlignment.center,
+                                                children: [
+                                                  if (option.svgAsset != null)
+                                                    SvgPicture.asset(
+                                                      option.svgAsset!, 
+                                                      height: 28.h, 
+                                                      width: 28.w,
+                                                      colorFilter: widget.preserveSvgColor ? null : ColorFilter.mode(
+                                                        isSelected ? const Color(0xFFC83A2D) : const Color(0xFF9CA3AF),
+                                                        BlendMode.srcIn,
                                                       ),
                                                     )
-                                                  : const SizedBox.shrink()),
+                                                  else if (option.icon != null)
+                                                    Icon(
+                                                      option.icon,
+                                                      color: isSelected ? const Color(0xFFC83A2D) : const Color(0xFF9CA3AF),
+                                                      size: 28.sp,
+                                                    ),
+                                                  SizedBox(height: 12.h),
+                                                  Text(
+                                                    option.label,
+                                                    textAlign: TextAlign.center,
+                                                    style: TextStyle(
+                                                      fontSize: 14.sp,
+                                                      fontWeight: FontWeight.w500,
+                                                      color: isSelected ? const Color(0xFFC83A2D) : const Color(0xFF111827),
+                                                      fontFamily: 'SF Pro',
+                                                      height: 1.2,
+                                                    ),
+                                                  ),
+                                                ],
+                                              )
+                                            : Row(
+                                                mainAxisAlignment: MainAxisAlignment.start,
+                                                crossAxisAlignment: CrossAxisAlignment.center,
+                                                children: [
+                                                  if (option.svgAsset != null)
+                                                    SvgPicture.asset(
+                                                      option.svgAsset!, 
+                                                      height: 24.h, 
+                                                      width: 24.w,
+                                                      colorFilter: widget.preserveSvgColor ? null : ColorFilter.mode(
+                                                        isSelected ? const Color(0xFFC83A2D) : const Color(0xFF9CA3AF),
+                                                        BlendMode.srcIn,
+                                                      ),
+                                                    )
+                                                  else if (option.icon != null)
+                                                    Icon(
+                                                      option.icon,
+                                                      color: isSelected ? const Color(0xFFC83A2D) : const Color(0xFF9CA3AF),
+                                                      size: 24.sp,
+                                                    ),
+                                                  if (option.svgAsset != null || option.icon != null)
+                                                    SizedBox(width: 12.w),
+                                                  Expanded(
+                                                    child: Text(
+                                                      option.label,
+                                                      textAlign: TextAlign.start,
+                                                      style: TextStyle(
+                                                        fontSize: 14.sp,
+                                                        fontWeight: FontWeight.w500,
+                                                        color: isSelected ? const Color(0xFFC83A2D) : const Color(0xFF111827),
+                                                        fontFamily: 'SF Pro',
+                                                        height: 1.2,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                      ),
+                                      if (isSelected && option.id != 'No Allergies')
+                                        Positioned(
+                                          top: 8.h,
+                                          right: 8.w,
+                                          child: Icon(
+                                            Icons.check_circle,
+                                            color: const Color(0xFFC83A2D),
+                                            size: 20.sp,
+                                          ),
+                                        )
+                                      else if (widget.gridItemDirection == Axis.vertical && option.id != 'No Allergies')
+                                        Positioned(
+                                          top: 8.h,
+                                          right: 8.w,
+                                          child: Container(
+                                            width: 20.sp,
+                                            height: 20.sp,
+                                            decoration: BoxDecoration(
+                                              shape: BoxShape.circle,
+                                              border: Border.all(
+                                                color: const Color(0xFFF3F4F6),
+                                                width: 1.5,
+                                              ),
+                                            ),
+                                          ),
                                         ),
                                     ],
                                   ),
@@ -458,11 +469,13 @@ class _SelectionOnboardingStepState extends State<SelectionOnboardingStep> with 
                                         ),
                                       ),
                                       if (isSelected)
-                                        Icon(
-                                          Icons.check_circle,
-                                          color: const Color(0xFFC83A2D),
-                                          size: 24.sp,
-                                        )
+                                        (option.id == 'No Allergies'
+                                            ? SizedBox(width: 24.sp, height: 24.sp)
+                                            : Icon(
+                                                Icons.check_circle,
+                                                color: const Color(0xFFC83A2D),
+                                                size: 24.sp,
+                                              ))
                                       else
                                         Container(
                                           width: 24.sp,

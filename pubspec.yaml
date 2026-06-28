@@ -1,7 +1,7 @@
 name: cooked
 description: "A new Flutter project."
 publish_to: 'none' 
-version: 1.0.1+44
+version: 1.0.1+45
 
 environment:
   sdk: ^3.8.1
@@ -47,6 +47,7 @@ dependencies:
   path_provider: ^2.1.5
   hive: ^2.2.3
   hive_flutter: ^1.1.0
+  in_app_review: ^2.0.12
 
 dev_dependencies:
   flutter_test:

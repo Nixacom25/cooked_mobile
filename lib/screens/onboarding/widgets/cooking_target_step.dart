@@ -22,23 +22,23 @@ class CookingTargetStep extends StatefulWidget {
 
 class _CookingTargetStepState extends State<CookingTargetStep> {
   final List<Map<String, String>> _options = [
-    {'title': 'Just me', 'subtitle': '1 person', 'icon': 'people1.svg'},
+    {'title': 'Just me', 'subtitle': '1 person', 'icon': 'peoples1.svg'},
     {
       'title': 'Two people',
       'subtitle': 'Couple or pair',
-      'icon': 'people2.svg',
+      'icon': 'peoples2.svg',
     },
-    {'title': '3–4 people', 'subtitle': 'Small family', 'icon': 'people3.svg'},
-    {'title': '5–6 people', 'subtitle': 'Larger family', 'icon': 'people5.svg'},
+    {'title': '3–4 people', 'subtitle': 'Small family', 'icon': 'peoples3.svg'},
+    {'title': '5–6 people', 'subtitle': 'Larger family', 'icon': 'peoples4.svg'},
     {
       'title': '7+ people',
       'subtitle': 'Large family or group',
-      'icon': 'people4.svg',
+      'icon': 'peoples5.svg',
     },
     {
       'title': 'It varies',
       'subtitle': "I'll adjust per recipe",
-      'icon': 'varies.svg',
+      'icon': 'varies1.svg',
     },
   ];
 

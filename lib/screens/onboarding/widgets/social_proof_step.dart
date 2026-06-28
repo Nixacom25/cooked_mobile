@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:in_app_review/in_app_review.dart';
 
 class SocialProofStep extends StatefulWidget {
   final List<String> favoriteCuisines;
@@ -83,6 +84,21 @@ class _SocialProofStepState extends State<SocialProofStep>
     _buttonSlide = createSlide(currentDelay, currentDelay + 0.3);
 
     _controller.forward();
+    _triggerInAppReview();
+  }
+
+  Future<void> _triggerInAppReview() async {
+    // Wait for the entry animations to complete (1.4 seconds)
+    await Future.delayed(const Duration(milliseconds: 1500));
+    if (!mounted) return;
+    try {
+      final InAppReview inAppReview = InAppReview.instance;
+      if (await inAppReview.isAvailable()) {
+        await inAppReview.requestReview();
+      }
+    } catch (e) {
+      debugPrint('Error triggering in-app review: $e');
+    }
   }
 
   @override
