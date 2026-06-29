@@ -35,8 +35,8 @@ class _CookingSystemLoadingStepState extends State<CookingSystemLoadingStep> wit
       duration: const Duration(seconds: 20),
     )..repeat();
 
-    // 10s max for 4 steps => 2.5s per step
-    _timer = Timer.periodic(const Duration(milliseconds: 2000), (timer) {
+    // 2s total for 4 steps => 0.5s per step
+    _timer = Timer.periodic(const Duration(milliseconds: 500), (timer) {
       if (_currentLoadingStep < 4) {
         setState(() {
           _currentLoadingStep++;

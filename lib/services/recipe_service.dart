@@ -331,12 +331,15 @@ class RecipeService {
     final cacheKey = 'explore_recipes_${cuisine ?? ''}_${category ?? ''}_${page}_$size';
     if (!forceRefresh) {
       if (_cache.containsKey(cacheKey)) {
-        return _cache[cacheKey] as List<Recipe>;
+        final results = _cache[cacheKey] as List<Recipe>;
+        results.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+        return results;
       }
       final cachedData = await _readFromPersistentCache(cacheKey, const Duration(hours: 12));
       if (cachedData != null) {
         final List<dynamic> decodedList = cachedData;
         final results = decodedList.map((json) => Recipe.fromJson(json)).toList();
+        results.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
         _cache[cacheKey] = results;
         return results;
       }
@@ -351,6 +354,7 @@ class RecipeService {
 
     if (response.statusCode == 200) {
       final results = await compute(_parseExploreRecipesData, response.body);
+      results.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
       _cache[cacheKey] = results;
       
       try {
@@ -587,12 +591,15 @@ class RecipeService {
     final cacheKey = 'popular_recipes_${category ?? ''}_${cuisine ?? ''}_${page}_$size';
     if (!forceRefresh) {
       if (_cache.containsKey(cacheKey)) {
-        return _cache[cacheKey] as List<Recipe>;
+        final results = _cache[cacheKey] as List<Recipe>;
+        results.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+        return results;
       }
       final cachedData = await _readFromPersistentCache(cacheKey, const Duration(hours: 12));
       if (cachedData != null) {
         final List<dynamic> decodedList = cachedData;
         final results = decodedList.map((json) => Recipe.fromJson(json)).toList();
+        results.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
         _cache[cacheKey] = results;
         return results;
       }
@@ -607,6 +614,7 @@ class RecipeService {
 
     if (response.statusCode == 200) {
       final results = await compute(_parseExploreRecipesData, response.body);
+      results.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
       _cache[cacheKey] = results;
       
       try {

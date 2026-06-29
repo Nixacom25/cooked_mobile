@@ -27,11 +27,11 @@ class _CuisinesStepState extends State<CuisinesStep> {
     {'id': 'japanese', 'title': 'Japanese'},
     {'id': 'mexican', 'title': 'Mexican'},
     {'id': 'chinese', 'title': 'Chinese'},
+    {'id': 'indian', 'title': 'Indian'},
     {'id': 'thai', 'title': 'Thai'},
+    {'id': 'mediterranean', 'title': 'Mediterranean'},
     {'id': 'west-african', 'title': 'West African'},
     {'id': 'caribbean', 'title': 'Caribbean'},
-    {'id': 'indian', 'title': 'Indian'},
-    {'id': 'mediterranean', 'title': 'Mediterranean'},
     {'id': 'others', 'title': 'Others'},
   ];
 

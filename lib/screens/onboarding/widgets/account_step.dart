@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../../../widgets/red_button.dart';
+import '../../../core/widgets/ios_toast.dart';
 
 class AccountStep extends StatefulWidget {
   final String initialEmail;
@@ -16,6 +18,7 @@ class AccountStep extends StatefulWidget {
     String? lastname,
   })
   onChanged;
+  final VoidCallback onContinue;
 
   const AccountStep({
     super.key,
@@ -24,6 +27,7 @@ class AccountStep extends StatefulWidget {
     required this.initialPhone,
     required this.initialAcceptedTerms,
     required this.onChanged,
+    required this.onContinue,
   });
 
   @override
@@ -85,109 +89,180 @@ class _AccountStepState extends State<AccountStep> {
     );
   }
 
+  void _submitForm() {
+    HapticFeedback.selectionClick();
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+    final confirmPassword = _confirmController.text;
+
+    if (email.isEmpty) {
+      IosToast.show(
+        context,
+        message: 'Please enter your email',
+        type: ToastType.warning,
+      );
+      return;
+    }
+
+    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+    if (!emailRegex.hasMatch(email)) {
+      IosToast.show(
+        context,
+        message: 'Please enter a valid email address',
+        type: ToastType.warning,
+      );
+      return;
+    }
+
+    if (password.isEmpty) {
+      IosToast.show(
+        context,
+        message: 'Please enter a password',
+        type: ToastType.warning,
+      );
+      return;
+    }
+
+    if (password.length < 6) {
+      IosToast.show(
+        context,
+        message: 'Password must be at least 6 characters',
+        type: ToastType.warning,
+      );
+      return;
+    }
+
+    if (password != confirmPassword) {
+      IosToast.show(
+        context,
+        message: 'Passwords do not match',
+        type: ToastType.warning,
+      );
+      return;
+    }
+
+    // Call notify change to ensure parent has latest state
+    _notifyChange();
+    widget.onContinue();
+  }
+
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 30.h),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Create your account',
-              style: TextStyle(
-                fontSize: 24.sp,
-                fontWeight: FontWeight.w900,
-                color: const Color(0xFF0D1B3E),
-                fontFamily: 'SF Pro',
-                height: 1.2,
+    return Column(
+      children: [
+        Expanded(
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 30.h),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Create your account',
+                    style: TextStyle(
+                      fontSize: 24.sp,
+                      fontWeight: FontWeight.w900,
+                      color: const Color(0xFF0D1B3E),
+                      fontFamily: 'SF Pro',
+                      height: 1.2,
+                    ),
+                  ),
+                  SizedBox(height: 10.h),
+                  Text(
+                    'Secure your recipes and preferences',
+                    style: TextStyle(
+                      fontSize: 14.sp,
+                      color: const Color(0xFF7B8190),
+                      fontFamily: 'SF Pro',
+                    ),
+                  ),
+                  SizedBox(height: 32.h),
+
+                  _buildLabel('Full Name', required: false),
+                  const SizedBox(height: 8),
+                  _buildField(
+                    controller: _nameController,
+                    hint: 'John Doe',
+                    icon: Icons.person_outline_rounded,
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  _buildLabel('Email', required: true),
+                  const SizedBox(height: 8),
+                  _buildField(
+                    controller: _emailController,
+                    hint: 'john@example.com',
+                    icon: Icons.email_outlined,
+                    keyboardType: TextInputType.emailAddress,
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  _buildLabel('Password', required: true),
+                  const SizedBox(height: 8),
+                  _buildField(
+                    controller: _passwordController,
+                    hint: '••••••••',
+                    icon: Icons.lock_outline_rounded,
+                    obscureText: _obscurePassword,
+                    suffix: IconButton(
+                      icon: Icon(
+                        _obscurePassword
+                            ? Icons.visibility_off_outlined
+                            : Icons.visibility_outlined,
+                        color: const Color(0xFF7B8190),
+                        size: 20,
+                      ),
+                      onPressed: () {
+                        HapticFeedback.selectionClick();
+                        setState(() => _obscurePassword = !_obscurePassword);
+                      },
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  _buildLabel('Confirm Password', required: true),
+                  const SizedBox(height: 8),
+                  _buildField(
+                    controller: _confirmController,
+                    hint: '••••••••',
+                    icon: Icons.lock_outline_rounded,
+                    obscureText: _obscureConfirm,
+                    suffix: IconButton(
+                      icon: Icon(
+                        _obscureConfirm
+                            ? Icons.visibility_off_outlined
+                            : Icons.visibility_outlined,
+                        color: const Color(0xFF7B8190),
+                        size: 20,
+                      ),
+                      onPressed: () {
+                        HapticFeedback.selectionClick();
+                        setState(() => _obscureConfirm = !_obscureConfirm);
+                      },
+                    ),
+                  ),
+                  SizedBox(height: MediaQuery.of(context).viewInsets.bottom + 16.h),
+                ],
               ),
             ),
-            SizedBox(height: 10.h),
-            Text(
-              'Secure your recipes and preferences',
-              style: TextStyle(
-                fontSize: 14.sp,
-                color: const Color(0xFF7B8190),
-                fontFamily: 'SF Pro',
-              ),
-            ),
-            SizedBox(height: 32.h),
-
-
-            _buildLabel('Full Name', required: false),
-            const SizedBox(height: 8),
-            _buildField(
-              controller: _nameController,
-              hint: 'John Doe',
-              icon: Icons.person_outline_rounded,
-            ),
-
-            const SizedBox(height: 20),
-
-            _buildLabel('Email', required: true),
-            const SizedBox(height: 8),
-            _buildField(
-              controller: _emailController,
-              hint: 'john@example.com',
-              icon: Icons.email_outlined,
-              keyboardType: TextInputType.emailAddress,
-            ),
-
-            const SizedBox(height: 20),
-
-            _buildLabel('Password', required: true),
-            const SizedBox(height: 8),
-            _buildField(
-              controller: _passwordController,
-              hint: '••••••••',
-              icon: Icons.lock_outline_rounded,
-              obscureText: _obscurePassword,
-              suffix: IconButton(
-                icon: Icon(
-                  _obscurePassword
-                      ? Icons.visibility_off_outlined
-                      : Icons.visibility_outlined,
-                  color: const Color(0xFF7B8190),
-                  size: 20,
-                ),
-                onPressed: () {
-                  HapticFeedback.selectionClick();
-                  setState(() => _obscurePassword = !_obscurePassword);
-                },
-              ),
-            ),
-
-            const SizedBox(height: 20),
-
-            _buildLabel('Confirm Password', required: true),
-            const SizedBox(height: 8),
-            _buildField(
-              controller: _confirmController,
-              hint: '••••••••',
-              icon: Icons.lock_outline_rounded,
-              obscureText: _obscureConfirm,
-              suffix: IconButton(
-                icon: Icon(
-                  _obscureConfirm
-                      ? Icons.visibility_off_outlined
-                      : Icons.visibility_outlined,
-                  color: const Color(0xFF7B8190),
-                  size: 20,
-                ),
-                onPressed: () {
-                  HapticFeedback.selectionClick();
-                  setState(() => _obscureConfirm = !_obscureConfirm);
-                },
-              ),
-            ),
-
-            const SizedBox(height: 30),
-
-            SizedBox(height: MediaQuery.of(context).viewInsets.bottom + 32.h),
-          ],
+          ),
         ),
-      ),
+        SafeArea(
+          top: false,
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(20.w, 8.h, 20.w, 16.h),
+            child: RedButton(
+              label: 'Create Account',
+              onTap: _submitForm,
+              height: 56.h,
+              fontSize: 18.sp,
+            ),
+          ),
+        ),
+      ],
     );
   }
 

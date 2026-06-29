@@ -125,139 +125,147 @@ class _OtpStepState extends State<OtpStep> {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 40.h),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Verify your account',
-            style: TextStyle(
-              fontSize: 28.sp,
-              fontWeight: FontWeight.w900,
-              color: const Color(0xFF0D1B3E),
-              fontFamily: 'SF Pro',
-              height: 1.2,
-            ),
-          ),
-          SizedBox(height: 8.h),
-          Text(
-            'Please enter the 6-digit code we sent to\n${widget.email}',
-            style: TextStyle(
-              fontSize: 15.sp,
-              color: const Color(0xFF7B8190),
-              fontFamily: 'SF Pro',
-              height: 1.4,
-            ),
-          ),
-          SizedBox(height: 48.h),
-
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: List.generate(_otpLength, (idx) {
-              return Expanded(
-                child: Container(
-                  height: 60.h,
-                  margin: EdgeInsets.symmetric(horizontal: 4.w),
-                  decoration: BoxDecoration(
-                  color: const Color(0xFFF9FAFB),
-                  borderRadius: BorderRadius.circular(16.r),
-                  border: Border.all(
-                    color: _nodes[idx].hasFocus || _ctrls[idx].text.isNotEmpty
-                        ? const Color(0xFFC83A2D)
-                        : const Color(0xFFE5E7EB),
-                    width: _nodes[idx].hasFocus ? 2.w : 1.5.w,
-                  ),
-                  boxShadow: _nodes[idx].hasFocus
-                      ? [
-                          BoxShadow(
-                            color: const Color(0xFFC83A2D).withOpacity(0.1),
-                            blurRadius: 8,
-                            offset: const Offset(0, 4),
-                          )
-                        ]
-                      : [],
-                ),
-                child: TextField(
-                  controller: _ctrls[idx],
-                  focusNode: _nodes[idx],
-                  textAlign: TextAlign.center,
-                  keyboardType: TextInputType.number,
-                  onChanged: (v) => _onChanged(v, idx),
-                  inputFormatters: [
-                    FilteringTextInputFormatter.digitsOnly,
-                  ],
-                  style: TextStyle(
-                    fontSize: 24.sp,
-                    fontWeight: FontWeight.w800,
-                    fontFamily: 'SF Pro',
-                    color: const Color(0xFF0D1B3E),
-                  ),
-                  decoration: const InputDecoration(
-                    counterText: '',
-                    border: InputBorder.none,
-                    contentPadding: EdgeInsets.zero,
-                  ),
-                ),
-                ),
-              );
-            }),
-          ),
-
-          SizedBox(height: 32.h),
-
-          Center(
+    return Column(
+      children: [
+        Expanded(
+          child: SingleChildScrollView(
+            padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 40.h),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  "Didn't receive a code?",
+                  'Verify your account',
+                  style: TextStyle(
+                    fontSize: 28.sp,
+                    fontWeight: FontWeight.w900,
+                    color: const Color(0xFF0D1B3E),
+                    fontFamily: 'SF Pro',
+                    height: 1.2,
+                  ),
+                ),
+                SizedBox(height: 8.h),
+                Text(
+                  'Please enter the 6-digit code we sent to\n${widget.email}',
                   style: TextStyle(
                     fontSize: 15.sp,
                     color: const Color(0xFF7B8190),
                     fontFamily: 'SF Pro',
+                    height: 1.4,
                   ),
                 ),
-                SizedBox(height: 8.h),
-                TextButton(
-                  onPressed: _isResending ? null : _resendCode,
-                  child: _isResending
-                      ? LoadingText(
-                          text: 'Resending',
-                          style: TextStyle(
-                            fontSize: 16.sp,
-                            fontWeight: FontWeight.w700,
-                            color: const Color(0xFFC83A2D),
-                            fontFamily: 'SF Pro',
+                SizedBox(height: 48.h),
+
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(_otpLength, (idx) {
+                    return Expanded(
+                      child: Container(
+                        height: 60.h,
+                        margin: EdgeInsets.symmetric(horizontal: 4.w),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF9FAFB),
+                          borderRadius: BorderRadius.circular(16.r),
+                          border: Border.all(
+                            color: _nodes[idx].hasFocus || _ctrls[idx].text.isNotEmpty
+                                ? const Color(0xFFC83A2D)
+                                : const Color(0xFFE5E7EB),
+                            width: _nodes[idx].hasFocus ? 2.w : 1.5.w,
                           ),
-                        )
-                      : Text(
-                          'Resend Code',
+                          boxShadow: _nodes[idx].hasFocus
+                              ? [
+                                  BoxShadow(
+                                    color: const Color(0xFFC83A2D).withOpacity(0.1),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 4),
+                                  )
+                                ]
+                              : [],
+                        ),
+                        child: TextField(
+                          controller: _ctrls[idx],
+                          focusNode: _nodes[idx],
+                          textAlign: TextAlign.center,
+                          keyboardType: TextInputType.number,
+                          onChanged: (v) => _onChanged(v, idx),
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly,
+                          ],
                           style: TextStyle(
-                            fontSize: 16.sp,
-                            fontWeight: FontWeight.w700,
-                            color: const Color(0xFFC83A2D),
+                            fontSize: 24.sp,
+                            fontWeight: FontWeight.w800,
                             fontFamily: 'SF Pro',
+                            color: const Color(0xFF0D1B3E),
+                          ),
+                          decoration: const InputDecoration(
+                            counterText: '',
+                            border: InputBorder.none,
+                            contentPadding: EdgeInsets.zero,
                           ),
                         ),
+                      ),
+                    );
+                  }),
                 ),
+
+                SizedBox(height: 32.h),
+
+                Center(
+                  child: Column(
+                    children: [
+                      Text(
+                        "Didn't receive a code?",
+                        style: TextStyle(
+                          fontSize: 15.sp,
+                          color: const Color(0xFF7B8190),
+                          fontFamily: 'SF Pro',
+                        ),
+                      ),
+                      SizedBox(height: 8.h),
+                      TextButton(
+                        onPressed: _isResending ? null : _resendCode,
+                        child: _isResending
+                            ? LoadingText(
+                                text: 'Resending',
+                                style: TextStyle(
+                                  fontSize: 16.sp,
+                                  fontWeight: FontWeight.w700,
+                                  color: const Color(0xFFC83A2D),
+                                  fontFamily: 'SF Pro',
+                                ),
+                              )
+                            : Text(
+                                'Resend Code',
+                                style: TextStyle(
+                                  fontSize: 16.sp,
+                                  fontWeight: FontWeight.w700,
+                                  color: const Color(0xFFC83A2D),
+                                  fontFamily: 'SF Pro',
+                                ),
+                              ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: MediaQuery.of(context).viewInsets.bottom + 16.h),
               ],
             ),
           ),
-
-          SizedBox(height: 48.h),
-
-          RedButton(
-            label: 'Verify & Continue',
-            loadingLabel: 'Verifying',
-            isLoading: _isLoading,
-            onTap: _verifyCode,
-            height: 56.h,
-            fontSize: 18.sp,
+        ),
+        SafeArea(
+          top: false,
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(24.w, 8.h, 24.w, 16.h),
+            child: RedButton(
+              label: 'Verify & Continue',
+              loadingLabel: 'Verifying',
+              isLoading: _isLoading,
+              onTap: _verifyCode,
+              height: 56.h,
+              fontSize: 18.sp,
+            ),
           ),
-          SizedBox(height: 120.h),
-          SizedBox(height: MediaQuery.of(context).viewInsets.bottom),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

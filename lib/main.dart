@@ -34,9 +34,9 @@ import 'package:cooked/services/notification_service.dart';
 import 'package:cooked/services/history_service.dart';
 import 'package:cooked/services/sharing_service.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:cooked/widgets/clipboard_banner.dart';
+// import 'package:cooked/widgets/clipboard_banner.dart';
 import 'package:cooked/widgets/floating_heart.dart';
-import 'package:cooked/core/widgets/ios_toast.dart';
+// import 'package:cooked/core/widgets/ios_toast.dart';
 
 import 'package:cooked/services/database_service.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -83,7 +83,7 @@ class CookedApp extends StatefulWidget {
 
 class _CookedAppState extends State<CookedApp> with WidgetsBindingObserver {
   final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
-  OverlayEntry? _clipboardOverlay;
+  // OverlayEntry? _clipboardOverlay;
   late AppLinks _appLinks;
   StreamSubscription<Uri>? _linkSubscription;
 
@@ -98,8 +98,8 @@ class _CookedAppState extends State<CookedApp> with WidgetsBindingObserver {
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     SharingService.instance.sharedTextNotifier.removeListener(_onSharedTextReceived);
-    SharingService.instance.clipboardTextNotifier.removeListener(_onClipboardTextReceived);
-    _removeClipboardOverlay();
+    // SharingService.instance.clipboardTextNotifier.removeListener(_onClipboardTextReceived);
+    // _removeClipboardOverlay();
     SharingService.instance.dispose();
     _linkSubscription?.cancel();
     super.dispose();
@@ -108,97 +108,97 @@ class _CookedAppState extends State<CookedApp> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      SharingService.instance.checkClipboard();
+      // SharingService.instance.checkClipboard();
     }
   }
 
-  void _onClipboardTextReceived() {
-    final url = SharingService.instance.clipboardTextNotifier.value;
-    if (url != null && url.isNotEmpty) {
-      _showClipboardOverlay(url);
-    } else {
-      _removeClipboardOverlay();
-    }
-  }
+  // void _onClipboardTextReceived() {
+  //   final url = SharingService.instance.clipboardTextNotifier.value;
+  //   if (url != null && url.isNotEmpty) {
+  //     _showClipboardOverlay(url);
+  //   } else {
+  //     _removeClipboardOverlay();
+  //   }
+  // }
 
-  void _showClipboardOverlay(String url) {
-    _removeClipboardOverlay();
-    _clipboardOverlay = OverlayEntry(
-      builder: (context) => ClipboardBanner(
-        url: url,
-        topOffset: MediaQuery.of(context).padding.top + 10.h,
-        onClose: () => SharingService.instance.ignoreClipboard(),
-        onPaste: () => _handlePaste(url),
-      ),
-    );
-    _navigatorKey.currentState?.overlay?.insert(_clipboardOverlay!);
-  }
-
-  void _removeClipboardOverlay() {
-    _clipboardOverlay?.remove();
-    _clipboardOverlay = null;
-  }
-
-  void _handlePaste(String dummyUrl) async {
-    SharingService.instance.ignoreClipboard();
-    
-    // Read the clipboard now that the user explicitly initiated the action
-    final data = await Clipboard.getData(Clipboard.kTextPlain);
-    final text = data?.text;
-    if (text == null || text.isEmpty) return;
-    
-    final url = SharingService.instance.extractUrl(text);
-    if (url == null) return;
-    
-    final isLoggedIn = AuthService.instance.isLoggedIn;
-
-    if (!isLoggedIn) {
-      final state = _navigatorKey.currentState;
-      if (state != null) {
-        state.pushNamedAndRemoveUntil(AppRoutes.welcome, (route) => false);
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          IosToast.show(state.context, message: 'Please log in first to save this recipe', type: ToastType.warning);
-        });
-      }
-      return;
-    }
-
-    final state = _navigatorKey.currentState;
-    if (state != null) {
-      // Check if it's an internal recipe link
-      final recipeRegex = RegExp(r'(?:cooked\.nixacom\.com|cookedapp\.com)/(?:share/)?recipes/([a-zA-Z0-9-]+)');
-      final match = recipeRegex.firstMatch(url);
-
-      if (match != null) {
-        final recipeId = match.group(1);
-        debugPrint("CookedApp: Internal recipe link pasted. ID: $recipeId");
-        
-        state.pushNamedAndRemoveUntil(
-          AppRoutes.home,
-          (route) => false,
-        );
-        state.pushNamed(
-          AppRoutes.recipeDetail,
-          arguments: {'recipeId': recipeId},
-        );
-      } else {
-        state.pushNamedAndRemoveUntil(
-          AppRoutes.home,
-          (route) => false,
-          arguments: {'initialTab': 4, 'initialUrl': url},
-        );
-      }
-    }
-  }
+  // void _showClipboardOverlay(String url) {
+  //   _removeClipboardOverlay();
+  //   _clipboardOverlay = OverlayEntry(
+  //     builder: (context) => ClipboardBanner(
+  //       url: url,
+  //       topOffset: MediaQuery.of(context).padding.top + 10.h,
+  //       onClose: () => SharingService.instance.ignoreClipboard(),
+  //       onPaste: () => _handlePaste(url),
+  //     ),
+  //   );
+  //   _navigatorKey.currentState?.overlay?.insert(_clipboardOverlay!);
+  // }
+  // 
+  // void _removeClipboardOverlay() {
+  //   _clipboardOverlay?.remove();
+  //   _clipboardOverlay = null;
+  // }
+  // 
+  // void _handlePaste(String dummyUrl) async {
+  //   SharingService.instance.ignoreClipboard();
+  //   
+  //   // Read the clipboard now that the user explicitly initiated the action
+  //   final data = await Clipboard.getData(Clipboard.kTextPlain);
+  //   final text = data?.text;
+  //   if (text == null || text.isEmpty) return;
+  //   
+  //   final url = SharingService.instance.extractUrl(text);
+  //   if (url == null) return;
+  //   
+  //   final isLoggedIn = AuthService.instance.isLoggedIn;
+  // 
+  //   if (!isLoggedIn) {
+  //     final state = _navigatorKey.currentState;
+  //     if (state != null) {
+  //       state.pushNamedAndRemoveUntil(AppRoutes.welcome, (route) => false);
+  //       WidgetsBinding.instance.addPostFrameCallback((_) {
+  //         IosToast.show(state.context, message: 'Please log in first to save this recipe', type: ToastType.warning);
+  //       });
+  //     }
+  //     return;
+  //   }
+  // 
+  //   final state = _navigatorKey.currentState;
+  //   if (state != null) {
+  //     // Check if it's an internal recipe link
+  //     final recipeRegex = RegExp(r'(?:cooked\.nixacom\.com|cookedapp\.com)/(?:share/)?recipes/([a-zA-Z0-9-]+)');
+  //     final match = recipeRegex.firstMatch(url);
+  // 
+  //     if (match != null) {
+  //       final recipeId = match.group(1);
+  //       debugPrint("CookedApp: Internal recipe link pasted. ID: $recipeId");
+  //       
+  //       state.pushNamedAndRemoveUntil(
+  //         AppRoutes.home,
+  //         (route) => false,
+  //       );
+  //       state.pushNamed(
+  //         AppRoutes.recipeDetail,
+  //         arguments: {'recipeId': recipeId},
+  //       );
+  //     } else {
+  //       state.pushNamedAndRemoveUntil(
+  //         AppRoutes.home,
+  //         (route) => false,
+  //         arguments: {'initialTab': 4, 'initialUrl': url},
+  //       );
+  //     }
+  //   }
+  // }
 
   Future<void> _initApp() async {
     try {
       SharingService.instance.init();
       SharingService.instance.sharedTextNotifier.addListener(_onSharedTextReceived);
-      SharingService.instance.clipboardTextNotifier.addListener(_onClipboardTextReceived);
+      // SharingService.instance.clipboardTextNotifier.addListener(_onClipboardTextReceived);
       
       // Check clipboard on startup
-      SharingService.instance.checkClipboard();
+      // SharingService.instance.checkClipboard();
 
       await Future.wait([
         AuthService.instance.getToken(),

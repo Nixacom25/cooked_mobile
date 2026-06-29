@@ -192,7 +192,7 @@ class _SocialProofStepState extends State<SocialProofStep>
                             child: SlideTransition(
                               position: _reviewSlides[0],
                               child: _buildReviewCard(
-                                img: 'assets/images/sarah.png',
+                                img: '',
                                 name: 'Sarah M.',
                                 initials: 'SM',
                                 quote:
@@ -205,7 +205,7 @@ class _SocialProofStepState extends State<SocialProofStep>
                             child: SlideTransition(
                               position: _reviewSlides[1],
                               child: _buildReviewCard(
-                                img: 'assets/images/david.png',
+                                img: '',
                                 name: 'David K.',
                                 initials: 'DK',
                                 quote:
@@ -218,7 +218,7 @@ class _SocialProofStepState extends State<SocialProofStep>
                             child: SlideTransition(
                               position: _reviewSlides[2],
                               child: _buildReviewCard(
-                                img: 'assets/images/elena.png',
+                                img: '',
                                 name: 'Elena R.',
                                 initials: 'ER',
                                 quote:
@@ -309,15 +309,31 @@ class _SocialProofStepState extends State<SocialProofStep>
           Container(
             width: 50.r,
             height: 50.r,
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               shape: BoxShape.circle,
-              color: const Color(0xFFF3F4F6),
-              image: DecorationImage(
-                image: AssetImage(img),
-                fit: BoxFit.cover,
-                onError: (e, s) => null,
-              ),
+              color: Color(0xFFF3F4F6),
             ),
+            child: img.isNotEmpty
+                ? ClipOval(
+                    child: Image.asset(
+                      img,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => Center(
+                        child: Icon(
+                          Icons.person_rounded,
+                          color: const Color(0xFF9CA3AF),
+                          size: 24.r,
+                        ),
+                      ),
+                    ),
+                  )
+                : Center(
+                    child: Icon(
+                      Icons.person_rounded,
+                      color: const Color(0xFF9CA3AF),
+                      size: 24.r,
+                    ),
+                  ),
           ),
           SizedBox(width: 16.w),
           Expanded(

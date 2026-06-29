@@ -31,7 +31,6 @@ class _ProfileLoadingStepState extends State<ProfileLoadingStep> with TickerProv
   ];
 
   final List<String> _recipeImages = [
-    'assets/images/cookbook_dessert.png',
     'assets/cuisine/chinese.png',
     'assets/cuisine/mexican.png',
     'assets/cuisine/japanese.png',
@@ -40,7 +39,6 @@ class _ProfileLoadingStepState extends State<ProfileLoadingStep> with TickerProv
     'assets/cuisine/italian.png',
     'assets/cuisine/indian.png',
     'assets/cuisine/thai.png',
-    'assets/images/caribbean.png',
   ];
 
   @override
@@ -71,8 +69,8 @@ class _ProfileLoadingStepState extends State<ProfileLoadingStep> with TickerProv
       }
     });
 
-    // 20s total, 5 tasks => 4s per task
-    _tasksTimer = Timer.periodic(const Duration(seconds: 4), (timer) {
+    // 2.5s total, 5 tasks => 0.5s per task
+    _tasksTimer = Timer.periodic(const Duration(milliseconds: 500), (timer) {
       if (_currentTaskIndex < _loadingTasks.length) {
         setState(() {
           _currentTaskIndex++;

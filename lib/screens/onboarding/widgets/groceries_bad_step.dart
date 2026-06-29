@@ -62,7 +62,7 @@ class _GroceriesBadStepState extends State<GroceriesBadStep> {
               text: TextSpan(
                 style: TextStyle(color: const Color(0xFF111827), fontSize: 16.sp, fontFamily: 'SF Pro'),
                 children: [
-                  const TextSpan(text: 'The average household wastes over\n'),
+                  const TextSpan(text: 'your household wasting average of\n'),
                   TextSpan(
                     text: '\$$formattedWaste', 
                     style: TextStyle(color: const Color(0xFF00C40A), fontSize: 32.sp, fontWeight: FontWeight.w800, height: 1.2),

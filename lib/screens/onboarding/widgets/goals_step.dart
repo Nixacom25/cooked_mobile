@@ -23,7 +23,7 @@ class _GoalsStepState extends State<GoalsStep> {
     return SelectionOnboardingStep(
       title: 'What\'s your goal right now?',
       subtitle: 'We\'ll personalize everything around it.',
-      maxSelections: 2,
+      maxSelections: 8,
       useGrid: true,
       onContinue: widget.onContinue,
       initialSelected: widget.initialSelected,
