@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:cooked/services/cookbook_service.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../core/api_config.dart';
 import '../models/recipe.dart';
 import '../models/creator.dart';
@@ -19,7 +20,10 @@ List<Recipe> _parseRecipesList(String responseBody) {
 List<Recipe> _parseExploreRecipesData(String responseBody) {
   final Map<String, dynamic> data = jsonDecode(responseBody);
   final List<dynamic> content = data['content'];
-  return content.map((json) => Recipe.fromJson(json)).toList();
+  return content
+      .map((json) => Recipe.fromJson(json))
+      .where((recipe) => recipe.status)
+      .toList();
 }
 
 class RecipeService {
@@ -338,7 +342,10 @@ class RecipeService {
       final cachedData = await _readFromPersistentCache(cacheKey, const Duration(hours: 12));
       if (cachedData != null) {
         final List<dynamic> decodedList = cachedData;
-        final results = decodedList.map((json) => Recipe.fromJson(json)).toList();
+        final results = decodedList
+            .map((json) => Recipe.fromJson(json))
+            .where((recipe) => recipe.status)
+            .toList();
         results.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
         _cache[cacheKey] = results;
         return results;
@@ -510,14 +517,10 @@ class RecipeService {
   Future<List<Map<String, dynamic>>> getExploreCuisines({bool forceRefresh = false}) async {
     const cacheKey = 'explore_cuisines';
     if (!forceRefresh) {
-      if (_cache.containsKey(cacheKey)) {
-        return List<Map<String, dynamic>>.from(_cache[cacheKey]);
-      }
-      final cachedData = await _readFromPersistentCache(cacheKey, const Duration(hours: 24));
+      final cachedData = await _readFromPersistentCache(cacheKey, const Duration(minutes: 5));
       if (cachedData != null) {
         final List<dynamic> decodedList = cachedData;
         final results = decodedList.map((item) => Map<String, dynamic>.from(item)).toList();
-        _cache[cacheKey] = results;
         return results;
       }
     }
@@ -528,7 +531,18 @@ class RecipeService {
     if (response.statusCode == 200) {
       final List<dynamic> data = jsonDecode(response.body);
       final results = data.map((item) => Map<String, dynamic>.from(item)).toList();
-      _cache[cacheKey] = results;
+
+      if (forceRefresh) {
+        for (final item in results) {
+          final imageUrl = item['image'] as String?;
+          if (imageUrl != null && imageUrl.isNotEmpty) {
+            try {
+              CachedNetworkImageProvider(imageUrl).evict().catchError((_) => false);
+            } catch (_) {}
+          }
+        }
+      }
+
       await _writeToPersistentCache(cacheKey, results);
       return results;
     } else {
@@ -539,14 +553,10 @@ class RecipeService {
   Future<List<Map<String, dynamic>>> getExploreCategories({bool forceRefresh = false}) async {
     const cacheKey = 'explore_categories';
     if (!forceRefresh) {
-      if (_cache.containsKey(cacheKey)) {
-        return List<Map<String, dynamic>>.from(_cache[cacheKey]);
-      }
-      final cachedData = await _readFromPersistentCache(cacheKey, const Duration(hours: 24));
+      final cachedData = await _readFromPersistentCache(cacheKey, const Duration(minutes: 5));
       if (cachedData != null) {
         final List<dynamic> decodedList = cachedData;
         final results = decodedList.map((item) => Map<String, dynamic>.from(item)).toList();
-        _cache[cacheKey] = results;
         return results;
       }
     }
@@ -557,7 +567,18 @@ class RecipeService {
     if (response.statusCode == 200) {
       final List<dynamic> data = jsonDecode(response.body);
       final results = data.map((item) => Map<String, dynamic>.from(item)).toList();
-      _cache[cacheKey] = results;
+
+      if (forceRefresh) {
+        for (final item in results) {
+          final imageUrl = item['image'] as String?;
+          if (imageUrl != null && imageUrl.isNotEmpty) {
+            try {
+              CachedNetworkImageProvider(imageUrl).evict().catchError((_) => false);
+            } catch (_) {}
+          }
+        }
+      }
+
       await _writeToPersistentCache(cacheKey, results);
       return results;
     } else {
@@ -598,7 +619,10 @@ class RecipeService {
       final cachedData = await _readFromPersistentCache(cacheKey, const Duration(hours: 12));
       if (cachedData != null) {
         final List<dynamic> decodedList = cachedData;
-        final results = decodedList.map((json) => Recipe.fromJson(json)).toList();
+        final results = decodedList
+            .map((json) => Recipe.fromJson(json))
+            .where((recipe) => recipe.status)
+            .toList();
         results.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
         _cache[cacheKey] = results;
         return results;

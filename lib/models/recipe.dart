@@ -29,6 +29,7 @@ class Recipe {
   final bool isPlaceholder;
   final double? totalPrice;
   final int? ingredientsCount;
+  final bool status;
 
   Recipe({
     required this.id,
@@ -59,6 +60,7 @@ class Recipe {
     this.isPlaceholder = false,
     this.totalPrice,
     this.ingredientsCount,
+    this.status = true,
   });
 
   factory Recipe.fromJson(Map<String, dynamic> json) {
@@ -113,6 +115,7 @@ class Recipe {
         isPlaceholder: json['isPlaceholder'] ?? false,
         totalPrice: (json['totalPrice'] as num?)?.toDouble(),
         ingredientsCount: (json['ingredientsCount'] as num?)?.toInt(),
+        status: json['status'] is bool ? json['status'] : true,
       );
     } catch (e) {
       return Recipe(
@@ -128,6 +131,7 @@ class Recipe {
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
         isPlaceholder: true,
+        status: true,
       );
     }
   }
@@ -162,6 +166,7 @@ class Recipe {
       'isPlaceholder': isPlaceholder,
       'totalPrice': totalPrice,
       'ingredientsCount': ingredientsCount,
+      'status': status,
     };
   }
 
@@ -191,6 +196,7 @@ class Recipe {
     bool? isInCookbook,
     bool? isPinned,
     bool? isValidated,
+    bool? status,
   }) {
     return Recipe(
       id: id ?? this.id,
@@ -218,6 +224,7 @@ class Recipe {
       isInCookbook: isInCookbook ?? this.isInCookbook,
       isPinned: isPinned ?? this.isPinned,
       isValidated: isValidated ?? this.isValidated,
+      status: status ?? this.status,
     );
   }
 

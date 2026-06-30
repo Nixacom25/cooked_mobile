@@ -43,9 +43,20 @@ class _ExploreScreenState extends State<ExploreScreen>
   final List<Recipe> _recentRecipes = [];
   Timer? _refreshTimer;
 
+  int _refreshTimestamp = DateTime.now().millisecondsSinceEpoch;
+
+  String _bustedUrl(String? url) {
+    if (url == null || url.isEmpty) return '';
+    final separator = url.contains('?') ? '&' : '?';
+    return '$url${separator}t=$_refreshTimestamp';
+  }
+
   void _refreshData({bool force = false}) {
     if (!mounted) return;
     setState(() {
+      if (force) {
+        _refreshTimestamp = DateTime.now().millisecondsSinceEpoch;
+      }
       _cuisinesFuture = RecipeService.instance.getExploreCuisines(forceRefresh: force);
       _categoriesFuture = RecipeService.instance.getExploreCategories(forceRefresh: force);
       _popularFuture = RecipeService.instance.getPopularRecipes(size: 10, forceRefresh: force);
@@ -64,6 +75,11 @@ class _ExploreScreenState extends State<ExploreScreen>
   void initState() {
     super.initState();
     _refreshData(force: false);
+
+    // Revalidate from network in the background on entry to get latest Cloudinary image updates
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _refreshData(force: true);
+    });
 
     // Live automatic updates every 5 minutes
     _refreshTimer = Timer.periodic(const Duration(minutes: 5), (_) {
@@ -176,6 +192,15 @@ class _ExploreScreenState extends State<ExploreScreen>
     setState(() {}); // Local refresh
   }
 
+  Future<void> _handleRefresh() async {
+    _refreshData(force: true);
+    await Future.wait([
+      _cuisinesFuture,
+      _categoriesFuture,
+      _popularFuture,
+    ]).catchError((_) => []);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Stack(
@@ -183,19 +208,24 @@ class _ExploreScreenState extends State<ExploreScreen>
         Scaffold(
           backgroundColor: Colors.white,
           resizeToAvoidBottomInset: false,
-          body: ListView(
-            padding: EdgeInsets.only(bottom: 120.h),
-            children: [
-              _buildHeader(),
-              SizedBox(height: 20.h),
-              if (_searchCtrl.text.isEmpty) ...[
-                _buildBrowseByCuisine(),
+          body: RefreshIndicator(
+            onRefresh: _handleRefresh,
+            color: const Color(0xFFC83A2D),
+            child: ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: EdgeInsets.only(bottom: 120.h),
+              children: [
+                _buildHeader(),
                 SizedBox(height: 20.h),
-                _buildPopularCategories(),
+                if (_searchCtrl.text.isEmpty) ...[
+                  _buildBrowseByCuisine(),
+                  SizedBox(height: 20.h),
+                  _buildPopularCategories(),
+                ],
+                _buildPopularNow(),
+                SizedBox(height: 50.h),
               ],
-              _buildPopularNow(),
-              SizedBox(height: 50.h),
-            ],
+            ),
           ),
         ),
       ],
@@ -261,7 +291,7 @@ class _ExploreScreenState extends State<ExploreScreen>
     return FutureBuilder<List<Map<String, dynamic>>>(
       future: _cuisinesFuture,
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
+        if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -324,6 +354,7 @@ class _ExploreScreenState extends State<ExploreScreen>
                   final item = filteredList[i];
                   final name = item['name'] as String;
                   final imageUrl = item['image'] as String?;
+                  final bustedImageUrl = _bustedUrl(imageUrl);
 
                   return Padding(
                     padding: EdgeInsets.only(right: 15.w),
@@ -354,9 +385,9 @@ class _ExploreScreenState extends State<ExploreScreen>
                                 ),
                               ],
                               color: const Color(0xFFF2F1EF),
-                              image: imageUrl != null && imageUrl.isNotEmpty
+                              image: bustedImageUrl.isNotEmpty
                                   ? DecorationImage(
-                                      image: CachedNetworkImageProvider(imageUrl),
+                                      image: CachedNetworkImageProvider(bustedImageUrl),
                                       fit: BoxFit.cover,
                                     )
                                   : null,
@@ -399,7 +430,7 @@ class _ExploreScreenState extends State<ExploreScreen>
     return FutureBuilder<List<Map<String, dynamic>>>(
       future: _categoriesFuture,
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
+        if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -467,6 +498,7 @@ class _ExploreScreenState extends State<ExploreScreen>
                   final name = item['name'] as String;
                   final count = item['recipeCount'] ?? 0;
                   final imageUrl = item['image'] as String?;
+                  final bustedImageUrl = _bustedUrl(imageUrl);
                   return GestureDetector(
                     onTap: () {
                       Navigator.pushNamed(
@@ -490,9 +522,9 @@ class _ExploreScreenState extends State<ExploreScreen>
                         children: [
                           ClipRRect(
                             borderRadius: BorderRadius.circular(16.r),
-                            child: imageUrl != null && imageUrl.isNotEmpty
+                            child: bustedImageUrl.isNotEmpty
                                 ? CachedNetworkImage(
-                                    imageUrl: imageUrl,
+                                    imageUrl: bustedImageUrl,
                                     width: 160.w,
                                     height: 130.h,
                                     fit: BoxFit.cover,
@@ -592,7 +624,7 @@ class _ExploreScreenState extends State<ExploreScreen>
           );
         }
 
-        if (snapshot.connectionState == ConnectionState.waiting) {
+        if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

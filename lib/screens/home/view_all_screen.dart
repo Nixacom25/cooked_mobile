@@ -36,11 +36,42 @@ class ViewAllScreen extends StatefulWidget {
 
 class _ViewAllScreenState extends State<ViewAllScreen> {
   final ValueNotifier<String> _searchQueryNotifier = ValueNotifier('');
+  Key _gridKey = UniqueKey();
 
   @override
   void dispose() {
     _searchQueryNotifier.dispose();
     super.dispose();
+  }
+
+  Future<void> _handleRefresh(ViewAllType type) async {
+    try {
+      if (type == ViewAllType.exploreCuisines) {
+        await RecipeService.instance.getExploreCuisines(forceRefresh: true);
+      } else if (type == ViewAllType.exploreCategories) {
+        await RecipeService.instance.getExploreCategories(forceRefresh: true);
+      } else if (type == ViewAllType.savedRecipes) {
+        await RecipeService.instance.getMyRecipes(forceRefresh: true);
+      } else if (type == ViewAllType.imports) {
+        await RecipeService.instance.getRecentImports(forceRefresh: true, size: 50);
+      } else if (type == ViewAllType.exploreRecipesByCuisine) {
+        final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+        final cuisine = args['cuisine'] as String?;
+        await RecipeService.instance.getExploreRecipes(cuisine: cuisine, forceRefresh: true, size: 50);
+      } else if (type == ViewAllType.exploreRecipesByCategory) {
+        final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+        final category = args['category'] as String?;
+        await RecipeService.instance.getExploreRecipes(category: category, forceRefresh: true, size: 50);
+      } else if (type == ViewAllType.explore) {
+        await RecipeService.instance.getExploreRecipes(forceRefresh: true, size: 50);
+      }
+    } catch (_) {}
+
+    if (mounted) {
+      setState(() {
+        _gridKey = UniqueKey();
+      });
+    }
   }
 
   @override
@@ -133,11 +164,15 @@ class _ViewAllScreenState extends State<ViewAllScreen> {
 
             // ── Content ───────────────────────────────────────────────────
             Expanded(
-              child: ValueListenableBuilder<String>(
-                valueListenable: _searchQueryNotifier,
-                builder: (context, query, _) {
-                  return _buildContent(type, query);
-                },
+              child: RefreshIndicator(
+                onRefresh: () => _handleRefresh(type),
+                color: const Color(0xFFC83A2D),
+                child: ValueListenableBuilder<String>(
+                  valueListenable: _searchQueryNotifier,
+                  builder: (context, query, _) {
+                    return _buildContent(type, query);
+                  },
+                ),
               ),
             ),
           ],
@@ -149,7 +184,7 @@ class _ViewAllScreenState extends State<ViewAllScreen> {
   Widget _buildContent(ViewAllType type, String query) {
     switch (type) {
       case ViewAllType.cookbooks:
-        return _CookbooksGrid(searchQuery: query);
+        return _CookbooksGrid(key: _gridKey, searchQuery: query);
       case ViewAllType.savedRecipes:
       case ViewAllType.recentlyViewed:
       case ViewAllType.explore:
@@ -157,12 +192,12 @@ class _ViewAllScreenState extends State<ViewAllScreen> {
       case ViewAllType.imports:
       case ViewAllType.exploreRecipesByCuisine:
       case ViewAllType.exploreRecipesByCategory:
-        return _RecipesGrid(searchQuery: query);
+        return _RecipesGrid(key: _gridKey, searchQuery: query);
       case ViewAllType.creators:
-        return _CreatorsGrid(searchQuery: query);
+        return _CreatorsGrid(key: _gridKey, searchQuery: query);
       case ViewAllType.exploreCuisines:
       case ViewAllType.exploreCategories:
-        return _StaticCookbooksGrid(type: type, searchQuery: query);
+        return _StaticCookbooksGrid(key: _gridKey, type: type, searchQuery: query);
     }
   }
 
@@ -198,7 +233,7 @@ class _ViewAllScreenState extends State<ViewAllScreen> {
 // ══════════════════════════════════════════════════════════════════════════════
 class _CookbooksGrid extends StatefulWidget {
   final String searchQuery;
-  const _CookbooksGrid({this.searchQuery = ''});
+  const _CookbooksGrid({super.key, this.searchQuery = ''});
 
   @override
   State<_CookbooksGrid> createState() => _CookbooksGridState();
@@ -386,7 +421,7 @@ class _CookbooksGridState extends State<_CookbooksGrid> {
 // ══════════════════════════════════════════════════════════════════════════════
 class _RecipesGrid extends StatefulWidget {
   final String searchQuery;
-  const _RecipesGrid({this.searchQuery = ''});
+  const _RecipesGrid({super.key, this.searchQuery = ''});
 
   @override
   State<_RecipesGrid> createState() => _RecipesGridState();
@@ -794,7 +829,7 @@ class _RecipesGridState extends State<_RecipesGrid> {
 // ══════════════════════════════════════════════════════════════════════════════
 class _CreatorsGrid extends StatefulWidget {
   final String searchQuery;
-  const _CreatorsGrid({this.searchQuery = ''});
+  const _CreatorsGrid({super.key, this.searchQuery = ''});
 
   @override
   State<_CreatorsGrid> createState() => _CreatorsGridState();
@@ -931,7 +966,7 @@ class _StaticCookbooksGrid extends StatefulWidget {
   final ViewAllType type;
   final String searchQuery;
 
-  const _StaticCookbooksGrid({required this.type, this.searchQuery = ''});
+  const _StaticCookbooksGrid({super.key, required this.type, this.searchQuery = ''});
 
   @override
   State<_StaticCookbooksGrid> createState() => _StaticCookbooksGridState();
