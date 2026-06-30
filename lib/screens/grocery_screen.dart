@@ -225,9 +225,12 @@ class GroceryScreenState extends State<GroceryScreen> with SingleTickerProviderS
                       }
 
                       return ListView.builder(
-                        padding: EdgeInsets.only(bottom: 120.h),
-                        itemCount: grouped.length,
+                        padding: EdgeInsets.only(bottom: 200.h + MediaQuery.of(context).viewInsets.bottom),
+                        itemCount: grouped.length + 1,
                         itemBuilder: (_, gi) {
+                          if (gi == grouped.length) {
+                            return const _InlineAddRow();
+                          }
                           final recipeKey = grouped.keys.elementAt(gi);
                           final items = grouped[recipeKey]!;
                           final isCollapsed = _collapsedGroups.contains(recipeKey);
@@ -1259,6 +1262,285 @@ class _AddGrocerySheetState extends State<_AddGrocerySheet> {
           ),
         ),
       ),
+    );
+  }
+}
+
+// ── Inline Add Row ──────────────────────────────────────────────────────────
+class _InlineAddRow extends StatefulWidget {
+  const _InlineAddRow();
+
+  @override
+  State<_InlineAddRow> createState() => _InlineAddRowState();
+}
+
+class _InlineAddRowState extends State<_InlineAddRow> {
+  bool _isEditing = false;
+  final _nameController = TextEditingController();
+  final _qtyController = TextEditingController();
+  final _nameFocusNode = FocusNode();
+  final _qtyFocusNode = FocusNode();
+  bool _isSaving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _qtyController.text = '1';
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _qtyController.dispose();
+    _nameFocusNode.dispose();
+    _qtyFocusNode.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    final name = _nameController.text.trim();
+    final qty = _qtyController.text.trim();
+    if (name.isEmpty) {
+      IosToast.show(context, message: 'Please enter an ingredient name', type: ToastType.error);
+      return;
+    }
+
+    setState(() {
+      _isSaving = true;
+    });
+
+    try {
+      await GroceryService.instance.addGroceryItem(
+        name: name,
+        quantity: qty.isEmpty ? '1' : qty,
+        date: DateTime.now(),
+      );
+      // Reset state on success
+      _nameController.clear();
+      _qtyController.text = '1';
+      setState(() {
+        _isEditing = false;
+      });
+    } catch (e) {
+      if (mounted) {
+        IosToast.show(context, message: ErrorHelper.getFriendlyMessage(e), type: ToastType.error);
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSaving = false;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!_isEditing) {
+      return Column(
+        children: [
+          InkWell(
+            onTap: () {
+              setState(() {
+                _isEditing = true;
+              });
+              // Focus name field after build
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                _nameFocusNode.requestFocus();
+                Scrollable.ensureVisible(context, duration: const Duration(milliseconds: 300));
+              });
+            },
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 18.w, vertical: 16.h),
+              child: Row(
+                children: [
+                  Container(
+                    width: 20.w,
+                    height: 20.w,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: const Color(0xFFCCCCCC),
+                        width: 2.w,
+                      ),
+                    ),
+                    child: Center(
+                      child: Icon(
+                        Icons.add,
+                        size: 12.sp,
+                        color: const Color(0xFFCCCCCC),
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 14.w),
+                  Text(
+                    '🛒',
+                    style: TextStyle(fontSize: 15.sp),
+                  ),
+                  SizedBox(width: 5.w),
+                  Text(
+                    'Add an ingredient...',
+                    style: TextStyle(
+                      fontFamily: 'SF Pro',
+                      fontWeight: FontWeight.w500,
+                      fontSize: 15.sp,
+                      color: const Color(0xFFAAAAAA),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const Divider(
+            height: 0,
+            thickness: 1,
+            color: Color(0xFFF2F2F2),
+            indent: 18,
+            endIndent: 18,
+          ),
+        ],
+      );
+    }
+
+    return Column(
+      children: [
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: 18.w, vertical: 8.h),
+          child: Row(
+            children: [
+              // Check icon in edit mode
+              Container(
+                width: 20.w,
+                height: 20.w,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: const Color(0xFFC83A2D),
+                    width: 2.w,
+                  ),
+                ),
+                child: Center(
+                  child: Container(
+                    width: 10.w,
+                    height: 10.w,
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Color(0xFFC83A2D),
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(width: 14.w),
+              Text(
+                '🛒',
+                style: TextStyle(fontSize: 15.sp),
+              ),
+              SizedBox(width: 5.w),
+              // Name text field
+              Expanded(
+                child: TextField(
+                  controller: _nameController,
+                  focusNode: _nameFocusNode,
+                  textCapitalization: TextCapitalization.sentences,
+                  decoration: InputDecoration(
+                    hintText: 'Ingredient name',
+                    hintStyle: TextStyle(
+                      fontFamily: 'SF Pro',
+                      fontSize: 15.sp,
+                      color: const Color(0xFFAAAAAA),
+                    ),
+                    border: InputBorder.none,
+                    isDense: true,
+                    contentPadding: EdgeInsets.symmetric(vertical: 8.h),
+                  ),
+                  style: TextStyle(
+                    fontFamily: 'SF Pro',
+                    fontWeight: FontWeight.w500,
+                    fontSize: 15.sp,
+                    color: const Color(0xFF1A1A1A),
+                  ),
+                  onSubmitted: (_) => _qtyFocusNode.requestFocus(),
+                ),
+              ),
+              SizedBox(width: 10.w),
+              // Quantity text field
+              Container(
+                width: 60.w,
+                padding: EdgeInsets.symmetric(horizontal: 6.w),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF5F5F5),
+                  borderRadius: BorderRadius.circular(6.r),
+                ),
+                child: TextField(
+                  controller: _qtyController,
+                  focusNode: _qtyFocusNode,
+                  textAlign: TextAlign.center,
+                  decoration: InputDecoration(
+                    hintText: 'Qty',
+                    hintStyle: TextStyle(
+                      fontFamily: 'SF Pro',
+                      fontSize: 13.sp,
+                      color: const Color(0xFFAAAAAA),
+                    ),
+                    border: InputBorder.none,
+                    isDense: true,
+                    contentPadding: EdgeInsets.symmetric(vertical: 6.h),
+                  ),
+                  style: TextStyle(
+                    fontFamily: 'SF Pro',
+                    fontSize: 13.sp,
+                    color: const Color(0xFF1A1A1A),
+                  ),
+                  onSubmitted: (_) => _submit(),
+                ),
+              ),
+              SizedBox(width: 8.w),
+              // Validate button or loading indicator
+              _isSaving
+                  ? SizedBox(
+                      width: 24.w,
+                      height: 24.w,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.w,
+                        valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFC83A2D)),
+                      ),
+                    )
+                  : GestureDetector(
+                      onTap: _submit,
+                      child: Icon(
+                        Icons.check_circle_rounded,
+                        color: const Color(0xFFC83A2D),
+                        size: 26.sp,
+                      ),
+                    ),
+              SizedBox(width: 4.w),
+              // Cancel button
+              if (!_isSaving)
+                GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _isEditing = false;
+                      _nameController.clear();
+                      _qtyController.text = '1';
+                    });
+                  },
+                  child: Icon(
+                    Icons.cancel_rounded,
+                    color: const Color(0xFF888888),
+                    size: 26.sp,
+                  ),
+                ),
+            ],
+          ),
+        ),
+        const Divider(
+          height: 0,
+          thickness: 1,
+          color: Color(0xFFF2F2F2),
+          indent: 18,
+          endIndent: 18,
+        ),
+      ],
     );
   }
 }

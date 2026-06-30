@@ -82,155 +82,70 @@ class _FreeTrialIntroStepState extends State<FreeTrialIntroStep> with SingleTick
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, child) {
-        return Column(
-          children: [
-            Expanded(
-              child: SingleChildScrollView(
-                padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 30.h),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Title
-                    FadeTransition(
-                      opacity: _titleOpacity,
-                      child: SlideTransition(
-                        position: _titleSlide,
-                        child: RichText(
-                          text: TextSpan(
-                            style: TextStyle(
-                              fontSize: 34.sp,
-                              fontWeight: FontWeight.w900,
-                              color: const Color(0xFF0D1B3E),
-                              fontFamily: 'Larken',
-                              height: 1.1,
-                              letterSpacing: -0.5,
-                            ),
-                            children: const [
-                              TextSpan(text: 'We want you to try\nCooked for '),
-                              TextSpan(
-                                text: 'free',
-                                style: TextStyle(color: Color(0xFFC83A2D)),
-                              ),
-                            ],
-                          ),
-                        ),
+        return Padding(
+          padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 10.h),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Title
+              FadeTransition(
+                opacity: _titleOpacity,
+                child: SlideTransition(
+                  position: _titleSlide,
+                  child: RichText(
+                    text: TextSpan(
+                      style: TextStyle(
+                        fontSize: 34.sp,
+                        fontWeight: FontWeight.w400,
+                        color: const Color(0xFF0D1B3E),
+                        fontFamily: 'Larken',
+                        height: 1.1,
+                        letterSpacing: -0.5,
                       ),
-                    ),
-                    SizedBox(height: 12.h),
-                    FadeTransition(
-                      opacity: _titleOpacity,
-                      child: SlideTransition(
-                        position: _titleSlide,
-                        child: Text(
-                          'Create your account to keep your recipes, meal plans, grocery lists, and savings tracker.',
-                          style: TextStyle(
-                            fontSize: 16.sp,
-                            color: const Color(0xFF4B5563),
-                            fontFamily: 'SF Pro',
-                            height: 1.3,
-                          ),
+                      children: const [
+                        TextSpan(text: 'We want you to try\nCooked for '),
+                        TextSpan(
+                          text: 'free',
+                          style: TextStyle(color: Color(0xFFC83A2D)),
                         ),
-                      ),
+                      ],
                     ),
-                    SizedBox(height: 32.h),
-
-                    // Image
-                    FadeTransition(
-                      opacity: _imageOpacity,
-                      child: SlideTransition(
-                        position: _imageSlide,
-                        child: Center(
-                          child: Image.asset(
-                            'assets/images/step28.png', // Wait, let's use a placeholder if step28 is missing, but it's not missing based on my ls
-                            height: 280.h,
-                            fit: BoxFit.contain,
-                            errorBuilder: (context, error, stackTrace) => Container(
-                              height: 280.h,
-                              width: 250.w,
-                              color: Colors.grey[200],
-                              alignment: Alignment.center,
-                              child: const Text('assets/images/step28.png missing'),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 32.h),
-
-                    // Checklist
-                    Column(
-                      children: List.generate(_benefits.length, (index) {
-                        return FadeTransition(
-                          opacity: _itemOpacities[index],
-                          child: SlideTransition(
-                            position: _itemSlides[index],
-                            child: Padding(
-                              padding: EdgeInsets.only(bottom: 16.h),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  Container(
-                                    width: 24.w,
-                                    height: 24.w,
-                                    decoration: const BoxDecoration(
-                                      color: Color(0xFFC83A2D),
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: Icon(Icons.check, color: Colors.white, size: 16.sp),
-                                  ),
-                                  SizedBox(width: 12.w),
-                                  Expanded(
-                                    child: Text(
-                                      _benefits[index],
-                                      style: TextStyle(
-                                        fontFamily: 'SF Pro',
-                                        fontSize: 15.sp,
-                                        fontWeight: FontWeight.w600,
-                                        color: const Color(0xFF1B1C1C),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        );
-                      }),
-                    ),
-                    SizedBox(height: 20.h),
-                  ],
+                  ),
                 ),
               ),
-            ),
-
-            // Bottom Button Area
-            FadeTransition(
-              opacity: _buttonOpacity,
-              child: SlideTransition(
-                position: _buttonSlide,
-                child: SafeArea(
-                  top: false,
-                  child: Padding(
-                    padding: EdgeInsets.fromLTRB(24.w, 10.h, 24.w, 20.h),
-                    child: SizedBox(
-                      width: double.infinity,
-                      height: 55.h,
-                      child: ElevatedButton(
-                        onPressed: widget.onContinue,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFC83A2D),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(50.r),
-                          ),
-                          elevation: 0,
-                        ),
-                        child: Text(
-                          'Try for \$0.00',
-                          style: TextStyle(
-                            fontFamily: 'SF Pro',
-                            fontSize: 18.sp,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white,
+              SizedBox(height: 8.h),
+              FadeTransition(
+                opacity: _titleOpacity,
+                child: SlideTransition(
+                  position: _titleSlide,
+                  child: Text(
+                    'Create your account to keep your recipes, meal plans, grocery lists, and savings tracker.',
+                    style: TextStyle(
+                      fontSize: 15.sp,
+                      color: const Color(0xFF4B5563),
+                      fontFamily: 'SF Pro',
+                      height: 1.3,
+                    ),
+                  ),
+                ),
+              ),
+              
+              // Image
+              Expanded(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(vertical: 16.h),
+                  child: FadeTransition(
+                    opacity: _imageOpacity,
+                    child: SlideTransition(
+                      position: _imageSlide,
+                      child: Center(
+                        child: Image.asset(
+                          'assets/onboarding/step25.png',
+                          fit: BoxFit.contain,
+                          errorBuilder: (context, error, stackTrace) => Container(
+                            color: Colors.grey[200],
+                            alignment: Alignment.center,
+                            child: const Text('assets/onboarding/step24.png missing'),
                           ),
                         ),
                       ),
@@ -238,10 +153,84 @@ class _FreeTrialIntroStepState extends State<FreeTrialIntroStep> with SingleTick
                   ),
                 ),
               ),
-            ),
-          ],
+
+              // Checklist
+              Column(
+                children: List.generate(_benefits.length, (index) {
+                  return FadeTransition(
+                    opacity: _itemOpacities[index],
+                    child: SlideTransition(
+                      position: _itemSlides[index],
+                      child: Padding(
+                        padding: EdgeInsets.only(bottom: 12.h),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Container(
+                              width: 22.w,
+                              height: 22.w,
+                              decoration: const BoxDecoration(
+                                color: Color(0xFFC83A2D),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(Icons.check, color: Colors.white, size: 14.sp),
+                            ),
+                            SizedBox(width: 12.w),
+                            Expanded(
+                              child: Text(
+                                _benefits[index],
+                                style: TextStyle(
+                                  fontFamily: 'SF Pro',
+                                  fontSize: 14.sp,
+                                  fontWeight: FontWeight.w600,
+                                  color: const Color(0xFF1B1C1C),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                }),
+              ),
+              SizedBox(height: 16.h),
+
+              // Bottom Button Area
+              FadeTransition(
+                opacity: _buttonOpacity,
+                child: SlideTransition(
+                  position: _buttonSlide,
+                  child: SizedBox(
+                    width: double.infinity,
+                    height: 55.h,
+                    child: ElevatedButton(
+                      onPressed: widget.onContinue,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFC83A2D),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(50.r),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: Text(
+                        'Try for \$0.00',
+                        style: TextStyle(
+                          fontFamily: 'SF Pro',
+                          fontSize: 18.sp,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(height: 10.h),
+            ],
+          ),
         );
-      }
+      },
     );
   }
 }

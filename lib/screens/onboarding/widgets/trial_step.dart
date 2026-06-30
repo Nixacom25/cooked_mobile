@@ -93,166 +93,168 @@ class _TrialStepState extends State<TrialStep> with SingleTickerProviderStateMix
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 30.h),
-      child: AnimatedBuilder(
-        animation: _controller,
-        builder: (context, child) {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-                    // The image is now moved up, this block is removed here.
-
-              // Image First
-              FadeTransition(
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Image First (Edge-to-edge)
+            Expanded(
+              child: FadeTransition(
                 opacity: _titleOpacity,
-                child: Center(
-                  child: Image.asset(
-                    'assets/images/step27.png', // Fallback, could be step27.png
-                    height: 280.h,
-                    fit: BoxFit.contain,
-                    errorBuilder: (context, error, stackTrace) => Container(
-                      height: 280.h,
-                      width: double.infinity,
-                      color: Colors.grey[200],
-                      alignment: Alignment.center,
-                      child: const Text('assets/images/step27.png missing'),
-                    ),
+                child: Image.asset(
+                  'assets/onboarding/step27.png',
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                  alignment: Alignment.center,
+                  errorBuilder: (context, error, stackTrace) => Container(
+                    color: Colors.grey[200],
+                    alignment: Alignment.center,
+                    child: const Text('assets/onboarding/step27.png missing'),
                   ),
                 ),
               ),
-              SizedBox(height: 24.h),
+            ),
+            SizedBox(height: 16.h),
 
-              // Title & Subtitle Below Image
-              FadeTransition(
-                opacity: _titleOpacity,
-                child: SlideTransition(
-                  position: _titleSlide,
-                  child: Column(
+            // Content with padding
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 24.w),
+              child: Column(
+                children: [
+                  // Title & Subtitle Below Image
+                  FadeTransition(
+                    opacity: _titleOpacity,
+                    child: SlideTransition(
+                      position: _titleSlide,
+                      child: Column(
+                        children: [
+                          Text(
+                            'Unlock your full\npersonalized\ncooking system.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 32.sp,
+                              fontWeight: FontWeight.w900,
+                              color: const Color(0xFF0D1B3E),
+                              fontFamily: 'Larken',
+                              height: 1.1,
+                              letterSpacing: -0.5,
+                            ),
+                          ),
+                          SizedBox(height: 8.h),
+                          Text(
+                            'Built around your goals, schedule, and taste.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 15.sp,
+                              color: const Color(0xFF4B5563),
+                              fontFamily: 'SF Pro',
+                              height: 1.3,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 24.h),
+
+                  // Subscription Options
+                  Row(
                     children: [
-                      Text(
-                        'Unlock your full\npersonalized\ncooking system.',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 32.sp,
-                          fontWeight: FontWeight.w900,
-                          color: const Color(0xFF0D1B3E),
-                          fontFamily: 'Larken',
-                          height: 1.1,
-                          letterSpacing: -0.5,
+                      Expanded(
+                        child: FadeTransition(
+                          opacity: _card1Opacity,
+                          child: Transform.scale(
+                            scale: _card1Scale.value,
+                            child: _buildPlanCard(
+                              id: 'monthly',
+                              title: 'Monthly',
+                              price: _monthlyPrice,
+                              isSelected: _selectedPlan == 'monthly',
+                            ),
+                          ),
                         ),
                       ),
-                      SizedBox(height: 12.h),
-                      Text(
-                        'Built around your goals, schedule,\nand taste.',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 16.sp,
-                          color: const Color(0xFF4B5563),
-                          fontFamily: 'SF Pro',
-                          height: 1.3,
+                      SizedBox(width: 16.w),
+                      Expanded(
+                        child: FadeTransition(
+                          opacity: _card2Opacity,
+                          child: Transform.scale(
+                            scale: _card2Scale.value,
+                            child: _buildPlanCard(
+                              id: 'yearly',
+                              title: 'Yearly',
+                              price: _yearlyPrice,
+                              isSelected: _selectedPlan == 'yearly',
+                              badge: widget.showTrialBadge ? '3 days free' : null,
+                            ),
+                          ),
                         ),
                       ),
                     ],
                   ),
-                ),
-              ),
-              SizedBox(height: 32.h),
+                  SizedBox(height: 24.h),
 
-              // Subscription Options
-              Row(
-                children: [
-                  Expanded(
-                    child: FadeTransition(
-                      opacity: _card1Opacity,
-                      child: Transform.scale(
-                        scale: _card1Scale.value,
-                        child: _buildPlanCard(
-                          id: 'monthly',
-                          title: 'Monthly',
-                          price: _monthlyPrice,
-                          isSelected: _selectedPlan == 'monthly',
-                        ),
-                      ),
-                    ),
-                  ),
-                  SizedBox(width: 16.w),
-                  Expanded(
-                    child: FadeTransition(
-                      opacity: _card2Opacity,
-                      child: Transform.scale(
-                        scale: _card2Scale.value,
-                        child: _buildPlanCard(
-                          id: 'yearly',
-                          title: 'Yearly',
-                          price: _yearlyPrice,
-                          isSelected: _selectedPlan == 'yearly',
-                          badge: widget.showTrialBadge ? '3 days free' : null,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: 32.h),
-
-              // Bottom Button Area
-              FadeTransition(
-                opacity: _card2Opacity,
-                child: Column(
-                  children: [
-                    Text(
-                      'No payment due today',
-                      style: TextStyle(
-                        fontFamily: 'SF Pro',
-                        fontSize: 14.sp,
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFFC83A2D),
-                      ),
-                    ),
-                    SizedBox(height: 16.h),
-                    SizedBox(
-                      width: double.infinity,
-                      height: 55.h,
-                      child: ElevatedButton(
-                        onPressed: () {
-                          widget.onPlanSelected(_selectedPlan);
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFC83A2D),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(50.r),
-                          ),
-                          elevation: 0,
-                        ),
-                        child: Text(
-                          'Try for Free',
+                  // Bottom Button Area
+                  FadeTransition(
+                    opacity: _card2Opacity,
+                    child: Column(
+                      children: [
+                        Text(
+                          'No payment due today',
                           style: TextStyle(
                             fontFamily: 'SF Pro',
-                            fontSize: 18.sp,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white,
+                            fontSize: 14.sp,
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xFFC83A2D),
                           ),
                         ),
-                      ),
+                        SizedBox(height: 12.h),
+                        SizedBox(
+                          width: double.infinity,
+                          height: 55.h,
+                          child: ElevatedButton(
+                            onPressed: () {
+                              widget.onPlanSelected(_selectedPlan);
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFFC83A2D),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(50.r),
+                              ),
+                              elevation: 0,
+                            ),
+                            child: Text(
+                              'Try for Free',
+                              style: TextStyle(
+                                fontFamily: 'SF Pro',
+                                fontSize: 18.sp,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                        SizedBox(height: 12.h),
+                        Text(
+                          '3 days free, then \$29.99/year. Cancel anytime.',
+                          style: TextStyle(
+                            fontFamily: 'SF Pro',
+                            fontSize: 12.sp,
+                            color: const Color(0xFF7B8190),
+                          ),
+                        ),
+                      ],
                     ),
-                    SizedBox(height: 16.h),
-                    Text(
-                      '3 days free, then \$29.99/year. Cancel anytime.',
-                      style: TextStyle(
-                        fontFamily: 'SF Pro',
-                        fontSize: 12.sp,
-                        color: const Color(0xFF7B8190),
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                  SizedBox(height: 10.h),
+                ],
               ),
-              SizedBox(height: 30.h),
-            ],
-          );
-        }
-      ),
+            ),
+          ],
+        );
+      },
     );
   }
 

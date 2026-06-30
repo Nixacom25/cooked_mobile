@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class FreeTrialGuideStep extends StatefulWidget {
   final VoidCallback onContinue;
@@ -76,199 +77,195 @@ class _FreeTrialGuideStepState extends State<FreeTrialGuideStep> with SingleTick
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, child) {
-        return Column(
-          children: [
-            Expanded(
-              child: SingleChildScrollView(
-                padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 30.h),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Title
-                    FadeTransition(
-                      opacity: _titleOpacity,
-                      child: SlideTransition(
-                        position: _titleSlide,
-                        child: Text(
-                          'Free trial guide',
-                          style: TextStyle(
-                            fontSize: 32.sp,
-                            fontWeight: FontWeight.w900,
-                            color: const Color(0xFF0D1B3E),
-                            fontFamily: 'Larken',
-                            height: 1.2,
-                            letterSpacing: -0.5,
-                          ),
-                        ),
-                      ),
+        return Padding(
+          padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 10.h),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Title
+              FadeTransition(
+                opacity: _titleOpacity,
+                child: SlideTransition(
+                  position: _titleSlide,
+                  child: Text(
+                    'Free trial guide',
+                    style: TextStyle(
+                      fontSize: 34.sp,
+                      fontWeight: FontWeight.w400,
+                      color: const Color(0xFF0D1B3E),
+                      fontFamily: 'Larken',
+                      height: 1.1,
+                      letterSpacing: -0.5,
                     ),
-                    SizedBox(height: 8.h),
-                    FadeTransition(
-                      opacity: _titleOpacity,
-                      child: SlideTransition(
-                        position: _titleSlide,
-                        child: Text(
-                          'Get the most out of your Cooked trial.',
-                          style: TextStyle(
-                            fontSize: 16.sp,
-                            color: const Color(0xFF7B8190),
-                            fontFamily: 'SF Pro',
-                            height: 1.3,
-                          ),
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 40.h),
-
-                    // Guide Container (Timeline)
-                    FadeTransition(
-                      opacity: _containerOpacity,
-                      child: SlideTransition(
-                        position: _containerSlide,
-                        child: Stack(
-                          children: [
-                            // Timeline line
-                            Positioned(
-                              left: 36.w, // Center of the cards (width 72)
-                              top: 40.h,
-                              bottom: 40.h,
-                              child: Container(
-                                width: 2.w,
-                                color: const Color(0xFFFDE8E8), // Light red line
-                              ),
-                            ),
-                            
-                            Column(
-                              children: [
-                                FadeTransition(
-                                  opacity: _itemOpacities[0],
-                                  child: SlideTransition(
-                                    position: _itemSlides[0],
-                                    child: _buildTimelineCard(
-                                      label: 'Today',
-                                      icon: Icons.lock_open,
-                                      color: const Color(0xFFC83A2D), // Red
-                                      bgColor: const Color(0xFFFFF1F2), // Light red
-                                      description: 'Unlock personalized recipes, meal suggestions, and ingredient scanning.',
-                                    ),
-                                  ),
-                                ),
-                                SizedBox(height: 32.h),
-                                FadeTransition(
-                                  opacity: _itemOpacities[1],
-                                  child: SlideTransition(
-                                    position: _itemSlides[1],
-                                    child: _buildTimelineCard(
-                                      label: 'Day 2',
-                                      icon: Icons.notifications_none,
-                                      color: const Color(0xFF0284C7), // Blue
-                                      bgColor: const Color(0xFFF0F9FF), // Light blue
-                                      description: 'We\'ll send you a reminder before your trial ends.',
-                                    ),
-                                  ),
-                                ),
-                                SizedBox(height: 32.h),
-                                FadeTransition(
-                                  opacity: _itemOpacities[2],
-                                  child: SlideTransition(
-                                    position: _itemSlides[2],
-                                    child: _buildTimelineCard(
-                                      label: 'Day 3',
-                                      icon: Icons.star_border,
-                                      color: const Color(0xFFD97706), // Yellow
-                                      bgColor: const Color(0xFFFEF3C7), // Light yellow
-                                      description: 'Full access starts. Cancel in advance to avoid payment.',
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 40.h),
-                    
-                    FadeTransition(
-                      opacity: _buttonOpacity,
-                      child: SlideTransition(
-                        position: _buttonSlide,
-                        child: Column(
-                          children: [
-                            Text(
-                              '3 days free, then \$29.99/year',
-                              style: TextStyle(
-                                fontFamily: 'SF Pro',
-                                fontSize: 16.sp,
-                                fontWeight: FontWeight.w800,
-                                color: const Color(0xFF1B1C1C),
-                              ),
-                            ),
-                            SizedBox(height: 12.h),
-                            Text(
-                              'View other plans',
-                              style: TextStyle(
-                                fontFamily: 'SF Pro',
-                                fontSize: 14.sp,
-                                fontWeight: FontWeight.w500,
-                                color: const Color(0xFF7B8190),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 20.h),
-                  ],
+                  ),
                 ),
               ),
-            ),
+              SizedBox(height: 8.h),
+              FadeTransition(
+                opacity: _titleOpacity,
+                child: SlideTransition(
+                  position: _titleSlide,
+                  child: Text(
+                    'Get the most out of your Cooked trial.',
+                    style: TextStyle(
+                      fontSize: 16.sp,
+                      color: const Color(0xFF7B8190),
+                      fontFamily: 'SF Pro',
+                      height: 1.3,
+                    ),
+                  ),
+                ),
+              ),
+              
+              SizedBox(height: 32.h),
 
-            // Bottom Button Area
-            FadeTransition(
-              opacity: _buttonOpacity,
-              child: SlideTransition(
-                position: _buttonSlide,
-                child: SafeArea(
-                  top: false,
-                  child: Padding(
-                    padding: EdgeInsets.fromLTRB(24.w, 0.h, 24.w, 20.h),
-                    child: SizedBox(
-                      width: double.infinity,
-                      height: 55.h,
-                      child: ElevatedButton(
-                        onPressed: widget.onContinue,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFC83A2D),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(50.r),
-                          ),
-                          elevation: 0,
+              // Guide Container (Timeline)
+              FadeTransition(
+                opacity: _containerOpacity,
+                child: SlideTransition(
+                  position: _containerSlide,
+                  child: Stack(
+                    children: [
+                      // Timeline line
+                      Positioned(
+                        left: 36.w, // Center of the cards (width 72.w)
+                        top: 44.h,
+                        bottom: 44.h,
+                        child: Container(
+                          width: 2.w,
+                          color: const Color(0xFFFDE8E8), // Soft peach line
                         ),
+                      ),
+                      
+                      Column(
+                        children: [
+                          FadeTransition(
+                            opacity: _itemOpacities[0],
+                            child: SlideTransition(
+                              position: _itemSlides[0],
+                              child: _buildTimelineCard(
+                                label: 'Today',
+                                iconPath: 'assets/icones/clock1.svg',
+                                color: const Color(0xFFC83A2D), // Red
+                                bgColor: const Color(0xFFFFF1F2), // Light red
+                                description: 'Unlock personalized recipes, meal suggestions, and ingredient scanning.',
+                              ),
+                            ),
+                          ),
+                          SizedBox(height: 24.h),
+                          FadeTransition(
+                            opacity: _itemOpacities[1],
+                            child: SlideTransition(
+                              position: _itemSlides[1],
+                              child: _buildTimelineCard(
+                                label: 'Day 2',
+                                iconPath: 'assets/icones/notif.svg',
+                                color: const Color(0xFF0284C7), // Blue
+                                bgColor: const Color(0xFFF0F9FF), // Light blue
+                                description: 'We\'ll send you a reminder before your trial ends.',
+                              ),
+                            ),
+                          ),
+                          SizedBox(height: 24.h),
+                          FadeTransition(
+                            opacity: _itemOpacities[2],
+                            child: SlideTransition(
+                              position: _itemSlides[2],
+                              child: _buildTimelineCard(
+                                label: 'Day 3',
+                                iconPath: 'assets/icones/star1.svg',
+                                color: const Color(0xFFD97706), // Yellow
+                                bgColor: const Color(0xFFFEF3C7), // Light yellow
+                                description: 'Full access starts. Cancel in advance to avoid payment.',
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              
+              SizedBox(height: 36.h),
+              
+              FadeTransition(
+                opacity: _buttonOpacity,
+                child: SlideTransition(
+                  position: _buttonSlide,
+                  child: Column(
+                    children: [
+                      Center(
                         child: Text(
-                          'Continue',
+                          '3 days free, then \$29.99/year',
                           style: TextStyle(
                             fontFamily: 'SF Pro',
-                            fontSize: 18.sp,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white,
+                            fontSize: 16.sp,
+                            fontWeight: FontWeight.w800,
+                            color: const Color(0xFF1B1C1C),
                           ),
+                        ),
+                      ),
+                      SizedBox(height: 12.h),
+                      Center(
+                        child: Text(
+                          'View other plans',
+                          style: TextStyle(
+                            fontFamily: 'SF Pro',
+                            fontSize: 14.sp,
+                            fontWeight: FontWeight.w500,
+                            color: const Color(0xFF7B8190),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              
+              const Spacer(),
+
+              // Bottom Button Area
+              FadeTransition(
+                opacity: _buttonOpacity,
+                child: SlideTransition(
+                  position: _buttonSlide,
+                  child: SizedBox(
+                    width: double.infinity,
+                    height: 55.h,
+                    child: ElevatedButton(
+                      onPressed: widget.onContinue,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFC83A2D),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(50.r),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: Text(
+                        'Continue',
+                        style: TextStyle(
+                          fontFamily: 'SF Pro',
+                          fontSize: 18.sp,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
                         ),
                       ),
                     ),
                   ),
                 ),
               ),
-            ),
-          ],
+              SizedBox(height: 10.h),
+            ],
+          ),
         );
-      }
+      },
     );
   }
 
   Widget _buildTimelineCard({
     required String label,
-    required IconData icon,
+    required String iconPath,
     required Color color,
     required Color bgColor,
     required String description,
@@ -279,21 +276,29 @@ class _FreeTrialGuideStepState extends State<FreeTrialGuideStep> with SingleTick
         // Card Icon
         Container(
           width: 72.w,
+          height: 88.h,
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(12.r),
-            border: Border.all(color: color.withOpacity(0.5)),
+            border: Border.all(
+              color: color.withOpacity(0.5),
+              width: 1.5.w,
+            ),
           ),
           child: Column(
-            mainAxisSize: MainAxisSize.min,
             children: [
               Container(
                 width: double.infinity,
-                padding: EdgeInsets.symmetric(vertical: 6.h),
+                height: 26.h,
                 decoration: BoxDecoration(
                   color: bgColor,
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(11.r)),
-                  border: Border(bottom: BorderSide(color: color.withOpacity(0.2))),
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(10.r)),
+                  border: Border(
+                    bottom: BorderSide(
+                      color: color.withOpacity(0.3),
+                      width: 1.w,
+                    ),
+                  ),
                 ),
                 alignment: Alignment.center,
                 child: Text(
@@ -306,9 +311,15 @@ class _FreeTrialGuideStepState extends State<FreeTrialGuideStep> with SingleTick
                   ),
                 ),
               ),
-              Padding(
-                padding: EdgeInsets.symmetric(vertical: 12.h),
-                child: Icon(icon, color: color, size: 28.sp),
+              Expanded(
+                child: Center(
+                  child: SvgPicture.asset(
+                    iconPath,
+                    width: 24.sp,
+                    height: 24.sp,
+                    colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
+                  ),
+                ),
               ),
             ],
           ),
@@ -323,8 +334,8 @@ class _FreeTrialGuideStepState extends State<FreeTrialGuideStep> with SingleTick
               fontFamily: 'SF Pro',
               fontSize: 15.sp,
               fontWeight: FontWeight.w500,
-              color: const Color(0xFF374151),
-              height: 1.4,
+              color: const Color(0xFF1B1C1C),
+              height: 1.35,
             ),
           ),
         ),

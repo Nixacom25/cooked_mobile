@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cooked/core/widgets/ios_toast.dart';
@@ -40,21 +41,34 @@ class _ExploreScreenState extends State<ExploreScreen>
   List<Recipe> _allPopularRecipes = [];
   List<Recipe> _allExploreRecipes = [];
   final List<Recipe> _recentRecipes = [];
+  Timer? _refreshTimer;
 
-  @override
-  void initState() {
-    super.initState();
-    _cuisinesFuture = RecipeService.instance.getExploreCuisines();
-    _categoriesFuture = RecipeService.instance.getExploreCategories();
-    _popularFuture = RecipeService.instance.getPopularRecipes(size: 10);
+  void _refreshData({bool force = false}) {
+    if (!mounted) return;
+    setState(() {
+      _cuisinesFuture = RecipeService.instance.getExploreCuisines(forceRefresh: force);
+      _categoriesFuture = RecipeService.instance.getExploreCategories(forceRefresh: force);
+      _popularFuture = RecipeService.instance.getPopularRecipes(size: 10, forceRefresh: force);
+    });
 
-    RecipeService.instance.getExploreRecipes(size: 100).then((recipes) {
+    RecipeService.instance.getExploreRecipes(size: 100, forceRefresh: force).then((recipes) {
       if (mounted) {
         setState(() {
           _allExploreRecipes = recipes;
         });
       }
     }).catchError((_) {});
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _refreshData(force: false);
+
+    // Live automatic updates every 5 minutes
+    _refreshTimer = Timer.periodic(const Duration(minutes: 5), (_) {
+      _refreshData(force: true);
+    });
 
     _searchCtrl.addListener(() {
       if (mounted) setState(() {});
@@ -106,6 +120,7 @@ class _ExploreScreenState extends State<ExploreScreen>
 
   @override
   void dispose() {
+    _refreshTimer?.cancel();
     _searchCtrl.dispose();
     _overlaySearchCtrl.dispose();
     _animationController.dispose();
@@ -606,13 +621,6 @@ class _ExploreScreenState extends State<ExploreScreen>
             ? popular.sublist(0, 10)
             : popular;
 
-        if (displayList.isEmpty) {
-          return Padding(
-            padding: EdgeInsets.symmetric(vertical: 40.h),
-            child: const Center(child: Text('No recipes found.')),
-          );
-        }
-
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -629,29 +637,35 @@ class _ExploreScreenState extends State<ExploreScreen>
               ),
             ),
             SizedBox(height: 8.h),
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20.w),
-              child: ValueListenableBuilder<List<Recipe>?>(
-                valueListenable: RecipeService.instance.myRecipesNotifier,
-                builder: (context, savedRecipes, _) {
-                  final savedIds = (savedRecipes ?? []).map((r) => r.id).toSet();
-                  final savedNames = (savedRecipes ?? [])
-                      .map((r) => r.name.toLowerCase())
-                      .toSet();
+            if (displayList.isEmpty)
+              Padding(
+                padding: EdgeInsets.symmetric(vertical: 40.h),
+                child: const Center(child: Text('No recipes found.')),
+              )
+            else
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 20.w),
+                child: ValueListenableBuilder<List<Recipe>?>(
+                  valueListenable: RecipeService.instance.myRecipesNotifier,
+                  builder: (context, savedRecipes, _) {
+                    final savedIds = (savedRecipes ?? []).map((r) => r.id).toSet();
+                    final savedNames = (savedRecipes ?? [])
+                        .map((r) => r.name.toLowerCase())
+                        .toSet();
 
-                  return GridView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    padding: EdgeInsets.zero,
-                    itemCount: popular.length,
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 16.w,
-                      mainAxisSpacing: 20.h,
-                      childAspectRatio: 0.72,
-                    ),
-                    itemBuilder: (context, i) {
-                      final recipe = popular[i];
+                    return GridView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      padding: EdgeInsets.zero,
+                      itemCount: displayList.length,
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        crossAxisSpacing: 16.w,
+                        mainAxisSpacing: 20.h,
+                        childAspectRatio: 0.72,
+                      ),
+                      itemBuilder: (context, i) {
+                        final recipe = displayList[i];
                       final isSaved = savedIds.contains(recipe.id) ||
                           savedNames.contains(recipe.name.toLowerCase());
 

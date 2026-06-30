@@ -433,6 +433,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       _pageController.jumpToPage(7);
       return;
     }
+
+    if (_currentPage == 29) {
+      // Skip TrialStep (28) when going back from PerfectMealStep (29) to FreeTrialGuideStep (27)
+      _pageController.jumpToPage(27);
+      return;
+    }
     
     if (_currentPage > 0) {
       _pageController.previousPage(
@@ -713,7 +719,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             child: Column(
               children: [
                 // Header: Progress & Skip
-                if (_currentPage != 8 && _currentPage != 20)
+                if (_currentPage != 8 && _currentPage != 20 && _currentPage != 28)
                   Padding(
                     padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 0),
                   child: Row(
