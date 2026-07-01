@@ -63,7 +63,6 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
   // GlobalKeys for tutorial
   final GlobalKey _shutterKey = GlobalKey();
   final GlobalKey _typeTabKey = GlobalKey();
-  final GlobalKey _scanMoreKey = GlobalKey();
 
   // LIVE CAMERA Logic
   CameraController? _cameraController;
@@ -568,6 +567,8 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                 // Spacer for buttons and pill nav
                 if (showPill)
                   SizedBox(height: 140.h)
+                else if (_state == ScanState.results)
+                  SizedBox(height: MediaQuery.of(context).padding.bottom + 15.h)
                 else
                   SizedBox(height: 100.h),
               ],
@@ -921,32 +922,15 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
       );
     }
 
-    // "Get Recipes" or "Scan More" buttons
-    Widget actionBtn;
     if (_state == ScanState.results) {
-      actionBtn = SizedBox(
-        key: _scanMoreKey,
-        child: _buildWideBtn("View Recipe", () {
-          if (_recipes.isNotEmpty) {
-            final int maxLen = _recipes.length > 10 ? 10 : _recipes.length;
-            if (_currentRecipeIndex < maxLen) {
-              final recipe = _recipes[_currentRecipeIndex];
-              // Assuming AppRoutes.recipeDetail is '/recipe_detail'
-              Navigator.pushNamed(
-                context,
-                '/recipe_detail',
-                arguments: {'recipe': recipe, 'isPreview': true},
-              );
-            }
-          }
-        }),
-      );
-    } else {
-      actionBtn = _buildWideBtn("Get Recipes", _generateFromTyped);
+      return const SizedBox.shrink();
     }
 
+    // "Get Recipes" button
+    Widget actionBtn = _buildWideBtn("Get Recipes", _generateFromTyped);
+
     return Positioned(
-      bottom: _state == ScanState.results ? 15.h : 90.h,
+      bottom: 90.h,
       left: 22.w,
       right: 22.w,
       child: SafeArea(top: false, child: actionBtn),
@@ -1535,7 +1519,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                   itemBuilder: (context, i) {
                     final recipe = _recipes[i];
                     return Padding(
-                      padding: EdgeInsets.only(right: 15.w, bottom: 20.h),
+                      padding: EdgeInsets.only(right: 15.w, bottom: 12.h),
                       child: GestureDetector(
                         onTap: () {
                            Navigator.pushNamed(
@@ -1552,7 +1536,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
         ),
         if (_recipes.isNotEmpty)
           Padding(
-            padding: EdgeInsets.only(bottom: 10.h),
+            padding: EdgeInsets.only(bottom: 0.h),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: List.generate(
@@ -1571,7 +1555,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
               ),
             ),
           ),
-        SizedBox(height: 10.h), // Reduced from 80.h to give cards more space
+        SizedBox(height: 5.h), // Reduced from 80.h to give cards more space
       ],
     );
   }

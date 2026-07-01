@@ -152,13 +152,15 @@ class GroceryScreenState extends State<GroceryScreen> with SingleTickerProviderS
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      resizeToAvoidBottomInset: false,
-      body: SafeArea(
-        bottom: false,
-        child: Stack(
-          children: [
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        resizeToAvoidBottomInset: false,
+        body: SafeArea(
+          bottom: false,
+          child: Stack(
+            children: [
             // ── Main content column ────────────────────────────────────────
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -407,8 +409,9 @@ class GroceryScreenState extends State<GroceryScreen> with SingleTickerProviderS
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildEmpty(List<GroceryItem> allItems) {
     return Center(
@@ -1276,32 +1279,60 @@ class _InlineAddRow extends StatefulWidget {
 
 class _InlineAddRowState extends State<_InlineAddRow> {
   bool _isEditing = false;
-  final _nameController = TextEditingController();
-  final _qtyController = TextEditingController();
-  final _nameFocusNode = FocusNode();
-  final _qtyFocusNode = FocusNode();
+  final _inputController = TextEditingController();
+  final _focusNode = FocusNode();
   bool _isSaving = false;
 
   @override
   void initState() {
     super.initState();
-    _qtyController.text = '1';
+    _focusNode.addListener(_onFocusChange);
+  }
+
+  void _onFocusChange() {
+    if (!_focusNode.hasFocus) {
+      if (!_isSaving) {
+        setState(() {
+          _isEditing = false;
+          _inputController.clear();
+        });
+      }
+    }
   }
 
   @override
   void dispose() {
-    _nameController.dispose();
-    _qtyController.dispose();
-    _nameFocusNode.dispose();
-    _qtyFocusNode.dispose();
+    _inputController.dispose();
+    _focusNode.removeListener(_onFocusChange);
+    _focusNode.dispose();
     super.dispose();
   }
 
   Future<void> _submit() async {
-    final name = _nameController.text.trim();
-    final qty = _qtyController.text.trim();
+    final rawText = _inputController.text.trim();
+    if (rawText.isEmpty) {
+      return;
+    }
+
+    final parts = rawText.split('-');
+    if (parts.length < 2) {
+      IosToast.show(
+        context,
+        message: 'Use format: Ingredient - Qty (e.g. Tomato - 2)',
+        type: ToastType.error,
+      );
+      return;
+    }
+
+    final name = parts[0].trim();
+    final qty = parts.sublist(1).join('-').trim();
+
     if (name.isEmpty) {
       IosToast.show(context, message: 'Please enter an ingredient name', type: ToastType.error);
+      return;
+    }
+    if (qty.isEmpty) {
+      IosToast.show(context, message: 'Please enter a quantity', type: ToastType.error);
       return;
     }
 
@@ -1312,12 +1343,10 @@ class _InlineAddRowState extends State<_InlineAddRow> {
     try {
       await GroceryService.instance.addGroceryItem(
         name: name,
-        quantity: qty.isEmpty ? '1' : qty,
+        quantity: qty,
         date: DateTime.now(),
       );
-      // Reset state on success
-      _nameController.clear();
-      _qtyController.text = '1';
+      _inputController.clear();
       setState(() {
         _isEditing = false;
       });
@@ -1344,9 +1373,8 @@ class _InlineAddRowState extends State<_InlineAddRow> {
               setState(() {
                 _isEditing = true;
               });
-              // Focus name field after build
               WidgetsBinding.instance.addPostFrameCallback((_) {
-                _nameFocusNode.requestFocus();
+                _focusNode.requestFocus();
                 Scrollable.ensureVisible(context, duration: const Duration(milliseconds: 300));
               });
             },
@@ -1408,7 +1436,6 @@ class _InlineAddRowState extends State<_InlineAddRow> {
           padding: EdgeInsets.symmetric(horizontal: 18.w, vertical: 8.h),
           child: Row(
             children: [
-              // Check icon in edit mode
               Container(
                 width: 20.w,
                 height: 20.w,
@@ -1436,17 +1463,17 @@ class _InlineAddRowState extends State<_InlineAddRow> {
                 style: TextStyle(fontSize: 15.sp),
               ),
               SizedBox(width: 5.w),
-              // Name text field
               Expanded(
                 child: TextField(
-                  controller: _nameController,
-                  focusNode: _nameFocusNode,
+                  controller: _inputController,
+                  focusNode: _focusNode,
                   textCapitalization: TextCapitalization.sentences,
+                  textInputAction: TextInputAction.done,
                   decoration: InputDecoration(
-                    hintText: 'Ingredient name',
+                    hintText: 'e.g. Tomato - 200g',
                     hintStyle: TextStyle(
                       fontFamily: 'SF Pro',
-                      fontSize: 15.sp,
+                      fontSize: 14.sp,
                       color: const Color(0xFFAAAAAA),
                     ),
                     border: InputBorder.none,
@@ -1459,77 +1486,20 @@ class _InlineAddRowState extends State<_InlineAddRow> {
                     fontSize: 15.sp,
                     color: const Color(0xFF1A1A1A),
                   ),
-                  onSubmitted: (_) => _qtyFocusNode.requestFocus(),
-                ),
-              ),
-              SizedBox(width: 10.w),
-              // Quantity text field
-              Container(
-                width: 60.w,
-                padding: EdgeInsets.symmetric(horizontal: 6.w),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF5F5F5),
-                  borderRadius: BorderRadius.circular(6.r),
-                ),
-                child: TextField(
-                  controller: _qtyController,
-                  focusNode: _qtyFocusNode,
-                  textAlign: TextAlign.center,
-                  decoration: InputDecoration(
-                    hintText: 'Qty',
-                    hintStyle: TextStyle(
-                      fontFamily: 'SF Pro',
-                      fontSize: 13.sp,
-                      color: const Color(0xFFAAAAAA),
-                    ),
-                    border: InputBorder.none,
-                    isDense: true,
-                    contentPadding: EdgeInsets.symmetric(vertical: 6.h),
-                  ),
-                  style: TextStyle(
-                    fontFamily: 'SF Pro',
-                    fontSize: 13.sp,
-                    color: const Color(0xFF1A1A1A),
-                  ),
                   onSubmitted: (_) => _submit(),
                 ),
               ),
-              SizedBox(width: 8.w),
-              // Validate button or loading indicator
-              _isSaving
-                  ? SizedBox(
-                      width: 24.w,
-                      height: 24.w,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2.w,
-                        valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFC83A2D)),
-                      ),
-                    )
-                  : GestureDetector(
-                      onTap: _submit,
-                      child: Icon(
-                        Icons.check_circle_rounded,
-                        color: const Color(0xFFC83A2D),
-                        size: 26.sp,
-                      ),
-                    ),
-              SizedBox(width: 4.w),
-              // Cancel button
-              if (!_isSaving)
-                GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      _isEditing = false;
-                      _nameController.clear();
-                      _qtyController.text = '1';
-                    });
-                  },
-                  child: Icon(
-                    Icons.cancel_rounded,
-                    color: const Color(0xFF888888),
-                    size: 26.sp,
+              if (_isSaving) ...[
+                SizedBox(width: 8.w),
+                SizedBox(
+                  width: 20.w,
+                  height: 20.w,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.w,
+                    valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFC83A2D)),
                   ),
                 ),
+              ],
             ],
           ),
         ),
@@ -1544,3 +1514,4 @@ class _InlineAddRowState extends State<_InlineAddRow> {
     );
   }
 }
+
