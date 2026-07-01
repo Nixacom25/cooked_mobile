@@ -1,3 +1,4 @@
+import 'home/home_screen.dart';
 import 'dart:async';
 import 'dart:ui';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -76,6 +77,9 @@ class _ExploreScreenState extends State<ExploreScreen>
     super.initState();
     _refreshData(force: false);
 
+    // Listen to tab switches to trigger live update
+    HomeScreen.activeTabNotifier.addListener(_onTabChanged);
+
     // Revalidate from network in the background on entry to get latest Cloudinary image updates
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _refreshData(force: true);
@@ -134,8 +138,15 @@ class _ExploreScreenState extends State<ExploreScreen>
     _searchOverlayEntry = null;
   }
 
+  void _onTabChanged() {
+    if (HomeScreen.activeTabNotifier.value == 1) {
+      _refreshData(force: true);
+    }
+  }
+
   @override
   void dispose() {
+    HomeScreen.activeTabNotifier.removeListener(_onTabChanged);
     _refreshTimer?.cancel();
     _searchCtrl.dispose();
     _overlaySearchCtrl.dispose();
@@ -385,22 +396,39 @@ class _ExploreScreenState extends State<ExploreScreen>
                                 ),
                               ],
                               color: const Color(0xFFF2F1EF),
-                              image: bustedImageUrl.isNotEmpty
-                                  ? DecorationImage(
-                                      image: CachedNetworkImageProvider(bustedImageUrl),
-                                      fit: BoxFit.cover,
-                                    )
-                                  : null,
                             ),
-                            child: imageUrl == null || imageUrl.isEmpty
-                                ? Center(
-                                    child: Icon(
-                                      Icons.restaurant_menu,
-                                      color: const Color(0xFFC83A2D),
-                                      size: 24.sp,
+                            child: ClipOval(
+                              child: bustedImageUrl.isNotEmpty
+                                  ? CachedNetworkImage(
+                                      imageUrl: bustedImageUrl,
+                                      cacheKey: imageUrl,
+                                      fit: BoxFit.cover,
+                                      placeholder: (context, url) => const Center(
+                                        child: SizedBox(
+                                          width: 16,
+                                          height: 16,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            color: Color(0xFFC83A2D),
+                                          ),
+                                        ),
+                                      ),
+                                      errorWidget: (context, url, error) => Center(
+                                        child: Icon(
+                                          Icons.restaurant_menu,
+                                          color: const Color(0xFFC83A2D),
+                                          size: 24.sp,
+                                        ),
+                                      ),
+                                    )
+                                  : Center(
+                                      child: Icon(
+                                        Icons.restaurant_menu,
+                                        color: const Color(0xFFC83A2D),
+                                        size: 24.sp,
+                                      ),
                                     ),
-                                  )
-                                : null,
+                            ),
                           ),
                           SizedBox(height: 5.h),
                           Text(
@@ -525,6 +553,7 @@ class _ExploreScreenState extends State<ExploreScreen>
                             child: bustedImageUrl.isNotEmpty
                                 ? CachedNetworkImage(
                                     imageUrl: bustedImageUrl,
+                                    cacheKey: imageUrl,
                                     width: 160.w,
                                     height: 130.h,
                                     fit: BoxFit.cover,

@@ -39,6 +39,9 @@ class HomeScreen extends StatefulWidget {
   final int initialTab;
   final String? initialUrl;
   const HomeScreen({super.key, this.initialTab = 0, this.initialUrl});
+
+  static final ValueNotifier<int> activeTabNotifier = ValueNotifier<int>(0);
+
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
@@ -244,6 +247,8 @@ class _HomeScreenState extends State<HomeScreen>
         _navCtrl.reverse(); // Show nav
       }
     });
+
+    HomeScreen.activeTabNotifier.value = i;
 
     // If returning to Home during tutorial, advance step based on where we came from
     if (TutorialService.instance.isTutorialActive && i == 0 && prev != 0) {

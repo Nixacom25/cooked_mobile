@@ -974,10 +974,12 @@ class _StaticCookbooksGrid extends StatefulWidget {
 
 class _StaticCookbooksGridState extends State<_StaticCookbooksGrid> {
   Future<List<Map<String, dynamic>>>? _future;
+  late final int _refreshTimestamp;
 
   @override
   void initState() {
     super.initState();
+    _refreshTimestamp = DateTime.now().millisecondsSinceEpoch;
     if (widget.type == ViewAllType.exploreCategories) {
       _future = RecipeService.instance.getExploreCategories();
     } else {
@@ -1051,6 +1053,9 @@ class _StaticCookbooksGridState extends State<_StaticCookbooksGrid> {
     int count,
   ) {
     final bool isCuisine = widget.type == ViewAllType.exploreCuisines;
+    final bustedImageUrl = imgUrl != null && imgUrl.isNotEmpty
+        ? '$imgUrl${imgUrl.contains('?') ? '&' : '?'}t=$_refreshTimestamp'
+        : '';
     return GestureDetector(
       onTap: () {
         Navigator.pushNamed(
@@ -1079,7 +1084,8 @@ class _StaticCookbooksGridState extends State<_StaticCookbooksGrid> {
                 color: const Color(0xFFF2F1EF),
                 child: imgUrl != null && imgUrl.startsWith('http')
                     ? CachedNetworkImage(
-                        imageUrl: imgUrl,
+                        imageUrl: bustedImageUrl,
+                        cacheKey: imgUrl,
                         fit: BoxFit.cover,
                         placeholder: (context, url) => const Center(
                           child: SizedBox(

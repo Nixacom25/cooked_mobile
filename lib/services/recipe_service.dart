@@ -334,12 +334,7 @@ class RecipeService {
   Future<List<Recipe>> getExploreRecipes({String? cuisine, String? category, int page = 0, int size = 10, bool forceRefresh = false}) async {
     final cacheKey = 'explore_recipes_${cuisine ?? ''}_${category ?? ''}_${page}_$size';
     if (!forceRefresh) {
-      if (_cache.containsKey(cacheKey)) {
-        final results = _cache[cacheKey] as List<Recipe>;
-        results.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
-        return results;
-      }
-      final cachedData = await _readFromPersistentCache(cacheKey, const Duration(hours: 12));
+      final cachedData = await _readFromPersistentCache(cacheKey, const Duration(seconds: 15));
       if (cachedData != null) {
         final List<dynamic> decodedList = cachedData;
         final results = decodedList
@@ -347,7 +342,6 @@ class RecipeService {
             .where((recipe) => recipe.status)
             .toList();
         results.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
-        _cache[cacheKey] = results;
         return results;
       }
     }
@@ -362,8 +356,18 @@ class RecipeService {
     if (response.statusCode == 200) {
       final results = await compute(_parseExploreRecipesData, response.body);
       results.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
-      _cache[cacheKey] = results;
       
+      if (forceRefresh) {
+        for (final recipe in results) {
+          final imageUrl = recipe.image;
+          if (imageUrl != null && imageUrl.isNotEmpty) {
+            try {
+              CachedNetworkImageProvider(imageUrl).evict().catchError((_) => false);
+            } catch (_) {}
+          }
+        }
+      }
+
       try {
         final Map<String, dynamic> data = jsonDecode(response.body);
         await _writeToPersistentCache(cacheKey, data['content']);
@@ -517,7 +521,7 @@ class RecipeService {
   Future<List<Map<String, dynamic>>> getExploreCuisines({bool forceRefresh = false}) async {
     const cacheKey = 'explore_cuisines';
     if (!forceRefresh) {
-      final cachedData = await _readFromPersistentCache(cacheKey, const Duration(minutes: 5));
+      final cachedData = await _readFromPersistentCache(cacheKey, const Duration(seconds: 15));
       if (cachedData != null) {
         final List<dynamic> decodedList = cachedData;
         final results = decodedList.map((item) => Map<String, dynamic>.from(item)).toList();
@@ -553,7 +557,7 @@ class RecipeService {
   Future<List<Map<String, dynamic>>> getExploreCategories({bool forceRefresh = false}) async {
     const cacheKey = 'explore_categories';
     if (!forceRefresh) {
-      final cachedData = await _readFromPersistentCache(cacheKey, const Duration(minutes: 5));
+      final cachedData = await _readFromPersistentCache(cacheKey, const Duration(seconds: 15));
       if (cachedData != null) {
         final List<dynamic> decodedList = cachedData;
         final results = decodedList.map((item) => Map<String, dynamic>.from(item)).toList();
@@ -611,12 +615,7 @@ class RecipeService {
   }) async {
     final cacheKey = 'popular_recipes_${category ?? ''}_${cuisine ?? ''}_${page}_$size';
     if (!forceRefresh) {
-      if (_cache.containsKey(cacheKey)) {
-        final results = _cache[cacheKey] as List<Recipe>;
-        results.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
-        return results;
-      }
-      final cachedData = await _readFromPersistentCache(cacheKey, const Duration(hours: 12));
+      final cachedData = await _readFromPersistentCache(cacheKey, const Duration(seconds: 15));
       if (cachedData != null) {
         final List<dynamic> decodedList = cachedData;
         final results = decodedList
@@ -624,7 +623,6 @@ class RecipeService {
             .where((recipe) => recipe.status)
             .toList();
         results.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
-        _cache[cacheKey] = results;
         return results;
       }
     }
@@ -639,8 +637,18 @@ class RecipeService {
     if (response.statusCode == 200) {
       final results = await compute(_parseExploreRecipesData, response.body);
       results.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
-      _cache[cacheKey] = results;
       
+      if (forceRefresh) {
+        for (final recipe in results) {
+          final imageUrl = recipe.image;
+          if (imageUrl != null && imageUrl.isNotEmpty) {
+            try {
+              CachedNetworkImageProvider(imageUrl).evict().catchError((_) => false);
+            } catch (_) {}
+          }
+        }
+      }
+
       try {
         final Map<String, dynamic> data = jsonDecode(response.body);
         await _writeToPersistentCache(cacheKey, data['content']);
