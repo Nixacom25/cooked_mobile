@@ -1890,12 +1890,23 @@ class _SuggestedRecipesSection extends StatefulWidget {
 
 class _SuggestedRecipesSectionState extends State<_SuggestedRecipesSection> {
   Timer? _pollingTimer;
+  Timer? _skeletonTimer;
   bool _isPolling = true;
+  bool _showSkeletons = true;
 
   @override
   void initState() {
     super.initState();
     _fetchSuggestions();
+
+    // Limit skeleton display to 5 seconds
+    _skeletonTimer = Timer(const Duration(seconds: 5), () {
+      if (mounted) {
+        setState(() {
+          _showSkeletons = false;
+        });
+      }
+    });
 
     // Polling: If suggestions are empty, check every 10 seconds for 2 minutes
     _startPolling();
@@ -1903,6 +1914,7 @@ class _SuggestedRecipesSectionState extends State<_SuggestedRecipesSection> {
 
   @override
   void dispose() {
+    _skeletonTimer?.cancel();
     _pollingTimer?.cancel();
     super.dispose();
   }
@@ -1954,6 +1966,16 @@ class _SuggestedRecipesSectionState extends State<_SuggestedRecipesSection> {
         // If we have an empty list but we are still polling, treat it as loading (null) to show skeletons
         if (displayList != null && displayList.isEmpty && _isPolling) {
           displayList = null;
+        }
+
+        // Handle loading/skeleton state vs timeout
+        if (displayList == null) {
+          if (!_showSkeletons) {
+            // Skeletons timed out (5s), hide section but keep polling in background
+            return const SizedBox.shrink();
+          }
+        } else if (displayList.isEmpty) {
+          return const SizedBox.shrink();
         }
 
         if (displayList != null && widget.searchQuery.trim().isNotEmpty) {
@@ -2411,7 +2433,7 @@ class _SavingsCardState extends State<_SavingsCard>
                                   textBaseline: TextBaseline.alphabetic,
                                   children: [
                                     Text(
-                                      "~\$${totalSaved.toStringAsFixed(0)}",
+                                      "\$${totalSaved.toStringAsFixed(0)}",
                                       style: TextStyle(
                                         fontFamily: 'SF Pro',
                                         fontSize: 28.sp,

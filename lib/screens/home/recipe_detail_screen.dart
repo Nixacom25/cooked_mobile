@@ -1873,17 +1873,18 @@ class _SavingsBreakdownCard extends StatelessWidget {
                     style: TextStyle(
                       fontFamily: 'Georgia',
                       fontStyle: FontStyle.italic,
-                      fontSize: 20.sp,
+                      fontSize: 18.sp,
                       color: const Color(0xFF623F18),
                       fontWeight: FontWeight.w900,
                     ),
                   ),
+                  const Spacer(),
                   Text(
-                    "~\$${savings.toStringAsFixed(2)}",
+                    "\$${savings.toStringAsFixed(2)}",
                     style: TextStyle(
                       fontFamily: 'SF Pro',
                       fontSize: 24.sp,
-                      color: const Color(0xFFC83A2D),
+                      color: const Color(0xFF00C40A),
                       fontWeight: FontWeight.w900,
                     ),
                   ),
