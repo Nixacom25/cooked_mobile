@@ -45,7 +45,14 @@ class _SplashScreenState extends State<SplashScreen>
         // Verify token by fetching user data
         await UserService.instance.getCurrentUser();
         if (!mounted) return;
-        Navigator.pushReplacementNamed(context, AppRoutes.home);
+        
+        final bool isUserPremium = UserService.instance.isPremium;
+        if (!isUserPremium) {
+          await AuthService.instance.logout();
+          Navigator.pushReplacementNamed(context, AppRoutes.welcome);
+        } else {
+          Navigator.pushReplacementNamed(context, AppRoutes.home);
+        }
       } catch (e) {
         // If token is invalid or expired, force logout and go to welcome
         await AuthService.instance.logout();

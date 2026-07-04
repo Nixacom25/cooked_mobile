@@ -161,9 +161,11 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                               'Create New Password',
                               style: TextStyle(
                                 fontSize: 24,
-                                fontWeight: FontWeight.w800,
+                                fontWeight: FontWeight.w400,
+                                fontFamily: 'Larken',
+                                height: 1.149,
+                                letterSpacing: 0.8,
                                 color: Colors.white,
-                                fontFamily: 'SF Pro',
                               ),
                             ),
                           ),
@@ -258,8 +260,9 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                 const Text(
                   'RESET PASSWORD',
                   style: TextStyle(
-                    fontFamily: 'SF Pro',
-                    fontWeight: FontWeight.w800,
+                    fontWeight: FontWeight.w400,
+                    fontFamily: 'Larken',
+                    height: 1.149,
                     fontSize: 14,
                     letterSpacing: 0.8,
                     color: AppColors.textDark,

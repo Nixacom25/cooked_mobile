@@ -193,10 +193,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 const Text(
                   'FORGOT PASSWORD',
                   style: TextStyle(
-                    fontFamily: 'SF Pro',
-                    fontWeight: FontWeight.w800,
-                    fontSize: 16,
-                    letterSpacing: 0.8,
+                    fontWeight: FontWeight.w400,
+                    fontFamily: 'Larken',
+                    height: 1.149,
+                    letterSpacing: 0,
+                    fontSize: 14,
                     color: AppColors.textDark,
                   ),
                 ),

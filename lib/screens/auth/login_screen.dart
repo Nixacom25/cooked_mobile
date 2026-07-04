@@ -7,6 +7,10 @@ import '../../services/auth_service.dart';
 import '../../core/widgets/ios_toast.dart';
 import '../../widgets/red_button.dart';
 import '../../core/utils/error_helper.dart';
+import '../premium/paywall_screen.dart';
+import '../../services/paywall_service.dart';
+import '../../core/api_config.dart';
+import '../../services/user_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -73,7 +77,7 @@ class _LoginScreenState extends State<LoginScreen> {
         message: "Login successful!",
         type: ToastType.success,
       );
-      nav.pushReplacementNamed(AppRoutes.home);
+      await _verifyPremiumAndNavigate(nav);
     } catch (e) {
       if (!mounted) return;
       IosToast.show(
@@ -110,7 +114,7 @@ class _LoginScreenState extends State<LoginScreen> {
         message: "Social login successful!",
         type: ToastType.success,
       );
-      nav.pushReplacementNamed(AppRoutes.home);
+      await _verifyPremiumAndNavigate(nav);
     } catch (e) {
       if (!mounted) return;
       IosToast.show(
@@ -120,6 +124,59 @@ class _LoginScreenState extends State<LoginScreen> {
       );
     } finally {
       if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _verifyPremiumAndNavigate(NavigatorState nav) async {
+    try {
+      await UserService.instance.getCurrentUser();
+      final bool isUserPremium = UserService.instance.isPremium;
+
+      if (!isUserPremium) {
+        final token = await AuthService.instance.getToken();
+        if (token != null) {
+          final paywallService = PaywallService(
+            baseUrl: ApiConfig.baseUrl,
+            authToken: token,
+          );
+          if (!mounted) return;
+          final purchased = await Navigator.push<bool>(
+            context,
+            MaterialPageRoute(
+              builder: (context) => PaywallScreen(
+                paywallService: paywallService,
+                flowType: PaywallFlowType.standard,
+              ),
+              fullscreenDialog: true,
+            ),
+          );
+          if (purchased == true) {
+            nav.pushReplacementNamed(AppRoutes.home);
+          } else {
+            await AuthService.instance.logout();
+            if (mounted) {
+              IosToast.show(
+                context,
+                message: "An active subscription is required to log in.",
+                type: ToastType.warning,
+              );
+            }
+          }
+        } else {
+          await AuthService.instance.logout();
+          nav.pushReplacementNamed(AppRoutes.welcome);
+        }
+      } else {
+        nav.pushReplacementNamed(AppRoutes.home);
+      }
+    } catch (e) {
+      if (mounted) {
+        IosToast.show(
+          context,
+          message: "Failed to verify subscription status.",
+          type: ToastType.error,
+        );
+      }
     }
   }
 
@@ -177,11 +234,12 @@ class _LoginScreenState extends State<LoginScreen> {
                   Text(
                     'SIGN IN',
                     style: TextStyle(
-                      fontFamily: 'SF Pro',
-                      fontWeight: FontWeight.w800,
-                      fontSize: 16.sp,
-                      letterSpacing: 0.5,
-                      color: const Color(0xFF0D1B36),
+                      fontWeight: FontWeight.w400,
+                      fontFamily: 'Larken',
+                      height: 1.149,
+                      fontSize: 14,
+                      letterSpacing: 0.8,
+                      color: AppColors.textDark,
                     ),
                   ),
                 ],
@@ -252,12 +310,14 @@ class _LoginScreenState extends State<LoginScreen> {
                         children: [
                           Center(
                             child: Text(
-                              'Sign To Your Account',
+                              'Sign In To Your Account',
                               style: TextStyle(
-                                fontSize: 26.sp,
-                                fontWeight: FontWeight.w700,
+                                fontSize: 25.sp,
+                                fontWeight: FontWeight.w400,
+                                fontFamily: 'Larken',
+                                height: 1.149,
+                                letterSpacing: 0.8,
                                 color: Colors.white,
-                                fontFamily: 'SF Pro',
                               ),
                             ),
                           ),

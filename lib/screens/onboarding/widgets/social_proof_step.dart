@@ -167,14 +167,14 @@ class _SocialProofStepState extends State<SocialProofStep>
                       child: SlideTransition(
                         position: _subtitleSlide,
                         child: Text(
-                          'stars from thousands of\nfood lovers',
+                          'Stars from thousands of\nfood lovers',
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontSize: 24.sp,
-                            fontWeight: FontWeight.w800,
-                            color: const Color(0xFF1B1C1C),
-                            fontFamily: 'SF Pro',
-                            height: 1.2,
+                            fontWeight: FontWeight.w400,
+                            color: const Color(0xFF111827),
+                            fontFamily: 'Larken',
+                            height: 1.149,
                             letterSpacing: -0.5,
                           ),
                         ),

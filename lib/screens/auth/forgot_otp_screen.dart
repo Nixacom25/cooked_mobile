@@ -333,8 +333,9 @@ class _ForgotOtpScreenState extends State<ForgotOtpScreen> {
                 const Text(
                   'VERIFICATION CODE',
                   style: TextStyle(
-                    fontFamily: 'SF Pro',
-                    fontWeight: FontWeight.w800,
+                    fontWeight: FontWeight.w400,
+                    fontFamily: 'Larken',
+                    height: 1.149,
                     fontSize: 14,
                     letterSpacing: 0.8,
                     color: AppColors.textDark,

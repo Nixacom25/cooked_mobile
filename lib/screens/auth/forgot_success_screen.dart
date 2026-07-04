@@ -112,9 +112,9 @@ class _ForgotSuccessScreenState extends State<ForgotSuccessScreen>
                                     textAlign: TextAlign.center,
                                     style: TextStyle(
                                       fontSize: 28,
-                                      fontWeight: FontWeight.w900,
-                                      color: Color(0xFF160B0B),
-                                      fontFamily: 'SF Pro',
+                                      fontWeight: FontWeight.w400,
+                                      fontFamily: 'Larken',
+                                      color: AppColors.textDark,
                                     ),
                                   ),
                                   const SizedBox(height: 3),

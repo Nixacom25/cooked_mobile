@@ -201,16 +201,6 @@ class _TrialStepState extends State<TrialStep> with SingleTickerProviderStateMix
                     opacity: _card2Opacity,
                     child: Column(
                       children: [
-                        Text(
-                          'No payment due today',
-                          style: TextStyle(
-                            fontFamily: 'SF Pro',
-                            fontSize: 14.sp,
-                            fontWeight: FontWeight.w600,
-                            color: const Color(0xFFC83A2D),
-                          ),
-                        ),
-                        SizedBox(height: 12.h),
                         SizedBox(
                           width: double.infinity,
                           height: 55.h,
@@ -221,12 +211,12 @@ class _TrialStepState extends State<TrialStep> with SingleTickerProviderStateMix
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFFC83A2D),
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(50.r),
+                                  borderRadius: BorderRadius.circular(50.r),
                               ),
                               elevation: 0,
                             ),
                             child: Text(
-                              'Try for Free',
+                              _selectedPlan == 'yearly' ? 'Try for Free' : 'Subscribe Now',
                               style: TextStyle(
                                 fontFamily: 'SF Pro',
                                 fontSize: 18.sp,
@@ -238,7 +228,9 @@ class _TrialStepState extends State<TrialStep> with SingleTickerProviderStateMix
                         ),
                         SizedBox(height: 12.h),
                         Text(
-                          '3 days free, then \$29.99/year. Cancel anytime.',
+                          _selectedPlan == 'yearly'
+                              ? '3 days free, then \$29.99/year. Cancel anytime.'
+                              : 'Billed immediately at $_monthlyPrice. Cancel anytime.',
                           style: TextStyle(
                             fontFamily: 'SF Pro',
                             fontSize: 12.sp,

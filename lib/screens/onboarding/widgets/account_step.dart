@@ -160,11 +160,12 @@ class _AccountStepState extends State<AccountStep> {
                   Text(
                     'Create your account',
                     style: TextStyle(
-                      fontSize: 24.sp,
-                      fontWeight: FontWeight.w900,
-                      color: const Color(0xFF0D1B3E),
-                      fontFamily: 'SF Pro',
-                      height: 1.2,
+                      fontSize: 28.sp,
+                      fontWeight: FontWeight.w400,
+                      color: const Color(0xFF111827),
+                      fontFamily: 'Larken',
+                      height: 1.149,
+                      letterSpacing: 0,
                     ),
                   ),
                   SizedBox(height: 10.h),

@@ -119,7 +119,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   void _initIap() async {
     IapService.instance.initialize();
     IapService.instance.onPurchaseSuccess = () {
-      if (mounted && _currentPage == 19) {
+      if (mounted && _currentPage == 28) {
+        setState(() => _isLoading = false);
         _pageController.nextPage(
           duration: const Duration(milliseconds: 300),
           curve: Curves.easeInOut,
@@ -421,6 +422,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   void _onBack() {
     HapticFeedback.selectionClick();
     FocusScope.of(context).unfocus();
+    if (_currentPage >= 25) return; // Disable back navigation once account creation/OTP phase starts
     if (_currentPage == 20 || _currentPage == 8) return; // Prevent going back during loading steps
     if (_currentPage == 21) {
       // Skip ProfileLoadingStep (20) when going back from SocialProofStep (21)
@@ -431,12 +433,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     if (_currentPage == 9) {
       // Skip CookingSystemLoadingStep (8) when going back from GoalsStep
       _pageController.jumpToPage(7);
-      return;
-    }
-
-    if (_currentPage == 29) {
-      // Skip TrialStep (28) when going back from PerfectMealStep (29) to FreeTrialGuideStep (27)
-      _pageController.jumpToPage(27);
       return;
     }
     
@@ -633,7 +629,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
       // Navigation logic ONLY after success
       if (isGuest || isSocial) {
-        _pageController.jumpToPage(27); // Jump to FreeTrialGuideStep directly
+        _pageController.jumpToPage(26); // Jump to FreeTrialIntroStep directly
       } else {
         _pageController.jumpToPage(25); // Jump to OtpStep for local auth
       }
@@ -704,22 +700,28 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      resizeToAvoidBottomInset: false,
-      body: GestureDetector(
-        behavior: HitTestBehavior.translucent,
-        onTap: () => FocusScope.of(context).unfocus(),
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-          // Image.asset('assets/images/fond.png', fit: BoxFit.cover),
-          Container(color: Colors.white),
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        _onBack();
+      },
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        resizeToAvoidBottomInset: false,
+        body: GestureDetector(
+          behavior: HitTestBehavior.translucent,
+          onTap: () => FocusScope.of(context).unfocus(),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+            // Image.asset('assets/images/fond.png', fit: BoxFit.cover),
+            Container(color: Colors.white),
           SafeArea(
             child: Column(
               children: [
                 // Header: Progress & Skip
-                if (_currentPage != 8 && _currentPage != 20 && _currentPage != 28)
+                if (_currentPage != 8 && _currentPage != 20 && _currentPage < 25)
                   Padding(
                     padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 0),
                   child: Row(
@@ -948,7 +950,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       TrialStep(
                         onPlanSelected: (plan) {
                           setState(() => _selectedPlanId = plan);
-                          _pageController.nextPage(duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
+                          _onContinue();
                         },
                         onSkip: () {
                           _pageController.nextPage(duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
@@ -1120,6 +1122,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         ],
       ),
     ),
-  );
-}
+    ),
+    );
+  }
 }
