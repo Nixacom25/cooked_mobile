@@ -44,9 +44,11 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'dart:ui';
 
 import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:rive/rive.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await RiveNative.init();
 
   await Firebase.initializeApp();
 
