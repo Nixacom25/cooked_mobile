@@ -53,12 +53,12 @@ class _ScanAnimationOverlayState extends State<ScanAnimationOverlay> {
     try {
       final file = await rive.File.asset(
         'assets/onboarding/cooked.riv',
-        riveFactory: rive.Factory.rive,
+        riveFactory: rive.Factory.canvas,
         assetLoader: _loadRiveAsset,
       );
       if (mounted && file != null) {
         setState(() {
-          _fileLoader = rive.FileLoader.fromFile(file, riveFactory: rive.Factory.rive);
+          _fileLoader = rive.FileLoader.fromFile(file, riveFactory: rive.Factory.canvas);
         });
       }
     } catch (e) {
