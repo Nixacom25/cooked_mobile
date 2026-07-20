@@ -128,56 +128,59 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _verifyPremiumAndNavigate(NavigatorState nav) async {
-    try {
-      await UserService.instance.getCurrentUser();
-      final bool isUserPremium = UserService.instance.isPremium;
+    // try {
+    //   await UserService.instance.getCurrentUser();
+    //   final bool isUserPremium = UserService.instance.isPremium;
 
-      if (!isUserPremium) {
-        final token = await AuthService.instance.getToken();
-        if (token != null) {
-          final paywallService = PaywallService(
-            baseUrl: ApiConfig.baseUrl,
-            authToken: token,
-          );
-          if (!mounted) return;
-          final purchased = await Navigator.push<bool>(
-            context,
-            MaterialPageRoute(
-              builder: (context) => PaywallScreen(
-                paywallService: paywallService,
-                flowType: PaywallFlowType.standard,
-              ),
-              fullscreenDialog: true,
-            ),
-          );
-          if (purchased == true) {
-            nav.pushReplacementNamed(AppRoutes.home);
-          } else {
-            await AuthService.instance.logout();
-            if (mounted) {
-              IosToast.show(
-                context,
-                message: "An active subscription is required to log in.",
-                type: ToastType.warning,
-              );
-            }
-          }
-        } else {
-          await AuthService.instance.logout();
-          nav.pushReplacementNamed(AppRoutes.welcome);
-        }
-      } else {
-        nav.pushReplacementNamed(AppRoutes.home);
-      }
-    } catch (e) {
-      if (mounted) {
-        IosToast.show(
-          context,
-          message: "Failed to verify subscription status.",
-          type: ToastType.error,
-        );
-      }
-    }
+    //   if (!isUserPremium) {
+    //     final token = await AuthService.instance.getToken();
+    //     if (token != null) {
+    //       final paywallService = PaywallService(
+    //         baseUrl: ApiConfig.baseUrl,
+    //         authToken: token,
+    //       );
+    //       if (!mounted) return;
+    //       final purchased = await Navigator.push<bool>(
+    //         context,
+    //         MaterialPageRoute(
+    //           builder: (context) => PaywallScreen(
+    //             paywallService: paywallService,
+    //             flowType: PaywallFlowType.standard,
+    //           ),
+    //           fullscreenDialog: true,
+    //         ),
+    //       );
+    //       if (purchased == true) {
+    //         nav.pushReplacementNamed(AppRoutes.home);
+    //       } else {
+    //         await AuthService.instance.logout();
+    //         if (mounted) {
+    //           IosToast.show(
+    //             context,
+    //             message: "An active subscription is required to log in.",
+    //             type: ToastType.warning,
+    //           );
+    //         }
+    //       }
+    //     } else {
+    //       await AuthService.instance.logout();
+    //       nav.pushReplacementNamed(AppRoutes.welcome);
+    //     }
+    //   } else {
+    //     nav.pushReplacementNamed(AppRoutes.home);
+    //   }
+    // } catch (e) {
+    //   if (mounted) {
+    //     IosToast.show(
+    //       context,
+    //       message: "Failed to verify subscription status.",
+    //       type: ToastType.error,
+    //     );
+    //   }
+    // }
+    
+    // TEMPORAIRE : On contourne la vérification d'abonnement et on va direct vers l'accueil.
+    nav.pushReplacementNamed(AppRoutes.home);
   }
 
   @override

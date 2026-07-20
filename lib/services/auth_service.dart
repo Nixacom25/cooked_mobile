@@ -143,23 +143,47 @@ class AuthService {
         'Register error [${response.statusCode}]: ${response.body}',
         name: 'AuthService',
       );
-      throw Exception(
-        _extractErrorMessage(
-          response.body,
-          'Registration failed. Please check your information.',
-        ),
+      final errorMessage = _extractErrorMessage(
+        response.body,
+        'Registration failed. Please check your information.',
       );
+
+      bool accountExists = response.statusCode == 409 ||
+          errorMessage.toLowerCase().contains('already exists') ||
+          errorMessage.toLowerCase().contains('email in use') ||
+          errorMessage.toLowerCase().contains('existe déjà');
+
+      if (accountExists) {
+        try {
+          final loginResult = await login(
+            identifier: email,
+            password: password,
+            provider: provider ?? 'LOCAL',
+          );
+          loginResult['info_message'] = 'Ce compte existe déjà. Vous avez été connecté avec succès.';
+          return loginResult;
+        } catch (e) {
+          if (provider == 'GOOGLE' || provider == 'APPLE') {
+            throw Exception('Ce compte existe déjà, mais la connexion via $provider a échoué.');
+          } else {
+            throw Exception('Ce compte existe déjà, mais les identifiants sont incorrects. Veuillez utiliser "Mot de passe oublié".');
+          }
+        }
+      }
+
+      throw Exception(errorMessage);
     }
   }
 
   Future<Map<String, dynamic>> login({
     required String identifier, // email or phone
     required String password,
+    String provider = 'LOCAL',
   }) async {
     final url = Uri.parse('${ApiConfig.baseUrl}/auth/login');
     
     developer.log(
-      'Attempting Login: $url',
+      'Attempting Login: $url (provider: $provider)',
       name: 'AuthService',
     );
     
@@ -169,7 +193,7 @@ class AuthService {
       body: jsonEncode({
         'identifier': identifier,
         'password': password,
-        'provider': 'LOCAL',
+        'provider': provider,
       }),
     );
 

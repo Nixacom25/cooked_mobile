@@ -491,6 +491,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     }
 
     try {
+      Map<String, dynamic>? registerResult;
       if (!isGuest) {
         if (!isSocial) {
           // Standard Email Signup
@@ -504,7 +505,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             finalLast = trimmedName.substring(lastSpaceIndex + 1).trim();
           }
 
-          await AuthService.instance.register(
+          registerResult = await AuthService.instance.register(
             firstname: finalFirst,
             lastname: finalLast,
             email: _email,
@@ -581,7 +582,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           developer.log('Final Registration Info: $finalEmail, $finalFirst $finalLast', name: 'OnboardingScreen');
 
           // Now call register with ALL preferences + social identity
-          await AuthService.instance.register(
+          registerResult = await AuthService.instance.register(
             firstname: finalFirst,
             lastname: finalLast,
             email: finalEmail,
@@ -625,6 +626,18 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       if (!isGuest) {
         TutorialService.instance.reset();
         await OnboardingStorage.clear();
+      }
+
+      bool isFallbackLogin = registerResult?['info_message'] != null;
+
+      if (isFallbackLogin) {
+        IosToast.show(
+          context,
+          message: registerResult!['info_message'],
+          type: ToastType.success,
+        );
+        Navigator.pushReplacementNamed(context, AppRoutes.home);
+        return;
       }
 
       // Navigation logic ONLY after success
