@@ -53,12 +53,11 @@ class _RiveTesterScreenState extends State<RiveTesterScreen> {
       
       final file = await rive.File.asset(
         'assets/onboarding/cooked.riv',
-        riveFactory: rive.Factory.canvas, // Use canvas for iOS compatibility
         assetLoader: _loadRiveAsset,
       );
       if (mounted && file != null) {
         setState(() {
-          _fileLoader = rive.FileLoader.fromFile(file, riveFactory: rive.Factory.canvas);
+          _fileLoader = rive.FileLoader.fromFile(file);
           _status = "File loaded. Waiting for artboard...";
         });
       }
