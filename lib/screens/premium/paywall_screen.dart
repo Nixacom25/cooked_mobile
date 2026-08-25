@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:in_app_purchase/in_app_purchase.dart';
+import 'package:purchases_flutter/purchases_flutter.dart';
 import '../../services/paywall_service.dart';
 import '../../services/iap_service.dart';
+import '../../services/revenuecat_service.dart';
 import '../../core/utils/error_helper.dart';
 import '../../services/user_service.dart';
 import '../../widgets/red_button.dart';
@@ -31,7 +32,8 @@ class _PaywallScreenState extends State<PaywallScreen> {
   Map<String, dynamic>? config;
   bool isLoading = true;
   bool _isPurchasing = false;
-  List<ProductDetails> _products = [];
+  Offerings? _offerings;
+  Package? _selectedPackage;
   String _selectedPlanId = 'yearly_sub';
 
   bool get isOffer => widget.flowType == PaywallFlowType.offer;
@@ -86,15 +88,15 @@ class _PaywallScreenState extends State<PaywallScreen> {
         flow: widget.flowType == PaywallFlowType.offer ? 'OFFER' : null,
       );
 
-      final products = await IapService.instance.getProducts({
-        'monthly_sub',
-        'yearly_sub',
-      });
+      final offerings = await RevenueCatService.instance.getOfferings();
 
       if (mounted) {
         setState(() {
           config = data;
-          _products = products;
+          _offerings = offerings;
+          if (offerings != null && offerings.current != null) {
+            _selectedPackage = offerings.current?.annual ?? offerings.current?.availablePackages.firstOrNull;
+          }
           isLoading = false;
         });
         widget.paywallService.trackEvent(
@@ -372,6 +374,14 @@ class _PaywallScreenState extends State<PaywallScreen> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           GestureDetector(
+                            onTap: _handleRestore,
+                            child: Text(
+                              'Restore Purchases',
+                              style: TextStyle(fontSize: 12.sp, color: const Color(0xFF7B8190), fontWeight: FontWeight.bold, decoration: TextDecoration.underline),
+                            ),
+                          ),
+                          Text('  •  ', style: TextStyle(fontSize: 12.sp, color: const Color(0xFF7B8190))),
+                          GestureDetector(
                             onTap: () => LegalContentModal.show(context, title: 'Terms of Use', content: dummyTerms),
                             child: Text(
                               'Terms of Use',
@@ -400,12 +410,17 @@ class _PaywallScreenState extends State<PaywallScreen> {
   }
 
   String _getProductPrice(String id, String defaultPrice) {
-    if (_products.isEmpty) return defaultPrice;
+    if (_offerings == null || _offerings!.current == null) return defaultPrice;
     try {
-      return _products.firstWhere((p) => p.id == id).price;
-    } catch (_) {
-      return defaultPrice;
-    }
+      final current = _offerings!.current!;
+      if (id == 'yearly_sub' && current.annual != null) {
+        return current.annual!.storeProduct.priceString;
+      }
+      if (id == 'monthly_sub' && current.monthly != null) {
+        return current.monthly!.storeProduct.priceString;
+      }
+    } catch (_) {}
+    return defaultPrice;
   }
 
   Widget _buildTimelineItem({
@@ -590,49 +605,37 @@ class _PaywallScreenState extends State<PaywallScreen> {
       metadata: _selectedPlanId,
     );
 
-    if (_products.isEmpty) {
-      setState(() => isLoading = true);
-      try {
-        final products = await IapService.instance.getProducts({
-          'monthly_sub',
-          'yearly_sub',
-        });
-        if (mounted) {
-          setState(() {
-            _products = products;
-            isLoading = false;
-          });
-        }
-        if (products.isEmpty) {
-          _showErrorSnackBar("Store unavailable. Please check your connection or try again later.");
-          return;
-        }
-      } catch (e) {
-        if (mounted) setState(() => isLoading = false);
-        _showErrorSnackBar("Could not connect to the Store.");
-        return;
-      }
-    }
-
     try {
       setState(() => _isPurchasing = true);
-      ProductDetails? product;
-      for (var p in _products) {
-        if (p.id == _selectedPlanId) {
-          product = p;
-          break;
+      Package? packageToBuy = _selectedPackage;
+      
+      if (packageToBuy == null && _offerings?.current != null) {
+        final current = _offerings!.current!;
+        if (_selectedPlanId == 'yearly_sub') {
+          packageToBuy = current.annual ?? current.availablePackages.firstOrNull;
+        } else {
+          packageToBuy = current.monthly ?? current.availablePackages.lastOrNull;
         }
       }
-      
-      // Fallback if ID doesn't match
-      product ??= _products.first;
 
-      final success = await IapService.instance.buyProduct(product);
-      if (!success) {
-        _showErrorSnackBar("Could not initiate purchase with the Store.");
+      if (packageToBuy != null) {
+        await RevenueCatService.instance.buyPackage(packageToBuy);
+      } else {
+        _showErrorSnackBar("RevenueCat Offerings look empty or not configured yet on console.");
       }
     } catch (e) {
       _showErrorSnackBar("Purchase failed: ${e.toString()}");
+    } finally {
+      if (mounted) setState(() => _isPurchasing = false);
+    }
+  }
+
+  Future<void> _handleRestore() async {
+    setState(() => _isPurchasing = true);
+    try {
+      await RevenueCatService.instance.restorePurchases();
+    } catch (e) {
+      _showErrorSnackBar("Restore error: ${e.toString()}");
     } finally {
       if (mounted) setState(() => _isPurchasing = false);
     }

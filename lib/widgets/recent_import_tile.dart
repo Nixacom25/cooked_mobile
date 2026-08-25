@@ -69,32 +69,32 @@ class RecentImportTile extends StatelessWidget {
       margin: EdgeInsets.only(bottom: 12.h),
       padding: EdgeInsets.all(12.r),
       decoration: BoxDecoration(
-        color: const Color(0xFFF9F8F6),
-        borderRadius: BorderRadius.circular(16.r),
+        color: const Color(0xFFFAF5E8), // Cream yellow matching mockup
+        borderRadius: BorderRadius.circular(20.r),
       ),
       child: Row(
         children: [
           ClipRRect(
-            borderRadius: BorderRadius.circular(12.r),
-            child: SizedBox(width: 56.w, height: 56.h, child: _buildImage(img)),
+            borderRadius: BorderRadius.circular(16.r),
+            child: SizedBox(width: 80.w, height: 80.h, child: _buildImage(img)),
           ),
-          SizedBox(width: 12.w),
+          SizedBox(width: 14.w),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   title.toTitleCase(),
-                  maxLines: 1,
+                  maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    fontFamily: 'SF Pro',
-                    fontWeight: FontWeight.bold,
-                    fontSize: 15.sp,
-                    color: const Color(0xFF1A1A1A),
+                    fontFamily: 'Rubik',
+                    fontWeight: FontWeight.w800,
+                    fontSize: 16.sp,
+                    color: const Color(0xFF0F172A),
                   ),
                 ),
-                SizedBox(height: 4.h),
+                SizedBox(height: 6.h),
                 GestureDetector(
                   onTap: _launchUrl,
                   child: Row(
@@ -107,9 +107,10 @@ class RecentImportTile extends StatelessWidget {
                       Text(
                         source,
                         style: TextStyle(
-                          fontFamily: 'SF Pro',
-                          fontSize: 12.sp,
-                          color: const Color(0xFF888888),
+                          fontFamily: 'Rubik',
+                          fontWeight: FontWeight.w500,
+                          fontSize: 13.sp,
+                          color: const Color(0xFF64748B),
                         ),
                       ),
                     ],

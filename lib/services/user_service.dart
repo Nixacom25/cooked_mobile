@@ -34,6 +34,14 @@ class UserService {
     return false;
   }
 
+  void updateLocalUserPremiumStatus(bool isPremium) {
+    if (currentUserNotifier.value != null) {
+      final updated = Map<String, dynamic>.from(currentUserNotifier.value!);
+      updated['subscriptionStatus'] = isPremium ? 'ACTIVE' : 'EXPIRED';
+      currentUserNotifier.value = updated;
+    }
+  }
+
   Future<Map<String, String>> _getHeaders() async {
     final token = await AuthService.instance.getToken();
     return {

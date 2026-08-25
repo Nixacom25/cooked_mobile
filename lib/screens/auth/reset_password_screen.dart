@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../../core/theme/app_theme.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../routes/app_routes.dart';
 import '../../services/auth_service.dart';
 import '../../core/widgets/ios_toast.dart';
@@ -65,7 +65,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
         type: ToastType.success,
       );
       nav.pushNamedAndRemoveUntil(
-        AppRoutes.home,
+        AppRoutes.forgotSuccess,
         (route) => false,
       );
     } catch (e) {
@@ -91,187 +91,151 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       resizeToAvoidBottomInset: false,
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          // Background
-          Image.asset('assets/images/fond.png', fit: BoxFit.cover),
-
-          // Logo + Cooked centered above card
-          Positioned.fill(
-            bottom: 380,
-            child: Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Image.asset(
-                    'assets/images/logo.png',
-                    width: 100,
-                    fit: BoxFit.contain,
-                  ),
-                ],
-              ),
+      body: GestureDetector(
+        behavior: HitTestBehavior.translucent,
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            // Background image fond_page.png
+            Image.asset(
+              'assets/images/fond_page.png',
+              fit: BoxFit.cover,
+              width: double.infinity,
+              height: double.infinity,
             ),
-          ),
 
-          // Red card at bottom
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [Color(0xFFC83A2D), Color(0x63C83A2D)],
-                ),
-                borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
-              ),
-              child: Stack(
+            // Top Header (Back Button & Forgot Password Title)
+            Positioned(
+              top: statusBarH + 12.h,
+              left: 20.w,
+              right: 20.w,
+              child: Row(
                 children: [
-                  Positioned.fill(
-                    child: ClipRRect(
-                      borderRadius: const BorderRadius.vertical(
-                        top: Radius.circular(30),
+                  GestureDetector(
+                    onTap: () {
+                      HapticFeedback.selectionClick();
+                      Navigator.pop(context);
+                    },
+                    child: Container(
+                      width: 40.w,
+                      height: 40.w,
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
                       ),
-                      child: Opacity(
-                        opacity: 0.12,
-                        child: Image.asset(
-                          'assets/images/fond.png',
-                          fit: BoxFit.cover,
-                        ),
+                      child: Icon(
+                        Icons.arrow_back,
+                        size: 20.sp,
+                        color: Colors.black,
                       ),
                     ),
                   ),
-                  SingleChildScrollView(
-                    child: Padding(
-                      padding: EdgeInsets.fromLTRB(
-                        22,
-                        28,
-                        22,
-                        24 + MediaQuery.of(context).padding.bottom,
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Center(
-                            child: Text(
-                              'Create New Password',
-                              style: TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.w400,
-                                fontFamily: 'Larken',
-                                height: 1.149,
-                                letterSpacing: 0.8,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-
-                          // New Password
-                          const _Label('New Password'),
-                          const SizedBox(height: 7),
-                          _PasswordField(
-                            controller: _newPassCtrl,
-                            obscure: _obscureNew,
-                            errorText: _newPassError,
-                            onToggle: () =>
-                                setState(() => _obscureNew = !_obscureNew),
-                          ),
-                          const SizedBox(height: 16),
-
-                          // Confirm Password
-                          const _Label('Confirm Password'),
-                          const SizedBox(height: 7),
-                          _PasswordField(
-                            controller: _confirmPassCtrl,
-                            obscure: _obscureConfirm,
-                            errorText: _confirmPassError,
-                            onToggle: () => setState(
-                              () => _obscureConfirm = !_obscureConfirm,
-                            ),
-                          ),
-                          const SizedBox(height: 40),
-
-                          RedButton(
-                            label: 'Send',
-                            loadingLabel: 'Updating',
-                            isLoading: _isLoading,
-                            onTap: () {
-                              if (identifier != null) {
-                                _handleReset(identifier);
-                              } else {
-                                IosToast.show(
-                                  context,
-                                  message: 'Missing identifier context. Please try again.',
-                                  type: ToastType.error,
-                                );
-                              }
-                            },
-                          ),
-                          SizedBox(
-                            height: MediaQuery.of(context).viewInsets.bottom,
-                          ),
-                        ],
-                      ),
+                  SizedBox(width: 16.w),
+                  Text(
+                    'Forgot Password',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'Rubik',
+                      fontSize: 24.sp,
+                      color: Colors.white,
                     ),
                   ),
                 ],
               ),
             ),
-          ),
 
-          // Floating AppBar
-          Positioned(
-            top: statusBarH + 28,
-            left: 16,
-            right: 16,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                GestureDetector(
-                  onTap: () {
-                    HapticFeedback.selectionClick();
-                    Navigator.pop(context);
-                  },
-                  child: Container(
-                    width: 42,
-                    height: 42,
-                    decoration: BoxDecoration(
-                      color: Color(0xffF8F5EF),
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.3),
-                          blurRadius: 8,
+            // White Card Pinned at Bottom
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.vertical(
+                    top: Radius.circular(32.r),
+                  ),
+                ),
+                child: SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  padding: EdgeInsets.fromLTRB(
+                    24.w,
+                    28.h,
+                    24.w,
+                    24.h +
+                        MediaQuery.of(context).padding.bottom +
+                        MediaQuery.of(context).viewInsets.bottom,
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Center(
+                        child: Text(
+                          'Create New Password',
+                          style: TextStyle(
+                            fontSize: 24.sp,
+                            fontWeight: FontWeight.w800,
+                            fontFamily: 'Rubik',
+                            color: const Color(0xFF0F172A),
+                          ),
                         ),
-                      ],
-                    ),
-                    child: const Icon(
-                      Icons.arrow_back_rounded,
-                      size: 24,
-                      color: AppColors.textDark,
-                    ),
+                      ),
+                      SizedBox(height: 24.h),
+
+                      // New Password
+                      const _Label('New Password'),
+                      SizedBox(height: 8.h),
+                      _PasswordField(
+                        controller: _newPassCtrl,
+                        obscure: _obscureNew,
+                        errorText: _newPassError,
+                        onToggle: () =>
+                            setState(() => _obscureNew = !_obscureNew),
+                      ),
+                      SizedBox(height: 18.h),
+
+                      // Confirm Password
+                      const _Label('Confirm Password'),
+                      SizedBox(height: 8.h),
+                      _PasswordField(
+                        controller: _confirmPassCtrl,
+                        obscure: _obscureConfirm,
+                        errorText: _confirmPassError,
+                        onToggle: () => setState(
+                          () => _obscureConfirm = !_obscureConfirm,
+                        ),
+                      ),
+                      SizedBox(height: 28.h),
+
+                      RedButton(
+                        label: 'Continue',
+                        loadingLabel: 'Updating',
+                        isLoading: _isLoading,
+                        color: const Color(0xFFC31E26),
+                        height: 52.h,
+                        fontSize: 16.sp,
+                        onTap: () {
+                          if (identifier != null) {
+                            _handleReset(identifier);
+                          } else {
+                            IosToast.show(
+                              context,
+                              message:
+                                  'Missing identifier context. Please try again.',
+                              type: ToastType.error,
+                            );
+                          }
+                        },
+                      ),
+                    ],
                   ),
                 ),
-                const Text(
-                  'RESET PASSWORD',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w400,
-                    fontFamily: 'Larken',
-                    height: 1.149,
-                    fontSize: 14,
-                    letterSpacing: 0.8,
-                    color: AppColors.textDark,
-                  ),
-                ),
-              ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -282,13 +246,14 @@ class _Label extends StatelessWidget {
   const _Label(this.text);
   @override
   Widget build(BuildContext context) => Text(
-    text,
-    style: const TextStyle(
-      color: Colors.white,
-      fontFamily: 'SF Pro',
-      fontSize: 14,
-    ),
-  );
+        text,
+        style: TextStyle(
+          color: const Color(0xFF64748B),
+          fontFamily: 'SF Pro',
+          fontSize: 14.sp,
+          fontWeight: FontWeight.w500,
+        ),
+      );
 }
 
 class _PasswordField extends StatelessWidget {
@@ -307,59 +272,65 @@ class _PasswordField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ClipRRect(
-      borderRadius: BorderRadius.circular(10),
+      borderRadius: BorderRadius.circular(14.r),
       child: TextField(
         controller: controller,
         obscureText: obscure,
-        style: const TextStyle(fontFamily: 'SF Pro', fontSize: 14),
+        style: TextStyle(
+          fontFamily: 'SF Pro',
+          fontSize: 15.sp,
+          color: const Color(0xFF0F172A),
+        ),
         decoration: InputDecoration(
-          hintText: '• • • • • • • •',
-          hintStyle: const TextStyle(
-            color: AppColors.textMuted,
+          hintText: '••••••••',
+          hintStyle: TextStyle(
+            color: const Color(0xFF94A3B8),
             fontFamily: 'SF Pro',
-            fontSize: 14,
+            fontSize: 15.sp,
           ),
-          prefixIcon: const Icon(
+          prefixIcon: Icon(
             Icons.lock_outline_rounded,
-            color: AppColors.textMuted,
-            size: 20,
+            color: const Color(0xFF64748B),
+            size: 20.sp,
           ),
           suffixIcon: IconButton(
             icon: Icon(
               obscure
                   ? Icons.visibility_off_outlined
                   : Icons.visibility_outlined,
-              color: AppColors.textMuted,
-              size: 20,
+              color: const Color(0xFF64748B),
+              size: 20.sp,
             ),
             onPressed: onToggle,
           ),
           filled: true,
-          fillColor: Colors.white,
+          fillColor: const Color(0xFFF0F1F3),
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(14.r),
             borderSide: BorderSide.none,
           ),
           enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(14.r),
             borderSide: BorderSide.none,
           ),
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(14.r),
             borderSide: BorderSide.none,
           ),
           errorText: errorText,
-          errorStyle: const TextStyle(
-            color: Color.fromARGB(255, 126, 1, 1),
-            fontSize: 12,
+          errorStyle: TextStyle(
+            color: const Color(0xFFDC2626),
+            fontSize: 12.sp,
             fontFamily: 'SF Pro',
           ),
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 10,
-            vertical: 10,
+          contentPadding: EdgeInsets.symmetric(
+            horizontal: 16.w,
+            vertical: 16.h,
           ),
         ),
       ),
     );
   }
 }
+
+

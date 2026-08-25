@@ -1,162 +1,89 @@
 import 'package:flutter/material.dart';
-import '../../core/theme/app_theme.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../routes/app_routes.dart';
 import '../../widgets/red_button.dart';
 
-class SuccessScreen extends StatefulWidget {
+class SuccessScreen extends StatelessWidget {
   const SuccessScreen({super.key});
-  @override
-  State<SuccessScreen> createState() => _SuccessScreenState();
-}
-
-class _SuccessScreenState extends State<SuccessScreen>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _ctrl;
-  late Animation<double> _fade;
-
-  @override
-  void initState() {
-    super.initState();
-    _ctrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 700),
-    );
-    _fade = CurvedAnimation(parent: _ctrl, curve: Curves.easeIn);
-    _ctrl.forward();
-  }
-
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
+    final statusBarH = MediaQuery.of(context).padding.top;
+    final bottomH = MediaQuery.of(context).padding.bottom;
+
     return Scaffold(
       backgroundColor: Colors.white,
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          // ── Food pattern background ──
-          Image.asset('assets/images/fond.png', fit: BoxFit.cover),
+      body: SafeArea(
+        top: false,
+        bottom: false,
+        child: Padding(
+          padding: EdgeInsets.fromLTRB(24.w, statusBarH + 16.h, 24.w, bottomH + 20.h),
+          child: Column(
+            children: [
+              // Top Title: Congratulations!
+              Text(
+                'Congratulations!',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 28.sp,
+                  fontWeight: FontWeight.w800,
+                  fontFamily: 'Rubik',
+                  color: const Color(0xFF0F172A),
+                ),
+              ),
 
-          SafeArea(
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                return SingleChildScrollView(
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                    child: IntrinsicHeight(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // ── Top-left: logo2.png + "Cooked" ──
-                          Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 20,
-                              vertical: 5,
-                            ),
-                            child: Row(
-                              children: [
-                                Image.asset(
-                                  'assets/images/logo2.png',
-                                  width: 40,
-                                  fit: BoxFit.contain,
-                                ),
-                              ],
-                            ),
-                          ),
+              const Spacer(),
 
-                          const Spacer(flex: 2),
+              // Center Illustration: success1.png
+              Image.asset(
+                'assets/images/success1.png',
+                width: 280.w,
+                fit: BoxFit.contain,
+              ),
 
-                          // ── "Congratulation!" ──
-                          FadeTransition(
-                            opacity: _fade,
-                            child: const Center(
-                              child: Text(
-                                'Congratulations!',
-                                style: TextStyle(
-                                  fontSize: 28,
-                                  fontWeight: FontWeight.w900,
-                                  color: Color(0xFF160B0B),
-                                  fontFamily: 'SF Pro',
-                                ),
-                              ),
-                            ),
-                          ),
+              const Spacer(),
 
-                          const SizedBox(height: 80),
+              // Bottom Info: Account Created!
+              Text(
+                'Creation Successfully!',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 24.sp,
+                  fontWeight: FontWeight.bold,
+                  fontFamily: 'Rubik',
+                  color: const Color(0xFF0F172A),
+                ),
+              ),
+              SizedBox(height: 12.h),
 
-                          // ── Illustration: success.png ──
-                          FadeTransition(
-                            opacity: _fade,
-                            child: Center(
-                              child: Image.asset(
-                                'assets/images/success.png',
-                                width: 150,
-                                fit: BoxFit.contain,
-                              ),
-                            ),
-                          ),
+              Text(
+                'Your account is complete, please enjoy\nthe best menu from us.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 14.sp,
+                  color: const Color(0xFF64748B),
+                  fontFamily: 'SF Pro',
+                  height: 1.35,
+                ),
+              ),
+              SizedBox(height: 32.h),
 
-                          const Spacer(flex: 3),
-
-                          // ── Bottom text + button ──
-                          FadeTransition(
-                            opacity: _fade,
-                            child: Padding(
-                              padding: const EdgeInsets.fromLTRB(28, 0, 28, 0),
-                              child: Column(
-                                children: [
-                                  const Text(
-                                    'Creation successfully',
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      fontSize: 28,
-                                      fontWeight: FontWeight.w900,
-                                      color: Color(0xFF160B0B),
-                                      fontFamily: 'SF Pro',
-                                    ),
-                                  ),
-                                  const SizedBox(height: 3),
-                                  Text(
-                                    'Your account is complete, please enjoy\nthe best manu from us.',
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      color: AppColors.textMuted,
-                                      fontFamily: 'SF Pro',
-                                      height: 1.2,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 20),
-                                  RedButton(
-                                    label: 'Get Started',
-                                    onTap: () {
-                                      Navigator.pushReplacementNamed(
-                                        context,
-                                        AppRoutes.home,
-                                        arguments: {'initialTab': 0},
-                                      );
-                                    },
-                                    height: 50,
-                                    fontSize: 15,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-                        ],
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
+              RedButton(
+                label: 'Get Started',
+                color: const Color(0xFFC31E26),
+                height: 52.h,
+                fontSize: 16.sp,
+                onTap: () {
+                  Navigator.pushReplacementNamed(
+                    context,
+                    AppRoutes.home,
+                    arguments: {'initialTab': 0},
+                  );
+                },
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import '../../../widgets/red_button.dart';
 
 class SavingsStep extends StatefulWidget {
@@ -35,27 +34,27 @@ class _SavingsStepState extends State<SavingsStep> with SingleTickerProviderStat
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1000),
+      duration: const Duration(milliseconds: 900),
     );
 
     _titleOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _controller, curve: const Interval(0.0, 0.4, curve: Curves.easeOut)),
     );
-    _titleSlide = Tween<Offset>(begin: const Offset(0, 0.2), end: Offset.zero).animate(
+    _titleSlide = Tween<Offset>(begin: const Offset(0, 0.15), end: Offset.zero).animate(
       CurvedAnimation(parent: _controller, curve: const Interval(0.0, 0.4, curve: Curves.easeOutCubic)),
     );
 
     _subtitleOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _controller, curve: const Interval(0.1, 0.5, curve: Curves.easeOut)),
     );
-    _subtitleSlide = Tween<Offset>(begin: const Offset(0, 0.2), end: Offset.zero).animate(
+    _subtitleSlide = Tween<Offset>(begin: const Offset(0, 0.15), end: Offset.zero).animate(
       CurvedAnimation(parent: _controller, curve: const Interval(0.1, 0.5, curve: Curves.easeOutCubic)),
     );
 
     _imageOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _controller, curve: const Interval(0.2, 0.7, curve: Curves.easeOut)),
     );
-    _imageScale = Tween<double>(begin: 0.95, end: 1.0).animate(
+    _imageScale = Tween<double>(begin: 0.96, end: 1.0).animate(
       CurvedAnimation(parent: _controller, curve: const Interval(0.2, 0.7, curve: Curves.easeOutCubic)),
     );
 
@@ -87,212 +86,250 @@ class _SavingsStepState extends State<SavingsStep> with SingleTickerProviderStat
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, child) {
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        return Stack(
+          fit: StackFit.expand,
           children: [
-            Padding(
-              padding: EdgeInsets.fromLTRB(24.w, 20.h, 24.w, 0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  FadeTransition(
-                    opacity: _titleOpacity,
-                    child: SlideTransition(
-                      position: _titleSlide,
-                      child: RichText(
-                        textAlign: TextAlign.left,
-                        text: TextSpan(
-                          style: TextStyle(
-                            fontSize: 34.sp,
-                            fontWeight: FontWeight.w400,
-                            color: const Color(0xFF111827),
-                            fontFamily: 'Larken',
-                            height: 1.149,
-                            letterSpacing: 0,
-                          ),
-                          children: const [
-                            TextSpan(text: 'You\'re not '),
-                            TextSpan(
-                              text: 'alone.',
-                              style: TextStyle(color: Color(0xFFC83A2D)),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: 8.h),
-                  FadeTransition(
-                    opacity: _subtitleOpacity,
-                    child: SlideTransition(
-                      position: _subtitleSlide,
-                      child: Text(
-                        'Most people spend over 200 hours every year deciding what to eat.',
-                        textAlign: TextAlign.left,
-                        style: TextStyle(
-                          fontSize: 16.sp,
-                          color: const Color(0xFF4B5563),
-                          fontFamily: 'SF Pro',
-                          height: 1.3,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(height: 16.h),
-            Expanded(
+            // Full screen background image with smooth top fade
+            Positioned.fill(
               child: FadeTransition(
                 opacity: _imageOpacity,
                 child: Transform.scale(
                   scale: _imageScale.value,
-                  child: Center(
+                  child: ShaderMask(
+                    shaderCallback: (rect) {
+                      return const LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [Colors.transparent, Colors.white],
+                        stops: [0.0, 0.25],
+                      ).createShader(rect);
+                    },
+                    blendMode: BlendMode.dstIn,
                     child: Image.asset(
                       'assets/onboarding/step4.png',
                       width: double.infinity,
-                      fit: BoxFit.contain,
+                      height: double.infinity,
+                      fit: BoxFit.cover,
+                      alignment: Alignment.bottomCenter,
                       errorBuilder: (context, error, stackTrace) => Container(
                         color: Colors.grey[200],
                         alignment: Alignment.center,
-                        child: const Text('assets/onboarding/step5.png missing'),
+                        child: const Text('assets/onboarding/step4.png missing'),
                       ),
                     ),
                   ),
                 ),
               ),
             ),
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 24.w),
-              child: FadeTransition(
-                opacity: _infoOpacity,
-                child: SlideTransition(
-                  position: _infoSlide,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.center,
+
+            // Content Overlay
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Title & Subtitle Header
+                Padding(
+                  padding: EdgeInsets.fromLTRB(24.w, 16.h, 24.w, 0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Left side
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          SvgPicture.asset('assets/icones/minute1.svg', width: 55.sp, height: 55.sp),
-                          SizedBox(width: 8.w),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              Text(
-                                '200',
-                                style: TextStyle(
-                                  fontSize: 32.sp,
-                                  fontWeight: FontWeight.w500,
-                                  color: const Color(0xFFC83A2D),
-                                  fontFamily: 'Larken',
-                                  height: 1,
-                                ),
+                      FadeTransition(
+                        opacity: _titleOpacity,
+                        child: SlideTransition(
+                          position: _titleSlide,
+                          child: RichText(
+                            textAlign: TextAlign.left,
+                            text: TextSpan(
+                              style: TextStyle(
+                                fontSize: 30.sp,
+                                fontWeight: FontWeight.w800,
+                                color: const Color(0xFF0F172A),
+                                fontFamily: 'Rubik',
+                                height: 1.2,
+                                letterSpacing: -0.3,
                               ),
-                              Text(
-                                'hours',
-                                style: TextStyle(
-                                  fontSize: 16.sp,
-                                  color: const Color(0xFF0D1B3E),
-                                  fontFamily: 'SF Pro',
-                                  height: 1.2,
+                              children: const [
+                                TextSpan(text: 'You’re '),
+                                TextSpan(
+                                  text: 'not alone',
+                                  style: TextStyle(color: Color(0xFFC31E26)),
                                 ),
-                              ),
-                              Text(
-                                'spent deciding\nwhat to eat',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  fontSize: 11.sp,
-                                  color: const Color(0xFF6B7280),
-                                  fontFamily: 'SF Pro',
-                                  height: 1.2,
-                                ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                        ],
-                      ),
-                      // Equal sign
-                      Text(
-                        '=',
-                        style: TextStyle(
-                          fontSize: 40.sp,
-                          fontWeight: FontWeight.w900,
-                          color: const Color(0xFFC83A2D),
-                          fontFamily: 'Larken',
-                          height: 1,
                         ),
                       ),
-                      // Right side
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              Text(
-                                '8.3',
-                                style: TextStyle(
-                                  fontSize: 32.sp,
-                                  fontWeight: FontWeight.w500,
-                                  color: const Color(0xFFC83A2D),
-                                  fontFamily: 'Larken',
-                                  height: 1,
-                                ),
-                              ),
-                              Text(
-                                'days',
-                                style: TextStyle(
-                                  fontSize: 16.sp,
-                                  color: const Color(0xFF0D1B3E),
-                                  fontFamily: 'SF Pro',
-                                  height: 1.2,
-                                ),
-                              ),
-                              Text(
-                                'of your life\nevery year',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  fontSize: 11.sp,
-                                  color: const Color(0xFF6B7280),
-                                  fontFamily: 'SF Pro',
-                                  height: 1.2,
-                                ),
-                              ),
-                            ],
+                      SizedBox(height: 10.h),
+                      FadeTransition(
+                        opacity: _subtitleOpacity,
+                        child: SlideTransition(
+                          position: _subtitleSlide,
+                          child: Text(
+                            'Most people spend over 200 hours\nevery year deciding what to eat',
+                            textAlign: TextAlign.left,
+                            style: TextStyle(
+                              fontSize: 16.sp,
+                              color: const Color(0xFF475569),
+                              fontFamily: 'SF Pro',
+                              fontWeight: FontWeight.w400,
+                              height: 1.35,
+                            ),
                           ),
-                          SizedBox(width: 8.w),
-                          SvgPicture.asset('assets/icones/calendar2.svg', width: 55.sp, height: 55.sp),
-                        ],
+                        ),
                       ),
                     ],
                   ),
                 ),
-              ),
-            ),
-            Padding(
-              padding: EdgeInsets.fromLTRB(24.w, 24.h, 24.w, 20.h),
-              child: FadeTransition(
-                opacity: _buttonOpacity,
-                child: SlideTransition(
-                  position: _buttonSlide,
-                  child: SafeArea(
-                    top: false,
-                    child: RedButton(
-                      label: 'Continue',
-                      onTap: widget.onContinue,
-                      height: 55.h,
-                      fontSize: 18.sp,
+
+                const Spacer(),
+
+                // Stat Cards Row
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 24.w),
+                  child: FadeTransition(
+                    opacity: _infoOpacity,
+                    child: SlideTransition(
+                      position: _infoSlide,
+                      child: Row(
+                        children: [
+                          // Card 1: 200 Hours
+                          Expanded(
+                            child: Container(
+                              padding: EdgeInsets.all(16.w),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF1F5F9).withValues(alpha: 0.95),
+                                borderRadius: BorderRadius.circular(16.r),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.access_time_rounded,
+                                    color: const Color(0xFFC31E26),
+                                    size: 24.sp,
+                                  ),
+                                  SizedBox(height: 8.h),
+                                  Text(
+                                    '200',
+                                    style: TextStyle(
+                                      fontSize: 28.sp,
+                                      fontWeight: FontWeight.w800,
+                                      color: const Color(0xFFC31E26),
+                                      fontFamily: 'Rubik',
+                                      height: 1.1,
+                                    ),
+                                  ),
+                                  SizedBox(height: 2.h),
+                                  Text(
+                                    'Hours',
+                                    style: TextStyle(
+                                      fontSize: 15.sp,
+                                      fontWeight: FontWeight.w700,
+                                      color: const Color(0xFF0F172A),
+                                      fontFamily: 'Rubik',
+                                    ),
+                                  ),
+                                  SizedBox(height: 4.h),
+                                  Text(
+                                    'Spent deciding\nwhat to eat',
+                                    style: TextStyle(
+                                      fontSize: 12.sp,
+                                      fontWeight: FontWeight.w400,
+                                      color: const Color(0xFF64748B),
+                                      fontFamily: 'SF Pro',
+                                      height: 1.25,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          SizedBox(width: 12.w),
+                          // Card 2: 8.3 Days
+                          Expanded(
+                            child: Container(
+                              padding: EdgeInsets.all(16.w),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF1F5F9).withValues(alpha: 0.95),
+                                borderRadius: BorderRadius.circular(16.r),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.calendar_today_outlined,
+                                    color: const Color(0xFFC31E26),
+                                    size: 22.sp,
+                                  ),
+                                  SizedBox(height: 8.h),
+                                  Text(
+                                    '8.3',
+                                    style: TextStyle(
+                                      fontSize: 28.sp,
+                                      fontWeight: FontWeight.w800,
+                                      color: const Color(0xFFC31E26),
+                                      fontFamily: 'Rubik',
+                                      height: 1.1,
+                                    ),
+                                  ),
+                                  SizedBox(height: 2.h),
+                                  Text(
+                                    'Days',
+                                    style: TextStyle(
+                                      fontSize: 15.sp,
+                                      fontWeight: FontWeight.w700,
+                                      color: const Color(0xFF0F172A),
+                                      fontFamily: 'Rubik',
+                                    ),
+                                  ),
+                                  SizedBox(height: 4.h),
+                                  Text(
+                                    'of your life\nevery year',
+                                    style: TextStyle(
+                                      fontSize: 12.sp,
+                                      fontWeight: FontWeight.w400,
+                                      color: const Color(0xFF64748B),
+                                      fontFamily: 'SF Pro',
+                                      height: 1.25,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
-              ),
+
+                // Button
+                FadeTransition(
+                  opacity: _buttonOpacity,
+                  child: SlideTransition(
+                    position: _buttonSlide,
+                    child: SafeArea(
+                      top: false,
+                      bottom: true,
+                      child: Padding(
+                        padding: EdgeInsets.fromLTRB(24.w, 16.h, 24.w, 20.h),
+                        child: RedButton(
+                          label: 'Continue',
+                          color: const Color(0xFFC31E26),
+                          onTap: widget.onContinue,
+                          height: 52.h,
+                          fontSize: 16.sp,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         );
-      }
+      },
     );
   }
 }

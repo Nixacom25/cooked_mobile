@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../../../widgets/red_button.dart';
 
 class ProfileSummaryStep extends StatefulWidget {
   final List<String> favoriteCuisines;
@@ -53,9 +54,6 @@ class _ProfileSummaryStepState extends State<ProfileSummaryStep>
     'assets/images/plat4.png',
     'assets/images/plat5.png',
     'assets/images/plat6.png',
-    'assets/images/plat7.png',
-    'assets/images/plat8.png',
-    'assets/images/plat9.png',
   ];
 
   @override
@@ -63,7 +61,7 @@ class _ProfileSummaryStepState extends State<ProfileSummaryStep>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1400),
+      duration: const Duration(milliseconds: 1200),
     );
 
     _pageController = PageController(viewportFraction: 0.45, initialPage: 1);
@@ -89,7 +87,7 @@ class _ProfileSummaryStepState extends State<ProfileSummaryStep>
 
     Animation<Offset> createSlide(double start, double end) {
       return Tween<Offset>(
-        begin: const Offset(0, 0.2),
+        begin: const Offset(0, 0.15),
         end: Offset.zero,
       ).animate(
         CurvedAnimation(
@@ -116,27 +114,6 @@ class _ProfileSummaryStepState extends State<ProfileSummaryStep>
     _controller.forward();
   }
 
-  String get _cuisineText {
-    if (widget.favoriteCuisines.isEmpty) {
-      return '10,000+\nrecipes waiting';
-    } else if (widget.favoriteCuisines.length == 1) {
-      return '500+ ${widget.favoriteCuisines.first}\nrecipes waiting';
-    } else if (widget.favoriteCuisines.length == 2) {
-      return '${widget.favoriteCuisines[0]} • ${widget.favoriteCuisines[1]}\n+ more';
-    } else {
-      return '${widget.favoriteCuisines[0]} • ${widget.favoriteCuisines[1]}\n+ ${widget.favoriteCuisines.length - 2} more';
-    }
-  }
-
-  String get _goalText {
-    if (widget.goals.contains('eat_healthier')) return 'Healthy recipes\nmatched to your goals';
-    if (widget.goals.contains('lose_weight')) return 'Calorie-conscious\nmeals';
-    if (widget.goals.contains('gain_muscle')) return 'High-protein\nmeal plans';
-    if (widget.goals.contains('save_money')) return 'Budget-friendly\nrecipes';
-    if (widget.goals.contains('waste_less')) return 'Recipes built around\nyour ingredients';
-    return 'Personalized meals\nmade easy';
-  }
-
   @override
   void dispose() {
     _carouselTimer?.cancel();
@@ -153,216 +130,175 @@ class _ProfileSummaryStepState extends State<ProfileSummaryStep>
         return Column(
           children: [
             Expanded(
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  return SingleChildScrollView(
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints(
-                        minHeight: constraints.maxHeight,
-                      ),
-                      child: IntrinsicHeight(
-                        child: Padding(
-                          padding: EdgeInsets.symmetric(vertical: 30.h),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Padding(
-                                padding: EdgeInsets.symmetric(horizontal: 20.w),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    // Title
-                                    FadeTransition(
-                                      opacity: _titleOpacity,
-                                      child: SlideTransition(
-                                        position: _titleSlide,
-                                        child: Text(
-                                          'Your personal cooking\nsystem is ready.',
-                                          textAlign: TextAlign.left,
-                                          style: TextStyle(
-                                            fontSize: 34.sp,
-                                            fontWeight: FontWeight.w400,
-                                            color: const Color(0xFF111827),
-                                            fontFamily: 'Larken',
-                                            height: 1.149,
-                                            letterSpacing: -0.5,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    SizedBox(height: 12.h),
-
-                                    // Subtitle
-                                    FadeTransition(
-                                      opacity: _titleOpacity,
-                                      child: SlideTransition(
-                                        position: _titleSlide,
-                                        child: Text(
-                                          'Built around your goals, taste, schedule, and budget.',
-                                          style: TextStyle(
-                                            fontSize: 16.sp,
-                                            color: const Color(0xFF4B5563),
-                                            fontFamily: 'SF Pro',
-                                            height: 1.3,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    SizedBox(height: 20.h),
-
-                                    // Big Number
-                                    FadeTransition(
-                                      opacity: _topOpacity,
-                                      child: Center(
-                                        child: Column(
-                                          children: [
-                                            Text(
-                                              '${widget.recipeCount.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}',
-                                              style: TextStyle(
-                                                fontSize: 60.sp,
-                                                fontWeight: FontWeight.w900,
-                                                color: const Color(
-                                                  0xFF00C40A,
-                                                ), // Green
-                                                fontFamily: 'SF Pro',
-                                                height: 1.0,
-                                                letterSpacing: -2.0,
-                                              ),
-                                            ),
-                                            SizedBox(height: 8.h),
-                                            Text(
-                                              'recipes curated for your taste',
-                                              style: TextStyle(
-                                                fontSize: 14.sp,
-                                                color: const Color(0xFF1B1C1C),
-                                                fontWeight: FontWeight.w600,
-                                                fontFamily: 'SF Pro',
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                    SizedBox(height: 32.h),
-                                  ],
-                                ),
-                              ),
-
-                              // Images PageView
-                              FadeTransition(
-                                opacity: _chipsOpacity,
-                                child: SlideTransition(
-                                  position: _chipsSlide,
-                                  child: SizedBox(
-                                    height: 160.h,
-                                    child: PageView.builder(
-                                      controller: _pageController,
-                                      physics: const BouncingScrollPhysics(),
-                                      itemBuilder: (context, index) {
-                                        final imageIndex =
-                                            index % _recipeImages.length;
-                                        return AnimatedBuilder(
-                                          animation: _pageController,
-                                          builder: (context, child) {
-                                            double value = 0.0;
-                                            if (_pageController
-                                                .position
-                                                .haveDimensions) {
-                                              value =
-                                                  _pageController.page! - index;
-                                            } else {
-                                              value = (1 - index).toDouble();
-                                            }
-
-                                            value = value.clamp(-1.0, 1.0);
-                                            final double scale =
-                                                (1 - (value.abs() * 0.15))
-                                                    .clamp(0.0, 1.0);
-                                            final double opacity =
-                                                (1 - (value.abs() * 0.2)).clamp(
-                                                  0.0,
-                                                  1.0,
-                                                );
-
-                                            return Transform.scale(
-                                              scale: scale,
-                                              child: Padding(
-                                                padding: EdgeInsets.symmetric(
-                                                  horizontal: 8.w,
-                                                ),
-                                                child: _buildImageCard(
-                                                  _recipeImages[imageIndex],
-                                                  opacity,
-                                                ),
-                                              ),
-                                            );
-                                          },
-                                        );
-                                      },
-                                    ),
-                                  ),
-                                ),
-                              ),
-
-                              const Spacer(),
-                              SizedBox(height: 30.h),
-
-                              // 4 Grid Cards
-                              Padding(
-                                padding: EdgeInsets.symmetric(horizontal: 20.w),
-                                child: FadeTransition(
-                                  opacity: _listOpacity,
-                                  child: SlideTransition(
-                                    position: _listSlide,
-                                    child: Column(
-                                      children: [
-                                        Row(
-                                          children: [
-                                            Expanded(
-                                              child: _buildInfoCard(
-                                                Icons.savings_outlined,
-                                                'Save \$${widget.totalSavings.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')} /\nyear',
-                                              ),
-                                            ),
-                                            SizedBox(width: 12.w),
-                                            Expanded(
-                                              child: _buildInfoCard(
-                                                Icons.access_time,
-                                                'Save 180+\nhours / year',
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        SizedBox(height: 12.h),
-                                        Row(
-                                          children: [
-                                            Expanded(
-                                              child: _buildInfoCard(
-                                                Icons.eco_outlined,
-                                                _goalText,
-                                              ),
-                                            ),
-                                            SizedBox(width: 12.w),
-                                            Expanded(
-                                              child: _buildInfoCard(
-                                                Icons.restaurant_menu,
-                                                _cuisineText,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
+              child: SingleChildScrollView(
+                padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Title
+                    FadeTransition(
+                      opacity: _titleOpacity,
+                      child: SlideTransition(
+                        position: _titleSlide,
+                        child: Text(
+                          'Your personalized\nplan is ready.',
+                          textAlign: TextAlign.left,
+                          style: TextStyle(
+                            fontSize: 32.sp,
+                            fontWeight: FontWeight.w800,
+                            color: const Color(0xFF0F172A),
+                            fontFamily: 'Rubik',
+                            height: 1.15,
                           ),
                         ),
                       ),
                     ),
-                  );
-                },
+                    SizedBox(height: 10.h),
+
+                    // Subtitle
+                    FadeTransition(
+                      opacity: _titleOpacity,
+                      child: SlideTransition(
+                        position: _titleSlide,
+                        child: Text(
+                          'Built around your goals, taste,\nschedule, and savings',
+                          style: TextStyle(
+                            fontSize: 15.sp,
+                            color: const Color(0xFF475569),
+                            fontFamily: 'SF Pro',
+                            height: 1.3,
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 24.h),
+
+                    // Big Green Stat Number
+                    FadeTransition(
+                      opacity: _topOpacity,
+                      child: Center(
+                        child: Column(
+                          children: [
+                            Text(
+                              '1,847',
+                              style: TextStyle(
+                                fontSize: 52.sp,
+                                fontWeight: FontWeight.w800,
+                                color: const Color(0xFF10B981),
+                                fontFamily: 'Rubik',
+                                height: 1.0,
+                              ),
+                            ),
+                            SizedBox(height: 8.h),
+                            Text(
+                              'recipes curated for your taste',
+                              style: TextStyle(
+                                fontSize: 14.sp,
+                                color: const Color(0xFF64748B),
+                                fontWeight: FontWeight.w400,
+                                fontFamily: 'SF Pro',
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 24.h),
+
+                    // Images Carousel
+                    FadeTransition(
+                      opacity: _chipsOpacity,
+                      child: SlideTransition(
+                        position: _chipsSlide,
+                        child: SizedBox(
+                          height: 150.h,
+                          child: PageView.builder(
+                            controller: _pageController,
+                            physics: const BouncingScrollPhysics(),
+                            itemBuilder: (context, index) {
+                              final imageIndex = index % _recipeImages.length;
+                              return AnimatedBuilder(
+                                animation: _pageController,
+                                builder: (context, child) {
+                                  double value = 0.0;
+                                  if (_pageController.position.haveDimensions) {
+                                    value = _pageController.page! - index;
+                                  } else {
+                                    value = (1 - index).toDouble();
+                                  }
+
+                                  value = value.clamp(-1.0, 1.0);
+                                  final double scale = (1 - (value.abs() * 0.15)).clamp(0.0, 1.0);
+                                  final double opacity = (1 - (value.abs() * 0.2)).clamp(0.0, 1.0);
+
+                                  return Transform.scale(
+                                    scale: scale,
+                                    child: Padding(
+                                      padding: EdgeInsets.symmetric(horizontal: 6.w),
+                                      child: _buildImageCard(
+                                        _recipeImages[imageIndex],
+                                        opacity,
+                                      ),
+                                    ),
+                                  );
+                                },
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 24.h),
+
+                    // 2x2 Grid Badge Cards
+                    FadeTransition(
+                      opacity: _listOpacity,
+                      child: SlideTransition(
+                        position: _listSlide,
+                        child: Column(
+                          children: [
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: _buildBadgeCard(
+                                    icon: Icons.account_balance_wallet_outlined,
+                                    title: 'Save \$2,496/\nyear',
+                                  ),
+                                ),
+                                SizedBox(width: 10.w),
+                                Expanded(
+                                  child: _buildBadgeCard(
+                                    icon: Icons.access_time,
+                                    title: 'Save 180+ hours/\nyear',
+                                  ),
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: 10.h),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: _buildBadgeCard(
+                                    icon: Icons.soup_kitchen_outlined,
+                                    title: '1,847 recipes\nmatched',
+                                  ),
+                                ),
+                                SizedBox(width: 10.w),
+                                Expanded(
+                                  child: _buildBadgeCard(
+                                    icon: Icons.auto_awesome_outlined,
+                                    title: 'Healthier meals,\nmade easy',
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 20.h),
+                  ],
+                ),
               ),
             ),
 
@@ -371,32 +307,17 @@ class _ProfileSummaryStepState extends State<ProfileSummaryStep>
               opacity: _buttonOpacity,
               child: SlideTransition(
                 position: _buttonSlide,
-                child: SafeArea(
-                  top: false,
-                  child: Padding(
-                    padding: EdgeInsets.fromLTRB(24.w, 10.h, 24.w, 20.h),
-                    child: SizedBox(
-                      width: double.infinity,
-                      height: 55.h,
-                      child: ElevatedButton(
-                        onPressed: widget.onContinue,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFC83A2D),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(50.r),
-                          ),
-                          elevation: 0,
-                        ),
-                        child: Text(
-                          'Unlock',
-                          style: TextStyle(
-                            fontFamily: 'SF Pro',
-                            fontSize: 18.sp,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
+                child: Padding(
+                  padding: EdgeInsets.fromLTRB(24.w, 8.h, 24.w, 20.h),
+                  child: SafeArea(
+                    top: false,
+                    bottom: true,
+                    child: RedButton(
+                      label: 'Unlock',
+                      color: const Color(0xFFC31E26),
+                      onTap: widget.onContinue,
+                      height: 52.h,
+                      fontSize: 16.sp,
                     ),
                   ),
                 ),
@@ -413,24 +334,19 @@ class _ProfileSummaryStepState extends State<ProfileSummaryStep>
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16.r),
-        boxShadow: [
-          if (opacity == 1.0)
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
-              blurRadius: 10.r,
-              offset: Offset(0, 4.h),
-            ),
-        ],
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(16.r),
         child: Stack(
-          fit: StackFit.loose,
+          fit: StackFit.expand,
           children: [
             Image.asset(
               path,
-              height: double.infinity,
               fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) => Container(
+                color: const Color(0xFFF1F5F9),
+                child: const Icon(Icons.fastfood, color: Color(0xFFCBD5E1)),
+              ),
             ),
             if (blurSigma > 0)
               Positioned.fill(
@@ -447,34 +363,33 @@ class _ProfileSummaryStepState extends State<ProfileSummaryStep>
     );
   }
 
-  Widget _buildInfoCard(IconData icon, String text) {
+  Widget _buildBadgeCard({
+    required IconData icon,
+    required String title,
+  }) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
+      padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: const Color(0xFFF1F5F9),
         borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Container(
-            padding: EdgeInsets.all(6.r),
-            decoration: BoxDecoration(
-              color: const Color(0xFFC83A2D).withOpacity(0.1),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(icon, color: const Color(0xFFC83A2D), size: 16.sp),
+          Icon(
+            icon,
+            color: const Color(0xFFC31E26),
+            size: 22.sp,
           ),
-          SizedBox(width: 8.w),
+          SizedBox(width: 10.w),
           Expanded(
             child: Text(
-              text,
+              title,
               style: TextStyle(
-                fontFamily: 'SF Pro',
-                fontSize: 12.sp,
-                fontWeight: FontWeight.w600,
-                color: const Color(0xFF1B1C1C),
+                fontFamily: 'Rubik',
+                fontSize: 13.sp,
+                fontWeight: FontWeight.w700,
+                color: const Color(0xFF0F172A),
                 height: 1.2,
               ),
             ),

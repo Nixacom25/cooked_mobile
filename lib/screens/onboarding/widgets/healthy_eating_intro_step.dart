@@ -16,45 +16,44 @@ class HealthyEatingIntroStep extends StatelessWidget {
       children: [
         Expanded(
           child: SingleChildScrollView(
-            padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 30.h),
+            padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 RichText(
                   text: TextSpan(
                     style: TextStyle(
-                      fontSize: 34.sp,
-                      fontWeight: FontWeight.w400,
-                      color: const Color(0xFF111827),
-                      fontFamily: 'Larken',
-                      height: 1.149,
-                      letterSpacing: 0,
+                      fontSize: 32.sp,
+                      fontWeight: FontWeight.w800,
+                      color: const Color(0xFF0F172A),
+                      fontFamily: 'Rubik',
+                      height: 1.15,
                     ),
                     children: [
-                      const TextSpan(text: "Healthy eating\nshouldn't "),
+                      const TextSpan(text: "Healthy eating\nshouldn’t "),
                       const TextSpan(
                         text: "feel like",
-                        style: TextStyle(color: Color(0xFFC83A2D)),
+                        style: TextStyle(color: Color(0xFFC31E26)),
                       ),
                       const TextSpan(text: " a\n"),
                       const TextSpan(
-                        text: "second job.",
-                        style: TextStyle(color: Color(0xFFC83A2D)),
+                        text: "second job",
+                        style: TextStyle(color: Color(0xFFC31E26)),
                       ),
                     ],
                   ),
                 ),
-                SizedBox(height: 12.h),
+                SizedBox(height: 10.h),
                 Text(
-                  "Recipes you'll actually look forward to\neating.",
+                  "Recipes you’ll actually look forward\nto eating.",
                   style: TextStyle(
-                    fontSize: 16.sp,
-                    color: const Color(0xFF4B5563),
+                    fontSize: 15.sp,
+                    color: const Color(0xFF475569),
                     fontFamily: 'SF Pro',
                     height: 1.3,
                   ),
                 ),
-                SizedBox(height: 40.h),
+                SizedBox(height: 24.h),
                 Center(
                   child: Image.asset(
                     'assets/onboarding/step17.png',
@@ -62,26 +61,28 @@ class HealthyEatingIntroStep extends StatelessWidget {
                     fit: BoxFit.contain,
                     errorBuilder: (context, error, stackTrace) => Container(
                       height: 300.h,
-                      color: Colors.grey[200],
+                      color: const Color(0xFFF1F5F9),
                       alignment: Alignment.center,
                       child: const Text('assets/onboarding/step17.png missing'),
                     ),
                   ),
                 ),
-                SizedBox(height: MediaQuery.of(context).viewInsets.bottom + 20.h),
+                SizedBox(height: 20.h),
               ],
             ),
           ),
         ),
         Padding(
-          padding: EdgeInsets.fromLTRB(24.w, 16.h, 24.w, 20.h),
+          padding: EdgeInsets.fromLTRB(24.w, 8.h, 24.w, 20.h),
           child: SafeArea(
             top: false,
+            bottom: true,
             child: RedButton(
               label: 'Continue',
+              color: const Color(0xFFC31E26),
               onTap: onContinue,
-              height: 55.h,
-              fontSize: 18.sp,
+              height: 52.h,
+              fontSize: 16.sp,
             ),
           ),
         ),

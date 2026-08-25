@@ -1,4 +1,5 @@
 import 'package:cooked/services/auth_service.dart';
+import 'package:cooked/services/revenuecat_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:app_links/app_links.dart';
@@ -195,16 +196,13 @@ class _CookedAppState extends State<CookedApp> with WidgetsBindingObserver {
     try {
       SharingService.instance.init();
       SharingService.instance.sharedTextNotifier.addListener(_onSharedTextReceived);
-      // SharingService.instance.clipboardTextNotifier.addListener(_onClipboardTextReceived);
       
-      // Check clipboard on startup
-      // SharingService.instance.checkClipboard();
-
       await Future.wait([
         AuthService.instance.getToken(),
         TutorialService.instance.init(),
         NotificationService.instance.init(),
         HistoryService.instance.init(),
+        RevenueCatService.instance.initialize(),
       ]);
       
       _initDeepLinks();

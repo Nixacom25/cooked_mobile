@@ -108,31 +108,31 @@ class _ProfileLoadingStepState extends State<ProfileLoadingStep> with TickerProv
     Widget leading;
     if (state == 2) {
       leading = Container(
-        width: 20.w,
-        height: 20.w,
+        width: 22.r,
+        height: 22.r,
         decoration: const BoxDecoration(
-          color: Color(0xFFC83A2D),
+          color: Color(0xFFC31E26),
           shape: BoxShape.circle,
         ),
-        child: Icon(Icons.check, color: Colors.white, size: 14.sp),
+        child: Icon(Icons.check, color: Colors.white, size: 13.sp),
       );
     } else if (state == 1) {
       leading = SizedBox(
-        width: 20.w,
-        height: 20.w,
-        child: CircularProgressIndicator(
-          strokeWidth: 2.0,
-          valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFC83A2D)),
-          backgroundColor: const Color(0xFFE5E7EB),
+        width: 22.r,
+        height: 22.r,
+        child: const CircularProgressIndicator(
+          strokeWidth: 2.5,
+          valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFC31E26)),
+          backgroundColor: Color(0xFFE2E8F0),
         ),
       );
     } else {
       leading = Container(
-        width: 20.w,
-        height: 20.w,
+        width: 22.r,
+        height: 22.r,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          border: Border.all(color: const Color(0xFFE5E7EB), width: 1.5),
+          border: Border.all(color: const Color(0xFFCBD5E1), width: 1.5),
         ),
       );
     }
@@ -148,10 +148,10 @@ class _ProfileLoadingStepState extends State<ProfileLoadingStep> with TickerProv
           Text(
             text,
             style: TextStyle(
-              fontSize: 13.sp,
-              color: state == 0 ? const Color(0xFF9CA3AF) : const Color(0xFF111827),
-              fontFamily: 'SF Pro',
-              fontWeight: state > 0 ? FontWeight.w500 : FontWeight.w400,
+              fontSize: 15.sp,
+              color: state == 0 ? const Color(0xFF94A3B8) : const Color(0xFF0F172A),
+              fontFamily: 'Rubik',
+              fontWeight: state > 0 ? FontWeight.w700 : FontWeight.w500,
             ),
           ),
         ],
@@ -164,32 +164,22 @@ class _ProfileLoadingStepState extends State<ProfileLoadingStep> with TickerProv
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        SizedBox(height: MediaQuery.of(context).padding.top + 20.h),
+        SizedBox(height: 16.h),
         Padding(
           padding: EdgeInsets.symmetric(horizontal: 24.w),
-          child: RichText(
+          child: Text(
+            "Building your\npersonalized cooking\nsystem${'.' * _dotCount}",
             textAlign: TextAlign.center,
-            text: TextSpan(
-              style: TextStyle(
-                fontSize: 34.sp,
-                fontWeight: FontWeight.w400,
-                color: const Color(0xFF111827),
-                fontFamily: 'Larken',
-                height: 1.149,
-                letterSpacing: 0,
-              ),
-              children: [
-                const TextSpan(text: "Building your\n"),
-                const TextSpan(
-                  text: "personalized\n",
-                  style: TextStyle(color: Color(0xFFC83A2D)),
-                ),
-                TextSpan(text: "cooking system${'.' * _dotCount}"),
-              ],
+            style: TextStyle(
+              fontSize: 30.sp,
+              fontWeight: FontWeight.w800,
+              color: const Color(0xFF0F172A),
+              fontFamily: 'Rubik',
+              height: 1.15,
             ),
           ),
         ),
-        Spacer(),
+        SizedBox(height: 20.h),
         SizedBox(
           height: 220.h,
           child: PageView.builder(
@@ -251,7 +241,7 @@ class _ProfileLoadingStepState extends State<ProfileLoadingStep> with TickerProv
             },
           ),
         ),
-        Spacer(),
+        SizedBox(height: 20.h),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -264,7 +254,7 @@ class _ProfileLoadingStepState extends State<ProfileLoadingStep> with TickerProv
             ),
           ],
         ),
-        SizedBox(height: 40.h),
+        SizedBox(height: 20.h),
       ],
     );
   }

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import '../../../widgets/red_button.dart';
 
 class CostingMoreStep extends StatefulWidget {
@@ -21,8 +20,8 @@ class _CostingMoreStepState extends State<CostingMoreStep> with SingleTickerProv
   late Animation<double> _subtitleOpacity;
   late Animation<Offset> _subtitleSlide;
   
-  late Animation<double> _imageOpacity;
-  late Animation<double> _imageScale;
+  late Animation<double> _chartOpacity;
+  late Animation<double> _chartScale;
   
   late Animation<double> _cardOpacity;
   late Animation<Offset> _cardSlide;
@@ -35,27 +34,27 @@ class _CostingMoreStepState extends State<CostingMoreStep> with SingleTickerProv
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1000),
+      duration: const Duration(milliseconds: 900),
     );
 
     _titleOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _controller, curve: const Interval(0.0, 0.4, curve: Curves.easeOut)),
     );
-    _titleSlide = Tween<Offset>(begin: const Offset(0, 0.2), end: Offset.zero).animate(
+    _titleSlide = Tween<Offset>(begin: const Offset(0, 0.15), end: Offset.zero).animate(
       CurvedAnimation(parent: _controller, curve: const Interval(0.0, 0.4, curve: Curves.easeOutCubic)),
     );
 
     _subtitleOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _controller, curve: const Interval(0.1, 0.5, curve: Curves.easeOut)),
     );
-    _subtitleSlide = Tween<Offset>(begin: const Offset(0, 0.2), end: Offset.zero).animate(
+    _subtitleSlide = Tween<Offset>(begin: const Offset(0, 0.15), end: Offset.zero).animate(
       CurvedAnimation(parent: _controller, curve: const Interval(0.1, 0.5, curve: Curves.easeOutCubic)),
     );
 
-    _imageOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
+    _chartOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _controller, curve: const Interval(0.2, 0.7, curve: Curves.easeOut)),
     );
-    _imageScale = Tween<double>(begin: 0.95, end: 1.0).animate(
+    _chartScale = Tween<double>(begin: 0.96, end: 1.0).animate(
       CurvedAnimation(parent: _controller, curve: const Interval(0.2, 0.7, curve: Curves.easeOutCubic)),
     );
 
@@ -82,6 +81,29 @@ class _CostingMoreStepState extends State<CostingMoreStep> with SingleTickerProv
     super.dispose();
   }
 
+  Widget _buildDottedLine() {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final boxWidth = constraints.maxWidth;
+        const dashWidth = 4.0;
+        const dashSpace = 4.0;
+        final dashCount = (boxWidth / (dashWidth + dashSpace)).floor();
+        return Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: List.generate(dashCount, (_) {
+            return SizedBox(
+              width: dashWidth,
+              height: 1,
+              child: DecoratedBox(
+                decoration: BoxDecoration(color: const Color(0xFFE2E8F0)),
+              ),
+            );
+          }),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
@@ -90,8 +112,9 @@ class _CostingMoreStepState extends State<CostingMoreStep> with SingleTickerProv
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Title & Subtitle Header
             Padding(
-              padding: EdgeInsets.fromLTRB(24.w, 20.h, 24.w, 0),
+              padding: EdgeInsets.fromLTRB(24.w, 16.h, 24.w, 0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -103,23 +126,23 @@ class _CostingMoreStepState extends State<CostingMoreStep> with SingleTickerProv
                         textAlign: TextAlign.left,
                         text: TextSpan(
                           style: TextStyle(
-                            fontSize: 34.sp,
-                            fontWeight: FontWeight.w400,
-                            color: const Color(0xFF111827),
-                            fontFamily: 'Larken',
-                            height: 1.149,
-                            letterSpacing: 0,
+                            fontSize: 30.sp,
+                            fontWeight: FontWeight.w800,
+                            color: const Color(0xFF0F172A),
+                            fontFamily: 'Rubik',
+                            height: 1.2,
+                            letterSpacing: -0.3,
                           ),
                           children: const [
-                            TextSpan(text: 'And it\'s '),
+                            TextSpan(text: 'And it’s '),
                             TextSpan(
-                              text: 'costing',
-                              style: TextStyle(color: Color(0xFFC83A2D)),
+                              text: 'costing\n',
+                              style: TextStyle(color: Color(0xFFC31E26)),
                             ),
-                            TextSpan(text: '\nmore than '),
+                            TextSpan(text: 'more than '),
                             TextSpan(
-                              text: 'time.',
-                              style: TextStyle(color: Color(0xFFC83A2D)),
+                              text: 'time',
+                              style: TextStyle(color: Color(0xFFC31E26)),
                             ),
                           ],
                         ),
@@ -132,13 +155,14 @@ class _CostingMoreStepState extends State<CostingMoreStep> with SingleTickerProv
                     child: SlideTransition(
                       position: _subtitleSlide,
                       child: Text(
-                        'Small decisions become expensive habits.',
+                        'Small decisions become\nexpensive habits',
                         textAlign: TextAlign.left,
                         style: TextStyle(
                           fontSize: 16.sp,
-                          color: const Color(0xFF4B5563),
+                          color: const Color(0xFF475569),
                           fontFamily: 'SF Pro',
-                          height: 1.3,
+                          fontWeight: FontWeight.w400,
+                          height: 1.35,
                         ),
                       ),
                     ),
@@ -146,52 +170,273 @@ class _CostingMoreStepState extends State<CostingMoreStep> with SingleTickerProv
                 ],
               ),
             ),
+
+            SizedBox(height: 16.h),
+
+            // Comparison Chart Container
             Expanded(
-              child: FadeTransition(
-                opacity: _imageOpacity,
-                child: Transform.scale(
-                  scale: _imageScale.value,
-                  child: Center(
-                    child: Image.asset(
-                      'assets/onboarding/step5.png',
-                      width: double.infinity,
-                      fit: BoxFit.contain,
-                      errorBuilder: (context, error, stackTrace) => Container(
-                        color: Colors.grey[200],
-                        alignment: Alignment.center,
-                        child: const Text('assets/onboarding/step5.png missing'),
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 24.w),
+                child: FadeTransition(
+                  opacity: _chartOpacity,
+                  child: Transform.scale(
+                    scale: _chartScale.value,
+                    child: Container(
+                      padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 16.h),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(24.r),
+                        border: Border.all(
+                          color: const Color(0xFFF1F5F9),
+                          width: 1.5,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.03),
+                            blurRadius: 15,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Stack(
+                        children: [
+                          // Y-Axis Labels + Horizontal Dotted Grid Lines
+                          Column(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              for (final label in [
+                                '\$2,500',
+                                '\$2,000',
+                                '\$1,500',
+                                '\$1,000',
+                                '\$500',
+                                '\$0'
+                              ])
+                                Row(
+                                  children: [
+                                    SizedBox(
+                                      width: 42.w,
+                                      child: Text(
+                                        label,
+                                        style: TextStyle(
+                                          fontSize: 11.sp,
+                                          color: const Color(0xFF94A3B8),
+                                          fontFamily: 'SF Pro',
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ),
+                                    Expanded(child: _buildDottedLine()),
+                                  ],
+                                ),
+                            ],
+                          ),
+
+                          // Bars Overlay
+                          Padding(
+                            padding: EdgeInsets.only(left: 48.w, right: 12.w, bottom: 4.h),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                // Takeout Bar (Red)
+                                Column(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    // Top Stat Label
+                                    Column(
+                                      children: [
+                                        Text(
+                                          '\$2,080',
+                                          style: TextStyle(
+                                            fontSize: 18.sp,
+                                            fontWeight: FontWeight.w800,
+                                            color: const Color(0xFFC31E26),
+                                            fontFamily: 'Rubik',
+                                            height: 1.1,
+                                          ),
+                                        ),
+                                        Text(
+                                          '/year',
+                                          style: TextStyle(
+                                            fontSize: 11.sp,
+                                            color: const Color(0xFF64748B),
+                                            fontFamily: 'SF Pro',
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    SizedBox(height: 6.h),
+                                    // Red Bar Body
+                                    Container(
+                                      width: 100.w,
+                                      height: 165.h,
+                                      padding: EdgeInsets.all(10.w),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFFC31E26),
+                                        borderRadius: BorderRadius.circular(16.r),
+                                      ),
+                                      child: Column(
+                                        mainAxisAlignment: MainAxisAlignment.end,
+                                        children: [
+                                          Container(
+                                            width: 28.r,
+                                            height: 28.r,
+                                            decoration: const BoxDecoration(
+                                              shape: BoxShape.circle,
+                                              color: Colors.white,
+                                            ),
+                                            child: Icon(
+                                              Icons.restaurant_rounded,
+                                              color: const Color(0xFFC31E26),
+                                              size: 16.sp,
+                                            ),
+                                          ),
+                                          SizedBox(height: 6.h),
+                                          Text(
+                                            'Takeout',
+                                            style: TextStyle(
+                                              fontSize: 13.sp,
+                                              fontWeight: FontWeight.w700,
+                                              color: Colors.white,
+                                              fontFamily: 'Rubik',
+                                            ),
+                                          ),
+                                          SizedBox(height: 2.h),
+                                          Text(
+                                            '3 Meals / Week',
+                                            style: TextStyle(
+                                              fontSize: 10.sp,
+                                              fontWeight: FontWeight.w400,
+                                              color: Colors.white.withValues(alpha: 0.9),
+                                              fontFamily: 'SF Pro',
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+
+                                // Home Cooked Bar (Light Grey)
+                                Column(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    // Top Stat Label
+                                    Column(
+                                      children: [
+                                        Text(
+                                          '\$540',
+                                          style: TextStyle(
+                                            fontSize: 18.sp,
+                                            fontWeight: FontWeight.w800,
+                                            color: const Color(0xFF475569),
+                                            fontFamily: 'Rubik',
+                                            height: 1.1,
+                                          ),
+                                        ),
+                                        Text(
+                                          '/year',
+                                          style: TextStyle(
+                                            fontSize: 11.sp,
+                                            color: const Color(0xFF64748B),
+                                            fontFamily: 'SF Pro',
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    SizedBox(height: 6.h),
+                                    // Grey Bar Body
+                                    Container(
+                                      width: 100.w,
+                                      height: 85.h,
+                                      padding: EdgeInsets.all(8.w),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFFF1F5F9),
+                                        borderRadius: BorderRadius.circular(16.r),
+                                      ),
+                                      child: Column(
+                                        mainAxisAlignment: MainAxisAlignment.end,
+                                        children: [
+                                          Container(
+                                            width: 26.r,
+                                            height: 26.r,
+                                            decoration: const BoxDecoration(
+                                              shape: BoxShape.circle,
+                                              color: Color(0xFF64748B),
+                                            ),
+                                            child: Icon(
+                                              Icons.home_rounded,
+                                              color: Colors.white,
+                                              size: 15.sp,
+                                            ),
+                                          ),
+                                          SizedBox(height: 4.h),
+                                          Text(
+                                            'Home Cooked',
+                                            style: TextStyle(
+                                              fontSize: 12.sp,
+                                              fontWeight: FontWeight.w700,
+                                              color: const Color(0xFF0F172A),
+                                              fontFamily: 'Rubik',
+                                            ),
+                                          ),
+                                          Text(
+                                            'Made at home',
+                                            style: TextStyle(
+                                              fontSize: 9.sp,
+                                              fontWeight: FontWeight.w400,
+                                              color: const Color(0xFF64748B),
+                                              fontFamily: 'SF Pro',
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
                 ),
               ),
             ),
+
+            SizedBox(height: 14.h),
+
+            // Banner Highlight Below Chart
             Padding(
-              padding: EdgeInsets.only(left: 25.w, right: 25.w, bottom: 20.h),
+              padding: EdgeInsets.symmetric(horizontal: 24.w),
               child: FadeTransition(
                 opacity: _cardOpacity,
                 child: SlideTransition(
                   position: _cardSlide,
                   child: Container(
-                    padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
+                    padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
                     decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(20.r),
-                      border: Border.all(
-                        color: const Color(0xFFFFE4E4),
-                        width: 1.5,
-                      ),
+                      color: const Color(0xFFF1F5F9),
+                      borderRadius: BorderRadius.circular(16.r),
                     ),
                     child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        SvgPicture.asset(
-                          'assets/icones/trending1.svg', 
-                          width: 40.sp, 
-                          height: 40.sp,
-                          colorFilter: const ColorFilter.mode(Color(0xFFC83A2D), BlendMode.srcIn),
+                        Container(
+                          width: 36.r,
+                          height: 36.r,
+                          decoration: const BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.white,
+                          ),
+                          child: Icon(
+                            Icons.trending_up_rounded,
+                            color: const Color(0xFFC31E26),
+                            size: 20.sp,
+                          ),
                         ),
-                        SizedBox(width: 16.w),
+                        SizedBox(width: 14.w),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -199,31 +444,32 @@ class _CostingMoreStepState extends State<CostingMoreStep> with SingleTickerProv
                               RichText(
                                 text: TextSpan(
                                   style: TextStyle(
-                                    fontSize: 16.sp,
-                                    fontWeight: FontWeight.w200,
-                                    color: const Color(0xFF0D1B3E),
-                                    fontFamily: 'Larken',
+                                    fontSize: 15.sp,
+                                    fontWeight: FontWeight.w700,
+                                    color: const Color(0xFF0F172A),
+                                    fontFamily: 'Rubik',
                                   ),
-                                  children: [
-                                    const TextSpan(text: 'That is nearly '),
+                                  children: const [
+                                    TextSpan(text: 'That is nearly '),
                                     TextSpan(
                                       text: '4x',
                                       style: TextStyle(
-                                        color: const Color(0xFFC83A2D),
-                                        fontSize: 25.sp,
+                                        color: Color(0xFFC31E26),
+                                        fontWeight: FontWeight.w800,
                                       ),
                                     ),
-                                    const TextSpan(text: ' more'),
+                                    TextSpan(text: ' more'),
                                   ],
                                 ),
                               ),
-                              SizedBox(height: 4.h),
+                              SizedBox(height: 2.h),
                               Text(
                                 'Than cooking at home',
                                 style: TextStyle(
-                                  fontSize: 16.sp,
-                                  color: const Color(0xFF6B7280),
+                                  fontSize: 13.sp,
+                                  color: const Color(0xFF64748B),
                                   fontFamily: 'SF Pro',
+                                  fontWeight: FontWeight.w400,
                                 ),
                               ),
                             ],
@@ -235,19 +481,23 @@ class _CostingMoreStepState extends State<CostingMoreStep> with SingleTickerProv
                 ),
               ),
             ),
-            Padding(
-              padding: EdgeInsets.fromLTRB(24.w, 24.h, 24.w, 20.h),
-              child: FadeTransition(
-                opacity: _buttonOpacity,
-                child: SlideTransition(
-                  position: _buttonSlide,
-                  child: SafeArea(
-                    top: false,
+
+            // Footer Continue Button
+            FadeTransition(
+              opacity: _buttonOpacity,
+              child: SlideTransition(
+                position: _buttonSlide,
+                child: SafeArea(
+                  top: false,
+                  bottom: true,
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(24.w, 12.h, 24.w, 20.h),
                     child: RedButton(
                       label: 'Continue',
+                      color: const Color(0xFFC31E26),
                       onTap: widget.onContinue,
-                      height: 55.h,
-                      fontSize: 18.sp,
+                      height: 52.h,
+                      fontSize: 16.sp,
                     ),
                   ),
                 ),
@@ -255,7 +505,7 @@ class _CostingMoreStepState extends State<CostingMoreStep> with SingleTickerProv
             ),
           ],
         );
-      }
+      },
     );
   }
 }

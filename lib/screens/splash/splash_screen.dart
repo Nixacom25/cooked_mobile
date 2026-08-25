@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../routes/app_routes.dart';
 import '../../services/auth_service.dart';
 import '../../services/user_service.dart';
@@ -73,28 +74,21 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          // Food pattern background
-          Image.asset('assets/images/fond.png', fit: BoxFit.cover),
-          // Centered logo only — no title/button here
-          Center(
-            child: FadeTransition(
-              opacity: _fade,
-              child: ScaleTransition(
-                scale: _scale,
-                child: Image.asset(
-                  'assets/images/logo.png',
-                  width: 140,
-                  fit: BoxFit.contain,
-                ),
-              ),
+      backgroundColor: const Color(0xFFF4F4F6),
+      body: Center(
+        child: FadeTransition(
+          opacity: _fade,
+          child: ScaleTransition(
+            scale: _scale,
+            child: Image.asset(
+              'assets/images/logo.png',
+              width: 170.w,
+              fit: BoxFit.contain,
             ),
           ),
-        ],
+        ),
       ),
     );
   }
 }
+

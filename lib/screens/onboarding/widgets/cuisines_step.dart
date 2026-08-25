@@ -7,7 +7,6 @@ import 'package:flutter/services.dart';
 class CuisinesStep extends StatefulWidget {
   final List<String> initialSelected;
   final Function(List<String> selected) onChanged;
-
   final VoidCallback? onContinue;
 
   const CuisinesStep({
@@ -27,11 +26,17 @@ class _CuisinesStepState extends State<CuisinesStep> {
     {'id': 'japanese', 'title': 'Japanese'},
     {'id': 'mexican', 'title': 'Mexican'},
     {'id': 'chinese', 'title': 'Chinese'},
-    {'id': 'indian', 'title': 'Indian'},
     {'id': 'thai', 'title': 'Thai'},
-    {'id': 'mediterranean', 'title': 'Mediterranean'},
+    {'id': 'middle-eastern', 'title': 'Middle Eastern'},
     {'id': 'west-african', 'title': 'West African'},
+    {'id': 'east-african', 'title': 'East African'},
     {'id': 'caribbean', 'title': 'Caribbean'},
+    {'id': 'indian', 'title': 'Indian'},
+    {'id': 'spanish', 'title': 'Spanish'},
+    {'id': 'greek', 'title': 'Greek'},
+    {'id': 'french', 'title': 'French'},
+    {'id': 'korean', 'title': 'Korean'},
+    {'id': 'mediterranean', 'title': 'Mediterranean'},
     {'id': 'others', 'title': 'Others'},
   ];
 
@@ -68,10 +73,9 @@ class _CuisinesStepState extends State<CuisinesStep> {
     if (text.isEmpty) return;
 
     setState(() {
-      // Split by comma in case they pasted multiple
       final items = text.split(',').map((s) => s.trim().toTitleCase()).where((s) => s.isNotEmpty);
       for (var item in items) {
-        if (!_selected.contains(item) && _selected.length < 10) { // Limit to 10 total
+        if (!_selected.contains(item) && _selected.length < 12) {
           _selected.add(item);
         }
       }
@@ -97,32 +101,31 @@ class _CuisinesStepState extends State<CuisinesStep> {
       children: [
         Expanded(
           child: SingleChildScrollView(
-            padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 30.h),
+            padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'What cuisines do you love?',
+                  'What cuisines do\nyou love?',
                   style: TextStyle(
-                    fontSize: 34.sp,
-                    fontWeight: FontWeight.w400,
-                    color: const Color(0xFF111827),
-                    fontFamily: 'Larken',
-                    height: 1.149,
-                    letterSpacing: 0,
+                    fontSize: 32.sp,
+                    fontWeight: FontWeight.w800,
+                    color: const Color(0xFF0F172A),
+                    fontFamily: 'Rubik',
+                    height: 1.15,
                   ),
                 ),
-                SizedBox(height: 8.h),
+                SizedBox(height: 10.h),
                 Text(
-                  'Pick your favorites. The more you choose,\nthe better your recommendations.',
+                  'Pick your favorites. The more you choose, the\nbetter your recommendations',
                   style: TextStyle(
-                    fontSize: 16.sp,
-                    color: const Color(0xFF4B5563),
+                    fontSize: 15.sp,
+                    color: const Color(0xFF475569),
                     fontFamily: 'SF Pro',
                     height: 1.3,
                   ),
                 ),
-                SizedBox(height: 25.h),
+                SizedBox(height: 24.h),
                 GridView.builder(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
@@ -130,7 +133,7 @@ class _CuisinesStepState extends State<CuisinesStep> {
                     crossAxisCount: 2,
                     crossAxisSpacing: 12.w,
                     mainAxisSpacing: 12.h,
-                    childAspectRatio: 1.0,
+                    childAspectRatio: 0.82,
                   ),
                   itemCount: _cuisines.length,
                   itemBuilder: (context, index) {
@@ -144,18 +147,18 @@ class _CuisinesStepState extends State<CuisinesStep> {
                   Text(
                     'Specify other cuisines',
                     style: TextStyle(
-                      fontFamily: 'SF Pro',
+                      fontFamily: 'Rubik',
                       fontSize: 14.sp,
-                      fontWeight: FontWeight.w600,
-                      color: const Color(0xFF7B8190),
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF0F172A),
                     ),
                   ),
                   SizedBox(height: 8.h),
                   Container(
                     decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12.r),
-                      border: Border.all(color: const Color(0xFFE5E7EB)),
+                      color: const Color(0xFFF1F5F9),
+                      borderRadius: BorderRadius.circular(14.r),
+                      border: Border.all(color: const Color(0xFFCBD5E1)),
                     ),
                     child: TextField(
                       controller: _othersController,
@@ -163,31 +166,31 @@ class _CuisinesStepState extends State<CuisinesStep> {
                       onSubmitted: (_) => _addCustomCuisine(),
                       textCapitalization: TextCapitalization.words,
                       style: TextStyle(
-                        fontFamily: 'SF Pro',
+                        fontFamily: 'Rubik',
                         fontSize: 14.sp,
-                        color: const Color(0xFF1A1A1A),
+                        color: const Color(0xFF0F172A),
                       ),
                       decoration: InputDecoration(
                         hintText: 'Type a cuisine...',
                         hintStyle: TextStyle(
                           fontFamily: 'SF Pro',
                           fontSize: 14.sp,
-                          color: Colors.grey[400],
+                          color: const Color(0xFF94A3B8),
                         ),
                         border: InputBorder.none,
-                        contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
+                        contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
                         suffixIcon: Padding(
-                          padding: EdgeInsets.all(8.r),
+                          padding: EdgeInsets.all(6.r),
                           child: GestureDetector(
                             onTap: _addCustomCuisine,
                             child: Container(
                               width: 36.w,
                               height: 36.w,
                               decoration: BoxDecoration(
-                                color: const Color(0xFFC83A2D),
-                                borderRadius: BorderRadius.circular(8.r),
+                                color: const Color(0xFFC31E26),
+                                borderRadius: BorderRadius.circular(10.r),
                               ),
-                              child: Icon(Icons.add_rounded, color: Colors.white, size: 24.sp),
+                              child: Icon(Icons.add_rounded, color: Colors.white, size: 22.sp),
                             ),
                           ),
                         ),
@@ -200,8 +203,8 @@ class _CuisinesStepState extends State<CuisinesStep> {
                       spacing: 8.w,
                       runSpacing: 8.h,
                       children: customCuisines.map((c) => Chip(
-                        label: Text(c, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                        backgroundColor: const Color(0xFFC83A2D),
+                        label: Text(c, style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13.sp)),
+                        backgroundColor: const Color(0xFFC31E26),
                         deleteIcon: const Icon(Icons.close, size: 14, color: Colors.white),
                         onDeleted: () => _removeCuisine(c),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.r)),
@@ -216,14 +219,16 @@ class _CuisinesStepState extends State<CuisinesStep> {
         ),
         if (widget.onContinue != null)
           Padding(
-            padding: EdgeInsets.fromLTRB(24.w, 16.h, 24.w, 20.h),
+            padding: EdgeInsets.fromLTRB(24.w, 8.h, 24.w, 20.h),
             child: SafeArea(
               top: false,
+              bottom: true,
               child: RedButton(
                 label: 'Continue',
+                color: const Color(0xFFC31E26),
                 onTap: widget.onContinue!,
-                height: 55.h,
-                fontSize: 18.sp,
+                height: 52.h,
+                fontSize: 16.sp,
               ),
             ),
           ),
@@ -246,58 +251,80 @@ class _CuisinesStepState extends State<CuisinesStep> {
         widget.onChanged(_selected.toList());
       },
       child: Container(
-        padding: EdgeInsets.all(1.5.r),
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20.r),
+          color: const Color(0xFFFAF4E5),
+          borderRadius: BorderRadius.circular(16.r),
           border: Border.all(
-            color: isSelected
-                ? const Color(0xFFC83A2D)
-                : const Color(0xFFF3F4F6),
+            color: isSelected ? const Color(0xFFC31E26) : Colors.transparent,
             width: 1.5,
           ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.04),
-              blurRadius: 15,
-              offset: const Offset(0, 4),
-            ),
-          ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Expanded(
               child: ClipRRect(
-                borderRadius: BorderRadius.vertical(top: Radius.circular(18.r)),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(14.r)),
                 child: Image.asset(
                   'assets/cuisine/${cuisine['id']}.png',
                   fit: BoxFit.cover,
                   errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      color: const Color(0xFFF3F4F6),
-                      child: Icon(
-                        Icons.restaurant,
-                        color: const Color(0xFF9CA3AF),
-                        size: 32.sp,
-                      ),
+                    return Image.asset(
+                      'assets/cuisine/others.png',
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          color: const Color(0xFFF1F5F9),
+                          child: Icon(
+                            Icons.restaurant_menu,
+                            color: const Color(0xFFCBD5E1),
+                            size: 32.sp,
+                          ),
+                        );
+                      },
                     );
                   },
                 ),
               ),
             ),
             Container(
-              padding: EdgeInsets.symmetric(vertical: 12.h),
-              child: Text(
-                cuisine['title']!,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontFamily: 'SF Pro',
-                  fontSize: 14.sp,
-                  fontWeight: FontWeight.w500,
-                  color: isSelected ? const Color(0xFFC83A2D) : const Color(0xFF111827),
-                  height: 1.2,
-                ),
+              padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFAF4E5),
+                borderRadius: BorderRadius.vertical(bottom: Radius.circular(14.r)),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      cuisine['title']!,
+                      style: TextStyle(
+                        fontFamily: 'Rubik',
+                        fontSize: 14.sp,
+                        fontWeight: FontWeight.w700,
+                        color: isSelected ? const Color(0xFFC31E26) : const Color(0xFF0F172A),
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  if (isSelected) ...[
+                    SizedBox(width: 4.w),
+                    Container(
+                      width: 18.r,
+                      height: 18.r,
+                      decoration: const BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Color(0xFFC31E26),
+                      ),
+                      child: Icon(
+                        Icons.check,
+                        color: Colors.white,
+                        size: 11.sp,
+                      ),
+                    ),
+                  ],
+                ],
               ),
             ),
           ],

@@ -27,12 +27,7 @@ class _TotalSavingsStepState extends State<TotalSavingsStep> with SingleTickerPr
   late Animation<double> _amountOpacity;
   late Animation<double> _amountScale;
   
-  late Animation<double> _subtitleOpacity;
-  late Animation<Offset> _subtitleSlide;
-  
   late Animation<double> _imageOpacity;
-  late Animation<Offset> _imageSlide;
-  
   late Animation<double> _buttonOpacity;
   late Animation<Offset> _buttonSlide;
 
@@ -41,42 +36,32 @@ class _TotalSavingsStepState extends State<TotalSavingsStep> with SingleTickerPr
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1000),
+      duration: const Duration(milliseconds: 900),
     );
 
     _titleOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _controller, curve: const Interval(0.0, 0.4, curve: Curves.easeOut)),
     );
-    _titleSlide = Tween<Offset>(begin: const Offset(0, 0.2), end: Offset.zero).animate(
+    _titleSlide = Tween<Offset>(begin: const Offset(0, 0.15), end: Offset.zero).animate(
       CurvedAnimation(parent: _controller, curve: const Interval(0.0, 0.4, curve: Curves.easeOutCubic)),
     );
 
     _amountOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: const Interval(0.2, 0.6, curve: Curves.easeOut)),
+      CurvedAnimation(parent: _controller, curve: const Interval(0.25, 0.65, curve: Curves.easeOut)),
     );
-    _amountScale = Tween<double>(begin: 0.8, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: const Interval(0.2, 0.6, curve: Curves.elasticOut)),
-    );
-
-    _subtitleOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: const Interval(0.4, 0.8, curve: Curves.easeOut)),
-    );
-    _subtitleSlide = Tween<Offset>(begin: const Offset(0, 0.2), end: Offset.zero).animate(
-      CurvedAnimation(parent: _controller, curve: const Interval(0.4, 0.8, curve: Curves.easeOutCubic)),
+    _amountScale = Tween<double>(begin: 0.85, end: 1.0).animate(
+      CurvedAnimation(parent: _controller, curve: const Interval(0.25, 0.65, curve: Curves.easeOutBack)),
     );
 
     _imageOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: const Interval(0.5, 1.0, curve: Curves.easeOut)),
-    );
-    _imageSlide = Tween<Offset>(begin: const Offset(0, 0.1), end: Offset.zero).animate(
-      CurvedAnimation(parent: _controller, curve: const Interval(0.5, 1.0, curve: Curves.easeOutCubic)),
+      CurvedAnimation(parent: _controller, curve: const Interval(0.4, 0.85, curve: Curves.easeOut)),
     );
 
     _buttonOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: const Interval(0.6, 1.0, curve: Curves.easeOut)),
+      CurvedAnimation(parent: _controller, curve: const Interval(0.55, 1.0, curve: Curves.easeOut)),
     );
     _buttonSlide = Tween<Offset>(begin: const Offset(0, 0.2), end: Offset.zero).animate(
-      CurvedAnimation(parent: _controller, curve: const Interval(0.6, 1.0, curve: Curves.easeOutCubic)),
+      CurvedAnimation(parent: _controller, curve: const Interval(0.55, 1.0, curve: Curves.easeOutCubic)),
     );
 
     _controller.forward();
@@ -90,136 +75,152 @@ class _TotalSavingsStepState extends State<TotalSavingsStep> with SingleTickerPr
 
   @override
   Widget build(BuildContext context) {
-    // Format total savings with commas
+    // Calculate total savings or fallback to default mockup value ($2,496)
     final totalSavings = widget.eatingOutSavings + widget.grocerySavings;
-    final formattedSavings = totalSavings.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},');
+    final displayAmount = totalSavings > 0 ? totalSavings : 2496;
+    final formattedSavings = displayAmount.toString().replaceAllMapped(
+      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), 
+      (Match m) => '${m[1]},'
+    );
 
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, child) {
         return Stack(
           children: [
-            SizedBox(
-              width: double.infinity,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Padding(
-                    padding: EdgeInsets.fromLTRB(24.w, 20.h, 24.w, 0),
-                    child: FadeTransition(
-                      opacity: _titleOpacity,
-                      child: SlideTransition(
-                        position: _titleSlide,
-                        child: Text(
-                          'You could save\napproximately',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 34.sp,
-                            fontWeight: FontWeight.w400,
-                            color: const Color(0xFF111827),
-                            fontFamily: 'Larken',
-                            height: 1.149,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: 24.h),
-                  FadeTransition(
-                    opacity: _amountOpacity,
-                    child: ScaleTransition(
-                      scale: _amountScale,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Text(
-                            '\$$formattedSavings',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 56.sp,
-                              fontWeight: FontWeight.w700,
-                              color: const Color(0xFF00C40A),
-                              fontFamily: 'SF Pro',
-                              height: 1,
-                            ),
-                          ),
-                          SizedBox(height: 8.h),
-                          Text(
-                            'Every Year',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 14.sp,
-                              color: const Color(0xFF6B7280),
-                              fontFamily: 'SF Pro',
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: 32.h),
-                  FadeTransition(
-                    opacity: _subtitleOpacity,
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Title Area (Left aligned, Rubik bold)
+                Padding(
+                  padding: EdgeInsets.fromLTRB(24.w, 16.h, 24.w, 0),
+                  child: FadeTransition(
+                    opacity: _titleOpacity,
                     child: SlideTransition(
-                      position: _subtitleSlide,
+                      position: _titleSlide,
                       child: Text(
-                        'Just by cooking smarter.',
-                        textAlign: TextAlign.center,
+                        'You could save\napproximately',
+                        textAlign: TextAlign.start,
                         style: TextStyle(
-                          fontSize: 16.sp,
-                          color: const Color(0xFF4B5563),
-                          fontFamily: 'SF Pro',
+                          fontSize: 32.sp,
+                          fontWeight: FontWeight.w800,
+                          color: const Color(0xFF0F172A),
+                          fontFamily: 'Rubik',
+                          height: 1.15,
                         ),
-                      ),
-                    ),
-                  ),
-                  const Spacer(),
-                ],
-              ),
-            ),
-            
-            // Image placed at the bottom, rotated, partially behind the button
-            Positioned(
-              left: -10.w,
-              right: 10.w,
-              bottom: 70.h, // overlapping the button slightly
-              child: FadeTransition(
-                opacity: _imageOpacity,
-                child: SlideTransition(
-                  position: _imageSlide,
-                  child: Transform.rotate(
-                    angle: -5 * (3.14159 / 180), // Convert degrees to radians
-                    child: Image.asset(
-                      'assets/onboarding/step8.png',
-                      fit: BoxFit.contain,
-                      errorBuilder: (context, error, stackTrace) => Container(
-                        height: 300.h,
-                        color: Colors.grey[200],
-                        alignment: Alignment.center,
-                        child: const Text('assets/onboarding/step8.png missing'),
                       ),
                     ),
                   ),
                 ),
-              ),
+                
+                SizedBox(height: 24.h),
+
+                // Big Stat Section (Centered amount + captions)
+                FadeTransition(
+                  opacity: _amountOpacity,
+                  child: ScaleTransition(
+                    scale: _amountScale,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Text(
+                          '\$$formattedSavings',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 52.sp,
+                            fontWeight: FontWeight.w800,
+                            color: const Color(0xFF10B981),
+                            fontFamily: 'Rubik',
+                            height: 1.0,
+                            letterSpacing: -1.0,
+                          ),
+                        ),
+                        SizedBox(height: 10.h),
+                        Text(
+                          'Every Year',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 15.sp,
+                            fontWeight: FontWeight.w500,
+                            color: const Color(0xFF64748B),
+                            fontFamily: 'Rubik',
+                          ),
+                        ),
+                        SizedBox(height: 4.h),
+                        Text(
+                          'Just by cooking smarter',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 14.sp,
+                            fontWeight: FontWeight.w400,
+                            color: const Color(0xFF94A3B8),
+                            fontFamily: 'SF Pro',
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                SizedBox(height: 16.h),
+
+                // Food Image area with top ShaderMask fade
+                Expanded(
+                  child: FadeTransition(
+                    opacity: _imageOpacity,
+                    child: ShaderMask(
+                      shaderCallback: (rect) {
+                        return const LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.transparent,
+                            Colors.black,
+                            Colors.black,
+                          ],
+                          stops: [0.0, 0.22, 1.0],
+                        ).createShader(rect);
+                      },
+                      blendMode: BlendMode.dstIn,
+                      child: Image.asset(
+                        'assets/onboarding/step8.png',
+                        width: double.infinity,
+                        height: double.infinity,
+                        fit: BoxFit.cover,
+                        alignment: Alignment.topCenter,
+                        errorBuilder: (context, error, stackTrace) => Container(
+                          color: const Color(0xFFF1F5F9),
+                          alignment: Alignment.center,
+                          child: const Icon(Icons.restaurant, size: 60, color: Color(0xFFCBD5E1)),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
 
-            // Button always on top
+            // Continue Button (Fixed at bottom over food image)
             Positioned(
-              left: 24.w,
-              right: 24.w,
-              bottom: 20.h,
+              left: 0,
+              right: 0,
+              bottom: 0,
               child: FadeTransition(
                 opacity: _buttonOpacity,
                 child: SlideTransition(
                   position: _buttonSlide,
                   child: SafeArea(
                     top: false,
-                    child: RedButton(
-                      label: 'Continue',
-                      onTap: widget.onContinue,
-                      height: 55.h,
-                      fontSize: 18.sp,
+                    bottom: true,
+                    child: Padding(
+                      padding: EdgeInsets.fromLTRB(24.w, 8.h, 24.w, 20.h),
+                      child: RedButton(
+                        label: 'Continue',
+                        color: const Color(0xFFC31E26),
+                        onTap: widget.onContinue,
+                        height: 52.h,
+                        fontSize: 16.sp,
+                      ),
                     ),
                   ),
                 ),

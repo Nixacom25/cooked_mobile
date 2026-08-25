@@ -129,58 +129,48 @@ class _OtpStepState extends State<OtpStep> {
       children: [
         Expanded(
           child: SingleChildScrollView(
-            padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 40.h),
+            padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   'Verify your account',
                   style: TextStyle(
-                    fontSize: 28.sp,
-                    fontWeight: FontWeight.w400,
-                    color: const Color(0xFF111827),
-                    fontFamily: 'Larken',
-                    height: 1.149,
-                    letterSpacing: 0,
+                    fontSize: 32.sp,
+                    fontWeight: FontWeight.w800,
+                    color: const Color(0xFF0F172A),
+                    fontFamily: 'Rubik',
+                    height: 1.15,
                   ),
                 ),
-                SizedBox(height: 8.h),
+                SizedBox(height: 10.h),
                 Text(
                   'Please enter the 6-digit code we sent to\n${widget.email}',
                   style: TextStyle(
                     fontSize: 15.sp,
-                    color: const Color(0xFF7B8190),
+                    color: const Color(0xFF475569),
                     fontFamily: 'SF Pro',
-                    height: 1.4,
+                    height: 1.3,
                   ),
                 ),
-                SizedBox(height: 48.h),
+                SizedBox(height: 36.h),
 
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: List.generate(_otpLength, (idx) {
                     return Expanded(
                       child: Container(
-                        height: 60.h,
-                        margin: EdgeInsets.symmetric(horizontal: 4.w),
+                        height: 56.h,
+                        margin: EdgeInsets.symmetric(horizontal: 3.w),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFF9FAFB),
+                          color: const Color(0xFFF1F5F9),
                           borderRadius: BorderRadius.circular(16.r),
                           border: Border.all(
                             color: _nodes[idx].hasFocus || _ctrls[idx].text.isNotEmpty
-                                ? const Color(0xFFC83A2D)
-                                : const Color(0xFFE5E7EB),
-                            width: _nodes[idx].hasFocus ? 2.w : 1.5.w,
+                                ? const Color(0xFFC31E26)
+                                : Colors.transparent,
+                            width: 1.5,
                           ),
-                          boxShadow: _nodes[idx].hasFocus
-                              ? [
-                                  BoxShadow(
-                                    color: const Color(0xFFC83A2D).withOpacity(0.1),
-                                    blurRadius: 8,
-                                    offset: const Offset(0, 4),
-                                  )
-                                ]
-                              : [],
                         ),
                         child: TextField(
                           controller: _ctrls[idx],
@@ -192,10 +182,10 @@ class _OtpStepState extends State<OtpStep> {
                             FilteringTextInputFormatter.digitsOnly,
                           ],
                           style: TextStyle(
-                            fontSize: 24.sp,
-                            fontWeight: FontWeight.w800,
-                            fontFamily: 'SF Pro',
-                            color: const Color(0xFF0D1B3E),
+                            fontSize: 22.sp,
+                            fontWeight: FontWeight.w700,
+                            fontFamily: 'Rubik',
+                            color: const Color(0xFF0F172A),
                           ),
                           decoration: const InputDecoration(
                             counterText: '',
@@ -216,53 +206,55 @@ class _OtpStepState extends State<OtpStep> {
                       Text(
                         "Didn't receive a code?",
                         style: TextStyle(
-                          fontSize: 15.sp,
-                          color: const Color(0xFF7B8190),
+                          fontSize: 14.sp,
+                          color: const Color(0xFF64748B),
                           fontFamily: 'SF Pro',
                         ),
                       ),
-                      SizedBox(height: 8.h),
+                      SizedBox(height: 6.h),
                       TextButton(
                         onPressed: _isResending ? null : _resendCode,
                         child: _isResending
                             ? LoadingText(
                                 text: 'Resending',
                                 style: TextStyle(
-                                  fontSize: 16.sp,
+                                  fontSize: 15.sp,
                                   fontWeight: FontWeight.w700,
-                                  color: const Color(0xFFC83A2D),
-                                  fontFamily: 'SF Pro',
+                                  color: const Color(0xFFC31E26),
+                                  fontFamily: 'Rubik',
                                 ),
                               )
                             : Text(
                                 'Resend Code',
                                 style: TextStyle(
-                                  fontSize: 16.sp,
+                                  fontSize: 15.sp,
                                   fontWeight: FontWeight.w700,
-                                  color: const Color(0xFFC83A2D),
-                                  fontFamily: 'SF Pro',
+                                  color: const Color(0xFFC31E26),
+                                  fontFamily: 'Rubik',
                                 ),
                               ),
                       ),
                     ],
                   ),
                 ),
-                SizedBox(height: MediaQuery.of(context).viewInsets.bottom + 16.h),
+                SizedBox(height: MediaQuery.of(context).viewInsets.bottom + 20.h),
               ],
             ),
           ),
         ),
-        SafeArea(
-          top: false,
-          child: Padding(
-            padding: EdgeInsets.fromLTRB(24.w, 8.h, 24.w, 16.h),
+        Padding(
+          padding: EdgeInsets.fromLTRB(24.w, 8.h, 24.w, 20.h),
+          child: SafeArea(
+            top: false,
+            bottom: true,
             child: RedButton(
               label: 'Verify & Continue',
               loadingLabel: 'Verifying',
               isLoading: _isLoading,
+              color: const Color(0xFFC31E26),
               onTap: _verifyCode,
-              height: 56.h,
-              fontSize: 18.sp,
+              height: 52.h,
+              fontSize: 16.sp,
             ),
           ),
         ),

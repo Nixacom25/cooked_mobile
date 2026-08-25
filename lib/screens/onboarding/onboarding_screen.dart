@@ -39,8 +39,9 @@ import 'widgets/perfect_meal_step.dart';
 
 import '../../services/auth_service.dart';
 import '../../services/iap_service.dart';
+import '../../services/revenuecat_service.dart';
+import 'package:purchases_flutter/purchases_flutter.dart';
 import '../../core/services/tutorial_service.dart';
-import 'package:in_app_purchase/in_app_purchase.dart';
 import '../../core/utils/error_helper.dart';
 
 import '../../core/widgets/terms_validation_modal.dart';
@@ -62,8 +63,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   int _analysisDotCount = 0;
   Timer? _analysisTimer;
 
-  // IAP
-  List<ProductDetails> _products = [];
+  // RevenueCat Packages
+  List<Package> _packages = [];
   bool _isIapAvailable = false;
   String _selectedPlanId = 'yearly';
 
@@ -138,14 +139,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       }
     };
 
-    final products = await IapService.instance.getProducts({
-      'monthly_sub',
-      'yearly_sub',
-    });
-    if (mounted) {
+    final offerings = await RevenueCatService.instance.getOfferings();
+    if (mounted && offerings?.current != null) {
       setState(() {
-        _products = products;
-        _isIapAvailable = products.isNotEmpty;
+        _packages = offerings!.current!.availablePackages;
+        _isIapAvailable = _packages.isNotEmpty;
       });
     }
   }
@@ -383,7 +381,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       // FreeTrialIntroStep and FreeTrialGuideStep handle their own navigation
     } else if (_currentPage == 28) {
       // TrialStep Payment Trigger
-      if (!_isIapAvailable || _products.isEmpty) {
+      if (!_isIapAvailable || _packages.isEmpty) {
         // Fallback or dev: skip billing if store is unavailable
         _pageController.nextPage(
           duration: const Duration(milliseconds: 300),
@@ -393,19 +391,18 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       }
 
       setState(() => _isLoading = true);
-      final targetId = _selectedPlanId == 'yearly'
-          ? 'yearly_sub'
-          : 'monthly_sub';
-      ProductDetails product = _products.first;
-      for (var p in _products) {
-        if (p.id == targetId) {
-          product = p;
+      Package? packageToBuy;
+      for (var p in _packages) {
+        if ((_selectedPlanId == 'yearly' && p.packageType == PackageType.annual) ||
+            (_selectedPlanId == 'monthly' && p.packageType == PackageType.monthly)) {
+          packageToBuy = p;
           break;
         }
       }
+      packageToBuy ??= _packages.first;
 
       try {
-        await IapService.instance.buyProduct(product);
+        await RevenueCatService.instance.buyPackage(packageToBuy);
       } catch (e) {
         setState(() => _isLoading = false);
         if (mounted) {
@@ -685,7 +682,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   Widget _buildFullScreenLoading() {
     return Container(
-      color: Colors.black.withOpacity(0.7),
+      color: Colors.black.withValues(alpha: 0.7),
       child: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -720,7 +717,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         _onBack();
       },
       child: Scaffold(
-        backgroundColor: Colors.transparent,
+        backgroundColor: const Color(0xFFF1F5F9),
         resizeToAvoidBottomInset: false,
         body: GestureDetector(
           behavior: HitTestBehavior.translucent,
@@ -728,65 +725,73 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           child: Stack(
             fit: StackFit.expand,
             children: [
-            // Image.asset('assets/images/fond.png', fit: BoxFit.cover),
-            Container(color: Colors.white),
-          SafeArea(
-            child: Column(
-              children: [
-                // Header: Progress & Skip
-                if (_currentPage != 8 && _currentPage != 20 && _currentPage < 25)
-                  Padding(
-                    padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 0),
-                  child: Row(
+              SafeArea(
+                bottom: false,
+                child: Container(
+                  margin: EdgeInsets.only(top: 10.h),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(32.r)),
+                  ),
+                  child: Column(
                     children: [
-                      Opacity(
-                        opacity: 1.0,
-                        child: GestureDetector(
-                          onTap: _onBack,
-                          child: Container(
-                            padding: EdgeInsets.all(8.r),
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: Colors.grey.withOpacity(0.05),
-                            ),
-                            child: Icon(
-                              Icons.arrow_back_rounded,
-                              size: 20.sp,
-                              color: const Color(0xFF374151),
-                            ),
-                          ),
-                        ),
-                      ),
-                      SizedBox(width: 16.w),
-                      Expanded(
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(10.r),
-                          child: Stack(
+                      // Header: Progress & Back
+                      if (_currentPage != 8 && _currentPage < 25)
+                        Padding(
+                          padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 4.h),
+                          child: Row(
                             children: [
-                              Container(
-                                height: 6.h,
-                                color: const Color(0xFFE5E7EB),
-                              ),
-                              AnimatedFractionallySizedBox(
-                                duration: const Duration(milliseconds: 400),
-                                widthFactor: (_getEffectiveStep() / 29).clamp(0.0, 1.0),
-                                child: Container(
-                                  height: 6.h,
-                                  color: const Color(0xFFC83A2D),
+                              if (_currentPage != 20) ...[
+                                GestureDetector(
+                                  onTap: _onBack,
+                                  child: Container(
+                                    width: 40.r,
+                                    height: 40.r,
+                                    decoration: const BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: Color(0xFFF1F5F9),
+                                    ),
+                                    child: Icon(
+                                      Icons.arrow_back_rounded,
+                                      size: 20.sp,
+                                      color: const Color(0xFF0F172A),
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(width: 16.w),
+                              ],
+                              Expanded(
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(10.r),
+                                  child: Stack(
+                                    children: [
+                                      Container(
+                                        height: 6.h,
+                                        color: const Color(0xFFF1F5F9),
+                                      ),
+                                      AnimatedFractionallySizedBox(
+                                        duration: const Duration(milliseconds: 400),
+                                        widthFactor: (_getEffectiveStep() / 29).clamp(0.0, 1.0),
+                                        child: Container(
+                                          height: 6.h,
+                                          decoration: BoxDecoration(
+                                            color: const Color(0xFFC31E26),
+                                            borderRadius: BorderRadius.circular(10.r),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
+                              SizedBox(width: 8.w),
                             ],
                           ),
                         ),
-                      ),
-                      SizedBox(width: 8.w),
-                    ],
-                  ),
-                ),
 
-                // Content
-                Expanded(
-                  child: PageView(
+                      // Content
+                      Expanded(
+                        child: PageView(
                     controller: _pageController,
                     physics: const NeverScrollableScrollPhysics(),
                     onPageChanged: _onStepChanged,
@@ -1128,14 +1133,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       ),
                     ),
                   ),
-              ],
+                ],
+              ),
             ),
           ),
           if (_isLoading) _buildFullScreenLoading(),
         ],
       ),
     ),
-    ),
-    );
-  }
+  ),
+);
+}
 }

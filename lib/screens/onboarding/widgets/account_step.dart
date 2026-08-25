@@ -141,7 +141,6 @@ class _AccountStepState extends State<AccountStep> {
       return;
     }
 
-    // Call notify change to ensure parent has latest state
     _notifyChange();
     widget.onContinue();
   }
@@ -152,114 +151,114 @@ class _AccountStepState extends State<AccountStep> {
       children: [
         Expanded(
           child: SingleChildScrollView(
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 30.h),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Create your account',
-                    style: TextStyle(
-                      fontSize: 28.sp,
-                      fontWeight: FontWeight.w400,
-                      color: const Color(0xFF111827),
-                      fontFamily: 'Larken',
-                      height: 1.149,
-                      letterSpacing: 0,
+            padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Create your account',
+                  style: TextStyle(
+                    fontSize: 32.sp,
+                    fontWeight: FontWeight.w800,
+                    color: const Color(0xFF0F172A),
+                    fontFamily: 'Rubik',
+                    height: 1.15,
+                  ),
+                ),
+                SizedBox(height: 10.h),
+                Text(
+                  'Secure your recipes and preferences',
+                  style: TextStyle(
+                    fontSize: 15.sp,
+                    color: const Color(0xFF475569),
+                    fontFamily: 'SF Pro',
+                    height: 1.3,
+                  ),
+                ),
+                SizedBox(height: 24.h),
+
+                _buildLabel('Full Name', required: false),
+                SizedBox(height: 8.h),
+                _buildField(
+                  controller: _nameController,
+                  hint: 'John Doe',
+                  icon: Icons.person_outline_rounded,
+                ),
+
+                SizedBox(height: 16.h),
+
+                _buildLabel('Email', required: true),
+                SizedBox(height: 8.h),
+                _buildField(
+                  controller: _emailController,
+                  hint: 'john@example.com',
+                  icon: Icons.email_outlined,
+                  keyboardType: TextInputType.emailAddress,
+                ),
+
+                SizedBox(height: 16.h),
+
+                _buildLabel('Password', required: true),
+                SizedBox(height: 8.h),
+                _buildField(
+                  controller: _passwordController,
+                  hint: '••••••••',
+                  icon: Icons.lock_outline_rounded,
+                  obscureText: _obscurePassword,
+                  suffix: IconButton(
+                    icon: Icon(
+                      _obscurePassword
+                          ? Icons.visibility_off_outlined
+                          : Icons.visibility_outlined,
+                      color: const Color(0xFF64748B),
+                      size: 20.sp,
                     ),
+                    onPressed: () {
+                      HapticFeedback.selectionClick();
+                      setState(() => _obscurePassword = !_obscurePassword);
+                    },
                   ),
-                  SizedBox(height: 10.h),
-                  Text(
-                    'Secure your recipes and preferences',
-                    style: TextStyle(
-                      fontSize: 14.sp,
-                      color: const Color(0xFF7B8190),
-                      fontFamily: 'SF Pro',
+                ),
+
+                SizedBox(height: 16.h),
+
+                _buildLabel('Confirm Password', required: true),
+                SizedBox(height: 8.h),
+                _buildField(
+                  controller: _confirmController,
+                  hint: '••••••••',
+                  icon: Icons.lock_outline_rounded,
+                  obscureText: _obscureConfirm,
+                  suffix: IconButton(
+                    icon: Icon(
+                      _obscureConfirm
+                          ? Icons.visibility_off_outlined
+                          : Icons.visibility_outlined,
+                      color: const Color(0xFF64748B),
+                      size: 20.sp,
                     ),
+                    onPressed: () {
+                      HapticFeedback.selectionClick();
+                      setState(() => _obscureConfirm = !_obscureConfirm);
+                    },
                   ),
-                  SizedBox(height: 32.h),
-
-                  _buildLabel('Full Name', required: false),
-                  const SizedBox(height: 8),
-                  _buildField(
-                    controller: _nameController,
-                    hint: 'John Doe',
-                    icon: Icons.person_outline_rounded,
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  _buildLabel('Email', required: true),
-                  const SizedBox(height: 8),
-                  _buildField(
-                    controller: _emailController,
-                    hint: 'john@example.com',
-                    icon: Icons.email_outlined,
-                    keyboardType: TextInputType.emailAddress,
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  _buildLabel('Password', required: true),
-                  const SizedBox(height: 8),
-                  _buildField(
-                    controller: _passwordController,
-                    hint: '••••••••',
-                    icon: Icons.lock_outline_rounded,
-                    obscureText: _obscurePassword,
-                    suffix: IconButton(
-                      icon: Icon(
-                        _obscurePassword
-                            ? Icons.visibility_off_outlined
-                            : Icons.visibility_outlined,
-                        color: const Color(0xFF7B8190),
-                        size: 20,
-                      ),
-                      onPressed: () {
-                        HapticFeedback.selectionClick();
-                        setState(() => _obscurePassword = !_obscurePassword);
-                      },
-                    ),
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  _buildLabel('Confirm Password', required: true),
-                  const SizedBox(height: 8),
-                  _buildField(
-                    controller: _confirmController,
-                    hint: '••••••••',
-                    icon: Icons.lock_outline_rounded,
-                    obscureText: _obscureConfirm,
-                    suffix: IconButton(
-                      icon: Icon(
-                        _obscureConfirm
-                            ? Icons.visibility_off_outlined
-                            : Icons.visibility_outlined,
-                        color: const Color(0xFF7B8190),
-                        size: 20,
-                      ),
-                      onPressed: () {
-                        HapticFeedback.selectionClick();
-                        setState(() => _obscureConfirm = !_obscureConfirm);
-                      },
-                    ),
-                  ),
-                  SizedBox(height: MediaQuery.of(context).viewInsets.bottom + 16.h),
-                ],
-              ),
+                ),
+                SizedBox(height: MediaQuery.of(context).viewInsets.bottom + 20.h),
+              ],
             ),
           ),
         ),
-        SafeArea(
-          top: false,
-          child: Padding(
-            padding: EdgeInsets.fromLTRB(20.w, 8.h, 20.w, 16.h),
+        Padding(
+          padding: EdgeInsets.fromLTRB(24.w, 8.h, 24.w, 20.h),
+          child: SafeArea(
+            top: false,
+            bottom: true,
             child: RedButton(
               label: 'Create Account',
+              color: const Color(0xFFC31E26),
               onTap: _submitForm,
-              height: 56.h,
-              fontSize: 18.sp,
+              height: 52.h,
+              fontSize: 16.sp,
             ),
           ),
         ),
@@ -273,18 +272,18 @@ class _AccountStepState extends State<AccountStep> {
         text: label,
         style: TextStyle(
           fontSize: 14.sp,
-          fontWeight: FontWeight.w600,
-          color: const Color(0xFF7B8190),
-          fontFamily: 'SF Pro',
+          fontWeight: FontWeight.w700,
+          color: const Color(0xFF0F172A),
+          fontFamily: 'Rubik',
         ),
         children: [
           if (required)
             TextSpan(
               text: ' *',
               style: TextStyle(
-                color: const Color(0xFFC83A2D),
+                color: const Color(0xFFC31E26),
                 fontSize: 14.sp,
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w700,
               ),
             ),
         ],
@@ -307,37 +306,35 @@ class _AccountStepState extends State<AccountStep> {
       onChanged: (_) => _notifyChange(),
       style: TextStyle(
         fontFamily: 'SF Pro',
-        fontSize: 16.sp,
+        fontSize: 15.sp,
         fontWeight: FontWeight.w600,
-        color: const Color(0xFF1A1A1A),
+        color: const Color(0xFF0F172A),
       ),
       decoration: InputDecoration(
         hintText: hint,
         hintStyle: TextStyle(
-          color: const Color(0xFFBDC3C7),
+          color: const Color(0xFF94A3B8),
           fontWeight: FontWeight.w400,
-          fontSize: 16.sp,
+          fontSize: 15.sp,
         ),
-        prefixIcon: Icon(icon, color: const Color(0xFFBDC3C7), size: 22.sp),
+        prefixIcon: Icon(icon, color: const Color(0xFF94A3B8), size: 20.sp),
         suffixIcon: suffix,
         filled: true,
-        fillColor: Colors.white,
-        contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
+        fillColor: const Color(0xFFF1F5F9),
+        contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12.r),
-          borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+          borderRadius: BorderRadius.circular(16.r),
+          borderSide: BorderSide.none,
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12.r),
-          borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+          borderRadius: BorderRadius.circular(16.r),
+          borderSide: BorderSide.none,
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12.r),
-          borderSide: BorderSide(color: const Color(0xFFC83A2D), width: 1.5.w),
+          borderRadius: BorderRadius.circular(16.r),
+          borderSide: const BorderSide(color: Color(0xFFC31E26), width: 1.5),
         ),
       ),
     );
   }
-
-
 }

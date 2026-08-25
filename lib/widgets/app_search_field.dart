@@ -10,6 +10,7 @@ class AppSearchField extends StatelessWidget {
   final Color? borderColor;
   final IconData? suffixIcon;
   final VoidCallback? onSuffixTap;
+  final double? borderRadius;
 
   const AppSearchField({
     super.key,
@@ -21,6 +22,7 @@ class AppSearchField extends StatelessWidget {
     this.borderColor,
     this.suffixIcon,
     this.onSuffixTap,
+    this.borderRadius,
   });
 
   @override
@@ -28,7 +30,7 @@ class AppSearchField extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: backgroundColor ?? Colors.white,
-        borderRadius: BorderRadius.circular(50.r),
+        borderRadius: BorderRadius.circular(borderRadius ?? 50.r),
         border: Border.all(color: borderColor ?? const Color(0xFFE0E0E0)),
       ),
       padding: EdgeInsets.symmetric(horizontal: 10.w),

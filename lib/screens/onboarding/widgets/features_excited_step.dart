@@ -28,25 +28,25 @@ class _FeaturesExcitedStepState extends State<FeaturesExcitedStep> {
       'id': 'scan_ingredients',
       'title': 'Scan Ingredients',
       'desc': 'Take a photo and get recipes from what you already have.',
-      'icon': 'scan1.svg', // Assuming you have an icon like this, or use a generic one
+      'icon': 'scan1.svg',
     },
     {
       'id': 'meal_planning',
       'title': 'Meal Planning',
       'desc': 'Plan your meals for the week without starting from scratch.',
-      'icon': 'calendar2.svg', // Or similar
+      'icon': 'calendar2.svg',
     },
     {
       'id': 'import_recipes',
       'title': 'Import Recipes',
       'desc': 'Save recipes from TikTok, Instagram, YouTube, or websites.',
-      'icon': 'import1.svg', // Or similar
+      'icon': 'import1.svg',
     },
     {
       'id': 'grocery_lists',
       'title': 'Grocery Lists',
       'desc': 'Turn recipes into shopping lists automatically.',
-      'icon': 'grocery.svg', // Or similar
+      'icon': 'grocery.svg',
     },
   ];
 
@@ -74,32 +74,31 @@ class _FeaturesExcitedStepState extends State<FeaturesExcitedStep> {
       children: [
         Expanded(
           child: SingleChildScrollView(
-            padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 30.h),
+            padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   'What are you most\nexcited about?',
                   style: TextStyle(
-                    fontSize: 34.sp,
-                    fontWeight: FontWeight.w400,
-                    color: const Color(0xFF111827),
-                    fontFamily: 'Larken',
-                    height: 1.149,
-                    letterSpacing: 0,
+                    fontSize: 32.sp,
+                    fontWeight: FontWeight.w800,
+                    color: const Color(0xFF0F172A),
+                    fontFamily: 'Rubik',
+                    height: 1.15,
                   ),
                 ),
-                SizedBox(height: 12.h),
+                SizedBox(height: 10.h),
                 Text(
-                  "Pick the features you'll use most.",
+                  "Pick the features you’ll use most",
                   style: TextStyle(
-                    fontSize: 16.sp,
-                    color: const Color(0xFF4B5563),
+                    fontSize: 15.sp,
+                    color: const Color(0xFF475569),
                     fontFamily: 'SF Pro',
                     height: 1.3,
                   ),
                 ),
-                SizedBox(height: 32.h),
+                SizedBox(height: 24.h),
                 ..._options.map((opt) {
                   final isSelected = _selected.contains(opt['id']);
                   return Padding(
@@ -107,36 +106,43 @@ class _FeaturesExcitedStepState extends State<FeaturesExcitedStep> {
                     child: GestureDetector(
                       onTap: () => _toggleOption(opt['id']!),
                       child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
+                        duration: const Duration(milliseconds: 150),
+                        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
                         decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(20.r),
+                          color: const Color(0xFFF1F5F9),
+                          borderRadius: BorderRadius.circular(16.r),
                           border: Border.all(
-                            color: isSelected ? const Color(0xFFC83A2D) : const Color(0xFFF3F4F6),
+                            color: isSelected
+                                ? const Color(0xFFC31E26)
+                                : Colors.transparent,
                             width: 1.5,
                           ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.04),
-                              blurRadius: 15,
-                              offset: const Offset(0, 4),
-                            ),
-                          ]
                         ),
                         child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            SvgPicture.asset(
-                              'assets/icones/${opt['icon']}',
-                              height: 28.sp,
-                              width: 28.sp,
-                              colorFilter: ColorFilter.mode(
-                                isSelected ? const Color(0xFFC83A2D) : const Color(0xFF9CA3AF),
-                                BlendMode.srcIn,
+                            Padding(
+                              padding: EdgeInsets.only(top: 2.h),
+                              child: SvgPicture.asset(
+                                'assets/icones/${opt['icon']}',
+                                height: 24.sp,
+                                width: 24.sp,
+                                colorFilter: ColorFilter.mode(
+                                  isSelected
+                                      ? const Color(0xFFC31E26)
+                                      : const Color(0xFF0F172A),
+                                  BlendMode.srcIn,
+                                ),
+                                placeholderBuilder: (context) => Icon(
+                                  Icons.star,
+                                  color: isSelected
+                                      ? const Color(0xFFC31E26)
+                                      : const Color(0xFF0F172A),
+                                  size: 24.sp,
+                                ),
                               ),
-                              placeholderBuilder: (context) => Icon(Icons.star, color: Colors.grey, size: 28.sp),
                             ),
-                            SizedBox(width: 16.w),
+                            SizedBox(width: 14.w),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -144,53 +150,78 @@ class _FeaturesExcitedStepState extends State<FeaturesExcitedStep> {
                                   Text(
                                     opt['title']!,
                                     style: TextStyle(
-                                      fontFamily: 'SF Pro',
-                                      fontSize: 16.sp,
-                                      fontWeight: FontWeight.w600,
-                                      color: isSelected ? const Color(0xFFC83A2D) : const Color(0xFF111827),
+                                      fontFamily: 'Rubik',
+                                      fontSize: 15.sp,
+                                      fontWeight: FontWeight.w700,
+                                      color: isSelected
+                                          ? const Color(0xFFC31E26)
+                                          : const Color(0xFF0F172A),
                                     ),
                                   ),
-                                  SizedBox(height: 4.h),
+                                  SizedBox(height: 3.h),
                                   Text(
                                     opt['desc']!,
                                     style: TextStyle(
                                       fontFamily: 'SF Pro',
                                       fontSize: 13.sp,
-                                      color: const Color(0xFF9CA3AF),
+                                      color: const Color(0xFF64748B),
                                       height: 1.3,
                                     ),
                                   ),
                                 ],
                               ),
                             ),
-                            if (isSelected)
-                              Padding(
-                                padding: EdgeInsets.only(left: 12.w),
-                                child: Icon(
-                                  Icons.check_circle,
-                                  color: const Color(0xFFC83A2D),
-                                  size: 24.sp,
-                                ),
-                              ),
+                            SizedBox(width: 10.w),
+                            Padding(
+                              padding: EdgeInsets.only(top: 2.h),
+                              child: isSelected
+                                  ? Container(
+                                      width: 20.r,
+                                      height: 20.r,
+                                      decoration: const BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color: Color(0xFFC31E26),
+                                      ),
+                                      child: Icon(
+                                        Icons.check,
+                                        color: Colors.white,
+                                        size: 12.sp,
+                                      ),
+                                    )
+                                  : Container(
+                                      width: 20.r,
+                                      height: 20.r,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        border: Border.all(
+                                          color: const Color(0xFFCBD5E1),
+                                          width: 1.5,
+                                        ),
+                                      ),
+                                    ),
+                            ),
                           ],
                         ),
                       ),
                     ),
                   );
                 }),
+                SizedBox(height: 20.h),
               ],
             ),
           ),
         ),
         Padding(
-          padding: EdgeInsets.fromLTRB(24.w, 16.h, 24.w, 20.h),
+          padding: EdgeInsets.fromLTRB(24.w, 8.h, 24.w, 20.h),
           child: SafeArea(
             top: false,
+            bottom: true,
             child: RedButton(
               label: 'Continue',
+              color: const Color(0xFFC31E26),
               onTap: widget.onContinue,
-              height: 55.h,
-              fontSize: 18.sp,
+              height: 52.h,
+              fontSize: 16.sp,
               isDisabled: _selected.isEmpty,
             ),
           ),

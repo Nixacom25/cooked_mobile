@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import '../../models/recipe.dart';
 import '../../services/recipe_service.dart';
 import '../../routes/app_routes.dart';
+import '../../widgets/saved_recipe_card.dart';
 
 class SavingsDetailsScreen extends StatelessWidget {
   const SavingsDetailsScreen({super.key});
@@ -11,213 +11,174 @@ class SavingsDetailsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        centerTitle: true,
-        iconTheme: const IconThemeData(color: Color(0xFF1E293B)),
-        title: Text(
-          "Your Savings",
-          style: TextStyle(
-            fontSize: 18.sp,
-            fontWeight: FontWeight.w700,
-            color: const Color(0xFF1E293B),
+      backgroundColor: const Color(0xFFF0F1F3),
+      body: SafeArea(
+        bottom: false,
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(32.r)),
           ),
-        ),
-      ),
-      body: ValueListenableBuilder<List<Recipe>?>(
-        valueListenable: RecipeService.instance.myRecipesNotifier,
-        builder: (context, recipes, _) {
-          final myRecipes = recipes ?? [];
-          final validRecipes = myRecipes
-              .where((r) => r.totalPrice != null && r.totalPrice! > 0)
-              .toList();
-          
-          double totalSaved = 0.0;
-          for (var r in validRecipes) {
-            double makeAtHome = r.totalPrice!;
-            double orderNearby = makeAtHome * 2.5 + 5.0;
-            totalSaved += (orderNearby - makeAtHome);
-          }
-
-          if (validRecipes.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.receipt_long_outlined, size: 60.sp, color: Colors.grey[300]),
-                  SizedBox(height: 16.h),
-                  Text(
-                    "No savings yet",
-                    style: TextStyle(
-                      fontSize: 16.sp,
-                      color: Colors.grey[600],
+          child: Column(
+            children: [
+              // Custom Top Navigation Header Row
+              Padding(
+                padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 10.h),
+                child: Row(
+                  children: [
+                    // Floating Circular Back Arrow Button
+                    GestureDetector(
+                      onTap: () => Navigator.pop(context),
+                      child: Container(
+                        width: 44.r,
+                        height: 44.r,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFFF1F5F9),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.arrow_back_rounded,
+                          size: 20.sp,
+                          color: const Color(0xFF0F172A),
+                        ),
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            );
-          }
-
-          return CustomScrollView(
-            slivers: [
-              SliverToBoxAdapter(
-                child: Container(
-                  color: Colors.white,
-                  padding: EdgeInsets.symmetric(vertical: 30.h),
-                  child: Column(
-                    children: [
-                      Text(
-                        "Total Saved",
+                    Expanded(
+                      child: Text(
+                        "Your Savings",
+                        textAlign: TextAlign.center,
                         style: TextStyle(
-                          fontSize: 14.sp,
-                          fontWeight: FontWeight.w600,
-                          color: const Color(0xFF64748B),
-                        ),
-                      ),
-                      SizedBox(height: 8.h),
-                      Text(
-                        "~\$${totalSaved.toStringAsFixed(0)}",
-                        style: TextStyle(
-                          fontSize: 42.sp,
+                          fontFamily: 'Rubik',
+                          fontSize: 22.sp,
                           fontWeight: FontWeight.w800,
-                          color: const Color(0xFF00C40A),
+                          color: const Color(0xFF0F172A),
                         ),
                       ),
-                      SizedBox(height: 8.h),
-                      Text(
-                        "From ${validRecipes.length} saved recipes",
-                        style: TextStyle(
-                          fontSize: 13.sp,
-                          color: const Color(0xFF94A3B8),
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                    SizedBox(width: 44.r), // Balance back button offset
+                  ],
                 ),
               ),
-              SliverPadding(
-                padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 20.h),
-                sliver: SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) {
-                      final recipe = validRecipes[index];
-                      return _buildSavingsItem(context, recipe);
-                    },
-                    childCount: validRecipes.length,
-                  ),
+
+              // Page Content Body
+              Expanded(
+                child: ValueListenableBuilder<List<Recipe>?>(
+                  valueListenable: RecipeService.instance.myRecipesNotifier,
+                  builder: (context, recipes, _) {
+                    final myRecipes = recipes ?? [];
+                    final validRecipes = myRecipes
+                        .where((r) => r.totalPrice != null && r.totalPrice! > 0)
+                        .toList();
+
+                    final displayRecipes =
+                        validRecipes.isNotEmpty ? validRecipes : myRecipes;
+
+                    double totalSaved = 0.0;
+                    for (var r in displayRecipes) {
+                      if (r.totalPrice != null && r.totalPrice! > 0) {
+                        double makeAtHome = r.totalPrice!;
+                        double orderNearby = makeAtHome * 2.5 + 5.0;
+                        totalSaved += (orderNearby - makeAtHome);
+                      } else {
+                        totalSaved += 14.0;
+                      }
+                    }
+
+                    if (displayRecipes.isEmpty) {
+                      return Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.receipt_long_outlined,
+                                size: 60.sp, color: Colors.grey[300]),
+                            SizedBox(height: 16.h),
+                            Text(
+                              "No savings yet",
+                              style: TextStyle(
+                                fontFamily: 'Rubik',
+                                fontSize: 16.sp,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+
+                    return CustomScrollView(
+                      physics: const BouncingScrollPhysics(),
+                      slivers: [
+                        // Savings Summary Section
+                        SliverToBoxAdapter(
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(vertical: 20.h),
+                            child: Column(
+                              children: [
+                                Text(
+                                  "Your saved",
+                                  style: TextStyle(
+                                    fontFamily: 'Rubik',
+                                    fontSize: 14.sp,
+                                    fontWeight: FontWeight.w600,
+                                    color: const Color(0xFF475569),
+                                  ),
+                                ),
+                                SizedBox(height: 4.h),
+                                Text(
+                                  "~\$${totalSaved.toStringAsFixed(0)}",
+                                  style: TextStyle(
+                                    fontFamily: 'Rubik',
+                                    fontSize: 54.sp,
+                                    fontWeight: FontWeight.w800,
+                                    color: const Color(0xFF16A34A),
+                                  ),
+                                ),
+                                SizedBox(height: 4.h),
+                                Text(
+                                  displayRecipes.length == 1
+                                      ? "From 1 saved recipe"
+                                      : "From ${displayRecipes.length} saved recipes",
+                                  style: TextStyle(
+                                    fontFamily: 'Rubik',
+                                    fontSize: 14.sp,
+                                    fontWeight: FontWeight.w500,
+                                    color: const Color(0xFF64748B),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+
+                        // Saved Recipe Cards List using shared RecipeHorizontalCard
+                        SliverPadding(
+                          padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 50.h),
+                          sliver: SliverList(
+                            delegate: SliverChildBuilderDelegate(
+                              (context, index) {
+                                final recipe = displayRecipes[index];
+                                return SavedRecipeCard(
+                                  recipe: recipe,
+                                  onTap: () {
+                                    Navigator.pushNamed(
+                                      context,
+                                      AppRoutes.recipeDetail,
+                                      arguments: {'recipe': recipe},
+                                    );
+                                  },
+                                );
+                              },
+                              childCount: displayRecipes.length,
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
                 ),
               ),
             ],
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildSavingsItem(BuildContext context, Recipe recipe) {
-    double savedAmount = 0.0;
-    if (recipe.totalPrice != null && recipe.totalPrice! > 0) {
-      double makeAtHome = recipe.totalPrice!;
-      double orderNearby = makeAtHome * 2.5 + 5.0;
-      savedAmount = orderNearby - makeAtHome;
-    }
-
-    return GestureDetector(
-      onTap: () {
-        Navigator.pushNamed(
-          context,
-          AppRoutes.recipeDetail,
-          arguments: {'recipe': recipe},
-        );
-      },
-      child: Container(
-        margin: EdgeInsets.only(bottom: 12.h),
-        padding: EdgeInsets.all(10.w),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16.r),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.02),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(12.r),
-              child: recipe.image != null && recipe.image!.isNotEmpty
-                  ? CachedNetworkImage(
-                      imageUrl: recipe.image!,
-                      width: 60.w,
-                      height: 60.w,
-                      fit: BoxFit.cover,
-                      placeholder: (context, url) => Container(
-                        color: Colors.grey[200],
-                        width: 60.w,
-                        height: 60.w,
-                      ),
-                      errorWidget: (context, url, error) => Container(
-                        color: Colors.grey[200],
-                        width: 60.w,
-                        height: 60.w,
-                        child: Icon(Icons.restaurant, color: Colors.grey[400]),
-                      ),
-                    )
-                  : Container(
-                      width: 60.w,
-                      height: 60.w,
-                      color: Colors.grey[200],
-                      child: Icon(Icons.restaurant, color: Colors.grey[400]),
-                    ),
-            ),
-            SizedBox(width: 4.w),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    recipe.name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 15.sp,
-                      fontWeight: FontWeight.w600,
-                      color: const Color(0xFF1E293B),
-                    ),
-                  ),
-                  SizedBox(height: 2.h),
-                  Text(
-                    recipe.origin?.toUpperCase() == 'SCAN' ? "Scanned at home" : "Saved in your cookbook",
-                    style: TextStyle(
-                      fontSize: 12.sp,
-                      color: const Color(0xFF94A3B8),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(width: 10.w),
-            Container(
-              padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
-              decoration: BoxDecoration(
-                color: const Color(0xFFDCFCE7),
-                borderRadius: BorderRadius.circular(20.r),
-              ),
-              child: Text(
-                "+\$${savedAmount.toStringAsFixed(0)}",
-                style: TextStyle(
-                  fontSize: 13.sp,
-                  fontWeight: FontWeight.w700,
-                  color: const Color(0xFF166534),
-                ),
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );

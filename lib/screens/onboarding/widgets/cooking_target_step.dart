@@ -47,7 +47,7 @@ class _CookingTargetStepState extends State<CookingTargetStep> {
   @override
   void initState() {
     super.initState();
-    _selected = widget.initialTarget;
+    _selected = widget.initialTarget.isNotEmpty ? widget.initialTarget : 'Two people';
   }
 
   @override
@@ -55,64 +55,52 @@ class _CookingTargetStepState extends State<CookingTargetStep> {
     return Column(
       children: [
         Expanded(
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              return SingleChildScrollView(
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                  child: IntrinsicHeight(
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 30.h),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Who are you usually\ncooking for?',
-                            style: TextStyle(
-                              fontSize: 34.sp,
-                              fontWeight: FontWeight.w400,
-                              color: const Color(0xFF111827),
-                              fontFamily: 'Larken',
-                              height: 1.149,
-                              letterSpacing: 0,
-                            ),
-                          ),
-                          SizedBox(height: 12.h),
-                          Text(
-                            "This helps us recommend the right portions.",
-                            style: TextStyle(
-                              fontSize: 16.sp,
-                              color: const Color(0xFF4B5563),
-                              fontFamily: 'SF Pro',
-                              height: 1.3,
-                            ),
-                          ),
-                          SizedBox(height: 24.h),
-                          Column(
-                            children: _options.map((opt) => _buildOption(opt)).toList(),
-                          ),
-                          SizedBox(
-                            height: MediaQuery.of(context).viewInsets.bottom,
-                          ),
-                        ],
-                      ),
-                    ),
+          child: SingleChildScrollView(
+            padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Who are you usually\ncooking for?',
+                  style: TextStyle(
+                    fontSize: 32.sp,
+                    fontWeight: FontWeight.w800,
+                    color: const Color(0xFF0F172A),
+                    fontFamily: 'Rubik',
+                    height: 1.15,
                   ),
                 ),
-              );
-            },
+                SizedBox(height: 10.h),
+                Text(
+                  "This helps us recommend the right portions",
+                  style: TextStyle(
+                    fontSize: 15.sp,
+                    color: const Color(0xFF475569),
+                    fontFamily: 'SF Pro',
+                    height: 1.3,
+                  ),
+                ),
+                SizedBox(height: 24.h),
+                Column(
+                  children: _options.map((opt) => _buildOption(opt)).toList(),
+                ),
+                SizedBox(height: 20.h),
+              ],
+            ),
           ),
         ),
         if (widget.onContinue != null)
           Padding(
-            padding: EdgeInsets.fromLTRB(24.w, 16.h, 24.w, 20.h),
+            padding: EdgeInsets.fromLTRB(24.w, 8.h, 24.w, 20.h),
             child: SafeArea(
               top: false,
+              bottom: true,
               child: RedButton(
                 label: 'Continue',
+                color: const Color(0xFFC31E26),
                 onTap: widget.onContinue!,
-                height: 55.h,
-                fontSize: 18.sp,
+                height: 52.h,
+                fontSize: 16.sp,
               ),
             ),
           ),
@@ -123,7 +111,7 @@ class _CookingTargetStepState extends State<CookingTargetStep> {
   Widget _buildOption(Map<String, String> opt) {
     final bool isSelected = _selected == opt['title'];
     return Padding(
-      padding: EdgeInsets.only(bottom: 6.h),
+      padding: EdgeInsets.only(bottom: 10.h),
       child: GestureDetector(
         onTap: () {
           HapticFeedback.selectionClick();
@@ -131,24 +119,17 @@ class _CookingTargetStepState extends State<CookingTargetStep> {
           widget.onChanged(_selected);
         },
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
+          duration: const Duration(milliseconds: 150),
+          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
           decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(20.r),
+            color: const Color(0xFFF1F5F9),
+            borderRadius: BorderRadius.circular(16.r),
             border: Border.all(
               color: isSelected
-                  ? const Color(0xFFC83A2D)
-                  : const Color(0xFFF3F4F6),
+                  ? const Color(0xFFC31E26)
+                  : Colors.transparent,
               width: 1.5,
             ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.04),
-                blurRadius: 15,
-                offset: const Offset(0, 4),
-              ),
-            ],
           ),
           child: Row(
             children: [
@@ -158,8 +139,8 @@ class _CookingTargetStepState extends State<CookingTargetStep> {
                 width: 24.sp,
                 colorFilter: ColorFilter.mode(
                   isSelected
-                      ? const Color(0xFFC83A2D)
-                      : const Color(0xFF9CA3AF),
+                      ? const Color(0xFFC31E26)
+                      : const Color(0xFF0F172A),
                   BlendMode.srcIn,
                 ),
                 placeholderBuilder: (context) => const SizedBox.shrink(),
@@ -172,12 +153,12 @@ class _CookingTargetStepState extends State<CookingTargetStep> {
                     Text(
                       opt['title']!,
                       style: TextStyle(
-                        fontFamily: 'SF Pro',
+                        fontFamily: 'Rubik',
                         fontSize: 15.sp,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w700,
                         color: isSelected
-                            ? const Color(0xFFC83A2D)
-                            : const Color(0xFF111827),
+                            ? const Color(0xFFC31E26)
+                            : const Color(0xFF0F172A),
                       ),
                     ),
                     SizedBox(height: 2.h),
@@ -185,27 +166,35 @@ class _CookingTargetStepState extends State<CookingTargetStep> {
                       opt['subtitle']!,
                       style: TextStyle(
                         fontFamily: 'SF Pro',
-                        fontSize: 12.sp,
-                        color: const Color(0xFF9CA3AF),
+                        fontSize: 13.sp,
+                        color: const Color(0xFF64748B),
                       ),
                     ),
                   ],
                 ),
               ),
               if (isSelected)
-                Icon(
-                  Icons.check_circle,
-                  color: const Color(0xFFC83A2D),
-                  size: 24.sp,
+                Container(
+                  width: 20.r,
+                  height: 20.r,
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Color(0xFFC31E26),
+                  ),
+                  child: Icon(
+                    Icons.check,
+                    color: Colors.white,
+                    size: 12.sp,
+                  ),
                 )
               else
                 Container(
-                  width: 24.sp,
-                  height: 24.sp,
+                  width: 20.r,
+                  height: 20.r,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: const Color(0xFFE5E7EB),
+                      color: const Color(0xFFCBD5E1),
                       width: 1.5,
                     ),
                   ),

@@ -21,8 +21,8 @@ class _GoalsStepState extends State<GoalsStep> {
   @override
   Widget build(BuildContext context) {
     return SelectionOnboardingStep(
-      title: 'What\'s your goal right now?',
-      subtitle: 'We\'ll personalize everything around it.',
+      title: 'What’s your goal\nright now?',
+      subtitle: 'We’ll personalize everything around it',
       maxSelections: 8,
       useGrid: true,
       onContinue: widget.onContinue,
@@ -30,14 +30,14 @@ class _GoalsStepState extends State<GoalsStep> {
       onSelectionChanged: widget.onChanged,
       gridItemDirection: Axis.vertical,
       options: [
-        SelectionOption(id: 'save_money', label: 'Save Money', svgAsset: 'assets/icones/eating.svg'),
+        SelectionOption(id: 'save_money', label: 'Save money', svgAsset: 'assets/icones/dollar-bag.svg'),
         SelectionOption(id: 'eat_healthier', label: 'Eat healthier', svgAsset: 'assets/icones/coeur.svg'),
         SelectionOption(id: 'gain_muscle', label: 'Gain muscle', svgAsset: 'assets/icones/muscle.svg'),
         SelectionOption(id: 'lose_weight', label: 'Lose weight', svgAsset: 'assets/icones/feuille.svg'),
         SelectionOption(id: 'waste_less', label: 'Waste less food', svgAsset: 'assets/icones/waste.svg'),
         SelectionOption(id: 'learn_cook', label: 'Learn to cook', svgAsset: 'assets/icones/knowing.svg'),
-        SelectionOption(id: 'discover_recipes', label: 'Discover recipes', svgAsset: 'assets/icones/ordering.svg'),
-        SelectionOption(id: 'meal_prep', label: 'Meal prep easier', svgAsset: 'assets/icones/saving.svg'), // mapped 'eating' as prep icon temporarily
+        SelectionOption(id: 'discover_recipes', label: 'Discover recipes', svgAsset: 'assets/icones/magnifier.svg'),
+        SelectionOption(id: 'meal_prep', label: 'Meal prep easier', svgAsset: 'assets/icones/notes.svg'),
       ],
     );
   }

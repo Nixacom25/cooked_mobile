@@ -3,7 +3,9 @@ import 'dart:async';
 import 'package:http/http.dart' as http;
 import '../core/api_config.dart';
 import '../models/grocery_item.dart';
+import '../models/instacart_link_response.dart';
 import 'auth_service.dart';
+import 'analytics_service.dart';
 import 'package:flutter/foundation.dart';
 
 class GroceryService {
@@ -39,6 +41,10 @@ class GroceryService {
       _autoCleanupItems(items);
       
       myGroceriesNotifier.value = items;
+      
+      // Analytics log
+      AnalyticsService.instance.logGroceryListView(itemCount: items.length);
+
       return items;
     } else {
       throw Exception('Failed to load grocery list.');
@@ -71,6 +77,7 @@ class GroceryService {
     String? icon,
     String? recipeId,
     DateTime? date,
+    String? source,
   }) async {
     final url = Uri.parse('${ApiConfig.baseUrl}/grocery-items');
 
@@ -104,6 +111,9 @@ class GroceryService {
       ));
 
       if (response.statusCode == 200 || response.statusCode == 201) {
+        // Log Analytics event
+        AnalyticsService.instance.logGroceryItemAdded(name: name, source: source);
+
         // Refresh list to replace placeholder with real data
         await getMyGroceries(forceRefresh: true);
         return GroceryItem.fromJson(jsonDecode(response.body));
@@ -117,6 +127,38 @@ class GroceryService {
             .where((item) => !item.isPlaceholder)
             .toList();
       }
+      rethrow;
+    }
+  }
+
+  Future<InstacartLinkResponse> createInstacartShoppingLink() async {
+    final itemsCount = myGroceriesNotifier.value?.length ?? 0;
+    AnalyticsService.instance.logInstacartRequestStarted(itemCount: itemsCount);
+
+    final url = Uri.parse('${ApiConfig.baseUrl}/grocery-items/instacart');
+    try {
+      final response = await _reliableRequest(() async => http.post(
+        url,
+        headers: await _getHeaders(),
+      ));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final instacartRes = InstacartLinkResponse.fromJson(data);
+
+        AnalyticsService.instance.logInstacartRequestSuccess(
+          url: instacartRes.url,
+          itemCount: instacartRes.itemCount,
+        );
+
+        return instacartRes;
+      } else if (response.statusCode == 400) {
+        throw Exception('Your grocery list is empty. Add ingredients from a recipe to get started.');
+      } else {
+        throw Exception('Unable to connect to Instacart right now. Please try again.');
+      }
+    } catch (e) {
+      AnalyticsService.instance.logInstacartRequestFailed(error: e.toString());
       rethrow;
     }
   }
@@ -191,8 +233,22 @@ class GroceryService {
   }
 
   Future<void> deleteGroceryItem(String id) async {
-    // 1. Optimistic remove
+    String itemName = '';
     if (myGroceriesNotifier.value != null) {
+      final found = myGroceriesNotifier.value!.firstWhere(
+        (item) => item.id == id,
+        orElse: () => GroceryItem(
+          id: '',
+          ingredientName: '',
+          quantity: '',
+          isBought: false,
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        ),
+      );
+      itemName = found.ingredientName;
+
+      // 1. Optimistic remove
       myGroceriesNotifier.value = myGroceriesNotifier.value!
           .where((item) => item.id != id)
           .toList();
@@ -204,8 +260,12 @@ class GroceryService {
       if (response.statusCode != 200) {
         throw Exception('Failed to delete item');
       }
+
+      if (itemName.isNotEmpty) {
+        AnalyticsService.instance.logGroceryItemRemoved(name: itemName);
+      }
     } catch (e) {
-      // Revert on error? (In complex cases yes, but here we usually refresh anyway)
+      // Revert on error
       await getMyGroceries(forceRefresh: true);
       throw Exception('Failed to delete grocery item.');
     }
@@ -218,24 +278,17 @@ class GroceryService {
     // 1. Clean up items bought more than 24h ago
     // 2. Clean up items with a planned date that passed more than 24h ago
     final toDelete = items.where((item) {
-      // Rule 1: Bought items older than 24h
       if (item.isBought && item.updatedAt.isBefore(oneDayAgo)) return true;
-      
-      // Rule 2: Planned items where the date passed more than 24h ago
-      // (plannedDate is usually 00:00:00, so +48h means 24h after that day ended)
       if (item.plannedDate != null) {
         if (item.plannedDate!.add(const Duration(hours: 48)).isBefore(now)) return true;
       }
-      
       return false;
     }).toList();
 
     for (final item in toDelete) {
       try {
-        // Silently delete from backend
         final url = Uri.parse('${ApiConfig.baseUrl}/grocery-items/${item.id}');
         http.delete(url, headers: await _getHeaders());
-        // Remove from local list to avoid waiting for next refresh
         items.remove(item);
       } catch (e) {
         print('Error auto-cleaning item ${item.id}: $e');

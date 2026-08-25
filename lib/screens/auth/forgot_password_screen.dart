@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
-import '../../core/theme/app_theme.dart';
 import '../../routes/app_routes.dart';
 import '../../services/auth_service.dart';
 import '../../core/widgets/ios_toast.dart';
@@ -87,253 +87,207 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         child: Stack(
           fit: StackFit.expand,
           children: [
-          // Background
-          Image.asset('assets/images/fond.png', fit: BoxFit.cover),
-
-          // Logo centered above card
-          Positioned.fill(
-            bottom: 220,
-            child: Center(
-              child: Image.asset(
-                'assets/images/logo.png',
-                width: 100,
-                fit: BoxFit.contain,
-              ),
+            // Background image fond_page.png
+            Image.asset(
+              'assets/images/fond_page.png',
+              fit: BoxFit.cover,
+              width: double.infinity,
+              height: double.infinity,
             ),
-          ),
 
-          // Red card pinned at bottom
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [Color(0xFFC83A2D), Color(0x63C83A2D)],
-                ),
-                borderRadius: BorderRadius.vertical(top: Radius.circular(15)),
-              ),
-              child: Stack(
+            // Top Header (Back Button & Forgot Password Title)
+            Positioned(
+              top: statusBarH + 12.h,
+              left: 20.w,
+              right: 20.w,
+              child: Row(
                 children: [
-                  Positioned.fill(
-                    child: ClipRRect(
-                      borderRadius: const BorderRadius.vertical(
-                        top: Radius.circular(30),
+                  GestureDetector(
+                    onTap: () {
+                      HapticFeedback.selectionClick();
+                      if (_step == _ForgotStep.input) {
+                        setState(() => _step = _ForgotStep.select);
+                      } else {
+                        Navigator.pop(context);
+                      }
+                    },
+                    child: Container(
+                      width: 40.w,
+                      height: 40.w,
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
                       ),
-                      child: Opacity(
-                        opacity: 0.12,
-                        child: Image.asset(
-                          'assets/images/fond.png',
-                          fit: BoxFit.cover,
-                        ),
+                      child: Icon(
+                        Icons.arrow_back,
+                        size: 20.sp,
+                        color: Colors.black,
                       ),
                     ),
                   ),
-
-                  SingleChildScrollView(
-                    child: Column(
-                      children: [
-                        AnimatedSwitcher(
-                          duration: const Duration(milliseconds: 300),
-                          child: _step == _ForgotStep.select
-                              ? _buildSelectStep()
-                              : _buildInputStep(),
-                        ),
-                        SizedBox(
-                          height: MediaQuery.of(context).viewInsets.bottom,
-                        ),
-                      ],
+                  SizedBox(width: 16.w),
+                  Text(
+                    'Forgot Password',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'Rubik',
+                      fontSize: 24.sp,
+                      color: Colors.white,
                     ),
                   ),
                 ],
               ),
             ),
-          ),
 
-          // Floating AppBar
-          Positioned(
-            top: statusBarH + 28,
-            left: 16,
-            right: 16,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                GestureDetector(
-                  onTap: () {
-                    HapticFeedback.selectionClick();
-                    if (_step == _ForgotStep.input) {
-                      setState(() => _step = _ForgotStep.select);
-                    } else {
-                      Navigator.pop(context);
-                    }
-                  },
-                  child: Container(
-                    width: 42,
-                    height: 42,
-                    decoration: BoxDecoration(
-                      color: Color(0xffF8F5EF),
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.3),
-                          blurRadius: 8,
-                        ),
-                      ],
-                    ),
-                    child: const Icon(
-                      Icons.arrow_back_rounded,
-                      size: 24,
-                      color: AppColors.textDark,
-                    ),
+            // White Card Pinned at Bottom
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.vertical(
+                    top: Radius.circular(32.r),
                   ),
                 ),
-                const Text(
-                  'FORGOT PASSWORD',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w400,
-                    fontFamily: 'Larken',
-                    height: 1.149,
-                    letterSpacing: 0,
-                    fontSize: 14,
-                    color: AppColors.textDark,
+                child: SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  padding: EdgeInsets.fromLTRB(
+                    24.w,
+                    28.h,
+                    24.w,
+                    24.h +
+                        MediaQuery.of(context).padding.bottom +
+                        MediaQuery.of(context).viewInsets.bottom,
+                  ),
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 300),
+                    child: _step == _ForgotStep.select
+                        ? _buildSelectStep()
+                        : _buildInputStep(),
                   ),
                 ),
-              ],
+              ),
             ),
-          ),
-        ],
-      ),
+          ],
+        ),
       ),
     );
   }
 
   // ── Step 1: Select Email or Phone ──────────────────────────────────────────
   Widget _buildSelectStep() {
-    final bottomPadding = 24 + MediaQuery.of(context).padding.bottom;
-    return Padding(
+    return Column(
       key: const ValueKey('select'),
-      padding: EdgeInsets.fromLTRB(22, 28, 22, bottomPadding),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Text(
-            'Select which contact details should\nwe use to reset your password',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-              color: Colors.white,
-              fontFamily: 'SF Pro',
-              height: 1.2,
-            ),
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Text(
+          'Select which contact details we should\nuse to reset your password',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: 18.sp,
+            fontWeight: FontWeight.w800,
+            color: const Color(0xFF0F172A),
+            fontFamily: 'Rubik',
+            height: 1.25,
           ),
-          const SizedBox(height: 20),
+        ),
+        SizedBox(height: 24.h),
 
-          // Selection cards
-          Row(
-            children: [
-              Expanded(
-                child: _ContactCard(
-                  icon: Icons.email_rounded,
-                  iconColor: const Color(0xFFC83A2D),
-                  title: 'Email',
-                  subtitle: 'Send to your email',
-                  selected: _method == _ContactMethod.email,
-                  onTap: () {
-                    HapticFeedback.selectionClick();
-                    setState(() => _method = _ContactMethod.email);
-                  },
-                ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: _ContactCard(
-                  icon: Icons.phone_outlined,
-                  iconColor: const Color(0xFFC83A2D),
-                  title: 'Phone Number',
-                  subtitle: 'Send to your phone',
-                  selected: _method == _ContactMethod.phone,
-                  onTap: () {
-                    HapticFeedback.selectionClick();
-                    setState(() => _method = _ContactMethod.phone);
-                  },
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 28),
+        _ContactCard(
+          icon: Icons.email_outlined,
+          title: 'Email',
+          subtitle: 'Send to your email',
+          selected: _method == _ContactMethod.email,
+          onTap: () {
+            HapticFeedback.selectionClick();
+            setState(() => _method = _ContactMethod.email);
+          },
+        ),
+        SizedBox(height: 14.h),
 
-          // Continue btn
-          RedButton(
-            label: 'Continue',
-            onTap: _onContinue,
-          ),
-        ],
-      ),
+        _ContactCard(
+          icon: Icons.phone_outlined,
+          title: 'Phone Number',
+          subtitle: 'Send to your phone',
+          selected: _method == _ContactMethod.phone,
+          onTap: () {
+            HapticFeedback.selectionClick();
+            setState(() => _method = _ContactMethod.phone);
+          },
+        ),
+        SizedBox(height: 28.h),
+
+        RedButton(
+          label: 'Continue',
+          color: const Color(0xFFC31E26),
+          height: 52.h,
+          fontSize: 16.sp,
+          onTap: _onContinue,
+        ),
+      ],
     );
   }
 
   // ── Step 2: Input (Email or Phone) ─────────────────────────────────────────
   Widget _buildInputStep() {
     final isEmail = _method == _ContactMethod.email;
-    final bottomPadding = 24 + MediaQuery.of(context).padding.bottom;
-    return Padding(
+    return Column(
       key: const ValueKey('input'),
-      padding: EdgeInsets.fromLTRB(22, 28, 22, bottomPadding),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Center(
-            child: Text(
-              isEmail
-                  ? 'Please enter the email, we  will send a\nverification code to your email'
-                  : 'Please enter the phone number,\n we  will send a verification\ncode to your phone number',
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 17,
-                fontWeight: FontWeight.w700,
-                color: Colors.white,
-                fontFamily: 'SF Pro',
-                height: 1.2,
-              ),
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Center(
+          child: Text(
+            isEmail
+                ? 'Please enter the email, we will send a\nverification code to your email'
+                : 'Please enter the phone number, \nwe will send a verification code\n to your phone number',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 18.sp,
+              fontWeight: FontWeight.w800,
+              color: const Color(0xFF0F172A),
+              fontFamily: 'Rubik',
+              height: 1.25,
             ),
           ),
-          const SizedBox(height: 20),
+        ),
+        SizedBox(height: 24.h),
 
-          Text(
-            isEmail ? 'Email' : 'Phone Number',
-            style: const TextStyle(
-              color: Colors.white,
-              fontFamily: 'SF Pro',
-              fontWeight: FontWeight.w600,
-              fontSize: 14,
-            ),
+        Text(
+          isEmail ? 'Email' : 'Phone Number',
+          style: TextStyle(
+            color: const Color(0xFF64748B),
+            fontFamily: 'SF Pro',
+            fontWeight: FontWeight.w500,
+            fontSize: 14.sp,
           ),
-          const SizedBox(height: 8),
+        ),
+        SizedBox(height: 8.h),
 
-          if (isEmail)
-            _EmailField(controller: _inputCtrl, errorText: _inputError)
-          else
-            _PhoneField(
-              controller: _inputCtrl,
-              errorText: _inputError,
-              onChanged: (val) => _phoneNumber = val,
-            ),
-
-          const SizedBox(height: 28),
-
-          RedButton(
-            label: 'Send',
-            loadingLabel: 'Sending',
-            isLoading: _isLoading,
-            onTap: _onContinue,
+        if (isEmail)
+          _EmailField(controller: _inputCtrl, errorText: _inputError)
+        else
+          _PhoneField(
+            controller: _inputCtrl,
+            errorText: _inputError,
+            onChanged: (val) => _phoneNumber = val,
           ),
-        ],
-      ),
+
+        SizedBox(height: 28.h),
+
+        RedButton(
+          label: 'Send',
+          loadingLabel: 'Sending',
+          isLoading: _isLoading,
+          color: const Color(0xFFC31E26),
+          height: 52.h,
+          fontSize: 16.sp,
+          onTap: _onContinue,
+        ),
+      ],
     );
   }
 }
@@ -341,7 +295,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 // ── Selection card ─────────────────────────────────────────────────────────────
 class _ContactCard extends StatelessWidget {
   final IconData icon;
-  final Color iconColor;
   final String title;
   final String subtitle;
   final bool selected;
@@ -349,7 +302,6 @@ class _ContactCard extends StatelessWidget {
 
   const _ContactCard({
     required this.icon,
-    required this.iconColor,
     required this.title,
     required this.subtitle,
     required this.selected,
@@ -362,37 +314,76 @@ class _ContactCard extends StatelessWidget {
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        width: double.infinity,
+        padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 14.h),
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
+          color: const Color(0xFFF0F1F3),
+          borderRadius: BorderRadius.circular(16.r),
           border: Border.all(
-            color: selected ? const Color(0xFFC83A2D) : Colors.transparent,
-            width: 2,
+            color: selected ? const Color(0xFFC31E26) : Colors.transparent,
+            width: 1.5,
           ),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Row(
           children: [
-            Icon(icon, color: iconColor, size: 28),
-            const SizedBox(height: 12),
-            Text(
-              title,
-              style: const TextStyle(
-                fontFamily: 'SF Pro',
-                fontWeight: FontWeight.w700,
-                fontSize: 14,
-                color: AppColors.textDark,
+            Container(
+              child: Icon(
+                icon,
+                color: const Color(0xFFC31E26),
+                size: 40.sp,
               ),
             ),
-            const SizedBox(height: 2),
-            Text(
-              subtitle,
-              style: TextStyle(
-                fontFamily: 'SF Pro',
-                fontSize: 12,
-                color: AppColors.textMuted,
+            SizedBox(width: 14.w),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontFamily: 'SF Pro',
+                      fontWeight: FontWeight.w700,
+                      fontSize: 14.sp,
+                      color: const Color(0xFF0F172A),
+                    ),
+                  ),
+                  SizedBox(height: 2.h),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontFamily: 'SF Pro',
+                      fontSize: 12.sp,
+                      color: const Color(0xFF64748B),
+                    ),
+                  ),
+                ],
               ),
+            ),
+            Container(
+              width: 20.w,
+              height: 20.w,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: selected ? const Color(0xFFC31E26) : Colors.transparent,
+                border: Border.all(
+                  color: selected
+                      ? const Color(0xFFC31E26)
+                      : const Color(0xFFCBD5E1),
+                  width: 2,
+                ),
+              ),
+              child: selected
+                  ? Center(
+                      child: Container(
+                        width: 8.w,
+                        height: 8.w,
+                        decoration: const BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white,
+                        ),
+                      ),
+                    )
+                  : null,
             ),
           ],
         ),
@@ -411,41 +402,45 @@ class _EmailField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ClipRRect(
-      borderRadius: BorderRadius.circular(10),
+      borderRadius: BorderRadius.circular(14.r),
       child: TextField(
         controller: controller,
         keyboardType: TextInputType.emailAddress,
-        style: const TextStyle(fontFamily: 'SF Pro', fontSize: 14),
+        style: TextStyle(
+          fontFamily: 'SF Pro',
+          fontSize: 15.sp,
+          color: const Color(0xFF0F172A),
+        ),
         decoration: InputDecoration(
-          hintText: 'Full Email',
-          hintStyle: const TextStyle(
-            color: AppColors.textMuted,
+          hintText: 'Email',
+          hintStyle: TextStyle(
+            color: const Color(0xFF94A3B8),
             fontFamily: 'SF Pro',
-            fontSize: 14,
+            fontSize: 15.sp,
           ),
           filled: true,
-          fillColor: Colors.white,
+          fillColor: const Color(0xFFF0F1F3),
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(14.r),
             borderSide: BorderSide.none,
           ),
           enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(14.r),
             borderSide: BorderSide.none,
           ),
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(14.r),
             borderSide: BorderSide.none,
           ),
           errorText: errorText,
-          errorStyle: const TextStyle(
-            color: Color.fromARGB(255, 126, 1, 1),
-            fontSize: 12,
+          errorStyle: TextStyle(
+            color: const Color(0xFFDC2626),
+            fontSize: 12.sp,
             fontFamily: 'SF Pro',
           ),
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 10,
-            vertical: 10,
+          contentPadding: EdgeInsets.symmetric(
+            horizontal: 16.w,
+            vertical: 16.h,
           ),
         ),
       ),
@@ -471,33 +466,33 @@ class _PhoneField extends StatelessWidget {
       controller: controller,
       decoration: InputDecoration(
         hintText: 'XX XXX XX XX',
-        hintStyle: const TextStyle(
-          color: AppColors.textMuted,
+        hintStyle: TextStyle(
+          color: const Color(0xFF94A3B8),
           fontFamily: 'SF Pro',
-          fontSize: 14,
+          fontSize: 15.sp,
         ),
         filled: true,
-        fillColor: Colors.white,
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 16,
+        fillColor: const Color(0xFFF0F1F3),
+        contentPadding: EdgeInsets.symmetric(
+          horizontal: 16.w,
+          vertical: 16.h,
         ),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(14.r),
           borderSide: BorderSide.none,
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(14.r),
           borderSide: BorderSide.none,
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: Color(0xFFC83A2D), width: 1.5),
+          borderRadius: BorderRadius.circular(14.r),
+          borderSide: const BorderSide(color: Color(0xFFC31E26), width: 1.5),
         ),
         errorText: errorText,
-        errorStyle: const TextStyle(
-          color: Color.fromARGB(255, 126, 1, 1),
-          fontSize: 12,
+        errorStyle: TextStyle(
+          color: const Color(0xFFDC2626),
+          fontSize: 12.sp,
           fontFamily: 'SF Pro',
         ),
       ),
@@ -505,23 +500,28 @@ class _PhoneField extends StatelessWidget {
       onChanged: (phone) {
         onChanged(phone.completeNumber);
       },
-      style: const TextStyle(
+      style: TextStyle(
         fontFamily: 'SF Pro',
-        fontSize: 14,
-        color: Colors.black,
+        fontSize: 15.sp,
+        color: const Color(0xFF0F172A),
       ),
-      dropdownIcon: const Icon(
+      dropdownIcon: Icon(
         Icons.keyboard_arrow_down_rounded,
-        color: AppColors.textMuted,
-        size: 20,
+        color: const Color(0xFF64748B),
+        size: 20.sp,
       ),
-      flagsButtonPadding: const EdgeInsets.only(left: 8),
-      flagsButtonMargin: const EdgeInsets.only(right: 8),
+      flagsButtonPadding: EdgeInsets.only(left: 8.w),
+      flagsButtonMargin: EdgeInsets.only(right: 8.w),
       showCountryFlag: true,
       showDropdownIcon: true,
       dropdownIconPosition: IconPosition.trailing,
       disableLengthCheck: true,
       textAlignVertical: TextAlignVertical.center,
+      dropdownDecoration: BoxDecoration(
+        color: const Color(0xFFF0F1F3),
+        borderRadius: BorderRadius.circular(14.r),
+      ),
     );
   }
 }
+

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:in_app_review/in_app_review.dart';
+import '../../../widgets/red_button.dart';
 
 class SocialProofStep extends StatefulWidget {
   final List<String> favoriteCuisines;
@@ -37,7 +38,7 @@ class _SocialProofStepState extends State<SocialProofStep>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1400),
+      duration: const Duration(milliseconds: 1200),
     );
 
     Animation<double> createOpacity(double start, double end) {
@@ -51,7 +52,7 @@ class _SocialProofStepState extends State<SocialProofStep>
 
     Animation<Offset> createSlide(double start, double end) {
       return Tween<Offset>(
-        begin: const Offset(0, 0.2),
+        begin: const Offset(0, 0.15),
         end: Offset.zero,
       ).animate(
         CurvedAnimation(
@@ -88,7 +89,6 @@ class _SocialProofStepState extends State<SocialProofStep>
   }
 
   Future<void> _triggerInAppReview() async {
-    // Wait for the entry animations to complete (1.4 seconds)
     await Future.delayed(const Duration(milliseconds: 1500));
     if (!mounted) return;
     try {
@@ -116,11 +116,11 @@ class _SocialProofStepState extends State<SocialProofStep>
           children: [
             Expanded(
               child: SingleChildScrollView(
-                padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 30.h),
+                padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    SizedBox(height: 20.h),
+                    SizedBox(height: 10.h),
                     // Big score
                     FadeTransition(
                       opacity: _scoreOpacity,
@@ -131,25 +131,24 @@ class _SocialProofStepState extends State<SocialProofStep>
                             Text(
                               '4.9',
                               style: TextStyle(
-                                fontSize: 80.sp,
+                                fontSize: 64.sp,
                                 fontWeight: FontWeight.w900,
-                                color: const Color(0xFF00C40A),
-                                fontFamily: 'SF Pro',
+                                color: const Color(0xFF10B981),
+                                fontFamily: 'Rubik',
                                 height: 1.0,
-                                letterSpacing: -2.0,
                               ),
                             ),
-                            SizedBox(height: 8.h),
+                            SizedBox(height: 10.h),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: List.generate(5, (index) {
                                 return Padding(
                                   padding: EdgeInsets.symmetric(
-                                    horizontal: 2.w,
+                                    horizontal: 3.w,
                                   ),
                                   child: Icon(
-                                    Icons.star,
-                                    color: const Color(0xFFFFB800),
+                                    Icons.star_rounded,
+                                    color: const Color(0xFFF59E0B),
                                     size: 28.sp,
                                   ),
                                 );
@@ -159,7 +158,7 @@ class _SocialProofStepState extends State<SocialProofStep>
                         ),
                       ),
                     ),
-                    SizedBox(height: 12.h),
+                    SizedBox(height: 16.h),
 
                     // Subtitle
                     FadeTransition(
@@ -167,68 +166,59 @@ class _SocialProofStepState extends State<SocialProofStep>
                       child: SlideTransition(
                         position: _subtitleSlide,
                         child: Text(
-                          'Stars from thousands of\nfood lovers',
+                          'stars from thousands\nof food lovers',
                           textAlign: TextAlign.center,
                           style: TextStyle(
-                            fontSize: 24.sp,
-                            fontWeight: FontWeight.w400,
-                            color: const Color(0xFF111827),
-                            fontFamily: 'Larken',
-                            height: 1.149,
-                            letterSpacing: -0.5,
+                            fontSize: 28.sp,
+                            fontWeight: FontWeight.w800,
+                            color: const Color(0xFF0F172A),
+                            fontFamily: 'Rubik',
+                            height: 1.15,
                           ),
                         ),
                       ),
                     ),
-                    SizedBox(height: 40.h),
+                    SizedBox(height: 32.h),
 
                     // Testimonials List
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 10.w),
-                      child: Column(
-                        children: [
-                          FadeTransition(
-                            opacity: _reviewOpacities[0],
-                            child: SlideTransition(
-                              position: _reviewSlides[0],
-                              child: _buildReviewCard(
-                                img: '',
-                                name: 'Sarah M.',
-                                initials: 'SM',
-                                quote:
-                                    '"Cooked helped me stop\nordering dinner every night."',
-                              ),
+                    Column(
+                      children: [
+                        FadeTransition(
+                          opacity: _reviewOpacities[0],
+                          child: SlideTransition(
+                            position: _reviewSlides[0],
+                            child: _buildReviewCard(
+                              name: 'Sarah M.',
+                              quote:
+                                  '"Cooked helped me stop\nordering dinner every night."',
                             ),
                           ),
-                          FadeTransition(
-                            opacity: _reviewOpacities[1],
-                            child: SlideTransition(
-                              position: _reviewSlides[1],
-                              child: _buildReviewCard(
-                                img: '',
-                                name: 'David K.',
-                                initials: 'DK',
-                                quote:
-                                    '"I finally use the groceries I\nalready have."',
-                              ),
+                        ),
+                        FadeTransition(
+                          opacity: _reviewOpacities[1],
+                          child: SlideTransition(
+                            position: _reviewSlides[1],
+                            child: _buildReviewCard(
+                              name: 'David K.',
+                              quote:
+                                  '"I finally use the groceries I\nalready have."',
                             ),
                           ),
-                          FadeTransition(
-                            opacity: _reviewOpacities[2],
-                            child: SlideTransition(
-                              position: _reviewSlides[2],
-                              child: _buildReviewCard(
-                                img: '',
-                                name: 'Elena R.',
-                                initials: 'ER',
-                                quote:
-                                    '"Meal ideas feel personalized\ninstead of random."',
-                              ),
+                        ),
+                        FadeTransition(
+                          opacity: _reviewOpacities[2],
+                          child: SlideTransition(
+                            position: _reviewSlides[2],
+                            child: _buildReviewCard(
+                              name: 'Elena R.',
+                              quote:
+                                  '"Meal ideas feel personalized\ninstead of random."',
                             ),
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
+                    SizedBox(height: 20.h),
                   ],
                 ),
               ),
@@ -239,38 +229,17 @@ class _SocialProofStepState extends State<SocialProofStep>
               opacity: _buttonOpacity,
               child: SlideTransition(
                 position: _buttonSlide,
-                child: SafeArea(
-                  top: false,
-                  child: Padding(
-                    padding: EdgeInsets.fromLTRB(24.w, 0.h, 24.w, 20.h),
-                    child: SizedBox(
-                      width: double.infinity,
-                      height: 55.h,
-                      child: ElevatedButton(
-                        onPressed: widget.onContinue,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFC83A2D),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(50.r),
-                          ),
-                          elevation: 0,
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              'Continue',
-                              style: TextStyle(
-                                fontFamily: 'SF Pro',
-                                fontSize: 18.sp,
-                                fontWeight: FontWeight.w700,
-                                color: Colors.white,
-                              ),
-                            ),
-                            SizedBox(width: 8.w),
-                          ],
-                        ),
-                      ),
+                child: Padding(
+                  padding: EdgeInsets.fromLTRB(24.w, 8.h, 24.w, 20.h),
+                  child: SafeArea(
+                    top: false,
+                    bottom: true,
+                    child: RedButton(
+                      label: 'Continue',
+                      color: const Color(0xFFC31E26),
+                      onTap: widget.onContinue,
+                      height: 52.h,
+                      fontSize: 16.sp,
                     ),
                   ),
                 ),
@@ -283,59 +252,35 @@ class _SocialProofStepState extends State<SocialProofStep>
   }
 
   Widget _buildReviewCard({
-    required String img,
     required String name,
-    required String initials,
     required String quote,
   }) {
     return Container(
-      margin: EdgeInsets.only(bottom: 16.h),
+      margin: EdgeInsets.only(bottom: 12.h),
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(50.r),
-        border: Border.all(color: const Color(0xFFF3F4F6)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.02),
-            blurRadius: 10.r,
-            offset: Offset(0, 4.h),
-          ),
-        ],
+        color: const Color(0xFFF1F5F9),
+        borderRadius: BorderRadius.circular(20.r),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Container(
-            width: 50.r,
-            height: 50.r,
+            width: 52.r,
+            height: 52.r,
             decoration: const BoxDecoration(
               shape: BoxShape.circle,
-              color: Color(0xFFF3F4F6),
+              color: Color(0xFFE2E8F0),
             ),
-            child: img.isNotEmpty
-                ? ClipOval(
-                    child: Image.asset(
-                      img,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) => Center(
-                        child: Icon(
-                          Icons.person_rounded,
-                          color: const Color(0xFF9CA3AF),
-                          size: 24.r,
-                        ),
-                      ),
-                    ),
-                  )
-                : Center(
-                    child: Icon(
-                      Icons.person_rounded,
-                      color: const Color(0xFF9CA3AF),
-                      size: 24.r,
-                    ),
-                  ),
+            child: ClipOval(
+              child: Icon(
+                Icons.person,
+                color: const Color(0xFF64748B),
+                size: 28.sp,
+              ),
+            ),
           ),
-          SizedBox(width: 16.w),
+          SizedBox(width: 14.w),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -346,19 +291,19 @@ class _SocialProofStepState extends State<SocialProofStep>
                   style: TextStyle(
                     fontFamily: 'SF Pro',
                     fontSize: 14.sp,
-                    fontWeight: FontWeight.w500,
-                    color: const Color(0xFF1B1C1C),
+                    fontWeight: FontWeight.w400,
+                    color: const Color(0xFF0F172A),
                     height: 1.3,
                   ),
                 ),
-                SizedBox(height: 6.h),
+                SizedBox(height: 4.h),
                 Text(
                   '— $name',
                   style: TextStyle(
                     fontSize: 14.sp,
-                    fontWeight: FontWeight.w400,
-                    color: const Color(0xFF6B7280),
-                    fontFamily: 'SF Pro',
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF0F172A),
+                    fontFamily: 'Rubik',
                   ),
                 ),
               ],

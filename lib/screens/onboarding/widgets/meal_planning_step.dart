@@ -107,7 +107,7 @@ class _MealPlanningStepState extends State<MealPlanningStep> {
             boxShadow: isSelected
                 ? [
                     BoxShadow(
-                      color: const Color(0xFFC83A2D).withOpacity(0.05),
+                      color: const Color(0xFFC83A2D).withValues(alpha: 0.05),
                       blurRadius: 10.r,
                       offset: Offset(0, 4.h),
                     ),

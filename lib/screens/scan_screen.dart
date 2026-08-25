@@ -89,9 +89,6 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
   List<RecipeIngredient>? _overlayDetectedIngredients;
   List<Recipe>? _overlayGeneratedRecipes;
 
-  // Carousel State
-  final PageController _recipesPageController = PageController(viewportFraction: 0.88);
-  int _currentRecipeIndex = 0;
   late final AnimationController _scannerController;
 
   void _updateState(ScanState newState) {
@@ -547,36 +544,54 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
       "BUILD_SCAN: state=$_state manual=$_useManualStreaming init=$_isCameraInitialized status=$_cameraStatus notify=${widget.isActiveNotifier.value}",
     );
     final bool isKeyboardOpen = MediaQuery.of(context).viewInsets.bottom > 0;
+    final bool isScan = _state == ScanState.scan;
     bool showPill = _state != ScanState.results && !isKeyboardOpen;
+
     return Scaffold(
-      backgroundColor: _state == ScanState.scan ? Colors.black : Colors.white,
+      backgroundColor: isScan ? Colors.black : const Color(0xFFF0F1F3),
       resizeToAvoidBottomInset: false,
       body: Stack(
         children: [
-          // 1. Background Content
-          _buildBackground(),
-
-          // 2. Main Content
-          SafeArea(
-            bottom: false,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (_state != ScanState.scan && _state != ScanState.results) _buildDynamicHeader(),
-                Expanded(child: _buildStateContent()),
-                // Spacer for buttons and pill nav
-                if (showPill)
-                  SizedBox(height: 140.h)
-                else if (_state == ScanState.results)
-                  SizedBox(height: MediaQuery.of(context).padding.bottom + 15.h)
-                else
-                  SizedBox(height: 100.h),
-              ],
+          // 1. Background Content (Camera for Scan, White sheet card for Type/Saved)
+          if (isScan)
+            _buildBackground()
+          else
+            SafeArea(
+              bottom: false,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.vertical(
+                    top: Radius.circular(32.r),
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    _buildDynamicHeader(),
+                    Expanded(child: _buildStateContent()),
+                    if (showPill)
+                      SizedBox(height: _state == ScanState.saved ? 150.h : 90.h)
+                    else
+                      SizedBox(height: 20.h),
+                  ],
+                ),
+              ),
             ),
-          ),
+
+          // 2. Main Content for Scan mode
+          if (isScan)
+            SafeArea(
+              bottom: false,
+              child: Column(
+                children: [
+                  Expanded(child: _buildStateContent()),
+                  if (showPill) SizedBox(height: 140.h),
+                ],
+              ),
+            ),
 
           // 3. Floating Overlays (Brackets for Scan)
-          if (_state == ScanState.scan)
+          if (isScan)
             Positioned.fill(child: _buildScanBrackets()),
 
           // 4. Floating Action Buttons (Fixed at bottom above pill)
@@ -589,8 +604,8 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
           if (showPill)
             Positioned(
               bottom: 20.h,
-              left: 22.w,
-              right: 22.w,
+              left: 20.w,
+              right: 20.w,
               child: SafeArea(top: false, child: _buildBottomPillNav()),
             ),
 
@@ -619,7 +634,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
     if (_isInitializing && _state == ScanState.scan) {
       loadingOverlay = Positioned.fill(
         child: Container(
-          color: Colors.black.withOpacity(0.4),
+          color: Colors.black.withValues(alpha: 0.4),
           child: Center(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -662,24 +677,41 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
           ),
           if (loadingOverlay != null) loadingOverlay,
 
-          // 4. Close Icon (Top-left) for Scan mode
+          // 4. Close Icon (Top-left) & Centered Title "Scan" for Scan mode
           Positioned(
             top: 50.h,
             left: 20.w,
-            child: GestureDetector(
-              onTap: widget.onClose,
-              child: Container(
-                padding: EdgeInsets.all(8.r),
-                decoration: const BoxDecoration(
-                  color: Colors.black26,
-                  shape: BoxShape.circle,
+            right: 20.w,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                GestureDetector(
+                  onTap: widget.onClose,
+                  child: Container(
+                    width: 44.r,
+                    height: 44.r,
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.close_rounded,
+                      color: const Color(0xFF0F172A),
+                      size: 22.sp,
+                    ),
+                  ),
                 ),
-                child: Icon(
-                  Icons.close_rounded,
-                  color: Colors.white,
-                  size: 22.sp,
+                Text(
+                  "Scan",
+                  style: TextStyle(
+                    fontFamily: 'Rubik',
+                    fontWeight: FontWeight.w800,
+                    fontSize: 20.sp,
+                    color: const Color(0xFF0F172A),
+                  ),
                 ),
-              ),
+                SizedBox(width: 44.r),
+              ],
             ),
           ),
         ],
@@ -810,35 +842,38 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
   Widget _buildDynamicHeader() {
     String title = _state == ScanState.type ? "Type Ingredient" : "Saved";
     return Padding(
-      padding: EdgeInsets.fromLTRB(22.w, 40.h, 22.w, 20.h),
+      padding: EdgeInsets.fromLTRB(16.w, 20.h, 16.w, 16.h),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            title,
-            style: TextStyle(
-              fontFamily: 'SF Pro',
-              fontWeight: FontWeight.w800,
-              fontSize: 24.sp,
-              color: const Color(0xFF1E293B),
-            ),
-          ),
           GestureDetector(
             onTap: widget.onClose,
             child: Container(
-              padding: EdgeInsets.all(6.r),
-              margin: EdgeInsets.only(top: 15.h), // Adjust for alignment
-              decoration: BoxDecoration(
-                color: Colors.grey[100],
+              width: 44.r,
+              height: 44.r,
+              decoration: const BoxDecoration(
+                color: Color(0xFFF1F5F9),
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 Icons.close_rounded,
-                size: 20.sp,
-                color: Colors.grey[700],
+                size: 22.sp,
+                color: const Color(0xFF0F172A),
               ),
             ),
           ),
+          Expanded(
+            child: Text(
+              title,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontFamily: 'Rubik',
+                fontWeight: FontWeight.w800,
+                fontSize: 22.sp,
+                color: const Color(0xFF0F172A),
+              ),
+            ),
+          ),
+          SizedBox(width: 44.r),
         ],
       ),
     );
@@ -859,16 +894,17 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
 
   Widget _buildScanBrackets() {
     return Center(
-      child: SizedBox(
-        width: 300.w,
-        height: 250.h,
+      child: Container(
+        margin: EdgeInsets.only(bottom: 60.h),
+        width: 320.w,
+        height: 380.h,
         child: Stack(
           children: [
             Positioned.fill(
               child: CustomPaint(
                 painter: _FramePainter(
-                  corner: 30.r,
-                  thick: 3.w,
+                  corner: 36.r,
+                  thick: 4.w,
                   color: const Color(0xFFC83A2D),
                 ),
               ),
@@ -879,13 +915,13 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                 return Align(
                   alignment: Alignment(0, -1.0 + (_scannerController.value * 2.0)),
                   child: Container(
-                    height: 4.h,
+                    height: 3.h,
                     margin: EdgeInsets.symmetric(horizontal: 10.w),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFC83A2D).withOpacity(0.9), // Red line
+                      color: const Color(0xFFC83A2D).withValues(alpha: 0.9),
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFFC83A2D).withOpacity(0.5),
+                          color: const Color(0xFFC83A2D).withValues(alpha: 0.5),
                           blurRadius: 15.r,
                           spreadRadius: 3.r,
                         ),
@@ -904,7 +940,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
   Widget _buildFloatingActions() {
     if (_state == ScanState.scan) {
       return Positioned(
-        bottom: 90.h,
+        bottom: 95.h,
         left: 0,
         right: 0,
         child: SafeArea(
@@ -913,9 +949,9 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               _buildGalleryBtn(),
-              SizedBox(width: 60.w),
+              SizedBox(width: 32.w),
               _buildShutterBtn(),
-              SizedBox(width: 85.w),
+              SizedBox(width: 84.w),
             ],
           ),
         ),
@@ -926,13 +962,14 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
       return const SizedBox.shrink();
     }
 
-    // "Get Recipes" button
-    Widget actionBtn = _buildWideBtn("Get Recipes", _generateFromTyped);
+    // Action button ("Get Recipes" for Type, "Add" for Saved)
+    final String label = _state == ScanState.saved ? "Add" : "Get Recipes";
+    Widget actionBtn = _buildWideBtn(label, _generateFromTyped);
 
     return Positioned(
-      bottom: 90.h,
-      left: 22.w,
-      right: 22.w,
+      bottom: 88.h,
+      left: 20.w,
+      right: 20.w,
       child: SafeArea(top: false, child: actionBtn),
     );
   }
@@ -941,16 +978,16 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
     return GestureDetector(
       onTap: () => _pickAndScan(ImageSource.gallery),
       child: Container(
-        width: 50.r,
-        height: 50.r,
+        width: 52.r,
+        height: 52.r,
         decoration: const BoxDecoration(
-          color: Color(0xFFFAF2DE),
+          color: Colors.white,
           shape: BoxShape.circle,
         ),
         child: Icon(
-          Icons.image_outlined,
-          color: const Color(0xFFC83A2D),
-          size: 27.sp,
+          Icons.photo_library_outlined,
+          color: const Color(0xFF0F172A),
+          size: 24.sp,
         ),
       ),
     );
@@ -961,21 +998,18 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
       onTap: () => _pickAndScan(ImageSource.camera),
       child: Container(
         key: _shutterKey,
-        width: 70.r,
-        height: 70.r,
+        width: 76.r,
+        height: 76.r,
+        padding: EdgeInsets.all(4.r),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Colors.transparent,
           shape: BoxShape.circle,
           border: Border.all(color: Colors.white, width: 4.r),
         ),
-        child: Padding(
-          padding: EdgeInsets.all(1.r),
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              shape: BoxShape.circle,
-              border: Border.all(color: Colors.grey[500]!, width: 4.r),
-            ),
+        child: Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            shape: BoxShape.circle,
           ),
         ),
       ),
@@ -1013,11 +1047,18 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
 
   Widget _buildBottomPillNav() {
     return Container(
-      height: 50.h,
-      padding: EdgeInsets.all(6.r),
+      height: 54.h,
+      padding: EdgeInsets.all(5.r),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFF6D6),
-        borderRadius: BorderRadius.circular(35.r),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(30.r),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Row(
         children: [
@@ -1050,57 +1091,73 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
       children: [
         // ── FIXED HEADER PART ─────────────────────────────────────────────
         Padding(
-          padding: EdgeInsets.symmetric(horizontal: 22.w),
+          padding: EdgeInsets.symmetric(horizontal: 20.w),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 "Enter ingredients one by one",
                 style: TextStyle(
-                  color: const Color(0xFF64748B),
-                  fontSize: 13.sp,
+                  fontFamily: 'Rubik',
+                  color: const Color(0xFF475569),
+                  fontSize: 14.sp,
                   fontWeight: FontWeight.w500,
                 ),
               ),
-              SizedBox(height: 10.h),
+              SizedBox(height: 12.h),
               Container(
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: const Color(0xFFF1F5F9),
                   borderRadius: BorderRadius.circular(16.r),
-                  border: Border.all(color: const Color(0xFFE2E8F0)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.03),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
                 ),
                 child: TextField(
                   controller: _ingCtrl,
                   textCapitalization: TextCapitalization.words,
                   style: TextStyle(
+                    fontFamily: 'Rubik',
                     fontSize: 15.sp,
                     fontWeight: FontWeight.w500,
+                    color: const Color(0xFF0F172A),
                   ),
                   decoration: InputDecoration(
-                    hintText: 'e.g., Tomato, Cheese...',
+                    prefixIcon: Icon(
+                      Icons.search_rounded,
+                      color: const Color(0xFF64748B),
+                      size: 22.sp,
+                    ),
+                    hintText: 'Search your recipes',
                     hintStyle: TextStyle(
+                      fontFamily: 'Rubik',
                       color: const Color(0xFF94A3B8),
-                      fontSize: 14.sp,
+                      fontSize: 15.sp,
                     ),
                     border: InputBorder.none,
                     contentPadding: EdgeInsets.symmetric(
                       horizontal: 16.w,
                       vertical: 14.h,
                     ),
-                    suffixIcon: IconButton(
-                      onPressed: _addTypedIngredient,
-                      icon: Icon(
-                        Icons.add_circle_rounded,
-                        color: const Color(0xFFC83A2D),
-                        size: 26.sp,
+                    suffixIcon: Padding(
+                      padding: EdgeInsets.only(right: 8.w),
+                      child: GestureDetector(
+                        onTap: _addTypedIngredient,
+                        child: Container(
+                          width: 32.r,
+                          height: 32.r,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFC83A2D),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            Icons.add_rounded,
+                            color: Colors.white,
+                            size: 20.sp,
+                          ),
+                        ),
                       ),
+                    ),
+                    suffixIconConstraints: BoxConstraints(
+                      minWidth: 40.r,
+                      minHeight: 40.r,
                     ),
                   ),
                   onSubmitted: (_) => _addTypedIngredient(),
@@ -1257,7 +1314,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                       scale: 0.8,
                       child: Switch(
                         value: _useAllSaved,
-                        activeColor: const Color(0xFFC83A2D),
+                        activeTrackColor: const Color(0xFFC83A2D),
                         onChanged: (val) {
                           setState(() {
                             _useAllSaved = val;
@@ -1434,128 +1491,269 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
   }
 
   Widget _buildResultsPage() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    final int ingredientCount = _ingredients.isNotEmpty
+        ? _ingredients.length
+        : _typedIngredients.length;
+
+    return ListView(
+      padding: EdgeInsets.symmetric(horizontal: 20.w),
       children: [
-        Padding(
-          padding: EdgeInsets.fromLTRB(22.w, 10.h, 22.w, 0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Image.asset(
-                'assets/images/logo2.png',
-                width: 40.w,
-                fit: BoxFit.contain,
+        // 1. Top Header Close Icon
+        Align(
+          alignment: Alignment.centerLeft,
+          child: GestureDetector(
+            onTap: () {
+              _updateState(ScanState.scan);
+            },
+            child: Container(
+              width: 44.r,
+              height: 44.r,
+              margin: EdgeInsets.only(top: 10.h, bottom: 16.h),
+              decoration: const BoxDecoration(
+                color: Color(0xFFF1F5F9),
+                shape: BoxShape.circle,
               ),
-              GestureDetector(
+              child: Icon(
+                Icons.close_rounded,
+                size: 22.sp,
+                color: const Color(0xFF0F172A),
+              ),
+            ),
+          ),
+        ),
+
+        // 2. Section Title: "Recipes you can cook now"
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              "Recipes you can cook now",
+              style: TextStyle(
+                fontFamily: 'Rubik',
+                fontWeight: FontWeight.w800,
+                fontSize: 18.sp,
+                color: const Color(0xFF0F172A),
+              ),
+            ),
+            GestureDetector(
+              onTap: () {
+                Navigator.pushNamed(
+                  context,
+                  AppRoutes.viewAll,
+                  arguments: {'title': 'Recipes', 'recipes': _recipes},
+                );
+              },
+              child: Text(
+                "View All",
+                style: TextStyle(
+                  fontFamily: 'Rubik',
+                  fontWeight: FontWeight.w700,
+                  fontSize: 14.sp,
+                  color: const Color(0xFFC83A2D),
+                ),
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: 14.h),
+
+        // 3. Recipe Cards List
+        if (_recipes.isEmpty)
+          const Center(child: SkeletonList(height: 120, itemCount: 3))
+        else
+          ..._recipes.take(3).map((recipe) => GestureDetector(
                 onTap: () {
-                  _updateState(ScanState.scan);
-                  if (widget.onClose != null) widget.onClose!();
+                  Navigator.pushNamed(
+                    context,
+                    AppRoutes.recipeDetail,
+                    arguments: {'recipe': recipe, 'isPreview': true},
+                  );
+                },
+                child: _buildResultRecipeCard(recipe),
+              )),
+
+        SizedBox(height: 20.h),
+
+        // 4. Section Title: "Your Ingredients"
+        Text(
+          "Your Ingredients",
+          style: TextStyle(
+            fontFamily: 'Rubik',
+            fontWeight: FontWeight.w800,
+            fontSize: 18.sp,
+            color: const Color(0xFF0F172A),
+          ),
+        ),
+        SizedBox(height: 4.h),
+        Text(
+          "We found $ingredientCount items in your kitchen",
+          style: TextStyle(
+            fontFamily: 'Rubik',
+            fontSize: 14.sp,
+            fontWeight: FontWeight.w400,
+            color: const Color(0xFF94A3B8),
+          ),
+        ),
+        SizedBox(height: 14.h),
+
+        // 5. Wrap Chips of Ingredients
+        Wrap(
+          spacing: 8.w,
+          runSpacing: 10.h,
+          children: [
+            ...(_ingredients.isNotEmpty
+                    ? _ingredients.map((i) => i.name)
+                    : _typedIngredients)
+                .map((name) => Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 14.w,
+                        vertical: 8.h,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFAF6ED),
+                        borderRadius: BorderRadius.circular(20.r),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            _capitalize(name),
+                            style: TextStyle(
+                              fontFamily: 'Rubik',
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14.sp,
+                              color: const Color(0xFF0F172A),
+                            ),
+                          ),
+                          SizedBox(width: 8.w),
+                          GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                _ingredients.removeWhere((i) => i.name == name);
+                                _typedIngredients.remove(name);
+                              });
+                            },
+                            child: Container(
+                              width: 18.r,
+                              height: 18.r,
+                              decoration: const BoxDecoration(
+                                color: Color(0xFF0F172A),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(
+                                Icons.close_rounded,
+                                color: Colors.white,
+                                size: 12.sp,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    )),
+          ],
+        ),
+
+        SizedBox(height: 24.h),
+
+        // 6. Action Buttons: [ Edit ]  [ Filter ]
+        Row(
+          children: [
+            Expanded(
+              child: GestureDetector(
+                onTap: () => _updateState(ScanState.type),
+                child: Container(
+                  height: 48.h,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF1F5F9),
+                    borderRadius: BorderRadius.circular(24.r),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.edit_outlined,
+                        size: 18.sp,
+                        color: const Color(0xFF0F172A),
+                      ),
+                      SizedBox(width: 8.w),
+                      Text(
+                        "Edit",
+                        style: TextStyle(
+                          fontFamily: 'Rubik',
+                          fontWeight: FontWeight.w700,
+                          fontSize: 15.sp,
+                          color: const Color(0xFF0F172A),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(width: 12.w),
+            Expanded(
+              child: GestureDetector(
+                onTap: () {
+                  // Filter action
                 },
                 child: Container(
-                  padding: EdgeInsets.all(6.r),
+                  height: 48.h,
                   decoration: BoxDecoration(
-                    color: Colors.grey[200],
-                    shape: BoxShape.circle,
+                    color: const Color(0xFFF1F5F9),
+                    borderRadius: BorderRadius.circular(24.r),
                   ),
-                  child: Icon(
-                    Icons.close_rounded,
-                    size: 20.sp,
-                    color: Colors.grey[700],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        SizedBox(height: 15.h),
-        Padding(
-          padding: EdgeInsets.symmetric(horizontal: 22.w),
-          child: RichText(
-            text: TextSpan(
-              text: "Recipes You\n",
-              style: TextStyle(
-                fontFamily: 'Larken',
-                fontWeight: FontWeight.w900,
-                fontSize: 38.sp,
-                height: 1.1,
-                color: const Color(0xFF1E293B),
-              ),
-              children: [
-                TextSpan(
-                  text: "Can Cook Now",
-                  style: TextStyle(
-                    color: const Color(0xFFC83A2D),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        SizedBox(height: 10.h),
-        Padding(
-          padding: EdgeInsets.symmetric(horizontal: 22.w),
-          child: Text(
-            "Delicious recipes made with what you have.",
-            style: TextStyle(
-              fontSize: 15.sp,
-              color: Colors.grey[600],
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ),
-        SizedBox(height: 20.h),
-        Expanded(
-          child: _recipes.isEmpty
-              ? Center(child: CircularProgressIndicator())
-              : PageView.builder(
-                  controller: _recipesPageController,
-                  onPageChanged: (idx) {
-                    setState(() {
-                      _currentRecipeIndex = idx;
-                    });
-                  },
-                  itemCount: _recipes.length > 10 ? 10 : _recipes.length,
-                  itemBuilder: (context, i) {
-                    final recipe = _recipes[i];
-                    return Padding(
-                      padding: EdgeInsets.only(right: 15.w, bottom: 12.h),
-                      child: GestureDetector(
-                        onTap: () {
-                           Navigator.pushNamed(
-                             context,
-                             AppRoutes.recipeDetail,
-                             arguments: {'recipe': recipe, 'isPreview': true},
-                           );
-                        },
-                        child: _buildMockupRecipeCard(recipe),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.tune_rounded,
+                        size: 18.sp,
+                        color: const Color(0xFF0F172A),
                       ),
-                    );
-                  },
-                ),
-        ),
-        if (_recipes.isNotEmpty)
-          Padding(
-            padding: EdgeInsets.only(bottom: 0.h),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(
-                _recipes.length > 10 ? 10 : _recipes.length,
-                (index) => Container(
-                  margin: EdgeInsets.symmetric(horizontal: 4.w),
-                  width: 8.r,
-                  height: 8.r,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: _currentRecipeIndex == index
-                        ? const Color(0xFFC83A2D)
-                        : Colors.grey[300],
+                      SizedBox(width: 8.w),
+                      Text(
+                        "Filter",
+                        style: TextStyle(
+                          fontFamily: 'Rubik',
+                          fontWeight: FontWeight.w700,
+                          fontSize: 15.sp,
+                          color: const Color(0xFF0F172A),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
             ),
+          ],
+        ),
+
+        SizedBox(height: 12.h),
+
+        // 7. Full-width Primary Button: "Scan More"
+        GestureDetector(
+          onTap: () => _updateState(ScanState.scan),
+          child: Container(
+            height: 52.h,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: const Color(0xFFC83A2D),
+              borderRadius: BorderRadius.circular(28.r),
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              "Scan More",
+              style: TextStyle(
+                fontFamily: 'Rubik',
+                fontWeight: FontWeight.w700,
+                fontSize: 16.sp,
+                color: Colors.white,
+              ),
+            ),
           ),
-        SizedBox(height: 5.h), // Reduced from 80.h to give cards more space
+        ),
+
+        SizedBox(height: 30.h),
       ],
     );
   }
@@ -1571,7 +1769,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
           child: CircularProgressIndicator(color: Color(0xFFC83A2D)),
         ),
       );
-      
+
       Recipe finalRecipe = r;
       if (r.id.isEmpty) {
         finalRecipe = await RecipeService.instance.createRecipe(r);
@@ -1583,7 +1781,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
         }
       }
 
-      if (mounted) Navigator.pop(context); // Hide loading
+      if (mounted) Navigator.pop(context);
 
       if (mounted) {
         showModalBottomSheet(
@@ -1597,7 +1795,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
         );
       }
     } catch (e) {
-      if (mounted) Navigator.pop(context); // Hide loading
+      if (mounted) Navigator.pop(context);
       if (mounted) {
         IosToast.show(
           context,
@@ -1608,215 +1806,193 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
     }
   }
 
-  Widget _buildMockupRecipeCard(Recipe recipe) {
+  Widget _buildResultRecipeCard(Recipe recipe) {
     return Container(
+      margin: EdgeInsets.only(bottom: 14.h),
+      height: 135.h,
       decoration: BoxDecoration(
-        color: Colors.white,
         borderRadius: BorderRadius.circular(24.r),
-        border: Border.all(color: const Color(0xFFF1F5F9), width: 1.5),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 15,
-            offset: const Offset(0, 4),
-          ),
-        ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Image with exact padding and border radius
-          Expanded(
-            child: Padding(
-              padding: EdgeInsets.fromLTRB(14.w, 14.h, 14.w, 0),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(16.r),
-                child: recipe.image != null
-                    ? Image.network(
-                        recipe.image!,
-                        width: double.infinity,
-                        fit: BoxFit.cover,
-                      )
-                    : Container(
-                        width: double.infinity,
-                        color: Colors.grey[200],
-                        child: Icon(Icons.restaurant, color: Colors.grey[400]),
-                      ),
-              ),
-            ),
-          ),
-          Padding(
-            padding: EdgeInsets.fromLTRB(14.w, 16.h, 14.w, 16.h),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min, // Takes only the space it needs
-              children: [
-                Row(
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24.r),
+        child: Row(
+          children: [
+            // Left Content: Beige background
+            Expanded(
+              flex: 5,
+              child: Container(
+                color: const Color(0xFFFAF6ED),
+                padding: EdgeInsets.all(14.r),
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Expanded(
-                      child: Text(
-                        recipe.name,
-                        style: TextStyle(
-                          fontSize: 24.sp,
-                          fontWeight: FontWeight.w700,
-                          color: const Color(0xFF0F172A),
-                          height: 1.15,
-                          letterSpacing: -0.3,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    SizedBox(width: 10.w),
+                    // Top: Heart Icon Button
                     ValueListenableBuilder<List<Recipe>?>(
                       valueListenable: RecipeService.instance.myRecipesNotifier,
                       builder: (context, savedRecipes, _) {
                         final isSaved = (savedRecipes ?? []).any(
-                          (r) => (r.id == recipe.id && recipe.id.isNotEmpty) || r.name == recipe.name
+                          (r) =>
+                              (r.id == recipe.id && recipe.id.isNotEmpty) ||
+                              r.name == recipe.name,
                         );
                         return GestureDetector(
                           onTap: () => _handleSaveRecipe(recipe),
-                          child: Padding(
-                            padding: EdgeInsets.only(top: 4.h),
+                          child: Container(
+                            width: 32.r,
+                            height: 32.r,
+                            decoration: const BoxDecoration(
+                              color: Colors.white,
+                              shape: BoxShape.circle,
+                            ),
                             child: Icon(
-                              Icons.favorite,
-                              color: isSaved ? const Color(0xFFC83A2D) : const Color(0xFFE2E8F0),
-                              size: 32.sp,
+                              isSaved ? Icons.favorite : Icons.favorite_outline,
+                              color: const Color(0xFFC83A2D),
+                              size: 18.sp,
                             ),
                           ),
                         );
                       },
                     ),
-                  ],
-                ),
-                SizedBox(height: 16.h),
-                Row(
-                  children: [
-                    _buildPill(Icons.access_time, "${recipe.cookTime} min"),
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 10.w),
-                      child: Text("|", style: TextStyle(color: const Color(0xFFE2E8F0), fontSize: 16.sp)),
+
+                    // Middle: Recipe Name
+                    Text(
+                      recipe.name,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontFamily: 'Rubik',
+                        fontWeight: FontWeight.w800,
+                        fontSize: 15.sp,
+                        color: const Color(0xFF0F172A),
+                        height: 1.2,
+                      ),
                     ),
-                    _buildPill(Icons.local_fire_department, "${recipe.kcal} cal", iconColor: const Color(0xFFF59E0B)),
+
+                    // Bottom: Time & Calories Badges
+                    Row(
+                      children: [
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 8.w,
+                            vertical: 4.h,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF3EFE4),
+                            borderRadius: BorderRadius.circular(10.r),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.access_time_rounded,
+                                size: 12.sp,
+                                color: const Color(0xFF64748B),
+                              ),
+                              SizedBox(width: 4.w),
+                              Text(
+                                "${recipe.cookTime} min",
+                                style: TextStyle(
+                                  fontFamily: 'Rubik',
+                                  fontSize: 11.sp,
+                                  fontWeight: FontWeight.w600,
+                                  color: const Color(0xFF64748B),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        SizedBox(width: 6.w),
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 8.w,
+                            vertical: 4.h,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF3EFE4),
+                            borderRadius: BorderRadius.circular(10.r),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.local_fire_department_rounded,
+                                size: 12.sp,
+                                color: const Color(0xFF64748B),
+                              ),
+                              SizedBox(width: 4.w),
+                              Text(
+                                "${recipe.kcal} kcal",
+                                style: TextStyle(
+                                  fontFamily: 'Rubik',
+                                  fontSize: 11.sp,
+                                  fontWeight: FontWeight.w600,
+                                  color: const Color(0xFF64748B),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
-                SizedBox(height: 16.h),
-                Text(
-                  "USES YOUR INGREDIENTS",
-                  style: TextStyle(
-                    fontSize: 12.sp,
-                    fontWeight: FontWeight.w600,
-                    color: const Color(0xFF64748B),
-                    letterSpacing: 0.5,
+              ),
+            ),
+
+            // Right Image + Arrow Button
+            Expanded(
+              flex: 4,
+              child: Stack(
+                children: [
+                  Positioned.fill(
+                    child: recipe.image != null
+                        ? Image.network(
+                            recipe.image!,
+                            fit: BoxFit.cover,
+                          )
+                        : Container(
+                            color: Colors.grey[200],
+                            child: Icon(
+                              Icons.restaurant,
+                              color: Colors.grey[400],
+                            ),
+                          ),
                   ),
-                ),
-                SizedBox(height: 12.h),
-                Wrap(
-                  spacing: 8.w,
-                  runSpacing: 10.h,
-                  children: [
-                    ...recipe.ingredients.take(3).map((ing) {
-                      return _buildIngredientChip(ing.name, ing.icon);
-                    }).toList(),
-                    if (recipe.ingredients.length > 3)
-                      _buildIngredientChip("+${recipe.ingredients.length - 3}", null),
-                  ],
-                ),
-              ],
+                  Positioned(
+                    top: 10.h,
+                    right: 10.w,
+                    child: Container(
+                      width: 32.r,
+                      height: 32.r,
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.chevron_right_rounded,
+                        color: const Color(0xFF0F172A),
+                        size: 22.sp,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPill(IconData icon, String text, {Color? iconColor}) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20.r),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 18.sp, color: iconColor ?? const Color(0xFF94A3B8)),
-          SizedBox(width: 6.w),
-          Text(
-            text,
-            style: TextStyle(
-              fontSize: 15.sp,
-              fontWeight: FontWeight.w600,
-              color: const Color(0xFF475569),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildIngredientChip(String name, String? icon) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFF8E7), // Light yellow background
-        borderRadius: BorderRadius.circular(24.r),
-        border: Border.all(color: const Color(0xFFFFD579), width: 1), // Yellow/Orange border
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (icon != null) ...[
-            Text(icon, style: TextStyle(fontSize: 15.sp)),
-            SizedBox(width: 6.w),
           ],
-          Text(
-            name.toTitleCase(),
-            style: TextStyle(
-              fontSize: 15.sp,
-              fontWeight: FontWeight.w600,
-              color: const Color(0xFF0F172A),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
 
-  // Widget _buildActionBtn(String label, IconData icon) {
-  //   return Container(
-  //     height: 50.h,
-  //     decoration: BoxDecoration(
-  //       color: const Color(0xFFF1F5F9),
-  //       borderRadius: BorderRadius.circular(14.r),
-  //     ),
-  //     child: Row(
-  //       mainAxisAlignment: MainAxisAlignment.center,
-  //       children: [
-  //         Icon(icon, size: 18.sp, color: const Color(0xFF64748B)),
-  //         SizedBox(width: 8.w),
-  //         Text(
-  //           label,
-  //           style: TextStyle(
-  //             fontWeight: FontWeight.w600,
-  //             color: const Color(0xFF64748B),
-  //           ),
-  //         ),
-  //       ],
-  //     ),
-  //   );
-  // }
-
-  // ── Logic ──────────────────────────────────────────────────────────────────
   void _addTypedIngredient() {
     final text = _ingCtrl.text.trim();
     if (text.isNotEmpty) {
       final capitalized = _capitalize(text);
-      
-      // Save to recent
-      IngredientService.instance.addToRecentTypedIngredient(capitalized).then((_) {
+
+      IngredientService.instance
+          .addToRecentTypedIngredient(capitalized)
+          .then((_) {
         _fetchRecentIngredients();
       });
 
@@ -1838,7 +2014,6 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
         _cameraController != null) {
       try {
         photo = await _cameraController!.takePicture();
-        // Pause preview to stop background buffer spam while processing
         await _cameraController!.pausePreview();
       } catch (e) {
         debugPrint('Error taking picture: $e');
@@ -1854,8 +2029,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
 
     if (photo == null) return;
     HapticFeedback.mediumImpact();
-    
-    // Instead of old loading, we use the new overlay
+
     setState(() {
       _showAnimationOverlay = true;
       _overlayDetectedIngredients = null;
@@ -1864,15 +2038,15 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
     });
 
     try {
-      // Step 1: Detect ingredients
-      final detectResult = await RecipeService.instance.detectIngredients(photo);
-      
-      final List<RecipeIngredient> detectedAllowed = 
+      final detectResult =
+          await RecipeService.instance.detectIngredients(photo);
+
+      final List<RecipeIngredient> detectedAllowed =
           (detectResult['allowed_ingredients'] as List? ?? [])
               .map((j) => RecipeIngredient.fromJson(j))
               .toList();
-      
-      final List<RecipeIngredient> detectedRestricted = 
+
+      final List<RecipeIngredient> detectedRestricted =
           (detectResult['restricted_ingredients'] as List? ?? [])
               .map((j) => RecipeIngredient.fromJson(j))
               .toList();
@@ -1881,35 +2055,30 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
         setState(() {
           _ingredients.clear();
           _ingredients.addAll(detectedAllowed);
-          
+
           _restrictedIngredients.clear();
           _restrictedIngredients.addAll(detectedRestricted);
-          
+
           _overlayDetectedIngredients = detectedAllowed;
         });
       }
 
-      // Step 2: Generate Recipes
-      // We pass the names of allowed ingredients to generateAiRecipes
-      final List<String> ingredientNames = detectedAllowed.map((i) => i.name).toList();
-      
-      // We still need to call generateAiRecipes. 
-      // But wait, the backend `/detect-ingredients` returns ingredients, not recipes.
-      // So we call `/generate-ai-recipes` here:
-      final generatedRecipes = await RecipeService.instance.generateAiRecipes(ingredientNames);
+      final List<String> ingredientNames =
+          detectedAllowed.map((i) => i.name).toList();
+
+      final generatedRecipes =
+          await RecipeService.instance.generateAiRecipes(ingredientNames);
 
       if (mounted) {
         setState(() {
           _recipes.clear();
           _recipes.addAll(generatedRecipes);
-          
+
           _overlayGeneratedRecipes = generatedRecipes;
         });
       }
-      
-      // Save to temporary home suggestions for 3 days
-      RecipeService.instance.saveScanResults(generatedRecipes);
 
+      RecipeService.instance.saveScanResults(generatedRecipes);
     } catch (e) {
       if (mounted) {
         setState(() {
@@ -1969,20 +2138,20 @@ class _PillTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Give more width ratio to the longer "Type Ingredients" text
-    final int flexValue = label.length > 10 ? 12 : 7;
-    
+    final int flexValue = label.length > 10 ? 13 : 8;
+
     return Expanded(
       flex: flexValue,
       child: GestureDetector(
         onTap: onTap,
-        child: Container(
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
           height: double.infinity,
           margin: EdgeInsets.symmetric(horizontal: 2.w),
           alignment: Alignment.center,
           decoration: BoxDecoration(
             color: active ? const Color(0xFFC83A2D) : Colors.transparent,
-            borderRadius: BorderRadius.circular(25.r),
+            borderRadius: BorderRadius.circular(26.r),
           ),
           child: Text(
             label,
@@ -1990,9 +2159,10 @@ class _PillTab extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
-              color: active ? Colors.white : const Color(0xFF6B7280),
-              fontWeight: FontWeight.w800,
-              fontSize: 11.sp,
+              fontFamily: 'Rubik',
+              color: active ? Colors.white : const Color(0xFF64748B),
+              fontWeight: active ? FontWeight.w700 : FontWeight.w600,
+              fontSize: 14.sp,
             ),
           ),
         ),
@@ -2021,38 +2191,31 @@ class _FramePainter extends CustomPainter {
       ..strokeCap = StrokeCap.round;
     final w = size.width;
     final h = size.height;
-    final r = 5.0;
+    final r = 12.0;
+    final arm = corner;
 
-    canvas.drawLine(Offset(0, corner), Offset(0, r), p);
+    // Top-Left
+    canvas.drawLine(Offset(0, arm), Offset(0, r), p);
     canvas.drawArc(Rect.fromLTWH(0, 0, r * 2, r * 2), 3.14, 1.57, false, p);
-    canvas.drawLine(Offset(r, 0), Offset(corner, 0), p);
-    canvas.drawLine(Offset(w - corner, 0), Offset(w - r, 0), p);
+    canvas.drawLine(Offset(r, 0), Offset(arm, 0), p);
+
+    // Top-Right
+    canvas.drawLine(Offset(w - arm, 0), Offset(w - r, 0), p);
     canvas.drawArc(
-      Rect.fromLTWH(w - 2 * r, 0, r * 2, r * 2),
-      -1.57,
-      1.57,
-      false,
-      p,
-    );
-    canvas.drawLine(Offset(w, r), Offset(w, corner), p);
-    canvas.drawLine(Offset(w, h - corner), Offset(w, h - r), p);
+        Rect.fromLTWH(w - 2 * r, 0, r * 2, r * 2), -1.57, 1.57, false, p);
+    canvas.drawLine(Offset(w, r), Offset(w, arm), p);
+
+    // Bottom-Right
+    canvas.drawLine(Offset(w, h - arm), Offset(w, h - r), p);
     canvas.drawArc(
-      Rect.fromLTWH(w - 2 * r, h - 2 * r, r * 2, r * 2),
-      0,
-      1.57,
-      false,
-      p,
-    );
-    canvas.drawLine(Offset(w - r, h), Offset(w - corner, h), p);
-    canvas.drawLine(Offset(corner, h), Offset(r, h), p);
+        Rect.fromLTWH(w - 2 * r, h - 2 * r, r * 2, r * 2), 0, 1.57, false, p);
+    canvas.drawLine(Offset(w - r, h), Offset(w - arm, h), p);
+
+    // Bottom-Left
+    canvas.drawLine(Offset(arm, h), Offset(r, h), p);
     canvas.drawArc(
-      Rect.fromLTWH(0, h - 2 * r, r * 2, r * 2),
-      1.57,
-      1.57,
-      false,
-      p,
-    );
-    canvas.drawLine(Offset(0, h - r), Offset(0, h - corner), p);
+        Rect.fromLTWH(0, h - 2 * r, r * 2, r * 2), 1.57, 1.57, false, p);
+    canvas.drawLine(Offset(0, h - r), Offset(0, h - arm), p);
   }
 
   @override

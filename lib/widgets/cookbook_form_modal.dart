@@ -43,8 +43,11 @@ class _CookbookFormModalState extends State<CookbookFormModal> {
   @override
   void initState() {
     super.initState();
-    _nameCtrl = TextEditingController(text: widget.cookbook?.name ?? widget.initialName ?? '');
-    _selectedRecipes = widget.cookbook?.recipes ?? widget.initialRecipes ?? [];
+    _nameCtrl = TextEditingController(
+        text: widget.cookbook?.name ?? widget.initialName ?? '');
+    _selectedRecipes = widget.cookbook?.recipes != null
+        ? List.from(widget.cookbook!.recipes)
+        : (widget.initialRecipes != null ? List.from(widget.initialRecipes!) : []);
   }
 
   @override
@@ -63,7 +66,7 @@ class _CookbookFormModalState extends State<CookbookFormModal> {
 
     return DraggableScrollableSheet(
       controller: _dragCtrl,
-      initialChildSize: 0.6,
+      initialChildSize: 0.65,
       minChildSize: 0.4,
       maxChildSize: 0.95,
       expand: false,
@@ -77,9 +80,9 @@ class _CookbookFormModalState extends State<CookbookFormModal> {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: widget.isEmbedded 
-            ? BorderRadius.zero 
-            : BorderRadius.vertical(top: Radius.circular(30.r)),
+        borderRadius: widget.isEmbedded
+            ? BorderRadius.zero
+            : BorderRadius.vertical(top: Radius.circular(32.r)),
       ),
       child: Column(
         mainAxisSize: widget.isEmbedded ? MainAxisSize.max : MainAxisSize.min,
@@ -87,18 +90,18 @@ class _CookbookFormModalState extends State<CookbookFormModal> {
           if (!widget.isEmbedded)
             // Drag handle
             Container(
-              margin: EdgeInsets.symmetric(vertical: 12.h),
+              margin: EdgeInsets.only(top: 12.h, bottom: 8.h),
               width: 36.w,
               height: 4.h,
               decoration: BoxDecoration(
-                color: const Color(0xFFE5E7EB),
+                color: const Color(0xFFE2E8F0),
                 borderRadius: BorderRadius.circular(2.r),
               ),
             ),
-          
+
           // Header
           Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -107,7 +110,9 @@ class _CookbookFormModalState extends State<CookbookFormModal> {
                     if (_isPickingRecipes) {
                       setState(() => _isPickingRecipes = false);
                       if (!widget.isEmbedded) {
-                        _dragCtrl.animateTo(0.6, duration: const Duration(milliseconds: 300), curve: Curves.easeOut);
+                        _dragCtrl.animateTo(0.65,
+                            duration: const Duration(milliseconds: 300),
+                            curve: Curves.easeOut);
                       }
                     } else if (widget.onCancel != null) {
                       widget.onCancel!();
@@ -115,167 +120,252 @@ class _CookbookFormModalState extends State<CookbookFormModal> {
                       Navigator.pop(context);
                     }
                   },
-                  child: Row(
-                    children: [
-                      if (widget.isEmbedded || _isPickingRecipes)
-                        Padding(
-                          padding: EdgeInsets.only(right: 4.w),
-                          child: Icon(Icons.chevron_left_rounded, color: const Color(0xFF1F2937), size: 24.sp),
+                  child: Container(
+                    padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF1F5F9),
+                      borderRadius: BorderRadius.circular(20.r),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (widget.isEmbedded || _isPickingRecipes)
+                          Padding(
+                            padding: EdgeInsets.only(right: 2.w),
+                            child: Icon(
+                              Icons.chevron_left_rounded,
+                              color: const Color(0xFF0F172A),
+                              size: 18.sp,
+                            ),
+                          ),
+                        Text(
+                          (_isPickingRecipes) ? 'Back' : 'Cancel',
+                          style: TextStyle(
+                            color: const Color(0xFF0F172A),
+                            fontSize: 14.sp,
+                            fontFamily: 'Rubik',
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
-                      Text(
-                        (widget.isEmbedded || _isPickingRecipes) ? 'Back' : 'Cancel',
-                        style: TextStyle(
-                          color: const Color(0xFF1F2937),
-                          fontSize: 16.sp,
-                          fontFamily: 'SF Pro',
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
                 Text(
-                  _isPickingRecipes ? 'Select Recipes' : (_isEdit ? 'Edit Cookbook' : 'New Cookbook'),
+                  _isPickingRecipes
+                      ? 'Select Recipes'
+                      : (_isEdit ? 'Edit Cookbook' : 'New Cookbook'),
                   style: TextStyle(
-                    color: const Color(0xFF111827),
-                    fontSize: 16.sp,
-                    fontWeight: FontWeight.bold,
-                    fontFamily: 'SF Pro',
+                    color: const Color(0xFF0F172A),
+                    fontSize: 18.sp,
+                    fontWeight: FontWeight.w800,
+                    fontFamily: 'Rubik',
                   ),
                 ),
                 GestureDetector(
-                  onTap: _isPickingRecipes ? () {
-                    setState(() => _isPickingRecipes = false);
-                    if (!widget.isEmbedded) {
-                      _dragCtrl.animateTo(0.6, duration: const Duration(milliseconds: 300), curve: Curves.easeOut);
-                    }
-                  } : _save,
-                  child: _isSaving 
-                    ? SizedBox(
-                        width: 16.w,
-                        height: 16.w,
-                        child: const CircularProgressIndicator(strokeWidth: 2, color: Color(0xFFC83A2D)),
-                      )
-                    : Text(
-                        _isPickingRecipes ? 'Done' : 'Save',
-                        style: TextStyle(
-                          color: (_isPickingRecipes || _nameCtrl.text.isNotEmpty) ? const Color(0xFFC83A2D) : const Color(0xFFD1D5DB),
-                          fontSize: 16.sp,
-                          fontWeight: FontWeight.bold,
-                          fontFamily: 'SF Pro',
+                  onTap: _isPickingRecipes
+                      ? () {
+                          setState(() => _isPickingRecipes = false);
+                          if (!widget.isEmbedded) {
+                            _dragCtrl.animateTo(0.65,
+                                duration: const Duration(milliseconds: 300),
+                                curve: Curves.easeOut);
+                          }
+                        }
+                      : _save,
+                  child: _isSaving
+                      ? SizedBox(
+                          width: 18.w,
+                          height: 18.w,
+                          child: const CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Color(0xFFC83A2D),
+                          ),
+                        )
+                      : Container(
+                          padding: EdgeInsets.symmetric(
+                              horizontal: 14.w, vertical: 6.h),
+                          decoration: BoxDecoration(
+                            color: (_isPickingRecipes ||
+                                    _nameCtrl.text.trim().isNotEmpty)
+                                ? const Color(0xFFC83A2D)
+                                : const Color(0xFFE2E8F0),
+                            borderRadius: BorderRadius.circular(20.r),
+                          ),
+                          child: Text(
+                            _isPickingRecipes ? 'Done' : 'Save',
+                            style: TextStyle(
+                              color: (_isPickingRecipes ||
+                                      _nameCtrl.text.trim().isNotEmpty)
+                                  ? Colors.white
+                                  : const Color(0xFF94A3B8),
+                              fontSize: 14.sp,
+                              fontWeight: FontWeight.w700,
+                              fontFamily: 'Rubik',
+                            ),
+                          ),
                         ),
-                      ),
                 ),
               ],
             ),
           ),
 
+          const Divider(height: 1, color: Color(0xFFF1F5F9)),
+
           Expanded(
             child: ListView(
               controller: scrollController,
-              padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom + 40.h),
+              padding: EdgeInsets.only(
+                  bottom: MediaQuery.of(context).viewInsets.bottom + 40.h),
               children: [
                 if (!_isPickingRecipes) ...[
-                  SizedBox(height: 24.h),
+                  SizedBox(height: 20.h),
 
-                  // Name field
+                  // Name field input
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: 16.w),
                     child: Container(
                       decoration: BoxDecoration(
-                        color: const Color(0xFFF9FAFB),
-                        borderRadius: BorderRadius.circular(12.r),
-                        border: Border.all(color: const Color(0xFFE5E7EB)),
+                        color: const Color(0xFFF1F5F9),
+                        borderRadius: BorderRadius.circular(16.r),
                       ),
-                      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
+                      padding: EdgeInsets.symmetric(
+                          horizontal: 16.w, vertical: 4.h),
                       child: TextField(
                         controller: _nameCtrl,
                         autofocus: !widget.isEmbedded,
-                        style: const TextStyle(color: Color(0xFF1F2937)),
+                        style: TextStyle(
+                          color: const Color(0xFF0F172A),
+                          fontFamily: 'Rubik',
+                          fontSize: 15.sp,
+                          fontWeight: FontWeight.w600,
+                        ),
                         onChanged: (_) => setState(() {}),
                         decoration: InputDecoration(
                           hintText: 'Cookbook name',
-                          hintStyle: TextStyle(color: const Color(0xFF9CA3AF)),
+                          hintStyle: TextStyle(
+                            color: const Color(0xFF94A3B8),
+                            fontFamily: 'Rubik',
+                            fontSize: 15.sp,
+                            fontWeight: FontWeight.w400,
+                          ),
                           border: InputBorder.none,
                         ),
                       ),
                     ),
                   ),
 
-                  SizedBox(height: 24.h),
+                  SizedBox(height: 20.h),
 
-                  // Add recipes row
+                  // Add recipes action card
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: 16.w),
                     child: GestureDetector(
                       onTap: _pickRecipes,
-                      child: Row(
-                        children: [
-                          Container(
-                            padding: EdgeInsets.all(8.r),
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              border: Border.all(color: const Color(0xFFE5E7EB)),
-                            ),
-                            child: Icon(Icons.add_rounded, color: const Color(0xFFC83A2D), size: 20.sp),
-                          ),
-                          SizedBox(width: 14.w),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Add recipes',
-                                  style: TextStyle(
-                                    color: const Color(0xFF1F2937),
-                                    fontSize: 15.sp,
-                                    fontWeight: FontWeight.w500,
-                                    fontFamily: 'SF Pro',
-                                  ),
-                                ),
-                                Text(
-                                  'Select recipes for this cookbook',
-                                  style: TextStyle(
-                                    color: const Color(0xFF6B7280),
-                                    fontSize: 13.sp,
-                                    fontFamily: 'SF Pro',
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          if (_selectedRecipes.isNotEmpty)
+                      child: Container(
+                        padding: EdgeInsets.all(14.r),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFAF5E8),
+                          borderRadius: BorderRadius.circular(20.r),
+                        ),
+                        child: Row(
+                          children: [
                             Container(
-                              padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFFEE2E2),
-                                borderRadius: BorderRadius.circular(10.r),
+                              padding: EdgeInsets.all(10.r),
+                              decoration: const BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Colors.white,
                               ),
-                              child: Text(
-                                '${_selectedRecipes.length}',
-                                style: TextStyle(
-                                  color: const Color(0xFFC83A2D),
-                                  fontSize: 12.sp,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                              child: Icon(
+                                Icons.add_rounded,
+                                color: const Color(0xFFC83A2D),
+                                size: 20.sp,
                               ),
                             ),
-                          Icon(Icons.chevron_right_rounded, color: const Color(0xFFD1D5DB)),
-                        ],
+                            SizedBox(width: 14.w),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Add recipes',
+                                    style: TextStyle(
+                                      color: const Color(0xFF0F172A),
+                                      fontSize: 15.sp,
+                                      fontWeight: FontWeight.w700,
+                                      fontFamily: 'Rubik',
+                                    ),
+                                  ),
+                                  SizedBox(height: 2.h),
+                                  Text(
+                                    'Select recipes for this cookbook',
+                                    style: TextStyle(
+                                      color: const Color(0xFF64748B),
+                                      fontSize: 13.sp,
+                                      fontFamily: 'Rubik',
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            if (_selectedRecipes.isNotEmpty)
+                              Container(
+                                padding: EdgeInsets.symmetric(
+                                    horizontal: 10.w, vertical: 4.h),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFC83A2D),
+                                  borderRadius: BorderRadius.circular(12.r),
+                                ),
+                                child: Text(
+                                  '${_selectedRecipes.length}',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 13.sp,
+                                    fontWeight: FontWeight.w700,
+                                    fontFamily: 'Rubik',
+                                  ),
+                                ),
+                              ),
+                            SizedBox(width: 4.w),
+                            Icon(
+                              Icons.chevron_right_rounded,
+                              color: const Color(0xFF94A3B8),
+                              size: 22.sp,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
 
                   if (_selectedRecipes.isNotEmpty) ...[
-                    SizedBox(height: 16.h),
+                    SizedBox(height: 20.h),
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 16.w),
+                      child: Text(
+                        'Included Recipes (${_selectedRecipes.length})',
+                        style: TextStyle(
+                          fontFamily: 'Rubik',
+                          fontWeight: FontWeight.w700,
+                          fontSize: 14.sp,
+                          color: const Color(0xFF0F172A),
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 10.h),
                     Padding(
                       padding: EdgeInsets.symmetric(horizontal: 16.w),
                       child: Wrap(
                         spacing: 8.w,
                         runSpacing: 8.h,
-                        children: _selectedRecipes.map((r) => _RecipeChip(
-                          recipe: r,
-                          onRemove: () => setState(() => _selectedRecipes.removeWhere((x) => x.id == r.id)),
-                        )).toList(),
+                        children: _selectedRecipes
+                            .map((r) => _RecipeChip(
+                                  recipe: r,
+                                  onRemove: () => setState(() =>
+                                      _selectedRecipes
+                                          .removeWhere((x) => x.id == r.id)),
+                                ))
+                            .toList(),
                       ),
                     ),
                   ],
@@ -304,7 +394,9 @@ class _CookbookFormModalState extends State<CookbookFormModal> {
   Future<void> _pickRecipes() async {
     setState(() => _isPickingRecipes = true);
     if (!widget.isEmbedded) {
-      _dragCtrl.animateTo(0.95, duration: const Duration(milliseconds: 400), curve: Curves.easeOutQuart);
+      _dragCtrl.animateTo(0.95,
+          duration: const Duration(milliseconds: 400),
+          curve: Curves.easeOutQuart);
     }
   }
 
@@ -317,23 +409,22 @@ class _CookbookFormModalState extends State<CookbookFormModal> {
       final recipeIds = _selectedRecipes.map((r) => r.id).toList();
       Cookbook cb;
       if (_isEdit) {
-        cb = await CookbookService.instance.updateCookbook(widget.cookbook!.id, name, recipeIds);
+        cb = await CookbookService.instance
+            .updateCookbook(widget.cookbook!.id, name, recipeIds);
       } else {
         cb = await CookbookService.instance.createCookbook(name, recipeIds);
       }
-      
+
       if (!mounted) return;
       if (mounted) {
-        IosToast.show(context, 
-          message: _isEdit ? 'Cookbook updated!' : 'Cookbook created!', 
-          type: ToastType.success
-        );
+        IosToast.show(context,
+            message: _isEdit ? 'Cookbook updated!' : 'Cookbook created!',
+            type: ToastType.success);
       }
-      
+
       if (!mounted || _isPopping) return;
       _isPopping = true;
-      
-      // Small delay to ensure the toast has started and context is stable
+
       await Future.delayed(const Duration(milliseconds: 100));
       if (!mounted) return;
 
@@ -348,7 +439,9 @@ class _CookbookFormModalState extends State<CookbookFormModal> {
     } catch (e) {
       if (mounted) {
         setState(() => _isSaving = false);
-        IosToast.show(context, message: ErrorHelper.getFriendlyMessage(e), type: ToastType.error);
+        IosToast.show(context,
+            message: ErrorHelper.getFriendlyMessage(e),
+            type: ToastType.error);
       }
     }
   }
@@ -365,9 +458,8 @@ class _RecipeChip extends StatelessWidget {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
       decoration: BoxDecoration(
-        color: const Color(0xFFF3F4F6),
+        color: const Color(0xFFF1F5F9),
         borderRadius: BorderRadius.circular(20.r),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -375,24 +467,26 @@ class _RecipeChip extends StatelessWidget {
           ClipRRect(
             borderRadius: BorderRadius.circular(10.r),
             child: recipe.image != null && recipe.image!.isNotEmpty
-              ? CachedNetworkImage(
-                  imageUrl: recipe.image!,
-                  width: 20.w,
-                  height: 20.w,
-                  fit: BoxFit.cover,
-                  errorWidget: (_, __, ___) => Container(
-                    width: 20.w,
-                    height: 20.w,
-                    color: const Color(0xFFD1D5DB),
-                    child: Icon(Icons.fastfood_rounded, size: 12.sp, color: Colors.white),
+                ? CachedNetworkImage(
+                    imageUrl: recipe.image!,
+                    width: 22.w,
+                    height: 22.w,
+                    fit: BoxFit.cover,
+                    errorWidget: (_, __, ___) => Container(
+                      width: 22.w,
+                      height: 22.w,
+                      color: const Color(0xFFCBD5E1),
+                      child: Icon(Icons.fastfood_rounded,
+                          size: 12.sp, color: Colors.white),
+                    ),
+                  )
+                : Container(
+                    width: 22.w,
+                    height: 22.w,
+                    color: const Color(0xFFCBD5E1),
+                    child: Icon(Icons.fastfood_rounded,
+                        size: 12.sp, color: Colors.white),
                   ),
-                )
-              : Container(
-                  width: 20.w,
-                  height: 20.w,
-                  color: const Color(0xFFD1D5DB),
-                  child: Icon(Icons.fastfood_rounded, size: 12.sp, color: Colors.white),
-                ),
           ),
           SizedBox(width: 6.w),
           Flexible(
@@ -402,15 +496,17 @@ class _RecipeChip extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 fontSize: 13.sp,
-                color: const Color(0xFF374151),
-                fontWeight: FontWeight.w500,
+                color: const Color(0xFF0F172A),
+                fontFamily: 'Rubik',
+                fontWeight: FontWeight.w600,
               ),
             ),
           ),
-          SizedBox(width: 4.w),
+          SizedBox(width: 6.w),
           GestureDetector(
             onTap: onRemove,
-            child: Icon(Icons.close_rounded, size: 14.sp, color: const Color(0xFF9CA3AF)),
+            child: Icon(Icons.close_rounded,
+                size: 16.sp, color: const Color(0xFF64748B)),
           ),
         ],
       ),
@@ -421,7 +517,8 @@ class _RecipeChip extends StatelessWidget {
 class _InlineRecipePicker extends StatefulWidget {
   final List<Recipe> alreadySelected;
   final Function(List<Recipe>) onSelected;
-  const _InlineRecipePicker({required this.alreadySelected, required this.onSelected});
+  const _InlineRecipePicker(
+      {required this.alreadySelected, required this.onSelected});
 
   @override
   State<_InlineRecipePicker> createState() => _InlineRecipePickerState();
@@ -465,14 +562,26 @@ class _InlineRecipePickerState extends State<_InlineRecipePicker> {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        const Divider(),
+        const Divider(color: Color(0xFFF1F5F9)),
         if (_loading)
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: 20),
             child: SkeletonList(height: 60, itemCount: 8),
           )
         else if (_allRecipes == null || _allRecipes!.isEmpty)
-          const Center(child: Padding(padding: EdgeInsets.all(40), child: Text('No recipes found')))
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.all(40),
+              child: Text(
+                'No recipes found',
+                style: TextStyle(
+                  fontFamily: 'Rubik',
+                  color: const Color(0xFF64748B),
+                  fontSize: 14.sp,
+                ),
+              ),
+            ),
+          )
         else
           ListView.builder(
             shrinkWrap: true,
@@ -486,53 +595,72 @@ class _InlineRecipePickerState extends State<_InlineRecipePicker> {
               final isSelected = _selected.any((x) => x.id == r.id);
 
               return ListTile(
-                onTap: isAlready ? null : () {
-                  setState(() {
-                    if (isSelected) {
-                      _selected.removeWhere((x) => x.id == r.id);
-                    } else {
-                      _selected.add(r);
-                    }
-                  });
-                  widget.onSelected(_selected);
-                },
+                onTap: isAlready
+                    ? null
+                    : () {
+                        setState(() {
+                          if (isSelected) {
+                            _selected.removeWhere((x) => x.id == r.id);
+                          } else {
+                            _selected.add(r);
+                          }
+                        });
+                        widget.onSelected(_selected);
+                      },
                 leading: ClipRRect(
-                  borderRadius: BorderRadius.circular(8.r),
+                  borderRadius: BorderRadius.circular(10.r),
                   child: r.image != null && r.image!.isNotEmpty
-                    ? CachedNetworkImage(
-                        imageUrl: r.image!,
-                        width: 48.w,
-                        height: 48.w,
-                        fit: BoxFit.cover,
-                        errorWidget: (_, __, ___) => Container(
+                      ? CachedNetworkImage(
+                          imageUrl: r.image!,
                           width: 48.w,
                           height: 48.w,
-                          color: const Color(0xFFF3F4F6),
-                          child: Icon(Icons.fastfood_rounded, size: 20.sp, color: const Color(0xFFD1D5DB)),
+                          fit: BoxFit.cover,
+                          errorWidget: (_, __, ___) => Container(
+                            width: 48.w,
+                            height: 48.w,
+                            color: const Color(0xFFF1F5F9),
+                            child: Icon(Icons.fastfood_rounded,
+                                size: 20.sp, color: const Color(0xFF94A3B8)),
+                          ),
+                        )
+                      : Container(
+                          width: 48.w,
+                          height: 48.w,
+                          color: const Color(0xFFF1F5F9),
+                          child: Icon(Icons.fastfood_rounded,
+                              size: 20.sp, color: const Color(0xFF94A3B8)),
                         ),
-                      )
-                    : Container(
-                        width: 48.w,
-                        height: 48.w,
-                        color: const Color(0xFFF3F4F6),
-                        child: Icon(Icons.fastfood_rounded, size: 20.sp, color: const Color(0xFFD1D5DB)),
-                      ),
                 ),
                 title: Text(
                   r.name.toTitleCase(),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontWeight: FontWeight.w600),
+                  style: TextStyle(
+                    fontFamily: 'Rubik',
+                    fontWeight: FontWeight.w700,
+                    fontSize: 15.sp,
+                    color: const Color(0xFF0F172A),
+                  ),
                 ),
-                subtitle: Text('${r.cookTime} min • ${r.kcal} kcal'),
+                subtitle: Text(
+                  '${r.cookTime} min • ${r.kcal} kcal',
+                  style: TextStyle(
+                    fontFamily: 'Rubik',
+                    fontSize: 12.sp,
+                    color: const Color(0xFF64748B),
+                  ),
+                ),
                 trailing: isAlready
                     ? const Icon(
                         Icons.check_circle_rounded,
-                        color: Colors.grey,
+                        color: Color(0xFFCBD5E1),
                       )
                     : Checkbox(
                         value: isSelected,
                         activeColor: const Color(0xFFC83A2D),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(4.r),
+                        ),
                         onChanged: (val) {
                           setState(() {
                             if (val == true) {

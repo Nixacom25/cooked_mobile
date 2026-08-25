@@ -17,7 +17,7 @@ class FrustrationsStep extends StatelessWidget {
   Widget build(BuildContext context) {
     return SelectionOnboardingStep(
       title: "What's holding you back from cooking more?",
-      subtitle: 'Choose the ones that feels most true.',
+      subtitle: 'Choose the ones that feel most true',
       maxSelections: 3,
       onContinue: onContinue,
       initialSelected: initialSelected,

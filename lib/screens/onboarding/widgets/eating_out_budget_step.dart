@@ -24,7 +24,7 @@ class _EatingOutBudgetStepState extends State<EatingOutBudgetStep> {
   @override
   void initState() {
     super.initState();
-    _selectedValue = widget.initialSelected ?? '';
+    _selectedValue = widget.initialSelected ?? 'under_50';
   }
 
   int _calculateSpend(String value) {
@@ -34,60 +34,72 @@ class _EatingOutBudgetStepState extends State<EatingOutBudgetStep> {
       case '100_250': return 175;
       case '250_500': return 375;
       case 'over_500': return 650;
-      default: return 0;
+      default: return 40;
     }
   }
 
   Widget _buildBottomCard(int spend) {
     final savings = (spend * 52 * 0.30).round();
-    final formattedSavings = savings.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},');
+    final formattedSavings = savings.toString().replaceAllMapped(
+      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), 
+      (Match m) => '${m[1]},'
+    );
 
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 20.h),
+      width: double.infinity,
+      padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 16.h),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFF7ED),
-        borderRadius: BorderRadius.circular(20.r),
-        border: Border.all(color: const Color(0xFFFBE8D0), width: 1.5),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 15,
-            offset: const Offset(0, 4),
-          )
-        ],
+        color: const Color(0xFFFAF4E5),
+        borderRadius: BorderRadius.circular(16.r),
       ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Potential Yearly Savings', 
-                  style: TextStyle(color: const Color(0xFF7D562D), fontSize: 13.sp, fontFamily: 'SF Pro'),
-                ),
-                SizedBox(height: 8.h),
-                RichText(
-                  text: TextSpan(
-                    style: TextStyle(color: const Color(0xFF111827), fontSize: 16.sp, fontFamily: 'SF Pro'),
-                    children: [
-                      const TextSpan(text: 'That could be over\n'),
-                      TextSpan(
-                        text: '\$$formattedSavings', 
-                        style: TextStyle(color: const Color(0xFF00C40A), fontSize: 32.sp, fontWeight: FontWeight.w800, height: 1.2),
-                      ),
-                      TextSpan(
-                        text: ' /year',
-                        style: TextStyle(fontSize: 14.sp),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+          Text(
+            'Potential Yearly Savings', 
+            style: TextStyle(
+              color: const Color(0xFF334155), 
+              fontSize: 14.sp, 
+              fontFamily: 'Rubik',
+              fontWeight: FontWeight.w700,
             ),
           ),
-          Image.asset('assets/images/logo2.png', width: 48.w, height: 48.w),
+          SizedBox(height: 8.h),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.baseline,
+            textBaseline: TextBaseline.alphabetic,
+            children: [
+              Text(
+                '~\$$formattedSavings',
+                style: TextStyle(
+                  color: const Color(0xFF16A34A),
+                  fontSize: 28.sp,
+                  fontWeight: FontWeight.w800,
+                  fontFamily: 'Rubik',
+                ),
+              ),
+              SizedBox(width: 6.w),
+              Text(
+                '/year',
+                style: TextStyle(
+                  color: const Color(0xFF64748B),
+                  fontSize: 14.sp,
+                  fontFamily: 'SF Pro',
+                  fontWeight: FontWeight.w400,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 4.h),
+          Text(
+            'That could be over',
+            style: TextStyle(
+              color: const Color(0xFF64748B),
+              fontSize: 13.sp,
+              fontFamily: 'SF Pro',
+              fontWeight: FontWeight.w400,
+            ),
+          ),
         ],
       ),
     );
@@ -97,22 +109,22 @@ class _EatingOutBudgetStepState extends State<EatingOutBudgetStep> {
   Widget build(BuildContext context) {
     return SelectionOnboardingStep(
       title: 'How much do you spend eating out every week?',
-      subtitle: 'Take your best guess.\nWe\'ll do the math.',
+      subtitle: 'Take your best guess. We’ll do the math',
       maxSelections: 1,
       useGrid: true,
-      initialSelected: _selectedValue.isNotEmpty ? [_selectedValue] : [],
+      initialSelected: [_selectedValue],
       onContinue: () {
         final spend = _calculateSpend(_selectedValue);
         widget.onContinue((spend * 52 * 0.30).round());
       },
       onSelectionChanged: (selections) {
-        final newVal = selections.isNotEmpty ? selections.first : '';
+        final newVal = selections.isNotEmpty ? selections.first : 'under_50';
         setState(() => _selectedValue = newVal);
         if (widget.onChanged != null) {
           widget.onChanged!(newVal);
         }
       },
-      bottomCardWidget: _selectedValue.isEmpty ? null : _buildBottomCard(_calculateSpend(_selectedValue)),
+      bottomCardWidget: _buildBottomCard(_calculateSpend(_selectedValue)),
       options: [
         SelectionOption(id: 'under_50', label: 'Under \$50'),
         SelectionOption(id: '50_100', label: '\$50–100'),

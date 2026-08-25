@@ -1,24 +1,18 @@
 import 'home/home_screen.dart';
 import 'dart:async';
-import 'dart:ui';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:cooked/core/widgets/ios_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../widgets/app_search_field.dart';
+import '../widgets/app_top_header.dart';
+import '../widgets/saved_recipe_card.dart';
 import '../routes/app_routes.dart';
 import '../services/recipe_service.dart';
 import '../models/recipe.dart';
 import '../models/view_all_type.dart';
-import '../widgets/skeleton_loader.dart';
-import '../widgets/recipe_grid_skeleton.dart';
-import '../widgets/recipe_card.dart';
-import '../core/extensions/string_extensions.dart';
-import '../widgets/add_to_cookbook_sheet.dart';
-import '../core/utils/error_helper.dart';
 
 // ══════════════════════════════════════════════════════════════════════════════
-// EXPLORE SCREEN (Backend Driven)
+// EXPLORE SCREEN (Full Width Cards Parity with Home & Reusable Components)
 // ══════════════════════════════════════════════════════════════════════════════
 class ExploreScreen extends StatefulWidget {
   const ExploreScreen({super.key});
@@ -31,7 +25,6 @@ class _ExploreScreenState extends State<ExploreScreen>
     with SingleTickerProviderStateMixin {
   final _searchCtrl = TextEditingController();
   final _overlaySearchCtrl = TextEditingController();
-  bool _isSearching = false;
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   OverlayEntry? _searchOverlayEntry;
@@ -39,9 +32,6 @@ class _ExploreScreenState extends State<ExploreScreen>
   late Future<List<Map<String, dynamic>>> _cuisinesFuture;
   late Future<List<Map<String, dynamic>>> _categoriesFuture;
   late Future<List<Recipe>> _popularFuture;
-  List<Recipe> _allPopularRecipes = [];
-  List<Recipe> _allExploreRecipes = [];
-  final List<Recipe> _recentRecipes = [];
   Timer? _refreshTimer;
 
   int _refreshTimestamp = DateTime.now().millisecondsSinceEpoch;
@@ -62,14 +52,6 @@ class _ExploreScreenState extends State<ExploreScreen>
       _categoriesFuture = RecipeService.instance.getExploreCategories(forceRefresh: force);
       _popularFuture = RecipeService.instance.getPopularRecipes(size: 10, forceRefresh: force);
     });
-
-    RecipeService.instance.getExploreRecipes(size: 100, forceRefresh: force).then((recipes) {
-      if (mounted) {
-        setState(() {
-          _allExploreRecipes = recipes;
-        });
-      }
-    }).catchError((_) {});
   }
 
   @override
@@ -77,15 +59,12 @@ class _ExploreScreenState extends State<ExploreScreen>
     super.initState();
     _refreshData(force: false);
 
-    // Listen to tab switches to trigger live update
     HomeScreen.activeTabNotifier.addListener(_onTabChanged);
 
-    // Revalidate from network in the background on entry to get latest Cloudinary image updates
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _refreshData(force: true);
     });
 
-    // Live automatic updates every 5 minutes
     _refreshTimer = Timer.periodic(const Duration(minutes: 5), (_) {
       _refreshData(force: true);
     });
@@ -106,19 +85,13 @@ class _ExploreScreenState extends State<ExploreScreen>
 
   void _toggleSearch(bool searching) {
     if (searching) {
-      setState(() {
-        _isSearching = true;
-      });
       _animationController.forward();
       _showOverlay();
     } else {
       _animationController.reverse().then((_) {
         if (mounted) {
-          setState(() {
-            _isSearching = false;
-            _searchCtrl.clear();
-            _overlaySearchCtrl.clear();
-          });
+          _searchCtrl.clear();
+          _overlaySearchCtrl.clear();
           _removeOverlay();
         }
       });
@@ -154,639 +127,550 @@ class _ExploreScreenState extends State<ExploreScreen>
     super.dispose();
   }
 
-
-  void _handleValidation(Recipe r, bool isSaved) {
-    if (isSaved) {
-      IosToast.show(
-        context,
-        message: "Already in your recipes",
-        type: ToastType.success,
-      );
-      return;
-    }
-
-    // 1. Optimistic Save immediately 'In Direct'
-    RecipeService.instance.validateRecipe(r.id).catchError((e) {
-      if (mounted) {
-        IosToast.show(context, message: ErrorHelper.getFriendlyMessage(e), type: ToastType.error);
-      }
-      return r;
-    });
-    _updateLocalStateForValidation(r);
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => AddToCookbookSheet(
-        recipe: r,
-        onSuccess: () => _updateLocalStateForValidation(r),
-      ),
-    );
-  }
-
-  void _updateLocalStateForValidation(Recipe r) {
-    if (!mounted) return;
-    
-    final validatedRecipe = r.copyWith(origin: 'MANUAL', isValidated: true, isSuggested: false);
-
-    // Update global state via notifiers
-    final currentSaved = RecipeService.instance.myRecipesNotifier.value ?? [];
-    if (!currentSaved.any((item) => item.id == r.id)) {
-      RecipeService.instance.myRecipesNotifier.value = [validatedRecipe, ...currentSaved];
-    }
-
-    // Refresh backgrounds
-    RecipeService.instance.getMyRecipes(forceRefresh: true).catchError((_) => <Recipe>[]);
-    RecipeService.instance.getPopularRecipes(forceRefresh: true).catchError((_) => <Recipe>[]);
-    
-    setState(() {}); // Local refresh
-  }
-
   Future<void> _handleRefresh() async {
     _refreshData(force: true);
-    await Future.wait([
+    await Future.wait<dynamic>([
       _cuisinesFuture,
       _categoriesFuture,
       _popularFuture,
-    ]).catchError((_) => []);
+    ]).catchError((_) => <dynamic>[]);
   }
+
+  static const List<Map<String, String>> _filterTags = [
+    {"icon": "🍝", "name": "Italian"},
+    {"icon": "🥗", "name": "Healthy"},
+    {"icon": "🌱", "name": "Vegetarian"},
+    {"icon": "🥐", "name": "Bakery"},
+    {"icon": "🍗", "name": "Poultry"},
+  ];
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        Scaffold(
-          backgroundColor: Colors.white,
-          resizeToAvoidBottomInset: false,
-          body: RefreshIndicator(
-            onRefresh: _handleRefresh,
-            color: const Color(0xFFC83A2D),
-            child: ListView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              padding: EdgeInsets.only(bottom: 120.h),
-              children: [
-                _buildHeader(),
-                SizedBox(height: 20.h),
-                if (_searchCtrl.text.isEmpty) ...[
-                  _buildBrowseByCuisine(),
-                  SizedBox(height: 20.h),
-                  _buildPopularCategories(),
-                ],
-                _buildPopularNow(),
-                SizedBox(height: 50.h),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  // ── Header (Gradient + Search) ──────────────────────────────────────────────
-  Widget _buildHeader() {
     return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.vertical(bottom: Radius.circular(20.r)),
-        image: const DecorationImage(
-          image: AssetImage('assets/images/explore.png'),
-          fit: BoxFit.cover,
-        ),
-      ),
-      child: Container(
-        padding: EdgeInsets.only(
-          top: 60.h,
-          bottom: 20.h,
-          left: 20.w,
-          right: 20.w,
-        ),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.vertical(bottom: Radius.circular(20.r)),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Explore',
-              style: TextStyle(
-                fontFamily: 'SF Pro',
-                fontWeight: FontWeight.w800,
-                fontSize: 24.sp,
-                color: Colors.white,
+      color: const Color(0xFFF0F1F3),
+      child: SafeArea(
+        bottom: false,
+        child: RefreshIndicator(
+          onRefresh: _handleRefresh,
+          color: const Color(0xFFC31E26),
+          child: CustomScrollView(
+            physics: const BouncingScrollPhysics(),
+            slivers: [
+              // 1. Shared App Header (Home, Explore, Grocery, Import)
+              const SliverToBoxAdapter(
+                child: AppTopHeader(),
               ),
-            ),
-            SizedBox(height: 20.h),
-            Opacity(
-              opacity: (_isSearching || _animationController.isAnimating)
-                  ? 0.0
-                  : 1.0,
-              child: GestureDetector(
-                onTap: () => _toggleSearch(true),
-                child: AbsorbPointer(
-                  child: AppSearchField(
-                    controller: _searchCtrl,
-                    hintText: 'Search recipes, ingredients....',
-                  ),
+
+              // 2. Sticky Header (Explore Title, Search Field, Filter Suggestions)
+              SliverPersistentHeader(
+                pinned: true,
+                delegate: _StickyExploreHeaderDelegate(
+                  onSearchTap: () => _toggleSearch(true),
+                  filterTags: _filterTags,
                 ),
               ),
-            ),
-          ],
+
+              // 3. Main Body Content
+              SliverPadding(
+                padding: EdgeInsets.only(bottom: 140.h),
+                sliver: SliverList(
+                  delegate: SliverChildListDelegate([
+                    // Bottom half of Explore Card ("For You" section)
+                    _buildForYouSectionCard(),
+
+                    SizedBox(height: 14.h),
+
+                    // Section 2: Cuisines Card (Full Width like Home)
+                    _buildCuisinesSectionCard(),
+
+                    SizedBox(height: 14.h),
+
+                    // Section 3: Popular Now Card (Full Width like Home & Shared Recipe Cards)
+                    _buildPopularNowSectionCard(),
+                  ]),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  // ── Browse by Cuisine ───────────────────────────────────────────────────────
-  Widget _buildBrowseByCuisine() {
-    return FutureBuilder<List<Map<String, dynamic>>>(
-      future: _cuisinesFuture,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+  // ── Section 1 (Bottom): "For You" Categories Card (Full Width) ──────────────
+  Widget _buildForYouSectionCard() {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 20.h),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(
+          bottom: Radius.circular(24.r),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // "For You" Section (Categories)
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _SectionHeader(title: 'Browse by Cuisine', onViewAll: () {}),
-              SizedBox(height: 8.h),
-              SizedBox(
-                height: 90.h,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  padding: EdgeInsets.symmetric(horizontal: 20.w),
-                  itemCount: 5,
-                  itemBuilder: (_, __) => Padding(
-                    padding: EdgeInsets.only(right: 15.w),
-                    child: Column(
-                      children: [
-                        SkeletonLoader(
-                          width: 65.w,
-                          height: 65.h,
-                          borderRadius: 32.5,
-                        ),
-                        SizedBox(height: 5.h),
-                        SkeletonLoader(width: 50.w, height: 12.h),
-                      ],
-                    ),
+              Text(
+                "For You",
+                style: TextStyle(
+                  fontFamily: 'Rubik',
+                  fontSize: 18.sp,
+                  fontWeight: FontWeight.w800,
+                  color: const Color(0xFF0F172A),
+                ),
+              ),
+              GestureDetector(
+                onTap: () {
+                  Navigator.pushNamed(
+                    context,
+                    AppRoutes.viewAll,
+                    arguments: {
+                      'type': ViewAllType.exploreCategories,
+                      'title': 'Popular Categories',
+                    },
+                  );
+                },
+                child: Text(
+                  "View All",
+                  style: TextStyle(
+                    fontFamily: 'Rubik',
+                    fontSize: 14.sp,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFFC31E26),
                   ),
                 ),
               ),
             ],
-          );
-        }
-        if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return const SizedBox.shrink();
-        }
-        final filteredList = snapshot.data!;
+          ),
 
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _SectionHeader(
-              title: 'Browse by Cuisine',
-              onViewAll: () {
-                Navigator.pushNamed(
-                  context,
-                  AppRoutes.viewAll,
-                  arguments: {
-                    'type': ViewAllType.exploreCuisines,
-                    'title': 'Browse by Cuisine',
-                  },
-                );
-              },
-            ),
-            SizedBox(height: 8.h),
-            SizedBox(
-              height: 90.h,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                padding: EdgeInsets.symmetric(horizontal: 20.w),
-                itemCount: filteredList.length,
-                itemBuilder: (context, i) {
-                  final item = filteredList[i];
-                  final name = item['name'] as String;
-                  final imageUrl = item['image'] as String?;
-                  final bustedImageUrl = _bustedUrl(imageUrl);
+          SizedBox(height: 14.h),
 
-                  return Padding(
-                    padding: EdgeInsets.only(right: 15.w),
-                    child: GestureDetector(
+          // For You Cards (First 2 categories displayed dynamically)
+          FutureBuilder<List<Map<String, dynamic>>>(
+            future: _categoriesFuture,
+            builder: (context, snapshot) {
+              final categories = snapshot.data ?? [];
+              
+              final List<Map<String, String>> fallbackCategories = [
+                {
+                  "name": "Autumn's Favorite",
+                  "count": "18 recipes",
+                  "image": "assets/images/explore_autumn.png",
+                },
+                {
+                  "name": "Spring Delights",
+                  "count": "24 recipes",
+                  "image": "assets/images/explore_summer.png",
+                },
+              ];
+
+              final cat1 = categories.isNotEmpty ? categories[0] : null;
+              final cat2 = categories.length > 1 ? categories[1] : null;
+
+              final name1 = cat1 != null ? (cat1['name'] as String? ?? "Autumn's Favorite") : fallbackCategories[0]["name"]!;
+              final count1 = cat1 != null ? "${cat1['recipeCount'] ?? 18} recipes" : fallbackCategories[0]["count"]!;
+              final img1 = cat1 != null ? (cat1['image'] as String? ?? fallbackCategories[0]["image"]!) : fallbackCategories[0]["image"]!;
+
+              final name2 = cat2 != null ? (cat2['name'] as String? ?? "Spring Delights") : fallbackCategories[1]["name"]!;
+              final count2 = cat2 != null ? "${cat2['recipeCount'] ?? 24} recipes" : fallbackCategories[1]["count"]!;
+              final img2 = cat2 != null ? (cat2['image'] as String? ?? fallbackCategories[1]["image"]!) : fallbackCategories[1]["image"]!;
+
+              return Row(
+                children: [
+                  Expanded(
+                    child: _buildCategoryCard(
+                      title: name1,
+                      subtitle: count1,
+                      imagePath: img1,
                       onTap: () {
                         Navigator.pushNamed(
                           context,
                           AppRoutes.viewAll,
                           arguments: {
-                            'type': ViewAllType.exploreRecipesByCuisine,
-                            'title': name,
-                            'cuisine': name,
+                            'type': ViewAllType.exploreRecipesByCategory,
+                            'title': name1,
+                            'category': name1,
                           },
                         );
                       },
-                      child: Column(
-                        children: [
-                          Container(
-                            width: 65.w,
-                            height: 65.h,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.1),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ],
-                              color: const Color(0xFFF2F1EF),
-                            ),
-                            child: ClipOval(
-                              child: bustedImageUrl.isNotEmpty
-                                  ? CachedNetworkImage(
-                                      imageUrl: bustedImageUrl,
-                                      cacheKey: imageUrl,
-                                      fit: BoxFit.cover,
-                                      placeholder: (context, url) => const Center(
-                                        child: SizedBox(
-                                          width: 16,
-                                          height: 16,
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2,
-                                            color: Color(0xFFC83A2D),
-                                          ),
-                                        ),
-                                      ),
-                                      errorWidget: (context, url, error) => Center(
-                                        child: Icon(
-                                          Icons.restaurant_menu,
-                                          color: const Color(0xFFC83A2D),
-                                          size: 24.sp,
-                                        ),
-                                      ),
-                                    )
-                                  : Center(
-                                      child: Icon(
-                                        Icons.restaurant_menu,
-                                        color: const Color(0xFFC83A2D),
-                                        size: 24.sp,
-                                      ),
-                                    ),
-                            ),
-                          ),
-                          SizedBox(height: 5.h),
-                          Text(
-                            name.toTitleCase(),
-                            style: TextStyle(
-                              fontFamily: 'SF Pro',
-                              fontWeight: FontWeight.w700,
-                              fontSize: 12.sp,
-                              color: const Color(0xFF191C1E),
-                            ),
-                          ),
-                        ],
-                      ),
                     ),
-                  );
-                },
-              ),
-            ),
-          ],
-        );
-      },
+                  ),
+                  SizedBox(width: 14.w),
+                  Expanded(
+                    child: _buildCategoryCard(
+                      title: name2,
+                      subtitle: count2,
+                      imagePath: img2,
+                      onTap: () {
+                        Navigator.pushNamed(
+                          context,
+                          AppRoutes.viewAll,
+                          arguments: {
+                            'type': ViewAllType.exploreRecipesByCategory,
+                            'title': name2,
+                            'category': name2,
+                          },
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
     );
   }
 
-  // ── Popular Categories ──────────────────────────────────────────────────────
-  Widget _buildPopularCategories() {
-    return FutureBuilder<List<Map<String, dynamic>>>(
-      future: _categoriesFuture,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _SectionHeader(title: 'Popular Categories', onViewAll: () {}),
-              SizedBox(height: 8.h),
-              SizedBox(
-                height: 200.h,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  padding: EdgeInsets.symmetric(horizontal: 20.w),
-                  itemCount: 3,
-                  itemBuilder: (_, __) => Container(
-                    width: 160.w,
-                    margin: EdgeInsets.only(right: 16.w),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        SkeletonLoader(
-                          width: 160.w,
-                          height: 130.h,
-                          borderRadius: 16,
+  Widget _buildCategoryCard({
+    required String title,
+    required String subtitle,
+    required String imagePath,
+    required VoidCallback onTap,
+  }) {
+    final isNetwork = imagePath.startsWith('http');
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          color: const Color(0xFFFAF6EE),
+          borderRadius: BorderRadius.circular(24.r),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(24.r),
+              child: SizedBox(
+                height: 130.h,
+                width: double.infinity,
+                child: isNetwork
+                    ? CachedNetworkImage(
+                        imageUrl: _bustedUrl(imagePath),
+                        fit: BoxFit.cover,
+                        placeholder: (_, __) => Container(color: Colors.grey[200]),
+                        errorWidget: (_, __, ___) => Image.asset(
+                          'assets/images/explore_autumn.png',
+                          fit: BoxFit.cover,
                         ),
-                        SizedBox(height: 10.h),
-                        SkeletonLoader(width: 120.w, height: 14.h),
-                        SizedBox(height: 4.h),
-                        SkeletonLoader(width: 80.w, height: 12.h),
-                      ],
+                      )
+                    : Image.asset(
+                        imagePath,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => Container(
+                          color: Colors.grey[200],
+                          child: Icon(Icons.restaurant, color: Colors.grey[400]),
+                        ),
+                      ),
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.all(12.r),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontFamily: 'Rubik',
+                      fontSize: 14.sp,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF0F172A),
                     ),
+                  ),
+                  SizedBox(height: 4.h),
+                  Text(
+                    subtitle,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontFamily: 'Rubik',
+                      fontSize: 11.sp,
+                      fontWeight: FontWeight.w400,
+                      color: const Color(0xFF64748B),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ── Section 2: Cuisines Card (Full Width) ───────────────────────────────────
+  Widget _buildCuisinesSectionCard() {
+    final List<Map<String, String>> fallbackCuisines = [
+      {"name": "Italian", "count": "21 recipes", "image": "assets/images/italian.png"},
+      {"name": "Mexican", "count": "28 recipes", "image": "assets/images/mexican.png"},
+      {"name": "Asian", "count": "17 recipes", "image": "assets/images/chinese.png"},
+      {"name": "Indian", "count": "32 recipes", "image": "assets/images/indian.png"},
+    ];
+
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.fromLTRB(16.w, 20.h, 16.w, 20.h),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24.r),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                "Cuisines",
+                style: TextStyle(
+                  fontFamily: 'Rubik',
+                  fontSize: 18.sp,
+                  fontWeight: FontWeight.w800,
+                  color: const Color(0xFF0F172A),
+                ),
+              ),
+              GestureDetector(
+                onTap: () {
+                  Navigator.pushNamed(
+                    context,
+                    AppRoutes.viewAll,
+                    arguments: {
+                      'type': ViewAllType.exploreCuisines,
+                      'title': 'Cuisines',
+                    },
+                  );
+                },
+                child: Text(
+                  "View All",
+                  style: TextStyle(
+                    fontFamily: 'Rubik',
+                    fontSize: 14.sp,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFFC31E26),
                   ),
                 ),
               ),
             ],
-          );
-        }
-        if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return const SizedBox.shrink();
-        }
-        final filteredList = snapshot.data!;
+          ),
 
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _SectionHeader(
-              title: 'Popular Categories',
-              onViewAll: () {
-                Navigator.pushNamed(
-                  context,
-                  AppRoutes.viewAll,
-                  arguments: {
-                    'type': ViewAllType.exploreCategories,
-                    'title': 'Popular Categories',
-                  },
-                );
-              },
-            ),
-            SizedBox(height: 8.h),
-            SizedBox(
-              height: 200.h,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                padding: EdgeInsets.zero,
-                itemCount: filteredList.length,
-                itemBuilder: (context, i) {
-                  final item = filteredList[i];
-                  final name = item['name'] as String;
-                  final count = item['recipeCount'] ?? 0;
-                  final imageUrl = item['image'] as String?;
-                  final bustedImageUrl = _bustedUrl(imageUrl);
-                  return GestureDetector(
-                    onTap: () {
-                      Navigator.pushNamed(
-                        context,
-                        AppRoutes.viewAll,
-                        arguments: {
-                          'type': ViewAllType.exploreRecipesByCategory,
-                          'title': name,
-                          'category': name,
-                        },
-                      );
-                    },
-                    child: Container(
-                      width: 160.w,
-                      margin: EdgeInsets.only(
-                        left: i == 0 ? 20.w : 0,
-                        right: 16.w,
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(16.r),
-                            child: bustedImageUrl.isNotEmpty
-                                ? CachedNetworkImage(
-                                    imageUrl: bustedImageUrl,
-                                    cacheKey: imageUrl,
-                                    width: 160.w,
-                                    height: 130.h,
-                                    fit: BoxFit.cover,
-                                    placeholder: (context, url) => SkeletonLoader(
-                                      width: 160.w,
-                                      height: 130.h,
-                                      borderRadius: 16,
-                                    ),
-                                    errorWidget: (context, url, error) =>
-                                        Image.asset(
-                                      'assets/images/others.png',
-                                      width: 160.w,
-                                      height: 130.h,
-                                      fit: BoxFit.cover,
-                                    ),
-                                  )
-                                : Image.asset(
-                                    'assets/images/others.png',
-                                    width: 160.w,
-                                    height: 130.h,
-                                    fit: BoxFit.cover,
-                                  ),
-                          ),
-                          SizedBox(height: 10.h),
-                          Text(
-                            name.toTitleCase(),
-                            maxLines: 2,
-                            style: TextStyle(
-                              fontFamily: 'SF Pro',
-                              fontWeight: FontWeight.w800,
-                              fontSize: 14.sp,
-                              color: const Color(0xFF222222),
-                              height: 1.2,
-                            ),
-                          ),
-                          SizedBox(height: 2.h),
-                          Row(
-                            children: [
-                              Icon(
-                                Icons.restaurant_menu,
-                                size: 13.sp,
-                                color: const Color(0xFF9CA3AF),
-                              ),
-                              SizedBox(width: 4.w),
-                              Text(
-                                '$count Recipes',
-                                style: TextStyle(
-                                  fontFamily: 'SF Pro',
-                                  fontSize: 11.sp,
-                                  color: const Color(0xFF9CA3AF),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
+          SizedBox(height: 16.h),
 
-  // ── Popular Now ─────────────────────────────────────────────────────────────
-  Widget _buildPopularNow() {
-    return FutureBuilder<List<Recipe>>(
-      future: _popularFuture,
-      builder: (context, snapshot) {
-        if (snapshot.hasError) {
-          return Padding(
-            padding: EdgeInsets.symmetric(vertical: 20.h, horizontal: 20.w),
-            child: Column(
-              children: [
-                const Icon(Icons.error_outline, color: Colors.grey),
-                SizedBox(height: 8.h),
-                Text(
-                  'Could not load popular recipes.',
-                  style: TextStyle(color: Colors.grey, fontSize: 13.sp),
-                ),
-                TextButton(
-                  onPressed: () {
-                    setState(() {
-                      _popularFuture = RecipeService.instance.getPopularRecipes(
-                        size: 10,
-                        forceRefresh: true,
-                      );
-                    });
-                  },
-                  child: const Text('Retry'),
-                ),
-              ],
-            ),
-          );
-        }
+          FutureBuilder<List<Map<String, dynamic>>>(
+            future: _cuisinesFuture,
+            builder: (context, snapshot) {
+              final list = (snapshot.hasData && snapshot.data!.isNotEmpty)
+                  ? snapshot.data!
+                  : fallbackCuisines;
 
-        if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 20.w),
-                child: const SkeletonLoader(width: 120, height: 18),
-              ),
-              SizedBox(height: 12.h),
-              const RecipeGridSkeleton(
-                itemCount: 4,
-                padding: EdgeInsets.symmetric(horizontal: 20),
-                childAspectRatio: 0.72,
-              ),
-            ],
-          );
-        }
+              return SizedBox(
+                height: 125.h,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: list.length,
+                  itemBuilder: (context, i) {
+                    final item = list[i];
+                    final name = (item['name'] as String?) ?? fallbackCuisines[i % fallbackCuisines.length]['name']!;
+                    final count = item['count'] != null
+                        ? item['count'].toString()
+                        : fallbackCuisines[i % fallbackCuisines.length]['count']!;
+                    final imgPath = item['image'] ?? fallbackCuisines[i % fallbackCuisines.length]['image']!;
+                    final isNetwork = imgPath is String && imgPath.startsWith('http');
 
-        final popular = snapshot.data ?? [];
-        if (_allPopularRecipes.isEmpty && popular.isNotEmpty) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (mounted) setState(() => _allPopularRecipes = popular);
-          });
-        }
-
-        final displayList = popular.length > 10
-            ? popular.sublist(0, 10)
-            : popular;
-
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20.w),
-              child: Text(
-                'Popular Now',
-                style: TextStyle(
-                  fontFamily: 'SF Pro',
-                  fontWeight: FontWeight.w800,
-                  fontSize: 18.sp,
-                  color: const Color(0xFF111827),
-                ),
-              ),
-            ),
-            SizedBox(height: 8.h),
-            if (displayList.isEmpty)
-              Padding(
-                padding: EdgeInsets.symmetric(vertical: 40.h),
-                child: const Center(child: Text('No recipes found.')),
-              )
-            else
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 20.w),
-                child: ValueListenableBuilder<List<Recipe>?>(
-                  valueListenable: RecipeService.instance.myRecipesNotifier,
-                  builder: (context, savedRecipes, _) {
-                    final savedIds = (savedRecipes ?? []).map((r) => r.id).toSet();
-                    final savedNames = (savedRecipes ?? [])
-                        .map((r) => r.name.toLowerCase())
-                        .toSet();
-
-                    return GridView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      padding: EdgeInsets.zero,
-                      itemCount: displayList.length,
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        crossAxisSpacing: 16.w,
-                        mainAxisSpacing: 20.h,
-                        childAspectRatio: 0.72,
-                      ),
-                      itemBuilder: (context, i) {
-                        final recipe = displayList[i];
-                      final isSaved = savedIds.contains(recipe.id) ||
-                          savedNames.contains(recipe.name.toLowerCase());
-
-                      return RecipeCard(
-                        recipe: recipe,
-                        rank: i + 1,
-                        useValidationIcon: true,
-                        isValidated: isSaved,
-                        animationDelay: Duration(milliseconds: i * 800),
-                        useExploreButton: true,
-                        disableSlide: true,
-                        onValidateTap: () => _handleValidation(recipe, isSaved),
+                    return Padding(
+                      padding: EdgeInsets.only(right: 18.w),
+                      child: GestureDetector(
                         onTap: () {
                           Navigator.pushNamed(
                             context,
-                            AppRoutes.recipeDetail,
+                            AppRoutes.viewAll,
                             arguments: {
-                              'recipe': recipe,
-                              'isPreview': !isSaved,
+                              'type': ViewAllType.exploreRecipesByCuisine,
+                              'title': name,
+                              'cuisine': name,
                             },
                           );
                         },
-                        onAddToCookbookTap: () {
-                          showModalBottomSheet(
-                            context: context,
-                            backgroundColor: Colors.transparent,
-                            isScrollControlled: true,
-                            builder: (_) => AddToCookbookSheet(recipe: recipe),
-                          );
-                        },
-                        onShareTap: () {
-                          // Share logic
-                        },
-                        onPinTap: isSaved
-                            ? () {
-                                // Pin logic
-                              }
-                            : null,
-                        onDeleteTap: isSaved
-                            ? () async {
-                                final success = await RecipeService.instance
-                                    .deleteRecipe(recipe.id);
-                                if (success && context.mounted) {
-                                  IosToast.show(
-                                    context,
-                                    message: 'Recipe deleted',
-                                    type: ToastType.success,
-                                  );
-                                }
-                              }
-                            : null,
-                      );
+                        child: Column(
+                          children: [
+                            Container(
+                              width: 72.r,
+                              height: 72.r,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: const Color(0xFFC31E26),
+                                  width: 2.5.w,
+                                ),
+                              ),
+                              child: ClipOval(
+                                child: isNetwork
+                                    ? CachedNetworkImage(
+                                        imageUrl: _bustedUrl(imgPath),
+                                        fit: BoxFit.cover,
+                                        placeholder: (_, __) => Container(color: Colors.grey[200]),
+                                        errorWidget: (_, __, ___) => Image.asset(
+                                          fallbackCuisines[i % fallbackCuisines.length]['image']!,
+                                          fit: BoxFit.cover,
+                                        ),
+                                      )
+                                    : Image.asset(
+                                        imgPath,
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (_, __, ___) => Container(
+                                          color: Colors.grey[200],
+                                          child: Icon(Icons.restaurant, color: Colors.grey[400]),
+                                        ),
+                                      ),
+                              ),
+                            ),
+                            SizedBox(height: 8.h),
+                            Text(
+                              name,
+                              style: TextStyle(
+                                fontFamily: 'Rubik',
+                                fontSize: 13.sp,
+                                fontWeight: FontWeight.w700,
+                                color: const Color(0xFF0F172A),
+                              ),
+                            ),
+                            SizedBox(height: 2.h),
+                            Text(
+                              count,
+                              style: TextStyle(
+                                fontFamily: 'Rubik',
+                                fontSize: 11.sp,
+                                fontWeight: FontWeight.w400,
+                                color: const Color(0xFF64748B),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── Section 3: Popular Now Card (Full Width & Shared Cards) ────────────────
+  Widget _buildPopularNowSectionCard() {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.fromLTRB(16.w, 20.h, 16.w, 20.h),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24.r),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                "Popular Now",
+                style: TextStyle(
+                  fontFamily: 'Rubik',
+                  fontSize: 18.sp,
+                  fontWeight: FontWeight.w800,
+                  color: const Color(0xFF0F172A),
+                ),
+              ),
+              GestureDetector(
+                onTap: () {
+                  Navigator.pushNamed(
+                    context,
+                    AppRoutes.viewAll,
+                    arguments: {
+                      'type': ViewAllType.explore,
+                      'title': 'Popular Now',
                     },
                   );
                 },
+                child: Text(
+                  "View All",
+                  style: TextStyle(
+                    fontFamily: 'Rubik',
+                    fontSize: 14.sp,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFFC31E26),
+                  ),
+                ),
               ),
-            ),
-          ],
-        );
-      },
+            ],
+          ),
+
+          SizedBox(height: 16.h),
+
+          // Using Reusable SavedRecipeCard (Extracted from Saved Recipes)
+          FutureBuilder<List<Recipe>>(
+            future: _popularFuture,
+            builder: (context, snapshot) {
+              final recipes = snapshot.data ?? [];
+
+              if (recipes.isNotEmpty) {
+                final displayList = recipes.take(3).toList();
+                return ListView.separated(
+                  padding: EdgeInsets.zero,
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: displayList.length,
+                  separatorBuilder: (_, __) => SizedBox(height: 12.h),
+                  itemBuilder: (ctx, i) {
+                    final r = displayList[i];
+                    return SavedRecipeCard(
+                      recipe: r,
+                      onTap: () {
+                        Navigator.pushNamed(
+                          context,
+                          AppRoutes.recipeDetail,
+                          arguments: {'recipe': r},
+                        );
+                      },
+                    );
+                  },
+                );
+              }
+
+              // High Fidelity Design Fallback Cards using the SAME SavedRecipeCard from Home
+              return Column(
+                children: [
+                  SavedRecipeCard(
+                    title: "Chicken Stir-Fry",
+                    time: "25 min",
+                    kcal: "317 kcal",
+                    image: "assets/images/plat4.png",
+                    onTap: () {},
+                  ),
+                  SizedBox(height: 12.h),
+                  SavedRecipeCard(
+                    title: "Tacos",
+                    time: "10 min",
+                    kcal: "217 kcal",
+                    image: "assets/images/plat3.png",
+                    onTap: () {},
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
     );
   }
 
@@ -795,355 +679,187 @@ class _ExploreScreenState extends State<ExploreScreen>
     return AnimatedBuilder(
       animation: _animationController,
       builder: (context, child) {
-        // Use a sharper curve for an even faster feel
-        final curvedValue = CurvedAnimation(
-          parent: _animationController,
-          curve: Curves.easeOutQuart,
-        ).value;
-
-        final topPos = lerpDouble(135.h, 100.h, curvedValue)!;
-        final horizontalPadding = lerpDouble(20.w, 12.w, curvedValue)!;
-        final borderRadius = lerpDouble(50.r, 32.r, curvedValue)!;
-        final screenHeight = MediaQuery.of(context).size.height;
-        final bottomLimit = topPos / 2; // User requested: bottom = top / 2
-        final maxModalHeight = screenHeight - topPos - bottomLimit;
-        
-        // Dynamic height: expand only if needed, but limited by maxModalHeight
-        final height = curvedValue < 1.0 
-            ? lerpDouble(50.h, 450.h, curvedValue)!
-            : maxModalHeight;
-        final bgColor = Color.lerp(
-          Colors.white,
-          const Color(0xFFF7F7F7),
-          curvedValue,
-        )!;
-
-        return Material(
-          color: Colors.transparent,
-          child: Stack(
-            children: [
-              // Backdrop Blur
-              GestureDetector(
-                onTap: () => _toggleSearch(false),
-                child: FadeTransition(
-                  opacity: _fadeAnimation,
-                  child: BackdropFilter(
-                    filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
-                    child: Container(color: Colors.black.withOpacity(0.3)),
-                  ),
-                ),
-              ),
-              // Expanding Search Card
-              Positioned(
-                top: topPos,
-                left: horizontalPadding,
-                right: horizontalPadding,
-                child: Container(
-                  constraints: BoxConstraints(maxHeight: height),
-                  padding: EdgeInsets.all(20.w),
-                  decoration: BoxDecoration(
-                    color: bgColor,
-                    borderRadius: BorderRadius.circular(borderRadius),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.08 * curvedValue),
-                        blurRadius: 20,
-                        offset: const Offset(0, 10),
-                      ),
-                    ],
-                  ),
-                  child: SingleChildScrollView(
-                    physics: curvedValue > 0.9
-                        ? const BouncingScrollPhysics()
-                        : const NeverScrollableScrollPhysics(),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
+        return FadeTransition(
+          opacity: _fadeAnimation,
+          child: Material(
+            color: Colors.white,
+            child: SafeArea(
+              child: Column(
+                children: [
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+                    child: Row(
                       children: [
-                        // Header when expanded
-                        if (curvedValue > 0.5)
-                          FadeTransition(
-                            opacity: _animationController,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Explore',
-                                  style: TextStyle(
-                                    fontFamily: 'SF Pro',
-                                    fontWeight: FontWeight.w800,
-                                    fontSize: 22.sp,
-                                    color: const Color(0xFF1A1A1A),
-                                  ),
-                                ),
-                                SizedBox(height: 16.h),
-                              ],
-                            ),
+                        Expanded(
+                          child: AppSearchField(
+                            controller: _overlaySearchCtrl,
+                            hintText: 'Search recipes...',
+                            onChanged: (val) {
+                              if (mounted) setState(() {});
+                            },
                           ),
-
-                        // The Search Input (Morphs size/style)
-                        AppSearchField(
-                          controller: _overlaySearchCtrl,
-                          hintText: curvedValue > 0.5
-                              ? 'Search recipes, ingredients...'
-                              : 'Start your search',
-                          backgroundColor: Colors.white,
-                          borderColor: curvedValue > 0.5
-                              ? const Color(0xFFDDDDDD)
-                              : Colors.transparent,
-                          onChanged: (val) {
-                            _searchOverlayEntry?.markNeedsBuild();
-                          },
                         ),
-
-                        if (curvedValue > 0.8)
-                          FadeTransition(
-                            opacity: _animationController,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                SizedBox(height: 24.h),
-                                if (_overlaySearchCtrl.text.length >= 3) ...[
-                                  Text(
-                                    'Search results',
-                                    style: TextStyle(
-                                      fontFamily: 'SF Pro',
-                                      fontWeight: FontWeight.w700,
-                                      fontSize: 14.sp,
-                                      color: const Color(0xFF1A1A1A),
-                                    ),
-                                  ),
-                                  SizedBox(height: 12.h),
-                                ],
-                                if (_overlaySearchCtrl.text.length < 3) ...[
-                                  Text(
-                                    'Recommended',
-                                    style: TextStyle(
-                                      fontFamily: 'SF Pro',
-                                      fontWeight: FontWeight.w700,
-                                      fontSize: 13.sp,
-                                      color: const Color(0xFF6B7280),
-                                    ),
-                                  ),
-                                  SizedBox(height: 10.h),
-                                  SizedBox(
-                                    height: 34.h,
-                                    child: ListView(
-                                      scrollDirection: Axis.horizontal,
-                                      physics: const BouncingScrollPhysics(),
-                                      children:
-                                          [
-                                                'Chicken',
-                                                'Beef',
-                                                'Fish',
-                                                'Dessert',
-                                                'Pasta',
-                                                'Vegetarian',
-                                                'Healthy',
-                                                'Breakfast',
-                                              ]
-                                              .map(
-                                                (tag) => GestureDetector(
-                                                  onTap: () {
-                                                    _overlaySearchCtrl.text = tag;
-                                                    _searchOverlayEntry
-                                                        ?.markNeedsBuild();
-                                                  },
-                                                  child: Container(
-                                                    margin: EdgeInsets.only(
-                                                      right: 8.w,
-                                                    ),
-                                                    padding:
-                                                        EdgeInsets.symmetric(
-                                                          horizontal: 14.w,
-                                                        ),
-                                                    alignment: Alignment.center,
-                                                    decoration: BoxDecoration(
-                                                      color: Colors.white,
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                            20.r,
-                                                          ),
-                                                      border: Border.all(
-                                                        color: const Color(
-                                                          0xFFEEEEEE,
-                                                        ),
-                                                      ),
-                                                    ),
-                                                    child: Text(
-                                                      tag,
-                                                      style: TextStyle(
-                                                        fontFamily: 'SF Pro',
-                                                        fontSize: 12.sp,
-                                                        fontWeight:
-                                                            FontWeight.w500,
-                                                        color: const Color(
-                                                          0xFF4B5563,
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ),
-                                              )
-                                              .toList(),
-                                    ),
-                                  ),
-                                  SizedBox(height: 20.h),
-                                  Text(
-                                    'Recents',
-                                    style: TextStyle(
-                                      fontFamily: 'SF Pro',
-                                      fontWeight: FontWeight.w700,
-                                      fontSize: 13.sp,
-                                      color: const Color(0xFF6B7280),
-                                    ),
-                                  ),
-                                  SizedBox(height: 8.h),
-                                ],
-                                if (_overlaySearchCtrl.text.length < 3)
-                                  ...(_recentRecipes.isEmpty
-                                      ? [
-                                          Text(
-                                            'No recent searches',
-                                            style: TextStyle(
-                                              fontSize: 12.sp,
-                                              color: Colors.grey,
-                                            ),
-                                          ),
-                                        ]
-                                      : _recentRecipes.map(
-                                          (r) => _buildRecentSearchItem(r),
-                                        ))
-                                else
-                                  ...(() {
-                                    final q = _overlaySearchCtrl.text
-                                        .toLowerCase();
-                                    final sourceList = _allExploreRecipes.isNotEmpty
-                                        ? _allExploreRecipes
-                                        : _allPopularRecipes;
-                                    final filtered = sourceList
-                                        .where(
-                                          (r) =>
-                                              r.name.toLowerCase().contains(q),
-                                        )
-                                        .toList();
-                                    if (filtered.isEmpty) {
-                                      return [
-                                        Text(
-                                          'No results found',
-                                          style: TextStyle(
-                                            fontSize: 12.sp,
-                                            color: Colors.grey,
-                                          ),
-                                        ),
-                                      ];
-                                    }
-                                    return filtered.map(
-                                      (r) => _buildRecentSearchItem(r),
-                                    );
-                                  }()),
-                              ],
+                        SizedBox(width: 10.w),
+                        GestureDetector(
+                          onTap: () => _toggleSearch(false),
+                          child: Text(
+                            "Cancel",
+                            style: TextStyle(
+                              fontFamily: 'Rubik',
+                              fontSize: 15.sp,
+                              fontWeight: FontWeight.w600,
+                              color: const Color(0xFFC31E26),
                             ),
                           ),
+                        ),
                       ],
                     ),
                   ),
-                ),
-              ),
-
-              // Close Button
-              Positioned(
-                top: MediaQuery.of(context).padding.top + 10.h,
-                right: 16.w,
-                child: FadeTransition(
-                  opacity: _fadeAnimation,
-                  child: GestureDetector(
-                    onTap: () => _toggleSearch(false),
-                    child: Container(
-                      padding: EdgeInsets.all(8.r),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
-                            blurRadius: 10,
-                          ),
-                        ],
-                      ),
-                      child: Icon(
-                        Icons.close,
-                        color: Colors.black87,
-                        size: 20.sp,
+                  const Divider(height: 1),
+                  Expanded(
+                    child: Center(
+                      child: Text(
+                        "Search results will appear here",
+                        style: TextStyle(
+                          fontFamily: 'Rubik',
+                          fontSize: 14.sp,
+                          color: const Color(0xFF94A3B8),
+                        ),
                       ),
                     ),
                   ),
-                ),
+                ],
               ),
-            ],
+            ),
           ),
         );
       },
     );
   }
+}
 
-  Widget _buildRecentSearchItem(Recipe recipe) {
-    return GestureDetector(
-      onTap: () {
-        if (!_recentRecipes.contains(recipe)) {
-          setState(() {
-            _recentRecipes.insert(0, recipe);
-            if (_recentRecipes.length > 5) _recentRecipes.removeLast();
-          });
-        }
-        _toggleSearch(false);
-        Navigator.pushNamed(
-          context,
-          AppRoutes.recipeDetail,
-          arguments: {'recipe': recipe},
-        );
-      },
-      child: Padding(
-        padding: EdgeInsets.only(bottom: 12.h),
-        child: Row(
+// ── Sticky Explore Header Delegate ──────────────────────────────────────────────
+class _StickyExploreHeaderDelegate extends SliverPersistentHeaderDelegate {
+  final VoidCallback onSearchTap;
+  final List<Map<String, String>> filterTags;
+
+  _StickyExploreHeaderDelegate({
+    required this.onSearchTap,
+    required this.filterTags,
+  });
+
+  @override
+  Widget build(
+      BuildContext context, double shrinkOffset, bool overlapsContent) {
+    final isPinned = shrinkOffset > 0;
+    return Container(
+      color: const Color(0xFFF0F1F3),
+      child: Container(
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: isPinned
+              ? BorderRadius.circular(24.r)
+              : BorderRadius.vertical(top: Radius.circular(24.r)),
+          boxShadow: isPinned
+              ? [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.08),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ]
+              : [],
+        ),
+        padding: EdgeInsets.fromLTRB(16.w, 14.h, 16.w, 10.h),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Container(
-              width: 48.w,
-              height: 48.w,
-              decoration: BoxDecoration(
-                color: const Color(0xFFF3F4F6),
-                borderRadius: BorderRadius.circular(12.r),
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(12.r),
-                child: _buildItemImage(recipe.image),
+            Text(
+              "Explore",
+              style: TextStyle(
+                fontFamily: 'Rubik',
+                fontSize: 22.sp,
+                fontWeight: FontWeight.w800,
+                color: const Color(0xFF0F172A),
               ),
             ),
-            SizedBox(width: 12.w),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    recipe.name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontFamily: 'SF Pro',
-                      fontWeight: FontWeight.w600,
-                      fontSize: 14.sp,
-                      color: const Color(0xFF1A1A1A),
-                    ),
+            SizedBox(height: 10.h),
+
+            // Search Field Bar
+            GestureDetector(
+              onTap: onSearchTap,
+              child: AbsorbPointer(
+                child: Container(
+                  height: 46.h,
+                  padding: EdgeInsets.symmetric(horizontal: 16.w),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF1F5F9),
+                    borderRadius: BorderRadius.circular(24.r),
                   ),
-                  Text(
-                    '${recipe.kcal} kcal • ${recipe.cookTime} min',
-                    style: TextStyle(
-                      fontFamily: 'SF Pro',
-                      fontSize: 12.sp,
-                      color: const Color(0xFF6B7280),
-                    ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.search_rounded,
+                        size: 20.sp,
+                        color: const Color(0xFF94A3B8),
+                      ),
+                      SizedBox(width: 10.w),
+                      Text(
+                        "Search your recipes",
+                        style: TextStyle(
+                          fontFamily: 'Rubik',
+                          fontSize: 15.sp,
+                          color: const Color(0xFF94A3B8),
+                        ),
+                      ),
+                    ],
                   ),
-                ],
+                ),
+              ),
+            ),
+
+            SizedBox(height: 12.h),
+
+            // Filter Tags Row
+            SizedBox(
+              height: 36.h,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: filterTags.length,
+                itemBuilder: (context, i) {
+                  final tag = filterTags[i];
+                  return Padding(
+                    padding: EdgeInsets.only(right: 8.w),
+                    child: Container(
+                      padding: EdgeInsets.symmetric(
+                          horizontal: 12.w, vertical: 6.h),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFAF6EE),
+                        borderRadius: BorderRadius.circular(20.r),
+                      ),
+                      child: Row(
+                        children: [
+                          Text(
+                            tag["icon"]!,
+                            style: TextStyle(fontSize: 13.sp),
+                          ),
+                          SizedBox(width: 6.w),
+                          Text(
+                            tag["name"]!,
+                            style: TextStyle(
+                              fontFamily: 'Rubik',
+                              fontSize: 13.sp,
+                              fontWeight: FontWeight.w700,
+                              color: const Color(0xFF0F172A),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
               ),
             ),
           ],
@@ -1152,77 +868,14 @@ class _ExploreScreenState extends State<ExploreScreen>
     );
   }
 
-  Widget _buildItemImage(String? path) {
-    final imagePath = path ?? '';
-    if (imagePath.isEmpty || imagePath == 'null') {
-      return Image.asset(
-        'assets/images/recipes.png',
-        fit: BoxFit.cover,
-      );
-    }
-
-    if (imagePath.startsWith('http')) {
-      return CachedNetworkImage(
-        imageUrl: imagePath,
-        fit: BoxFit.cover,
-        placeholder: (context, url) => Container(
-          color: const Color(0xFFF3F4F6),
-        ),
-        errorWidget: (context, url, error) => Image.asset(
-          'assets/images/recipes.png',
-          fit: BoxFit.cover,
-        ),
-      );
-    }
-
-    return Image.asset(
-      imagePath,
-      fit: BoxFit.cover,
-      errorBuilder: (context, error, stackTrace) => Image.asset(
-        'assets/images/recipes.png',
-        fit: BoxFit.cover,
-      ),
-    );
-  }
-}
-
-// ── Shared Section Header ─────────────────────────────────────────────────────
-class _SectionHeader extends StatelessWidget {
-  final String title;
-  final VoidCallback onViewAll;
-
-  const _SectionHeader({required this.title, required this.onViewAll});
+  @override
+  double get maxExtent => 165.h;
 
   @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 20.w),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            title,
-            style: TextStyle(
-              fontFamily: 'SF Pro',
-              fontWeight: FontWeight.w800,
-              fontSize: 18.sp,
-              color: const Color(0xFF111827),
-            ),
-          ),
-          GestureDetector(
-            onTap: onViewAll,
-            child: Text(
-              'View All',
-              style: TextStyle(
-                fontFamily: 'SF Pro',
-                fontWeight: FontWeight.w600,
-                fontSize: 13.sp,
-                color: const Color(0xFFC83A2D),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
+  double get minExtent => 165.h;
+
+  @override
+  bool shouldRebuild(covariant _StickyExploreHeaderDelegate oldDelegate) {
+    return false;
   }
 }

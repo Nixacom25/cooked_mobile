@@ -31,34 +31,30 @@ class _DinnerFiguredOutStepState extends State<DinnerFiguredOutStep> with Single
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1000),
+      duration: const Duration(milliseconds: 800),
     );
 
-    // Title: 0ms to 400ms
     _titleOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _controller, curve: const Interval(0.0, 0.4, curve: Curves.easeOut)),
     );
-    _titleSlide = Tween<Offset>(begin: const Offset(0, 0.2), end: Offset.zero).animate(
+    _titleSlide = Tween<Offset>(begin: const Offset(0, 0.15), end: Offset.zero).animate(
       CurvedAnimation(parent: _controller, curve: const Interval(0.0, 0.4, curve: Curves.easeOutCubic)),
     );
 
-    // Subtitle: 100ms to 500ms
     _subtitleOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _controller, curve: const Interval(0.1, 0.5, curve: Curves.easeOut)),
     );
-    _subtitleSlide = Tween<Offset>(begin: const Offset(0, 0.2), end: Offset.zero).animate(
+    _subtitleSlide = Tween<Offset>(begin: const Offset(0, 0.15), end: Offset.zero).animate(
       CurvedAnimation(parent: _controller, curve: const Interval(0.1, 0.5, curve: Curves.easeOutCubic)),
     );
 
-    // Image: 200ms to 700ms
     _imageOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _controller, curve: const Interval(0.2, 0.7, curve: Curves.easeOut)),
     );
-    _imageScale = Tween<double>(begin: 0.95, end: 1.0).animate(
+    _imageScale = Tween<double>(begin: 0.96, end: 1.0).animate(
       CurvedAnimation(parent: _controller, curve: const Interval(0.2, 0.7, curve: Curves.easeOutCubic)),
     );
 
-    // Button: 400ms to 800ms
     _buttonOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _controller, curve: const Interval(0.4, 0.8, curve: Curves.easeOut)),
     );
@@ -80,71 +76,31 @@ class _DinnerFiguredOutStepState extends State<DinnerFiguredOutStep> with Single
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, child) {
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        return Stack(
+          fit: StackFit.expand,
           children: [
-            Padding(
-              padding: EdgeInsets.fromLTRB(24.w, 20.h, 24.w, 0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  FadeTransition(
-                    opacity: _titleOpacity,
-                    child: SlideTransition(
-                      position: _titleSlide,
-                      child: RichText(
-                        textAlign: TextAlign.left,
-                        text: TextSpan(
-                          style: TextStyle(
-                            fontSize: 34.sp,
-                            fontWeight: FontWeight.w400,
-                            color: const Color(0xFF111827),
-                            fontFamily: 'Larken',
-                            height: 1.149,
-                            letterSpacing: 0,
-                          ),
-                          children: const [
-                            TextSpan(text: 'Imagine dinner\nalready '),
-                            TextSpan(
-                              text: 'figured out',
-                              style: TextStyle(color: Color(0xFFC83A2D)),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: 8.h),
-                  FadeTransition(
-                    opacity: _subtitleOpacity,
-                    child: SlideTransition(
-                      position: _subtitleSlide,
-                      child: Text(
-                        'No stress. No guesswork',
-                        textAlign: TextAlign.left,
-                        style: TextStyle(
-                          fontSize: 16.sp,
-                          color: const Color(0xFF4B5563),
-                          fontFamily: 'SF Pro',
-                          height: 1.3,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(height: 24.h),
-            Expanded(
+            // Background Image with smooth top alpha gradient fade
+            Positioned.fill(
               child: FadeTransition(
                 opacity: _imageOpacity,
                 child: Transform.scale(
                   scale: _imageScale.value,
-                  child: Center(
+                  child: ShaderMask(
+                    shaderCallback: (rect) {
+                      return const LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [Colors.transparent, Colors.white],
+                        stops: [0.0, 0.25],
+                      ).createShader(rect);
+                    },
+                    blendMode: BlendMode.dstIn,
                     child: Image.asset(
                       'assets/onboarding/step2.png',
                       width: double.infinity,
-                      fit: BoxFit.contain,
+                      height: double.infinity,
+                      fit: BoxFit.cover,
+                      alignment: Alignment.bottomCenter,
                       errorBuilder: (context, error, stackTrace) => Container(
                         color: Colors.grey[200],
                         alignment: Alignment.center,
@@ -155,27 +111,89 @@ class _DinnerFiguredOutStepState extends State<DinnerFiguredOutStep> with Single
                 ),
               ),
             ),
-            Padding(
-              padding: EdgeInsets.fromLTRB(24.w, 16.h, 24.w, 20.h),
-              child: FadeTransition(
-                opacity: _buttonOpacity,
-                child: SlideTransition(
-                  position: _buttonSlide,
-                  child: SafeArea(
-                    top: false,
-                    child: RedButton(
-                      label: 'Show Me',
-                      onTap: widget.onContinue,
-                      height: 55.h,
-                      fontSize: 18.sp,
+            // Overlay Content (Title, Subtitle & Button)
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: EdgeInsets.fromLTRB(24.w, 16.h, 24.w, 0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      FadeTransition(
+                        opacity: _titleOpacity,
+                        child: SlideTransition(
+                          position: _titleSlide,
+                          child: RichText(
+                            textAlign: TextAlign.left,
+                            text: TextSpan(
+                              style: TextStyle(
+                                fontSize: 30.sp,
+                                fontWeight: FontWeight.w800,
+                                color: const Color(0xFF0F172A),
+                                fontFamily: 'Rubik',
+                                height: 1.2,
+                                letterSpacing: -0.3,
+                              ),
+                              children: const [
+                                TextSpan(text: 'Imagine dinner\nalready '),
+                                TextSpan(
+                                  text: 'figured out',
+                                  style: TextStyle(color: Color(0xFFC31E26)),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 10.h),
+                      FadeTransition(
+                        opacity: _subtitleOpacity,
+                        child: SlideTransition(
+                          position: _subtitleSlide,
+                          child: Text(
+                            'No stress. No guesswork',
+                            textAlign: TextAlign.left,
+                            style: TextStyle(
+                              fontSize: 16.sp,
+                              color: const Color(0xFF475569),
+                              fontFamily: 'SF Pro',
+                              fontWeight: FontWeight.w400,
+                              height: 1.35,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Spacer(),
+                FadeTransition(
+                  opacity: _buttonOpacity,
+                  child: SlideTransition(
+                    position: _buttonSlide,
+                    child: SafeArea(
+                      top: false,
+                      bottom: true,
+                      child: Padding(
+                        padding: EdgeInsets.fromLTRB(24.w, 12.h, 24.w, 20.h),
+                        child: RedButton(
+                          label: 'Continue',
+                          color: const Color(0xFFC31E26),
+                          onTap: widget.onContinue,
+                          height: 52.h,
+                          fontSize: 16.sp,
+                        ),
+                      ),
                     ),
                   ),
                 ),
-              ),
+              ],
             ),
           ],
         );
-      }
+      },
     );
   }
 }
+

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../../core/theme/app_theme.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../routes/app_routes.dart';
 import '../../services/auth_service.dart';
 import '../../core/widgets/ios_toast.dart';
@@ -132,113 +132,120 @@ class _ForgotOtpScreenState extends State<ForgotOtpScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       resizeToAvoidBottomInset: false,
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          Image.asset('assets/images/fond.png', fit: BoxFit.cover),
+      body: GestureDetector(
+        behavior: HitTestBehavior.translucent,
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            // Background image fond_page.png
+            Image.asset(
+              'assets/images/fond_page.png',
+              fit: BoxFit.cover,
+              width: double.infinity,
+              height: double.infinity,
+            ),
 
-          // Logo centered
-          Positioned.fill(
-            bottom: 220,
-            child: Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
+            // Top Header (Back Button & Forgot Password Title)
+            Positioned(
+              top: statusBarH + 12.h,
+              left: 20.w,
+              right: 20.w,
+              child: Row(
                 children: [
-                  Image.asset(
-                    'assets/images/logo.png',
-                    width: 100,
-                    fit: BoxFit.contain,
+                  GestureDetector(
+                    onTap: () {
+                      HapticFeedback.selectionClick();
+                      Navigator.pop(context);
+                    },
+                    child: Container(
+                      width: 40.w,
+                      height: 40.w,
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.arrow_back,
+                        size: 20.sp,
+                        color: Colors.black,
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 16.w),
+                  Text(
+                    'Forgot Password',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'Rubik',
+                      fontSize: 24.sp,
+                      color: Colors.white,
+                    ),
                   ),
                 ],
               ),
             ),
-          ),
 
-          // Red card at bottom
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [Color(0xFFC83A2D), Color(0x63C83A2D)],
+            // White Card Pinned at Bottom
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.vertical(
+                    top: Radius.circular(32.r),
+                  ),
                 ),
-                borderRadius: BorderRadius.vertical(top: Radius.circular(15)),
-              ),
-              child: Stack(
-                children: [
-                  Positioned.fill(
-                    child: ClipRRect(
-                      borderRadius: const BorderRadius.vertical(
-                        top: Radius.circular(30),
-                      ),
-                      child: Opacity(
-                        opacity: 0.12,
-                        child: Image.asset(
-                          'assets/images/fond.png',
-                          fit: BoxFit.cover,
+                child: SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  padding: EdgeInsets.fromLTRB(
+                    24.w,
+                    28.h,
+                    24.w,
+                    24.h +
+                        MediaQuery.of(context).padding.bottom +
+                        MediaQuery.of(context).viewInsets.bottom,
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Please enter the code we just sent to\n${identifier ?? 'mail/phone number'}',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 18.sp,
+                          fontWeight: FontWeight.w800,
+                          color: const Color(0xFF0F172A),
+                          fontFamily: 'Rubik',
+                          height: 1.25,
                         ),
                       ),
-                    ),
-                  ),
-                  SingleChildScrollView(
-                    child: Padding(
-                      padding: EdgeInsets.fromLTRB(
-                        24,
-                        30,
-                        24,
-                        24 + MediaQuery.of(context).padding.bottom,
+                      SizedBox(height: 24.h),
+
+                      // OTP boxes
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          ..._buildBoxes(0, 3),
+                          SizedBox(width: 2.w),
+                          ..._buildBoxes(3, 6),
+                        ],
                       ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
+                      SizedBox(height: 24.h),
+
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            'Please enter the code we just sent to\n${identifier ?? 'your contact details'}',
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              fontSize: 17,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white,
-                              fontFamily: 'SF Pro',
-                              height: 1.2,
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-
-                          // OTP boxes
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              ..._buildBoxes(0, 3),
-                              const Padding(
-                                padding: EdgeInsets.symmetric(horizontal: 4),
-                                child: Text(
-                                  '-',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 26,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                              ),
-                              ..._buildBoxes(3, 6),
-                            ],
-                          ),
-
-                          const SizedBox(height: 24),
-
-                          const Text(
-                            "Didn't receive a code?",
+                            'If you didn’t receive a code? ',
                             style: TextStyle(
-                              color: Colors.white70,
+                              color: const Color(0xFF64748B),
                               fontFamily: 'SF Pro',
-                              fontSize: 14,
+                              fontSize: 14.sp,
                             ),
                           ),
-                          const SizedBox(height: 3),
                           GestureDetector(
                             onTap: _isResending
                                 ? null
@@ -251,100 +258,53 @@ class _ForgotOtpScreenState extends State<ForgotOtpScreen> {
                                 ? const LoadingText(
                                     text: 'Resending',
                                     style: TextStyle(
-                                      color: Color(0xFFFFF6D6),
+                                      color: Color(0xFF0F172A),
                                       fontFamily: 'SF Pro',
-                                      fontWeight: FontWeight.w500,
+                                      fontWeight: FontWeight.bold,
                                       fontSize: 14,
                                     ),
                                   )
-                                : const Text(
-                                    'Resend code',
+                                : Text(
+                                    'Resend Code',
                                     style: TextStyle(
-                                      color: Color(0xFFFFF6D6),
+                                      color: const Color(0xFF0F172A),
                                       fontFamily: 'SF Pro',
-                                      fontWeight: FontWeight.w500,
-                                      fontSize: 14,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14.sp,
                                     ),
                                   ),
                           ),
-                          const SizedBox(height: 28),
-
-                          RedButton(
-                            label: 'Continue',
-                            loadingLabel: 'Verifying',
-                            isLoading: _isLoading,
-                            onTap: () {
-                              if (identifier != null) {
-                                _verifyCode(identifier);
-                              } else {
-                                IosToast.show(
-                                  context,
-                                  message: 'Missing identifier context. Please try again.',
-                                  type: ToastType.success,
-                                );
-                              }
-                            },
-                          ),
-                          SizedBox(
-                            height: MediaQuery.of(context).viewInsets.bottom,
-                          ),
                         ],
                       ),
-                    ),
+                      SizedBox(height: 28.h),
+
+                      RedButton(
+                        label: 'Continue',
+                        loadingLabel: 'Verifying',
+                        isLoading: _isLoading,
+                        color: const Color(0xFFC31E26),
+                        height: 52.h,
+                        fontSize: 16.sp,
+                        onTap: () {
+                          if (identifier != null) {
+                            _verifyCode(identifier);
+                          } else {
+                            IosToast.show(
+                              context,
+                              message:
+                                  'Missing identifier context. Please try again.',
+                              type: ToastType.success,
+                            );
+                          }
+                        },
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
             ),
-          ),
-
-          // Floating AppBar
-          Positioned(
-            top: statusBarH + 28,
-            left: 16,
-            right: 16,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                GestureDetector(
-                  onTap: () {
-                    HapticFeedback.selectionClick();
-                    Navigator.pop(context);
-                  },
-                  child: Container(
-                    width: 42,
-                    height: 42,
-                    decoration: BoxDecoration(
-                      color: Color(0xffF8F5EF),
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.3),
-                          blurRadius: 8,
-                        ),
-                      ],
-                    ),
-                    child: const Icon(
-                      Icons.arrow_back_rounded,
-                      size: 24,
-                      color: AppColors.textDark,
-                    ),
-                  ),
-                ),
-                const Text(
-                  'VERIFICATION CODE',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w400,
-                    fontFamily: 'Larken',
-                    height: 1.149,
-                    fontSize: 14,
-                    letterSpacing: 0.8,
-                    color: AppColors.textDark,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -353,15 +313,15 @@ class _ForgotOtpScreenState extends State<ForgotOtpScreen> {
     return List.generate(to - from, (i) {
       final idx = from + i;
       return Container(
-        width: 40,
-        height: 43,
-        margin: const EdgeInsets.symmetric(horizontal: 4),
+        width: 44.w,
+        height: 52.h,
+        margin: EdgeInsets.symmetric(horizontal: 3.w),
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(14),
+          color: const Color(0xFFF0F1F3),
+          borderRadius: BorderRadius.circular(14.r),
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(14.r),
           child: TextField(
             controller: _ctrls[idx],
             focusNode: _nodes[idx],
@@ -372,28 +332,28 @@ class _ForgotOtpScreenState extends State<ForgotOtpScreen> {
             inputFormatters: [
               FilteringTextInputFormatter.digitsOnly,
             ],
-            style: const TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w800,
+            style: TextStyle(
+              fontSize: 18.sp,
+              fontWeight: FontWeight.w700,
               fontFamily: 'SF Pro',
-              color: AppColors.textDark,
+              color: const Color(0xFF0F172A),
             ),
             decoration: InputDecoration(
               counterText: '',
               filled: true,
-              fillColor: Colors.white,
+              fillColor: const Color(0xFFF0F1F3),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(14.r),
                 borderSide: BorderSide.none,
               ),
               enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(14.r),
                 borderSide: BorderSide.none,
               ),
               focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(14.r),
                 borderSide: const BorderSide(
-                  color: Color(0xFFC83A2D),
+                  color: Color(0xFFC31E26),
                   width: 1.5,
                 ),
               ),
@@ -405,3 +365,5 @@ class _ForgotOtpScreenState extends State<ForgotOtpScreen> {
     });
   }
 }
+
+

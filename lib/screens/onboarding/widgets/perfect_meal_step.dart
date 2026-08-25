@@ -1,3 +1,5 @@
+
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
@@ -23,10 +25,10 @@ class PerfectMealStep extends StatefulWidget {
 
 class _PerfectMealStepState extends State<PerfectMealStep> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
-  
+
   late Animation<double> _titleOpacity;
   late Animation<Offset> _titleSlide;
-  
+
   late Animation<double> _imageScale;
   late Animation<double> _imageOpacity;
 
@@ -76,152 +78,169 @@ class _PerfectMealStepState extends State<PerfectMealStep> with SingleTickerProv
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, child) {
-        final reasons = [
-          {'text': 'Matches your taste', 'icon': Icons.thumb_up_alt_outlined},
-          {'text': 'Quick dinner', 'icon': Icons.bolt_rounded},
-          {'text': 'Uses your ingredients', 'icon': Icons.kitchen_outlined},
-        ];
-
-        return Padding(
-          padding: EdgeInsets.symmetric(vertical: 10.h),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Title & Subtitle
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 24.w),
-                child: FadeTransition(
-                  opacity: _titleOpacity,
-                  child: SlideTransition(
-                    position: _titleSlide,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Perfect meal for you',
-                          style: TextStyle(
-                            fontSize: 34.sp,
-                            fontWeight: FontWeight.w400,
-                            color: const Color(0xFF0D1B3E),
-                            fontFamily: 'Larken',
-                            height: 1.1,
-                            letterSpacing: -0.5,
+        return Column(
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Title & Subtitle
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 8.h),
+                      child: FadeTransition(
+                        opacity: _titleOpacity,
+                        child: SlideTransition(
+                          position: _titleSlide,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Perfect meal for you',
+                                style: TextStyle(
+                                  fontSize: 32.sp,
+                                  fontWeight: FontWeight.w800,
+                                  color: const Color(0xFF0F172A),
+                                  fontFamily: 'Rubik',
+                                  height: 1.15,
+                                ),
+                              ),
+                              SizedBox(height: 8.h),
+                              Text(
+                                'Based on your goals, taste, and cooking',
+                                style: TextStyle(
+                                  fontSize: 15.sp,
+                                  color: const Color(0xFF475569),
+                                  fontFamily: 'SF Pro',
+                                  height: 1.3,
+                                ),
+                              ),
+                            ],
                           ),
-                        ),
-                        SizedBox(height: 8.h),
-                        Text(
-                          'Based on your goals, taste, and cooking',
-                          style: TextStyle(
-                            fontSize: 16.sp,
-                            color: const Color(0xFF4B5563),
-                            fontFamily: 'SF Pro',
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              
-              // Image in the center takes the available space (Edge-to-Edge)
-              Expanded(
-                child: Center(
-                  child: FadeTransition(
-                    opacity: _imageOpacity,
-                    child: Transform.scale(
-                      scale: _imageScale.value,
-                      child: Image.asset(
-                        'assets/onboarding/step28.png',
-                        width: double.infinity,
-                        fit: BoxFit.fitWidth,
-                        alignment: Alignment.center,
-                        errorBuilder: (context, error, stackTrace) => Container(
-                          color: Colors.grey[200],
-                          alignment: Alignment.center,
-                          child: const Text('assets/onboarding/step28.png missing'),
                         ),
                       ),
                     ),
-                  ),
-                ),
-              ),
-              
-              SizedBox(height: 16.h),
+                    SizedBox(height: 12.h),
 
-              // Bottom info and chips (Why We Picked This)
-              FadeTransition(
-                opacity: _bottomOpacity,
-                child: SlideTransition(
-                  position: _bottomSlide,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Why We Picked This Section Header
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 24.w),
-                        child: Text(
-                          'WHY WE PICKED THIS',
-                          style: TextStyle(
-                            fontSize: 12.sp,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 1.5,
-                            color: const Color(0xFF7B8190),
-                            fontFamily: 'SF Pro',
+                    // Image Graphic in center
+                    FadeTransition(
+                      opacity: _imageOpacity,
+                      child: Transform.scale(
+                        scale: _imageScale.value,
+                        child: Center(
+                          child: Image.asset(
+                            'assets/onboarding/step28.png',
+                            width: MediaQuery.of(context).size.width,
+                            fit: BoxFit.contain,
+                            errorBuilder: (context, error, stackTrace) => Container(
+                              height: 300.h,
+                              color: const Color(0xFFF1F5F9),
+                              alignment: Alignment.center,
+                              child: const Icon(Icons.restaurant, color: Color(0xFFCBD5E1)),
+                            ),
                           ),
                         ),
                       ),
-                      SizedBox(height: 12.h),
+                    ),
+                    SizedBox(height: 20.h),
 
-                      // Horizontal Scrollable Chips
-                      SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        padding: EdgeInsets.symmetric(horizontal: 24.w),
-                        clipBehavior: Clip.none,
-                        child: Row(
-                          children: reasons.map((r) {
-                            return Padding(
-                              padding: EdgeInsets.only(right: 12.w),
-                              child: _buildReasonChip(r['icon'] as IconData, r['text'] as String),
-                            );
-                          }).toList(),
+                    // Why we picked this section
+                    FadeTransition(
+                      opacity: _bottomOpacity,
+                      child: SlideTransition(
+                        position: _bottomSlide,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 24.w),
+                              child: Text(
+                                'Why we picked this',
+                                style: TextStyle(
+                                  fontSize: 18.sp,
+                                  fontWeight: FontWeight.w800,
+                                  color: const Color(0xFF0F172A),
+                                  fontFamily: 'Rubik',
+                                ),
+                              ),
+                            ),
+                            SizedBox(height: 12.h),
+
+                            // Horizontal scroll chips
+                            SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              padding: EdgeInsets.symmetric(horizontal: 24.w),
+                              clipBehavior: Clip.none,
+                              child: Row(
+                                children: [
+                                  _buildReasonChip(
+                                    icon: Icons.favorite_border_rounded,
+                                    label: 'Matches your taste',
+                                    bgColor: const Color(0xFFFFF5F5),
+                                    borderColor: const Color(0xFFFEE2E2),
+                                    iconColor: const Color(0xFFC31E26),
+                                  ),
+                                  SizedBox(width: 10.w),
+                                  _buildReasonChip(
+                                    icon: Icons.bolt_rounded,
+                                    label: 'Quick dinner',
+                                    bgColor: const Color(0xFFFEFCE8),
+                                    borderColor: const Color(0xFFFEF08A),
+                                    iconColor: const Color(0xFFC31E26),
+                                  ),
+                                  SizedBox(width: 10.w),
+                                  _buildReasonChip(
+                                    icon: Icons.eco_outlined,
+                                    label: 'Uses your ingredients',
+                                    bgColor: const Color(0xFFF0FDF4),
+                                    borderColor: const Color(0xFFDCFCE7),
+                                    iconColor: const Color(0xFF16A34A),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                    SizedBox(height: 24.h),
+                  ],
                 ),
               ),
-              
-              SizedBox(height: 24.h),
+            ),
 
-              // Bottom Actions Area
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 24.w),
-                child: FadeTransition(
-                  opacity: _bottomOpacity,
-                  child: SlideTransition(
-                    position: _bottomSlide,
+            // Bottom Action Button
+            FadeTransition(
+              opacity: _bottomOpacity,
+              child: SlideTransition(
+                position: _bottomSlide,
+                child: Padding(
+                  padding: EdgeInsets.fromLTRB(24.w, 4.h, 24.w, 20.h),
+                  child: SafeArea(
+                    top: false,
+                    bottom: true,
                     child: SizedBox(
                       width: double.infinity,
-                      height: 55.h,
+                      height: 52.h,
                       child: ElevatedButton(
                         onPressed: widget.onStartCooking,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFC83A2D),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(50.r),
-                          ),
+                          backgroundColor: const Color(0xFFC31E26),
                           elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16.r),
+                          ),
                         ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.restaurant, color: Colors.white, size: 20.sp),
+                            Icon(Icons.restaurant_rounded, color: Colors.white, size: 20.sp),
                             SizedBox(width: 8.w),
                             Text(
-                              'Start Cooking',
+                              "Start Cookin'",
                               style: TextStyle(
-                                fontFamily: 'SF Pro',
-                                fontSize: 18.sp,
+                                fontFamily: 'Rubik',
+                                fontSize: 16.sp,
                                 fontWeight: FontWeight.w700,
                                 color: Colors.white,
                               ),
@@ -233,33 +252,39 @@ class _PerfectMealStepState extends State<PerfectMealStep> with SingleTickerProv
                   ),
                 ),
               ),
-              SizedBox(height: 10.h),
-            ],
-          ),
+            ),
+          ],
         );
       },
     );
   }
 
-  Widget _buildReasonChip(IconData icon, String text) {
+  Widget _buildReasonChip({
+    required IconData icon,
+    required String label,
+    required Color bgColor,
+    required Color borderColor,
+    required Color iconColor,
+  }) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFF9EB), // Light yellow bg from mockup
-        borderRadius: BorderRadius.circular(30.r),
-        border: Border.all(color: const Color(0xFFFDE6B0), width: 1.w),
+        color: bgColor,
+        borderRadius: BorderRadius.circular(50.r),
+        border: Border.all(color: borderColor, width: 1.w),
       ),
       child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: const Color(0xFFC83A2D), size: 18.sp),
+          Icon(icon, color: iconColor, size: 18.sp),
           SizedBox(width: 8.w),
           Text(
-            text,
+            label,
             style: TextStyle(
               fontSize: 14.sp,
-              fontWeight: FontWeight.w600,
-              color: const Color(0xFF1B1C1C),
-              fontFamily: 'SF Pro',
+              fontWeight: FontWeight.w700,
+              color: const Color(0xFF0F172A),
+              fontFamily: 'Rubik',
             ),
           ),
         ],

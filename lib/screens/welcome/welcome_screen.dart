@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import '../../core/theme/app_theme.dart';
 import '../../routes/app_routes.dart';
 import '../../services/auth_service.dart';
 import '../../widgets/red_button.dart';
 
-/// The single Welcome screen — kept as the user requested.
-/// Flow: Splash → Welcome → GetStarted → Login / Register
+/// The Welcome screen using welcome2.png background.
 class WelcomeScreen extends StatefulWidget {
   const WelcomeScreen({super.key});
 
@@ -31,90 +29,102 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // Food pattern full screen
-          // Image.asset('assets/images/fond.png', fit: BoxFit.cover),
+          // Background image welcome2.png
+          Image.asset(
+            'assets/images/welcome2.png',
+            fit: BoxFit.cover,
+            width: double.infinity,
+            height: double.infinity,
+          ),
 
-          // Content
+          // Content layout
           SafeArea(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                // Top Logo
-                Padding(
-                  padding: EdgeInsets.only(top: 25.h),
-                  child: Image.asset(
-                    'assets/images/logo3.png',
-                    width: 80.w,
-                    fit: BoxFit.contain,
-                  ),
-                ),
-
-                // Middle Image (Fills available space)
-                Expanded(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(vertical: 0.h),
-                    child: Image.asset(
-                      'assets/images/welcome.png',
-                      width: double.infinity,
-                      fit: BoxFit.contain,
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  // Top Logo (Red C Icon + White Cooked Text)
+                  Padding(
+                    padding: EdgeInsets.only(top: 20.h),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Image.asset(
+                          'assets/images/logo4.png',
+                          width: 170.w,
+                          fit: BoxFit.contain,
+                        ),
+                        // SizedBox(height: 4.h),
+                        // Text(
+                        //   'Cooked',
+                        //   style: TextStyle(
+                        //     color: Colors.white,
+                        //     fontSize: 34.sp,
+                        //     fontWeight: FontWeight.w900,
+                        //     fontFamily: 'SF Pro',
+                        //     letterSpacing: -0.5,
+                        //   ),
+                        // ),
+                      ],
                     ),
                   ),
-                ),
 
-                // Bottom Section
-                Padding(
-                  padding: EdgeInsets.fromLTRB(20.w, 0, 20.w, 10.h),
-                  child: Column(
+                  // Bottom Section
+                  Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        'Cook More. Spend\nLess. Eat Better.',
+                        'Welcome to Cooked',
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          fontSize: 34.sp,
-                          fontWeight: FontWeight.w400,
-                          color: const Color(0xFF111827),
-                          fontFamily: 'Larken',
-                          height: 1.149,
-                          letterSpacing: 0,
+                          fontSize: 32.sp,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          fontFamily: 'Rubik',
                         ),
                       ),
-                      SizedBox(height: 5.h),
+                      SizedBox(height: 12.h),
                       Text(
-                        'Personalized recipes, meal plans, and\ngrocery lists built around you.',
+                        'Scan ingredients. Save recipes.\nPlan effortlessly.',
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 16.sp,
-                          color: AppColors.textMuted,
-                          fontFamily: 'SF Pro',
-                          height: 1.1,
+                          fontWeight: FontWeight.w400,
+                          color: Colors.white,
+                          fontFamily: 'Poppins',
+                          height: 1.35,
                         ),
                       ),
-                      SizedBox(height: 20.h),
+                      SizedBox(height: 28.h),
 
-                      // Get Started
+                      // Get Started Button (White background, refined dark red text)
                       RedButton(
                         label: 'Get Started',
+                        color: Colors.white,
+                        textColor: const Color(0xFF8B1D1D),
+                        fontSize: 17.sp,
+                        height: 54.h,
                         onTap: () => Navigator.pushReplacementNamed(
                           context,
                           AppRoutes.preferences,
                         ),
                       ),
-                      SizedBox(height: 10.h),
+                      SizedBox(height: 18.h),
 
-                      // Already have account?
+                      // Already have an account? Sign In
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
                             'Already have an account? ',
                             style: TextStyle(
-                              color: AppColors.textMuted,
-                              fontFamily: 'SF Pro',
+                              color: Colors.white,
+                              fontFamily: 'Poppins',
                               fontSize: 14.sp,
                             ),
                           ),
@@ -123,9 +133,9 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                             child: Text(
                               'Sign In',
                               style: TextStyle(
-                                color: const Color(0xFFC83A2D),
-                                fontWeight: FontWeight.w700,
-                                fontFamily: 'SF Pro',
+                                color: Colors.white,
+                                fontWeight: FontWeight.w800,
+                                fontFamily: 'Rubik',
                                 fontSize: 14.sp,
                               ),
                             ),
@@ -134,8 +144,8 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                       ),
                     ],
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ],
@@ -143,3 +153,4 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     );
   }
 }
+

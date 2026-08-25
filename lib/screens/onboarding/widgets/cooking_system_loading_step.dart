@@ -12,11 +12,9 @@ class CookingSystemLoadingStep extends StatefulWidget {
   State<CookingSystemLoadingStep> createState() => _CookingSystemLoadingStepState();
 }
 
-class _CookingSystemLoadingStepState extends State<CookingSystemLoadingStep> with TickerProviderStateMixin {
-  int _currentLoadingStep = 0; // 0 to 3 for the 4 steps, 4 means all done
+class _CookingSystemLoadingStepState extends State<CookingSystemLoadingStep> with SingleTickerProviderStateMixin {
+  int _currentLoadingStep = 0; // 0 to 3 for the 4 steps, 4 means all completed
   Timer? _timer;
-  
-  late AnimationController _rotationController;
 
   final List<String> _loadingTasks = [
     'Understanding your cooking challenges',
@@ -29,20 +27,14 @@ class _CookingSystemLoadingStepState extends State<CookingSystemLoadingStep> wit
   void initState() {
     super.initState();
     
-    // Slight static rotation or slow animation
-    _rotationController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 20),
-    )..repeat();
-
-    // 2s total for 4 steps => 0.5s per step
-    _timer = Timer.periodic(const Duration(milliseconds: 500), (timer) {
+    // Automatically progress through the loading steps
+    _timer = Timer.periodic(const Duration(milliseconds: 650), (timer) {
+      if (!mounted) return;
       if (_currentLoadingStep < 4) {
         setState(() {
           _currentLoadingStep++;
         });
-      }
-      if (_currentLoadingStep >= 4) {
+      } else {
         timer.cancel();
       }
     });
@@ -51,90 +43,65 @@ class _CookingSystemLoadingStepState extends State<CookingSystemLoadingStep> wit
   @override
   void dispose() {
     _timer?.cancel();
-    _rotationController.dispose();
     super.dispose();
   }
 
   Widget _buildTaskItem(int index, String text) {
-    int state = 0;
+    int state = 0; // 0 = pending, 1 = loading, 2 = done
     if (_currentLoadingStep > index) {
-      state = 2; // done
+      state = 2;
     } else if (_currentLoadingStep == index) {
-      state = 1; // loading
+      state = 1;
     }
 
-    Widget leading;
+    Widget leadingIcon;
     if (state == 2) {
-      leading = Container(
-        width: 24.w,
-        height: 24.w,
+      leadingIcon = Container(
+        width: 22.r,
+        height: 22.r,
         decoration: const BoxDecoration(
-          color: Color(0xFFC83A2D),
+          color: Color(0xFFC31E26),
           shape: BoxShape.circle,
         ),
-        child: Icon(Icons.check, color: Colors.white, size: 16.sp),
+        child: Icon(Icons.check, color: Colors.white, size: 13.sp),
       );
     } else if (state == 1) {
-      leading = SizedBox(
-        width: 24.w,
-        height: 24.w,
+      leadingIcon = SizedBox(
+        width: 22.r,
+        height: 22.r,
         child: CircularProgressIndicator(
-          strokeWidth: 2.5,
-          valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFC83A2D)),
-          backgroundColor: const Color(0xFFE5E7EB),
+          strokeWidth: 2.2,
+          valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFC31E26)),
+          backgroundColor: const Color(0xFFFFEDD5),
         ),
       );
     } else {
-      leading = Container(
-        width: 24.w,
-        height: 24.w,
+      leadingIcon = Container(
+        width: 22.r,
+        height: 22.r,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          border: Border.all(color: const Color(0xFF9CA3AF), width: 1.5),
+          border: Border.all(color: const Color(0xFFCBD5E1), width: 1.8),
         ),
       );
     }
 
-    return IntrinsicHeight(
+    return Padding(
+      padding: EdgeInsets.only(bottom: 18.h),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          SizedBox(
-            width: 24.w,
-            child: Column(
-              children: [
-                leading,
-                if (index < _loadingTasks.length - 1)
-                  Expanded(
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(vertical: 6.h),
-                      child: Container(
-                        width: 2.w,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFE5E7EB),
-                          borderRadius: BorderRadius.circular(1.r),
-                        ),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-          SizedBox(width: 16.w),
+          leadingIcon,
+          SizedBox(width: 14.w),
           Expanded(
-            child: Padding(
-              padding: EdgeInsets.only(
-                top: 2.h,
-                bottom: index < _loadingTasks.length - 1 ? 24.h : 0,
-              ),
-              child: Text(
-                text,
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  color: state == 0 ? const Color(0xFF6B7280) : const Color(0xFF111827),
-                  fontFamily: 'SF Pro',
-                  fontWeight: state > 0 ? FontWeight.w500 : FontWeight.w400,
-                ),
+            child: Text(
+              text,
+              style: TextStyle(
+                fontSize: 15.sp,
+                color: state == 0 ? const Color(0xFF94A3B8) : const Color(0xFF0F172A),
+                fontFamily: 'Rubik',
+                fontWeight: state == 0 ? FontWeight.w500 : FontWeight.w700,
+                height: 1.2,
               ),
             ),
           ),
@@ -147,38 +114,77 @@ class _CookingSystemLoadingStepState extends State<CookingSystemLoadingStep> wit
   Widget build(BuildContext context) {
     return Stack(
       children: [
+        // Food Background Image (starts under description with white gradient overlay behind checklist)
+        Positioned.fill(
+          top: 135.h,
+          child: Stack(
+            children: [
+              Image.asset(
+                'assets/onboarding/step9.png',
+                width: double.infinity,
+                height: double.infinity,
+                fit: BoxFit.cover,
+                alignment: Alignment.topCenter,
+                errorBuilder: (context, error, stackTrace) => Container(
+                  color: const Color(0xFFF1F5F9),
+                  alignment: Alignment.center,
+                  child: const Icon(Icons.restaurant_menu, size: 60, color: Color(0xFFCBD5E1)),
+                ),
+              ),
+              // White gradient overlay covering top area behind auto-checks
+              Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.white,
+                      Colors.white.withValues(alpha: 0.96),
+                      Colors.white.withValues(alpha: 0.75),
+                      Colors.white.withValues(alpha: 0.0),
+                    ],
+                    stops: const [0.0, 0.22, 0.42, 0.62],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        // Foreground Content (Title, Subtitle, Tasks Checklist)
         Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            // Top Section (Title & Subtitle)
             Padding(
-              padding: EdgeInsets.fromLTRB(24.w, 20.h, 24.w, 0),
+              padding: EdgeInsets.fromLTRB(24.w, 16.h, 24.w, 0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   RichText(
                     text: TextSpan(
                       style: TextStyle(
-                        fontSize: 34.sp,
-                        fontWeight: FontWeight.w400,
-                        color: const Color(0xFF111827),
-                        fontFamily: 'Larken',
-                        height: 1.149,
+                        fontSize: 32.sp,
+                        fontWeight: FontWeight.w800,
+                        color: const Color(0xFF0F172A),
+                        fontFamily: 'Rubik',
+                        height: 1.15,
                       ),
                       children: const [
-                        TextSpan(text: 'Let\'s build your\ncooking '),
+                        TextSpan(text: 'Let’s build your\ncooking '),
                         TextSpan(
-                          text: 'profile.',
-                          style: TextStyle(color: Color(0xFFC83A2D)),
+                          text: 'profile',
+                          style: TextStyle(color: Color(0xFFC31E26)),
                         ),
                       ],
                     ),
                   ),
-                  SizedBox(height: 12.h),
+                  SizedBox(height: 10.h),
                   Text(
-                    'The more we learn, the better your\nrecommendations.',
+                    'The more we learn, the better your recommendations',
                     style: TextStyle(
-                      fontSize: 16.sp,
-                      color: const Color(0xFF4B5563),
+                      fontSize: 15.sp,
+                      color: const Color(0xFF475569),
                       fontFamily: 'SF Pro',
                       height: 1.3,
                     ),
@@ -186,7 +192,10 @@ class _CookingSystemLoadingStepState extends State<CookingSystemLoadingStep> wit
                 ],
               ),
             ),
-            SizedBox(height: 30.h),
+
+            SizedBox(height: 28.h),
+
+            // Tasks Checklist (Floats over the food image)
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 24.w),
               child: Column(
@@ -199,53 +208,30 @@ class _CookingSystemLoadingStepState extends State<CookingSystemLoadingStep> wit
           ],
         ),
 
+        // Start Button (Animated in at bottom)
         Positioned(
-          right: 20.w,
-          bottom: 60.h,
-          child: Transform.rotate(
-            angle: -1 * (3.14159 / 180),
-            child: Image.asset(
-              'assets/onboarding/step9.png',
-              width: 400.w,
-              fit: BoxFit.contain,
-              errorBuilder: (context, error, stackTrace) => Container(
-                width: 300.w,
-                height: 300.h,
-                color: Colors.transparent,
-                child: Center(child: Text('step9.png missing')),
-              ),
-            ),
-          ),
-        ),
-
-        if (_currentLoadingStep >= 4)
-          Positioned(
-            left: 24.w,
-            right: 24.w,
-            bottom: 20.h,
-            child: TweenAnimationBuilder<double>(
-              tween: Tween(begin: 0.0, end: 1.0),
-              duration: const Duration(milliseconds: 500),
-              builder: (context, value, child) {
-                return Opacity(
-                  opacity: value,
-                  child: Transform.translate(
-                    offset: Offset(0, 20 * (1 - value)),
-                    child: child,
-                  ),
-                );
-              },
-              child: SafeArea(
-                top: false,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          child: AnimatedOpacity(
+            opacity: _currentLoadingStep >= 2 ? 1.0 : 0.0,
+            duration: const Duration(milliseconds: 400),
+            child: SafeArea(
+              top: false,
+              bottom: true,
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(24.w, 8.h, 24.w, 20.h),
                 child: RedButton(
                   label: 'Start \u2192',
+                  color: const Color(0xFFC31E26),
                   onTap: widget.onContinue,
-                  height: 55.h,
-                  fontSize: 18.sp,
+                  height: 52.h,
+                  fontSize: 16.sp,
                 ),
               ),
             ),
           ),
+        ),
       ],
     );
   }

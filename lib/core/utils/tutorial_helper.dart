@@ -89,7 +89,7 @@ class TutorialHelper {
     showGeneralDialog(
       context: context,
       barrierDismissible: false,
-      barrierColor: Colors.black.withOpacity(0.8),
+      barrierColor: Colors.black.withValues(alpha: 0.8),
       transitionDuration: const Duration(milliseconds: 400),
       pageBuilder: (context, anim1, anim2) {
         return const CookbookOnboardingModal();
@@ -120,7 +120,7 @@ class TutorialHelper {
     showGeneralDialog(
       context: context,
       barrierDismissible: false,
-      barrierColor: Colors.black.withOpacity(0.8),
+      barrierColor: Colors.black.withValues(alpha: 0.8),
       transitionDuration: const Duration(milliseconds: 400),
       pageBuilder: (context, anim1, anim2) {
         return ScanOnboardingModal(onTabSwitch: onTabSwitch);
@@ -177,11 +177,11 @@ class TutorialHelper {
   }) {
     final List<TargetFocus> targets = [];
 
-    // Step 1: Scan
+    // Step 1: Import Recipes (Image 1)
     targets.add(
       TargetFocus(
-        identify: "scan",
-        keyTarget: scanKey,
+        identify: "import",
+        keyTarget: importKey,
         alignSkip: Alignment.topRight,
         shape: ShapeLightFocus.RRect,
         radius: 30.r,
@@ -190,11 +190,12 @@ class TutorialHelper {
             align: ContentAlign.top,
             builder: (context, controller) {
               return _TutorialContent(
-                title: "Scan Ingredients",
-                description:
-                    "Snap a photo of your fridge, pantry, or ingredients and instantly discover recipes you can make with what you already have.",
+                title: "Import Recipes",
+                description: "Import recipes from TikTok,\nInstagram, or any Link",
                 step: 1,
                 totalSteps: 3,
+                arrowAlignment: const Alignment(0.7, 1.0),
+                isArrowPointingDown: true,
                 onNext: () {
                   controller.next();
                 },
@@ -209,11 +210,11 @@ class TutorialHelper {
       ),
     );
 
-    // Step 2: Import
+    // Step 2: Scan Ingredients (Image 2)
     targets.add(
       TargetFocus(
-        identify: "import",
-        keyTarget: importKey,
+        identify: "scan",
+        keyTarget: scanKey,
         alignSkip: Alignment.topRight,
         shape: ShapeLightFocus.Circle,
         radius: 35.r,
@@ -223,11 +224,12 @@ class TutorialHelper {
             align: ContentAlign.top,
             builder: (context, controller) {
               return _TutorialContent(
-                title: "Import Recipes",
-                description:
-                    "Import recipes directly from TikTok, Instagram, YouTube, or any recipe website and save them instantly inside your app.",
+                title: "Scan Ingredients",
+                description: "Scan and get instant recipes",
                 step: 2,
                 totalSteps: 3,
+                arrowAlignment: Alignment.bottomCenter,
+                isArrowPointingDown: true,
                 onNext: () {
                   controller.next();
                 },
@@ -242,25 +244,26 @@ class TutorialHelper {
       ),
     );
 
-    // Step 3: Cookbooks (Redirected to Creation flow as requested)
+    // Step 3: Your Cookbooks (Image 3)
     targets.add(
       TargetFocus(
         identify: "cookbook",
         keyTarget: cookbookKey,
         alignSkip: Alignment.topRight,
         shape: ShapeLightFocus.RRect,
-        radius: 16.r,
+        radius: 20.r,
         contents: [
           TargetContent(
-            align: ContentAlign.bottom,
+            align: ContentAlign.top,
             builder: (context, controller) {
               return _TutorialContent(
-                title: "Create Cookbooks",
-                description:
-                    "Organize your favorite recipes into custom cookbooks here",
+                title: "Your Cookbooks",
+                description: "Save and organize your recipes here.",
                 step: 3,
                 totalSteps: 3,
                 isLast: true,
+                arrowAlignment: const Alignment(-0.6, 1.0),
+                isArrowPointingDown: true,
                 onNext: () {
                   TutorialService.instance.completeHome();
                   controller.next();
@@ -297,19 +300,38 @@ class _ScanOnboardingModalState extends State<ScanOnboardingModal> {
       'title': 'Get the best scan',
       'image': 'assets/images/onboarding_scan_1.png',
       'items': [
-        'Hold your phone steady',
-        'Use good lighting',
-        'Make sure all ingredients are visible',
+        {
+          'icon': Icons.phone_iphone_rounded,
+          'text': 'Hold your phone steady',
+        },
+        {
+          'icon': Icons.wb_incandescent_outlined,
+          'text': 'Use good lighting',
+        },
+        {
+          'icon': Icons.soup_kitchen_outlined,
+          'text': 'Make sure all ingredients are visible',
+        },
       ],
       'btnText': 'Next',
+      'showCard': false,
     },
     {
       'title': 'We instantly find your ingredients',
-      'image': 'assets/images/fond.png',
+      'image': null,
       'items': [
-        'Snap a photo of your ingredients',
-        'We detect what\'s inside instantly',
-        'Edit anything that looks off',
+        {
+          'icon': Icons.center_focus_weak_rounded,
+          'text': 'Snap a photo of your ingredients',
+        },
+        {
+          'icon': Icons.crop_free_rounded,
+          'text': 'We detect what\'s inside instantly',
+        },
+        {
+          'icon': Icons.edit_outlined,
+          'text': 'Edit anything that looks off',
+        },
       ],
       'btnText': 'Next',
       'showCard': true,
@@ -318,11 +340,21 @@ class _ScanOnboardingModalState extends State<ScanOnboardingModal> {
       'title': 'Ready to scan',
       'image': 'assets/images/onboarding_scan_3.png',
       'items': [
-        'Scan your fridge, pantry, or ingredients',
-        'Try different angles for better results',
-        'The more visible, the better your recipes',
+        {
+          'icon': Icons.center_focus_weak_rounded,
+          'text': 'Scan your fridge, pantry, or ingredients',
+        },
+        {
+          'icon': Icons.crop_free_rounded,
+          'text': 'Try different angles for better results',
+        },
+        {
+          'icon': Icons.visibility_outlined,
+          'text': 'The more visible, the better your recipes',
+        },
       ],
       'btnText': 'Scan Now',
+      'showCard': false,
     },
   ];
 
@@ -337,55 +369,32 @@ class _ScanOnboardingModalState extends State<ScanOnboardingModal> {
   @override
   Widget build(BuildContext context) {
     final step = _steps[_currentPage];
+    final String? imageAsset = step['image'] as String?;
 
     return Scaffold(
-      backgroundColor: Colors.transparent,
+      backgroundColor: imageAsset != null ? Colors.transparent : const Color(0xFFF8FAFC),
       body: Stack(
         children: [
-          // Background with cross-fade
-          Positioned.fill(
-            child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 600),
-              child: Image.asset(
-                step['image'],
-                key: ValueKey(step['image']),
-                fit: BoxFit.cover,
-                width: double.infinity,
-                height: double.infinity,
-              ),
-            ),
-          ),
-
-          // Dimmer
-          Positioned.fill(
-            child: Container(color: Colors.black.withValues(alpha: 0.1)),
-          ),
-
-          // Skip button
-          Positioned(
-            top: 50.h,
-            right: 20.w,
-            child: GestureDetector(
-              onTap: () => Navigator.pop(context),
-              child: Container(
-                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 5.h),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFFF6D6),
-                  borderRadius: BorderRadius.circular(30.r),
-                  border: Border.all(color: Color(0xFFF2C94C), width: 1.w),
-                ),
-                child: Text(
-                  'Skip',
-                  style: TextStyle(
-                    fontFamily: 'SF Pro',
-                    fontSize: 13.sp,
-                    fontWeight: FontWeight.w600,
-                    color: const Color(0xFF1A1A1A),
-                  ),
+          // Background with cross-fade (for slides with food photos)
+          if (imageAsset != null)
+            Positioned.fill(
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 400),
+                child: Image.asset(
+                  imageAsset,
+                  key: ValueKey(imageAsset),
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                  height: double.infinity,
                 ),
               ),
             ),
-          ),
+
+          // Soft overlay for photo readability
+          if (imageAsset != null)
+            Positioned.fill(
+              child: Container(color: Colors.black.withValues(alpha: 0.1)),
+            ),
 
           // Logo Top Left
           Positioned(
@@ -393,29 +402,68 @@ class _ScanOnboardingModalState extends State<ScanOnboardingModal> {
             left: 20.w,
             child: Image.asset(
               'assets/images/logo2.png',
-              width: 40.w,
-              height: 40.h,
+              width: 38.w,
+              height: 38.w,
             ),
           ),
 
-          // Step 2 Ingredients Card
+          // Skip button (white pill)
+          Positioned(
+            top: 50.h,
+            right: 20.w,
+            child: GestureDetector(
+              onTap: () => Navigator.pop(context),
+              child: Container(
+                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20.r),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.06),
+                      blurRadius: 10,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Text(
+                  'Skip',
+                  style: TextStyle(
+                    fontFamily: 'Rubik',
+                    fontSize: 14.sp,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF0F172A),
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+          // Step 2 Floating Ingredients Card
           if (step['showCard'] == true)
             Positioned(
-              top: 150.h,
-              left: 24.w,
-              right: 24.w,
+              top: 110.h,
+              left: 20.w,
+              right: 20.w,
               child: _IngredientsDetectedCard(),
             ),
 
-          // Bottom Content
+          // Bottom Content Sheet
           Align(
             alignment: Alignment.bottomCenter,
             child: Container(
               width: double.infinity,
-              padding: EdgeInsets.fromLTRB(24.w, 32.h, 24.w, 40.h),
+              padding: EdgeInsets.fromLTRB(24.w, 28.h, 24.w, 34.h),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.vertical(top: Radius.circular(32.r)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.08),
+                    blurRadius: 20,
+                    offset: const Offset(0, -4),
+                  ),
+                ],
               ),
               child: SingleChildScrollView(
                 child: Column(
@@ -423,47 +471,72 @@ class _ScanOnboardingModalState extends State<ScanOnboardingModal> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      step['title'],
+                      step['title'] as String,
                       style: TextStyle(
-                        fontFamily: 'SF Pro',
-                        fontSize: 25.sp,
+                        fontFamily: 'Rubik',
+                        fontSize: 22.sp,
                         fontWeight: FontWeight.w800,
-                        color: const Color(0xFF1A1A1A),
+                        color: const Color(0xFF0F172A),
                       ),
                     ),
-                    SizedBox(height: 16.h),
+                    SizedBox(height: 18.h),
 
                     ...List.generate(
-                      step['items'].length,
-                      (i) => Padding(
-                        padding: EdgeInsets.only(bottom: 12.h),
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.check_circle_rounded,
-                              size: 20.sp,
-                              color: const Color(0xFFC83A2D),
-                            ),
-                            SizedBox(width: 12.w),
-                            Expanded(
-                              child: Text(
-                                step['items'][i],
-                                style: TextStyle(
-                                  fontFamily: 'SF Pro',
-                                  fontSize: 15.sp,
-                                  fontWeight: FontWeight.w500,
-                                  color: const Color(0xFF555555),
+                      (step['items'] as List).length,
+                      (i) {
+                        final item = (step['items'] as List)[i] as Map<String, dynamic>;
+                        return Padding(
+                          padding: EdgeInsets.only(bottom: 14.h),
+                          child: Row(
+                            children: [
+                              Icon(
+                                item['icon'] as IconData,
+                                size: 22.sp,
+                                color: const Color(0xFF475569),
+                              ),
+                              SizedBox(width: 14.w),
+                              Expanded(
+                                child: Text(
+                                  item['text'] as String,
+                                  style: TextStyle(
+                                    fontFamily: 'Rubik',
+                                    fontSize: 15.sp,
+                                    fontWeight: FontWeight.w500,
+                                    color: const Color(0xFF334155),
+                                  ),
                                 ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+
+                    SizedBox(height: 16.h),
+
+                    // Page Indicator (Active pill + inactive dots)
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(
+                        _steps.length,
+                        (i) => AnimatedContainer(
+                          duration: const Duration(milliseconds: 250),
+                          margin: EdgeInsets.symmetric(horizontal: 3.w),
+                          width: _currentPage == i ? 28.w : 6.w,
+                          height: 6.h,
+                          decoration: BoxDecoration(
+                            color: _currentPage == i
+                                ? const Color(0xFFC83A2D)
+                                : const Color(0xFFE2E8F0),
+                            borderRadius: BorderRadius.circular(3.r),
+                          ),
                         ),
                       ),
                     ),
 
-                    SizedBox(height: 24.h),
+                    SizedBox(height: 20.h),
 
-                    // Button
+                    // Bottom Button
                     SizedBox(
                       width: double.infinity,
                       height: 52.h,
@@ -472,7 +545,7 @@ class _ScanOnboardingModalState extends State<ScanOnboardingModal> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFFC83A2D),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20.r),
+                            borderRadius: BorderRadius.circular(26.r),
                           ),
                           elevation: 0,
                         ),
@@ -481,44 +554,22 @@ class _ScanOnboardingModalState extends State<ScanOnboardingModal> {
                           children: [
                             if (_currentPage == 2) ...[
                               Icon(
-                                Icons.qr_code_scanner,
+                                Icons.crop_free_rounded,
                                 size: 20.sp,
                                 color: Colors.white,
                               ),
                               SizedBox(width: 8.w),
                             ],
                             Text(
-                              step['btnText'],
+                              step['btnText'] as String,
                               style: TextStyle(
-                                fontFamily: 'SF Pro',
+                                fontFamily: 'Rubik',
                                 fontSize: 16.sp,
                                 fontWeight: FontWeight.w700,
                                 color: Colors.white,
                               ),
                             ),
                           ],
-                        ),
-                      ),
-                    ),
-
-                    SizedBox(height: 20.h),
-
-                    // Page Indicator
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: List.generate(
-                        _steps.length,
-                        (i) => AnimatedContainer(
-                          duration: const Duration(milliseconds: 300),
-                          margin: EdgeInsets.symmetric(horizontal: 4.w),
-                          width: _currentPage == i ? 24.w : 8.w,
-                          height: 4.h,
-                          decoration: BoxDecoration(
-                            color: _currentPage == i
-                                ? const Color(0xFFC83A2D)
-                                : const Color(0xFFFFD1D1),
-                            borderRadius: BorderRadius.circular(2.r),
-                          ),
                         ),
                       ),
                     ),
@@ -548,18 +599,15 @@ class _ImportOnboardingModalState extends State<ImportOnboardingModal> {
   final List<Map<String, dynamic>> _platforms = [
     {
       'name': 'Instagram',
-      'icon': 'assets/images/insta_logo.svg',
-      'shareIcon': 'assets/images/shared1.svg',
+      'asset': 'assets/images/insta_logo.svg',
     },
     {
       'name': 'TikTok',
-      'icon': 'assets/images/tiktok_logo.svg',
-      'shareIcon': 'assets/images/shared2.svg',
+      'asset': 'assets/images/tiktok_logo.svg',
     },
     {
-      'name': 'Youtube',
-      'icon': 'assets/images/you_logo.svg',
-      'shareIcon': 'assets/images/shared3.svg',
+      'name': 'YouTube',
+      'asset': 'assets/images/you_logo.svg',
     },
   ];
 
@@ -573,267 +621,231 @@ class _ImportOnboardingModalState extends State<ImportOnboardingModal> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.transparent,
-      body: Center(
-        child: Container(
-          width: 0.9.sw,
-          margin: EdgeInsets.symmetric(vertical: 40.h),
-          padding: EdgeInsets.only(bottom: 24.h),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(24.r),
+      body: Stack(
+        children: [
+          // Background food image
+          Positioned.fill(
+            child: Image.asset(
+              'assets/images/onboarding_scan_1.png',
+              fit: BoxFit.cover,
+              width: double.infinity,
+              height: double.infinity,
+            ),
           ),
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Header (Fixed inside scroll for simplicity)
-                Padding(
-                  padding: EdgeInsets.fromLTRB(20.w, 20.h, 20.w, 10.h),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Image.asset(
-                        'assets/images/logo2.png',
-                        width: 30.w,
-                        height: 30.h,
-                      ),
-                      GestureDetector(
+
+          // Soft overlay
+          Positioned.fill(
+            child: Container(color: Colors.black.withValues(alpha: 0.15)),
+          ),
+
+          // Logo Top Left
+          Positioned(
+            top: 50.h,
+            left: 20.w,
+            child: Image.asset(
+              'assets/images/logo2.png',
+              width: 38.w,
+              height: 38.w,
+            ),
+          ),
+
+          // Skip Button Top Right
+          Positioned(
+            top: 50.h,
+            right: 20.w,
+            child: GestureDetector(
+              onTap: () => Navigator.pop(context),
+              child: Container(
+                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20.r),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.06),
+                      blurRadius: 10,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Text(
+                  'Skip',
+                  style: TextStyle(
+                    fontFamily: 'Rubik',
+                    fontSize: 14.sp,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF0F172A),
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+          // Main White Bottom Sheet
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: Container(
+              width: double.infinity,
+              padding: EdgeInsets.fromLTRB(24.w, 20.h, 24.w, 30.h),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(32.r)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.1),
+                    blurRadius: 25,
+                    offset: const Offset(0, -5),
+                  ),
+                ],
+              ),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Top Close (X) Button
+                    Align(
+                      alignment: Alignment.topRight,
+                      child: GestureDetector(
                         onTap: () => Navigator.pop(context),
                         child: Container(
-                          padding: EdgeInsets.all(6.r),
+                          width: 32.r,
+                          height: 32.r,
                           decoration: const BoxDecoration(
-                            color: Color(0xFFF5F5F5),
+                            color: Color(0xFFF1F5F9),
                             shape: BoxShape.circle,
                           ),
                           child: Icon(
                             Icons.close_rounded,
                             size: 18.sp,
-                            color: Colors.black,
+                            color: const Color(0xFF0F172A),
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                // Mockup Section
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 20.w),
-                  child: Column(
-                    children: [
-                      Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 16.w,
-                          vertical: 12.h,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(30.r),
-                          border: Border.all(
-                            color: const Color(0xFFFFE57F),
-                            width: 1.5,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(0xFFFFECB3).withOpacity(0.5),
-                              blurRadius: 10,
-                              spreadRadius: 2,
-                            ),
-                          ],
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              'Paste a recipe link...',
-                              style: TextStyle(
-                                fontFamily: 'SF Pro',
-                                fontSize: 14.sp,
-                                color: const Color(0xFF666666),
-                              ),
-                            ),
-                            Icon(
-                              Icons.content_paste_rounded,
-                              size: 18.sp,
-                              color: const Color(0xFFC83A2D),
-                            ),
-                          ],
-                        ),
-                      ),
-                      SizedBox(height: 12.h),
-                      Container(
-                        width: double.infinity,
-                        height: 50.h,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFC83A2D),
-                          borderRadius: BorderRadius.circular(30.r),
-                        ),
-                        child: Center(
-                          child: Text(
-                            'Import Recipes',
-                            style: TextStyle(
-                              fontFamily: 'SF Pro',
-                              fontSize: 15.sp,
-                              fontWeight: FontWeight.w700,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                      ),
-                      SizedBox(height: 24.h),
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 20.w),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Import recipes from\nanywhere',
-                              style: TextStyle(
-                                fontFamily: 'SF Pro',
-                                fontSize: 24.sp,
-                                fontWeight: FontWeight.w800,
-                                color: const Color(0xFF1A1A1A),
-                                height: 1.1,
-                              ),
-                            ),
-                            SizedBox(height: 20.h),
-                            _BulletItem(
-                              text:
-                                  'Paste a link from TikTok, Instagram, or any website',
-                            ),
-                            _BulletItem(
-                              text:
-                                  'Or share directly from social apps to import instantly',
-                            ),
-                            _BulletItem(
-                              text:
-                                  'We\'ll turn it into a full recipe automatically',
-                            ),
-                            _BulletItem(text: 'Save it to your cookbook'),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                // Horizontal Carousel Section
-                SizedBox(
-                  height: 100.h,
-                  child: PageView.builder(
-                    controller: _pageController,
-                    onPageChanged: (idx) => setState(() => _currentPage = idx),
-                    itemCount: _platforms.length,
-                    itemBuilder: (context, index) {
-                      final platform = _platforms[index];
-                      return Container(
-                        margin: EdgeInsets.symmetric(horizontal: 20.w),
-                        padding: EdgeInsets.all(16.r),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF9FAFB),
-                          borderRadius: BorderRadius.circular(20.r),
-                          border: Border.all(color: const Color(0xFFE5E7EB)),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            _DiagramIcon(
-                              asset: platform['icon'],
-                              label: platform['name'],
-                            ),
-                            SvgPicture.asset(
-                              'assets/images/direction.svg',
-                              width: 10.w,
-                              height: 10.w,
-                            ),
-                            _DiagramIcon(
-                              asset: platform['shareIcon'],
-                              label: 'Share',
-                              isShare: true,
-                            ),
-                            SvgPicture.asset(
-                              'assets/images/direction.svg',
-                              width: 10.w,
-                              height: 10.w,
-                            ),
-                            const _DiagramIcon(
-                              asset: 'assets/images/logo2.png',
-                              label: 'Cooked',
-                            ),
-                            SvgPicture.asset(
-                              'assets/images/direction.svg',
-                              width: 10.w,
-                              height: 10.w,
-                            ),
-                            const _DiagramIcon(
-                              icon: Icons.archive_rounded,
-                              label: 'Imported\nRecipe',
-                              isImported: true,
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
-                ),
-
-                SizedBox(height: 12.h),
-
-                // Bottom indicators
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: List.generate(
-                    3,
-                    (i) => AnimatedContainer(
-                      duration: const Duration(milliseconds: 300),
-                      margin: EdgeInsets.symmetric(horizontal: 4.w),
-                      width: _currentPage == i ? 24.w : 8.w,
-                      height: 8.h,
-                      decoration: BoxDecoration(
-                        color: _currentPage == i
-                            ? const Color(0xFFC83A2D)
-                            : const Color(0xFFFFDADA),
-                        borderRadius: BorderRadius.circular(4),
                       ),
                     ),
-                  ),
+                    SizedBox(height: 8.h),
+
+                    // Mockup Input Field
+                    Container(
+                      width: double.infinity,
+                      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF1F5F9),
+                        borderRadius: BorderRadius.circular(16.r),
+                      ),
+                      child: Text(
+                        'Paste a recipe link...',
+                        style: TextStyle(
+                          fontFamily: 'Rubik',
+                          fontSize: 14.sp,
+                          color: const Color(0xFF94A3B8),
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 12.h),
+
+                    // Mockup Import Button
+                    Container(
+                      width: double.infinity,
+                      height: 48.h,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFC83A2D),
+                        borderRadius: BorderRadius.circular(24.r),
+                      ),
+                      child: Center(
+                        child: Text(
+                          'Import Recipes',
+                          style: TextStyle(
+                            fontFamily: 'Rubik',
+                            fontSize: 15.sp,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    SizedBox(height: 24.h),
+
+                    // Title
+                    Text(
+                      'Import recipes from anywhere',
+                      style: TextStyle(
+                        fontFamily: 'Rubik',
+                        fontSize: 22.sp,
+                        fontWeight: FontWeight.w800,
+                        color: const Color(0xFF0F172A),
+                      ),
+                    ),
+                    SizedBox(height: 16.h),
+
+                    // Bullets
+                    const _ImportBulletItem(
+                      icon: Icons.link_rounded,
+                      text: 'Paste a link from TikTok, Instagram, or any site',
+                    ),
+                    const _ImportBulletItem(
+                      icon: Icons.share_outlined,
+                      text: 'Or share directly from social apps to import instantly',
+                    ),
+                    const _ImportBulletItem(
+                      icon: Icons.auto_awesome_rounded,
+                      text: 'We\'ll turn it into a full recipe automatically',
+                    ),
+                    const _ImportBulletItem(
+                      icon: Icons.favorite_border_rounded,
+                      text: 'Save it to your cookbook',
+                    ),
+
+                    SizedBox(height: 20.h),
+
+                    // Swipeable Diagram Flow Carousel
+                    SizedBox(
+                      height: 80.h,
+                      child: PageView.builder(
+                        controller: _pageController,
+                        onPageChanged: (index) {
+                          setState(() => _currentPage = index);
+                        },
+                        itemCount: _platforms.length,
+                        itemBuilder: (context, index) {
+                          return _ImportFlowDiagram(platform: _platforms[index]);
+                        },
+                      ),
+                    ),
+
+                    SizedBox(height: 16.h),
+
+                    // Page Indicator (3 Dots)
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(
+                        _platforms.length,
+                        (i) => GestureDetector(
+                          onTap: () {
+                            _pageController.animateToPage(
+                              i,
+                              duration: const Duration(milliseconds: 300),
+                              curve: Curves.easeInOut,
+                            );
+                          },
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 250),
+                            margin: EdgeInsets.symmetric(horizontal: 3.w),
+                            width: _currentPage == i ? 28.w : 6.w,
+                            height: 6.h,
+                            decoration: BoxDecoration(
+                              color: _currentPage == i
+                                  ? const Color(0xFFC83A2D)
+                                  : const Color(0xFFE2E8F0),
+                              borderRadius: BorderRadius.circular(3.r),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                SizedBox(height: 10.h),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _BulletItem extends StatelessWidget {
-  final String text;
-  const _BulletItem({required this.text});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.only(bottom: 12.h),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.access_time_filled_rounded,
-            size: 16.sp,
-            color: const Color(0xFF444444),
-          ),
-          SizedBox(width: 12.w),
-          Expanded(
-            child: Text(
-              text,
-              style: TextStyle(
-                fontFamily: 'SF Pro',
-                fontSize: 13.sp,
-                fontWeight: FontWeight.w500,
-                color: const Color(0xFF555555),
               ),
             ),
           ),
@@ -843,77 +855,125 @@ class _BulletItem extends StatelessWidget {
   }
 }
 
-class _DiagramIcon extends StatelessWidget {
-  final String? asset;
-  final IconData? icon;
-  final String label;
-  final bool isShare;
-  final bool isImported;
-
-  const _DiagramIcon({
-    this.asset,
-    this.icon,
-    required this.label,
-    this.isShare = false,
-    this.isImported = false,
-  });
+class _ImportBulletItem extends StatelessWidget {
+  final IconData icon;
+  final String text;
+  const _ImportBulletItem({required this.icon, required this.text});
 
   @override
   Widget build(BuildContext context) {
-    bool isSvg = asset?.endsWith('.svg') ?? false;
-    bool useWhiteBg = !isShare && !isSvg && label != 'Instagram';
-
-    return Column(
-      children: [
-        Container(
-          width: 35.w,
-          height: 35.w,
-          decoration: BoxDecoration(
-            color: useWhiteBg ? Colors.white : Colors.transparent,
-            borderRadius: BorderRadius.circular(12.r),
-            boxShadow: useWhiteBg
-                ? [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.08),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ]
-                : null,
+    return Padding(
+      padding: EdgeInsets.only(bottom: 14.h),
+      child: Row(
+        children: [
+          Icon(
+            icon,
+            size: 22.sp,
+            color: const Color(0xFF475569),
           ),
-          child: Center(
-            child: asset != null
-                ? (asset!.endsWith('.svg')
-                      ? SvgPicture.asset(
-                          asset!,
-                          width: useWhiteBg ? 20.w : 30.w,
-                          height: useWhiteBg ? 20.w : 30.w,
-                        )
-                      : Image.asset(
-                          asset!,
-                          width: useWhiteBg ? 24.w : 35.w,
-                          height: useWhiteBg ? 24.w : 35.w,
-                        ))
-                : Icon(
-                    icon!,
-                    size: isImported ? 25.sp : 27.sp,
-                    color: isImported ? const Color(0xFFC83A2D) : Colors.black,
-                  ),
+          SizedBox(width: 14.w),
+          Expanded(
+            child: Text(
+              text,
+              style: TextStyle(
+                fontFamily: 'Rubik',
+                fontSize: 15.sp,
+                fontWeight: FontWeight.w500,
+                color: const Color(0xFF334155),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ImportFlowDiagram extends StatelessWidget {
+  final Map<String, dynamic> platform;
+  const _ImportFlowDiagram({required this.platform});
+
+  @override
+  Widget build(BuildContext context) {
+    final String name = platform['name'] as String;
+    final String asset = platform['asset'] as String;
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        // Card 1: Platform
+        _FlowCard(
+          label: name,
+          child: SvgPicture.asset(
+            asset,
+            width: 20.w,
+            height: 20.w,
+            colorFilter: const ColorFilter.mode(Color(0xFF0F172A), BlendMode.srcIn),
           ),
         ),
-        SizedBox(height: 8.h),
-        Text(
-          label,
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            fontFamily: 'SF Pro',
-            fontSize: 10.sp,
-            fontWeight: FontWeight.w600,
-            color: const Color(0xFF333333),
-            height: 1.1,
-          ),
+        Icon(Icons.arrow_forward_rounded, size: 12.sp, color: const Color(0xFFC83A2D)),
+
+        // Card 2: Share
+        _FlowCard(
+          label: 'Share',
+          child: Icon(Icons.reply_rounded, size: 20.sp, color: const Color(0xFFC83A2D)),
+        ),
+        Icon(Icons.arrow_forward_rounded, size: 12.sp, color: const Color(0xFFC83A2D)),
+
+        // Card 3: Cooked
+        _FlowCard(
+          label: 'Cooked',
+          child: Image.asset('assets/images/logo2.png', width: 20.w, height: 20.w),
+        ),
+        Icon(Icons.arrow_forward_rounded, size: 12.sp, color: const Color(0xFFC83A2D)),
+
+        // Card 4: Import
+        _FlowCard(
+          label: 'Import',
+          child: Icon(Icons.archive_outlined, size: 20.sp, color: const Color(0xFFC83A2D)),
         ),
       ],
+    );
+  }
+}
+
+class _FlowCard extends StatelessWidget {
+  final Widget child;
+  final String label;
+  const _FlowCard({required this.child, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 64.w,
+      height: 68.h,
+      decoration: BoxDecoration(
+        color: const Color(0xFFF1F5F9),
+        borderRadius: BorderRadius.circular(16.r),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          child,
+          SizedBox(height: 4.h),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 2.w),
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontFamily: 'Rubik',
+                  fontSize: 11.sp,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF0F172A),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -926,6 +986,8 @@ class _TutorialContent extends StatelessWidget {
   final VoidCallback onNext;
   final VoidCallback onSkip;
   final bool isLast;
+  final Alignment arrowAlignment;
+  final bool isArrowPointingDown;
 
   const _TutorialContent({
     required this.title,
@@ -935,117 +997,188 @@ class _TutorialContent extends StatelessWidget {
     required this.onNext,
     required this.onSkip,
     this.isLast = false,
+    this.arrowAlignment = Alignment.bottomCenter,
+    this.isArrowPointingDown = true,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10.r),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 12.sp,
-                    fontWeight: FontWeight.w800,
-                    color: const Color(0xFF1A1A1A),
-                    fontFamily: 'SF Pro',
-                  ),
-                ),
-              ),
-              Text(
-                "$step/$totalSteps",
-                style: TextStyle(
-                  fontSize: 11.sp,
-                  fontWeight: FontWeight.w600,
-                  color: const Color(0xFF888888),
-                  fontFamily: 'SF Pro',
-                ),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (!isArrowPointingDown)
+          _TrianglePointer(
+            isPointingDown: false,
+            alignment: arrowAlignment,
+          ),
+        Container(
+          margin: EdgeInsets.symmetric(horizontal: 12.w),
+          padding: EdgeInsets.fromLTRB(20.w, 18.h, 20.w, 18.h),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24.r),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.15),
+                blurRadius: 20,
+                offset: const Offset(0, 6),
               ),
             ],
           ),
-          SizedBox(height: 4.h),
-          Text(
-            description,
-            style: TextStyle(
-              fontSize: 11.sp,
-              fontWeight: FontWeight.w500,
-              color: const Color(0xFF555555),
-              fontFamily: 'SF Pro',
-            ),
-          ),
-          SizedBox(height: 12.h),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (!isLast)
-                TextButton(
-                  onPressed: onSkip,
-                  style: TextButton.styleFrom(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(25.r),
-                      side: const BorderSide(color: Color(0xFFE5E5E5)),
-                    ),
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 20.w,
-                      vertical: 6.h,
-                    ),
-                    minimumSize: Size.zero,
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  ),
-                  child: Text(
-                    "Skip",
+              // Header Row: Title & Step Count
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    title,
                     style: TextStyle(
-                      color: const Color(0xFF737373),
-                      fontSize: 12.sp,
-                      fontWeight: FontWeight.w600,
-                      fontFamily: 'SF Pro',
+                      fontFamily: 'Rubik',
+                      fontSize: 18.sp,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF0F172A),
                     ),
                   ),
-                )
-              else
-                const Spacer(),
-              ElevatedButton(
-                onPressed: onNext,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFC83A2D),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(25.r),
+                  Text(
+                    '$step/$totalSteps',
+                    style: TextStyle(
+                      fontFamily: 'Rubik',
+                      fontSize: 14.sp,
+                      fontWeight: FontWeight.w500,
+                      color: const Color(0xFF94A3B8),
+                    ),
                   ),
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 24.w,
-                    vertical: 8.h,
-                  ),
-                  elevation: 0,
-                  minimumSize: Size.zero,
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ],
+              ),
+              SizedBox(height: 8.h),
+
+              // Description
+              Text(
+                description,
+                style: TextStyle(
+                  fontFamily: 'Rubik',
+                  fontSize: 14.sp,
+                  fontWeight: FontWeight.w400,
+                  color: const Color(0xFF64748B),
+                  height: 1.3,
                 ),
-                child: Text(
-                  isLast ? "Done" : "Next",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 13.sp,
-                    fontWeight: FontWeight.w700,
-                    fontFamily: 'SF Pro',
+              ),
+              SizedBox(height: 20.h),
+
+              // Action Buttons Row (Skip & Next)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // Skip Pill Button
+                  GestureDetector(
+                    onTap: onSkip,
+                    child: Container(
+                      padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 10.h),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF1F5F9),
+                        borderRadius: BorderRadius.circular(20.r),
+                      ),
+                      child: Text(
+                        'Skip',
+                        style: TextStyle(
+                          fontFamily: 'Rubik',
+                          fontSize: 14.sp,
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFF0F172A),
+                        ),
+                      ),
+                    ),
                   ),
-                ),
+
+                  // Next Pill Button
+                  GestureDetector(
+                    onTap: onNext,
+                    child: Container(
+                      padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 10.h),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFC83A2D),
+                        borderRadius: BorderRadius.circular(20.r),
+                      ),
+                      child: Text(
+                        'Next',
+                        style: TextStyle(
+                          fontFamily: 'Rubik',
+                          fontSize: 14.sp,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
-        ],
+        ),
+        if (isArrowPointingDown)
+          _TrianglePointer(
+            isPointingDown: true,
+            alignment: arrowAlignment,
+          ),
+      ],
+    );
+  }
+}
+
+class _TrianglePointer extends StatelessWidget {
+  final bool isPointingDown;
+  final Alignment alignment;
+
+  const _TrianglePointer({
+    required this.isPointingDown,
+    required this.alignment,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: alignment,
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 40.w),
+        child: CustomPaint(
+          size: Size(18.w, 12.h),
+          painter: _TrianglePainterCanvas(isPointingDown: isPointingDown),
+        ),
       ),
     );
   }
+}
+
+class _TrianglePainterCanvas extends CustomPainter {
+  final bool isPointingDown;
+  _TrianglePainterCanvas({required this.isPointingDown});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.fill;
+
+    final path = Path();
+    if (isPointingDown) {
+      path.moveTo(0, 0);
+      path.lineTo(size.width / 2, size.height);
+      path.lineTo(size.width, 0);
+    } else {
+      path.moveTo(0, size.height);
+      path.lineTo(size.width / 2, 0);
+      path.lineTo(size.width, size.height);
+    }
+    path.close();
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 class CookbookOnboardingModal extends StatefulWidget {
@@ -1116,7 +1249,7 @@ class _CookbookOnboardingModalState extends State<CookbookOnboardingModal> {
 
           // Dimmer
           Positioned.fill(
-            child: Container(color: Colors.black.withOpacity(0.2)),
+            child: Container(color: Colors.black.withValues(alpha: 0.2)),
           ),
 
           // Close button
@@ -1278,79 +1411,60 @@ class _IngredientsDetectedCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(18.r),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16.r),
+        borderRadius: BorderRadius.circular(28.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.06),
             blurRadius: 20,
-            offset: const Offset(0, 10),
+            offset: const Offset(0, 8),
           ),
         ],
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Header
-          Container(
-            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-            decoration: BoxDecoration(
-              color: const Color(0xFFFFF7E6),
-              borderRadius: BorderRadius.vertical(top: Radius.circular(16.r)),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  padding: EdgeInsets.all(6.r),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFFCC00),
-                    borderRadius: BorderRadius.circular(8.r),
-                  ),
-                  child: Icon(
-                    Icons.auto_awesome_rounded,
-                    size: 16.sp,
-                    color: Colors.white,
-                  ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Ingredients detected',
+                style: TextStyle(
+                  fontFamily: 'Rubik',
+                  fontSize: 16.sp,
+                  fontWeight: FontWeight.w800,
+                  color: const Color(0xFF0F172A),
                 ),
-                SizedBox(width: 12.w),
-                Expanded(
-                  child: Text(
-                    'Ingredients detected',
-                    style: TextStyle(
-                      fontFamily: 'SF Pro',
-                      fontSize: 15.sp,
-                      fontWeight: FontWeight.bold,
-                      color: const Color(0xFF1A1A1A),
-                    ),
-                  ),
+              ),
+              Text(
+                'Edit',
+                style: TextStyle(
+                  fontFamily: 'Rubik',
+                  fontSize: 14.sp,
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFFC83A2D),
                 ),
-                Text(
-                  'Edit',
-                  style: TextStyle(
-                    fontFamily: 'SF Pro',
-                    fontSize: 14.sp,
-                    fontWeight: FontWeight.bold,
-                    color: const Color(0xFFC83A2D),
-                    decoration: TextDecoration.underline,
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
-          // List
-          Padding(
-            padding: EdgeInsets.all(16.r),
+          SizedBox(height: 14.h),
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFAF5E8),
+              borderRadius: BorderRadius.circular(20.r),
+            ),
             child: Column(
-              children: [
-                _IngredientItem(icon: Icons.apple_rounded, name: 'Tomatoes'),
-                SizedBox(height: 12.h),
-                _IngredientItem(
-                  icon: Icons.egg_rounded,
-                  name: 'Chicken breast',
-                ),
-                SizedBox(height: 12.h),
-                _IngredientItem(icon: Icons.grass_rounded, name: 'Garlic'),
+              children: const [
+                _IngredientDetectedRow(emoji: '🍅', name: 'Tomatoes'),
+                Divider(color: Color(0xFFE2E8F0), height: 20),
+                _IngredientDetectedRow(emoji: '🍗', name: 'Chicken breast'),
+                Divider(color: Color(0xFFE2E8F0), height: 20),
+                _IngredientDetectedRow(emoji: '🧄', name: 'Garlic'),
               ],
             ),
           ),
@@ -1360,24 +1474,24 @@ class _IngredientsDetectedCard extends StatelessWidget {
   }
 }
 
-class _IngredientItem extends StatelessWidget {
-  final IconData icon;
+class _IngredientDetectedRow extends StatelessWidget {
+  final String emoji;
   final String name;
-  const _IngredientItem({required this.icon, required this.name});
+  const _IngredientDetectedRow({required this.emoji, required this.name});
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(icon, size: 16.sp, color: Colors.black87),
-        SizedBox(width: 12.w),
+        Text(emoji, style: TextStyle(fontSize: 18.sp)),
+        SizedBox(width: 10.w),
         Text(
           name,
           style: TextStyle(
-            fontFamily: 'SF Pro',
-            fontSize: 14.sp,
+            fontFamily: 'Rubik',
+            fontSize: 15.sp,
             fontWeight: FontWeight.w600,
-            color: const Color(0xFF1A1A1A),
+            color: const Color(0xFF0F172A),
           ),
         ),
       ],

@@ -9,7 +9,6 @@ import '../../widgets/recipe_card.dart';
 import '../../models/recipe.dart';
 import '../../models/cookbook.dart';
 import '../../models/creator.dart';
-import '../../widgets/cookbook_cover.dart';
 import '../../services/recipe_service.dart';
 import '../../services/history_service.dart';
 import '../../services/cookbook_service.dart';
@@ -24,6 +23,8 @@ import '../../widgets/cookbook_form_modal.dart';
 import '../../widgets/haptic_context_menu.dart';
 import '../../core/utils/error_helper.dart';
 import '../../widgets/recent_import_tile.dart';
+import '../../widgets/saved_recipe_card.dart';
+import '../../widgets/app_top_header.dart';
 
 // ══════════════════════════════════════════════════════════════════════════════
 // VIEW ALL SCREEN
@@ -79,104 +80,140 @@ class _ViewAllScreenState extends State<ViewAllScreen> {
     final args =
         ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
     final ViewAllType type = args['type'] as ViewAllType;
-    final String title = args['title'] as String;
+    final String title = type == ViewAllType.exploreCuisines
+        ? 'Cuisine'
+        : (args['title'] as String? ?? '');
     final bool showPlus = type == ViewAllType.cookbooks;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFF0F1F3),
       resizeToAvoidBottomInset: false,
-      body: SafeArea(
-        child: Column(
-          children: [
-            // ── AppBar ────────────────────────────────────────────────────
-            Padding(
-              padding: const EdgeInsets.fromLTRB(18, 30, 18, 0),
-              child: Row(
+      body: Column(
+        children: [
+          const AppTopHeader(),
+          Expanded(
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(
+                  top: Radius.circular(32.r),
+                ),
+              ),
+              child: Column(
                 children: [
-                  GestureDetector(
-                    onTap: () => Navigator.pop(context),
-                    child: const Icon(
-                      Icons.arrow_back_rounded,
-                      size: 20,
-                      color: Color(0xFF1A1A1A),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                  // ── AppBar ────────────────────────────────────────────────────
+                  Padding(
+                    padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 12.h),
+                    child: Row(
                       children: [
-                        Text(
-                          title.toTitleCase(),
-                          style: const TextStyle(
-                            fontFamily: 'SF Pro',
-                            fontWeight: FontWeight.w800,
-                            fontSize: 20,
-                            color: Color(0xFF1A1A1A),
+                        GestureDetector(
+                          onTap: () => Navigator.pop(context),
+                          child: Container(
+                            width: 42.r,
+                            height: 42.r,
+                            decoration: const BoxDecoration(
+                              color: Color(0xFFF1F5F9),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              Icons.arrow_back_rounded,
+                              size: 20.sp,
+                              color: const Color(0xFF0F172A),
+                            ),
                           ),
                         ),
-                        _buildSubtitleBadge(type),
+                        Expanded(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                title.toTitleCase(),
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontFamily: 'Rubik',
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 22.sp,
+                                  color: const Color(0xFF0F172A),
+                                ),
+                              ),
+                              _buildSubtitleBadge(type),
+                            ],
+                          ),
+                        ),
+                        if (showPlus)
+                          GestureDetector(
+                            onTap: () async {
+                              await showModalBottomSheet(
+                                context: context,
+                                isScrollControlled: true,
+                                backgroundColor: Colors.transparent,
+                                builder: (context) => const CookbookFormModal(),
+                              );
+                            },
+                            child: Container(
+                              width: 42.r,
+                              height: 42.r,
+                              decoration: const BoxDecoration(
+                                color: Color(0xFFF1F5F9),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(
+                                Icons.add_rounded,
+                                color: const Color(0xFF0F172A),
+                                size: 22.sp,
+                              ),
+                            ),
+                          )
+                        else
+                          SizedBox(width: 42.r),
                       ],
                     ),
                   ),
-                  if (showPlus)
-                    GestureDetector(
-                      onTap: () async {
-                        await showModalBottomSheet(
-                          context: context,
-                          isScrollControlled: true,
-                          backgroundColor: Colors.transparent,
-                          builder: (context) => const CookbookFormModal(),
-                        );
+
+                  SizedBox(height: 4.h),
+
+                  // ── Search bar (matches design mockup) ────────────────────
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16.w),
+                    child: AppSearchField(
+                      onChanged: (val) {
+                        _searchQueryNotifier.value = val;
                       },
-                      child: Container(
-                        width: 30,
-                        height: 30,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFC83A2D),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: const Icon(
-                          Icons.add_rounded,
-                          color: Colors.white,
-                          size: 20,
-                        ),
+                      hintText: type == ViewAllType.cookbooks
+                          ? 'Search your recipes'
+                          : type == ViewAllType.exploreCuisines
+                              ? 'Search cuisine ...'
+                              : type == ViewAllType.exploreCategories
+                                  ? 'Search category ...'
+                                  : type == ViewAllType.exploreRecipesByCuisine
+                                      ? 'Search ${title.toLowerCase()} recipes...'
+                                      : 'Search recipes, cookbooks...',
+                      backgroundColor: const Color(0xFFF1F5F9),
+                      borderColor: Colors.transparent,
+                      borderRadius: 16.r,
+                    ),
+                  ),
+
+                  SizedBox(height: 16.h),
+
+                  // ── Content ───────────────────────────────────────────────────
+                  Expanded(
+                    child: RefreshIndicator(
+                      onRefresh: () => _handleRefresh(type),
+                      color: const Color(0xFFC83A2D),
+                      child: ValueListenableBuilder<String>(
+                        valueListenable: _searchQueryNotifier,
+                        builder: (context, query, _) {
+                          return _buildContent(type, query);
+                        },
                       ),
                     ),
+                  ),
                 ],
               ),
             ),
-
-            const SizedBox(height: 10),
-
-            // ── Search bar (matches home screen style) ────────────────────
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 18),
-              child: AppSearchField(
-                onChanged: (val) {
-                  _searchQueryNotifier.value = val;
-                },
-                hintText: 'Search recipes, cookbooks...',
-              ),
-            ),
-
-            const SizedBox(height: 16),
-
-            // ── Content ───────────────────────────────────────────────────
-            Expanded(
-              child: RefreshIndicator(
-                onRefresh: () => _handleRefresh(type),
-                color: const Color(0xFFC83A2D),
-                child: ValueListenableBuilder<String>(
-                  valueListenable: _searchQueryNotifier,
-                  builder: (context, query, _) {
-                    return _buildContent(type, query);
-                  },
-                ),
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -231,6 +268,73 @@ class _ViewAllScreenState extends State<ViewAllScreen> {
 // ══════════════════════════════════════════════════════════════════════════════
 // COOKBOOKS GRID
 // ══════════════════════════════════════════════════════════════════════════════
+class _OverlappingAvatars extends StatelessWidget {
+  final List<String> imageUrls;
+  const _OverlappingAvatars({required this.imageUrls});
+
+  @override
+  Widget build(BuildContext context) {
+    final List<String> defaultAssets = [
+      'assets/images/plat1.png',
+      'assets/images/plat2.png',
+      'assets/images/plat3.png',
+    ];
+
+    List<Widget> avatarWidgets = [];
+    for (int i = 0; i < 3; i++) {
+      String path = i < imageUrls.length && imageUrls[i].isNotEmpty
+          ? imageUrls[i]
+          : defaultAssets[i % defaultAssets.length];
+
+      avatarWidgets.add(
+        Positioned(
+          left: (i * 22).w,
+          child: Container(
+            width: 36.r,
+            height: 36.r,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.white, width: 2.r),
+              color: const Color(0xFFF1F5F9),
+            ),
+            child: ClipOval(
+              child: path.startsWith('http')
+                  ? CachedNetworkImage(
+                      imageUrl: path,
+                      fit: BoxFit.cover,
+                      errorWidget: (_, __, ___) => Image.asset(
+                        defaultAssets[i % defaultAssets.length],
+                        fit: BoxFit.cover,
+                      ),
+                    )
+                  : Image.asset(
+                      path,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => Image.asset(
+                        defaultAssets[i % defaultAssets.length],
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    return SizedBox(
+      height: 36.r,
+      width: (36 + 2 * 22).w,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: avatarWidgets,
+      ),
+    );
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// COOKBOOKS GRID
+// ══════════════════════════════════════════════════════════════════════════════
 class _CookbooksGrid extends StatefulWidget {
   final String searchQuery;
   const _CookbooksGrid({super.key, this.searchQuery = ''});
@@ -254,8 +358,9 @@ class _CookbooksGridState extends State<_CookbooksGrid> {
       valueListenable: CookbookService.instance.myCookbooksNotifier,
       builder: (context, cookbooks, _) {
         if (cookbooks == null) {
-          return const CookbookGridSkeleton(
-            padding: EdgeInsets.fromLTRB(16, 4, 16, 20),
+          return CookbookGridSkeleton(
+            childAspectRatio: 1.15,
+            padding: EdgeInsets.fromLTRB(16.w, 4.h, 16.w, 20.h),
           );
         }
 
@@ -276,16 +381,21 @@ class _CookbooksGridState extends State<_CookbooksGrid> {
         }
 
         return GridView.builder(
-          padding: const EdgeInsets.fromLTRB(16, 4, 16, 20),
+          padding: EdgeInsets.fromLTRB(16.w, 4.h, 16.w, 20.h),
           itemCount: displayList.length,
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 2,
-            crossAxisSpacing: 12,
-            mainAxisSpacing: 16,
-            childAspectRatio: 0.72,
+            crossAxisSpacing: 14.w,
+            mainAxisSpacing: 14.h,
+            childAspectRatio: 1.15,
           ),
           itemBuilder: (ctx, i) {
             final cb = displayList[i];
+            final imageUrls = cb.recipes
+                .map((r) => r.image ?? '')
+                .where((img) => img.isNotEmpty)
+                .toList();
+
             return GestureDetector(
               onTap: () async {
                 final result = await Navigator.pushNamed(
@@ -350,7 +460,7 @@ class _CookbooksGridState extends State<_CookbooksGrid> {
                       onTap: () async {
                         try {
                           await CookbookService.instance.deleteCookbook(cb.id);
-                          if (mounted) {
+                          if (ctx.mounted) {
                             IosToast.show(
                               ctx,
                               message: 'Cookbook deleted',
@@ -358,7 +468,7 @@ class _CookbooksGridState extends State<_CookbooksGrid> {
                             );
                           }
                         } catch (e) {
-                          if (mounted) {
+                          if (ctx.mounted) {
                             IosToast.show(
                               ctx,
                               message: 'Failed to delete cookbook',
@@ -371,42 +481,60 @@ class _CookbooksGridState extends State<_CookbooksGrid> {
                   ],
                 );
               },
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(child: CookbookCover(cookbook: cb)),
-                  const SizedBox(height: 7),
-                  Text(
-                    cb.name.toTitleCase(),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontFamily: 'SF Pro',
-                      fontWeight: FontWeight.w700,
-                      fontSize: 14,
-                      color: Color(0xFF222222),
+              child: Container(
+                padding: EdgeInsets.all(14.r),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFAF5E8),
+                  borderRadius: BorderRadius.circular(20.r),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    _OverlappingAvatars(imageUrls: imageUrls),
+                    SizedBox(height: 8.h),
+                    Text(
+                      cb.name.toTitleCase(),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontFamily: 'Rubik',
+                        fontWeight: FontWeight.w800,
+                        fontSize: 15.sp,
+                        color: const Color(0xFF0F172A),
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 2),
-                  Row(
-                    children: [
-                      const Icon(
-                        Icons.restaurant_outlined,
-                        size: 13,
-                        color: Color(0xFF9CA3AF),
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        '${cb.recipes.length} Recipes',
-                        style: const TextStyle(
-                          fontFamily: 'SF Pro',
-                          fontSize: 11,
-                          color: Color(0xFF9CA3AF),
+                    SizedBox(height: 6.h),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.flatware_rounded,
+                          size: 15.sp,
+                          color: const Color(0xFF64748B),
                         ),
-                      ),
-                    ],
-                  ),
-                ],
+                        SizedBox(width: 4.w),
+                        Expanded(
+                          child: Text(
+                            '${cb.recipes.length} Recipes',
+                            style: TextStyle(
+                              fontFamily: 'Rubik',
+                              fontWeight: FontWeight.w500,
+                              fontSize: 13.sp,
+                              color: const Color(0xFF64748B),
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        Icon(
+                          Icons.chevron_right_rounded,
+                          size: 18.sp,
+                          color: const Color(0xFF64748B),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             );
           },
@@ -469,19 +597,55 @@ class _RecipesGridState extends State<_RecipesGrid> {
         final args =
             ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
         final cuisine = args['cuisine'] as String?;
-        _future = RecipeService.instance.getExploreRecipes(
-          cuisine: cuisine,
-          size: 50,
-        );
+        _future = RecipeService.instance
+            .getExploreRecipes(cuisine: cuisine, size: 50)
+            .then((results) async {
+              if (results.isNotEmpty) return results;
+              final myRecs = RecipeService.instance.myRecipesNotifier.value ?? [];
+              final suggestions = RecipeService.instance.homeSuggestionsNotifier.value ?? [];
+              final combined = [...myRecs, ...suggestions];
+              if (cuisine != null && cuisine.isNotEmpty) {
+                final q = cuisine.toLowerCase();
+                final matches = combined
+                    .where(
+                      (r) =>
+                          (r.cuisine != null &&
+                              r.cuisine!.toLowerCase().contains(q)) ||
+                          r.name.toLowerCase().contains(q),
+                    )
+                    .toList();
+                if (matches.isNotEmpty) return matches;
+              }
+              return combined;
+            });
         break;
       case ViewAllType.exploreRecipesByCategory:
         final args =
             ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
         final category = args['category'] as String?;
-        _future = RecipeService.instance.getExploreRecipes(
-          category: category,
-          size: 50,
-        );
+        _future = RecipeService.instance
+            .getExploreRecipes(category: category, size: 50)
+            .then((results) async {
+              if (results.isNotEmpty) return results;
+              final myRecs = RecipeService.instance.myRecipesNotifier.value ?? [];
+              final suggestions = RecipeService.instance.homeSuggestionsNotifier.value ?? [];
+              final combined = [...myRecs, ...suggestions];
+              if (category != null && category.isNotEmpty) {
+                final q = category.toLowerCase();
+                final matches = combined
+                    .where(
+                      (r) =>
+                          (r.categories != null &&
+                              r.categories!.any(
+                                (c) => c.toLowerCase().contains(q),
+                              )) ||
+                          r.name.toLowerCase().contains(q),
+                    )
+                    .toList();
+                if (matches.isNotEmpty) return matches;
+              }
+              return combined;
+            });
         break;
       case ViewAllType.groceryHistory:
         _future = _fetchGroceryHistory();
@@ -574,6 +738,37 @@ class _RecipesGridState extends State<_RecipesGrid> {
                 index: i,
                 onValidate: () => _handleValidation(ctx, r, isSaved),
                 isValidated: isSaved,
+              );
+            },
+          );
+        }
+
+        if (_type == ViewAllType.exploreRecipesByCuisine ||
+            _type == ViewAllType.exploreRecipesByCategory ||
+            _type == ViewAllType.savedRecipes ||
+            _type == ViewAllType.recentlyViewed ||
+            _type == ViewAllType.explore) {
+          return ListView.separated(
+            padding: EdgeInsets.fromLTRB(16.w, 4.h, 16.w, 20.h),
+            itemCount: displayList.length,
+            separatorBuilder: (_, __) => SizedBox(height: 12.h),
+            itemBuilder: (ctx, i) {
+              final r = displayList[i];
+              final isSaved =
+                  r.isInCookbook ||
+                  savedIds.contains(r.id) ||
+                  _validatedRecipeIds.contains(r.id);
+
+              return SavedRecipeCard(
+                recipe: r,
+                isPinned: isSaved,
+                onTap: () async {
+                  await Navigator.pushNamed(
+                    ctx,
+                    AppRoutes.recipeDetail,
+                    arguments: {'recipe': r, 'isPreview': !isSaved},
+                  );
+                },
               );
             },
           );
@@ -976,6 +1171,15 @@ class _StaticCookbooksGridState extends State<_StaticCookbooksGrid> {
   Future<List<Map<String, dynamic>>>? _future;
   late final int _refreshTimestamp;
 
+  final List<Map<String, dynamic>> _fallbackCuisines = [
+    {"name": "Italian", "image": "assets/cuisine/italian.png"},
+    {"name": "Mexican", "image": "assets/cuisine/mexican.png"},
+    {"name": "Asian", "image": "assets/cuisine/chinese.png"},
+    {"name": "Indian", "image": "assets/cuisine/indian.png"},
+    {"name": "Spanish", "image": "assets/images/plat5.png"},
+    {"name": "Japanese", "image": "assets/cuisine/japanese.png"},
+  ];
+
   @override
   void initState() {
     super.initState();
@@ -985,6 +1189,21 @@ class _StaticCookbooksGridState extends State<_StaticCookbooksGrid> {
     } else {
       _future = RecipeService.instance.getExploreCuisines();
     }
+  }
+
+  String _getFallbackImage(String name) {
+    final lower = name.toLowerCase();
+    if (lower.contains('italian')) return 'assets/cuisine/italian.png';
+    if (lower.contains('mexican')) return 'assets/cuisine/mexican.png';
+    if (lower.contains('asian') || lower.contains('chinese')) return 'assets/cuisine/chinese.png';
+    if (lower.contains('indian')) return 'assets/cuisine/indian.png';
+    if (lower.contains('japanese')) return 'assets/cuisine/japanese.png';
+    if (lower.contains('spanish')) return 'assets/images/plat5.png';
+    if (lower.contains('mediterranean')) return 'assets/cuisine/mediterranean.png';
+    if (lower.contains('caribbean')) return 'assets/cuisine/caribbean.png';
+    if (lower.contains('thai')) return 'assets/cuisine/thai.png';
+    if (lower.contains('african')) return 'assets/cuisine/west-african.png';
+    return 'assets/cuisine/others.png';
   }
 
   @override
@@ -998,11 +1217,16 @@ class _StaticCookbooksGridState extends State<_StaticCookbooksGrid> {
           );
         }
 
-        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+        List<Map<String, dynamic>> items = snapshot.data ?? [];
+
+        if (items.isEmpty && widget.type == ViewAllType.exploreCuisines) {
+          items = _fallbackCuisines;
+        }
+
+        if (items.isEmpty) {
           return const Center(child: Text("No items found."));
         }
 
-        final List<Map<String, dynamic>> items = snapshot.data!;
         var filteredItems = items;
 
         if (widget.searchQuery.trim().isNotEmpty) {
@@ -1026,13 +1250,13 @@ class _StaticCookbooksGridState extends State<_StaticCookbooksGrid> {
 
   Widget _buildGrid(List<Map<String, dynamic>> items) {
     return GridView.builder(
-      padding: const EdgeInsets.fromLTRB(16, 4, 16, 20),
+      padding: EdgeInsets.fromLTRB(16.w, 4.h, 16.w, 20.h),
       itemCount: items.length,
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
-        crossAxisSpacing: 12,
-        mainAxisSpacing: 16,
-        childAspectRatio: 0.72,
+        crossAxisSpacing: 14.w,
+        mainAxisSpacing: 16.h,
+        childAspectRatio: 0.78,
       ),
       itemBuilder: (ctx, i) {
         final item = items[i];
@@ -1040,7 +1264,7 @@ class _StaticCookbooksGridState extends State<_StaticCookbooksGrid> {
         final img = item['image'] as String?;
         final count = item['recipeCount'] as int? ?? 0;
 
-        return _buildItem(ctx, name, img, 'assets/images/others.png', count);
+        return _buildItem(ctx, name, img, _getFallbackImage(name), count);
       },
     );
   }
@@ -1052,10 +1276,11 @@ class _StaticCookbooksGridState extends State<_StaticCookbooksGrid> {
     String fallbackImg,
     int count,
   ) {
-    final bool isCuisine = widget.type == ViewAllType.exploreCuisines;
     final bustedImageUrl = imgUrl != null && imgUrl.isNotEmpty
         ? '$imgUrl${imgUrl.contains('?') ? '&' : '?'}t=$_refreshTimestamp'
         : '';
+    final isNetwork = imgUrl != null && imgUrl.startsWith('http');
+
     return GestureDetector(
       onTap: () {
         Navigator.pushNamed(
@@ -1073,84 +1298,67 @@ class _StaticCookbooksGridState extends State<_StaticCookbooksGrid> {
           },
         );
       },
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: Container(
-                width: double.infinity,
-                color: const Color(0xFFF2F1EF),
-                child: imgUrl != null && imgUrl.startsWith('http')
-                    ? CachedNetworkImage(
-                        imageUrl: bustedImageUrl,
-                        cacheKey: imgUrl,
-                        fit: BoxFit.cover,
-                        placeholder: (context, url) => const Center(
-                          child: SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Color(0xFFC83A2D),
+      child: Container(
+        decoration: BoxDecoration(
+          color: const Color(0xFFFAF6EE),
+          borderRadius: BorderRadius.circular(24.r),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: ClipRRect(
+                borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+                child: Container(
+                  width: double.infinity,
+                  color: const Color(0xFFF2F1EF),
+                  child: isNetwork
+                      ? CachedNetworkImage(
+                          imageUrl: bustedImageUrl,
+                          cacheKey: imgUrl,
+                          fit: BoxFit.cover,
+                          placeholder: (context, url) => const Center(
+                            child: SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Color(0xFFC83A2D),
+                              ),
                             ),
                           ),
+                          errorWidget: (context, url, error) => Image.asset(
+                            fallbackImg,
+                            fit: BoxFit.cover,
+                          ),
+                        )
+                      : Image.asset(
+                          imgUrl != null && imgUrl.isNotEmpty ? imgUrl : fallbackImg,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => Image.asset(
+                            fallbackImg,
+                            fit: BoxFit.cover,
+                          ),
                         ),
-                        errorWidget: (context, url, error) => isCuisine
-                            ? Center(
-                                child: Icon(
-                                  Icons.restaurant_menu,
-                                  color: const Color(0xFFC83A2D),
-                                  size: 32,
-                                ),
-                              )
-                            : Image.asset(fallbackImg, fit: BoxFit.cover),
-                      )
-                    : isCuisine
-                    ? Center(
-                        child: Icon(
-                          Icons.restaurant_menu,
-                          color: const Color(0xFFC83A2D),
-                          size: 32,
-                        ),
-                      )
-                    : Image.asset(fallbackImg, fit: BoxFit.cover),
-              ),
-            ),
-          ),
-          const SizedBox(height: 7),
-          Text(
-            name.toTitleCase(),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              fontFamily: 'SF Pro',
-              fontWeight: FontWeight.w700,
-              fontSize: 14,
-              color: Color(0xFF222222),
-            ),
-          ),
-          SizedBox(height: 2.h),
-          Row(
-            children: [
-              Icon(
-                Icons.restaurant_menu,
-                size: 13.sp,
-                color: const Color(0xFF9CA3AF),
-              ),
-              SizedBox(width: 4.w),
-              Text(
-                '$count Recipes',
-                style: TextStyle(
-                  fontFamily: 'SF Pro',
-                  fontSize: 11.sp,
-                  color: const Color(0xFF9CA3AF),
                 ),
               ),
-            ],
-          ),
-        ],
+            ),
+            Padding(
+              padding: EdgeInsets.fromLTRB(14.w, 12.h, 14.w, 14.h),
+              child: Text(
+                name.toTitleCase(),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontFamily: 'Rubik',
+                  fontWeight: FontWeight.w700,
+                  fontSize: 16.sp,
+                  color: const Color(0xFF0F172A),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

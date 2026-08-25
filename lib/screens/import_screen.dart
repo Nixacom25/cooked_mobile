@@ -2,8 +2,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_svg/svg.dart';
 import '../widgets/app_search_field.dart';
+import '../widgets/app_top_header.dart';
 import '../services/recipe_service.dart';
 import '../models/recipe.dart';
 import '../routes/app_routes.dart';
@@ -54,6 +54,24 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
   double _startLeft = 0;
   double _startWidth = 0;
 
+  final _linkCtrl = TextEditingController();
+  final _searchCtrl = TextEditingController();
+  bool _isImporting = false;
+  bool _isSearching = false;
+  List<Map<String, dynamic>> _searchResults = [];
+
+  Timer? _searchDebounce;
+  List<Map<String, dynamic>> _suggestedWebRecipes = [];
+
+  List<String> _trendingRecipes = [
+    'High protein dinner',
+    'Quinoa salad with chickpeas',
+    'Grilled salmon with asparagus',
+    'Stuffed bell peppers with turkey',
+    'Lentil soup with spinach',
+    'Tofu stir-fry with broccoli',
+  ];
+
   @override
   void initState() {
     super.initState();
@@ -70,7 +88,6 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
       
       if (widget.initialUrl != null && widget.initialUrl!.isNotEmpty) {
         _linkCtrl.text = widget.initialUrl!;
-        // Open web preview instead of direct import as requested
         WidgetsBinding.instance.addPostFrameCallback((_) {
           _showWebPreview(widget.initialUrl!, 'Recipe Preview');
         });
@@ -103,7 +120,7 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
     if (url != null && url.isNotEmpty) {
       if (!_isImporting && _linkCtrl.text != url) {
         _linkCtrl.text = url;
-        SharingService.instance.consumeSharedText(); // Consume immediately
+        SharingService.instance.consumeSharedText();
         _showWebPreview(url, 'Recipe Preview');
       }
     }
@@ -127,7 +144,7 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
   Future<void> _loadTrending() async {
     try {
       final trending = await RecipeService.instance.getTrendingAiDishes();
-      if (mounted) {
+      if (mounted && trending.isNotEmpty) {
         setState(() {
           _trendingRecipes = trending;
         });
@@ -135,16 +152,20 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
     } catch (_) {}
   }
 
-  final _linkCtrl = TextEditingController();
-  final _searchCtrl = TextEditingController();
-  bool _isImporting = false;
-  bool _isSearching = false;
-  List<Map<String, dynamic>> _searchResults = [];
-
-  Timer? _searchDebounce;
-  List<Map<String, dynamic>> _suggestedWebRecipes = [];
-
-  List<String> _trendingRecipes = [];
+  void _onPlatformTap(String domain) async {
+    HapticFeedback.lightImpact();
+    final d = await Clipboard.getData('text/plain');
+    if (d?.text != null && d!.text!.contains(domain)) {
+      _linkCtrl.text = d.text!;
+      if (mounted) {
+        IosToast.show(context, message: 'Link pasted from clipboard', type: ToastType.success);
+      }
+    } else {
+      if (mounted) {
+        IosToast.show(context, message: 'Paste a $domain recipe link in the box below', type: ToastType.warning);
+      }
+    }
+  }
 
   Future<void> _showWebPreview(String url, String title) async {
     showModalBottomSheet(
@@ -167,18 +188,17 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
       },
     );
   }
+
   Future<void> _importFromUrl(String url) async {
     if (url.isEmpty) return;
     HapticFeedback.lightImpact();
     setState(() => _isImporting = true);
     widget.isImportingNotifier?.value = true;
 
-    // Check for duplicates before importing
     final savedRecipes = RecipeService.instance.myRecipesNotifier.value ?? [];
     final recentImports = RecipeService.instance.recentImportsNotifier.value ?? [];
     
     Recipe? existing;
-    // Normalize search URL (simple trim and lowercase)
     final searchUrl = url.trim().toLowerCase();
 
     for (final r in savedRecipes) {
@@ -250,7 +270,6 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
     HapticFeedback.selectionClick();
     setState(() {
       _isSearching = true;
-      _hasSearched = true;
       _searchResults = [];
     });
     _importSearchOverlayEntry?.markNeedsBuild();
@@ -311,10 +330,8 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
       return;
     }
 
-    // 1. Update local state immediately to trigger the "falling check" animation
     _updateLocalStateForValidation(r);
 
-    // 2. Perform backend validation
     RecipeService.instance.validateRecipe(r.id).catchError((e) {
       if (mounted) {
         IosToast.show(context, message: ErrorHelper.getFriendlyMessage(e), type: ToastType.error);
@@ -322,12 +339,10 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
       return r;
     });
 
-    // 3. Wait for the falling animation to complete (700ms in AnimatedValidationButton)
     await Future.delayed(const Duration(milliseconds: 800));
 
     if (!mounted) return;
 
-    // 4. Show the modal
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -344,20 +359,16 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
     
     final validatedRecipe = r.copyWith(origin: 'MANUAL', isValidated: true, isSuggested: false);
 
-    // Update local animation state if needed
     setState(() => _validatedRecipeIds.add(r.id));
 
-    // Update global state via notifiers
     final currentSaved = RecipeService.instance.myRecipesNotifier.value ?? [];
     if (!currentSaved.any((item) => item.id == r.id)) {
       RecipeService.instance.myRecipesNotifier.value = [validatedRecipe, ...currentSaved];
     }
 
-    // Refresh backgrounds
     RecipeService.instance.getMyRecipes(forceRefresh: true).catchError((_) => <Recipe>[]);
     RecipeService.instance.getRecentImports(forceRefresh: true).catchError((_) => <Recipe>[]);
     
-    // Clear animation state after a delay if desired, or let the refresh handle it
     Future.delayed(const Duration(milliseconds: 1500), () {
       if (mounted) {
         setState(() => _validatedRecipeIds.remove(r.id));
@@ -365,11 +376,23 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
     });
   }
 
+  Future<void> _handleDeleteRecipe(Recipe r) async {
+    final success = await RecipeService.instance.deleteRecipe(r.id);
+    if (!mounted) return;
+    if (success) {
+      await RecipeService.instance.getRecentImports(forceRefresh: true);
+      if (!mounted) return;
+      setState(() {});
+      IosToast.show(context, message: 'Recipe deleted', type: ToastType.success);
+    }
+  }
+
   @override
   void dispose() {
     widget.isActiveNotifier?.removeListener(_onActiveStateChanged);
     SharingService.instance.sharedTextNotifier.removeListener(_onSharedUrlUpdated);
     _linkCtrl.dispose();
+    _searchCtrl.dispose();
     _overlaySearchCtrl.dispose();
     _importSearchController.dispose();
     _searchDebounce?.cancel();
@@ -407,7 +430,6 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
   }
 
   bool _isSearchingModal = false;
-  bool _hasSearched = false;
 
   void _showImportSearchOverlay() {
     _removeImportSearchOverlay();
@@ -432,377 +454,428 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
     }
 
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
-    return Scaffold(
-      backgroundColor: Colors.white,
-      resizeToAvoidBottomInset: false,
-      body: SafeArea(
-        bottom: false,
-        child: ListView(
-          padding: EdgeInsets.fromLTRB(22.w, 0, 22.w, bottomInset + 120.h),
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: Scaffold(
+        backgroundColor: const Color(0xFFF0F1F3),
+        resizeToAvoidBottomInset: false,
+        body: Column(
           children: [
-            Text(
-              'Import',
-              style: TextStyle(
-                fontFamily: 'SF Pro',
-                fontWeight: FontWeight.w800,
-                fontSize: 24.sp,
-                color: const Color(0xFF1A1A1A),
-              ),
-            ),
-            const SizedBox(height: 20),
-            Center(
-              child: Text(
-                'Recipe Link',
-                style: TextStyle(
-                  fontFamily: 'SF Pro',
-                  fontWeight: FontWeight.bold,
-                  fontSize: 13.sp,
-                  color: const Color(0xFF888888),
-                ),
-              ),
-            ),
-            const SizedBox(height: 14),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                _PlatformImg(asset: 'assets/images/instagram.png'),
-                SizedBox(width: 15.w),
-                _PlatformImg(asset: 'assets/images/facebook.png'),
-                SizedBox(width: 15.w),
-                _PlatformImg(asset: 'assets/images/tiktok.png'),
-                SizedBox(width: 15.w),
-                _PlatformImg(asset: 'assets/images/youtube.png'),
-              ],
-            ),
-            const SizedBox(height: 15),
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(50.r),
-                border: Border.all(color: const Color(0xFFE0E0E0)),
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _linkCtrl,
-                      style: TextStyle(
-                        fontFamily: 'SF Pro',
-                        fontSize: 14.sp,
-                        color: const Color(0xFF1A1A1A),
-                      ),
-                      decoration: InputDecoration(
-                        hintText: 'Paste a recipe link...',
-                        hintStyle: TextStyle(
-                          fontFamily: 'SF Pro',
-                          fontSize: 14.sp,
-                          color: Colors.grey[400],
-                        ),
-                        filled: true,
-                        fillColor: Colors.transparent,
-                        border: InputBorder.none,
-                        enabledBorder: InputBorder.none,
-                        focusedBorder: InputBorder.none,
-                        contentPadding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
-                      ),
-                    ),
-                  ),
-                  ValueListenableBuilder<TextEditingValue>(
-                    valueListenable: _linkCtrl,
-                    builder: (context, value, _) {
-                      final bool hasText = value.text.isNotEmpty;
-                      return GestureDetector(
-                        onTap: () async {
-                          if (hasText) {
-                            _linkCtrl.clear();
-                          } else {
-                            final d = await Clipboard.getData('text/plain');
-                            if (d?.text != null) _linkCtrl.text = d!.text!;
-                          }
-                        },
-                        child: Padding(
-                          padding: EdgeInsets.only(right: 18.w),
-                          child: Icon(
-                            hasText ? Icons.close_rounded : Icons.content_paste_rounded,
-                            size: 20.sp,
-                            color: const Color(0xFF7A8499),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 15),
-            RedButton(
-              label: 'Import Recipes',
-              loadingLabel: 'Importing',
-              isLoading: _isImporting,
-              onTap: () => _importFromUrl(_linkCtrl.text.trim()),
-              height: 50.h,
-              fontSize: 15.sp,
-            ),
-            const SizedBox(height: 25),
-            Row(
-              children: [
-                const Expanded(child: Divider(color: Color(0xFFE5E5E5))),
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 14.w),
-                  child: Text(
-                    'OR',
-                    style: TextStyle(
-                      fontFamily: 'SF Pro',
-                      fontSize: 14.sp,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.grey[500],
-                    ),
-                  ),
-                ),
-                const Expanded(child: Divider(color: Color(0xFFE5E5E5))),
-              ],
-            ),
-            const SizedBox(height: 25),
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 18.w),
-              child: Opacity(
-                opacity: _isSearchingModal ? 0.0 : 1.0,
-                child: GestureDetector(
-                  onTap: () => _toggleSearchModal(true),
-                  child: AbsorbPointer(
-                    child: AppSearchField(
-                      key: _searchFieldKey,
-                      controller: _searchCtrl,
-                      hintText: 'Search web',
-                      suffixIcon: Icons.check_circle_rounded,
-                      onSuffixTap: () {},
-                      onSubmitted: (_) {},
-                      onChanged: (_) {},
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            if (_suggestedWebRecipes.isNotEmpty && !_isSearching)
-              Container(
-                margin: EdgeInsets.symmetric(horizontal: 18.w, vertical: 8.h),
-                constraints: BoxConstraints(maxHeight: 250.h),
+            // Standard App Top Header
+            const AppTopHeader(),
+
+            // Main White Container Sheet
+            Expanded(
+              child: Container(
+                width: double.infinity,
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(12.r),
-                  border: Border.all(color: Colors.grey.shade200),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(32.r)),
                 ),
-                child: ListView.builder(
-                  shrinkWrap: true,
-                  padding: EdgeInsets.zero,
-                  itemCount: _suggestedWebRecipes.length,
-                  itemBuilder: (ctx, i) {
-                    final res = _suggestedWebRecipes[i];
-                    return ListTile(
-                      title: Text(
-                        _capitalize(res['name'] ?? ''),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(fontFamily: 'SF Pro', fontSize: 14.sp),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(32.r)),
+                  child: ListView(
+                    padding: EdgeInsets.fromLTRB(20.w, 20.h, 20.w, bottomInset + 120.h),
+                    children: [
+                      // Header Title: "Import"
+                      Text(
+                        'Import',
+                        style: TextStyle(
+                          fontFamily: 'Rubik',
+                          fontWeight: FontWeight.w800,
+                          fontSize: 24.sp,
+                          color: const Color(0xFF0F172A),
+                        ),
                       ),
-                      onTap: () {
-                        final title = _capitalize(res['name'] ?? '');
-                        setState(() => _suggestedWebRecipes = []);
-                        _searchCtrl.text = title;
-                        _handleWebSearch(title);
-                      },
-                    );
-                  },
-                ),
-              ),
-            SizedBox(height: 25.h),
-            if (_isSearching)
-              Padding(
-                padding: EdgeInsets.symmetric(vertical: 20.h),
-                child: const SkeletonList(height: 80, itemCount: 3),
-              )
-            else if (_searchResults.isNotEmpty)
-              _WebSearchResults(
-                results: _searchResults,
-                onView: (url, title) => _showWebPreview(url, title),
-                onClear: () => setState(() => _searchResults = []),
-              ),
-            if (_trendingRecipes.isNotEmpty) ...[
-              Text(
-                'Trending',
-                style: TextStyle(
-                  fontFamily: 'SF Pro',
-                  fontWeight: FontWeight.w800,
-                  fontSize: 16.sp,
-                  color: const Color(0xFF1A1A1A),
-                ),
-              ),
-              SizedBox(height: 12.h),
-              Wrap(
-                spacing: 8.w,
-                runSpacing: 8.h,
-                children: _trendingRecipes.map((name) => _TrendingChip(
-                  name: name,
-                  onImport: () {
-                    _searchCtrl.text = name;
-                    _handleWebSearch(name);
-                  },
-                )).toList(),
-              ),
-              SizedBox(height: 25.h),
-            ],
-            ValueListenableBuilder<List<Recipe>?>(
-              valueListenable: RecipeService.instance.recentImportsNotifier,
-              builder: (context, importsList, _) {
-                final List<Recipe> list = importsList ?? [];
-                return Column(
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Recent Imports',
+                      SizedBox(height: 20.h),
+
+                      // Section Title: "Recipe Link"
+                      Center(
+                        child: Text(
+                          'Recipe Link',
                           style: TextStyle(
-                            fontFamily: 'SF Pro',
+                            fontFamily: 'Rubik',
                             fontWeight: FontWeight.w800,
-                            fontSize: 18.sp,
-                            color: const Color(0xFF1A1A1A),
+                            fontSize: 16.sp,
+                            color: const Color(0xFF0F172A),
                           ),
                         ),
-                        if (list.length > 3)
-                          GestureDetector(
-                            onTap: () {
-                              Navigator.pushNamed(
-                                context,
-                                AppRoutes.viewAll,
-                                arguments: {
-                                  'type': ViewAllType.imports,
-                                  'title': 'Recent Imports',
-                                },
-                              );
-                            },
+                      ),
+                      SizedBox(height: 14.h),
+
+                      // Social Platforms Row (YouTube, TikTok, Instagram, Facebook)
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          _SocialPlatformCard(
+                            label: 'YouTube',
+                            asset: 'assets/images/youtube.png',
+                            onTap: () => _onPlatformTap('youtube.com'),
+                          ),
+                          _SocialPlatformCard(
+                            label: 'TikTok',
+                            asset: 'assets/images/tiktok.png',
+                            onTap: () => _onPlatformTap('tiktok.com'),
+                          ),
+                          _SocialPlatformCard(
+                            label: 'Instagram',
+                            asset: 'assets/images/instagram.png',
+                            onTap: () => _onPlatformTap('instagram.com'),
+                          ),
+                          _SocialPlatformCard(
+                            label: 'Facebook',
+                            asset: 'assets/images/facebook.png',
+                            onTap: () => _onPlatformTap('facebook.com'),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 20.h),
+
+                      // Input Box for Link
+                      Container(
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF1F5F9),
+                          borderRadius: BorderRadius.circular(16.r),
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: TextField(
+                                controller: _linkCtrl,
+                                style: TextStyle(
+                                  fontFamily: 'Rubik',
+                                  fontSize: 14.sp,
+                                  color: const Color(0xFF0F172A),
+                                ),
+                                decoration: InputDecoration(
+                                  hintText: 'Paste a recipe link...',
+                                  hintStyle: TextStyle(
+                                    fontFamily: 'Rubik',
+                                    fontSize: 14.sp,
+                                    color: const Color(0xFF94A3B8),
+                                  ),
+                                  filled: true,
+                                  fillColor: Colors.transparent,
+                                  border: InputBorder.none,
+                                  enabledBorder: InputBorder.none,
+                                  focusedBorder: InputBorder.none,
+                                  contentPadding: EdgeInsets.symmetric(horizontal: 18.w, vertical: 16.h),
+                                ),
+                              ),
+                            ),
+                            ValueListenableBuilder<TextEditingValue>(
+                              valueListenable: _linkCtrl,
+                              builder: (context, value, _) {
+                                final bool hasText = value.text.isNotEmpty;
+                                return GestureDetector(
+                                  onTap: () async {
+                                    if (hasText) {
+                                      _linkCtrl.clear();
+                                    } else {
+                                      final d = await Clipboard.getData('text/plain');
+                                      if (d?.text != null) _linkCtrl.text = d!.text!;
+                                    }
+                                  },
+                                  child: Padding(
+                                    padding: EdgeInsets.only(right: 16.w),
+                                    child: Icon(
+                                      hasText ? Icons.close_rounded : Icons.content_paste_rounded,
+                                      size: 20.sp,
+                                      color: const Color(0xFF64748B),
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                      SizedBox(height: 16.h),
+
+                      // Import Recipes Red Pill Button
+                      RedButton(
+                        label: 'Import Recipes',
+                        loadingLabel: 'Importing',
+                        isLoading: _isImporting,
+                        onTap: () => _importFromUrl(_linkCtrl.text.trim()),
+                        height: 50.h,
+                        fontSize: 15.sp,
+                      ),
+                      SizedBox(height: 24.h),
+
+                      // Divider "── OR ──"
+                      Row(
+                        children: [
+                          const Expanded(child: Divider(color: Color(0xFFE2E8F0))),
+                          Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 14.w),
                             child: Text(
-                              'View All',
+                              'OR',
                               style: TextStyle(
-                                fontFamily: 'SF Pro',
+                                fontFamily: 'Rubik',
+                                fontSize: 13.sp,
                                 fontWeight: FontWeight.w600,
-                                fontSize: 14.sp,
-                                color: const Color(0xFFC83A2D),
+                                color: const Color(0xFF94A3B8),
                               ),
                             ),
                           ),
-                      ],
-                    ),
-                    SizedBox(height: 12.h),
-                    if (importsList == null)
-                      const SkeletonList(height: 80, itemCount: 3)
-                    else if (list.isEmpty)
-                      Center(
-                        child: Text(
-                          'No recent imports yet.',
-                          style: TextStyle(color: Colors.grey, fontSize: 13.sp),
-                        ),
-                      )
-                    else
-                      ...list.take(5).toList().asMap().entries.map((entry) {
-                        final i = entry.key;
-                        final r = entry.value;
-                        String source = 'Web';
-                        IconData icon = Icons.language_rounded;
-                        Color iconColor = const Color(0xFF888888);
-                        String? sourceAsset;
+                          const Expanded(child: Divider(color: Color(0xFFE2E8F0))),
+                        ],
+                      ),
+                      SizedBox(height: 24.h),
 
-                        if (r.sourceUrl?.contains('instagram.com') ?? false) {
-                          source = 'Instagram';
-                          iconColor = const Color(0xFFe6683c);
-                          sourceAsset = 'assets/images/instagram.png';
-                        } else if (r.sourceUrl?.contains('tiktok.com') ?? false) {
-                          source = 'TikTok';
-                          iconColor = Colors.black;
-                          sourceAsset = 'assets/images/tiktok.png';
-                        } else if (r.sourceUrl?.contains('youtube.com') ?? false) {
-                          source = 'YouTube';
-                          iconColor = Colors.red;
-                          sourceAsset = 'assets/images/youtube.png';
-                        } else if (r.sourceUrl?.contains('facebook.com') ?? false) {
-                          source = 'Facebook';
-                          iconColor = Colors.blue;
-                          sourceAsset = 'assets/images/facebook.png';
-                        }
-
-                        final bool isSaved = _validatedRecipeIds.contains(r.id) || r.isInCookbook;
-
-                        return GestureDetector(
-                          onTap: () {
-                            Navigator.pushNamed(
-                              context,
-                              AppRoutes.recipeDetail,
-                              arguments: {
-                                'recipe': r,
-                                'isPreview': !isSaved,
-                              },
-                            );
-                          },
-                          onLongPressStart: (details) {
-                            HapticContextMenu.show(
-                              context,
-                              targetPosition: details.globalPosition,
-                              actions: [
-                                HapticMenuAction(
-                                  title: 'Edit Recipe',
-                                  icon: Icons.edit_outlined,
-                                  onTap: () {
-                                    // Edit
-                                  },
-                                ),
-                                HapticMenuAction(
-                                  title: 'Share Recipe',
-                                  icon: Icons.ios_share_rounded,
-                                  onTap: () {
-                                    // Share
-                                  },
-                                ),
-                                HapticMenuAction(
-                                  title: 'Delete Recipe',
-                                  icon: Icons.delete_outline_rounded,
-                                  isDestructive: true,
-                                  onTap: () async {
-                                    final success = await RecipeService.instance.deleteRecipe(r.id);
-                                    if (success && mounted) {
-                                      await RecipeService.instance.getRecentImports(forceRefresh: true);
-                                      setState(() {});
-                                      IosToast.show(context, message: 'Recipe deleted', type: ToastType.success);
-                                    }
-                                  },
-                                ),
-                              ],
-                            );
-                          },
-                          child: RecentImportTile(
-                            img: r.image ?? '',
-                            title: r.name,
-                            source: source,
-                            sourceUrl: r.sourceUrl,
-                            srcIcon: icon,
-                            srcIconColor: iconColor,
-                            srcAsset: sourceAsset,
-                            isSuggested: true, // Force true to show the button
-                            index: i,
-                            onValidate: () => _handleValidation(r),
-                            isValidated: isSaved,
+                      // Search Web Box
+                      Opacity(
+                        opacity: _isSearchingModal ? 0.0 : 1.0,
+                        child: GestureDetector(
+                          onTap: () => _toggleSearchModal(true),
+                          child: AbsorbPointer(
+                            child: Container(
+                              height: 50.h,
+                              padding: EdgeInsets.symmetric(horizontal: 16.w),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF1F5F9),
+                                borderRadius: BorderRadius.circular(16.r),
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(Icons.search_rounded, color: const Color(0xFF64748B), size: 22.sp),
+                                  SizedBox(width: 10.w),
+                                  Text(
+                                    'Search web',
+                                    style: TextStyle(
+                                      fontFamily: 'Rubik',
+                                      fontSize: 14.sp,
+                                      color: const Color(0xFF94A3B8),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
-                        );
-                      }),
-                  ],
-                );
-              },
+                        ),
+                      ),
+
+                      if (_suggestedWebRecipes.isNotEmpty && !_isSearching)
+                        Container(
+                          margin: EdgeInsets.only(top: 8.h),
+                          constraints: BoxConstraints(maxHeight: 250.h),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16.r),
+                            border: Border.all(color: const Color(0xFFE2E8F0)),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.05),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: ListView.builder(
+                            shrinkWrap: true,
+                            padding: EdgeInsets.zero,
+                            itemCount: _suggestedWebRecipes.length,
+                            itemBuilder: (ctx, i) {
+                              final res = _suggestedWebRecipes[i];
+                              return ListTile(
+                                title: Text(
+                                  _capitalize(res['name'] ?? ''),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(fontFamily: 'Rubik', fontSize: 14.sp),
+                                ),
+                                onTap: () {
+                                  final title = _capitalize(res['name'] ?? '');
+                                  setState(() => _suggestedWebRecipes = []);
+                                  _searchCtrl.text = title;
+                                  _handleWebSearch(title);
+                                },
+                              );
+                            },
+                          ),
+                        ),
+
+                      SizedBox(height: 24.h),
+
+                      if (_isSearching)
+                        Padding(
+                          padding: EdgeInsets.symmetric(vertical: 20.h),
+                          child: const SkeletonList(height: 80, itemCount: 3),
+                        )
+                      else if (_searchResults.isNotEmpty)
+                        _WebSearchResults(
+                          results: _searchResults,
+                          onView: (url, title) => _showWebPreview(url, title),
+                          onClear: () => setState(() => _searchResults = []),
+                        ),
+
+                      // Trending Section
+                      if (_trendingRecipes.isNotEmpty) ...[
+                        Text(
+                          'Trending',
+                          style: TextStyle(
+                            fontFamily: 'Rubik',
+                            fontWeight: FontWeight.w800,
+                            fontSize: 16.sp,
+                            color: const Color(0xFF0F172A),
+                          ),
+                        ),
+                        SizedBox(height: 12.h),
+                        Wrap(
+                          spacing: 8.w,
+                          runSpacing: 8.h,
+                          children: _trendingRecipes.map((name) => _TrendingChip(
+                            name: name,
+                            onImport: () {
+                              _searchCtrl.text = name;
+                              _handleWebSearch(name);
+                            },
+                          )).toList(),
+                        ),
+                        SizedBox(height: 28.h),
+                      ],
+
+                      // Recent Imports Section
+                      ValueListenableBuilder<List<Recipe>?>(
+                        valueListenable: RecipeService.instance.recentImportsNotifier,
+                        builder: (context, importsList, _) {
+                          final List<Recipe> list = importsList ?? [];
+                          return Column(
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    'Recent Imports',
+                                    style: TextStyle(
+                                      fontFamily: 'Rubik',
+                                      fontWeight: FontWeight.w800,
+                                      fontSize: 18.sp,
+                                      color: const Color(0xFF0F172A),
+                                    ),
+                                  ),
+                                  if (list.length > 3)
+                                    GestureDetector(
+                                      onTap: () {
+                                        Navigator.pushNamed(
+                                          context,
+                                          AppRoutes.viewAll,
+                                          arguments: {
+                                            'type': ViewAllType.imports,
+                                            'title': 'Recent Imports',
+                                          },
+                                        );
+                                      },
+                                      child: Text(
+                                        'View All',
+                                        style: TextStyle(
+                                          fontFamily: 'Rubik',
+                                          fontWeight: FontWeight.w700,
+                                          fontSize: 14.sp,
+                                          color: const Color(0xFFC83A2D),
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                              SizedBox(height: 14.h),
+                              if (importsList == null)
+                                const SkeletonList(height: 80, itemCount: 3)
+                              else if (list.isEmpty)
+                                Center(
+                                  child: Text(
+                                    'No recent imports yet.',
+                                    style: TextStyle(fontFamily: 'Rubik', color: const Color(0xFF94A3B8), fontSize: 13.sp),
+                                  ),
+                                )
+                              else
+                                ...list.take(5).toList().asMap().entries.map((entry) {
+                                  final i = entry.key;
+                                  final r = entry.value;
+                                  String source = 'Web';
+                                  IconData icon = Icons.language_rounded;
+                                  Color iconColor = const Color(0xFF888888);
+                                  String? sourceAsset;
+
+                                  if (r.sourceUrl?.contains('instagram.com') ?? false) {
+                                    source = 'Instagram';
+                                    iconColor = const Color(0xFFe6683c);
+                                    sourceAsset = 'assets/images/instagram.png';
+                                  } else if (r.sourceUrl?.contains('tiktok.com') ?? false) {
+                                    source = 'TikTok';
+                                    iconColor = Colors.black;
+                                    sourceAsset = 'assets/images/tiktok.png';
+                                  } else if (r.sourceUrl?.contains('youtube.com') ?? false) {
+                                    source = 'YouTube';
+                                    iconColor = Colors.red;
+                                    sourceAsset = 'assets/images/youtube.png';
+                                  } else if (r.sourceUrl?.contains('facebook.com') ?? false) {
+                                    source = 'Facebook';
+                                    iconColor = Colors.blue;
+                                    sourceAsset = 'assets/images/facebook.png';
+                                  }
+
+                                  final bool isSaved = _validatedRecipeIds.contains(r.id) || r.isInCookbook;
+
+                                  return GestureDetector(
+                                    onTap: () {
+                                      Navigator.pushNamed(
+                                        context,
+                                        AppRoutes.recipeDetail,
+                                        arguments: {
+                                          'recipe': r,
+                                          'isPreview': !isSaved,
+                                        },
+                                      );
+                                    },
+                                    onLongPressStart: (details) {
+                                      HapticContextMenu.show(
+                                        context,
+                                        targetPosition: details.globalPosition,
+                                        actions: [
+                                          HapticMenuAction(
+                                            title: 'Edit Recipe',
+                                            icon: Icons.edit_outlined,
+                                            onTap: () {},
+                                          ),
+                                          HapticMenuAction(
+                                            title: 'Share Recipe',
+                                            icon: Icons.ios_share_rounded,
+                                            onTap: () {},
+                                          ),
+                                          HapticMenuAction(
+                                            title: 'Delete Recipe',
+                                            icon: Icons.delete_outline_rounded,
+                                            isDestructive: true,
+                                            onTap: () => _handleDeleteRecipe(r),
+                                          ),
+                                        ],
+                                      );
+                                    },
+                                    child: RecentImportTile(
+                                      img: r.image ?? '',
+                                      title: r.name,
+                                      source: source,
+                                      sourceUrl: r.sourceUrl,
+                                      srcIcon: icon,
+                                      srcIconColor: iconColor,
+                                      srcAsset: sourceAsset,
+                                      isSuggested: true,
+                                      index: i,
+                                      onValidate: () => _handleValidation(r),
+                                      isValidated: isSaved,
+                                    ),
+                                  );
+                                }),
+                            ],
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ),
           ],
         ),
@@ -818,12 +891,10 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
         final size = MediaQuery.of(context).size;
         final topPadding = MediaQuery.of(context).padding.top;
 
-        // Use pre-calculated positions to avoid jank in the builder
         final originalTop = _startTop > 0 ? _startTop : 400.0;
         final originalLeft = _startLeft > 0 ? _startLeft : 20.w;
         final originalWidth = _startWidth > 0 ? _startWidth : size.width - 40.w;
 
-        // Animated values
         final sheetHeight = val * size.height;
         final fieldTop = Tween<double>(begin: originalTop, end: topPadding + 10.h).transform(val);
         final fieldLeft = Tween<double>(begin: originalLeft, end: 16.w).transform(val);
@@ -833,7 +904,6 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
           color: Colors.transparent,
           child: Stack(
             children: [
-              // The Rising Sheet
               Positioned(
                 bottom: 0,
                 left: 0,
@@ -845,7 +915,7 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
                     borderRadius: BorderRadius.vertical(top: Radius.circular((1 - val) * 30.r)),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.1 * val),
+                        color: Colors.black.withValues(alpha: 0.1 * val),
                         blurRadius: 20,
                         offset: const Offset(0, -5),
                       )
@@ -854,7 +924,6 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
                 ),
               ),
 
-              // Search Content (Recommendations, results)
               Positioned.fill(
                 top: topPadding + 80.h,
                 child: FadeTransition(
@@ -873,10 +942,10 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
                             child: Text(
                               'Recommended',
                               style: TextStyle(
-                                fontFamily: 'SF Pro',
+                                fontFamily: 'Rubik',
                                 fontWeight: FontWeight.w800,
                                 fontSize: 16.sp,
-                                color: const Color(0xFF1A1A1A),
+                                color: const Color(0xFF0F172A),
                               ),
                             ),
                           ),
@@ -898,37 +967,8 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
                                     {'name': 'Ramen', 'icon': '🍜'},
                                     {'name': 'Seafood', 'icon': '🦞'},
                                     {'name': 'Salad', 'icon': '🥗'},
-                                    {'name': 'Pay It Forward', 'icon': '🤝'},
-                                    {'name': 'Eco-friendly', 'icon': '🌿'},
-                                    {'name': 'Deals', 'icon': '🏷️'},
                                   ].map((item) => Padding(
                                     padding: EdgeInsets.only(right: 8.w, bottom: 8.h),
-                                    child: _TrendingChip(
-                                      name: item['name']!,
-                                      icon: item['icon'],
-                                      onImport: () {
-                                        _overlaySearchCtrl.text = item['name']!;
-                                        _handleWebSearch(item['name']!);
-                                      },
-                                    ),
-                                  )).toList(),
-                                ),
-                                Row(
-                                  children: [
-                                    {'name': 'Burgers', 'icon': '🍔'},
-                                    {'name': 'Tacos', 'icon': '🌮'},
-                                    {'name': 'Steak', 'icon': '🥩'},
-                                    {'name': 'Breakfast', 'icon': '🍳'},
-                                    {'name': 'Soup', 'icon': '🥣'},
-                                    {'name': 'Sandwiches', 'icon': '🥪'},
-                                    {'name': 'Indian', 'icon': '🍛'},
-                                    {'name': 'Mexican', 'icon': '🌮'},
-                                    {'name': 'Dessert', 'icon': '🍰'},
-                                    {'name': 'High Protein', 'icon': '💪'},
-                                    {'name': 'Keto Diet', 'icon': '🥑'},
-                                    {'name': 'Coffee', 'icon': '☕'},
-                                  ].map((item) => Padding(
-                                    padding: EdgeInsets.only(right: 8.w),
                                     child: _TrendingChip(
                                       name: item['name']!,
                                       icon: item['icon'],
@@ -947,12 +987,12 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
                             Padding(
                               padding: EdgeInsets.symmetric(horizontal: 20.w),
                               child: Text(
-                                'Tendances',
+                                'Trending',
                                 style: TextStyle(
-                                  fontFamily: 'SF Pro',
+                                  fontFamily: 'Rubik',
                                   fontWeight: FontWeight.w800,
                                   fontSize: 16.sp,
-                                  color: const Color(0xFF1A1A1A),
+                                  color: const Color(0xFF0F172A),
                                 ),
                               ),
                             ),
@@ -974,39 +1014,6 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
                               ),
                             ),
                           ],
-                          SizedBox(height: 24.h),
-                          Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 20.w),
-                            child: Text(
-                              'Cuisines',
-                              style: TextStyle(
-                                fontFamily: 'SF Pro',
-                                fontWeight: FontWeight.w800,
-                                fontSize: 16.sp,
-                                color: const Color(0xFF1A1A1A),
-                              ),
-                            ),
-                          ),
-                          SizedBox(height: 12.h),
-                          Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 20.w),
-                            child: Column(
-                              children: [
-                                'Italian', 'Mexican', 'Chinese', 'Japanese', 'Thai', 'Indian',
-                                'Korean', 'Mediterranean', 'Middle Eastern', 'French', 'Spanish',
-                                'African', 'American', 'Brazilian', 'Greek', 'Vietnamese', 'Turkish',
-                                'Moroccan', 'Caribbean', 'German', 'Russian'
-                              ].map((c) => ListTile(
-                                contentPadding: EdgeInsets.zero,
-                                leading: Icon(Icons.search, size: 20.sp, color: Colors.grey),
-                                title: Text(c, style: TextStyle(fontFamily: 'SF Pro', fontSize: 14.sp)),
-                                onTap: () {
-                                  _overlaySearchCtrl.text = c;
-                                  _handleWebSearch(c);
-                                },
-                              )).toList(),
-                            ),
-                          ),
                         ] else if (_suggestedWebRecipes.isNotEmpty && !_isSearching && _searchResults.isEmpty) ...[
                           Padding(
                             padding: EdgeInsets.symmetric(horizontal: 20.w),
@@ -1016,10 +1023,10 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
                                 Text(
                                   'Suggestions',
                                   style: TextStyle(
-                                    fontFamily: 'SF Pro',
+                                    fontFamily: 'Rubik',
                                     fontWeight: FontWeight.w800,
                                     fontSize: 16.sp,
-                                    color: const Color(0xFF1A1A1A),
+                                    color: const Color(0xFF0F172A),
                                   ),
                                 ),
                                 SizedBox(height: 8.h),
@@ -1028,7 +1035,7 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
                                   return ListTile(
                                     contentPadding: EdgeInsets.zero,
                                     leading: Icon(Icons.north_west_rounded, size: 18.sp, color: Colors.grey),
-                                    title: Text(name, style: TextStyle(fontFamily: 'SF Pro', fontSize: 14.sp)),
+                                    title: Text(name, style: TextStyle(fontFamily: 'Rubik', fontSize: 14.sp)),
                                     onTap: () {
                                       _overlaySearchCtrl.text = name;
                                       _handleWebSearch(name);
@@ -1051,64 +1058,9 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
                               onView: (url, title) => _showWebPreview(url, title),
                               onClear: () => setState(() {
                                 _searchResults = [];
-                                _hasSearched = false;
                                 _overlaySearchCtrl.clear();
                                 _importSearchOverlayEntry?.markNeedsBuild();
                               }),
-                            ),
-                          )
-                        else if (!_isSearching && _hasSearched && _searchResults.isEmpty && _overlaySearchCtrl.text.isNotEmpty)
-                          Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 40.h),
-                            child: Column(
-                              children: [
-                                Icon(Icons.search_off_rounded, size: 48.sp, color: Colors.grey.withOpacity(0.5)),
-                                SizedBox(height: 16.h),
-                                Text(
-                                  'No results found for "${_overlaySearchCtrl.text}"',
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    fontFamily: 'SF Pro',
-                                    fontSize: 14.sp,
-                                    color: Colors.grey,
-                                  ),
-                                ),
-                                SizedBox(height: 8.h),
-                                Text(
-                                  'Try a different or more general search term.',
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    fontFamily: 'SF Pro',
-                                    fontSize: 12.sp,
-                                    color: Colors.grey.withOpacity(0.7),
-                                  ),
-                                ),
-                                SizedBox(height: 24.h),
-                                GestureDetector(
-                                  onTap: () => setState(() {
-                                    _searchResults = [];
-                                    _hasSearched = false;
-                                    _overlaySearchCtrl.clear();
-                                    _importSearchOverlayEntry?.markNeedsBuild();
-                                  }),
-                                  child: Container(
-                                    padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFFF3F4F6),
-                                      borderRadius: BorderRadius.circular(50.r),
-                                    ),
-                                    child: Text(
-                                      'Clear search',
-                                      style: TextStyle(
-                                        fontFamily: 'SF Pro',
-                                        fontWeight: FontWeight.w600,
-                                        fontSize: 13.sp,
-                                        color: const Color(0xFF1F2937),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
                             ),
                           ),
                       ],
@@ -1117,7 +1069,6 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
                 ),
               ),
 
-              // The Moving Search Field
               Positioned(
                 top: fieldTop,
                 left: fieldLeft,
@@ -1167,21 +1118,63 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
   }
 }
 
-class _PlatformImg extends StatelessWidget {
+class _SocialPlatformCard extends StatelessWidget {
+  final String label;
   final String asset;
-  const _PlatformImg({required this.asset});
+  final VoidCallback onTap;
+
+  const _SocialPlatformCard({
+    required this.label,
+    required this.asset,
+    required this.onTap,
+  });
+
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: 22.w,
-      height: 22.h,
-      child: ClipRRect(
-        child: Image.asset(
-          asset,
-          width: 22.w,
-          height: 22.h,
-          fit: BoxFit.contain,
-          errorBuilder: (_, __, ___) => Icon(Icons.link_rounded, color: Colors.black, size: 20.sp),
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 76.w,
+        height: 76.h,
+        decoration: BoxDecoration(
+          color: const Color(0xFFF1F5F9),
+          borderRadius: BorderRadius.circular(16.r),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 34.r,
+              height: 34.r,
+              decoration: const BoxDecoration(
+                color: Color(0xFF0F172A),
+                shape: BoxShape.circle,
+              ),
+              child: Center(
+                child: Image.asset(
+                  asset,
+                  width: 18.r,
+                  height: 18.r,
+                  fit: BoxFit.contain,
+                  errorBuilder: (_, __, ___) => Icon(
+                    Icons.link_rounded,
+                    color: Colors.white,
+                    size: 18.sp,
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(height: 6.h),
+            Text(
+              label,
+              style: TextStyle(
+                fontFamily: 'Rubik',
+                fontWeight: FontWeight.w600,
+                fontSize: 11.sp,
+                color: const Color(0xFF0F172A),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -1201,8 +1194,8 @@ class _TrendingChip extends StatelessWidget {
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
         decoration: BoxDecoration(
-          color: const Color(0xFFF3F4F6),
-          borderRadius: BorderRadius.circular(50.r),
+          color: const Color(0xFFF1F5F9),
+          borderRadius: BorderRadius.circular(20.r),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -1212,22 +1205,22 @@ class _TrendingChip extends StatelessWidget {
                 icon!,
                 style: TextStyle(fontSize: 14.sp),
               ),
-              SizedBox(width: 8.w),
-            ] else
-              SvgPicture.asset(
-                'assets/icones/trending.svg',
-                height: 10.sp,
-                width: 10.sp,
-                placeholderBuilder: (context) => const SkeletonLoader(width: 10, height: 10, borderRadius: 5),
+              SizedBox(width: 6.w),
+            ] else ...[
+              Icon(
+                Icons.trending_up_rounded,
+                size: 16.sp,
+                color: const Color(0xFF475569),
               ),
-            if (icon == null) SizedBox(width: 10.w),
+              SizedBox(width: 8.w),
+            ],
             Text(
               name.toTitleCase(),
               style: TextStyle(
-                fontFamily: 'SF Pro',
+                fontFamily: 'Rubik',
                 fontWeight: FontWeight.w600,
                 fontSize: 13.sp,
-                color: const Color(0xFF1F2937),
+                color: const Color(0xFF334155),
               ),
             ),
           ],
@@ -1236,7 +1229,6 @@ class _TrendingChip extends StatelessWidget {
     );
   }
 }
-
 
 class _WebSearchResults extends StatelessWidget {
   final List<Map<String, dynamic>> results;
@@ -1260,10 +1252,10 @@ class _WebSearchResults extends StatelessWidget {
             Text(
               'Search Results',
               style: TextStyle(
-                fontFamily: 'SF Pro',
+                fontFamily: 'Rubik',
                 fontWeight: FontWeight.w700,
                 fontSize: 16.sp,
-                color: const Color(0xFF1A1A1A),
+                color: const Color(0xFF0F172A),
               ),
             ),
             GestureDetector(
@@ -1271,7 +1263,7 @@ class _WebSearchResults extends StatelessWidget {
               child: Text(
                 'Clear',
                 style: TextStyle(
-                  fontFamily: 'SF Pro',
+                  fontFamily: 'Rubik',
                   fontSize: 13.sp,
                   fontWeight: FontWeight.w600,
                   color: const Color(0xFFC83A2D),
@@ -1291,7 +1283,7 @@ class _WebSearchResults extends StatelessWidget {
           ),
         )),
         SizedBox(height: 20.h),
-        const Divider(color: Color(0xFFE5E5E5)),
+        const Divider(color: Color(0xFFE2E8F0)),
         SizedBox(height: 20.h),
       ],
     );
@@ -1317,8 +1309,8 @@ class _SearchResultTile extends StatelessWidget {
       margin: EdgeInsets.only(bottom: 12.h),
       padding: EdgeInsets.all(14.r),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8F8F8),
-        borderRadius: BorderRadius.circular(14.r),
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(16.r),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1328,10 +1320,10 @@ class _SearchResultTile extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
-              fontFamily: 'SF Pro',
+              fontFamily: 'Rubik',
               fontWeight: FontWeight.w700,
               fontSize: 15.sp,
-              color: const Color(0xFF1A1A1A),
+              color: const Color(0xFF0F172A),
             ),
           ),
           SizedBox(height: 4.h),
@@ -1340,9 +1332,9 @@ class _SearchResultTile extends StatelessWidget {
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
-              fontFamily: 'SF Pro',
+              fontFamily: 'Rubik',
               fontSize: 12.sp,
-              color: const Color(0xFF666666),
+              color: const Color(0xFF64748B),
             ),
           ),
           SizedBox(height: 10.h),
@@ -1357,7 +1349,7 @@ class _SearchResultTile extends StatelessWidget {
               child: Text(
                 'View this recipe',
                 style: TextStyle(
-                  fontFamily: 'SF Pro',
+                  fontFamily: 'Rubik',
                   fontWeight: FontWeight.w700,
                   fontSize: 12.sp,
                   color: Colors.white,
@@ -1426,20 +1418,19 @@ class _RecipeWebPreviewModalState extends State<_RecipeWebPreviewModal> {
           bottom: false,
           child: Column(
             children: [
-              // Browser-style Header
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 8.h),
                 child: Row(
                   children: [
                     IconButton(
-                      icon: Icon(Icons.close_rounded, size: 24.sp, color: const Color(0xFF1A1A1A)),
+                      icon: Icon(Icons.close_rounded, size: 24.sp, color: const Color(0xFF0F172A)),
                       onPressed: () => Navigator.pop(context),
                     ),
                     Expanded(
                       child: Container(
                         height: 38.h,
                         decoration: BoxDecoration(
-                          color: const Color(0xFFF3F4F6),
+                          color: const Color(0xFFF1F5F9),
                           borderRadius: BorderRadius.circular(10.r),
                         ),
                         padding: EdgeInsets.symmetric(horizontal: 12.w),
@@ -1453,7 +1444,7 @@ class _RecipeWebPreviewModalState extends State<_RecipeWebPreviewModal> {
                                 Uri.parse(widget.url).host,
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
-                                  fontFamily: 'SF Pro',
+                                  fontFamily: 'Rubik',
                                   fontSize: 14.sp,
                                   color: const Color(0xFF4B5563),
                                 ),
@@ -1467,7 +1458,7 @@ class _RecipeWebPreviewModalState extends State<_RecipeWebPreviewModal> {
                         ),
                       ),
                     ),
-                    SizedBox(width: 48.w), // Balance for the X button
+                    SizedBox(width: 48.w),
                   ],
                 ),
               ),
@@ -1487,9 +1478,9 @@ class _RecipeWebPreviewModalState extends State<_RecipeWebPreviewModal> {
                 ),
               ),
               Container(
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   color: Colors.white,
-                  border: Border(top: BorderSide(color: const Color(0xFFE5E7EB), width: 1)),
+                  border: Border(top: BorderSide(color: Color(0xFFE5E7EB), width: 1)),
                 ),
                 padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 30.h),
                 child: RedButton(

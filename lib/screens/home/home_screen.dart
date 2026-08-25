@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:math' as math;
+import 'dart:ui';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -15,6 +17,8 @@ import '../grocery_screen.dart';
 import '../import_screen.dart';
 import '../scan_screen.dart';
 import '../../widgets/app_search_field.dart';
+import '../../widgets/app_top_header.dart';
+import '../../widgets/saved_recipe_card.dart';
 import '../../services/recipe_service.dart';
 import '../../services/cookbook_service.dart';
 import '../../models/recipe.dart';
@@ -85,6 +89,7 @@ class _HomeScreenState extends State<HomeScreen>
         onRefresh: () => setState(() {}),
         onScanTap: () => _switchTab(2),
         onImportTap: () => _switchTab(4),
+        onExploreTap: () => _switchTab(1),
         firstCookbookKey: _firstCookbookKey,
         cookbooksRowKey: _cookbooksRowKey,
       ),
@@ -295,81 +300,123 @@ class _HomeScreenState extends State<HomeScreen>
       backgroundColor: Colors.white,
       resizeToAvoidBottomInset: false,
       extendBody: true,
-      floatingActionButton: (kDebugMode && _currentTab == 0)
-          ? FloatingActionButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => Scaffold(
-                    body: ScanAnimationOverlay(
-                      showTestControls: true,
-                      imagePath: 'assets/images/fridge_mockup.png', // Fallback mockup
-                      detectedIngredients: [
-                        RecipeIngredient(id: 'i1', name: "Tomates", amount: 2.0, unit: "pcs", quantity: "2 pcs", image: "assets/images/ing1.png"),
-                        RecipeIngredient(id: 'i2', name: "Oignons", amount: 1.0, unit: "pc", quantity: "1 pc", image: "assets/images/ing2.png"),
-                        RecipeIngredient(id: 'i3', name: "Ail", amount: 3.0, unit: "gousses", quantity: "3 gousses", image: "assets/images/ing3.png"),
-                        RecipeIngredient(id: 'i4', name: "Poulet", amount: 500.0, unit: "g", quantity: "500 g", image: "assets/images/ing4.png"),
-                        RecipeIngredient(id: 'i5', name: "Carottes", amount: 2.0, unit: "pcs", quantity: "2 pcs", image: "assets/images/ing5.png"),
-                      ],
-                      generatedRecipes: [
-                        Recipe(
-                          id: 'r1',
-                          name: 'Poulet rôti aux légumes',
-                          cookTime: 45,
-                          kcal: 450,
-                          steps: [],
-                          equipment: [],
-                          isPublic: true,
-                          isFavorite: false,
-                          createdAt: DateTime.now(),
-                          updatedAt: DateTime.now(),
-                          image: 'assets/images/plat1.png',
-                          ingredients: [],
-                        ),
-                        Recipe(
-                          id: 'r2',
-                          name: 'Salade fraîcheur',
-                          cookTime: 0,
-                          kcal: 200,
-                          steps: [],
-                          equipment: [],
-                          isPublic: true,
-                          isFavorite: false,
-                          createdAt: DateTime.now(),
-                          updatedAt: DateTime.now(),
-                          image: 'assets/images/plat2.png',
-                          ingredients: [],
-                        ),
-                        Recipe(
-                          id: 'r3',
-                          name: 'Mijoté de poulet',
-                          cookTime: 60,
-                          kcal: 550,
-                          steps: [],
-                          equipment: [],
-                          isPublic: true,
-                          isFavorite: false,
-                          createdAt: DateTime.now(),
-                          updatedAt: DateTime.now(),
-                          image: 'assets/images/plat3.png',
-                          ingredients: [],
-                        ),
-                      ],
-                      onAnimationComplete: () {
-                        Navigator.pop(context);
-                      },
-                    ),
-                  )),
-                );
-              },
-              child: const Icon(Icons.animation),
-            )
-          : null,
       body: NotificationListener<ScrollNotification>(
         onNotification: _handleScroll,
         child: Stack(
           children: [
             IndexedStack(index: _currentTab, children: _tabWidgets),
+
+            // Test animation FAB raised above bottom nav
+            if (kDebugMode && _currentTab == 0)
+              Positioned(
+                right: 16.w,
+                bottom: 95.h,
+                child: FloatingActionButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => Scaffold(
+                          body: ScanAnimationOverlay(
+                            showTestControls: true,
+                            imagePath: 'assets/images/fridge_mockup.png',
+                            detectedIngredients: [
+                              RecipeIngredient(
+                                id: 'i1',
+                                name: "Tomates",
+                                amount: 2.0,
+                                unit: "pcs",
+                                quantity: "2 pcs",
+                                image: "assets/images/ing1.png",
+                              ),
+                              RecipeIngredient(
+                                id: 'i2',
+                                name: "Oignons",
+                                amount: 1.0,
+                                unit: "pc",
+                                quantity: "1 pc",
+                                image: "assets/images/ing2.png",
+                              ),
+                              RecipeIngredient(
+                                id: 'i3',
+                                name: "Ail",
+                                amount: 3.0,
+                                unit: "gousses",
+                                quantity: "3 gousses",
+                                image: "assets/images/ing3.png",
+                              ),
+                              RecipeIngredient(
+                                id: 'i4',
+                                name: "Poulet",
+                                amount: 500.0,
+                                unit: "g",
+                                quantity: "500 g",
+                                image: "assets/images/ing4.png",
+                              ),
+                              RecipeIngredient(
+                                id: 'i5',
+                                name: "Carottes",
+                                amount: 2.0,
+                                unit: "pcs",
+                                quantity: "2 pcs",
+                                image: "assets/images/ing5.png",
+                              ),
+                            ],
+                            generatedRecipes: [
+                              Recipe(
+                                id: 'r1',
+                                name: 'Poulet rôti aux légumes',
+                                cookTime: 45,
+                                kcal: 450,
+                                steps: [],
+                                equipment: [],
+                                isPublic: true,
+                                isFavorite: false,
+                                createdAt: DateTime.now(),
+                                updatedAt: DateTime.now(),
+                                image: 'assets/images/plat1.png',
+                                ingredients: [],
+                              ),
+                              Recipe(
+                                id: 'r2',
+                                name: 'Salade fraîcheur',
+                                cookTime: 0,
+                                kcal: 200,
+                                steps: [],
+                                equipment: [],
+                                isPublic: true,
+                                isFavorite: false,
+                                createdAt: DateTime.now(),
+                                updatedAt: DateTime.now(),
+                                image: 'assets/images/plat2.png',
+                                ingredients: [],
+                              ),
+                              Recipe(
+                                id: 'r3',
+                                name: 'Mijoté de poulet',
+                                cookTime: 60,
+                                kcal: 550,
+                                steps: [],
+                                equipment: [],
+                                isPublic: true,
+                                isFavorite: false,
+                                createdAt: DateTime.now(),
+                                updatedAt: DateTime.now(),
+                                image: 'assets/images/plat3.png',
+                                ingredients: [],
+                              ),
+                            ],
+                            onAnimationComplete: () {
+                              Navigator.pop(context);
+                            },
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                  child: const Icon(Icons.animation),
+                ),
+              ),
 
             ValueListenableBuilder<bool>(
               valueListenable: _isScanInResultsMode,
@@ -377,10 +424,7 @@ class _HomeScreenState extends State<HomeScreen>
                 return ValueListenableBuilder<bool>(
                   valueListenable: _isImportLoading,
                   builder: (context, isImportLoading, _) {
-                    // Hide ONLY while actively scanning (Scan Tab + NOT in results mode) OR while importing
-                    // We also want to hide it in results mode as requested
                     final isScanningTab = (_currentTab == 2);
-                    // Hide nav entirely on Scan tab as requested
                     final hideNav = isScanningTab || isImportLoading;
 
                     return Stack(
@@ -400,9 +444,9 @@ class _HomeScreenState extends State<HomeScreen>
                                     onTap: _switchTab,
                                     onCameraTap: () {
                                       if (_currentTab == 2) {
-                                        _toggleNav(); // hide nav if already on scan tab
+                                        _toggleNav();
                                       } else {
-                                        _switchTab(2); // go to scan tab
+                                        _switchTab(2);
                                       }
                                     },
                                     scanTabKey: _scanTabKey,
@@ -422,6 +466,113 @@ class _HomeScreenState extends State<HomeScreen>
       ),
     );
   }
+}
+
+// ── Floating pill bottom nav ───────────────────────────────────────────────────
+// ── Helper Path Generator for Smooth Wave Notched Pill ──────────────────────
+// ── Helper Path Generator for Smooth Wave Notched Pill ──────────────────────
+Path _buildNotchedPillPath(Size size) {
+  final double w = size.width;
+  final double h = size.height;
+  final double r = 28.r;
+
+  final double centerX = w / 2;
+  // Largeur et profondeur de l'encoche adaptées au FAB
+  final double notchRadius = 32.r;
+  final double notchDepth = 30.h;
+
+  final Path path = Path();
+  path.moveTo(r, 0);
+
+  // Ligne jusqu'à l'épaule gauche de l'encoche
+  path.lineTo(centerX - notchRadius - 12.w, 0);
+
+  // Courbe descendante fluide vers le creux
+  path.cubicTo(
+    centerX - notchRadius + 2.w,
+    0,
+    centerX - notchRadius * 0.75,
+    notchDepth,
+    centerX,
+    notchDepth,
+  );
+
+  // Courbe remontante fluide
+  path.cubicTo(
+    centerX + notchRadius * 0.75,
+    notchDepth,
+    centerX + notchRadius - 2.w,
+    0,
+    centerX + notchRadius + 12.w,
+    0,
+  );
+
+  // Bord haut droit
+  path.lineTo(w - r, 0);
+  path.arcToPoint(Offset(w, r), radius: Radius.circular(r));
+
+  // Bord droit
+  path.lineTo(w, h - r);
+  path.arcToPoint(Offset(w - r, h), radius: Radius.circular(r));
+
+  // Bord bas
+  path.lineTo(r, h);
+  path.arcToPoint(Offset(0, h - r), radius: Radius.circular(r));
+
+  // Bord gauche
+  path.lineTo(0, r);
+  path.arcToPoint(Offset(r, 0), radius: Radius.circular(r));
+
+  path.close();
+  return path;
+}
+
+// ── Notched Pill Custom Clipper (for BackdropFilter) ──────────────────────────
+class NotchedPillClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    return _buildNotchedPillPath(size);
+  }
+
+  @override
+  bool shouldReclip(covariant CustomClipper<Path> oldClipper) => true;
+}
+
+// ── Notched Pill Custom Painter (Figma Spec Compliant) ──────────────────────
+class NotchedPillPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final Path path = _buildNotchedPillPath(size);
+
+    // Drop shadow under bottom nav pill
+    final Paint shadowPaint = Paint()
+      ..color = Colors.black.withValues(alpha: 0.12)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12);
+    canvas.drawPath(path.shift(const Offset(0, -2)), shadowPaint);
+
+    // Linear Gradient fill: #F8F8F8 -> #F6F6F6
+    final Paint fillPaint = Paint()
+      ..shader = const LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [
+          Color(0xFFF8F8F8),
+          Color(0xFFF6F6F6),
+        ],
+      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height))
+      ..style = PaintingStyle.fill;
+    canvas.drawPath(path, fillPaint);
+
+    // Border 1px: #39404E 8%
+    final Paint borderPaint = Paint()
+      ..color = const Color(0xFF39404E).withValues(alpha: 0.08)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.0;
+    canvas.drawPath(path, borderPaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 // ── Floating pill bottom nav ───────────────────────────────────────────────────
@@ -451,102 +602,130 @@ class _FloatingBottomNav extends StatelessWidget {
       right: false,
       child: Container(
         color: Colors.transparent,
-        padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 10.h),
+        padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 12.h),
         child: Stack(
           clipBehavior: Clip.none,
           alignment: Alignment.topCenter,
           children: [
-            // White pill
-            Container(
-              height: 68.h,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(40.r),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.12),
-                    blurRadius: 24.r,
-                    offset: Offset(0, 4.h),
+            // Notched Pill Background with Blur (Blur 25px) & CustomPainter
+            ClipPath(
+              clipper: NotchedPillClipper(),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
+                child: CustomPaint(
+                  size: Size(double.infinity, 66.h),
+                  painter: NotchedPillPainter(),
+                  child: SizedBox(
+                    height: 66.h,
+                    child: Row(
+                      children: [
+                        _NavItem(
+                          svgPath: 'assets/nav/home.svg',
+                          activeSvgPath: 'assets/nav/home_active.svg',
+                          label: 'Home',
+                          index: 0,
+                          current: currentIndex,
+                          onTap: onTap,
+                        ),
+                        _NavItem(
+                          svgPath: 'assets/nav/explore.svg',
+                          activeSvgPath: 'assets/nav/explore_active.svg',
+                          label: 'Explore',
+                          index: 1,
+                          current: currentIndex,
+                          onTap: onTap,
+                        ),
+                        // Center column for Scan Recipe label
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: onCameraTap,
+                            behavior: HitTestBehavior.opaque,
+                            child: Padding(
+                              padding: EdgeInsets.only(bottom: 6.h),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  Text(
+                                    'Scan Recipe',
+                                    style: TextStyle(
+                                      fontFamily: 'Rubik',
+                                      fontSize: 11.sp,
+                                      fontWeight: currentIndex == 2
+                                          ? FontWeight.w700
+                                          : FontWeight.w600,
+                                      color: currentIndex == 2
+                                          ? const Color(0xFFC31E26)
+                                          : const Color(0xFF334155),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        _NavItem(
+                          iconKey: groceryTabKey,
+                          svgPath: 'assets/nav/grocery.svg',
+                          activeSvgPath: 'assets/nav/grocery_active.svg',
+                          label: 'Grocery',
+                          index: 3,
+                          current: currentIndex,
+                          onTap: (idx) {
+                            onTap(idx);
+                          },
+                        ),
+                        _NavItem(
+                          iconKey: importTabKey,
+                          svgPath: 'assets/nav/import.svg',
+                          activeSvgPath: 'assets/nav/import_active.svg',
+                          label: 'Import',
+                          index: 4,
+                          current: currentIndex,
+                          onTap: (idx) {
+                            onTap(idx);
+                          },
+                        ),
+                      ],
+                    ),
                   ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  _NavItem(
-                    svgPath: 'assets/nav/home.svg',
-                    activeSvgPath: 'assets/nav/home_active.svg',
-                    label: 'Home',
-                    index: 0,
-                    current: currentIndex,
-                    onTap: onTap,
-                  ),
-                  _NavItem(
-                    svgPath: 'assets/nav/explore.svg',
-                    activeSvgPath: 'assets/nav/explore_active.svg',
-                    label: 'Explore',
-                    index: 1,
-                    current: currentIndex,
-                    onTap: onTap,
-                  ),
-                  const Expanded(child: SizedBox()),
-                  _NavItem(
-                    iconKey: groceryTabKey,
-                    svgPath: 'assets/nav/grocery.svg',
-                    activeSvgPath: 'assets/nav/grocery_active.svg',
-                    label: 'Grocery',
-                    index: 3,
-                    current: currentIndex,
-                    onTap: (idx) {
-                      onTap(idx);
-                    },
-                  ),
-                  _NavItem(
-                    iconKey: importTabKey,
-                    svgPath: 'assets/nav/import.svg',
-                    activeSvgPath: 'assets/nav/import_active.svg',
-                    label: 'Import',
-                    index: 4,
-                    current: currentIndex,
-                    onTap: (idx) {
-                      onTap(idx);
-                    },
-                  ),
-                ],
+                ),
               ),
             ),
 
-            // Camera FAB elevated
+            // Red Camera Floating Circle FAB (parfaitement logé dans la découpe)
             Positioned(
-              top: -18.h,
+              top: -28.h, // Sort le cercle de moitié au-dessus de la barre
               child: GestureDetector(
                 onTap: onCameraTap,
                 child: Container(
                   key: scanTabKey,
-                  width: 58.w,
-                  height: 58.h,
+                  width: 56.r,
+                  height: 56.r,
                   decoration: BoxDecoration(
-                    color: currentIndex == 2
-                        ? Colors.black87
-                        : const Color(0xFFC83A2D),
+                    color: const Color(0xFFC31E26),
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color:
-                            (currentIndex == 2
-                                    ? Colors.black87
-                                    : const Color(0xFFC83A2D))
-                                .withValues(alpha: 0.4),
-                        blurRadius: 16.r,
-                        offset: Offset(0, 4.h),
+                        color: const Color(0xFFC31E26).withValues(alpha: 0.28),
+                        blurRadius: 10.r,
+                        offset: Offset(0, 5.h),
                       ),
                     ],
                   ),
-                  child: Icon(
-                    currentIndex == 2
-                        ? Icons.keyboard_arrow_down_rounded
-                        : Icons.camera_alt_rounded,
-                    color: Colors.white,
-                    size: currentIndex == 2 ? 32.sp : 26.sp,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      Icon(
+                        Icons.crop_free_rounded,
+                        size: 34.sp,
+                        color: Colors.white,
+                      ),
+                      Icon(
+                        Icons.camera_alt_rounded,
+                        size: 18.sp,
+                        color: Colors.white,
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -637,7 +816,7 @@ class _NavItemState extends State<_NavItem>
                   width: 22.w,
                   height: 22.h,
                   colorFilter: ColorFilter.mode(
-                    active ? const Color(0xFFC83A2D) : const Color(0xFF8E8E8E),
+                    active ? const Color(0xFFC31E26) : const Color(0xFF334155),
                     BlendMode.srcIn,
                   ),
                 ),
@@ -647,12 +826,12 @@ class _NavItemState extends State<_NavItem>
             Text(
               widget.label,
               style: TextStyle(
-                fontFamily: 'SF Pro',
+                fontFamily: 'Rubik',
                 fontSize: 12.sp,
-                fontWeight: active ? FontWeight.w700 : FontWeight.w500,
+                fontWeight: active ? FontWeight.w700 : FontWeight.w600,
                 color: active
-                    ? const Color(0xFFC83A2D)
-                    : const Color(0xFF8E8E8E),
+                    ? const Color(0xFFC31E26)
+                    : const Color(0xFF334155),
               ),
             ),
           ],
@@ -669,12 +848,14 @@ class _HomeTab extends StatefulWidget {
   final VoidCallback? onRefresh;
   final VoidCallback? onScanTap;
   final VoidCallback? onImportTap;
+  final VoidCallback? onExploreTap;
   final GlobalKey? firstCookbookKey;
   final GlobalKey<_CookbooksRowState>? cookbooksRowKey;
   const _HomeTab({
     this.onRefresh,
     this.onScanTap,
     this.onImportTap,
+    this.onExploreTap,
     this.firstCookbookKey,
     this.cookbooksRowKey,
   });
@@ -724,180 +905,227 @@ class _HomeTabState extends State<_HomeTab> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Colors.white,
+      color: const Color(0xFFF0F1F3),
       child: ValueListenableBuilder<String>(
         valueListenable: _searchQueryNotifier,
         builder: (context, searchQuery, _) {
           return CustomScrollView(
             slivers: [
+              SliverToBoxAdapter(
+                child: const AppTopHeader(),
+              ),
               SliverPersistentHeader(
                 pinned: true,
-                delegate: _HomeHeaderDelegate(
-                  topPadding: MediaQuery.of(context).padding.top,
-                  onSearchChanged: (val) {
-                    _searchQueryNotifier.value = val;
-                  },
+                delegate: _StickySearchHeaderDelegate(
+                  searchQueryNotifier: _searchQueryNotifier,
                 ),
               ),
               SliverPadding(
-                padding: EdgeInsets.only(bottom: 40.h, top: 0.h),
+                padding: EdgeInsets.fromLTRB(0.w, 0.h, 0.w, 150.h),
                 sliver: SliverList(
                   delegate: SliverChildListDelegate([
                     if (searchQuery.isEmpty) ...[
-                      const _SavingsCard(),
-                      ValueListenableBuilder<List<Cookbook>?>(
-                        valueListenable:
-                            CookbookService.instance.myCookbooksNotifier,
-                        builder: (context, cookbooks, _) {
-                          final countBadge =
-                              (cookbooks != null && cookbooks.isNotEmpty)
-                              ? ' (${cookbooks.length})'
-                              : '';
-                          return _SectionRow(
-                            title: 'Your Cookbooks$countBadge',
-                            onViewAll:
-                                (cookbooks != null && cookbooks.length > 5)
-                                ? () {
-                                    _goViewAll(
-                                      context,
-                                      ViewAllType.cookbooks,
-                                      'Cookbooks',
-                                    );
-                                  }
-                                : null,
-                          );
-                        },
-                      ),
-                      SizedBox(height: 12.h),
-                      _CookbooksRow(
-                        key: widget.cookbooksRowKey,
-                        onRefresh: widget.onRefresh,
-                        firstCookbookKey: widget.firstCookbookKey,
-                      ),
-                    ],
-                    if (searchQuery.isEmpty) ...[
-                      ValueListenableBuilder<List<Recipe>>(
-                        valueListenable:
-                            HistoryService.instance.recentlyViewedNotifier,
-                        builder: (context, recent, _) {
-                          if (recent.isEmpty) return const SizedBox.shrink();
-                          return Column(
-                            children: [
-                              SizedBox(height: 30.h),
-                              _SectionRow(
-                                title: 'Recently Viewed',
-                                onViewAll: recent.length > 5
-                                    ? () => _goViewAll(
-                                        context,
-                                        ViewAllType.recentlyViewed,
-                                        'Recently Viewed',
-                                      )
-                                    : null,
-                              ),
-                              SizedBox(height: 12.h),
-                              _RecentlyViewedRow(
-                                key: ValueKey(recent.first.id),
-                                recipes: recent,
-                              ),
-                            ],
-                          );
-                        },
-                      ),
-                    ],
-                    if (searchQuery.isEmpty) ...[
-                      SizedBox(height: 25.h),
-                      _SectionRow(title: 'Add New Recipe'),
-                      SizedBox(height: 12.h),
-                      _QuickActionsRow(
-                        onScanTap: widget.onScanTap,
-                        onImportTap: widget.onImportTap,
-                      ),
-                      SizedBox(height: 5.h),
-                    ],
-                    ValueListenableBuilder<List<Recipe>?>(
-                      valueListenable: RecipeService.instance.myRecipesNotifier,
-                      builder: (context, recipes, _) {
-                        if (recipes == null) {
-                          return Column(
-                            children: [
-                              SizedBox(height: 30.h),
-                              _SectionRow(title: 'Saved Recipes'),
-                              SizedBox(height: 20.h),
-                              Padding(
-                                padding: EdgeInsets.symmetric(horizontal: 18.w),
-                                child: GridView.builder(
-                                  padding: EdgeInsets.zero,
-                                  shrinkWrap: true,
-                                  physics: const NeverScrollableScrollPhysics(),
-                                  itemCount: 4,
-                                  gridDelegate:
-                                      SliverGridDelegateWithFixedCrossAxisCount(
-                                        crossAxisCount: 2,
-                                        mainAxisSpacing: 14.h,
-                                        crossAxisSpacing: 14.w,
-                                        childAspectRatio: 0.72,
-                                      ),
-                                  itemBuilder: (_, __) => Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      SkeletonLoader(
-                                        width: double.infinity,
-                                        height: 145.h,
-                                        borderRadius: 20,
-                                      ),
-                                      SizedBox(height: 10.h),
-                                      SkeletonLoader(
-                                        width: 140.w,
-                                        height: 16.h,
-                                      ),
-                                      SizedBox(height: 6.h),
-                                      SkeletonLoader(width: 80.w, height: 12.h),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ],
-                          );
-                        }
-
-                        final savedRecipes = recipes
-                            .where((r) => !r.isInCookbook && !r.isSuggested)
-                            .toList();
-                        final hasSaved = savedRecipes.isNotEmpty;
-
-                        return Column(
+                      // ── TOP WHITE CONTAINER CARD (BOTTOM HALF) ──
+                      Container(
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.vertical(
+                            bottom: Radius.circular(24.r),
+                          ),
+                        ),
+                        padding: EdgeInsets.fromLTRB(16.w, 10.h, 16.w, 16.h),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            if (hasSaved) ...[
-                              SizedBox(height: 30.h),
-                              _SectionRow(
-                                title: 'Saved Recipes',
-                                onViewAll: savedRecipes.length > 6
-                                    ? () {
-                                        _goViewAll(
-                                          context,
-                                          ViewAllType.savedRecipes,
-                                          'Saved Recipes',
-                                        );
-                                      }
-                                    : null,
-                              ),
-                              SizedBox(height: 12.h),
-                              _SavedRecipesGrid(
-                                searchQuery: searchQuery,
-                                recipes: savedRecipes,
-                              ),
-                            ],
+                            // Sous-carte 1: You've saved
+                            const _SavingsCard(),
+                            SizedBox(height: 12.h),
 
-                            _SuggestedRecipesSection(
-                              searchQuery: searchQuery,
-                              isCompact: hasSaved,
+                            // Sous-carte 2: Your Cookbooks
+                            ValueListenableBuilder<List<Cookbook>?>(
+                              valueListenable:
+                                  CookbookService.instance.myCookbooksNotifier,
+                              builder: (context, cookbooks, _) {
+                                final count = cookbooks?.length ?? 0;
+                                return Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    _SectionRow(
+                                      title: 'Your Cookbooks',
+                                      onViewAll: count > 3
+                                          ? () => _goViewAll(
+                                                context,
+                                                ViewAllType.cookbooks,
+                                                'Cookbooks',
+                                              )
+                                          : null,
+                                    ),
+                                    SizedBox(height: 12.h),
+                                    (cookbooks == null || cookbooks.isEmpty)
+                                        ? _EmptyCookbookCard(
+                                            firstCookbookKey: widget.firstCookbookKey,
+                                            onRefresh: widget.onRefresh,
+                                          )
+                                        : _PopulatedCookbooksLayout(
+                                            cookbooks: cookbooks,
+                                            onRefresh: widget.onRefresh,
+                                          ),
+                                  ],
+                                );
+                              },
                             ),
                           ],
-                        );
-                      },
-                    ),
-                    SizedBox(height: 100.h),
+                        ),
+                      ),
+                      SizedBox(height: 16.h),
+
+                      // ── RECENTLY VIEWED ──
+                      ValueListenableBuilder<List<Recipe>>(
+                        valueListenable: HistoryService.instance.recentlyViewedNotifier,
+                        builder: (context, recent, _) {
+                          if (recent.isEmpty) return const SizedBox.shrink();
+                          final displayRecent = recent.take(10).toList();
+                          return Column(
+                            children: [
+                              Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(24.r),
+                                ),
+                                padding: EdgeInsets.all(16.w),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    _SectionRow(
+                                      title: 'Recently Viewed',
+                                      onViewAll: recent.length > 5
+                                          ? () => _goViewAll(
+                                                context,
+                                                ViewAllType.recentlyViewed,
+                                                'Recently Viewed',
+                                              )
+                                          : null,
+                                    ),
+                                    SizedBox(height: 12.h),
+                                    _CircularRecipeAvatarRow(
+                                      recipes: displayRecent,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              SizedBox(height: 16.h),
+                            ],
+                          );
+                        },
+                      ),
+
+                      // ── SUGGESTED FOR YOU ──
+                      ValueListenableBuilder<List<Recipe>?>(
+                        valueListenable: RecipeService.instance.homeSuggestionsNotifier,
+                        builder: (context, suggestions, _) {
+                          final list = suggestions ?? [];
+                          if (list.isEmpty) return const SizedBox.shrink();
+                          final displaySuggestions = list.take(10).toList();
+                          return Column(
+                            children: [
+                              Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(24.r),
+                                ),
+                                padding: EdgeInsets.all(16.w),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    _SectionRow(
+                                      title: 'Suggested for you',
+                                      onViewAll: list.length > 5
+                                          ? () => _goViewAll(
+                                                context,
+                                                ViewAllType.explore,
+                                                'Suggested for you',
+                                              )
+                                          : null,
+                                    ),
+                                    SizedBox(height: 12.h),
+                                    _CircularRecipeAvatarRow(
+                                      recipes: displaySuggestions,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              SizedBox(height: 16.h),
+                            ],
+                          );
+                        },
+                      ),
+
+                      // ── SAVED RECIPES ──
+                      ValueListenableBuilder<List<Recipe>?>(
+                        valueListenable: RecipeService.instance.myRecipesNotifier,
+                        builder: (context, recipes, _) {
+                          final savedRecipes = (recipes ?? [])
+                              .where((r) => !r.isInCookbook && !r.isSuggested)
+                              .toList();
+
+                          return Container(
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(24.r),
+                            ),
+                            padding: EdgeInsets.all(16.w),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _SectionRow(
+                                  title: 'Saved Recipes',
+                                  onViewAll: savedRecipes.length > 5
+                                      ? () => _goViewAll(
+                                            context,
+                                            ViewAllType.savedRecipes,
+                                            'Saved Recipes',
+                                          )
+                                      : null,
+                                ),
+                                SizedBox(height: 12.h),
+                                savedRecipes.isEmpty
+                                    ? _EmptySavedRecipesCard(
+                                        onBrowseTap: () => widget.onExploreTap?.call(),
+                                      )
+                                    : _PopulatedSavedRecipesList(
+                                        recipes: savedRecipes,
+                                        searchQuery: searchQuery,
+                                      ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                      SizedBox(height: 16.h),
+
+                      // ── HELP US IMPROVE COOKED ──
+                      _FeedbackCard(
+                        onTap: () => _showFeedbackModal(context),
+                      ),
+                    ] else ...[
+                      // Search Active State
+                      ValueListenableBuilder<List<Recipe>?>(
+                        valueListenable: RecipeService.instance.myRecipesNotifier,
+                        builder: (context, recipes, _) {
+                          final allRecipes = recipes ?? [];
+                          final filtered = allRecipes
+                              .where((r) => r.name
+                                  .toLowerCase()
+                                  .contains(searchQuery.trim().toLowerCase()))
+                              .toList();
+                          return _PopulatedSavedRecipesList(
+                            recipes: filtered,
+                            searchQuery: searchQuery,
+                          );
+                        },
+                      ),
+                    ],
                   ]),
                 ),
               ),
@@ -910,303 +1138,172 @@ class _HomeTabState extends State<_HomeTab> {
 }
 
 // ── Header ─────────────────────────────────────────────────────────────────────
-class _HomeHeaderDelegate extends SliverPersistentHeaderDelegate {
-  final ValueChanged<String>? onSearchChanged;
+class _HomeHeaderWidget extends StatelessWidget {
   final double topPadding;
 
-  _HomeHeaderDelegate({this.onSearchChanged, required this.topPadding});
+  const _HomeHeaderWidget({required this.topPadding});
 
   @override
-  double get maxExtent => 240.h + topPadding;
-  @override
-  double get minExtent => 80.h + topPadding;
-
-  @override
-  bool shouldRebuild(covariant _HomeHeaderDelegate oldDelegate) {
-    return topPadding != oldDelegate.topPadding;
-  }
-
-  @override
-  Widget build(
-    BuildContext context,
-    double shrinkOffset,
-    bool overlapsContent,
-  ) {
-    final double maxShrinkOffset = maxExtent - minExtent;
-    final double progress = (shrinkOffset / maxShrinkOffset).clamp(0.0, 1.0);
-
+  Widget build(BuildContext context) {
     return Container(
-      color: Colors.transparent,
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          Positioned(
-            top: -(shrinkOffset).clamp(0.0, 200.h),
-            left: 0,
-            right: 0,
-            height: 200.h + topPadding,
-            child: Opacity(
-              opacity: (1 - progress).clamp(0.0, 1.0),
-              child: ClipRRect(
-                borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(20.r),
-                  bottomRight: Radius.circular(20.r),
-                ),
-                child: Stack(
-                  children: [
-                    Positioned.fill(
-                      child: Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.vertical(
-                            bottom: Radius.circular(20.r),
-                          ),
-                          image: const DecorationImage(
-                            image: AssetImage('assets/images/home.png'),
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                      ),
+      color: const Color(0xFFF0F1F3),
+      child: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+          child: ValueListenableBuilder<Map<String, dynamic>?>(
+            valueListenable: UserService.instance.currentUserNotifier,
+            builder: (context, user, _) {
+              String firstName = user?['firstname'] ?? 'Adeel';
+              String? photo = user?['profilePictureUrl'];
+              String? photoUrl;
+              if (photo != null && photo.isNotEmpty) {
+                photoUrl = photo.startsWith('http')
+                    ? photo
+                    : '${ApiConfig.baseUrl}$photo';
+              }
+              return Row(
+                children: [
+                  CircleAvatar(
+                    radius: 16.r,
+                    backgroundColor: const Color(0xFFCBD5E1),
+                    backgroundImage: photoUrl != null
+                        ? NetworkImage(photoUrl)
+                        : null,
+                    child: photoUrl == null
+                        ? Icon(Icons.person, color: Colors.white, size: 20.sp)
+                        : null,
+                  ),
+                  SizedBox(width: 8.w),
+                  Text(
+                    'Hi, $firstName',
+                    style: TextStyle(
+                      fontFamily: 'Rubik',
+                      fontWeight: FontWeight.w700,
+                      fontSize: 18.sp,
+                      color: const Color(0xFF0F172A),
                     ),
-                    SafeArea(
-                      bottom: false,
-                      child: Padding(
-                        padding: EdgeInsets.fromLTRB(20.w, 15.h, 10.w, 0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                  ),
+                  const Spacer(),
+                  PopupMenuButton<String>(
+                    icon: Icon(
+                      Icons.more_vert_rounded,
+                      color: const Color(0xFF0F172A),
+                      size: 22.sp,
+                    ),
+                    onSelected: (val) async {
+                      if (val == 'settings') {
+                        Navigator.of(context).pushNamed(AppRoutes.profile);
+                      } else if (val == 'logout') {
+                        await AuthService.instance.logout();
+                        if (context.mounted) {
+                          Navigator.of(context).pushNamedAndRemoveUntil(
+                            AppRoutes.login,
+                            (route) => false,
+                          );
+                        }
+                      }
+                    },
+                    itemBuilder: (ctx) => [
+                      PopupMenuItem(
+                        value: 'settings',
+                        child: Row(
                           children: [
-                            ValueListenableBuilder<Map<String, dynamic>?>(
-                              valueListenable:
-                                  UserService.instance.currentUserNotifier,
-                              builder: (context, user, _) {
-                                String firstName = user?['firstname'] ?? 'User';
-                                String? photo = user?['profilePictureUrl'];
-                                String? photoUrl;
-                                if (photo != null && photo.isNotEmpty) {
-                                  photoUrl = photo.startsWith('http')
-                                      ? photo
-                                      : '${ApiConfig.baseUrl}$photo';
-                                }
-                                return Row(
-                                  children: [
-                                    CircleAvatar(
-                                      radius: 20.r,
-                                      backgroundColor: Colors.white24,
-                                      backgroundImage: photoUrl != null
-                                          ? NetworkImage(photoUrl)
-                                          : null,
-                                      child: photoUrl == null
-                                          ? Icon(
-                                              Icons.person,
-                                              color: Colors.white,
-                                              size: 28.sp,
-                                            )
-                                          : null,
-                                    ),
-                                    SizedBox(width: 12.w),
-                                    Text(
-                                      'Hi, $firstName',
-                                      style: TextStyle(
-                                        fontFamily: 'SF Pro',
-                                        fontWeight: FontWeight.w700,
-                                        fontSize: 20.sp,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                    const Spacer(),
-                                    PopupMenuButton<String>(
-                                      icon: Icon(
-                                        Icons.more_vert_rounded,
-                                        color: Colors.white,
-                                        size: 25.sp,
-                                      ),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(
-                                          16.r,
-                                        ),
-                                      ),
-                                      color: Colors.white,
-                                      elevation: 8,
-                                      onSelected: (value) async {
-                                        if (value == 'settings') {
-                                          Navigator.pushNamed(
-                                            context,
-                                            AppRoutes.profile,
-                                          );
-                                        } else if (value == 'logout') {
-                                          final confirm = await showDialog<bool>(
-                                            context: context,
-                                            builder: (context) => AlertDialog(
-                                              backgroundColor: Colors.white,
-                                              shape: RoundedRectangleBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(20.r),
-                                              ),
-                                              title: Text(
-                                                'Log out',
-                                                style: TextStyle(
-                                                  fontFamily: 'SF Pro',
-                                                  fontWeight: FontWeight.w800,
-                                                  color: const Color(
-                                                    0xFF1A1A1A,
-                                                  ),
-                                                  fontSize: 18.sp,
-                                                ),
-                                              ),
-                                              content: Text(
-                                                'Are you sure you want to log out of your account? You will need to enter your credentials to log back in.',
-                                                style: TextStyle(
-                                                  fontFamily: 'SF Pro',
-                                                  fontSize: 15.sp,
-                                                  color: const Color(
-                                                    0xFF555555,
-                                                  ),
-                                                ),
-                                              ),
-                                              actions: [
-                                                TextButton(
-                                                  onPressed: () =>
-                                                      Navigator.pop(
-                                                        context,
-                                                        false,
-                                                      ),
-                                                  child: const Text(
-                                                    'Cancel',
-                                                    style: TextStyle(
-                                                      fontFamily: 'SF Pro',
-                                                      fontWeight:
-                                                          FontWeight.w600,
-                                                      color: Color(0xFF888888),
-                                                    ),
-                                                  ),
-                                                ),
-                                                TextButton(
-                                                  onPressed: () =>
-                                                      Navigator.pop(
-                                                        context,
-                                                        true,
-                                                      ),
-                                                  child: const Text(
-                                                    'Log out',
-                                                    style: TextStyle(
-                                                      fontFamily: 'SF Pro',
-                                                      fontWeight:
-                                                          FontWeight.w700,
-                                                      color: Color(0xFFC83A2D),
-                                                    ),
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          );
-                                          if (confirm == true) {
-                                            await AuthService.instance.logout();
-                                            if (context.mounted)
-                                              Navigator.pushNamedAndRemoveUntil(
-                                                context,
-                                                AppRoutes.welcome,
-                                                (_) => false,
-                                              );
-                                          }
-                                        }
-                                      },
-                                      itemBuilder: (context) => [
-                                        PopupMenuItem(
-                                          value: 'settings',
-                                          child: Row(
-                                            children: [
-                                              Icon(
-                                                Icons.settings_rounded,
-                                                color: const Color(0xFF1A1A1A),
-                                                size: 20.sp,
-                                              ),
-                                              SizedBox(width: 12.w),
-                                              Text(
-                                                'Settings',
-                                                style: TextStyle(
-                                                  fontFamily: 'SF Pro',
-                                                  fontSize: 15.sp,
-                                                  color: const Color(
-                                                    0xFF1A1A1A,
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                        PopupMenuItem(
-                                          value: 'logout',
-                                          child: Row(
-                                            children: [
-                                              Icon(
-                                                Icons.logout_rounded,
-                                                color: const Color(0xFFC83A2D),
-                                                size: 20.sp,
-                                              ),
-                                              SizedBox(width: 12.w),
-                                              Text(
-                                                'Logout',
-                                                style: TextStyle(
-                                                  fontFamily: 'SF Pro',
-                                                  fontSize: 15.sp,
-                                                  color: const Color(
-                                                    0xFFC83A2D,
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                );
-                              },
-                            ),
-                            SizedBox(height: 20.h),
-                            Padding(
-                              padding: EdgeInsets.only(right: 30.w),
-                              child: Text(
-                                'What would you like to\ncook today?',
-                                style: TextStyle(
-                                  fontFamily: 'SF Pro',
-                                  fontWeight: FontWeight.w800,
-                                  fontSize: 25.sp,
-                                  color: const Color(0xFFFFF6D6),
-                                  height: 1.25,
-                                ),
-                              ),
-                            ),
+                            Icon(Icons.settings_outlined, size: 18.sp, color: const Color(0xFF0F172A)),
+                            SizedBox(width: 8.w),
+                            Text('Settings', style: TextStyle(fontSize: 14.sp, fontFamily: 'Rubik')),
                           ],
                         ),
                       ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+                      PopupMenuItem(
+                        value: 'logout',
+                        child: Row(
+                          children: [
+                            Icon(Icons.logout_rounded, size: 18.sp, color: const Color(0xFFC31E26)),
+                            SizedBox(width: 8.w),
+                            Text('Logout', style: TextStyle(fontSize: 14.sp, fontFamily: 'Rubik', color: const Color(0xFFC31E26))),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              );
+            },
           ),
-          Positioned(
-            bottom: 20,
-            left: 0,
-            right: 0,
-            child: _SearchBar(onChanged: onSearchChanged),
-          ),
-        ],
+        ),
       ),
     );
   }
 }
 
-// ── Search bar ─────────────────────────────────────────────────────────────────
-class _SearchBar extends StatelessWidget {
-  final ValueChanged<String>? onChanged;
-  const _SearchBar({this.onChanged});
+// ── Sticky Search Header Delegate ──────────────────────────────────────────────
+class _StickySearchHeaderDelegate extends SliverPersistentHeaderDelegate {
+  final ValueNotifier<String> searchQueryNotifier;
+
+  _StickySearchHeaderDelegate({required this.searchQueryNotifier});
+
   @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 20.w),
-      child: AppSearchField(onChanged: onChanged),
+  Widget build(
+      BuildContext context, double shrinkOffset, bool overlapsContent) {
+    final isPinned = shrinkOffset > 0;
+    return Container(
+      color: const Color(0xFFF0F1F3),
+      child: Container(
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: isPinned
+              ? BorderRadius.circular(24.r)
+              : BorderRadius.vertical(top: Radius.circular(24.r)),
+          boxShadow: isPinned
+              ? [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.08),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ]
+              : [],
+        ),
+        padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 10.h),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'What would you like to cook today?',
+              style: TextStyle(
+                fontFamily: 'Rubik',
+                fontWeight: FontWeight.w800,
+                fontSize: 19.sp,
+                color: const Color(0xFF0F172A),
+              ),
+            ),
+            SizedBox(height: 10.h),
+            AppSearchField(
+              backgroundColor: const Color(0xFFF1F3F5),
+              borderColor: const Color(0xFFF1F3F5),
+              onChanged: (val) {
+                searchQueryNotifier.value = val;
+              },
+              hintText: 'Search your recipes',
+            ),
+          ],
+        ),
+      ),
     );
+  }
+
+  @override
+  double get maxExtent => 125.h;
+
+  @override
+  double get minExtent => 125.h;
+
+  @override
+  bool shouldRebuild(covariant _StickySearchHeaderDelegate oldDelegate) {
+    return false;
   }
 }
 
@@ -1215,25 +1312,22 @@ class _SectionRow extends StatelessWidget {
   final String title;
   final VoidCallback? onViewAll;
   const _SectionRow({required this.title, this.onViewAll});
+
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 18.w),
+      padding: EdgeInsets.symmetric(horizontal: 4.w),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Row(
-            children: [
-              Text(
-                title,
-                style: TextStyle(
-                  fontFamily: 'SF Pro',
-                  fontWeight: FontWeight.w800,
-                  fontSize: 18.sp,
-                  color: const Color(0xFF111827),
-                ),
-              ),
-            ],
+          Text(
+            title,
+            style: TextStyle(
+              fontFamily: 'Rubik',
+              fontWeight: FontWeight.w800,
+              fontSize: 18.sp,
+              color: const Color(0xFF0F172A),
+            ),
           ),
           if (onViewAll != null)
             GestureDetector(
@@ -1241,10 +1335,10 @@ class _SectionRow extends StatelessWidget {
               child: Text(
                 'View All',
                 style: TextStyle(
-                  fontFamily: 'SF Pro',
-                  fontWeight: FontWeight.w500,
+                  fontFamily: 'Rubik',
+                  fontWeight: FontWeight.w600,
                   fontSize: 13.sp,
-                  color: const Color(0xFFC83A2D),
+                  color: const Color(0xFFC31E26),
                 ),
               ),
             ),
@@ -1252,6 +1346,878 @@ class _SectionRow extends StatelessWidget {
       ),
     );
   }
+}
+
+// ── Empty Cookbook Card ────────────────────────────────────────────────────────
+class _EmptyCookbookCard extends StatelessWidget {
+  final GlobalKey? firstCookbookKey;
+  final VoidCallback? onRefresh;
+
+  const _EmptyCookbookCard({this.firstCookbookKey, this.onRefresh});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      key: firstCookbookKey,
+      onTap: () async {
+        final result = await showModalBottomSheet(
+          context: context,
+          isScrollControlled: true,
+          backgroundColor: Colors.transparent,
+          builder: (context) => const CookbookFormModal(),
+        );
+        if (result != null) {
+          CookbookService.instance.getMyCookbooks();
+          onRefresh?.call();
+        }
+      },
+      child: CustomPaint(
+        painter: DashedBorderPainter(
+          color: const Color(0xFFC31E26),
+          borderRadius: 20.r,
+          dash: 5,
+          gap: 4,
+          strokeWidth: 1.2,
+        ),
+        child: Container(
+          width: double.infinity,
+          padding: EdgeInsets.symmetric(vertical: 28.h, horizontal: 20.w),
+          decoration: BoxDecoration(
+            color: const Color(0xFFFAF3E6),
+            borderRadius: BorderRadius.circular(20.r),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 52.r,
+                height: 52.r,
+                decoration: const BoxDecoration(
+                  color: Color(0xFFC31E26),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.add_rounded,
+                  color: Colors.white,
+                  size: 30.sp,
+                ),
+              ),
+              SizedBox(height: 14.h),
+              Text(
+                'Start building your cookbook',
+                style: TextStyle(
+                  fontFamily: 'Rubik',
+                  fontWeight: FontWeight.w700,
+                  fontSize: 17.sp,
+                  color: const Color(0xFF0F172A),
+                ),
+              ),
+              SizedBox(height: 6.h),
+              Text(
+                'Save your favorite recipes and\nkeep them all in one place.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontFamily: 'Rubik',
+                  fontSize: 14.sp,
+                  color: const Color(0xFF64748B),
+                  height: 1.3,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Populated Cookbooks Layout ──────────────────────────────────────────────────
+class _PopulatedCookbooksLayout extends StatelessWidget {
+  final List<Cookbook> cookbooks;
+  final VoidCallback? onRefresh;
+
+  const _PopulatedCookbooksLayout({
+    required this.cookbooks,
+    this.onRefresh,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (cookbooks.isEmpty) return const SizedBox.shrink();
+
+    final Cookbook mainCookbook = cookbooks[0];
+    final Cookbook? secondCookbook = cookbooks.length > 1 ? cookbooks[1] : null;
+    final Cookbook? thirdCookbook = cookbooks.length > 2 ? cookbooks[2] : null;
+
+    return SizedBox(
+      height: 220.h,
+      child: Row(
+        children: [
+          Expanded(
+            flex: 5,
+            child: _CookbookCardTile(
+              cookbook: mainCookbook,
+              isMain: true,
+              onRefresh: onRefresh,
+            ),
+          ),
+          SizedBox(width: 12.w),
+          Expanded(
+            flex: 5,
+            child: Column(
+              children: [
+                Expanded(
+                  child: secondCookbook != null
+                      ? _CookbookCardTile(
+                          cookbook: secondCookbook,
+                          isMain: false,
+                          onRefresh: onRefresh,
+                        )
+                      : _AddCookbookCardTile(onRefresh: onRefresh),
+                ),
+                SizedBox(height: 10.h),
+                Expanded(
+                  child: thirdCookbook != null
+                      ? _CookbookCardTile(
+                          cookbook: thirdCookbook,
+                          isMain: false,
+                          onRefresh: onRefresh,
+                        )
+                      : _AddCookbookCardTile(onRefresh: onRefresh),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AddCookbookCardTile extends StatelessWidget {
+  final VoidCallback? onRefresh;
+
+  const _AddCookbookCardTile({this.onRefresh});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () async {
+        final result = await showModalBottomSheet(
+          context: context,
+          isScrollControlled: true,
+          backgroundColor: Colors.transparent,
+          builder: (context) => const CookbookFormModal(),
+        );
+        if (result != null) {
+          CookbookService.instance.getMyCookbooks();
+          onRefresh?.call();
+        }
+      },
+      child: CustomPaint(
+        painter: DashedBorderPainter(
+          color: const Color(0xFFC31E26),
+          borderRadius: 20.r,
+          dash: 4,
+          gap: 3,
+          strokeWidth: 1.2,
+        ),
+        child: Container(
+          width: double.infinity,
+          padding: EdgeInsets.all(10.w),
+          decoration: BoxDecoration(
+            color: const Color(0xFFFAF3E6),
+            borderRadius: BorderRadius.circular(20.r),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 32.r,
+                height: 32.r,
+                decoration: const BoxDecoration(
+                  color: Color(0xFFC31E26),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.add_rounded,
+                  color: Colors.white,
+                  size: 20.sp,
+                ),
+              ),
+              SizedBox(height: 6.h),
+              Text(
+                'Add cookbook',
+                style: TextStyle(
+                  fontFamily: 'Rubik',
+                  fontWeight: FontWeight.w700,
+                  fontSize: 13.sp,
+                  color: const Color(0xFF0F172A),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _CookbookCardTile extends StatelessWidget {
+  final Cookbook cookbook;
+  final bool isMain;
+  final VoidCallback? onRefresh;
+
+  const _CookbookCardTile({
+    required this.cookbook,
+    required this.isMain,
+    this.onRefresh,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () async {
+        final result = await Navigator.pushNamed(
+          context,
+          AppRoutes.cookbookDetail,
+          arguments: {'cookbook': cookbook},
+        );
+        if (result == true) {
+          CookbookService.instance.getMyCookbooks();
+          onRefresh?.call();
+        }
+      },
+      child: Container(
+        padding: EdgeInsets.all(12.w),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFAF3E6),
+          borderRadius: BorderRadius.circular(20.r),
+        ),
+        child: isMain
+            ? Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(16.r),
+                      child: CookbookCover(cookbook: cookbook),
+                    ),
+                  ),
+                  SizedBox(height: 10.h),
+                  Text(
+                    cookbook.name.isEmpty
+                        ? cookbook.name
+                        : cookbook.name[0].toUpperCase() +
+                            cookbook.name.substring(1).toLowerCase(),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontFamily: 'Rubik',
+                      fontWeight: FontWeight.w700,
+                      fontSize: 16.sp,
+                      color: const Color(0xFF0F172A),
+                    ),
+                  ),
+                  SizedBox(height: 4.h),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.restaurant_menu_rounded,
+                        size: 14.sp,
+                        color: const Color(0xFF475569),
+                      ),
+                      SizedBox(width: 4.w),
+                      Text(
+                        '${cookbook.recipes.length} Recipes',
+                        style: TextStyle(
+                          fontFamily: 'Rubik',
+                          fontSize: 13.sp,
+                          color: const Color(0xFF475569),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const Spacer(),
+                      Icon(
+                        Icons.chevron_right_rounded,
+                        size: 18.sp,
+                        color: const Color(0xFF475569),
+                      ),
+                    ],
+                  ),
+                ],
+              )
+            : Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _buildOverlappingThumbnails(cookbook),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        cookbook.name.isEmpty
+                            ? cookbook.name
+                            : cookbook.name[0].toUpperCase() +
+                                cookbook.name.substring(1).toLowerCase(),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontFamily: 'Rubik',
+                          fontWeight: FontWeight.w700,
+                          fontSize: 14.sp,
+                          color: const Color(0xFF0F172A),
+                        ),
+                      ),
+                      SizedBox(height: 2.h),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.restaurant_menu_rounded,
+                            size: 13.sp,
+                            color: const Color(0xFF475569),
+                          ),
+                          SizedBox(width: 4.w),
+                          Text(
+                            '${cookbook.recipes.length} Recipes',
+                            style: TextStyle(
+                              fontFamily: 'Rubik',
+                              fontSize: 12.sp,
+                              color: const Color(0xFF475569),
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const Spacer(),
+                          Icon(
+                            Icons.chevron_right_rounded,
+                            size: 16.sp,
+                            color: const Color(0xFF475569),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+      ),
+    );
+  }
+
+  Widget _buildOverlappingThumbnails(Cookbook cb) {
+    final List<String> images = cb.recipes
+        .map((r) => r.image)
+        .where((img) => img != null && img.isNotEmpty)
+        .cast<String>()
+        .toList();
+
+    if (images.isEmpty) {
+      return Container(
+        width: 32.r,
+        height: 32.r,
+        decoration: const BoxDecoration(
+          color: Color(0xFFE2E8F0),
+          shape: BoxShape.circle,
+        ),
+        child: Icon(Icons.menu_book_rounded, size: 16.sp, color: const Color(0xFF475569)),
+      );
+    }
+
+    return SizedBox(
+      height: 34.r,
+      child: Stack(
+        children: List.generate(images.take(3).length, (idx) {
+          return Positioned(
+            left: idx * 18.w,
+            child: Container(
+              width: 34.r,
+              height: 34.r,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: const Color(0xFFFAF3E6), width: 2),
+              ),
+              child: ClipOval(
+                child: images[idx].startsWith('http')
+                    ? CachedNetworkImage(
+                        imageUrl: images[idx],
+                        fit: BoxFit.cover,
+                        errorWidget: (_, __, ___) => Image.asset('assets/images/recipes.png', fit: BoxFit.cover),
+                      )
+                    : Image.asset(images[idx], fit: BoxFit.cover),
+              ),
+            ),
+          );
+        }),
+      ),
+    );
+  }
+}
+
+// ── Circular Recipe Avatars ─────────────────────────────────────────────────────
+class _CircularRecipeAvatarRow extends StatelessWidget {
+  final List<Recipe> recipes;
+
+  const _CircularRecipeAvatarRow({required this.recipes});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 105.h,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: EdgeInsets.symmetric(horizontal: 4.w),
+        itemCount: recipes.length,
+        separatorBuilder: (_, __) => SizedBox(width: 14.w),
+        itemBuilder: (context, i) {
+          final r = recipes[i];
+          return GestureDetector(
+            onTap: () {
+              HistoryService.instance.addToHistory(r);
+              Navigator.pushNamed(
+                context,
+                AppRoutes.recipeDetail,
+                arguments: {'recipe': r},
+              );
+            },
+            child: SizedBox(
+              width: 70.w,
+              child: Column(
+                children: [
+                  Container(
+                    width: 62.r,
+                    height: 62.r,
+                    padding: EdgeInsets.all(2.r),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: const Color(0xFFC31E26),
+                        width: 2.2,
+                      ),
+                    ),
+                    child: ClipOval(
+                      child: _buildThumbnail(r.image),
+                    ),
+                  ),
+                  SizedBox(height: 6.h),
+                  Text(
+                    r.name,
+                    maxLines: 2,
+                    textAlign: TextAlign.center,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontFamily: 'Rubik',
+                      fontWeight: FontWeight.w700,
+                      fontSize: 12.sp,
+                      color: const Color(0xFF0F172A),
+                      height: 1.15,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildThumbnail(String? image) {
+    const fallback = 'assets/images/recipes.png';
+    if (image == null || image.isEmpty || image == 'null') {
+      return Image.asset(fallback, fit: BoxFit.cover);
+    }
+    if (image.startsWith('http')) {
+      return CachedNetworkImage(
+        imageUrl: image,
+        fit: BoxFit.cover,
+        placeholder: (_, __) => Container(color: const Color(0xFFEEEEEE)),
+        errorWidget: (_, __, ___) => Image.asset(fallback, fit: BoxFit.cover),
+      );
+    }
+    return Image.asset(
+      image,
+      fit: BoxFit.cover,
+      errorBuilder: (_, __, ___) => Image.asset(fallback, fit: BoxFit.cover),
+    );
+  }
+}
+
+// ── Empty Saved Recipes Card ────────────────────────────────────────────────────
+class _EmptySavedRecipesCard extends StatelessWidget {
+  final VoidCallback? onBrowseTap;
+
+  const _EmptySavedRecipesCard({this.onBrowseTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 2.w),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Expanded(child: _buildCollageThumb('assets/images/plat1.png')),
+              SizedBox(width: 10.w),
+              Expanded(child: _buildCollageThumb('assets/images/plat2.png')),
+              SizedBox(width: 10.w),
+              Expanded(child: _buildCollageThumb('assets/images/plat3.png')),
+            ],
+          ),
+          SizedBox(height: 18.h),
+          Text(
+            'No saved recipes yet',
+            style: TextStyle(
+              fontFamily: 'Rubik',
+              fontWeight: FontWeight.w800,
+              fontSize: 18.sp,
+              color: const Color(0xFF0F172A),
+            ),
+          ),
+          SizedBox(height: 8.h),
+          Text(
+            'Explore our recipes and save your favorites\nto build your personal collection.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontFamily: 'Rubik',
+              fontSize: 13.5.sp,
+              color: const Color(0xFF64748B),
+              height: 1.35,
+            ),
+          ),
+          SizedBox(height: 16.h),
+          GestureDetector(
+            onTap: onBrowseTap,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Browse Recipes',
+                  style: TextStyle(
+                    fontFamily: 'Rubik',
+                    fontWeight: FontWeight.w700,
+                    fontSize: 15.sp,
+                    color: const Color(0xFFC31E26),
+                  ),
+                ),
+                SizedBox(width: 4.w),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  color: const Color(0xFFC31E26),
+                  size: 18.sp,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCollageThumb(String asset) {
+    return AspectRatio(
+      aspectRatio: 1.0,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(28.r),
+        child: Image.asset(
+          asset,
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) => Container(
+            color: const Color(0xFFF1F5F9),
+            child: Icon(Icons.restaurant, color: const Color(0xFF94A3B8), size: 30.sp),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Populated Saved Recipes List ────────────────────────────────────────────────
+class _PopulatedSavedRecipesList extends StatelessWidget {
+  final List<Recipe> recipes;
+  final String searchQuery;
+
+  const _PopulatedSavedRecipesList({
+    required this.recipes,
+    required this.searchQuery,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    List<Recipe> displayList = List<Recipe>.from(recipes);
+    if (searchQuery.trim().isNotEmpty) {
+      final query = searchQuery.trim().toLowerCase();
+      displayList = displayList
+          .where((r) => r.name.toLowerCase().contains(query))
+          .toList();
+    } else {
+      displayList = displayList.take(5).toList();
+    }
+
+    if (displayList.isEmpty) return const SizedBox.shrink();
+
+    return ListView.separated(
+      padding: EdgeInsets.zero,
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: displayList.length,
+      separatorBuilder: (_, __) => SizedBox(height: 12.h),
+      itemBuilder: (ctx, i) {
+        final r = displayList[i];
+        return SavedRecipeCard(
+          recipe: r,
+          onPinTap: () {
+            RecipeService.instance.togglePin(r.id);
+          },
+          onTap: () {
+            HistoryService.instance.addToHistory(r);
+            Navigator.pushNamed(
+              ctx,
+              AppRoutes.recipeDetail,
+              arguments: {'recipe': r, 'isPreview': false},
+            );
+          },
+        );
+      },
+    );
+  }
+}
+
+// ── Feedback Card ──────────────────────────────────────────────────────────────
+class _FeedbackCard extends StatelessWidget {
+  final VoidCallback onTap;
+
+  const _FeedbackCard({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(20.w),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20.r),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 10.r,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Help us improve Cooked',
+            style: TextStyle(
+              fontFamily: 'Rubik',
+              fontWeight: FontWeight.w800,
+              fontSize: 17.sp,
+              color: const Color(0xFF0F172A),
+            ),
+          ),
+          SizedBox(height: 6.h),
+          Text(
+            'Share your thoughts, ideas, or anything that could make your experience better.',
+            style: TextStyle(
+              fontFamily: 'Rubik',
+              fontSize: 13.sp,
+              color: const Color(0xFF64748B),
+            ),
+          ),
+          SizedBox(height: 16.h),
+          SizedBox(
+            width: double.infinity,
+            height: 46.h,
+            child: ElevatedButton(
+              onPressed: onTap,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFC31E26),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(24.r),
+                ),
+                elevation: 0,
+              ),
+              child: Text(
+                'Send feedback',
+                style: TextStyle(
+                  fontFamily: 'Rubik',
+                  fontWeight: FontWeight.w700,
+                  fontSize: 14.sp,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Dashed Border Painter ──────────────────────────────────────────────────────
+class DashedBorderPainter extends CustomPainter {
+  final Color color;
+  final double strokeWidth;
+  final double gap;
+  final double dash;
+  final double borderRadius;
+
+  DashedBorderPainter({
+    required this.color,
+    this.strokeWidth = 1.5,
+    this.dash = 5.0,
+    this.gap = 4.0,
+    this.borderRadius = 20.0,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final Paint paint = Paint()
+      ..color = color
+      ..strokeWidth = strokeWidth
+      ..style = PaintingStyle.stroke;
+
+    final RRect rrect = RRect.fromRectAndRadius(
+      Rect.fromLTWH(0, 0, size.width, size.height),
+      Radius.circular(borderRadius),
+    );
+
+    final Path path = Path()..addRRect(rrect);
+    final Path dashPath = Path();
+
+    for (final PathMetric metric in path.computeMetrics()) {
+      double distance = 0.0;
+      while (distance < metric.length) {
+        dashPath.addPath(
+          metric.extractPath(distance, distance + dash),
+          Offset.zero,
+        );
+        distance += dash + gap;
+      }
+    }
+    canvas.drawPath(dashPath, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant DashedBorderPainter oldDelegate) =>
+      color != oldDelegate.color || borderRadius != oldDelegate.borderRadius;
+}
+
+void _showFeedbackModal(BuildContext context) {
+  final TextEditingController feedbackCtrl = TextEditingController();
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (context) => Padding(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+        ),
+        padding: EdgeInsets.fromLTRB(20.w, 20.h, 20.w, 30.h),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 40.w,
+                height: 4.h,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE2E8F0),
+                  borderRadius: BorderRadius.circular(2.r),
+                ),
+              ),
+            ),
+            SizedBox(height: 16.h),
+            Text(
+              'Help us improve Cooked',
+              style: TextStyle(
+                fontFamily: 'Rubik',
+                fontWeight: FontWeight.w800,
+                fontSize: 18.sp,
+                color: const Color(0xFF0F172A),
+              ),
+            ),
+            SizedBox(height: 6.h),
+            Text(
+              'Share your thoughts, ideas, or anything that could make your experience better.',
+              style: TextStyle(
+                fontFamily: 'Rubik',
+                fontSize: 13.sp,
+                color: const Color(0xFF64748B),
+              ),
+            ),
+            SizedBox(height: 16.h),
+            TextField(
+              controller: feedbackCtrl,
+              maxLines: 4,
+              decoration: InputDecoration(
+                hintText: 'Type your feedback here...',
+                hintStyle: TextStyle(
+                  fontFamily: 'Rubik',
+                  fontSize: 14.sp,
+                  color: const Color(0xFF94A3B8),
+                ),
+                filled: true,
+                fillColor: const Color(0xFFF8FAFC),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16.r),
+                  borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16.r),
+                  borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16.r),
+                  borderSide: const BorderSide(color: Color(0xFFC31E26)),
+                ),
+              ),
+            ),
+            SizedBox(height: 20.h),
+            SizedBox(
+              width: double.infinity,
+              height: 48.h,
+              child: ElevatedButton(
+                onPressed: () {
+                  if (feedbackCtrl.text.trim().isNotEmpty) {
+                    Navigator.pop(context);
+                    IosToast.show(
+                      context,
+                      message: 'Thank you for your feedback!',
+                      type: ToastType.success,
+                    );
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFC31E26),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(24.r),
+                  ),
+                  elevation: 0,
+                ),
+                child: Text(
+                  'Submit Feedback',
+                  style: TextStyle(
+                    fontFamily: 'Rubik',
+                    fontWeight: FontWeight.w700,
+                    fontSize: 15.sp,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -1736,140 +2702,7 @@ class _RecentlyViewedRow extends StatelessWidget {
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
-// SAVED RECIPES GRID
-// ══════════════════════════════════════════════════════════════════════════════
-class _SavedRecipesGrid extends StatelessWidget {
-  final String searchQuery;
-  final List<Recipe> recipes;
 
-  const _SavedRecipesGrid({required this.searchQuery, required this.recipes});
-
-  @override
-  Widget build(BuildContext context) {
-    List<Recipe> displayList = List<Recipe>.from(recipes);
-    if (searchQuery.trim().isNotEmpty) {
-      final query = searchQuery.trim().toLowerCase();
-      displayList = displayList
-          .where((r) => r.name.toLowerCase().contains(query))
-          .toList();
-    }
-
-    if (displayList.isEmpty) return const SizedBox.shrink();
-
-    // Sort displayList: pinned first, then by date
-    displayList.sort((a, b) {
-      if (a.isPinned && !b.isPinned) return -1;
-      if (!a.isPinned && b.isPinned) return 1;
-      return b.createdAt.compareTo(a.createdAt);
-    });
-
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 18.w),
-      child: GridView.builder(
-        padding: EdgeInsets.zero,
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        itemCount: displayList.length,
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          mainAxisSpacing: 14.h,
-          crossAxisSpacing: 14.w,
-          childAspectRatio: 0.72,
-        ),
-        itemBuilder: (ctx, i) {
-          final r = displayList[i];
-          return RecipeCard(
-            recipe: r,
-            onTap: () {
-              HistoryService.instance.addToHistory(r);
-              Navigator.pushNamed(
-                ctx,
-                AppRoutes.recipeDetail,
-                arguments: {'recipe': r, 'isPreview': false},
-              );
-            },
-            onAddToCookbookTap: () {
-              showModalBottomSheet(
-                context: ctx,
-                backgroundColor: Colors.transparent,
-                isScrollControlled: true,
-                builder: (_) => AddToCookbookSheet(recipe: r),
-              );
-            },
-            onPinTap: () {
-              // FIRE AND FORGET - Optimistic
-              RecipeService.instance
-                  .togglePin(r.id)
-                  .then((updated) {
-                    if (ctx.mounted) {
-                      IosToast.show(
-                        ctx,
-                        message: updated.isPinned
-                            ? 'Recipe pinned'
-                            : 'Recipe unpinned',
-                        type: ToastType.success,
-                      );
-                    }
-                  })
-                  .catchError((e) {
-                    if (ctx.mounted) {
-                      IosToast.show(
-                        ctx,
-                        message: 'Failed to pin recipe',
-                        type: ToastType.error,
-                      );
-                    }
-                  });
-            },
-            onShareTap: () async {
-              try {
-                final RenderBox? box = context.findRenderObject() as RenderBox?;
-                final Rect? sharePositionOrigin = box != null
-                    ? box.localToGlobal(Offset.zero) & box.size
-                    : null;
-                final rawLink = await RecipeService.instance.getShareLink(r.id);
-                final link = rawLink
-                    .replaceAll('cooked.nixacom.com', 'link.cookedapp.com')
-                    .replaceAll(
-                      'https://cookedapp.app',
-                      'https://link.cookedapp.com',
-                    );
-                final name = r.name;
-                final creatorStr = r.creator != null
-                    ? "${r.creator!.displayName}'s "
-                    : "";
-                final template =
-                    "Check out $creatorStr$name on Cooked 🙌\n$link";
-
-                Share.share(template, sharePositionOrigin: sharePositionOrigin);
-              } catch (e) {
-                if (ctx.mounted) {
-                  IosToast.show(
-                    ctx,
-                    message: ErrorHelper.getFriendlyMessage(e),
-                    type: ToastType.error,
-                  );
-                }
-              }
-            },
-            onDeleteTap: () {
-              // FIRE AND FORGET - Optimistic
-              RecipeService.instance.deleteRecipe(r.id).then((success) {
-                if (success && ctx.mounted) {
-                  IosToast.show(
-                    ctx,
-                    message: 'Recipe deleted',
-                    type: ToastType.success,
-                  );
-                }
-              });
-            },
-          );
-        },
-      ),
-    );
-  }
-}
 
 // ══════════════════════════════════════════════════════════════════════════════
 // SUGGESTED RECIPES SECTION
@@ -2277,7 +3110,6 @@ class _SuggestedRecipesSectionState extends State<_SuggestedRecipesSection> {
       }
     }
 
-    // 2. Inject directly into the global notifier so it appears in "Saved" lists instantly
     final currentSaved = RecipeService.instance.myRecipesNotifier.value ?? [];
     if (!currentSaved.any((item) => item.id == r.id)) {
       RecipeService.instance.myRecipesNotifier.value = [
@@ -2286,7 +3118,6 @@ class _SuggestedRecipesSectionState extends State<_SuggestedRecipesSection> {
       ];
     }
 
-    // 3. Background sync to ensure server consistency
     RecipeService.instance
         .getMyRecipes(forceRefresh: true)
         .catchError((_) => <Recipe>[]);
@@ -2309,15 +3140,15 @@ class _SavingsCardState extends State<_SavingsCard>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
-  bool _hasTriggeredAnimation = false;
 
   @override
   void initState() {
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 800),
-      reverseDuration: const Duration(milliseconds: 500),
+      duration: const Duration(milliseconds: 300),
+      reverseDuration: const Duration(milliseconds: 300),
+      value: 1.0,
     );
     _scaleAnimation = CurvedAnimation(
       parent: _controller,
@@ -2358,17 +3189,7 @@ class _SavingsCardState extends State<_SavingsCard>
             totalSaved += (orderNearby - makeAtHome);
           }
         }
-
-        if (totalSaved <= 0) return const SizedBox.shrink();
-
-        if (!_hasTriggeredAnimation && !_SavingsCard.isDismissed) {
-          _hasTriggeredAnimation = true;
-          Future.delayed(const Duration(seconds: 5), () {
-            if (mounted && !_SavingsCard.isDismissed) {
-              _controller.forward();
-            }
-          });
-        }
+        final double displayAmount = totalSaved > 0 ? totalSaved : 14.0;
 
         return AnimatedBuilder(
           animation: _scaleAnimation,
@@ -2383,232 +3204,98 @@ class _SavingsCardState extends State<_SavingsCard>
             alignment: Alignment.center,
             scale: _scaleAnimation,
             child: Padding(
-            padding: EdgeInsets.only(
-              left: 22.w,
-              right: 22.w,
-              bottom: 20.h,
-              top: 0.h,
-            ),
-            child: Stack(
-              clipBehavior: Clip.none,
-              children: [
-                Container(
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFEF8F0),
-                    borderRadius: BorderRadius.circular(16.r),
-                    border: Border.all(
-                      color: const Color(0xFFF3EBE0),
-                      width: 1,
-                    ),
-                  ),
-                  child: GestureDetector(
-                    onTap: () {
-                      Navigator.pushNamed(context, AppRoutes.savingsDetails);
-                    },
-                    behavior: HitTestBehavior.opaque,
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 20.w,
-                        vertical: 16.h,
-                      ),
-                      child: Row(
+              padding: EdgeInsets.only(bottom: 12.h),
+              child: Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFAF3E6),
+                  borderRadius: BorderRadius.circular(20.r),
+                ),
+                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+                child: GestureDetector(
+                  onTap: () {
+                    Navigator.pushNamed(context, AppRoutes.savingsDetails);
+                  },
+                  behavior: HitTestBehavior.opaque,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  "You've saved",
-                                  style: TextStyle(
-                                    fontFamily: 'SF Pro',
-                                    fontSize: 14.sp,
-                                    color: const Color(0xFF7D562D),
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                                SizedBox(height: 4.h),
-                                Row(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.baseline,
-                                  textBaseline: TextBaseline.alphabetic,
-                                  children: [
-                                    Text(
-                                      "\$${totalSaved.toStringAsFixed(0)}",
-                                      style: TextStyle(
-                                        fontFamily: 'SF Pro',
-                                        fontSize: 28.sp,
-                                        color: const Color(0xFF00C40A),
-                                        fontWeight: FontWeight.w800,
-                                      ),
-                                    ),
-                                    SizedBox(width: 6.w),
-                                    Text(
-                                      "this month",
-                                      style: TextStyle(
-                                        fontFamily: 'SF Pro',
-                                        fontSize: 16.sp,
-                                        color: const Color(0xFF1A1A1A),
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                SizedBox(height: 4.h),
-                                Text(
-                                  "Compared to ordering takeout.",
-                                  style: TextStyle(
-                                    fontFamily: 'SF Pro',
-                                    fontSize: 14.sp,
-                                    color: const Color(
-                                      0xFF7D562D,
-                                    ).withOpacity(0.7),
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ],
+                          Text(
+                            "Your saved",
+                            style: TextStyle(
+                              fontFamily: 'Rubik',
+                              fontSize: 16.sp,
+                              fontWeight: FontWeight.w700,
+                              color: const Color(0xFF0F172A),
                             ),
                           ),
-                          Image.asset(
-                            'assets/images/logo2.png',
-                            height: 47.h,
-                            width: 47.w,
-                            fit: BoxFit.contain,
+                          GestureDetector(
+                            onTap: _dismissCard,
+                            child: Container(
+                              width: 24.r,
+                              height: 24.r,
+                              decoration: const BoxDecoration(
+                                color: Color(0xFFC31E26),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(
+                                Icons.close_rounded,
+                                size: 14.sp,
+                                color: Colors.white,
+                              ),
+                            ),
                           ),
                         ],
                       ),
-                    ),
+                      SizedBox(height: 8.h),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.baseline,
+                        textBaseline: TextBaseline.alphabetic,
+                        children: [
+                          Text(
+                            "~\$${displayAmount.toStringAsFixed(0)}",
+                            style: TextStyle(
+                              fontFamily: 'Rubik',
+                              fontSize: 34.sp,
+                              fontWeight: FontWeight.w800,
+                              color: const Color(0xFF10B981),
+                            ),
+                          ),
+                          SizedBox(width: 8.w),
+                          Text(
+                            "This month",
+                            style: TextStyle(
+                              fontFamily: 'Rubik',
+                              fontSize: 16.sp,
+                              fontWeight: FontWeight.w500,
+                              color: const Color(0xFF334155),
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 6.h),
+                      Text(
+                        "Comparing to ordered takeout.",
+                        style: TextStyle(
+                          fontFamily: 'Rubik',
+                          fontSize: 14.sp,
+                          fontWeight: FontWeight.w400,
+                          color: const Color(0xFF475569),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                Positioned(
-                  top: -10.h,
-                  right: -6.w,
-                  child: GestureDetector(
-                    onTap: _dismissCard,
-                    child: Container(
-                      padding: EdgeInsets.all(6.r),
-                      decoration: BoxDecoration(
-                        color: Color(0xFFC83A2D),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        Icons.close_rounded,
-                        size: 16.sp,
-                        color: const Color(0xFFFFFFFF),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
-        ),
         );
       },
     );
   }
 }
 
-class _QuickActionsRow extends StatelessWidget {
-  final VoidCallback? onScanTap;
-  final VoidCallback? onImportTap;
 
-  const _QuickActionsRow({this.onScanTap, this.onImportTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 22.w),
-      child: Row(
-        children: [
-          Expanded(
-            child: _QuickActionCard(
-              title: "Scan Recipe",
-              subtitle: "Use your camera to scan a recipe",
-              icon: Icons.camera_alt_outlined,
-              onTap: () {
-                if (onScanTap != null) onScanTap!();
-              },
-            ),
-          ),
-          SizedBox(width: 14.w),
-          Expanded(
-            child: _QuickActionCard(
-              title: "Import Recipe",
-              subtitle: "Import from link, photo, or file",
-              icon: Icons.file_upload_outlined,
-              onTap: () {
-                if (onImportTap != null) onImportTap!();
-              },
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _QuickActionCard extends StatelessWidget {
-  final String title;
-  final String subtitle;
-  final IconData icon;
-  final VoidCallback onTap;
-
-  const _QuickActionCard({
-    required this.title,
-    required this.subtitle,
-    required this.icon,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: EdgeInsets.all(16.w),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16.r),
-          border: Border.all(color: const Color(0xFFF6C8CB), width: 1.5),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              width: 40.w,
-              height: 40.w,
-              decoration: BoxDecoration(
-                color: const Color(0xFFFDF0D5),
-                borderRadius: BorderRadius.circular(12.r),
-              ),
-              child: Center(
-                child: Icon(icon, color: const Color(0xFFC83A2D), size: 22.sp),
-              ),
-            ),
-            SizedBox(height: 10.h),
-            Text(
-              title,
-              style: TextStyle(
-                fontFamily: 'SF Pro',
-                fontSize: 14.sp,
-                color: const Color(0xFF1A1A1A),
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            SizedBox(height: 4.h),
-            Text(
-              subtitle,
-              style: TextStyle(
-                fontFamily: 'SF Pro',
-                fontSize: 10.sp,
-                color: const Color(0xFF7A8499),
-                fontWeight: FontWeight.w400,
-                height: 1.3,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}

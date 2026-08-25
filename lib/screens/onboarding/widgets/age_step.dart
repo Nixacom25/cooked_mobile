@@ -17,7 +17,7 @@ class AgeStep extends StatelessWidget {
   Widget build(BuildContext context) {
     return SelectionOnboardingStep(
       title: 'How old are you?',
-      subtitle: 'We\'ll use this to personalize your recommendations.',
+      subtitle: 'We’ll use this to personalize your recommendations',
       maxSelections: 1,
       onContinue: onContinue,
       initialSelected: initialSelected != null && initialSelected!.isNotEmpty ? [initialSelected!] : [],

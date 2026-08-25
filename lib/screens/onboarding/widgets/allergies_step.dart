@@ -86,13 +86,12 @@ class _AllergiesStepState extends State<AllergiesStep> {
 
   Widget _buildTopCard() {
     return Text(
-      'COMMON ALLERGIES',
+      'Common allergies',
       style: TextStyle(
-        fontFamily: 'SF Pro',
-        fontSize: 12.sp,
+        fontFamily: 'Rubik',
+        fontSize: 15.sp,
         fontWeight: FontWeight.w700,
-        letterSpacing: 1.2,
-        color: const Color(0xFF7B8190),
+        color: const Color(0xFF0F172A),
       ),
     );
   }
@@ -100,18 +99,18 @@ class _AllergiesStepState extends State<AllergiesStep> {
   Widget _buildBottomCard() {
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
       decoration: BoxDecoration(
-        color: const Color(0xFFF2C94C),
-        borderRadius: BorderRadius.circular(20.r),
+        color: const Color(0xFFFAF4E5),
+        borderRadius: BorderRadius.circular(14.r),
       ),
       child: Text(
-        "Additional dietary preferences can be\nupdated later in Settings.",
+        "Additional dietary preferences can be updated later in Settings.",
         style: TextStyle(
           fontSize: 14.sp,
           fontFamily: 'SF Pro',
-          color: const Color(0xFF111827),
-          height: 1.4,
+          color: const Color(0xFF0F172A),
+          height: 1.35,
         ),
       ),
     );
@@ -120,11 +119,11 @@ class _AllergiesStepState extends State<AllergiesStep> {
   @override
   Widget build(BuildContext context) {
     return SelectionOnboardingStep(
-      title: "Do you have any dietary restrictions or allergies?",
-      subtitle: "We'll automatically filter recipes for you.",
+      title: "Do you have any\ndietary restrictions or\nallergies?",
+      subtitle: "We’ll automatically filter recipes for you",
       useGrid: true,
       preserveSvgColor: false,
-      gridItemDirection: Axis.horizontal,
+      gridItemDirection: Axis.vertical,
       maxSelections: 20,
       initialSelected: _selectedAllergies.toList(),
       onContinue: widget.onContinue,

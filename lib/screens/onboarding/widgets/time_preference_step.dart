@@ -59,110 +59,112 @@ class _TimePreferenceStepState extends State<TimePreferenceStep> {
   @override
   void initState() {
     super.initState();
-    _selectedTime = widget.initialSelected;
+    _selectedTime = widget.initialSelected ?? '15–30 minutes';
   }
 
   @override
   Widget build(BuildContext context) {
+    final selectedOption = _options.firstWhere(
+      (o) => o['title'] == _selectedTime,
+      orElse: () => _options[1],
+    );
+
     return Column(
       children: [
         Expanded(
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              return SingleChildScrollView(
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                  child: IntrinsicHeight(
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 20.w),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          SizedBox(height: 30.h),
-                          Text(
-                            'How much time do\nyou usually have to\ncook?',
-                            style: TextStyle(
-                              fontSize: 34.sp,
-                              fontWeight: FontWeight.w400,
-                              color: const Color(0xFF111827),
-                              fontFamily: 'Larken',
-                              height: 1.149,
-                              letterSpacing: 0,
-                            ),
-                          ),
-                          SizedBox(height: 12.h),
-                          Text(
-                            "We'll prioritize recipes that fit your\nschedule.",
-                            style: TextStyle(
-                              fontSize: 16.sp,
-                              color: const Color(0xFF4B5563),
-                              fontFamily: 'SF Pro',
-                              height: 1.3,
-                            ),
-                          ),
-                          SizedBox(height: 20.h),
-                          Column(
-                            children: [
-                              Row(
-                                children: [
-                                  Expanded(child: _buildOptionCard(_options[0], false)),
-                                  SizedBox(width: 12.w),
-                                  Expanded(child: _buildOptionCard(_options[1], false)),
-                                ],
-                              ),
-                              SizedBox(height: 8.h),
-                              Row(
-                                children: [
-                                  Expanded(child: _buildOptionCard(_options[2], false)),
-                                  SizedBox(width: 12.w),
-                                  Expanded(child: _buildOptionCard(_options[3], false)),
-                                ],
-                              ),
-                              SizedBox(height: 8.h),
-                              _buildOptionCard(_options[4], true),
-                            ],
-                          ),
-                          if (_selectedTime != null && _selectedTime != 'Any amount of time') ...[
-                            SizedBox(height: 16.h),
-                            Container(
-                              width: double.infinity,
-                              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFFCD34D),
-                                borderRadius: BorderRadius.circular(20.r),
-                              ),
-                              child: Text(
-                                _options.firstWhere((o) => o['title'] == _selectedTime)['summary']!,
-                                style: TextStyle(
-                                  fontSize: 14.sp,
-                                  fontFamily: 'SF Pro',
-                                  color: const Color(0xFF111827),
-                                  height: 1.4,
-                                ),
-                              ),
-                            ),
-                          ],
-                          SizedBox(height: 10.h),
-                        ],
-                      ),
+          child: SingleChildScrollView(
+            padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'How much time do you\nusually have to cook?',
+                  style: TextStyle(
+                    fontSize: 32.sp,
+                    fontWeight: FontWeight.w800,
+                    color: const Color(0xFF0F172A),
+                    fontFamily: 'Rubik',
+                    height: 1.15,
+                  ),
+                ),
+                SizedBox(height: 10.h),
+                Text(
+                  'We’ll prioritize recipes that fit your schedule',
+                  style: TextStyle(
+                    fontSize: 15.sp,
+                    color: const Color(0xFF475569),
+                    fontFamily: 'SF Pro',
+                    height: 1.3,
+                  ),
+                ),
+                SizedBox(height: 24.h),
+                Text(
+                  'Cooking time',
+                  style: TextStyle(
+                    fontFamily: 'Rubik',
+                    fontSize: 15.sp,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF0F172A),
+                  ),
+                ),
+                SizedBox(height: 12.h),
+                Column(
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(child: _buildOptionCard(_options[0], false)),
+                        SizedBox(width: 12.w),
+                        Expanded(child: _buildOptionCard(_options[1], false)),
+                      ],
+                    ),
+                    SizedBox(height: 10.h),
+                    Row(
+                      children: [
+                        Expanded(child: _buildOptionCard(_options[2], false)),
+                        SizedBox(width: 12.w),
+                        Expanded(child: _buildOptionCard(_options[3], false)),
+                      ],
+                    ),
+                    SizedBox(height: 10.h),
+                    _buildOptionCard(_options[4], true),
+                  ],
+                ),
+                SizedBox(height: 20.h),
+                Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFAF4E5),
+                    borderRadius: BorderRadius.circular(14.r),
+                  ),
+                  child: Text(
+                    selectedOption['summary']!,
+                    style: TextStyle(
+                      fontSize: 14.sp,
+                      fontFamily: 'SF Pro',
+                      color: const Color(0xFF0F172A),
+                      height: 1.35,
                     ),
                   ),
                 ),
-              );
-            },
+                SizedBox(height: 20.h),
+              ],
+            ),
           ),
         ),
         if (widget.onContinue != null)
           Padding(
-            padding: EdgeInsets.fromLTRB(24.w, 16.h, 24.w, 20.h),
+            padding: EdgeInsets.fromLTRB(24.w, 8.h, 24.w, 20.h),
             child: SafeArea(
               top: false,
+              bottom: true,
               child: RedButton(
                 label: 'Continue',
+                color: const Color(0xFFC31E26),
                 onTap: widget.onContinue!,
                 isDisabled: _selectedTime == null,
-                height: 55.h,
-                fontSize: 18.sp,
+                height: 52.h,
+                fontSize: 16.sp,
               ),
             ),
           ),
@@ -179,23 +181,16 @@ class _TimePreferenceStepState extends State<TimePreferenceStep> {
         widget.onChanged(option['title']!);
       },
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
+        duration: const Duration(milliseconds: 150),
         width: isFullWidth ? double.infinity : null,
-        padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+        padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 16.h),
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20.r),
+          color: const Color(0xFFF1F5F9),
+          borderRadius: BorderRadius.circular(16.r),
           border: Border.all(
-            color: isSelected ? const Color(0xFFC83A2D) : const Color(0xFFF3F4F6),
+            color: isSelected ? const Color(0xFFC31E26) : Colors.transparent,
             width: 1.5,
           ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.04),
-              blurRadius: 15,
-              offset: const Offset(0, 4),
-            )
-          ]
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -203,23 +198,23 @@ class _TimePreferenceStepState extends State<TimePreferenceStep> {
           children: [
             SvgPicture.asset(
               'assets/icones/${option['icon']}',
-              height: 25.sp,
-              width: 25.sp,
+              height: 24.sp,
+              width: 24.sp,
               colorFilter: ColorFilter.mode(
-                isSelected ? const Color(0xFFC83A2D) : const Color(0xFF9CA3AF),
+                isSelected ? const Color(0xFFC31E26) : const Color(0xFF0F172A),
                 BlendMode.srcIn,
               ),
               placeholderBuilder: (context) => const SizedBox.shrink(),
             ),
-            SizedBox(height: 4.h),
+            SizedBox(height: 8.h),
             Text(
               option['title']!,
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 14.sp,
-                fontWeight: FontWeight.w500,
-                color: isSelected ? const Color(0xFFC83A2D) : const Color(0xFF111827),
-                fontFamily: 'SF Pro',
+                fontWeight: FontWeight.w700,
+                color: isSelected ? const Color(0xFFC31E26) : const Color(0xFF0F172A),
+                fontFamily: 'Rubik',
               ),
             ),
             SizedBox(height: 2.h),
@@ -229,7 +224,7 @@ class _TimePreferenceStepState extends State<TimePreferenceStep> {
               style: TextStyle(
                 fontSize: 12.sp,
                 fontWeight: FontWeight.w400,
-                color: const Color(0xFF9CA3AF),
+                color: const Color(0xFF64748B),
                 fontFamily: 'SF Pro',
               ),
             ),
