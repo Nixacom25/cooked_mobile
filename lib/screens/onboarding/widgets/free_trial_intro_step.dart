@@ -1,3 +1,4 @@
+import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../widgets/red_button.dart';
@@ -36,19 +37,16 @@ class _FreeTrialIntroStepState extends State<FreeTrialIntroStep> with SingleTick
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1200),
-    );
+      duration: const Duration(milliseconds: 1200));
 
     Animation<double> createOpacity(double start, double end) {
       return Tween<double>(begin: 0.0, end: 1.0).animate(
-        CurvedAnimation(parent: _controller, curve: Interval(start, end.clamp(0.0, 1.0), curve: Curves.easeOut)),
-      );
+        CurvedAnimation(parent: _controller, curve: Interval(start, end.clamp(0.0, 1.0), curve: Curves.easeOut)));
     }
 
     Animation<Offset> createSlide(double start, double end) {
       return Tween<Offset>(begin: const Offset(0, 0.15), end: Offset.zero).animate(
-        CurvedAnimation(parent: _controller, curve: Interval(start, end.clamp(0.0, 1.0), curve: Curves.easeOutCubic)),
-      );
+        CurvedAnimation(parent: _controller, curve: Interval(start, end.clamp(0.0, 1.0), curve: Curves.easeOutCubic)));
     }
 
     _titleOpacity = createOpacity(0.0, 0.3);
@@ -83,10 +81,42 @@ class _FreeTrialIntroStepState extends State<FreeTrialIntroStep> with SingleTick
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, child) {
-        return Stack(
+        return Column(
           children: [
-            // 1. Background image starting from top behind title down to checklist
-            Positioned.fill(
+            // 1. Header Text Section at top
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 8.h),
+              child: FadeTransition(
+                opacity: _titleOpacity,
+                child: SlideTransition(
+                  position: _titleSlide,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      RichText(
+                        text: TextSpan(
+                          style: GoogleFonts.rubik(
+                            fontSize: 32.sp,
+                            fontWeight: FontWeight.w500,
+                            color: const Color(0xFF111827),
+                            height: 1.15),
+                          children: const [
+                            TextSpan(text: 'We want you to try\nCooked for '),
+                            TextSpan(
+                              text: 'free',
+                              style: TextStyle(color: Color(0xFFC31E26))),
+                          ])),
+                      SizedBox(height: 10.h),
+                      Text(
+                        'Create your account to keep your recipes, meal plans, grocery lists, and savings tracker.',
+                        style: GoogleFonts.poppins(
+                          fontSize: 15.sp,
+                          color: const Color(0xFF111827),
+                          height: 1.3)),
+                    ])))),
+
+            // 2. Middle Image Section (confined to middle area like previous step)
+            Expanded(
               child: FadeTransition(
                 opacity: _imageOpacity,
                 child: SlideTransition(
@@ -101,16 +131,13 @@ class _FreeTrialIntroStepState extends State<FreeTrialIntroStep> with SingleTick
                           errorBuilder: (context, error, stackTrace) => Container(
                             color: const Color(0xFFF1F5F9),
                             alignment: Alignment.center,
-                            child: const Icon(Icons.fastfood, color: Color(0xFFCBD5E1)),
-                          ),
-                        ),
-                      ),
-                      // Top White Fade covering Title text
+                            child: const Icon(Icons.fastfood, color: Color(0xFFCBD5E1))))),
+                      // Top White Fade
                       Positioned(
                         top: 0,
                         left: 0,
                         right: 0,
-                        height: 180.h,
+                        height: 40.h,
                         child: Container(
                           decoration: const BoxDecoration(
                             gradient: LinearGradient(
@@ -118,21 +145,14 @@ class _FreeTrialIntroStepState extends State<FreeTrialIntroStep> with SingleTick
                               end: Alignment.bottomCenter,
                               colors: [
                                 Colors.white,
-                                Color(0xF5FFFFFF),
-                                Color(0x80FFFFFF),
                                 Color(0x00FFFFFF),
-                              ],
-                              stops: [0.0, 0.4, 0.7, 1.0],
-                            ),
-                          ),
-                        ),
-                      ),
-                      // Bottom White Fade covering Checklist & Button area
+                              ])))),
+                      // Bottom White Fade
                       Positioned(
                         bottom: 0,
                         left: 0,
                         right: 0,
-                        height: 220.h,
+                        height: 50.h,
                         child: Container(
                           decoration: const BoxDecoration(
                             gradient: LinearGradient(
@@ -140,73 +160,16 @@ class _FreeTrialIntroStepState extends State<FreeTrialIntroStep> with SingleTick
                               end: Alignment.topCenter,
                               colors: [
                                 Colors.white,
-                                Color(0xF5FFFFFF),
-                                Color(0x80FFFFFF),
                                 Color(0x00FFFFFF),
-                              ],
-                              stops: [0.0, 0.4, 0.7, 1.0],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
+                              ])))),
+                    ])))),
 
-            // 2. Main Content Column (Title at top, Checklist & Button at bottom)
-            Column(
-              children: [
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
-                  child: FadeTransition(
-                    opacity: _titleOpacity,
-                    child: SlideTransition(
-                      position: _titleSlide,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          RichText(
-                            text: TextSpan(
-                              style: TextStyle(
-                                fontSize: 32.sp,
-                                fontWeight: FontWeight.w800,
-                                color: const Color(0xFF0F172A),
-                                fontFamily: 'Rubik',
-                                height: 1.15,
-                              ),
-                              children: const [
-                                TextSpan(text: 'We want you to try\nCooked for '),
-                                TextSpan(
-                                  text: 'free',
-                                  style: TextStyle(color: Color(0xFFC31E26)),
-                                ),
-                              ],
-                            ),
-                          ),
-                          SizedBox(height: 10.h),
-                          Text(
-                            'Create your account to keep your recipes, meal plans, grocery lists, and savings tracker.',
-                            style: TextStyle(
-                              fontSize: 15.sp,
-                              color: const Color(0xFF475569),
-                              fontFamily: 'SF Pro',
-                              height: 1.3,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-
-                const Spacer(),
-
-                // Checklist items
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 8.h),
-                  child: Column(
+            // 3. Bottom Checklist & Action Button
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 24.w),
+              child: Column(
+                children: [
+                  Column(
                     children: List.generate(_benefits.length, (index) {
                       return FadeTransition(
                         opacity: _itemOpacities[index],
@@ -218,61 +181,40 @@ class _FreeTrialIntroStepState extends State<FreeTrialIntroStep> with SingleTick
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
                                 Container(
-                                  width: 20.r,
-                                  height: 20.r,
+                                  width: 22.r,
+                                  height: 22.r,
                                   decoration: const BoxDecoration(
                                     color: Color(0xFFC31E26),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: Icon(Icons.check, color: Colors.white, size: 12.sp),
-                                ),
+                                    shape: BoxShape.circle),
+                                  child: Icon(Icons.check_rounded, color: Colors.white, size: 14.sp)),
                                 SizedBox(width: 12.w),
                                 Expanded(
                                   child: Text(
                                     _benefits[index],
-                                    style: TextStyle(
-                                      fontFamily: 'Rubik',
+                                    style: GoogleFonts.rubik(
                                       fontSize: 14.sp,
-                                      fontWeight: FontWeight.w700,
-                                      color: const Color(0xFF0F172A),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      );
-                    }),
-                  ),
-                ),
-
-                // Bottom Button Area
-                FadeTransition(
-                  opacity: _buttonOpacity,
-                  child: SlideTransition(
-                    position: _buttonSlide,
-                    child: Padding(
-                      padding: EdgeInsets.fromLTRB(24.w, 4.h, 24.w, 20.h),
-                      child: SafeArea(
-                        top: false,
-                        bottom: true,
-                        child: RedButton(
-                          label: 'Try for \$0.00',
-                          color: const Color(0xFFC31E26),
-                          onTap: widget.onContinue,
-                          height: 52.h,
-                          fontSize: 16.sp,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        );
-      },
-    );
+                                      fontWeight: FontWeight.w500,
+                                      color: const Color(0xFF111827)))),
+                              ]))));
+                    })),
+                  SizedBox(height: 8.h),
+                  FadeTransition(
+                    opacity: _buttonOpacity,
+                    child: SlideTransition(
+                      position: _buttonSlide,
+                      child: Padding(
+                        padding: EdgeInsets.only(bottom: 20.h),
+                        child: SafeArea(
+                          top: false,
+                          bottom: true,
+                          child: RedButton(
+                            label: 'Try for \$0.00',
+                            color: const Color(0xFFC31E26),
+                            onTap: widget.onContinue,
+                            height: 52.h,
+                            fontSize: 16.sp))))),
+                ])),
+          ]);
+      });
   }
 }

@@ -1,3 +1,4 @@
+import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter/services.dart';
@@ -24,16 +25,16 @@ class _AllergiesStepState extends State<AllergiesStep> {
   final List<String> _customAllergies = [];
 
   final List<Map<String, dynamic>> _options = [
-    {'title': 'Tree nuts', 'icon': 'nuts.svg'},
-    {'title': 'Peanuts', 'icon': 'peanut1.svg'},
-    {'title': 'Shellfish', 'icon': 'shellfish1.svg'},
-    {'title': 'Fish', 'icon': 'fish1.svg'},
-    {'title': 'Eggs', 'icon': 'eggs1.svg'},
-    {'title': 'Soy', 'icon': 'soy1.svg'},
-    {'title': 'Dairy Milk', 'icon': 'milk1.svg'},
-    {'title': 'Wheat/Gluten', 'icon': 'gluten1.svg'},
-    {'title': 'Sesame', 'icon': 'sesame1.svg'},
-    {'title': 'No Allergies', 'icon': 'bloque2.svg'},
+    {'title': 'Tree nuts', 'icon': 'nuts1.svg'},
+    {'title': 'Peanuts', 'icon': 'peanuts.svg'},
+    {'title': 'Shellfish', 'icon': 'shellfishs.svg'},
+    {'title': 'Fish', 'icon': 'fishs.svg'},
+    {'title': 'Eggs', 'icon': 'eggs2.svg'},
+    {'title': 'Soy', 'icon': 'soys.svg'},
+    {'title': 'Dairy Milk', 'icon': 'milks.svg'},
+    {'title': 'Wheat/Gluten', 'icon': 'glutens.svg'},
+    {'title': 'Sesame', 'icon': 'sesames.svg'},
+    {'title': 'No Allergies', 'icon': 'bloques.svg'},
   ];
 
   @override
@@ -87,13 +88,9 @@ class _AllergiesStepState extends State<AllergiesStep> {
   Widget _buildTopCard() {
     return Text(
       'Common allergies',
-      style: TextStyle(
-        fontFamily: 'Rubik',
-        fontSize: 15.sp,
-        fontWeight: FontWeight.w700,
-        color: const Color(0xFF0F172A),
-      ),
-    );
+      style: GoogleFonts.rubik(fontSize: 15.sp,
+        fontWeight: FontWeight.w500,
+        color: const Color(0xFF111827)));
   }
 
   Widget _buildBottomCard() {
@@ -102,18 +99,12 @@ class _AllergiesStepState extends State<AllergiesStep> {
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
       decoration: BoxDecoration(
         color: const Color(0xFFFAF4E5),
-        borderRadius: BorderRadius.circular(14.r),
-      ),
+        borderRadius: BorderRadius.circular(14.r)),
       child: Text(
         "Additional dietary preferences can be updated later in Settings.",
-        style: TextStyle(
-          fontSize: 14.sp,
-          fontFamily: 'SF Pro',
-          color: const Color(0xFF0F172A),
-          height: 1.35,
-        ),
-      ),
-    );
+        style: GoogleFonts.poppins(fontSize: 14.sp,
+          color: const Color(0xFF111827),
+          height: 1.35)));
   }
 
   @override
@@ -135,15 +126,12 @@ class _AllergiesStepState extends State<AllergiesStep> {
           return SelectionOption(
             id: o['title'] as String,
             label: o['title'] as String,
-            icon: o['flutterIcon'] as IconData,
-          );
+            icon: o['flutterIcon'] as IconData);
         }
         return SelectionOption(
           id: o['title'] as String,
           label: o['title'] as String,
-          svgAsset: 'assets/icones/${o['icon']}',
-        );
-      }).toList(),
-    );
+          svgAsset: 'assets/icones/${o['icon']}');
+      }).toList());
   }
 }

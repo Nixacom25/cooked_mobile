@@ -1,3 +1,4 @@
+import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../core/extensions/string_extensions.dart';
@@ -96,23 +97,17 @@ class _KitchenStepState extends State<KitchenStep> {
         children: [
           Text(
             'What\'s in your kitchen?',
-            style: TextStyle(
+            style: GoogleFonts.poppins(
               fontSize: 24.sp,
               fontWeight: FontWeight.w900,
               color: const Color(0xFF0D1B3E),
-              fontFamily: 'SF Pro',
-              height: 1.2,
-            ),
-          ),
+              height: 1.2)),
           SizedBox(height: 8.h),
           Text(
             'Select your equipment',
-            style: TextStyle(
+            style: GoogleFonts.poppins(
               fontSize: 14.sp,
-              color: const Color(0xFF7B8190),
-              fontFamily: 'SF Pro',
-            ),
-          ),
+              color: const Color(0xFF7B8190))),
           SizedBox(height: 32.h),
           GridView.builder(
             shrinkWrap: true,
@@ -121,59 +116,42 @@ class _KitchenStepState extends State<KitchenStep> {
               crossAxisCount: 2,
               crossAxisSpacing: 16.w,
               mainAxisSpacing: 16.h,
-              childAspectRatio: 1.5,
-            ),
+              childAspectRatio: 1.5),
             itemCount: _appliances.length,
             itemBuilder: (context, index) {
               final app = _appliances[index];
               return _buildApplianceCard(app);
-            },
-          ),
+            }),
           
           if (isOtherSelected) ...[
             SizedBox(height: 24.h),
             Text(
               'Specify other equipment',
-              style: TextStyle(
-                fontFamily: 'SF Pro',
-                fontSize: 14.sp,
+              style: GoogleFonts.poppins(fontSize: 14.sp,
                 fontWeight: FontWeight.w600,
-                color: const Color(0xFF7B8190),
-              ),
-            ),
+                color: const Color(0xFF7B8190))),
             SizedBox(height: 8.h),
             Container(
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(12.r),
-                border: Border.all(color: const Color(0xFFE5E7EB)),
-              ),
+                border: Border.all(color: const Color(0xFFE5E7EB))),
               child: TextField(
                 controller: _othersController,
                 focusNode: _othersFocusNode,
                 onSubmitted: (_) => _addCustomEquipment(),
                 textCapitalization: TextCapitalization.words,
-                style: TextStyle(
-                  fontFamily: 'SF Pro',
-                  fontSize: 14.sp,
-                  color: const Color(0xFF1A1A1A),
-                ),
+                style: GoogleFonts.poppins(fontSize: 14.sp,
+                  color: const Color(0xFF1A1A1A)),
                 decoration: InputDecoration(
                   hintText: 'Enter equipment and press Enter',
-                  hintStyle: TextStyle(
-                    fontFamily: 'SF Pro',
-                    fontSize: 14.sp,
-                    color: Colors.grey[400],
-                  ),
+                  hintStyle: GoogleFonts.poppins(fontSize: 14.sp,
+                    color: Colors.grey[400]),
                   border: InputBorder.none,
                   contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
                   suffixIcon: IconButton(
                     icon: const Icon(Icons.add_rounded, color: Color(0xFFC83A2D)),
-                    onPressed: _addCustomEquipment,
-                  ),
-                ),
-              ),
-            ),
+                    onPressed: _addCustomEquipment)))),
             if (customEquipment.isNotEmpty) ...[
               SizedBox(height: 12.h),
               Wrap(
@@ -184,16 +162,12 @@ class _KitchenStepState extends State<KitchenStep> {
                   backgroundColor: const Color(0xFFC83A2D),
                   deleteIcon: const Icon(Icons.close, size: 14, color: Colors.white),
                   onDeleted: () => _removeEquipment(e),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.r)),
-                )).toList(),
-              ),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.r)))).toList()),
             ],
           ],
 
           SizedBox(height: MediaQuery.of(context).viewInsets.bottom + 120.h),
-        ],
-      ),
-    );
+        ]));
   }
 
   Widget _buildApplianceCard(Map<String, String> app) {
@@ -229,18 +203,15 @@ class _KitchenStepState extends State<KitchenStep> {
             color: isSelected
                 ? const Color(0xFFC83A2D)
                 : const Color(0xFFE5E7EB),
-            width: isSelected ? 1.5.w : 1.w,
-          ),
+            width: isSelected ? 1.5.w : 1.w),
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: const Color(0xFFC83A2D).withValues(alpha: 0.05),
+                    color: const Color(0xFFC31E26).withValues(alpha: 0.05),
                     blurRadius: 10.r,
-                    offset: Offset(0, 4.h),
-                  ),
+                    offset: Offset(0, 4.h)),
                 ]
-              : null,
-        ),
+              : null),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -249,25 +220,17 @@ class _KitchenStepState extends State<KitchenStep> {
                 'assets/icones/${app['icon']}',
                 height: 28.sp,
                 width: 28.sp,
-                placeholderBuilder: (context) => const SizedBox.shrink(),
-              )
+                placeholderBuilder: (context) => const SizedBox.shrink())
             else
               Icon(Icons.add_circle_outline, size: 28.sp, color: isSelected ? const Color(0xFFC83A2D) : const Color(0xFF9CA3AF)),
             SizedBox(height: 8.h),
             Text(
               app['title']!,
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontFamily: 'SF Pro',
-                fontSize: 14.sp,
+              style: GoogleFonts.poppins(fontSize: 14.sp,
                 fontWeight: FontWeight.w700,
                 color: const Color(0xFF1A1A1A),
-                height: 1.1,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+                height: 1.1)),
+          ])));
   }
 }

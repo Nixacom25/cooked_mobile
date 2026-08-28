@@ -1,3 +1,4 @@
+import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -21,8 +22,7 @@ class _OtpStepState extends State<OtpStep> {
   static const int _otpLength = 6;
   final List<TextEditingController> _ctrls = List.generate(
     _otpLength,
-    (_) => TextEditingController(),
-  );
+    (_) => TextEditingController());
   final List<FocusNode> _nodes = List.generate(_otpLength, (_) => FocusNode());
 
   bool _isLoading = false;
@@ -71,8 +71,7 @@ class _OtpStepState extends State<OtpStep> {
       IosToast.show(
         context,
         message: 'Please enter the complete 6-digit code.',
-        type: ToastType.warning,
-      );
+        type: ToastType.warning);
       return;
     }
 
@@ -80,8 +79,7 @@ class _OtpStepState extends State<OtpStep> {
     try {
       await AuthService.instance.verifyEmail(
         identifier: widget.email,
-        otpCode: code,
-      );
+        otpCode: code);
       if (!mounted) return;
       widget.onComplete();
     } catch (e) {
@@ -89,10 +87,8 @@ class _OtpStepState extends State<OtpStep> {
       IosToast.show(
         context,
         message: ErrorHelper.getFriendlyMessage(
-          e,
-        ).replaceAll('Exception: ', ''),
-        type: ToastType.error,
-      );
+          e).replaceAll('Exception: ', ''),
+        type: ToastType.error);
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -107,17 +103,14 @@ class _OtpStepState extends State<OtpStep> {
       IosToast.show(
         context,
         message: 'Verification code resent.',
-        type: ToastType.success,
-      );
+        type: ToastType.success);
     } catch (e) {
       if (!mounted) return;
       IosToast.show(
         context,
         message: ErrorHelper.getFriendlyMessage(
-          e,
-        ).replaceAll('Exception: ', ''),
-        type: ToastType.error,
-      );
+          e).replaceAll('Exception: ', ''),
+        type: ToastType.error);
     } finally {
       if (mounted) setState(() => _isResending = false);
     }
@@ -135,24 +128,18 @@ class _OtpStepState extends State<OtpStep> {
               children: [
                 Text(
                   'Verify your account',
-                  style: TextStyle(
+                  style: GoogleFonts.rubik(
                     fontSize: 32.sp,
-                    fontWeight: FontWeight.w800,
-                    color: const Color(0xFF0F172A),
-                    fontFamily: 'Rubik',
-                    height: 1.15,
-                  ),
-                ),
+                    fontWeight: FontWeight.w500,
+                    color: const Color(0xFF111827),
+                    height: 1.15)),
                 SizedBox(height: 10.h),
                 Text(
                   'Please enter the 6-digit code we sent to\n${widget.email}',
-                  style: TextStyle(
+                  style: GoogleFonts.poppins(
                     fontSize: 15.sp,
-                    color: const Color(0xFF475569),
-                    fontFamily: 'SF Pro',
-                    height: 1.3,
-                  ),
-                ),
+                    color: const Color(0xFF111827),
+                    height: 1.3)),
                 SizedBox(height: 36.h),
 
                 Row(
@@ -169,9 +156,7 @@ class _OtpStepState extends State<OtpStep> {
                             color: _nodes[idx].hasFocus || _ctrls[idx].text.isNotEmpty
                                 ? const Color(0xFFC31E26)
                                 : Colors.transparent,
-                            width: 1.5,
-                          ),
-                        ),
+                            width: 1.5)),
                         child: TextField(
                           controller: _ctrls[idx],
                           focusNode: _nodes[idx],
@@ -181,22 +166,14 @@ class _OtpStepState extends State<OtpStep> {
                           inputFormatters: [
                             FilteringTextInputFormatter.digitsOnly,
                           ],
-                          style: TextStyle(
-                            fontSize: 22.sp,
-                            fontWeight: FontWeight.w700,
-                            fontFamily: 'Rubik',
-                            color: const Color(0xFF0F172A),
-                          ),
+                          style: GoogleFonts.rubik(fontSize: 22.sp,
+                            fontWeight: FontWeight.w500,
+                            color: const Color(0xFF111827)),
                           decoration: const InputDecoration(
                             counterText: '',
                             border: InputBorder.none,
-                            contentPadding: EdgeInsets.zero,
-                          ),
-                        ),
-                      ),
-                    );
-                  }),
-                ),
+                            contentPadding: EdgeInsets.zero))));
+                  })),
 
                 SizedBox(height: 32.h),
 
@@ -205,43 +182,28 @@ class _OtpStepState extends State<OtpStep> {
                     children: [
                       Text(
                         "Didn't receive a code?",
-                        style: TextStyle(
+                        style: GoogleFonts.poppins(
                           fontSize: 14.sp,
-                          color: const Color(0xFF64748B),
-                          fontFamily: 'SF Pro',
-                        ),
-                      ),
+                          color: const Color(0xFF111827))),
                       SizedBox(height: 6.h),
                       TextButton(
                         onPressed: _isResending ? null : _resendCode,
                         child: _isResending
                             ? LoadingText(
                                 text: 'Resending',
-                                style: TextStyle(
+                                style: GoogleFonts.rubik(
                                   fontSize: 15.sp,
-                                  fontWeight: FontWeight.w700,
-                                  color: const Color(0xFFC31E26),
-                                  fontFamily: 'Rubik',
-                                ),
-                              )
+                                  fontWeight: FontWeight.w500,
+                                  color: const Color(0xFFC31E26)))
                             : Text(
                                 'Resend Code',
-                                style: TextStyle(
+                                style: GoogleFonts.rubik(
                                   fontSize: 15.sp,
-                                  fontWeight: FontWeight.w700,
-                                  color: const Color(0xFFC31E26),
-                                  fontFamily: 'Rubik',
-                                ),
-                              ),
-                      ),
-                    ],
-                  ),
-                ),
+                                  fontWeight: FontWeight.w500,
+                                  color: const Color(0xFFC31E26)))),
+                    ])),
                 SizedBox(height: MediaQuery.of(context).viewInsets.bottom + 20.h),
-              ],
-            ),
-          ),
-        ),
+              ]))),
         Padding(
           padding: EdgeInsets.fromLTRB(24.w, 8.h, 24.w, 20.h),
           child: SafeArea(
@@ -254,11 +216,7 @@ class _OtpStepState extends State<OtpStep> {
               color: const Color(0xFFC31E26),
               onTap: _verifyCode,
               height: 52.h,
-              fontSize: 16.sp,
-            ),
-          ),
-        ),
-      ],
-    );
+              fontSize: 16.sp))),
+      ]);
   }
 }

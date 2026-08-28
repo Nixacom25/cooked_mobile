@@ -1,3 +1,4 @@
+import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../widgets/red_button.dart';
@@ -34,43 +35,32 @@ class _SavingsStepState extends State<SavingsStep> with SingleTickerProviderStat
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 900),
-    );
+      duration: const Duration(milliseconds: 900));
 
     _titleOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: const Interval(0.0, 0.4, curve: Curves.easeOut)),
-    );
+      CurvedAnimation(parent: _controller, curve: const Interval(0.0, 0.4, curve: Curves.easeOut)));
     _titleSlide = Tween<Offset>(begin: const Offset(0, 0.15), end: Offset.zero).animate(
-      CurvedAnimation(parent: _controller, curve: const Interval(0.0, 0.4, curve: Curves.easeOutCubic)),
-    );
+      CurvedAnimation(parent: _controller, curve: const Interval(0.0, 0.4, curve: Curves.easeOutCubic)));
 
     _subtitleOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: const Interval(0.1, 0.5, curve: Curves.easeOut)),
-    );
+      CurvedAnimation(parent: _controller, curve: const Interval(0.1, 0.5, curve: Curves.easeOut)));
     _subtitleSlide = Tween<Offset>(begin: const Offset(0, 0.15), end: Offset.zero).animate(
-      CurvedAnimation(parent: _controller, curve: const Interval(0.1, 0.5, curve: Curves.easeOutCubic)),
-    );
+      CurvedAnimation(parent: _controller, curve: const Interval(0.1, 0.5, curve: Curves.easeOutCubic)));
 
     _imageOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: const Interval(0.2, 0.7, curve: Curves.easeOut)),
-    );
+      CurvedAnimation(parent: _controller, curve: const Interval(0.2, 0.7, curve: Curves.easeOut)));
     _imageScale = Tween<double>(begin: 0.96, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: const Interval(0.2, 0.7, curve: Curves.easeOutCubic)),
-    );
+      CurvedAnimation(parent: _controller, curve: const Interval(0.2, 0.7, curve: Curves.easeOutCubic)));
 
     _infoOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: const Interval(0.3, 0.8, curve: Curves.easeOut)),
-    );
+      CurvedAnimation(parent: _controller, curve: const Interval(0.3, 0.8, curve: Curves.easeOut)));
     _infoSlide = Tween<Offset>(begin: const Offset(0, 0.2), end: Offset.zero).animate(
-      CurvedAnimation(parent: _controller, curve: const Interval(0.3, 0.8, curve: Curves.easeOutCubic)),
-    );
+      CurvedAnimation(parent: _controller, curve: const Interval(0.3, 0.8, curve: Curves.easeOutCubic)));
 
     _buttonOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: const Interval(0.4, 0.8, curve: Curves.easeOut)),
-    );
+      CurvedAnimation(parent: _controller, curve: const Interval(0.4, 0.8, curve: Curves.easeOut)));
     _buttonSlide = Tween<Offset>(begin: const Offset(0, 0.2), end: Offset.zero).animate(
-      CurvedAnimation(parent: _controller, curve: const Interval(0.4, 0.8, curve: Curves.easeOutCubic)),
-    );
+      CurvedAnimation(parent: _controller, curve: const Interval(0.4, 0.8, curve: Curves.easeOutCubic)));
 
     _controller.forward();
   }
@@ -101,8 +91,7 @@ class _SavingsStepState extends State<SavingsStep> with SingleTickerProviderStat
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
                         colors: [Colors.transparent, Colors.white],
-                        stops: [0.0, 0.25],
-                      ).createShader(rect);
+                        stops: [0.0, 0.25]).createShader(rect);
                     },
                     blendMode: BlendMode.dstIn,
                     child: Image.asset(
@@ -114,13 +103,7 @@ class _SavingsStepState extends State<SavingsStep> with SingleTickerProviderStat
                       errorBuilder: (context, error, stackTrace) => Container(
                         color: Colors.grey[200],
                         alignment: Alignment.center,
-                        child: const Text('assets/onboarding/step4.png missing'),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
+                        child: const Text('assets/onboarding/step4.png missing'))))))),
 
             // Content Overlay
             Column(
@@ -139,25 +122,18 @@ class _SavingsStepState extends State<SavingsStep> with SingleTickerProviderStat
                           child: RichText(
                             textAlign: TextAlign.left,
                             text: TextSpan(
-                              style: TextStyle(
+                              style: GoogleFonts.rubik(
                                 fontSize: 30.sp,
-                                fontWeight: FontWeight.w800,
-                                color: const Color(0xFF0F172A),
-                                fontFamily: 'Rubik',
+                                fontWeight: FontWeight.w500,
+                                color: const Color(0xFF111827),
                                 height: 1.2,
-                                letterSpacing: -0.3,
-                              ),
+                                letterSpacing: -0.3),
                               children: const [
                                 TextSpan(text: 'You’re '),
                                 TextSpan(
                                   text: 'not alone',
-                                  style: TextStyle(color: Color(0xFFC31E26)),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
+                                  style: TextStyle(color: Color(0xFFC31E26))),
+                              ])))),
                       SizedBox(height: 10.h),
                       FadeTransition(
                         opacity: _subtitleOpacity,
@@ -166,19 +142,12 @@ class _SavingsStepState extends State<SavingsStep> with SingleTickerProviderStat
                           child: Text(
                             'Most people spend over 200 hours\nevery year deciding what to eat',
                             textAlign: TextAlign.left,
-                            style: TextStyle(
+                            style: GoogleFonts.poppins(
                               fontSize: 16.sp,
-                              color: const Color(0xFF475569),
-                              fontFamily: 'SF Pro',
+                              color: const Color(0xFF111827),
                               fontWeight: FontWeight.w400,
-                              height: 1.35,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                              height: 1.35)))),
+                    ])),
 
                 const Spacer(),
 
@@ -197,53 +166,44 @@ class _SavingsStepState extends State<SavingsStep> with SingleTickerProviderStat
                               padding: EdgeInsets.all(16.w),
                               decoration: BoxDecoration(
                                 color: const Color(0xFFF1F5F9).withValues(alpha: 0.95),
-                                borderRadius: BorderRadius.circular(16.r),
-                              ),
+                                borderRadius: BorderRadius.circular(16.r)),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Icon(
-                                    Icons.access_time_rounded,
-                                    color: const Color(0xFFC31E26),
-                                    size: 24.sp,
-                                  ),
-                                  SizedBox(height: 8.h),
-                                  Text(
-                                    '200',
-                                    style: TextStyle(
-                                      fontSize: 28.sp,
-                                      fontWeight: FontWeight.w800,
-                                      color: const Color(0xFFC31E26),
-                                      fontFamily: 'Rubik',
-                                      height: 1.1,
-                                    ),
-                                  ),
-                                  SizedBox(height: 2.h),
-                                  Text(
-                                    'Hours',
-                                    style: TextStyle(
-                                      fontSize: 15.sp,
-                                      fontWeight: FontWeight.w700,
-                                      color: const Color(0xFF0F172A),
-                                      fontFamily: 'Rubik',
-                                    ),
+                                  Row(
+                                    crossAxisAlignment: CrossAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.access_time_rounded,
+                                        color: const Color(0xFFC31E26),
+                                        size: 24.sp),
+                                      SizedBox(width: 8.w),
+                                      Text(
+                                        '200',
+                                        style: GoogleFonts.rubik(
+                                          fontSize: 28.sp,
+                                          fontWeight: FontWeight.w500,
+                                          color: const Color(0xFFC31E26),
+                                          height: 1.1)),
+                                    ],
                                   ),
                                   SizedBox(height: 4.h),
                                   Text(
+                                    'Hours',
+                                    style: GoogleFonts.rubik(
+                                      fontSize: 15.sp,
+                                      fontWeight: FontWeight.w500,
+                                      color: const Color(0xFF111827))),
+                                  SizedBox(height: 4.h),
+                                  Text(
                                     'Spent deciding\nwhat to eat',
-                                    style: TextStyle(
+                                    style: GoogleFonts.poppins(
                                       fontSize: 12.sp,
                                       fontWeight: FontWeight.w400,
-                                      color: const Color(0xFF64748B),
-                                      fontFamily: 'SF Pro',
-                                      height: 1.25,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
+                                      color: const Color(0xFF111827),
+                                      height: 1.25)),
+                                ]))),
                           SizedBox(width: 12.w),
                           // Card 2: 8.3 Days
                           Expanded(
@@ -251,58 +211,45 @@ class _SavingsStepState extends State<SavingsStep> with SingleTickerProviderStat
                               padding: EdgeInsets.all(16.w),
                               decoration: BoxDecoration(
                                 color: const Color(0xFFF1F5F9).withValues(alpha: 0.95),
-                                borderRadius: BorderRadius.circular(16.r),
-                              ),
+                                borderRadius: BorderRadius.circular(16.r)),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Icon(
-                                    Icons.calendar_today_outlined,
-                                    color: const Color(0xFFC31E26),
-                                    size: 22.sp,
-                                  ),
-                                  SizedBox(height: 8.h),
-                                  Text(
-                                    '8.3',
-                                    style: TextStyle(
-                                      fontSize: 28.sp,
-                                      fontWeight: FontWeight.w800,
-                                      color: const Color(0xFFC31E26),
-                                      fontFamily: 'Rubik',
-                                      height: 1.1,
-                                    ),
-                                  ),
-                                  SizedBox(height: 2.h),
-                                  Text(
-                                    'Days',
-                                    style: TextStyle(
-                                      fontSize: 15.sp,
-                                      fontWeight: FontWeight.w700,
-                                      color: const Color(0xFF0F172A),
-                                      fontFamily: 'Rubik',
-                                    ),
+                                  Row(
+                                    crossAxisAlignment: CrossAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.calendar_today_outlined,
+                                        color: const Color(0xFFC31E26),
+                                        size: 22.sp),
+                                      SizedBox(width: 8.w),
+                                      Text(
+                                        '8.3',
+                                        style: GoogleFonts.rubik(
+                                          fontSize: 28.sp,
+                                          fontWeight: FontWeight.w500,
+                                          color: const Color(0xFFC31E26),
+                                          height: 1.1)),
+                                    ],
                                   ),
                                   SizedBox(height: 4.h),
                                   Text(
+                                    'Days',
+                                    style: GoogleFonts.rubik(
+                                      fontSize: 15.sp,
+                                      fontWeight: FontWeight.w500,
+                                      color: const Color(0xFF111827))),
+                                  SizedBox(height: 4.h),
+                                  Text(
                                     'of your life\nevery year',
-                                    style: TextStyle(
+                                    style: GoogleFonts.poppins(
                                       fontSize: 12.sp,
                                       fontWeight: FontWeight.w400,
-                                      color: const Color(0xFF64748B),
-                                      fontFamily: 'SF Pro',
-                                      height: 1.25,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
+                                      color: const Color(0xFF111827),
+                                      height: 1.25)),
+                                ]))),
+                        ])))),
 
                 // Button
                 FadeTransition(
@@ -319,17 +266,9 @@ class _SavingsStepState extends State<SavingsStep> with SingleTickerProviderStat
                           color: const Color(0xFFC31E26),
                           onTap: widget.onContinue,
                           height: 52.h,
-                          fontSize: 16.sp,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        );
-      },
-    );
+                          fontSize: 16.sp))))),
+              ]),
+          ]);
+      });
   }
 }

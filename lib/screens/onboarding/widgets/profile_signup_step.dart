@@ -1,3 +1,4 @@
+import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -40,32 +41,25 @@ class _ProfileSignupStepState extends State<ProfileSignupStep>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1200),
-    );
+      duration: const Duration(milliseconds: 1200));
 
     Animation<double> createOpacity(double start, double end) {
       return Tween<double>(begin: 0.0, end: 1.0).animate(
         CurvedAnimation(
           parent: _controller,
-          curve: Interval(start, end.clamp(0.0, 1.0), curve: Curves.easeOut),
-        ),
-      );
+          curve: Interval(start, end.clamp(0.0, 1.0), curve: Curves.easeOut)));
     }
 
     Animation<Offset> createSlide(double start, double end) {
       return Tween<Offset>(
         begin: const Offset(0, 0.15),
-        end: Offset.zero,
-      ).animate(
+        end: Offset.zero).animate(
         CurvedAnimation(
           parent: _controller,
           curve: Interval(
             start,
             end.clamp(0.0, 1.0),
-            curve: Curves.easeOutCubic,
-          ),
-        ),
-      );
+            curve: Curves.easeOutCubic)));
     }
 
     _titleOpacity = createOpacity(0.0, 0.3);
@@ -99,105 +93,79 @@ class _ProfileSignupStepState extends State<ProfileSignupStep>
       builder: (context, child) {
         return Column(
           children: [
-            // 1. Header Text Section at top
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 8.h),
-              child: FadeTransition(
-                opacity: _titleOpacity,
-                child: SlideTransition(
-                  position: _titleSlide,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Save your\npersonalized plan',
-                        style: TextStyle(
-                          fontSize: 32.sp,
-                          fontWeight: FontWeight.w800,
-                          color: const Color(0xFF0F172A),
-                          fontFamily: 'Rubik',
-                          height: 1.15,
-                        ),
-                      ),
-                      SizedBox(height: 10.h),
-                      Text(
-                        'Create your account to keep your recipes, meal plans, grocery lists, and savings tracker',
-                        style: TextStyle(
-                          fontSize: 15.sp,
-                          color: const Color(0xFF475569),
-                          fontFamily: 'SF Pro',
-                          height: 1.3,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-
-            // 2. Middle Image Section (fading out smoothly at bottom near Google button)
+            // 1. Top Section + Image in Stack with top white gradient blending over subtitle text
             Expanded(
-              child: FadeTransition(
-                opacity: _infoOpacity,
-                child: SlideTransition(
-                  position: _infoSlide,
-                  child: Stack(
-                    children: [
-                      Positioned.fill(
+              child: Stack(
+                children: [
+                  // Image
+                  Positioned.fill(
+                    child: FadeTransition(
+                      opacity: _infoOpacity,
+                      child: SlideTransition(
+                        position: _infoSlide,
                         child: Image.asset(
                           'assets/onboarding/step24.png',
                           fit: BoxFit.cover,
-                          alignment: Alignment.center,
+                          alignment: Alignment.topCenter,
                           errorBuilder: (context, error, stackTrace) => Container(
                             color: const Color(0xFFF1F5F9),
                             alignment: Alignment.center,
-                            child: const Icon(Icons.fastfood, color: Color(0xFFCBD5E1)),
-                          ),
-                        ),
-                      ),
+                            child: const Icon(Icons.fastfood, color: Color(0xFFCBD5E1))))))),
 
-                      // Subtle top gradient fade
-                      Positioned(
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        height: 50.h,
-                        child: Container(
-                          decoration: const BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                              colors: [
-                                Colors.white,
-                                Color(0x00FFFFFF),
-                              ],
-                            ),
-                          ),
+                  // White Gradient Overlay (White at top covering text down into image)
+                  Positioned.fill(
+                    child: Container(
+                      decoration: const BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.white,
+                            Colors.white,
+                            Color(0xFAFFFFFF),
+                            Color(0xD0FFFFFF),
+                            Color(0x50FFFFFF),
+                            Color(0x00FFFFFF),
+                            Color(0x00FFFFFF),
+                            Color(0x90FFFFFF),
+                            Colors.white,
+                          ],
+                          stops: [0.0, 0.15, 0.25, 0.35, 0.45, 0.60, 0.80, 0.92, 1.0],
                         ),
                       ),
-
-                      // Smooth bottom white fade right at/above the Google button
-                      Positioned(
-                        bottom: 0,
-                        left: 0,
-                        right: 0,
-                        height: 70.h,
-                        child: Container(
-                          decoration: const BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.bottomCenter,
-                              end: Alignment.topCenter,
-                              colors: [
-                                Colors.white,
-                                Color(0x00FFFFFF),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
-                ),
+
+                  // Header Text Section on top of gradient mask
+                  Positioned(
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 8.h),
+                      child: FadeTransition(
+                        opacity: _titleOpacity,
+                        child: SlideTransition(
+                          position: _titleSlide,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Save your\npersonalized plan',
+                                style: GoogleFonts.rubik(
+                                  fontSize: 32.sp,
+                                  fontWeight: FontWeight.w500,
+                                  color: const Color(0xFF111827),
+                                  height: 1.15)),
+                              SizedBox(height: 10.h),
+                              Text(
+                                'Create your account to keep your recipes, meal plans, grocery lists, and savings tracker',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 15.sp,
+                                  color: const Color(0xFF111827),
+                                  height: 1.3)),
+                            ]))))),
+                ],
               ),
             ),
 
@@ -217,10 +185,7 @@ class _ProfileSignupStepState extends State<ProfileSignupStep>
                         child: _buildAuthButton(
                           onPressed: widget.onSignupGoogle,
                           icon: 'google.svg',
-                          label: 'Sign in with Google',
-                        ),
-                      ),
-                    ),
+                          label: 'Sign in with Google'))),
                     SizedBox(height: 12.h),
 
                     FadeTransition(
@@ -231,10 +196,7 @@ class _ProfileSignupStepState extends State<ProfileSignupStep>
                           onPressed: widget.onSignupApple,
                           icon: 'apple.svg',
                           label: 'Sign in with Apple',
-                          isEnabled: widget.isAppleEnabled,
-                        ),
-                      ),
-                    ),
+                          isEnabled: widget.isAppleEnabled))),
                     SizedBox(height: 12.h),
 
                     FadeTransition(
@@ -243,19 +205,12 @@ class _ProfileSignupStepState extends State<ProfileSignupStep>
                         position: _btnSlides[2],
                         child: _buildAuthButton(
                           onPressed: widget.onSignupEmail,
-                          icon: 'email1.svg',
+                          icon: 'email.svg',
                           label: 'Sign in with Email',
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
+                          iconColor: const Color(0xFF111827)))),
+                  ]))),
+          ]);
+      });
   }
 
   Widget _buildAuthButton({
@@ -263,6 +218,7 @@ class _ProfileSignupStepState extends State<ProfileSignupStep>
     required String icon,
     required String label,
     bool isEnabled = true,
+    Color? iconColor,
   }) {
     return SizedBox(
       width: double.infinity,
@@ -272,12 +228,10 @@ class _ProfileSignupStepState extends State<ProfileSignupStep>
         child: ElevatedButton(
           onPressed: isEnabled ? onPressed : null,
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFFF1F5F9),
+            backgroundColor: const Color(0xFFF0F1F3),
             elevation: 0,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16.r),
-            ),
-          ),
+              borderRadius: BorderRadius.circular(32.r))),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -285,26 +239,19 @@ class _ProfileSignupStepState extends State<ProfileSignupStep>
                 'assets/icones/$icon',
                 height: 22.sp,
                 width: 22.sp,
+                colorFilter: iconColor != null
+                    ? ColorFilter.mode(iconColor, BlendMode.srcIn)
+                    : null,
                 placeholderBuilder: (context) => Icon(
                   Icons.login,
-                  color: const Color(0xFF0F172A),
-                  size: 22.sp,
-                ),
-              ),
+                  color: const Color(0xFF111827),
+                  size: 22.sp)),
               SizedBox(width: 12.w),
               Text(
                 isEnabled ? label : '$label (Soon)',
-                style: TextStyle(
-                  fontSize: 15.sp,
-                  fontWeight: FontWeight.w700,
-                  fontFamily: 'Rubik',
-                  color: isEnabled ? const Color(0xFF0F172A) : Colors.grey,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
+                style: GoogleFonts.rubik(fontSize: 15.sp,
+                  fontWeight: FontWeight.w500,
+                  color: isEnabled ? const Color(0xFF0F172A) : Colors.grey)),
+            ]))));
   }
 }

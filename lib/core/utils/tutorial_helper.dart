@@ -298,18 +298,18 @@ class _ScanOnboardingModalState extends State<ScanOnboardingModal> {
   final List<Map<String, dynamic>> _steps = [
     {
       'title': 'Get the best scan',
-      'image': 'assets/images/onboarding_scan_1.png',
+      'image': 'assets/images/scan.png',
       'items': [
         {
-          'icon': Icons.phone_iphone_rounded,
+          'svg': 'assets/icones/phones.svg',
           'text': 'Hold your phone steady',
         },
         {
-          'icon': Icons.wb_incandescent_outlined,
+          'svg': 'assets/icones/good.svg',
           'text': 'Use good lighting',
         },
         {
-          'icon': Icons.soup_kitchen_outlined,
+          'svg': 'assets/icones/cook.svg',
           'text': 'Make sure all ingredients are visible',
         },
       ],
@@ -321,15 +321,15 @@ class _ScanOnboardingModalState extends State<ScanOnboardingModal> {
       'image': null,
       'items': [
         {
-          'icon': Icons.center_focus_weak_rounded,
+          'svg': 'assets/icones/scan1.svg',
           'text': 'Snap a photo of your ingredients',
         },
         {
-          'icon': Icons.crop_free_rounded,
+          'svg': 'assets/icones/detect.svg',
           'text': 'We detect what\'s inside instantly',
         },
         {
-          'icon': Icons.edit_outlined,
+          'svg': 'assets/icones/edit.svg',
           'text': 'Edit anything that looks off',
         },
       ],
@@ -338,18 +338,18 @@ class _ScanOnboardingModalState extends State<ScanOnboardingModal> {
     },
     {
       'title': 'Ready to scan',
-      'image': 'assets/images/onboarding_scan_3.png',
+      'image': 'assets/images/scan.png',
       'items': [
         {
-          'icon': Icons.center_focus_weak_rounded,
+          'svg': 'assets/icones/scan1.svg',
           'text': 'Scan your fridge, pantry, or ingredients',
         },
         {
-          'icon': Icons.crop_free_rounded,
+          'svg': 'assets/icones/result.svg',
           'text': 'Try different angles for better results',
         },
         {
-          'icon': Icons.visibility_outlined,
+          'svg': 'assets/icones/eyes.svg',
           'text': 'The more visible, the better your recipes',
         },
       ],
@@ -372,12 +372,16 @@ class _ScanOnboardingModalState extends State<ScanOnboardingModal> {
     final String? imageAsset = step['image'] as String?;
 
     return Scaffold(
-      backgroundColor: imageAsset != null ? Colors.transparent : const Color(0xFFF8FAFC),
+      backgroundColor: const Color(0xFFF1F4F8),
       body: Stack(
         children: [
-          // Background with cross-fade (for slides with food photos)
+          // Background with cross-fade (for slides 1 & 3 with food photo)
           if (imageAsset != null)
-            Positioned.fill(
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 260.h,
               child: AnimatedSwitcher(
                 duration: const Duration(milliseconds: 400),
                 child: Image.asset(
@@ -392,7 +396,11 @@ class _ScanOnboardingModalState extends State<ScanOnboardingModal> {
 
           // Soft overlay for photo readability
           if (imageAsset != null)
-            Positioned.fill(
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 260.h,
               child: Container(color: Colors.black.withValues(alpha: 0.1)),
             ),
 
@@ -453,7 +461,14 @@ class _ScanOnboardingModalState extends State<ScanOnboardingModal> {
             alignment: Alignment.bottomCenter,
             child: Container(
               width: double.infinity,
-              padding: EdgeInsets.fromLTRB(24.w, 28.h, 24.w, 34.h),
+              padding: EdgeInsets.fromLTRB(
+                24.w,
+                28.h,
+                24.w,
+                (MediaQuery.of(context).padding.bottom > 0
+                    ? MediaQuery.of(context).padding.bottom + 12.h
+                    : 34.h),
+              ),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.vertical(top: Radius.circular(32.r)),
@@ -485,15 +500,29 @@ class _ScanOnboardingModalState extends State<ScanOnboardingModal> {
                       (step['items'] as List).length,
                       (i) {
                         final item = (step['items'] as List)[i] as Map<String, dynamic>;
+                        final String? svgPath = item['svg'] as String?;
+                        final IconData? iconData = item['icon'] as IconData?;
+
                         return Padding(
                           padding: EdgeInsets.only(bottom: 14.h),
                           child: Row(
                             children: [
-                              Icon(
-                                item['icon'] as IconData,
-                                size: 22.sp,
-                                color: const Color(0xFF475569),
-                              ),
+                              if (svgPath != null)
+                                SvgPicture.asset(
+                                  svgPath,
+                                  width: 22.sp,
+                                  height: 22.sp,
+                                  colorFilter: const ColorFilter.mode(
+                                    Color(0xFF475569),
+                                    BlendMode.srcIn,
+                                  ),
+                                )
+                              else if (iconData != null)
+                                Icon(
+                                  iconData,
+                                  size: 22.sp,
+                                  color: const Color(0xFF475569),
+                                ),
                               SizedBox(width: 14.w),
                               Expanded(
                                 child: Text(
@@ -598,16 +627,16 @@ class _ImportOnboardingModalState extends State<ImportOnboardingModal> {
 
   final List<Map<String, dynamic>> _platforms = [
     {
-      'name': 'Instagram',
-      'asset': 'assets/images/insta_logo.svg',
+      'name': 'Instagram2',
+      'asset': 'assets/icones/instagram.svg',
     },
     {
       'name': 'TikTok',
-      'asset': 'assets/images/tiktok_logo.svg',
+      'asset': 'assets/icones/tiktok2.svg',
     },
     {
       'name': 'YouTube',
-      'asset': 'assets/images/you_logo.svg',
+      'asset': 'assets/icones/youtube.svg',
     },
   ];
 
@@ -623,19 +652,27 @@ class _ImportOnboardingModalState extends State<ImportOnboardingModal> {
       backgroundColor: Colors.transparent,
       body: Stack(
         children: [
-          // Background food image
-          Positioned.fill(
+          // Background image scan.png
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 260.h,
             child: Image.asset(
-              'assets/images/onboarding_scan_1.png',
+              'assets/images/scan.png',
               fit: BoxFit.cover,
               width: double.infinity,
               height: double.infinity,
             ),
           ),
 
-          // Soft overlay
-          Positioned.fill(
-            child: Container(color: Colors.black.withValues(alpha: 0.15)),
+          // Soft overlay for photo readability
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 260.h,
+            child: Container(color: Colors.black.withValues(alpha: 0.1)),
           ),
 
           // Logo Top Left
@@ -686,7 +723,14 @@ class _ImportOnboardingModalState extends State<ImportOnboardingModal> {
             alignment: Alignment.bottomCenter,
             child: Container(
               width: double.infinity,
-              padding: EdgeInsets.fromLTRB(24.w, 20.h, 24.w, 30.h),
+              padding: EdgeInsets.fromLTRB(
+                24.w,
+                20.h,
+                24.w,
+                (MediaQuery.of(context).padding.bottom > 0
+                    ? MediaQuery.of(context).padding.bottom + 12.h
+                    : 30.h),
+              ),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.vertical(top: Radius.circular(32.r)),
@@ -781,18 +825,22 @@ class _ImportOnboardingModalState extends State<ImportOnboardingModal> {
 
                     // Bullets
                     const _ImportBulletItem(
+                      svg: 'assets/icones/paste.svg',
                       icon: Icons.link_rounded,
                       text: 'Paste a link from TikTok, Instagram, or any site',
                     ),
                     const _ImportBulletItem(
+                      svg: 'assets/icones/imports1.svg',
                       icon: Icons.share_outlined,
                       text: 'Or share directly from social apps to import instantly',
                     ),
                     const _ImportBulletItem(
+                      svg: 'assets/icones/turn.svg',
                       icon: Icons.auto_awesome_rounded,
                       text: 'We\'ll turn it into a full recipe automatically',
                     ),
                     const _ImportBulletItem(
+                      svg: 'assets/icones/coeur1.svg',
                       icon: Icons.favorite_border_rounded,
                       text: 'Save it to your cookbook',
                     ),
@@ -856,9 +904,10 @@ class _ImportOnboardingModalState extends State<ImportOnboardingModal> {
 }
 
 class _ImportBulletItem extends StatelessWidget {
-  final IconData icon;
+  final IconData? icon;
+  final String? svg;
   final String text;
-  const _ImportBulletItem({required this.icon, required this.text});
+  const _ImportBulletItem({this.icon, this.svg, required this.text});
 
   @override
   Widget build(BuildContext context) {
@@ -866,11 +915,22 @@ class _ImportBulletItem extends StatelessWidget {
       padding: EdgeInsets.only(bottom: 14.h),
       child: Row(
         children: [
-          Icon(
-            icon,
-            size: 22.sp,
-            color: const Color(0xFF475569),
-          ),
+          if (svg != null)
+            SvgPicture.asset(
+              svg!,
+              width: 22.sp,
+              height: 22.sp,
+              colorFilter: const ColorFilter.mode(
+                Color(0xFF475569),
+                BlendMode.srcIn,
+              ),
+            )
+          else if (icon != null)
+            Icon(
+              icon,
+              size: 22.sp,
+              color: const Color(0xFF475569),
+            ),
           SizedBox(width: 14.w),
           Expanded(
             child: Text(
@@ -905,11 +965,21 @@ class _ImportFlowDiagram extends StatelessWidget {
         // Card 1: Platform
         _FlowCard(
           label: name,
-          child: SvgPicture.asset(
-            asset,
-            width: 20.w,
-            height: 20.w,
-            colorFilter: const ColorFilter.mode(Color(0xFF0F172A), BlendMode.srcIn),
+          child: Container(
+            width: 30.r,
+            height: 30.r,
+            decoration: const BoxDecoration(
+              color: Colors.black,
+              shape: BoxShape.circle,
+            ),
+            child: Center(
+              child: SvgPicture.asset(
+                asset,
+                width: 16.r,
+                height: 16.r,
+                colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
+              ),
+            ),
           ),
         ),
         Icon(Icons.arrow_forward_rounded, size: 12.sp, color: const Color(0xFFC83A2D)),
@@ -917,21 +987,31 @@ class _ImportFlowDiagram extends StatelessWidget {
         // Card 2: Share
         _FlowCard(
           label: 'Share',
-          child: Icon(Icons.reply_rounded, size: 20.sp, color: const Color(0xFFC83A2D)),
+          child: SvgPicture.asset(
+            'assets/icones/shared.svg',
+            width: 26.w,
+            height: 26.w,
+            colorFilter: const ColorFilter.mode(Color(0xFFC83A2D), BlendMode.srcIn),
+          ),
         ),
         Icon(Icons.arrow_forward_rounded, size: 12.sp, color: const Color(0xFFC83A2D)),
 
         // Card 3: Cooked
         _FlowCard(
           label: 'Cooked',
-          child: Image.asset('assets/images/logo2.png', width: 20.w, height: 20.w),
+          child: Image.asset('assets/images/logoo.png', width: 34.w, height: 34.w),
         ),
         Icon(Icons.arrow_forward_rounded, size: 12.sp, color: const Color(0xFFC83A2D)),
 
         // Card 4: Import
         _FlowCard(
           label: 'Import',
-          child: Icon(Icons.archive_outlined, size: 20.sp, color: const Color(0xFFC83A2D)),
+          child: SvgPicture.asset(
+            'assets/icones/import2.svg',
+            width: 24.w,
+            height: 24.w,
+            colorFilter: const ColorFilter.mode(Color(0xFFC83A2D), BlendMode.srcIn),
+          ),
         ),
       ],
     );
@@ -1233,23 +1313,14 @@ class _CookbookOnboardingModalState extends State<CookbookOnboardingModal> {
       backgroundColor: Colors.transparent,
       body: Stack(
         children: [
-          // Background
+          // Background image fond_page.png
           Positioned.fill(
-            child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 600),
-              child: Image.asset(
-                step['image'],
-                key: ValueKey(step['image']),
-                fit: BoxFit.cover,
-                width: double.infinity,
-                height: double.infinity,
-              ),
+            child: Image.asset(
+              'assets/images/fond_page.png',
+              fit: BoxFit.cover,
+              width: double.infinity,
+              height: double.infinity,
             ),
-          ),
-
-          // Dimmer
-          Positioned.fill(
-            child: Container(color: Colors.black.withValues(alpha: 0.2)),
           ),
 
           // Close button

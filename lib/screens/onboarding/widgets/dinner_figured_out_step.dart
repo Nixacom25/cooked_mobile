@@ -1,3 +1,4 @@
+import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../widgets/red_button.dart';
@@ -31,36 +32,27 @@ class _DinnerFiguredOutStepState extends State<DinnerFiguredOutStep> with Single
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 800),
-    );
+      duration: const Duration(milliseconds: 800));
 
     _titleOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: const Interval(0.0, 0.4, curve: Curves.easeOut)),
-    );
+      CurvedAnimation(parent: _controller, curve: const Interval(0.0, 0.4, curve: Curves.easeOut)));
     _titleSlide = Tween<Offset>(begin: const Offset(0, 0.15), end: Offset.zero).animate(
-      CurvedAnimation(parent: _controller, curve: const Interval(0.0, 0.4, curve: Curves.easeOutCubic)),
-    );
+      CurvedAnimation(parent: _controller, curve: const Interval(0.0, 0.4, curve: Curves.easeOutCubic)));
 
     _subtitleOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: const Interval(0.1, 0.5, curve: Curves.easeOut)),
-    );
+      CurvedAnimation(parent: _controller, curve: const Interval(0.1, 0.5, curve: Curves.easeOut)));
     _subtitleSlide = Tween<Offset>(begin: const Offset(0, 0.15), end: Offset.zero).animate(
-      CurvedAnimation(parent: _controller, curve: const Interval(0.1, 0.5, curve: Curves.easeOutCubic)),
-    );
+      CurvedAnimation(parent: _controller, curve: const Interval(0.1, 0.5, curve: Curves.easeOutCubic)));
 
     _imageOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: const Interval(0.2, 0.7, curve: Curves.easeOut)),
-    );
+      CurvedAnimation(parent: _controller, curve: const Interval(0.2, 0.7, curve: Curves.easeOut)));
     _imageScale = Tween<double>(begin: 0.96, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: const Interval(0.2, 0.7, curve: Curves.easeOutCubic)),
-    );
+      CurvedAnimation(parent: _controller, curve: const Interval(0.2, 0.7, curve: Curves.easeOutCubic)));
 
     _buttonOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: const Interval(0.4, 0.8, curve: Curves.easeOut)),
-    );
+      CurvedAnimation(parent: _controller, curve: const Interval(0.4, 0.8, curve: Curves.easeOut)));
     _buttonSlide = Tween<Offset>(begin: const Offset(0, 0.2), end: Offset.zero).animate(
-      CurvedAnimation(parent: _controller, curve: const Interval(0.4, 0.8, curve: Curves.easeOutCubic)),
-    );
+      CurvedAnimation(parent: _controller, curve: const Interval(0.4, 0.8, curve: Curves.easeOutCubic)));
 
     _controller.forward();
   }
@@ -91,8 +83,7 @@ class _DinnerFiguredOutStepState extends State<DinnerFiguredOutStep> with Single
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
                         colors: [Colors.transparent, Colors.white],
-                        stops: [0.0, 0.25],
-                      ).createShader(rect);
+                        stops: [0.0, 0.25]).createShader(rect);
                     },
                     blendMode: BlendMode.dstIn,
                     child: Image.asset(
@@ -104,13 +95,7 @@ class _DinnerFiguredOutStepState extends State<DinnerFiguredOutStep> with Single
                       errorBuilder: (context, error, stackTrace) => Container(
                         color: Colors.grey[200],
                         alignment: Alignment.center,
-                        child: const Text('assets/onboarding/step2.png missing'),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
+                        child: const Text('assets/onboarding/step2.png missing'))))))),
             // Overlay Content (Title, Subtitle & Button)
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -127,25 +112,18 @@ class _DinnerFiguredOutStepState extends State<DinnerFiguredOutStep> with Single
                           child: RichText(
                             textAlign: TextAlign.left,
                             text: TextSpan(
-                              style: TextStyle(
+                              style: GoogleFonts.rubik(
                                 fontSize: 30.sp,
-                                fontWeight: FontWeight.w800,
-                                color: const Color(0xFF0F172A),
-                                fontFamily: 'Rubik',
+                                fontWeight: FontWeight.w500,
+                                color: const Color(0xFF111827),
                                 height: 1.2,
-                                letterSpacing: -0.3,
-                              ),
+                                letterSpacing: -0.3),
                               children: const [
                                 TextSpan(text: 'Imagine dinner\nalready '),
                                 TextSpan(
                                   text: 'figured out',
-                                  style: TextStyle(color: Color(0xFFC31E26)),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
+                                  style: TextStyle(color: Color(0xFFC31E26))),
+                              ])))),
                       SizedBox(height: 10.h),
                       FadeTransition(
                         opacity: _subtitleOpacity,
@@ -154,19 +132,12 @@ class _DinnerFiguredOutStepState extends State<DinnerFiguredOutStep> with Single
                           child: Text(
                             'No stress. No guesswork',
                             textAlign: TextAlign.left,
-                            style: TextStyle(
+                            style: GoogleFonts.poppins(
                               fontSize: 16.sp,
-                              color: const Color(0xFF475569),
-                              fontFamily: 'SF Pro',
+                              color: const Color(0xFF111827),
                               fontWeight: FontWeight.w400,
-                              height: 1.35,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                              height: 1.35)))),
+                    ])),
                 const Spacer(),
                 FadeTransition(
                   opacity: _buttonOpacity,
@@ -182,18 +153,10 @@ class _DinnerFiguredOutStepState extends State<DinnerFiguredOutStep> with Single
                           color: const Color(0xFFC31E26),
                           onTap: widget.onContinue,
                           height: 52.h,
-                          fontSize: 16.sp,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        );
-      },
-    );
+                          fontSize: 16.sp))))),
+              ]),
+          ]);
+      });
   }
 }
 

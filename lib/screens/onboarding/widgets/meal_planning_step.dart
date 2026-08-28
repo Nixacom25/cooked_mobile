@@ -1,3 +1,4 @@
+import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter/services.dart';
@@ -58,28 +59,20 @@ class _MealPlanningStepState extends State<MealPlanningStep> {
         children: [
           Text(
             'How do you like to plan meals?',
-            style: TextStyle(
+            style: GoogleFonts.poppins(
               fontSize: 24.sp,
               fontWeight: FontWeight.w900,
               color: const Color(0xFF0D1B3E),
-              fontFamily: 'SF Pro',
-              height: 1.2,
-            ),
-          ),
+              height: 1.2)),
           SizedBox(height: 8.h),
           Text(
             'We\'ll customize the experience for you',
-            style: TextStyle(
+            style: GoogleFonts.poppins(
               fontSize: 14.sp,
-              color: const Color(0xFF7B8190),
-              fontFamily: 'SF Pro',
-            ),
-          ),
+              color: const Color(0xFF7B8190))),
           SizedBox(height: 32.h),
           ..._options.map((opt) => _buildOption(opt)),
-        ],
-      ),
-    );
+        ]));
   }
 
   Widget _buildOption(Map<String, String> opt) {
@@ -102,18 +95,15 @@ class _MealPlanningStepState extends State<MealPlanningStep> {
               color: isSelected
                   ? const Color(0xFFC83A2D)
                   : const Color(0xFFE5E7EB),
-              width: isSelected ? 1.5.w : 1.w,
-            ),
+              width: isSelected ? 1.5.w : 1.w),
             boxShadow: isSelected
                 ? [
                     BoxShadow(
-                      color: const Color(0xFFC83A2D).withValues(alpha: 0.05),
+                      color: const Color(0xFFC31E26).withValues(alpha: 0.05),
                       blurRadius: 10.r,
-                      offset: Offset(0, 4.h),
-                    ),
+                      offset: Offset(0, 4.h)),
                   ]
-                : null,
-          ),
+                : null),
           child: Row(
             children: [
               Container(
@@ -121,9 +111,7 @@ class _MealPlanningStepState extends State<MealPlanningStep> {
                   'assets/icones/${opt['icon']}',
                   height: 32.sp,
                   width: 32.sp,
-                  placeholderBuilder: (context) => const SizedBox.shrink(),
-                ),
-              ),
+                  placeholderBuilder: (context) => const SizedBox.shrink())),
               SizedBox(width: 16.w),
               Expanded(
                 child: Column(
@@ -131,29 +119,15 @@ class _MealPlanningStepState extends State<MealPlanningStep> {
                   children: [
                     Text(
                       opt['title']!,
-                      style: TextStyle(
-                        fontFamily: 'SF Pro',
-                        fontSize: 14.sp,
+                      style: GoogleFonts.poppins(fontSize: 14.sp,
                         fontWeight: FontWeight.w700,
-                        color: const Color(0xFF1A1A1A),
-                      ),
-                    ),
+                        color: const Color(0xFF1A1A1A))),
                     SizedBox(height: 2.h),
                     Text(
                       opt['subtitle']!,
-                      style: TextStyle(
-                        fontFamily: 'SF Pro',
-                        fontSize: 12.sp,
-                        color: const Color(0xFF7B8190),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
+                      style: GoogleFonts.poppins(fontSize: 12.sp,
+                        color: const Color(0xFF7B8190))),
+                  ])),
+            ]))));
   }
 }

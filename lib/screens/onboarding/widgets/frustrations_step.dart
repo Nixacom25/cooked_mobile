@@ -26,24 +26,23 @@ class FrustrationsStep extends StatelessWidget {
         SelectionOption(
             id: 'dont_know',
             label: "I don't know what to cook",
-            svgAsset: 'assets/icones/knowing.svg'),
+            svgAsset: 'assets/icones/cook.svg'),
         SelectionOption(
             id: 'time',
             label: 'Cooking takes too much time',
-            svgAsset: 'assets/icones/minute.svg'),
+            svgAsset: 'assets/icones/cooking.svg'),
         SelectionOption(
             id: 'takeout',
             label: 'I spend too much on takeout',
-            svgAsset: 'assets/icones/eating.svg'),
+            svgAsset: 'assets/icones/money.svg'),
         SelectionOption(
             id: 'unhealthy',
             label: 'Healthy eating feels difficult',
-            svgAsset: 'assets/icones/coeur.svg'),
+            svgAsset: 'assets/icones/coeur1.svg'),
         SelectionOption(
             id: 'grocery',
             label: 'Grocery shopping is stressful',
-            svgAsset: 'assets/icones/triste.svg'),
-      ],
-    );
+            svgAsset: 'assets/icones/stress.svg'),
+      ]);
   }
 }

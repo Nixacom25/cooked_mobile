@@ -1,3 +1,4 @@
+import 'package:google_fonts/google_fonts.dart';
 import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
@@ -47,8 +48,7 @@ class _ProfileLoadingStepState extends State<ProfileLoadingStep> with TickerProv
 
     _dotsController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1500),
-    )..addListener(() {
+      duration: const Duration(milliseconds: 1500))..addListener(() {
         final newCount = (_dotsController.value * 4).floor() % 4;
         if (newCount != _dotCount) {
           setState(() => _dotCount = newCount);
@@ -64,8 +64,7 @@ class _ProfileLoadingStepState extends State<ProfileLoadingStep> with TickerProv
         _pageController.animateToPage(
           nextPage,
           duration: const Duration(milliseconds: 800),
-          curve: Curves.easeInOut,
-        );
+          curve: Curves.easeInOut);
       }
     });
 
@@ -112,10 +111,8 @@ class _ProfileLoadingStepState extends State<ProfileLoadingStep> with TickerProv
         height: 22.r,
         decoration: const BoxDecoration(
           color: Color(0xFFC31E26),
-          shape: BoxShape.circle,
-        ),
-        child: Icon(Icons.check, color: Colors.white, size: 13.sp),
-      );
+          shape: BoxShape.circle),
+        child: Icon(Icons.check, color: Colors.white, size: 13.sp));
     } else if (state == 1) {
       leading = SizedBox(
         width: 22.r,
@@ -123,18 +120,14 @@ class _ProfileLoadingStepState extends State<ProfileLoadingStep> with TickerProv
         child: const CircularProgressIndicator(
           strokeWidth: 2.5,
           valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFC31E26)),
-          backgroundColor: Color(0xFFE2E8F0),
-        ),
-      );
+          backgroundColor: Color(0xFFE2E8F0)));
     } else {
       leading = Container(
         width: 22.r,
         height: 22.r,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          border: Border.all(color: const Color(0xFFCBD5E1), width: 1.5),
-        ),
-      );
+          border: Border.all(color: const Color(0xFFCBD5E1), width: 1.5)));
     }
 
     return Padding(
@@ -147,16 +140,11 @@ class _ProfileLoadingStepState extends State<ProfileLoadingStep> with TickerProv
           SizedBox(width: 12.w),
           Text(
             text,
-            style: TextStyle(
+            style: GoogleFonts.rubik(
               fontSize: 15.sp,
               color: state == 0 ? const Color(0xFF94A3B8) : const Color(0xFF0F172A),
-              fontFamily: 'Rubik',
-              fontWeight: state > 0 ? FontWeight.w700 : FontWeight.w500,
-            ),
-          ),
-        ],
-      ),
-    );
+              fontWeight: state > 0 ? FontWeight.w700 : FontWeight.w500)),
+        ]));
   }
 
   @override
@@ -170,15 +158,11 @@ class _ProfileLoadingStepState extends State<ProfileLoadingStep> with TickerProv
           child: Text(
             "Building your\npersonalized cooking\nsystem${'.' * _dotCount}",
             textAlign: TextAlign.center,
-            style: TextStyle(
+            style: GoogleFonts.rubik(
               fontSize: 30.sp,
-              fontWeight: FontWeight.w800,
-              color: const Color(0xFF0F172A),
-              fontFamily: 'Rubik',
-              height: 1.15,
-            ),
-          ),
-        ),
+              fontWeight: FontWeight.w500,
+              color: const Color(0xFF111827),
+              height: 1.15))),
         SizedBox(height: 20.h),
         SizedBox(
           height: 220.h,
@@ -220,27 +204,16 @@ class _ProfileLoadingStepState extends State<ProfileLoadingStep> with TickerProv
                               _recipeImages[imageIndex],
                               width: 150.w,
                               height: 200.h,
-                              fit: BoxFit.cover,
-                            ),
+                              fit: BoxFit.cover),
                             if (blurSigma > 0)
                               Positioned.fill(
                                 child: BackdropFilter(
                                   filter: ImageFilter.blur(sigmaX: blurSigma, sigmaY: blurSigma),
                                   child: Container(
-                                    color: Colors.white.withOpacity(0.1),
-                                  ),
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  );
-                },
-              );
-            },
-          ),
-        ),
+                                    color: Colors.white.withOpacity(0.1)))),
+                          ]))));
+                });
+            })),
         SizedBox(height: 20.h),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -249,13 +222,9 @@ class _ProfileLoadingStepState extends State<ProfileLoadingStep> with TickerProv
               crossAxisAlignment: CrossAxisAlignment.start,
               children: List.generate(
                 _loadingTasks.length,
-                (index) => _buildTaskItem(index, _loadingTasks[index]),
-              ),
-            ),
-          ],
-        ),
+                (index) => _buildTaskItem(index, _loadingTasks[index]))),
+          ]),
         SizedBox(height: 20.h),
-      ],
-    );
+      ]);
   }
 }

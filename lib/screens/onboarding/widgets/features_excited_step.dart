@@ -1,3 +1,4 @@
+import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter/services.dart';
@@ -28,7 +29,7 @@ class _FeaturesExcitedStepState extends State<FeaturesExcitedStep> {
       'id': 'scan_ingredients',
       'title': 'Scan Ingredients',
       'desc': 'Take a photo and get recipes from what you already have.',
-      'icon': 'scan1.svg',
+      'icon': 'scans.svg',
     },
     {
       'id': 'meal_planning',
@@ -40,13 +41,13 @@ class _FeaturesExcitedStepState extends State<FeaturesExcitedStep> {
       'id': 'import_recipes',
       'title': 'Import Recipes',
       'desc': 'Save recipes from TikTok, Instagram, YouTube, or websites.',
-      'icon': 'import1.svg',
+      'icon': 'imports.svg',
     },
     {
       'id': 'grocery_lists',
       'title': 'Grocery Lists',
       'desc': 'Turn recipes into shopping lists automatically.',
-      'icon': 'grocery.svg',
+      'icon': 'grocerys.svg',
     },
   ];
 
@@ -80,24 +81,18 @@ class _FeaturesExcitedStepState extends State<FeaturesExcitedStep> {
               children: [
                 Text(
                   'What are you most\nexcited about?',
-                  style: TextStyle(
+                  style: GoogleFonts.rubik(
                     fontSize: 32.sp,
-                    fontWeight: FontWeight.w800,
-                    color: const Color(0xFF0F172A),
-                    fontFamily: 'Rubik',
-                    height: 1.15,
-                  ),
-                ),
+                    fontWeight: FontWeight.w500,
+                    color: const Color(0xFF111827),
+                    height: 1.15)),
                 SizedBox(height: 10.h),
                 Text(
                   "Pick the features you’ll use most",
-                  style: TextStyle(
+                  style: GoogleFonts.poppins(
                     fontSize: 15.sp,
-                    color: const Color(0xFF475569),
-                    fontFamily: 'SF Pro',
-                    height: 1.3,
-                  ),
-                ),
+                    color: const Color(0xFF111827),
+                    height: 1.3)),
                 SizedBox(height: 24.h),
                 ..._options.map((opt) {
                   final isSelected = _selected.contains(opt['id']);
@@ -115,9 +110,7 @@ class _FeaturesExcitedStepState extends State<FeaturesExcitedStep> {
                             color: isSelected
                                 ? const Color(0xFFC31E26)
                                 : Colors.transparent,
-                            width: 1.5,
-                          ),
-                        ),
+                            width: 1.5)),
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -131,17 +124,13 @@ class _FeaturesExcitedStepState extends State<FeaturesExcitedStep> {
                                   isSelected
                                       ? const Color(0xFFC31E26)
                                       : const Color(0xFF0F172A),
-                                  BlendMode.srcIn,
-                                ),
+                                  BlendMode.srcIn),
                                 placeholderBuilder: (context) => Icon(
                                   Icons.star,
                                   color: isSelected
                                       ? const Color(0xFFC31E26)
                                       : const Color(0xFF0F172A),
-                                  size: 24.sp,
-                                ),
-                              ),
-                            ),
+                                  size: 24.sp))),
                             SizedBox(width: 14.w),
                             Expanded(
                               child: Column(
@@ -149,28 +138,18 @@ class _FeaturesExcitedStepState extends State<FeaturesExcitedStep> {
                                 children: [
                                   Text(
                                     opt['title']!,
-                                    style: TextStyle(
-                                      fontFamily: 'Rubik',
-                                      fontSize: 15.sp,
-                                      fontWeight: FontWeight.w700,
+                                    style: GoogleFonts.rubik(fontSize: 15.sp,
+                                      fontWeight: FontWeight.w500,
                                       color: isSelected
                                           ? const Color(0xFFC31E26)
-                                          : const Color(0xFF0F172A),
-                                    ),
-                                  ),
+                                          : const Color(0xFF0F172A))),
                                   SizedBox(height: 3.h),
                                   Text(
                                     opt['desc']!,
-                                    style: TextStyle(
-                                      fontFamily: 'SF Pro',
-                                      fontSize: 13.sp,
-                                      color: const Color(0xFF64748B),
-                                      height: 1.3,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
+                                    style: GoogleFonts.poppins(fontSize: 13.sp,
+                                      color: const Color(0xFF111827),
+                                      height: 1.3)),
+                                ])),
                             SizedBox(width: 10.w),
                             Padding(
                               padding: EdgeInsets.only(top: 2.h),
@@ -180,14 +159,11 @@ class _FeaturesExcitedStepState extends State<FeaturesExcitedStep> {
                                       height: 20.r,
                                       decoration: const BoxDecoration(
                                         shape: BoxShape.circle,
-                                        color: Color(0xFFC31E26),
-                                      ),
+                                        color: Color(0xFFC31E26)),
                                       child: Icon(
                                         Icons.check,
                                         color: Colors.white,
-                                        size: 12.sp,
-                                      ),
-                                    )
+                                        size: 12.sp))
                                   : Container(
                                       width: 20.r,
                                       height: 20.r,
@@ -195,22 +171,11 @@ class _FeaturesExcitedStepState extends State<FeaturesExcitedStep> {
                                         shape: BoxShape.circle,
                                         border: Border.all(
                                           color: const Color(0xFFCBD5E1),
-                                          width: 1.5,
-                                        ),
-                                      ),
-                                    ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  );
+                                          width: 1.5)))),
+                          ]))));
                 }),
                 SizedBox(height: 20.h),
-              ],
-            ),
-          ),
-        ),
+              ]))),
         Padding(
           padding: EdgeInsets.fromLTRB(24.w, 8.h, 24.w, 20.h),
           child: SafeArea(
@@ -222,11 +187,7 @@ class _FeaturesExcitedStepState extends State<FeaturesExcitedStep> {
               onTap: widget.onContinue,
               height: 52.h,
               fontSize: 16.sp,
-              isDisabled: _selected.isEmpty,
-            ),
-          ),
-        ),
-      ],
-    );
+              isDisabled: _selected.isEmpty))),
+      ]);
   }
 }

@@ -1,3 +1,4 @@
+import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:in_app_review/in_app_review.dart';
@@ -38,32 +39,25 @@ class _SocialProofStepState extends State<SocialProofStep>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1200),
-    );
+      duration: const Duration(milliseconds: 1200));
 
     Animation<double> createOpacity(double start, double end) {
       return Tween<double>(begin: 0.0, end: 1.0).animate(
         CurvedAnimation(
           parent: _controller,
-          curve: Interval(start, end.clamp(0.0, 1.0), curve: Curves.easeOut),
-        ),
-      );
+          curve: Interval(start, end.clamp(0.0, 1.0), curve: Curves.easeOut)));
     }
 
     Animation<Offset> createSlide(double start, double end) {
       return Tween<Offset>(
         begin: const Offset(0, 0.15),
-        end: Offset.zero,
-      ).animate(
+        end: Offset.zero).animate(
         CurvedAnimation(
           parent: _controller,
           curve: Interval(
             start,
             end.clamp(0.0, 1.0),
-            curve: Curves.easeOutCubic,
-          ),
-        ),
-      );
+            curve: Curves.easeOutCubic)));
     }
 
     _scoreOpacity = createOpacity(0.0, 0.3);
@@ -130,34 +124,24 @@ class _SocialProofStepState extends State<SocialProofStep>
                           children: [
                             Text(
                               '4.9',
-                              style: TextStyle(
+                              style: GoogleFonts.rubik(
                                 fontSize: 64.sp,
                                 fontWeight: FontWeight.w900,
                                 color: const Color(0xFF10B981),
-                                fontFamily: 'Rubik',
-                                height: 1.0,
-                              ),
-                            ),
+                                height: 1.0)),
                             SizedBox(height: 10.h),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: List.generate(5, (index) {
                                 return Padding(
                                   padding: EdgeInsets.symmetric(
-                                    horizontal: 3.w,
-                                  ),
+                                    horizontal: 3.w),
                                   child: Icon(
                                     Icons.star_rounded,
                                     color: const Color(0xFFF59E0B),
-                                    size: 28.sp,
-                                  ),
-                                );
-                              }),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
+                                    size: 28.sp));
+                              })),
+                          ]))),
                     SizedBox(height: 16.h),
 
                     // Subtitle
@@ -168,16 +152,11 @@ class _SocialProofStepState extends State<SocialProofStep>
                         child: Text(
                           'stars from thousands\nof food lovers',
                           textAlign: TextAlign.center,
-                          style: TextStyle(
+                          style: GoogleFonts.rubik(
                             fontSize: 28.sp,
-                            fontWeight: FontWeight.w800,
-                            color: const Color(0xFF0F172A),
-                            fontFamily: 'Rubik',
-                            height: 1.15,
-                          ),
-                        ),
-                      ),
-                    ),
+                            fontWeight: FontWeight.w500,
+                            color: const Color(0xFF111827),
+                            height: 1.15)))),
                     SizedBox(height: 32.h),
 
                     // Testimonials List
@@ -190,10 +169,7 @@ class _SocialProofStepState extends State<SocialProofStep>
                             child: _buildReviewCard(
                               name: 'Sarah M.',
                               quote:
-                                  '"Cooked helped me stop\nordering dinner every night."',
-                            ),
-                          ),
-                        ),
+                                  '"Cooked helped me stop\nordering dinner every night."'))),
                         FadeTransition(
                           opacity: _reviewOpacities[1],
                           child: SlideTransition(
@@ -201,10 +177,7 @@ class _SocialProofStepState extends State<SocialProofStep>
                             child: _buildReviewCard(
                               name: 'David K.',
                               quote:
-                                  '"I finally use the groceries I\nalready have."',
-                            ),
-                          ),
-                        ),
+                                  '"I finally use the groceries I\nalready have."'))),
                         FadeTransition(
                           opacity: _reviewOpacities[2],
                           child: SlideTransition(
@@ -212,17 +185,10 @@ class _SocialProofStepState extends State<SocialProofStep>
                             child: _buildReviewCard(
                               name: 'Elena R.',
                               quote:
-                                  '"Meal ideas feel personalized\ninstead of random."',
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
+                                  '"Meal ideas feel personalized\ninstead of random."'))),
+                      ]),
                     SizedBox(height: 20.h),
-                  ],
-                ),
-              ),
-            ),
+                  ]))),
 
             // Bottom Button Area
             FadeTransition(
@@ -239,16 +205,9 @@ class _SocialProofStepState extends State<SocialProofStep>
                       color: const Color(0xFFC31E26),
                       onTap: widget.onContinue,
                       height: 52.h,
-                      fontSize: 16.sp,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
+                      fontSize: 16.sp))))),
+          ]);
+      });
   }
 
   Widget _buildReviewCard({
@@ -260,8 +219,7 @@ class _SocialProofStepState extends State<SocialProofStep>
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
       decoration: BoxDecoration(
         color: const Color(0xFFF1F5F9),
-        borderRadius: BorderRadius.circular(20.r),
-      ),
+        borderRadius: BorderRadius.circular(20.r)),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
@@ -270,16 +228,12 @@ class _SocialProofStepState extends State<SocialProofStep>
             height: 52.r,
             decoration: const BoxDecoration(
               shape: BoxShape.circle,
-              color: Color(0xFFE2E8F0),
-            ),
+              color: Color(0xFFE2E8F0)),
             child: ClipOval(
               child: Icon(
                 Icons.person,
-                color: const Color(0xFF64748B),
-                size: 28.sp,
-              ),
-            ),
-          ),
+                color: const Color(0xFF111827),
+                size: 28.sp))),
           SizedBox(width: 14.w),
           Expanded(
             child: Column(
@@ -288,29 +242,18 @@ class _SocialProofStepState extends State<SocialProofStep>
               children: [
                 Text(
                   quote,
-                  style: TextStyle(
-                    fontFamily: 'SF Pro',
-                    fontSize: 14.sp,
+                  style: GoogleFonts.poppins(fontSize: 14.sp,
                     fontWeight: FontWeight.w400,
-                    color: const Color(0xFF0F172A),
-                    height: 1.3,
-                  ),
-                ),
+                    color: const Color(0xFF111827),
+                    height: 1.3)),
                 SizedBox(height: 4.h),
                 Text(
                   '— $name',
-                  style: TextStyle(
+                  style: GoogleFonts.rubik(
                     fontSize: 14.sp,
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xFF0F172A),
-                    fontFamily: 'Rubik',
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
+                    fontWeight: FontWeight.w500,
+                    color: const Color(0xFF111827))),
+              ])),
+        ]));
   }
 }

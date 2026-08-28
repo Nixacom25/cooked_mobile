@@ -1,3 +1,4 @@
+import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter/services.dart';
@@ -64,24 +65,18 @@ class _DislikesStepState extends State<DislikesStep> {
               children: [
                 Text(
                   "What foods don’t\nyou like?",
-                  style: TextStyle(
+                  style: GoogleFonts.rubik(
                     fontSize: 32.sp,
-                    fontWeight: FontWeight.w800,
-                    color: const Color(0xFF0F172A),
-                    fontFamily: 'Rubik',
-                    height: 1.15,
-                  ),
-                ),
+                    fontWeight: FontWeight.w500,
+                    color: const Color(0xFF111827),
+                    height: 1.15)),
                 SizedBox(height: 10.h),
                 Text(
                   "We’ll keep them out of your\nrecommendations",
-                  style: TextStyle(
+                  style: GoogleFonts.poppins(
                     fontSize: 15.sp,
-                    color: const Color(0xFF475569),
-                    fontFamily: 'SF Pro',
-                    height: 1.3,
-                  ),
-                ),
+                    color: const Color(0xFF111827),
+                    height: 1.3)),
                 SizedBox(height: 24.h),
 
                 // Predefined Suggestions Grid (Wrap)
@@ -96,29 +91,20 @@ class _DislikesStepState extends State<DislikesStep> {
                         duration: const Duration(milliseconds: 150),
                         padding: EdgeInsets.symmetric(
                           horizontal: 16.w,
-                          vertical: 10.h,
-                        ),
+                          vertical: 10.h),
                         decoration: BoxDecoration(
                           color: const Color(0xFFF1F5F9),
                           borderRadius: BorderRadius.circular(20.r),
                           border: Border.all(
                             color: isSelected ? const Color(0xFFC31E26) : Colors.transparent,
-                            width: 1.5,
-                          ),
-                        ),
+                            width: 1.5)),
                         child: Text(
                           s,
-                          style: TextStyle(
+                          style: GoogleFonts.rubik(
                             color: isSelected ? const Color(0xFFC31E26) : const Color(0xFF0F172A),
                             fontSize: 14.sp,
-                            fontWeight: FontWeight.w700,
-                            fontFamily: 'Rubik',
-                          ),
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                ),
+                            fontWeight: FontWeight.w500))));
+                  }).toList()),
 
                 SizedBox(height: 28.h),
 
@@ -128,23 +114,14 @@ class _DislikesStepState extends State<DislikesStep> {
                   padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
                   decoration: BoxDecoration(
                     color: const Color(0xFFFAF4E5),
-                    borderRadius: BorderRadius.circular(14.r),
-                  ),
+                    borderRadius: BorderRadius.circular(14.r)),
                   child: Text(
                     "More preferences can be updated later in Settings.",
-                    style: TextStyle(
-                      fontSize: 14.sp,
-                      fontFamily: 'SF Pro',
-                      color: const Color(0xFF0F172A),
-                      height: 1.35,
-                    ),
-                  ),
-                ),
+                    style: GoogleFonts.poppins(fontSize: 14.sp,
+                      color: const Color(0xFF111827),
+                      height: 1.35))),
                 SizedBox(height: 20.h),
-              ],
-            ),
-          ),
-        ),
+              ]))),
         if (widget.onContinue != null)
           Padding(
             padding: EdgeInsets.fromLTRB(24.w, 8.h, 24.w, 20.h),
@@ -156,11 +133,7 @@ class _DislikesStepState extends State<DislikesStep> {
                 color: const Color(0xFFC31E26),
                 onTap: widget.onContinue!,
                 height: 52.h,
-                fontSize: 16.sp,
-              ),
-            ),
-          ),
-      ],
-    );
+                fontSize: 16.sp))),
+      ]);
   }
 }

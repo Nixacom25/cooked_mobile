@@ -1,5 +1,4 @@
-
-
+import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
@@ -40,29 +39,22 @@ class _PerfectMealStepState extends State<PerfectMealStep> with SingleTickerProv
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1400),
-    );
+      duration: const Duration(milliseconds: 1400));
 
     _titleOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: const Interval(0.0, 0.3, curve: Curves.easeOut)),
-    );
+      CurvedAnimation(parent: _controller, curve: const Interval(0.0, 0.3, curve: Curves.easeOut)));
     _titleSlide = Tween<Offset>(begin: const Offset(0, 0.2), end: Offset.zero).animate(
-      CurvedAnimation(parent: _controller, curve: const Interval(0.0, 0.3, curve: Curves.easeOutCubic)),
-    );
+      CurvedAnimation(parent: _controller, curve: const Interval(0.0, 0.3, curve: Curves.easeOutCubic)));
 
     _imageOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: const Interval(0.1, 0.5, curve: Curves.easeOut)),
-    );
+      CurvedAnimation(parent: _controller, curve: const Interval(0.1, 0.5, curve: Curves.easeOut)));
     _imageScale = Tween<double>(begin: 0.8, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: const Interval(0.1, 0.5, curve: Curves.easeOutCubic)),
-    );
+      CurvedAnimation(parent: _controller, curve: const Interval(0.1, 0.5, curve: Curves.easeOutCubic)));
 
     _bottomOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: const Interval(0.6, 0.9, curve: Curves.easeOut)),
-    );
+      CurvedAnimation(parent: _controller, curve: const Interval(0.6, 0.9, curve: Curves.easeOut)));
     _bottomSlide = Tween<Offset>(begin: const Offset(0, 0.2), end: Offset.zero).animate(
-      CurvedAnimation(parent: _controller, curve: const Interval(0.6, 0.9, curve: Curves.easeOutCubic)),
-    );
+      CurvedAnimation(parent: _controller, curve: const Interval(0.6, 0.9, curve: Curves.easeOutCubic)));
 
     _controller.forward();
   }
@@ -82,6 +74,7 @@ class _PerfectMealStepState extends State<PerfectMealStep> with SingleTickerProv
           children: [
             Expanded(
               child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -97,32 +90,22 @@ class _PerfectMealStepState extends State<PerfectMealStep> with SingleTickerProv
                             children: [
                               Text(
                                 'Perfect meal for you',
-                                style: TextStyle(
+                                style: GoogleFonts.rubik(
                                   fontSize: 32.sp,
-                                  fontWeight: FontWeight.w800,
-                                  color: const Color(0xFF0F172A),
-                                  fontFamily: 'Rubik',
-                                  height: 1.15,
-                                ),
-                              ),
+                                  fontWeight: FontWeight.w500,
+                                  color: const Color(0xFF111827),
+                                  height: 1.15)),
                               SizedBox(height: 8.h),
                               Text(
                                 'Based on your goals, taste, and cooking',
-                                style: TextStyle(
+                                style: GoogleFonts.poppins(
                                   fontSize: 15.sp,
-                                  color: const Color(0xFF475569),
-                                  fontFamily: 'SF Pro',
-                                  height: 1.3,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 12.h),
+                                  color: const Color(0xFF111827),
+                                  height: 1.3)),
+                            ])))),
+                    SizedBox(height: 8.h),
 
-                    // Image Graphic in center
+                    // Image Graphic in center (step28.png)
                     FadeTransition(
                       opacity: _imageOpacity,
                       child: Transform.scale(
@@ -136,13 +119,8 @@ class _PerfectMealStepState extends State<PerfectMealStep> with SingleTickerProv
                               height: 300.h,
                               color: const Color(0xFFF1F5F9),
                               alignment: Alignment.center,
-                              child: const Icon(Icons.restaurant, color: Color(0xFFCBD5E1)),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 20.h),
+                              child: const Icon(Icons.restaurant, color: Color(0xFFCBD5E1))))))),
+                    SizedBox(height: 16.h),
 
                     // Why we picked this section
                     FadeTransition(
@@ -156,14 +134,10 @@ class _PerfectMealStepState extends State<PerfectMealStep> with SingleTickerProv
                               padding: EdgeInsets.symmetric(horizontal: 24.w),
                               child: Text(
                                 'Why we picked this',
-                                style: TextStyle(
+                                style: GoogleFonts.rubik(
                                   fontSize: 18.sp,
-                                  fontWeight: FontWeight.w800,
-                                  color: const Color(0xFF0F172A),
-                                  fontFamily: 'Rubik',
-                                ),
-                              ),
-                            ),
+                                  fontWeight: FontWeight.w500,
+                                  color: const Color(0xFF111827)))),
                             SizedBox(height: 12.h),
 
                             // Horizontal scroll chips
@@ -174,40 +148,29 @@ class _PerfectMealStepState extends State<PerfectMealStep> with SingleTickerProv
                               child: Row(
                                 children: [
                                   _buildReasonChip(
-                                    icon: Icons.favorite_border_rounded,
+                                    icon: Icons.favorite_outline_rounded,
                                     label: 'Matches your taste',
-                                    bgColor: const Color(0xFFFFF5F5),
-                                    borderColor: const Color(0xFFFEE2E2),
-                                    iconColor: const Color(0xFFC31E26),
-                                  ),
+                                    bgColor: const Color(0xFFFFF7ED),
+                                    borderColor: const Color(0xFFFFEDD5),
+                                    iconColor: const Color(0xFFC31E26)),
                                   SizedBox(width: 10.w),
                                   _buildReasonChip(
-                                    icon: Icons.bolt_rounded,
+                                    icon: Icons.flash_on_outlined,
                                     label: 'Quick dinner',
-                                    bgColor: const Color(0xFFFEFCE8),
-                                    borderColor: const Color(0xFFFEF08A),
-                                    iconColor: const Color(0xFFC31E26),
-                                  ),
+                                    bgColor: const Color(0xFFFFF7ED),
+                                    borderColor: const Color(0xFFFFEDD5),
+                                    iconColor: const Color(0xFFC31E26)),
                                   SizedBox(width: 10.w),
                                   _buildReasonChip(
-                                    icon: Icons.eco_outlined,
+                                    icon: Icons.restaurant_menu_rounded,
                                     label: 'Uses your ingredients',
-                                    bgColor: const Color(0xFFF0FDF4),
-                                    borderColor: const Color(0xFFDCFCE7),
-                                    iconColor: const Color(0xFF16A34A),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 24.h),
-                  ],
-                ),
-              ),
-            ),
+                                    bgColor: const Color(0xFFFFF7ED),
+                                    borderColor: const Color(0xFFFFEDD5),
+                                    iconColor: const Color(0xFFC31E26)),
+                                ])),
+                          ]))),
+                    SizedBox(height: 20.h),
+                  ]))),
 
             // Bottom Action Button
             FadeTransition(
@@ -228,9 +191,7 @@ class _PerfectMealStepState extends State<PerfectMealStep> with SingleTickerProv
                           backgroundColor: const Color(0xFFC31E26),
                           elevation: 0,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16.r),
-                          ),
-                        ),
+                            borderRadius: BorderRadius.circular(32.r))),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
@@ -238,25 +199,12 @@ class _PerfectMealStepState extends State<PerfectMealStep> with SingleTickerProv
                             SizedBox(width: 8.w),
                             Text(
                               "Start Cookin'",
-                              style: TextStyle(
-                                fontFamily: 'Rubik',
-                                fontSize: 16.sp,
-                                fontWeight: FontWeight.w700,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
+                              style: GoogleFonts.rubik(fontSize: 16.sp,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.white)),
+                          ]))))))),
+          ]);
+      });
   }
 
   Widget _buildReasonChip({
@@ -271,8 +219,7 @@ class _PerfectMealStepState extends State<PerfectMealStep> with SingleTickerProv
       decoration: BoxDecoration(
         color: bgColor,
         borderRadius: BorderRadius.circular(50.r),
-        border: Border.all(color: borderColor, width: 1.w),
-      ),
+        border: Border.all(color: borderColor, width: 1.w)),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -280,15 +227,10 @@ class _PerfectMealStepState extends State<PerfectMealStep> with SingleTickerProv
           SizedBox(width: 8.w),
           Text(
             label,
-            style: TextStyle(
+            style: GoogleFonts.rubik(
               fontSize: 14.sp,
-              fontWeight: FontWeight.w700,
-              color: const Color(0xFF0F172A),
-              fontFamily: 'Rubik',
-            ),
-          ),
-        ],
-      ),
-    );
+              fontWeight: FontWeight.w500,
+              color: const Color(0xFF111827))),
+        ]));
   }
 }

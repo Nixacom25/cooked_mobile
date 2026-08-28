@@ -1,7 +1,7 @@
 name: cooked
 description: "A new Flutter project."
 publish_to: 'none' 
-version: 1.0.1+57
+version: 1.0.1+58
 
 environment:
   sdk: ^3.10.0
@@ -48,6 +48,8 @@ dependencies:
   hive: ^2.2.3
   hive_flutter: ^1.1.0
   in_app_review: ^2.0.12
+  google_fonts: ^6.2.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -74,6 +76,7 @@ flutter:
     - assets/cuisine/
     - assets/onboarding/
     - assets/fonts/Larken/
+    - assets/fonts/Rubik/
 
   fonts:
     - family: Larken
@@ -81,3 +84,8 @@ flutter:
         - asset: assets/fonts/Larken/Larken-Variable.ttf
         - asset: assets/fonts/Larken/Larken Bold-6264325.ttf
           weight: 700
+    - family: Rubik
+      fonts:
+        - asset: assets/fonts/Rubik/Rubik-VariableFont_wght.ttf
+        - asset: assets/fonts/Rubik/Rubik-Italic-VariableFont_wght.ttf
+          style: italic

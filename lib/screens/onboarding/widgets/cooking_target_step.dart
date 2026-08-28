@@ -1,3 +1,4 @@
+import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -22,23 +23,23 @@ class CookingTargetStep extends StatefulWidget {
 
 class _CookingTargetStepState extends State<CookingTargetStep> {
   final List<Map<String, String>> _options = [
-    {'title': 'Just me', 'subtitle': '1 person', 'icon': 'peoples1.svg'},
+    {'title': 'Just me', 'subtitle': '1 person', 'icon': 'people1.svg'},
     {
       'title': 'Two people',
       'subtitle': 'Couple or pair',
-      'icon': 'peoples2.svg',
+      'icon': 'people2.svg',
     },
-    {'title': '3–4 people', 'subtitle': 'Small family', 'icon': 'peoples3.svg'},
-    {'title': '5–6 people', 'subtitle': 'Larger family', 'icon': 'peoples4.svg'},
+    {'title': '3–4 people', 'subtitle': 'Small family', 'icon': 'people3.svg'},
+    {'title': '5–6 people', 'subtitle': 'Larger family', 'icon': 'people4.svg'},
     {
       'title': '7+ people',
       'subtitle': 'Large family or group',
-      'icon': 'peoples5.svg',
+      'icon': 'people5.svg',
     },
     {
       'title': 'It varies',
       'subtitle': "I'll adjust per recipe",
-      'icon': 'varies1.svg',
+      'icon': 'people6.svg',
     },
   ];
 
@@ -62,33 +63,23 @@ class _CookingTargetStepState extends State<CookingTargetStep> {
               children: [
                 Text(
                   'Who are you usually\ncooking for?',
-                  style: TextStyle(
+                  style: GoogleFonts.rubik(
                     fontSize: 32.sp,
-                    fontWeight: FontWeight.w800,
-                    color: const Color(0xFF0F172A),
-                    fontFamily: 'Rubik',
-                    height: 1.15,
-                  ),
-                ),
+                    fontWeight: FontWeight.w500,
+                    color: const Color(0xFF111827),
+                    height: 1.15)),
                 SizedBox(height: 10.h),
                 Text(
                   "This helps us recommend the right portions",
-                  style: TextStyle(
+                  style: GoogleFonts.poppins(
                     fontSize: 15.sp,
-                    color: const Color(0xFF475569),
-                    fontFamily: 'SF Pro',
-                    height: 1.3,
-                  ),
-                ),
+                    color: const Color(0xFF111827),
+                    height: 1.3)),
                 SizedBox(height: 24.h),
                 Column(
-                  children: _options.map((opt) => _buildOption(opt)).toList(),
-                ),
+                  children: _options.map((opt) => _buildOption(opt)).toList()),
                 SizedBox(height: 20.h),
-              ],
-            ),
-          ),
-        ),
+              ]))),
         if (widget.onContinue != null)
           Padding(
             padding: EdgeInsets.fromLTRB(24.w, 8.h, 24.w, 20.h),
@@ -100,12 +91,8 @@ class _CookingTargetStepState extends State<CookingTargetStep> {
                 color: const Color(0xFFC31E26),
                 onTap: widget.onContinue!,
                 height: 52.h,
-                fontSize: 16.sp,
-              ),
-            ),
-          ),
-      ],
-    );
+                fontSize: 16.sp))),
+      ]);
   }
 
   Widget _buildOption(Map<String, String> opt) {
@@ -128,9 +115,7 @@ class _CookingTargetStepState extends State<CookingTargetStep> {
               color: isSelected
                   ? const Color(0xFFC31E26)
                   : Colors.transparent,
-              width: 1.5,
-            ),
-          ),
+              width: 1.5)),
           child: Row(
             children: [
               SvgPicture.asset(
@@ -141,10 +126,8 @@ class _CookingTargetStepState extends State<CookingTargetStep> {
                   isSelected
                       ? const Color(0xFFC31E26)
                       : const Color(0xFF0F172A),
-                  BlendMode.srcIn,
-                ),
-                placeholderBuilder: (context) => const SizedBox.shrink(),
-              ),
+                  BlendMode.srcIn),
+                placeholderBuilder: (context) => const SizedBox.shrink()),
               SizedBox(width: 16.w),
               Expanded(
                 child: Column(
@@ -152,41 +135,28 @@ class _CookingTargetStepState extends State<CookingTargetStep> {
                   children: [
                     Text(
                       opt['title']!,
-                      style: TextStyle(
-                        fontFamily: 'Rubik',
-                        fontSize: 15.sp,
-                        fontWeight: FontWeight.w700,
+                      style: GoogleFonts.rubik(fontSize: 15.sp,
+                        fontWeight: FontWeight.w500,
                         color: isSelected
                             ? const Color(0xFFC31E26)
-                            : const Color(0xFF0F172A),
-                      ),
-                    ),
+                            : const Color(0xFF0F172A))),
                     SizedBox(height: 2.h),
                     Text(
                       opt['subtitle']!,
-                      style: TextStyle(
-                        fontFamily: 'SF Pro',
-                        fontSize: 13.sp,
-                        color: const Color(0xFF64748B),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+                      style: GoogleFonts.poppins(fontSize: 13.sp,
+                        color: const Color(0xFF111827))),
+                  ])),
               if (isSelected)
                 Container(
                   width: 20.r,
                   height: 20.r,
                   decoration: const BoxDecoration(
                     shape: BoxShape.circle,
-                    color: Color(0xFFC31E26),
-                  ),
+                    color: Color(0xFFC31E26)),
                   child: Icon(
                     Icons.check,
                     color: Colors.white,
-                    size: 12.sp,
-                  ),
-                )
+                    size: 12.sp))
               else
                 Container(
                   width: 20.r,
@@ -195,14 +165,7 @@ class _CookingTargetStepState extends State<CookingTargetStep> {
                     shape: BoxShape.circle,
                     border: Border.all(
                       color: const Color(0xFFCBD5E1),
-                      width: 1.5,
-                    ),
-                  ),
-                ),
-            ],
-          ),
-        ),
-      ),
-    );
+                      width: 1.5))),
+            ]))));
   }
 }

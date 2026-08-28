@@ -1,3 +1,4 @@
+import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -27,31 +28,31 @@ class _TimePreferenceStepState extends State<TimePreferenceStep> {
     {
       'title': 'Under 15 minutes',
       'desc': 'Ultra-fast meals',
-      'icon': 'flash.svg',
+      'icon': 'under.svg',
       'summary': 'For when you need food instantly.',
     },
     {
       'title': '15–30 minutes',
       'desc': 'Quick but not rushed',
-      'icon': 'minute.svg',
+      'icon': 'demi.svg',
       'summary': 'Perfect for quick weekday meals.',
     },
     {
       'title': '30–60 minutes',
       'desc': 'A normal cooking window',
-      'icon': 'minute2.svg',
+      'icon': 'heure.svg',
       'summary': 'Great for relaxed dinners.',
     },
     {
       'title': '1–2 hours',
       'desc': 'I enjoy the cooking process',
-      'icon': 'hours.svg',
+      'icon': 'minutes.svg',
       'summary': 'For weekend cooking sessions.',
     },
     {
       'title': 'Any amount of time',
       'desc': 'Show me everything',
-      'icon': 'pipeline.svg',
+      'icon': 'time.svg',
       'summary': 'All recipes are on the table.',
     },
   ];
@@ -66,8 +67,7 @@ class _TimePreferenceStepState extends State<TimePreferenceStep> {
   Widget build(BuildContext context) {
     final selectedOption = _options.firstWhere(
       (o) => o['title'] == _selectedTime,
-      orElse: () => _options[1],
-    );
+      orElse: () => _options[1]);
 
     return Column(
       children: [
@@ -79,34 +79,24 @@ class _TimePreferenceStepState extends State<TimePreferenceStep> {
               children: [
                 Text(
                   'How much time do you\nusually have to cook?',
-                  style: TextStyle(
+                  style: GoogleFonts.rubik(
                     fontSize: 32.sp,
-                    fontWeight: FontWeight.w800,
-                    color: const Color(0xFF0F172A),
-                    fontFamily: 'Rubik',
-                    height: 1.15,
-                  ),
-                ),
+                    fontWeight: FontWeight.w500,
+                    color: const Color(0xFF111827),
+                    height: 1.15)),
                 SizedBox(height: 10.h),
                 Text(
                   'We’ll prioritize recipes that fit your schedule',
-                  style: TextStyle(
+                  style: GoogleFonts.poppins(
                     fontSize: 15.sp,
-                    color: const Color(0xFF475569),
-                    fontFamily: 'SF Pro',
-                    height: 1.3,
-                  ),
-                ),
+                    color: const Color(0xFF111827),
+                    height: 1.3)),
                 SizedBox(height: 24.h),
                 Text(
                   'Cooking time',
-                  style: TextStyle(
-                    fontFamily: 'Rubik',
-                    fontSize: 15.sp,
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xFF0F172A),
-                  ),
-                ),
+                  style: GoogleFonts.rubik(fontSize: 15.sp,
+                    fontWeight: FontWeight.w500,
+                    color: const Color(0xFF111827))),
                 SizedBox(height: 12.h),
                 Column(
                   children: [
@@ -115,43 +105,31 @@ class _TimePreferenceStepState extends State<TimePreferenceStep> {
                         Expanded(child: _buildOptionCard(_options[0], false)),
                         SizedBox(width: 12.w),
                         Expanded(child: _buildOptionCard(_options[1], false)),
-                      ],
-                    ),
+                      ]),
                     SizedBox(height: 10.h),
                     Row(
                       children: [
                         Expanded(child: _buildOptionCard(_options[2], false)),
                         SizedBox(width: 12.w),
                         Expanded(child: _buildOptionCard(_options[3], false)),
-                      ],
-                    ),
+                      ]),
                     SizedBox(height: 10.h),
                     _buildOptionCard(_options[4], true),
-                  ],
-                ),
+                  ]),
                 SizedBox(height: 20.h),
                 Container(
                   width: double.infinity,
                   padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
                   decoration: BoxDecoration(
                     color: const Color(0xFFFAF4E5),
-                    borderRadius: BorderRadius.circular(14.r),
-                  ),
+                    borderRadius: BorderRadius.circular(14.r)),
                   child: Text(
                     selectedOption['summary']!,
-                    style: TextStyle(
-                      fontSize: 14.sp,
-                      fontFamily: 'SF Pro',
-                      color: const Color(0xFF0F172A),
-                      height: 1.35,
-                    ),
-                  ),
-                ),
+                    style: GoogleFonts.poppins(fontSize: 14.sp,
+                      color: const Color(0xFF111827),
+                      height: 1.35))),
                 SizedBox(height: 20.h),
-              ],
-            ),
-          ),
-        ),
+              ]))),
         if (widget.onContinue != null)
           Padding(
             padding: EdgeInsets.fromLTRB(24.w, 8.h, 24.w, 20.h),
@@ -164,12 +142,8 @@ class _TimePreferenceStepState extends State<TimePreferenceStep> {
                 onTap: widget.onContinue!,
                 isDisabled: _selectedTime == null,
                 height: 52.h,
-                fontSize: 16.sp,
-              ),
-            ),
-          ),
-      ],
-    );
+                fontSize: 16.sp))),
+      ]);
   }
 
   Widget _buildOptionCard(Map<String, dynamic> option, bool isFullWidth) {
@@ -189,9 +163,7 @@ class _TimePreferenceStepState extends State<TimePreferenceStep> {
           borderRadius: BorderRadius.circular(16.r),
           border: Border.all(
             color: isSelected ? const Color(0xFFC31E26) : Colors.transparent,
-            width: 1.5,
-          ),
-        ),
+            width: 1.5)),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
@@ -202,35 +174,24 @@ class _TimePreferenceStepState extends State<TimePreferenceStep> {
               width: 24.sp,
               colorFilter: ColorFilter.mode(
                 isSelected ? const Color(0xFFC31E26) : const Color(0xFF0F172A),
-                BlendMode.srcIn,
-              ),
-              placeholderBuilder: (context) => const SizedBox.shrink(),
-            ),
+                BlendMode.srcIn),
+              placeholderBuilder: (context) => const SizedBox.shrink()),
             SizedBox(height: 8.h),
             Text(
               option['title']!,
               textAlign: TextAlign.center,
-              style: TextStyle(
+              style: GoogleFonts.rubik(
                 fontSize: 14.sp,
-                fontWeight: FontWeight.w700,
-                color: isSelected ? const Color(0xFFC31E26) : const Color(0xFF0F172A),
-                fontFamily: 'Rubik',
-              ),
-            ),
+                fontWeight: FontWeight.w500,
+                color: isSelected ? const Color(0xFFC31E26) : const Color(0xFF0F172A))),
             SizedBox(height: 2.h),
             Text(
               option['desc']!,
               textAlign: TextAlign.center,
-              style: TextStyle(
+              style: GoogleFonts.poppins(
                 fontSize: 12.sp,
                 fontWeight: FontWeight.w400,
-                color: const Color(0xFF64748B),
-                fontFamily: 'SF Pro',
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+                color: const Color(0xFF111827))),
+          ])));
   }
 }

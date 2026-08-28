@@ -1,3 +1,4 @@
+import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../core/extensions/string_extensions.dart';
@@ -27,7 +28,7 @@ class _CuisinesStepState extends State<CuisinesStep> {
     {'id': 'mexican', 'title': 'Mexican'},
     {'id': 'chinese', 'title': 'Chinese'},
     {'id': 'thai', 'title': 'Thai'},
-    {'id': 'middle-eastern', 'title': 'Middle Eastern'},
+    {'id': 'middle-east', 'title': 'Middle Eastern'},
     {'id': 'west-african', 'title': 'West African'},
     {'id': 'east-african', 'title': 'East African'},
     {'id': 'caribbean', 'title': 'Caribbean'},
@@ -107,24 +108,18 @@ class _CuisinesStepState extends State<CuisinesStep> {
               children: [
                 Text(
                   'What cuisines do\nyou love?',
-                  style: TextStyle(
+                  style: GoogleFonts.rubik(
                     fontSize: 32.sp,
-                    fontWeight: FontWeight.w800,
-                    color: const Color(0xFF0F172A),
-                    fontFamily: 'Rubik',
-                    height: 1.15,
-                  ),
-                ),
+                    fontWeight: FontWeight.w500,
+                    color: const Color(0xFF111827),
+                    height: 1.15)),
                 SizedBox(height: 10.h),
                 Text(
                   'Pick your favorites. The more you choose, the\nbetter your recommendations',
-                  style: TextStyle(
+                  style: GoogleFonts.poppins(
                     fontSize: 15.sp,
-                    color: const Color(0xFF475569),
-                    fontFamily: 'SF Pro',
-                    height: 1.3,
-                  ),
-                ),
+                    color: const Color(0xFF111827),
+                    height: 1.3)),
                 SizedBox(height: 24.h),
                 GridView.builder(
                   shrinkWrap: true,
@@ -133,50 +128,37 @@ class _CuisinesStepState extends State<CuisinesStep> {
                     crossAxisCount: 2,
                     crossAxisSpacing: 12.w,
                     mainAxisSpacing: 12.h,
-                    childAspectRatio: 0.82,
-                  ),
+                    childAspectRatio: 0.82),
                   itemCount: _cuisines.length,
                   itemBuilder: (context, index) {
                     final cuisine = _cuisines[index];
                     return _buildCuisineCard(cuisine);
-                  },
-                ),
+                  }),
                 
                 if (_selected.contains('Others')) ...[
                   SizedBox(height: 24.h),
                   Text(
                     'Specify other cuisines',
-                    style: TextStyle(
-                      fontFamily: 'Rubik',
-                      fontSize: 14.sp,
-                      fontWeight: FontWeight.w700,
-                      color: const Color(0xFF0F172A),
-                    ),
-                  ),
+                    style: GoogleFonts.rubik(fontSize: 14.sp,
+                      fontWeight: FontWeight.w500,
+                      color: const Color(0xFF111827))),
                   SizedBox(height: 8.h),
                   Container(
                     decoration: BoxDecoration(
                       color: const Color(0xFFF1F5F9),
                       borderRadius: BorderRadius.circular(14.r),
-                      border: Border.all(color: const Color(0xFFCBD5E1)),
-                    ),
+                      border: Border.all(color: const Color(0xFFCBD5E1))),
                     child: TextField(
                       controller: _othersController,
                       focusNode: _othersFocusNode,
                       onSubmitted: (_) => _addCustomCuisine(),
                       textCapitalization: TextCapitalization.words,
-                      style: TextStyle(
-                        fontFamily: 'Rubik',
-                        fontSize: 14.sp,
-                        color: const Color(0xFF0F172A),
-                      ),
+                      style: GoogleFonts.rubik(fontSize: 14.sp,
+                        color: const Color(0xFF111827)),
                       decoration: InputDecoration(
                         hintText: 'Type a cuisine...',
-                        hintStyle: TextStyle(
-                          fontFamily: 'SF Pro',
-                          fontSize: 14.sp,
-                          color: const Color(0xFF94A3B8),
-                        ),
+                        hintStyle: GoogleFonts.poppins(fontSize: 14.sp,
+                          color: const Color(0xFF94A3B8)),
                         border: InputBorder.none,
                         contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
                         suffixIcon: Padding(
@@ -188,35 +170,23 @@ class _CuisinesStepState extends State<CuisinesStep> {
                               height: 36.w,
                               decoration: BoxDecoration(
                                 color: const Color(0xFFC31E26),
-                                borderRadius: BorderRadius.circular(10.r),
-                              ),
-                              child: Icon(Icons.add_rounded, color: Colors.white, size: 22.sp),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
+                                borderRadius: BorderRadius.circular(10.r)),
+                              child: Icon(Icons.add_rounded, color: Colors.white, size: 22.sp))))))),
                   if (customCuisines.isNotEmpty) ...[
                     SizedBox(height: 12.h),
                     Wrap(
                       spacing: 8.w,
                       runSpacing: 8.h,
                       children: customCuisines.map((c) => Chip(
-                        label: Text(c, style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13.sp)),
+                        label: Text(c, style: TextStyle(color: Colors.white, fontWeight: FontWeight.w500, fontSize: 13.sp)),
                         backgroundColor: const Color(0xFFC31E26),
                         deleteIcon: const Icon(Icons.close, size: 14, color: Colors.white),
                         onDeleted: () => _removeCuisine(c),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.r)),
-                      )).toList(),
-                    ),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.r)))).toList()),
                   ],
                 ],
                 SizedBox(height: MediaQuery.of(context).viewInsets.bottom + 20.h),
-              ],
-            ),
-          ),
-        ),
+              ]))),
         if (widget.onContinue != null)
           Padding(
             padding: EdgeInsets.fromLTRB(24.w, 8.h, 24.w, 20.h),
@@ -228,12 +198,8 @@ class _CuisinesStepState extends State<CuisinesStep> {
                 color: const Color(0xFFC31E26),
                 onTap: widget.onContinue!,
                 height: 52.h,
-                fontSize: 16.sp,
-              ),
-            ),
-          ),
-      ],
-    );
+                fontSize: 16.sp))),
+      ]);
   }
 
   Widget _buildCuisineCard(Map<String, String> cuisine) {
@@ -256,15 +222,13 @@ class _CuisinesStepState extends State<CuisinesStep> {
           borderRadius: BorderRadius.circular(16.r),
           border: Border.all(
             color: isSelected ? const Color(0xFFC31E26) : Colors.transparent,
-            width: 1.5,
-          ),
-        ),
+            width: 1.5)),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Expanded(
               child: ClipRRect(
-                borderRadius: BorderRadius.vertical(top: Radius.circular(14.r)),
+                borderRadius: BorderRadius.circular(14.r),
                 child: Image.asset(
                   'assets/cuisine/${cuisine['id']}.png',
                   fit: BoxFit.cover,
@@ -278,36 +242,24 @@ class _CuisinesStepState extends State<CuisinesStep> {
                           child: Icon(
                             Icons.restaurant_menu,
                             color: const Color(0xFFCBD5E1),
-                            size: 32.sp,
-                          ),
-                        );
-                      },
-                    );
-                  },
-                ),
-              ),
-            ),
+                            size: 32.sp));
+                      });
+                  }))),
             Container(
               padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
               decoration: BoxDecoration(
                 color: const Color(0xFFFAF4E5),
-                borderRadius: BorderRadius.vertical(bottom: Radius.circular(14.r)),
-              ),
+                borderRadius: BorderRadius.vertical(bottom: Radius.circular(14.r))),
               child: Row(
                 children: [
                   Expanded(
                     child: Text(
                       cuisine['title']!,
-                      style: TextStyle(
-                        fontFamily: 'Rubik',
-                        fontSize: 14.sp,
-                        fontWeight: FontWeight.w700,
-                        color: isSelected ? const Color(0xFFC31E26) : const Color(0xFF0F172A),
-                      ),
+                      style: GoogleFonts.rubik(fontSize: 14.sp,
+                        fontWeight: FontWeight.w500,
+                        color: isSelected ? const Color(0xFFC31E26) : const Color(0xFF0F172A)),
                       maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
+                      overflow: TextOverflow.ellipsis)),
                   if (isSelected) ...[
                     SizedBox(width: 4.w),
                     Container(
@@ -315,21 +267,13 @@ class _CuisinesStepState extends State<CuisinesStep> {
                       height: 18.r,
                       decoration: const BoxDecoration(
                         shape: BoxShape.circle,
-                        color: Color(0xFFC31E26),
-                      ),
+                        color: Color(0xFFC31E26)),
                       child: Icon(
                         Icons.check,
                         color: Colors.white,
-                        size: 11.sp,
-                      ),
-                    ),
+                        size: 11.sp)),
                   ],
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+                ])),
+          ])));
   }
 }

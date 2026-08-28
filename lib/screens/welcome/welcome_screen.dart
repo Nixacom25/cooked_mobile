@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../routes/app_routes.dart';
 import '../../services/auth_service.dart';
 import '../../widgets/red_button.dart';
@@ -81,11 +82,10 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                       Text(
                         'Welcome to Cooked',
                         textAlign: TextAlign.center,
-                        style: TextStyle(
+                        style: GoogleFonts.rubik(
                           fontSize: 32.sp,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w500,
                           color: Colors.white,
-                          fontFamily: 'Rubik',
                         ),
                       ),
                       SizedBox(height: 12.h),
@@ -132,10 +132,9 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                             onTap: () => Navigator.pushNamed(context, AppRoutes.login),
                             child: Text(
                               'Sign In',
-                              style: TextStyle(
+                              style: GoogleFonts.rubik(
                                 color: Colors.white,
                                 fontWeight: FontWeight.w800,
-                                fontFamily: 'Rubik',
                                 fontSize: 14.sp,
                               ),
                             ),

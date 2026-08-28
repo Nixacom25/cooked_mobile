@@ -1,3 +1,4 @@
+import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter/services.dart';
@@ -47,8 +48,7 @@ class _LanguageRegionStepState extends State<LanguageRegionStep> {
     widget.onChanged(
       language: _selectedLanguage,
       country: _selectedCountry,
-      measurementSystem: _selectedMeasurementSystem,
-    );
+      measurementSystem: _selectedMeasurementSystem);
   }
 
   final List<String> _languages = [
@@ -79,24 +79,18 @@ class _LanguageRegionStepState extends State<LanguageRegionStep> {
         children: [
           Text(
             'Language & Region',
-            style: TextStyle(
+            style: GoogleFonts.poppins(
               fontSize: 24.sp,
               fontWeight: FontWeight.w900,
               color: const Color(0xFF0D1B36),
-              fontFamily: 'SF Pro',
-              height: 1.2,
-            ),
-          ),
+              height: 1.2)),
           SizedBox(height: 8.h),
           Text(
             "We'll use this to suggest local recipes and ingredients available near you",
-            style: TextStyle(
+            style: GoogleFonts.poppins(
               fontSize: 14.sp,
               color: const Color(0xFF7B8190),
-              fontFamily: 'SF Pro',
-              height: 1.5,
-            ),
-          ),
+              height: 1.5)),
           SizedBox(height: 40.h),
 
           _buildLabel('Language'),
@@ -108,8 +102,7 @@ class _LanguageRegionStepState extends State<LanguageRegionStep> {
               HapticFeedback.mediumImpact();
               setState(() => _selectedLanguage = val!);
               _notifyChange();
-            },
-          ),
+            }),
 
           SizedBox(height: 24.h),
 
@@ -122,16 +115,14 @@ class _LanguageRegionStepState extends State<LanguageRegionStep> {
               HapticFeedback.mediumImpact();
               setState(() => _selectedCountry = val!);
               _notifyChange();
-            },
-          ),
+            }),
 
           SizedBox(height: 32.h),
           Container(
             padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
             decoration: BoxDecoration(
               color: const Color(0xFFF8F5EF),
-              borderRadius: BorderRadius.circular(12.r),
-            ),
+              borderRadius: BorderRadius.circular(12.r)),
             child: Row(
               children: [
                 Expanded(
@@ -139,22 +130,14 @@ class _LanguageRegionStepState extends State<LanguageRegionStep> {
                     'Measurement system : ${_selectedMeasurementSystem == 'Imperial'
               ? 'Imperial (cups, oz, °F)'
               : 'Metric (grams, ml, °C)'} ',
-                    style: TextStyle(
+                    style: GoogleFonts.poppins(
                       fontSize: 12.sp,
-                      color: const Color(0xFF4B5563),
-                      fontFamily: 'SF Pro',
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
+                      color: const Color(0xFF111827)))),
+              ])),
           SizedBox(height: 8.h),
           _buildMeasurementSelector(),
           SizedBox(height: 32.h),
-        ],
-      ),
-    );
+        ]));
   }
 
   Widget _buildMeasurementSelector() {
@@ -165,25 +148,18 @@ class _LanguageRegionStepState extends State<LanguageRegionStep> {
       decoration: BoxDecoration(
         color: const Color(0xFFF9F7F2),
         borderRadius: BorderRadius.circular(50.r),
-        border: Border.all(color: const Color(0xFFEEEEEE)),
-      ),
+        border: Border.all(color: const Color(0xFFEEEEEE))),
       child: Row(
         children: [
           Expanded(
             child: _buildToggleOption(
               'Imperial',
-              _selectedMeasurementSystem == 'Imperial',
-            ),
-          ),
+              _selectedMeasurementSystem == 'Imperial')),
           Expanded(
             child: _buildToggleOption(
               'Metric',
-              _selectedMeasurementSystem == 'Metric',
-            ),
-          ),
-        ],
-      ),
-    );
+              _selectedMeasurementSystem == 'Metric')),
+        ]));
   }
 
   Widget _buildToggleOption(String label, bool isSelected) {
@@ -197,34 +173,24 @@ class _LanguageRegionStepState extends State<LanguageRegionStep> {
         alignment: Alignment.center,
         decoration: BoxDecoration(
           color: isSelected ? const Color(0xFFC83A2D) : Colors.transparent,
-          borderRadius: BorderRadius.circular(50.r),
-        ),
+          borderRadius: BorderRadius.circular(50.r)),
         child: Text(
           label == 'Imperial'
               ? 'Imperial (cups, oz, °F)'
               : 'Metric (grams, ml, °C)',
           textAlign: TextAlign.center,
-          style: TextStyle(
-            fontFamily: 'SF Pro',
-            fontSize: 12.sp,
+          style: GoogleFonts.poppins(fontSize: 12.sp,
             fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-            color: isSelected ? Colors.white : const Color(0xFF4B5563),
-          ),
-        ),
-      ),
-    );
+            color: isSelected ? Colors.white : const Color(0xFF4B5563)))));
   }
 
   Widget _buildLabel(String text) {
     return Text(
       text,
-      style: TextStyle(
+      style: GoogleFonts.poppins(
         fontSize: 14.sp,
         fontWeight: FontWeight.w600,
-        color: const Color(0xFF4B5563),
-        fontFamily: 'SF Pro',
-      ),
-    );
+        color: const Color(0xFF111827)));
   }
 
   Widget _buildDropdown({
@@ -259,21 +225,14 @@ class _LanguageRegionStepState extends State<LanguageRegionStep> {
                   padding: EdgeInsets.symmetric(horizontal: 16.w),
                   alignment: Alignment.centerLeft,
                   decoration: BoxDecoration(
-                    color: isSelected ? const Color(0xFFF4C459) : Colors.white,
-                  ),
+                    color: isSelected ? const Color(0xFFF4C459) : Colors.white),
                   child: Text(
                     item,
-                    style: TextStyle(
-                      fontFamily: 'SF Pro',
-                      fontSize: 14.sp,
+                    style: GoogleFonts.poppins(fontSize: 14.sp,
                       fontWeight: isSelected
                           ? FontWeight.w700
                           : FontWeight.w500,
-                      color: const Color(0xFF1A1A1A),
-                    ),
-                  ),
-                ),
-              );
+                      color: const Color(0xFF1A1A1A)))));
             }).toList();
           },
           child: Container(
@@ -282,31 +241,20 @@ class _LanguageRegionStepState extends State<LanguageRegionStep> {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(12.r),
-              border: Border.all(color: const Color(0xFFE5E7EB)),
-            ),
+              border: Border.all(color: const Color(0xFFE5E7EB))),
             child: Row(
               children: [
                 Expanded(
                   child: Text(
                     value,
-                    style: TextStyle(
-                      fontFamily: 'SF Pro',
-                      fontSize: 16.sp,
+                    style: GoogleFonts.poppins(fontSize: 16.sp,
                       fontWeight: FontWeight.w600,
-                      color: const Color(0xFF1A1A1A),
-                    ),
-                  ),
-                ),
+                      color: const Color(0xFF1A1A1A)))),
                 Icon(
                   Icons.keyboard_arrow_down_rounded,
                   color: const Color(0xFF1A1A1A),
-                  size: 24.sp,
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
+                  size: 24.sp),
+              ])));
+      });
   }
 }

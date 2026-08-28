@@ -7,6 +7,7 @@ import '../widgets/app_top_header.dart';
 import '../services/recipe_service.dart';
 import '../models/recipe.dart';
 import '../routes/app_routes.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../widgets/haptic_context_menu.dart';
 import '../models/view_all_type.dart';
 import '../widgets/import_loading_page.dart';
@@ -503,29 +504,29 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
                       ),
                       SizedBox(height: 14.h),
 
-                      // Social Platforms Row (YouTube, TikTok, Instagram, Facebook)
+                      // Social Platforms Row (Instagram, TikTok, Facebook, YouTube)
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
                           _SocialPlatformCard(
-                            label: 'YouTube',
-                            asset: 'assets/images/youtube.png',
-                            onTap: () => _onPlatformTap('youtube.com'),
-                          ),
-                          _SocialPlatformCard(
-                            label: 'TikTok',
-                            asset: 'assets/images/tiktok.png',
-                            onTap: () => _onPlatformTap('tiktok.com'),
-                          ),
-                          _SocialPlatformCard(
                             label: 'Instagram',
-                            asset: 'assets/images/instagram.png',
+                            asset: 'assets/icones/instagram2.svg',
                             onTap: () => _onPlatformTap('instagram.com'),
                           ),
                           _SocialPlatformCard(
+                            label: 'TikTok',
+                            asset: 'assets/icones/tiktok2.svg',
+                            onTap: () => _onPlatformTap('tiktok.com'),
+                          ),
+                          _SocialPlatformCard(
                             label: 'Facebook',
-                            asset: 'assets/images/facebook.png',
+                            asset: 'assets/icones/facebook2.svg',
                             onTap: () => _onPlatformTap('facebook.com'),
+                          ),
+                          _SocialPlatformCard(
+                            label: 'YouTube',
+                            asset: 'assets/icones/youtube.svg',
+                            onTap: () => _onPlatformTap('youtube.com'),
                           ),
                         ],
                       ),
@@ -1151,17 +1152,24 @@ class _SocialPlatformCard extends StatelessWidget {
                 shape: BoxShape.circle,
               ),
               child: Center(
-                child: Image.asset(
-                  asset,
-                  width: 18.r,
-                  height: 18.r,
-                  fit: BoxFit.contain,
-                  errorBuilder: (_, __, ___) => Icon(
-                    Icons.link_rounded,
-                    color: Colors.white,
-                    size: 18.sp,
-                  ),
-                ),
+                child: asset.endsWith('.svg')
+                    ? SvgPicture.asset(
+                        asset,
+                        width: 18.r,
+                        height: 18.r,
+                        fit: BoxFit.contain,
+                      )
+                    : Image.asset(
+                        asset,
+                        width: 18.r,
+                        height: 18.r,
+                        fit: BoxFit.contain,
+                        errorBuilder: (_, __, ___) => Icon(
+                          Icons.link_rounded,
+                          color: Colors.white,
+                          size: 18.sp,
+                        ),
+                      ),
               ),
             ),
             SizedBox(height: 6.h),

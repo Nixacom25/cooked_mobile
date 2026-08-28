@@ -1,3 +1,4 @@
+import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'selection_onboarding_step.dart';
@@ -44,30 +45,22 @@ class _CookingSkillStepState extends State<CookingSkillStep> {
       decoration: BoxDecoration(
         color: const Color(0xFFFFF7ED),
         borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: const Color(0xFFFBE8D0)),
-      ),
+        border: Border.all(color: const Color(0xFFFBE8D0))),
       child: RichText(
         textAlign: TextAlign.center,
         text: TextSpan(
-          style: TextStyle(
+          style: GoogleFonts.poppins(
             color: const Color(0xFF1B1C1C),
-            fontSize: 16.sp,
-            fontFamily: 'SF Pro',
-          ),
+            fontSize: 16.sp),
           children: [
             const TextSpan(text: 'Great, we\'ll avoid '),
             TextSpan(
               text: _getHighlightText(selectedValue),
               style: const TextStyle(
                 color: Color(0xFFD92D20),
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+                fontWeight: FontWeight.bold)),
             const TextSpan(text: ' recipes.'),
-          ],
-        ),
-      ),
-    );
+          ])));
   }
 
   @override
@@ -90,27 +83,22 @@ class _CookingSkillStepState extends State<CookingSkillStep> {
           id: 'beginner',
           label: 'Total Beginner',
           subLabel: 'I can barely boil water',
-          svgAsset: 'assets/icones/beginner.svg',
-        ),
+          svgAsset: 'assets/icones/beginner.svg'),
         SelectionOption(
           id: 'home_cook',
           label: 'Home Cook',
           subLabel: 'I follow recipes step by step',
-          icon: Icons.restaurant,
-        ),
+          icon: Icons.restaurant),
         SelectionOption(
           id: 'confident',
           label: 'Confident Cook',
           subLabel: 'I improvise and experiment',
-          svgAsset: 'assets/icones/chef.svg',
-        ),
+          svgAsset: 'assets/icones/chef.svg'),
         SelectionOption(
           id: 'advanced',
           label: 'Advanced / Semi-Pro',
           subLabel: 'I want challenging recipes.',
-          svgAsset: 'assets/icones/firew.svg',
-        ),
-      ],
-    );
+          svgAsset: 'assets/icones/firew.svg'),
+      ]);
   }
 }

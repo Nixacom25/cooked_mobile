@@ -1,3 +1,4 @@
+import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'selection_onboarding_step.dart';
@@ -50,20 +51,16 @@ class _EatingOutBudgetStepState extends State<EatingOutBudgetStep> {
       padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 16.h),
       decoration: BoxDecoration(
         color: const Color(0xFFFAF4E5),
-        borderRadius: BorderRadius.circular(16.r),
-      ),
+        borderRadius: BorderRadius.circular(16.r)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             'Potential Yearly Savings', 
-            style: TextStyle(
+            style: GoogleFonts.rubik(
               color: const Color(0xFF334155), 
-              fontSize: 14.sp, 
-              fontFamily: 'Rubik',
-              fontWeight: FontWeight.w700,
-            ),
-          ),
+              fontSize: 14.sp,
+              fontWeight: FontWeight.w500)),
           SizedBox(height: 8.h),
           Row(
             crossAxisAlignment: CrossAxisAlignment.baseline,
@@ -71,38 +68,26 @@ class _EatingOutBudgetStepState extends State<EatingOutBudgetStep> {
             children: [
               Text(
                 '~\$$formattedSavings',
-                style: TextStyle(
+                style: GoogleFonts.rubik(
                   color: const Color(0xFF16A34A),
                   fontSize: 28.sp,
-                  fontWeight: FontWeight.w800,
-                  fontFamily: 'Rubik',
-                ),
-              ),
+                  fontWeight: FontWeight.w500)),
               SizedBox(width: 6.w),
               Text(
                 '/year',
-                style: TextStyle(
-                  color: const Color(0xFF64748B),
+                style: GoogleFonts.poppins(
+                  color: const Color(0xFF111827),
                   fontSize: 14.sp,
-                  fontFamily: 'SF Pro',
-                  fontWeight: FontWeight.w400,
-                ),
-              ),
-            ],
-          ),
+                  fontWeight: FontWeight.w400)),
+            ]),
           SizedBox(height: 4.h),
           Text(
             'That could be over',
-            style: TextStyle(
-              color: const Color(0xFF64748B),
+            style: GoogleFonts.poppins(
+              color: const Color(0xFF111827),
               fontSize: 13.sp,
-              fontFamily: 'SF Pro',
-              fontWeight: FontWeight.w400,
-            ),
-          ),
-        ],
-      ),
-    );
+              fontWeight: FontWeight.w400)),
+        ]));
   }
 
   @override
@@ -131,7 +116,6 @@ class _EatingOutBudgetStepState extends State<EatingOutBudgetStep> {
         SelectionOption(id: '100_250', label: '\$100–250'),
         SelectionOption(id: '250_500', label: '\$250–500'),
         SelectionOption(id: 'over_500', label: '\$500+'),
-      ],
-    );
+      ]);
   }
 }

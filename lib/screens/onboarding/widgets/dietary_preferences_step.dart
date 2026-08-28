@@ -73,8 +73,6 @@ class _DietaryPreferencesStepState extends State<DietaryPreferencesStep> {
         id: o['title']!,
         label: o['title']!,
         subLabel: o['desc']!,
-        svgAsset: 'assets/icones/${o['icon']}',
-      )).toList(),
-    );
+        svgAsset: 'assets/icones/${o['icon']}')).toList());
   }
 }

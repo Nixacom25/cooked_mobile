@@ -33,7 +33,6 @@ class AgeStep extends StatelessWidget {
         SelectionOption(id: '35_44', label: '35 - 44'),
         SelectionOption(id: '45_54', label: '45 - 54'),
         SelectionOption(id: '55_plus', label: '55+'),
-      ],
-    );
+      ]);
   }
 }

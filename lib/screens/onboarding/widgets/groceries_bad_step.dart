@@ -1,3 +1,4 @@
+import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'selection_onboarding_step.dart';
@@ -48,20 +49,16 @@ class _GroceriesBadStepState extends State<GroceriesBadStep> {
       padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 16.h),
       decoration: BoxDecoration(
         color: const Color(0xFFFAF4E5),
-        borderRadius: BorderRadius.circular(16.r),
-      ),
+        borderRadius: BorderRadius.circular(16.r)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             'The average household wastes', 
-            style: TextStyle(
+            style: GoogleFonts.rubik(
               color: const Color(0xFF334155), 
-              fontSize: 14.sp, 
-              fontFamily: 'Rubik',
-              fontWeight: FontWeight.w700,
-            ),
-          ),
+              fontSize: 14.sp,
+              fontWeight: FontWeight.w500)),
           SizedBox(height: 8.h),
           Row(
             crossAxisAlignment: CrossAxisAlignment.baseline,
@@ -69,40 +66,27 @@ class _GroceriesBadStepState extends State<GroceriesBadStep> {
             children: [
               Text(
                 'over ',
-                style: TextStyle(
-                  color: const Color(0xFF64748B),
+                style: GoogleFonts.poppins(
+                  color: const Color(0xFF111827),
                   fontSize: 14.sp,
-                  fontFamily: 'SF Pro',
-                  fontWeight: FontWeight.w400,
-                ),
-              ),
+                  fontWeight: FontWeight.w400)),
               Text(
                 '~\$$formattedWaste',
-                style: TextStyle(
+                style: GoogleFonts.rubik(
                   color: const Color(0xFF16A34A),
                   fontSize: 28.sp,
-                  fontWeight: FontWeight.w800,
-                  fontFamily: 'Rubik',
-                ),
-              ),
+                  fontWeight: FontWeight.w500)),
               SizedBox(width: 6.w),
               Expanded(
                 child: Text(
                   '/year in food',
-                  style: TextStyle(
-                    color: const Color(0xFF64748B),
+                  style: GoogleFonts.poppins(
+                    color: const Color(0xFF111827),
                     fontSize: 14.sp,
-                    fontFamily: 'SF Pro',
-                    fontWeight: FontWeight.w400,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
+                    fontWeight: FontWeight.w400),
+                  overflow: TextOverflow.ellipsis)),
+            ]),
+        ]));
   }
 
   @override
@@ -130,7 +114,6 @@ class _GroceriesBadStepState extends State<GroceriesBadStep> {
         SelectionOption(id: 'sometimes', label: 'Sometimes'),
         SelectionOption(id: 'weekly', label: 'Weekly'),
         SelectionOption(id: 'constantly', label: 'Constantly'),
-      ],
-    );
+      ]);
   }
 }

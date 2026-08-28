@@ -1,3 +1,4 @@
+import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -81,32 +82,25 @@ class _SelectionOnboardingStepState extends State<SelectionOnboardingStep> with 
 
     _controller = AnimationController(
       vsync: this,
-      duration: Duration(milliseconds: totalDurationMs),
-    );
+      duration: Duration(milliseconds: totalDurationMs));
 
     // Header animations (Title: 0 to 400ms, Subtitle: 100 to 500ms, TopCard: 200 to 600ms)
     double timeToPct(int ms) => ms / totalDurationMs;
 
     _titleOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Interval(timeToPct(0), timeToPct(400), curve: Curves.easeOut)),
-    );
+      CurvedAnimation(parent: _controller, curve: Interval(timeToPct(0), timeToPct(400), curve: Curves.easeOut)));
     _titleSlide = Tween<Offset>(begin: const Offset(0, 0.2), end: Offset.zero).animate(
-      CurvedAnimation(parent: _controller, curve: Interval(timeToPct(0), timeToPct(400), curve: Curves.easeOutCubic)),
-    );
+      CurvedAnimation(parent: _controller, curve: Interval(timeToPct(0), timeToPct(400), curve: Curves.easeOutCubic)));
 
     _subtitleOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Interval(timeToPct(100), timeToPct(500), curve: Curves.easeOut)),
-    );
+      CurvedAnimation(parent: _controller, curve: Interval(timeToPct(100), timeToPct(500), curve: Curves.easeOut)));
     _subtitleSlide = Tween<Offset>(begin: const Offset(0, 0.2), end: Offset.zero).animate(
-      CurvedAnimation(parent: _controller, curve: Interval(timeToPct(100), timeToPct(500), curve: Curves.easeOutCubic)),
-    );
+      CurvedAnimation(parent: _controller, curve: Interval(timeToPct(100), timeToPct(500), curve: Curves.easeOutCubic)));
 
     _topCardOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Interval(timeToPct(200), timeToPct(600), curve: Curves.easeOut)),
-    );
+      CurvedAnimation(parent: _controller, curve: Interval(timeToPct(200), timeToPct(600), curve: Curves.easeOut)));
     _topCardSlide = Tween<Offset>(begin: const Offset(0, 0.2), end: Offset.zero).animate(
-      CurvedAnimation(parent: _controller, curve: Interval(timeToPct(200), timeToPct(600), curve: Curves.easeOutCubic)),
-    );
+      CurvedAnimation(parent: _controller, curve: Interval(timeToPct(200), timeToPct(600), curve: Curves.easeOutCubic)));
 
     // Waterfall items
     _itemOpacities = [];
@@ -118,22 +112,18 @@ class _SelectionOnboardingStepState extends State<SelectionOnboardingStep> with 
       int endMs = startMs + 400; // 400ms animation per item
       
       _itemOpacities.add(Tween<double>(begin: 0.0, end: 1.0).animate(
-        CurvedAnimation(parent: _controller, curve: Interval(timeToPct(startMs), timeToPct(endMs).clamp(0.0, 1.0), curve: Curves.easeOut)),
-      ));
+        CurvedAnimation(parent: _controller, curve: Interval(timeToPct(startMs), timeToPct(endMs).clamp(0.0, 1.0), curve: Curves.easeOut))));
       
       _itemSlides.add(Tween<Offset>(begin: const Offset(0, 0.2), end: Offset.zero).animate(
-        CurvedAnimation(parent: _controller, curve: Interval(timeToPct(startMs), timeToPct(endMs).clamp(0.0, 1.0), curve: Curves.easeOutCubic)),
-      ));
+        CurvedAnimation(parent: _controller, curve: Interval(timeToPct(startMs), timeToPct(endMs).clamp(0.0, 1.0), curve: Curves.easeOutCubic))));
     }
 
     // Button animation (End of list)
     int btnStartMs = totalDurationMs - 400;
     _buttonOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Interval(timeToPct(btnStartMs), 1.0, curve: Curves.easeOut)),
-    );
+      CurvedAnimation(parent: _controller, curve: Interval(timeToPct(btnStartMs), 1.0, curve: Curves.easeOut)));
     _buttonSlide = Tween<Offset>(begin: const Offset(0, 0.2), end: Offset.zero).animate(
-      CurvedAnimation(parent: _controller, curve: Interval(timeToPct(btnStartMs), 1.0, curve: Curves.easeOutCubic)),
-    );
+      CurvedAnimation(parent: _controller, curve: Interval(timeToPct(btnStartMs), 1.0, curve: Curves.easeOutCubic)));
 
     _controller.forward();
   }
@@ -213,17 +203,12 @@ class _SelectionOnboardingStepState extends State<SelectionOnboardingStep> with 
                         position: _titleSlide,
                         child: Text(
                           widget.title,
-                          style: TextStyle(
+                          style: GoogleFonts.rubik(
                             fontSize: 30.sp,
-                            fontWeight: FontWeight.w800,
-                            color: const Color(0xFF0F172A),
-                            fontFamily: 'Rubik',
+                            fontWeight: FontWeight.w500,
+                            color: const Color(0xFF111827),
                             height: 1.2,
-                            letterSpacing: -0.3,
-                          ),
-                        ),
-                      ),
-                    ),
+                            letterSpacing: -0.3)))),
                     if (widget.subtitle != null) ...[
                       SizedBox(height: 8.h),
                       FadeTransition(
@@ -232,16 +217,11 @@ class _SelectionOnboardingStepState extends State<SelectionOnboardingStep> with 
                           position: _subtitleSlide,
                           child: Text(
                             widget.subtitle!,
-                            style: TextStyle(
+                            style: GoogleFonts.poppins(
                               fontSize: 16.sp,
-                              color: const Color(0xFF475569),
-                              fontFamily: 'SF Pro',
+                              color: const Color(0xFF111827),
                               fontWeight: FontWeight.w400,
-                              height: 1.35,
-                            ),
-                          ),
-                        ),
-                      ),
+                              height: 1.35)))),
                     ],
                     if (widget.topCardWidget != null) ...[
                       SizedBox(height: 24.h),
@@ -249,9 +229,7 @@ class _SelectionOnboardingStepState extends State<SelectionOnboardingStep> with 
                         opacity: _topCardOpacity,
                         child: SlideTransition(
                           position: _topCardSlide,
-                          child: widget.topCardWidget!,
-                        ),
-                      ),
+                          child: widget.topCardWidget!)),
                     ],
                     SizedBox(height: 20.h),
                     if (widget.useGrid)
@@ -276,16 +254,13 @@ class _SelectionOnboardingStepState extends State<SelectionOnboardingStep> with 
                                   width: itemWidth,
                                   padding: EdgeInsets.symmetric(
                                     horizontal: 14.w, 
-                                    vertical: 14.h,
-                                  ),
+                                    vertical: 14.h),
                                   decoration: BoxDecoration(
                                     color: const Color(0xFFF1F5F9),
                                     borderRadius: BorderRadius.circular(16.r),
                                     border: Border.all(
                                       color: isSelected ? const Color(0xFFC31E26) : Colors.transparent,
-                                      width: 1.5,
-                                    ),
-                                  ),
+                                      width: 1.5)),
                                   child: widget.gridItemDirection == Axis.vertical
                                       ? Stack(
                                           children: [
@@ -299,14 +274,11 @@ class _SelectionOnboardingStepState extends State<SelectionOnboardingStep> with 
                                                       height: 20.r,
                                                       decoration: const BoxDecoration(
                                                         shape: BoxShape.circle,
-                                                        color: Color(0xFFC31E26),
-                                                      ),
+                                                        color: Color(0xFFC31E26)),
                                                       child: Icon(
                                                         Icons.check,
                                                         color: Colors.white,
-                                                        size: 13.sp,
-                                                      ),
-                                                    )
+                                                        size: 13.sp))
                                                   : Container(
                                                       width: 20.r,
                                                       height: 20.r,
@@ -314,11 +286,7 @@ class _SelectionOnboardingStepState extends State<SelectionOnboardingStep> with 
                                                         shape: BoxShape.circle,
                                                         border: Border.all(
                                                           color: const Color(0xFFCBD5E1),
-                                                          width: 1.5,
-                                                        ),
-                                                      ),
-                                                    ),
-                                            ),
+                                                          width: 1.5)))),
                                             // Centered Icon & Label
                                             Padding(
                                               padding: EdgeInsets.symmetric(vertical: 4.h),
@@ -333,31 +301,22 @@ class _SelectionOnboardingStepState extends State<SelectionOnboardingStep> with 
                                                       width: 26.w,
                                                       colorFilter: widget.preserveSvgColor ? null : ColorFilter.mode(
                                                         isSelected ? const Color(0xFFC31E26) : const Color(0xFF0F172A),
-                                                        BlendMode.srcIn,
-                                                      ),
-                                                    )
+                                                        BlendMode.srcIn))
                                                   else if (option.icon != null)
                                                     Icon(
                                                       option.icon,
                                                       color: isSelected ? const Color(0xFFC31E26) : const Color(0xFF0F172A),
-                                                      size: 24.sp,
-                                                    ),
+                                                      size: 24.sp),
                                                   SizedBox(height: 8.h),
                                                   Text(
                                                     option.label,
                                                     textAlign: TextAlign.center,
-                                                    style: TextStyle(
+                                                    style: GoogleFonts.rubik(
                                                       fontSize: 14.sp,
-                                                      fontWeight: FontWeight.w700,
-                                                      color: isSelected ? const Color(0xFFC31E26) : const Color(0xFF0F172A),
-                                                      fontFamily: 'Rubik',
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          ],
-                                        )
+                                                      fontWeight: FontWeight.w500,
+                                                      color: isSelected ? const Color(0xFFC31E26) : const Color(0xFF0F172A))),
+                                                ])),
+                                          ])
                                       : Row(
                                           mainAxisAlignment: MainAxisAlignment.start,
                                           crossAxisAlignment: CrossAxisAlignment.center,
@@ -369,52 +328,36 @@ class _SelectionOnboardingStepState extends State<SelectionOnboardingStep> with 
                                                 width: 22.w,
                                                 colorFilter: widget.preserveSvgColor ? null : ColorFilter.mode(
                                                   isSelected ? const Color(0xFFC31E26) : const Color(0xFF0F172A),
-                                                  BlendMode.srcIn,
-                                                ),
-                                              ),
+                                                  BlendMode.srcIn)),
                                               SizedBox(width: 10.w),
                                             ] else if (option.icon != null) ...[
                                               Icon(
                                                 option.icon,
                                                 color: isSelected ? const Color(0xFFC31E26) : const Color(0xFF0F172A),
-                                                size: 22.sp,
-                                              ),
+                                                size: 22.sp),
                                               SizedBox(width: 10.w),
                                             ],
                                             Expanded(
                                               child: Text(
                                                 option.label,
                                                 textAlign: TextAlign.start,
-                                                style: TextStyle(
+                                                style: GoogleFonts.rubik(
                                                   fontSize: 15.sp,
-                                                  fontWeight: FontWeight.w700,
-                                                  color: isSelected ? const Color(0xFFC31E26) : const Color(0xFF0F172A),
-                                                  fontFamily: 'Rubik',
-                                                ),
-                                              ),
-                                            ),
+                                                  fontWeight: FontWeight.w500,
+                                                  color: isSelected ? const Color(0xFFC31E26) : const Color(0xFF0F172A)))),
                                             if (isSelected)
                                               Container(
                                                 width: 20.r,
                                                 height: 20.r,
                                                 decoration: const BoxDecoration(
                                                   shape: BoxShape.circle,
-                                                  color: Color(0xFFC31E26),
-                                                ),
+                                                  color: Color(0xFFC31E26)),
                                                 child: Icon(
                                                   Icons.check,
                                                   color: Colors.white,
-                                                  size: 12.sp,
-                                                ),
-                                              ),
-                                          ],
-                                        ),
-                                ),
-                              ),
-                            ),
-                          );
-                        }),
-                      )
+                                                  size: 12.sp)),
+                                          ])))));
+                        }))
                     else
                       ...List.generate(widget.options.length, (index) {
                         final option = widget.options[index];
@@ -434,9 +377,7 @@ class _SelectionOnboardingStepState extends State<SelectionOnboardingStep> with 
                                     borderRadius: BorderRadius.circular(16.r),
                                     border: Border.all(
                                       color: isSelected ? const Color(0xFFC31E26) : Colors.transparent,
-                                      width: 1.5,
-                                    ),
-                                  ),
+                                      width: 1.5)),
                                   child: Row(
                                     children: [
                                       if (option.imageAsset != null) ...[
@@ -449,29 +390,22 @@ class _SelectionOnboardingStepState extends State<SelectionOnboardingStep> with 
                                           width: 22.w,
                                           colorFilter: widget.preserveSvgColor ? null : ColorFilter.mode(
                                             isSelected ? const Color(0xFFC31E26) : const Color(0xFF0F172A),
-                                            BlendMode.srcIn,
-                                          ),
-                                        ),
+                                            BlendMode.srcIn)),
                                         SizedBox(width: 14.w),
                                       ] else if (option.icon != null) ...[
                                         Icon(
                                           option.icon,
                                           color: isSelected ? const Color(0xFFC31E26) : const Color(0xFF0F172A),
-                                          size: 22.sp,
-                                        ),
+                                          size: 22.sp),
                                         SizedBox(width: 14.w),
                                       ],
                                       Expanded(
                                         child: Text(
                                           option.label,
-                                          style: TextStyle(
+                                          style: GoogleFonts.rubik(
                                             fontSize: 15.sp,
-                                            fontWeight: FontWeight.w700,
-                                            color: isSelected ? const Color(0xFFC31E26) : const Color(0xFF0F172A),
-                                            fontFamily: 'Rubik',
-                                          ),
-                                        ),
-                                      ),
+                                            fontWeight: FontWeight.w500,
+                                            color: isSelected ? const Color(0xFFC31E26) : const Color(0xFF0F172A)))),
                                       if (isSelected)
                                         (option.id == 'No Allergies'
                                             ? SizedBox(width: 22.r, height: 22.r)
@@ -480,14 +414,11 @@ class _SelectionOnboardingStepState extends State<SelectionOnboardingStep> with 
                                                 height: 22.r,
                                                 decoration: const BoxDecoration(
                                                   shape: BoxShape.circle,
-                                                  color: Color(0xFFC31E26),
-                                                ),
+                                                  color: Color(0xFFC31E26)),
                                                 child: Icon(
                                                   Icons.check,
                                                   color: Colors.white,
-                                                  size: 14.sp,
-                                                ),
-                                              ))
+                                                  size: 14.sp)))
                                       else
                                         Container(
                                           width: 22.r,
@@ -496,28 +427,16 @@ class _SelectionOnboardingStepState extends State<SelectionOnboardingStep> with 
                                             shape: BoxShape.circle,
                                             border: Border.all(
                                               color: const Color(0xFFCBD5E1),
-                                              width: 1.5,
-                                            ),
-                                          ),
-                                        ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        );
+                                              width: 1.5))),
+                                    ]))))));
                       }),
                     if (widget.bottomCardWidget != null) ...[
                       SizedBox(height: 20.h),
                       widget.bottomCardWidget!,
                     ],
-                  ],
-                );
+                  ]);
               }
-            ),
-          ),
-        ),
+            ))),
         // Footer Button
         if (widget.onContinue != null)
           AnimatedBuilder(
@@ -538,15 +457,9 @@ class _SelectionOnboardingStepState extends State<SelectionOnboardingStep> with 
                         onTap: widget.onContinue!,
                         isDisabled: _selectedIds.isEmpty,
                         height: 52.h,
-                        fontSize: 16.sp,
-                      ),
-                    ),
-                  ),
-                ),
-              );
+                        fontSize: 16.sp)))));
             }
           ),
-      ],
-    );
+      ]);
   }
 }

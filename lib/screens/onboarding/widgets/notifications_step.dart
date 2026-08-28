@@ -1,3 +1,4 @@
+import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter/services.dart';
@@ -39,24 +40,18 @@ class _NotificationsStepState extends State<NotificationsStep> {
         children: [
           Text(
             'Stay inspired with new recipes',
-            style: TextStyle(
+            style: GoogleFonts.poppins(
               fontSize: 24.sp,
               fontWeight: FontWeight.w900,
               color: const Color(0xFF0D1B3E),
-              fontFamily: 'SF Pro',
               height: 1.2,
-              letterSpacing: -0.5,
-            ),
-          ),
+              letterSpacing: -0.5)),
           SizedBox(height: 8.h),
           Text(
             'Choose what you\'d like to hear about',
-            style: TextStyle(
+            style: GoogleFonts.poppins(
               fontSize: 14.sp,
-              color: const Color(0xFF7B8190),
-              fontFamily: 'SF Pro',
-            ),
-          ),
+              color: const Color(0xFF7B8190))),
           SizedBox(height: 32.h),
           ..._options.map((opt) => _buildToggleItem(opt)),
           SizedBox(height: 32.h),
@@ -80,30 +75,20 @@ class _NotificationsStepState extends State<NotificationsStep> {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(50.r),
                   side: BorderSide(
-                    color: const Color(0xFFC83A2D),
-                    width: 1.5.w,
-                  ),
-                ),
-              ),
+                    color: const Color(0xFFC31E26),
+                    width: 1.5.w))),
               child: Text(
                 _selected.isEmpty ? 'Turn on all' : 'Turn off all',
-                style: TextStyle(
-                  fontFamily: 'SF Pro',
-                  fontSize: 16.sp,
+                style: GoogleFonts.poppins(fontSize: 16.sp,
                   fontWeight: FontWeight.w600,
-                  color: const Color(0xFFC83A2D),
-                ),
-              ),
-            ),
-          ),
+                  color: const Color(0xFFC31E26))))),
           SizedBox(height: 24.h),
           Container(
             padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
             decoration: BoxDecoration(
               color: const Color(0xFFFFF7ED), // Light yellowish-beige
               borderRadius: BorderRadius.circular(12.r),
-              border: Border.all(color: const Color(0xFFFDE68A), width: 0.5),
-            ),
+              border: Border.all(color: const Color(0xFFFDE68A), width: 0.5)),
             child: Row(
               children: [
                 Text('💡', style: TextStyle(fontSize: 14.sp)),
@@ -111,21 +96,12 @@ class _NotificationsStepState extends State<NotificationsStep> {
                 Expanded(
                   child: Text(
                     'You can adjust these anytime in your settings',
-                    style: TextStyle(
-                      fontFamily: 'SF Pro',
-                      fontSize: 13.sp,
+                    style: GoogleFonts.poppins(fontSize: 13.sp,
                       fontWeight: FontWeight.w500,
-                      color: const Color(0xFF1A1A1A),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
+                      color: const Color(0xFF1A1A1A)))),
+              ])),
           SizedBox(height: 10.h),
-        ],
-      ),
-    );
+        ]));
   }
 
   Widget _buildToggleItem(Map<String, String> opt) {
@@ -153,16 +129,13 @@ class _NotificationsStepState extends State<NotificationsStep> {
             borderRadius: BorderRadius.circular(16.r),
             border: Border.all(
               color: const Color(0xFFE5E7EB),
-              width: 1.w,
-            ),
+              width: 1.w),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.02),
                 blurRadius: 8.r,
-                offset: Offset(0, 4.h),
-              ),
-            ],
-          ),
+                offset: Offset(0, 4.h)),
+            ]),
           child: Row(
             children: [
               Expanded(
@@ -171,25 +144,15 @@ class _NotificationsStepState extends State<NotificationsStep> {
                   children: [
                     Text(
                       opt['title']!,
-                      style: TextStyle(
-                        fontFamily: 'SF Pro',
-                        fontSize: 15.sp,
+                      style: GoogleFonts.poppins(fontSize: 15.sp,
                         fontWeight: FontWeight.w600,
-                        color: const Color(0xFF1A1A1A),
-                      ),
-                    ),
+                        color: const Color(0xFF1A1A1A))),
                     SizedBox(height: 4.h),
                     Text(
                       opt['subtitle']!,
-                      style: TextStyle(
-                        fontFamily: 'SF Pro',
-                        fontSize: 13.sp,
-                        color: const Color(0xFF7B8190),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+                      style: GoogleFonts.poppins(fontSize: 13.sp,
+                        color: const Color(0xFF7B8190))),
+                  ])),
               SizedBox(width: 12.w),
               Container(
                 width: 24.sp,
@@ -199,17 +162,10 @@ class _NotificationsStepState extends State<NotificationsStep> {
                   color: isSelected ? const Color(0xFFC83A2D) : Colors.transparent,
                   border: Border.all(
                     color: isSelected ? const Color(0xFFC83A2D) : const Color(0xFFD1D5DB),
-                    width: 1.5.w,
-                  ),
-                ),
+                    width: 1.5.w)),
                 child: isSelected
                     ? Icon(Icons.check, size: 14.sp, color: Colors.white)
-                    : null,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
+                    : null),
+            ]))));
   }
 }

@@ -1,3 +1,4 @@
+import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -85,8 +86,7 @@ class _AccountStepState extends State<AccountStep> {
       phone: _phone,
       acceptedTerms: _acceptedTerms,
       firstname: firstname,
-      lastname: lastname,
-    );
+      lastname: lastname);
   }
 
   void _submitForm() {
@@ -99,8 +99,7 @@ class _AccountStepState extends State<AccountStep> {
       IosToast.show(
         context,
         message: 'Please enter your email',
-        type: ToastType.warning,
-      );
+        type: ToastType.warning);
       return;
     }
 
@@ -109,8 +108,7 @@ class _AccountStepState extends State<AccountStep> {
       IosToast.show(
         context,
         message: 'Please enter a valid email address',
-        type: ToastType.warning,
-      );
+        type: ToastType.warning);
       return;
     }
 
@@ -118,8 +116,7 @@ class _AccountStepState extends State<AccountStep> {
       IosToast.show(
         context,
         message: 'Please enter a password',
-        type: ToastType.warning,
-      );
+        type: ToastType.warning);
       return;
     }
 
@@ -127,8 +124,7 @@ class _AccountStepState extends State<AccountStep> {
       IosToast.show(
         context,
         message: 'Password must be at least 6 characters',
-        type: ToastType.warning,
-      );
+        type: ToastType.warning);
       return;
     }
 
@@ -136,8 +132,7 @@ class _AccountStepState extends State<AccountStep> {
       IosToast.show(
         context,
         message: 'Passwords do not match',
-        type: ToastType.warning,
-      );
+        type: ToastType.warning);
       return;
     }
 
@@ -157,24 +152,18 @@ class _AccountStepState extends State<AccountStep> {
               children: [
                 Text(
                   'Create your account',
-                  style: TextStyle(
+                  style: GoogleFonts.rubik(
                     fontSize: 32.sp,
-                    fontWeight: FontWeight.w800,
-                    color: const Color(0xFF0F172A),
-                    fontFamily: 'Rubik',
-                    height: 1.15,
-                  ),
-                ),
+                    fontWeight: FontWeight.w500,
+                    color: const Color(0xFF111827),
+                    height: 1.15)),
                 SizedBox(height: 10.h),
                 Text(
                   'Secure your recipes and preferences',
-                  style: TextStyle(
+                  style: GoogleFonts.poppins(
                     fontSize: 15.sp,
-                    color: const Color(0xFF475569),
-                    fontFamily: 'SF Pro',
-                    height: 1.3,
-                  ),
-                ),
+                    color: const Color(0xFF111827),
+                    height: 1.3)),
                 SizedBox(height: 24.h),
 
                 _buildLabel('Full Name', required: false),
@@ -182,8 +171,7 @@ class _AccountStepState extends State<AccountStep> {
                 _buildField(
                   controller: _nameController,
                   hint: 'John Doe',
-                  icon: Icons.person_outline_rounded,
-                ),
+                  icon: Icons.person_outline_rounded),
 
                 SizedBox(height: 16.h),
 
@@ -193,8 +181,7 @@ class _AccountStepState extends State<AccountStep> {
                   controller: _emailController,
                   hint: 'john@example.com',
                   icon: Icons.email_outlined,
-                  keyboardType: TextInputType.emailAddress,
-                ),
+                  keyboardType: TextInputType.emailAddress),
 
                 SizedBox(height: 16.h),
 
@@ -210,15 +197,12 @@ class _AccountStepState extends State<AccountStep> {
                       _obscurePassword
                           ? Icons.visibility_off_outlined
                           : Icons.visibility_outlined,
-                      color: const Color(0xFF64748B),
-                      size: 20.sp,
-                    ),
+                      color: const Color(0xFF111827),
+                      size: 20.sp),
                     onPressed: () {
                       HapticFeedback.selectionClick();
                       setState(() => _obscurePassword = !_obscurePassword);
-                    },
-                  ),
-                ),
+                    })),
 
                 SizedBox(height: 16.h),
 
@@ -234,20 +218,14 @@ class _AccountStepState extends State<AccountStep> {
                       _obscureConfirm
                           ? Icons.visibility_off_outlined
                           : Icons.visibility_outlined,
-                      color: const Color(0xFF64748B),
-                      size: 20.sp,
-                    ),
+                      color: const Color(0xFF111827),
+                      size: 20.sp),
                     onPressed: () {
                       HapticFeedback.selectionClick();
                       setState(() => _obscureConfirm = !_obscureConfirm);
-                    },
-                  ),
-                ),
+                    })),
                 SizedBox(height: MediaQuery.of(context).viewInsets.bottom + 20.h),
-              ],
-            ),
-          ),
-        ),
+              ]))),
         Padding(
           padding: EdgeInsets.fromLTRB(24.w, 8.h, 24.w, 20.h),
           child: SafeArea(
@@ -258,24 +236,18 @@ class _AccountStepState extends State<AccountStep> {
               color: const Color(0xFFC31E26),
               onTap: _submitForm,
               height: 52.h,
-              fontSize: 16.sp,
-            ),
-          ),
-        ),
-      ],
-    );
+              fontSize: 16.sp))),
+      ]);
   }
 
   Widget _buildLabel(String label, {bool required = false}) {
     return RichText(
       text: TextSpan(
         text: label,
-        style: TextStyle(
+        style: GoogleFonts.rubik(
           fontSize: 14.sp,
-          fontWeight: FontWeight.w700,
-          color: const Color(0xFF0F172A),
-          fontFamily: 'Rubik',
-        ),
+          fontWeight: FontWeight.w500,
+          color: const Color(0xFF111827)),
         children: [
           if (required)
             TextSpan(
@@ -283,12 +255,8 @@ class _AccountStepState extends State<AccountStep> {
               style: TextStyle(
                 color: const Color(0xFFC31E26),
                 fontSize: 14.sp,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-        ],
-      ),
-    );
+                fontWeight: FontWeight.w500)),
+        ]));
   }
 
   Widget _buildField({
@@ -304,19 +272,15 @@ class _AccountStepState extends State<AccountStep> {
       obscureText: obscureText,
       keyboardType: keyboardType,
       onChanged: (_) => _notifyChange(),
-      style: TextStyle(
-        fontFamily: 'SF Pro',
-        fontSize: 15.sp,
+      style: GoogleFonts.poppins(fontSize: 15.sp,
         fontWeight: FontWeight.w600,
-        color: const Color(0xFF0F172A),
-      ),
+        color: const Color(0xFF111827)),
       decoration: InputDecoration(
         hintText: hint,
         hintStyle: TextStyle(
           color: const Color(0xFF94A3B8),
           fontWeight: FontWeight.w400,
-          fontSize: 15.sp,
-        ),
+          fontSize: 15.sp),
         prefixIcon: Icon(icon, color: const Color(0xFF94A3B8), size: 20.sp),
         suffixIcon: suffix,
         filled: true,
@@ -324,17 +288,12 @@ class _AccountStepState extends State<AccountStep> {
         contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16.r),
-          borderSide: BorderSide.none,
-        ),
+          borderSide: BorderSide.none),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16.r),
-          borderSide: BorderSide.none,
-        ),
+          borderSide: BorderSide.none),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16.r),
-          borderSide: const BorderSide(color: Color(0xFFC31E26), width: 1.5),
-        ),
-      ),
-    );
+          borderSide: const BorderSide(color: Color(0xFFC31E26), width: 1.5))));
   }
 }

@@ -1,3 +1,4 @@
+import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../widgets/red_button.dart';
@@ -30,19 +31,16 @@ class _FreeTrialGuideStepState extends State<FreeTrialGuideStep> with SingleTick
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1200),
-    );
+      duration: const Duration(milliseconds: 1200));
 
     Animation<double> createOpacity(double start, double end) {
       return Tween<double>(begin: 0.0, end: 1.0).animate(
-        CurvedAnimation(parent: _controller, curve: Interval(start, end.clamp(0.0, 1.0), curve: Curves.easeOut)),
-      );
+        CurvedAnimation(parent: _controller, curve: Interval(start, end.clamp(0.0, 1.0), curve: Curves.easeOut)));
     }
 
     Animation<Offset> createSlide(double start, double end) {
       return Tween<Offset>(begin: const Offset(0, 0.15), end: Offset.zero).animate(
-        CurvedAnimation(parent: _controller, curve: Interval(start, end.clamp(0.0, 1.0), curve: Curves.easeOutCubic)),
-      );
+        CurvedAnimation(parent: _controller, curve: Interval(start, end.clamp(0.0, 1.0), curve: Curves.easeOutCubic)));
     }
 
     _titleOpacity = createOpacity(0.0, 0.3);
@@ -92,16 +90,11 @@ class _FreeTrialGuideStepState extends State<FreeTrialGuideStep> with SingleTick
                         position: _titleSlide,
                         child: Text(
                           'Free trial guide',
-                          style: TextStyle(
+                          style: GoogleFonts.rubik(
                             fontSize: 32.sp,
-                            fontWeight: FontWeight.w800,
-                            color: const Color(0xFF0F172A),
-                            fontFamily: 'Rubik',
-                            height: 1.15,
-                          ),
-                        ),
-                      ),
-                    ),
+                            fontWeight: FontWeight.w500,
+                            color: const Color(0xFF111827),
+                            height: 1.15)))),
                     SizedBox(height: 8.h),
                     FadeTransition(
                       opacity: _titleOpacity,
@@ -109,15 +102,10 @@ class _FreeTrialGuideStepState extends State<FreeTrialGuideStep> with SingleTick
                         position: _titleSlide,
                         child: Text(
                           'Get the most out of your Cooked trial.',
-                          style: TextStyle(
+                          style: GoogleFonts.poppins(
                             fontSize: 15.sp,
-                            color: const Color(0xFF475569),
-                            fontFamily: 'SF Pro',
-                            height: 1.3,
-                          ),
-                        ),
-                      ),
-                    ),
+                            color: const Color(0xFF111827),
+                            height: 1.3)))),
                     SizedBox(height: 32.h),
 
                     // Guide Container (Cards)
@@ -137,10 +125,7 @@ class _FreeTrialGuideStepState extends State<FreeTrialGuideStep> with SingleTick
                                   borderColor: const Color(0xFFFCA5A5),
                                   headerBgColor: const Color(0xFFFEE2E2),
                                   iconColor: const Color(0xFFDC2626),
-                                  description: 'Unlock personalized recipes, meal suggestions, and ingredient scanning.',
-                                ),
-                              ),
-                            ),
+                                  description: 'Unlock personalized recipes, meal suggestions, and ingredient scanning.'))),
                             SizedBox(height: 16.h),
                             FadeTransition(
                               opacity: _itemOpacities[1],
@@ -152,10 +137,7 @@ class _FreeTrialGuideStepState extends State<FreeTrialGuideStep> with SingleTick
                                   borderColor: const Color(0xFF7DD3FC),
                                   headerBgColor: const Color(0xFFE0F2FE),
                                   iconColor: const Color(0xFF0284C7),
-                                  description: "We'll send you a reminder before your trial ends.",
-                                ),
-                              ),
-                            ),
+                                  description: "We'll send you a reminder before your trial ends."))),
                             SizedBox(height: 16.h),
                             FadeTransition(
                               opacity: _itemOpacities[2],
@@ -167,14 +149,8 @@ class _FreeTrialGuideStepState extends State<FreeTrialGuideStep> with SingleTick
                                   borderColor: const Color(0xFFFCD34D),
                                   headerBgColor: const Color(0xFFFEF3C7),
                                   iconColor: const Color(0xFFD97706),
-                                  description: "We'll send you a reminder before your trial ends.",
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
+                                  description: "We'll send you a reminder before your trial ends."))),
+                          ]))),
                     SizedBox(height: 36.h),
 
                     // Price Summary
@@ -187,35 +163,19 @@ class _FreeTrialGuideStepState extends State<FreeTrialGuideStep> with SingleTick
                             Center(
                               child: Text(
                                 '3 days free, then \$29.99/year',
-                                style: TextStyle(
-                                  fontFamily: 'Rubik',
-                                  fontSize: 22.sp,
-                                  fontWeight: FontWeight.w800,
-                                  color: const Color(0xFF0F172A),
-                                ),
-                              ),
-                            ),
+                                style: GoogleFonts.rubik(fontSize: 22.sp,
+                                  fontWeight: FontWeight.w500,
+                                  color: const Color(0xFF111827)))),
                             SizedBox(height: 8.h),
                             Center(
                               child: Text(
                                 'View other plans',
-                                style: TextStyle(
-                                  fontFamily: 'SF Pro',
-                                  fontSize: 14.sp,
+                                style: GoogleFonts.poppins(fontSize: 14.sp,
                                   fontWeight: FontWeight.w500,
-                                  color: const Color(0xFF64748B),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
+                                  color: const Color(0xFF111827)))),
+                          ]))),
                     SizedBox(height: 20.h),
-                  ],
-                ),
-              ),
-            ),
+                  ]))),
 
             // Bottom Button Area
             FadeTransition(
@@ -232,16 +192,9 @@ class _FreeTrialGuideStepState extends State<FreeTrialGuideStep> with SingleTick
                       color: const Color(0xFFC31E26),
                       onTap: widget.onContinue,
                       height: 52.h,
-                      fontSize: 16.sp,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
+                      fontSize: 16.sp))))),
+          ]);
+      });
   }
 
   Widget _buildTimelineCard({
@@ -264,9 +217,7 @@ class _FreeTrialGuideStepState extends State<FreeTrialGuideStep> with SingleTick
             borderRadius: BorderRadius.circular(16.r),
             border: Border.all(
               color: borderColor,
-              width: 1.5,
-            ),
-          ),
+              width: 1.5)),
           child: Column(
             children: [
               Container(
@@ -278,49 +229,30 @@ class _FreeTrialGuideStepState extends State<FreeTrialGuideStep> with SingleTick
                   border: Border(
                     bottom: BorderSide(
                       color: borderColor,
-                      width: 1.0,
-                    ),
-                  ),
-                ),
+                      width: 1.0))),
                 alignment: Alignment.center,
                 child: Text(
                   label,
-                  style: TextStyle(
-                    fontFamily: 'Rubik',
-                    fontSize: 13.sp,
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xFF0F172A),
-                  ),
-                ),
-              ),
+                  style: GoogleFonts.rubik(fontSize: 13.sp,
+                    fontWeight: FontWeight.w500,
+                    color: const Color(0xFF111827)))),
               Expanded(
                 child: Center(
                   child: Icon(
                     icon,
                     size: 26.sp,
-                    color: iconColor,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
+                    color: iconColor))),
+            ])),
         SizedBox(width: 16.w),
 
         // Description Text
         Expanded(
           child: Text(
             description,
-            style: TextStyle(
-              fontFamily: 'SF Pro',
-              fontSize: 14.sp,
+            style: GoogleFonts.poppins(fontSize: 14.sp,
               fontWeight: FontWeight.w500,
-              color: const Color(0xFF0F172A),
-              height: 1.35,
-            ),
-          ),
-        ),
-      ],
-    );
+              color: const Color(0xFF111827),
+              height: 1.35))),
+      ]);
   }
 }

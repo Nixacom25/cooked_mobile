@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter/services.dart';
@@ -40,29 +42,22 @@ class _TrialStepState extends State<TrialStep> with SingleTickerProviderStateMix
 
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1200),
-    );
+      duration: const Duration(milliseconds: 1200));
 
     _titleOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: const Interval(0.0, 0.4, curve: Curves.easeOut)),
-    );
+      CurvedAnimation(parent: _controller, curve: const Interval(0.0, 0.4, curve: Curves.easeOut)));
     _titleSlide = Tween<Offset>(begin: const Offset(0, 0.15), end: Offset.zero).animate(
-      CurvedAnimation(parent: _controller, curve: const Interval(0.0, 0.4, curve: Curves.easeOutCubic)),
-    );
+      CurvedAnimation(parent: _controller, curve: const Interval(0.0, 0.4, curve: Curves.easeOutCubic)));
 
     _card1Opacity = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: const Interval(0.2, 0.5, curve: Curves.easeOut)),
-    );
+      CurvedAnimation(parent: _controller, curve: const Interval(0.2, 0.5, curve: Curves.easeOut)));
     _card1Scale = Tween<double>(begin: 0.9, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: const Interval(0.2, 0.8, curve: Curves.easeOut)),
-    );
+      CurvedAnimation(parent: _controller, curve: const Interval(0.2, 0.8, curve: Curves.easeOut)));
 
     _card2Opacity = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: const Interval(0.3, 0.6, curve: Curves.easeOut)),
-    );
+      CurvedAnimation(parent: _controller, curve: const Interval(0.3, 0.6, curve: Curves.easeOut)));
     _card2Scale = Tween<double>(begin: 0.9, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: const Interval(0.3, 0.9, curve: Curves.easeOut)),
-    );
+      CurvedAnimation(parent: _controller, curve: const Interval(0.3, 0.9, curve: Curves.easeOut)));
 
     _controller.forward();
   }
@@ -98,157 +93,154 @@ class _TrialStepState extends State<TrialStep> with SingleTickerProviderStateMix
       builder: (context, child) {
         return Column(
           children: [
+            // 1. Top Flexible Image Area with Top & Bottom White Fades
             Expanded(
-              child: SingleChildScrollView(
-                child: Column(
+              child: FadeTransition(
+                opacity: _titleOpacity,
+                child: Stack(
                   children: [
-                    FadeTransition(
-                      opacity: _titleOpacity,
-                      child: Container(
-                        constraints: BoxConstraints(maxHeight: 220.h),
-                        width: double.infinity,
-                        child: Image.asset(
-                          'assets/onboarding/step27.png',
-                          width: double.infinity,
-                          fit: BoxFit.cover,
+                    Positioned.fill(
+                      child: Image.asset(
+                        'assets/onboarding/step27.png',
+                        fit: BoxFit.cover,
+                        alignment: Alignment.center,
+                        errorBuilder: (context, error, stackTrace) => Container(
+                          color: const Color(0xFFF1F5F9),
                           alignment: Alignment.center,
-                          errorBuilder: (context, error, stackTrace) => Container(
-                            color: const Color(0xFFF1F5F9),
-                            alignment: Alignment.center,
-                            child: const Icon(Icons.fastfood, color: Color(0xFFCBD5E1)),
-                          ),
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 16.h),
+                          child: const Icon(Icons.fastfood, color: Color(0xFFCBD5E1))))),
+                    // Top White Fade
+                    Positioned(
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      height: 40.h,
+                      child: Container(
+                        decoration: const BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Colors.white,
+                              Color(0x00FFFFFF),
+                            ])))),
+                    // Bottom White Fade
+                    Positioned(
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      height: 50.h,
+                      child: Container(
+                        decoration: const BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.bottomCenter,
+                            end: Alignment.topCenter,
+                            colors: [
+                              Colors.white,
+                              Color(0x00FFFFFF),
+                            ])))),
+                  ]))),
 
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 24.w),
+            // 2. Lower Content Area (Title, Subtitle, Plan Cards, No Payment Text, Button)
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 24.w),
+              child: Column(
+                children: [
+                  // Title & Subtitle
+                  FadeTransition(
+                    opacity: _titleOpacity,
+                    child: SlideTransition(
+                      position: _titleSlide,
                       child: Column(
                         children: [
-                          FadeTransition(
-                            opacity: _titleOpacity,
-                            child: SlideTransition(
-                              position: _titleSlide,
-                              child: Column(
-                                children: [
-                                  Text(
-                                    'Unlock your full\npersonalized cooking\nsystem.',
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      fontSize: 32.sp,
-                                      fontWeight: FontWeight.w800,
-                                      color: const Color(0xFF0F172A),
-                                      fontFamily: 'Rubik',
-                                      height: 1.15,
-                                    ),
-                                  ),
-                                  SizedBox(height: 8.h),
-                                  Text(
-                                    'Built around your goals,\nschedule, and taste.',
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      fontSize: 15.sp,
-                                      color: const Color(0xFF475569),
-                                      fontFamily: 'SF Pro',
-                                      height: 1.3,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                          SizedBox(height: 24.h),
+                          Text(
+                            'Unlock your full\npersonalized cooking system.',
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.rubik(
+                              fontSize: 30.sp,
+                              fontWeight: FontWeight.w500,
+                              color: const Color(0xFF111827),
+                              height: 1.15)),
+                          SizedBox(height: 6.h),
+                          Text(
+                            'Built around your goals, schedule, and taste.',
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.poppins(
+                              fontSize: 14.sp,
+                              color: const Color(0xFF111827),
+                              height: 1.3)),
+                        ]))),
+                  SizedBox(height: 16.h),
 
-                          // Subscription Options
-                          Row(
-                            children: [
-                              Expanded(
-                                child: FadeTransition(
-                                  opacity: _card1Opacity,
-                                  child: Transform.scale(
-                                    scale: _card1Scale.value,
-                                    child: _buildPlanCard(
-                                      id: 'monthly',
-                                      title: 'Monthly',
-                                      price: _monthlyPrice,
-                                      isSelected: _selectedPlan == 'monthly',
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              SizedBox(width: 12.w),
-                              Expanded(
-                                child: FadeTransition(
-                                  opacity: _card2Opacity,
-                                  child: Transform.scale(
-                                    scale: _card2Scale.value,
-                                    child: _buildPlanCard(
-                                      id: 'yearly',
-                                      title: 'Yearly',
-                                      price: _yearlyPrice,
-                                      isSelected: _selectedPlan == 'yearly',
-                                      badge: widget.showTrialBadge ? '3 days free' : null,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          SizedBox(height: 20.h),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+                  // Subscription Options
+                  Row(
+                    children: [
+                      Expanded(
+                        child: FadeTransition(
+                          opacity: _card1Opacity,
+                          child: Transform.scale(
+                            scale: _card1Scale.value,
+                            child: _buildPlanCard(
+                              id: 'monthly',
+                              title: 'Monthly',
+                              price: _monthlyPrice,
+                              isSelected: _selectedPlan == 'monthly')))),
+                      SizedBox(width: 12.w),
+                      Expanded(
+                        child: FadeTransition(
+                          opacity: _card2Opacity,
+                          child: Transform.scale(
+                            scale: _card2Scale.value,
+                            child: _buildPlanCard(
+                              id: 'yearly',
+                              title: 'Yearly',
+                              price: _yearlyPrice,
+                              isSelected: _selectedPlan == 'yearly',
+                              badge: widget.showTrialBadge ? '3 days free' : null)))),
+                    ]),
+                  SizedBox(height: 14.h),
 
-            // Bottom Button Area with "No payment due today"
-            Padding(
-              padding: EdgeInsets.fromLTRB(24.w, 4.h, 24.w, 20.h),
-              child: SafeArea(
-                top: false,
-                bottom: true,
-                child: Column(
-                  children: [
-                    Text(
+                  // No payment due today (clickable only in dev/debug mode)
+                  GestureDetector(
+                    onTap: kDebugMode
+                        ? () {
+                            HapticFeedback.selectionClick();
+                            widget.onSkip();
+                          }
+                        : null,
+                    child: Text(
                       'No payment due today',
-                      style: TextStyle(
-                        fontFamily: 'Rubik',
-                        fontSize: 15.sp,
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFFC31E26),
-                      ),
-                    ),
-                    SizedBox(height: 12.h),
-                    RedButton(
-                      label: _selectedPlan == 'yearly' ? 'Try for Free' : 'Subscribe Now',
-                      color: const Color(0xFFC31E26),
-                      onTap: () => widget.onPlanSelected(_selectedPlan),
-                      height: 52.h,
-                      fontSize: 16.sp,
-                    ),
-                    SizedBox(height: 10.h),
-                    Text(
-                      _selectedPlan == 'yearly'
-                          ? '3 days free, then \$29.99/year. Cancel anytime.'
-                          : 'Billed immediately at $_monthlyPrice. Cancel anytime.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontFamily: 'SF Pro',
-                        fontSize: 13.sp,
-                        color: const Color(0xFF64748B),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
+                      style: GoogleFonts.rubik(
+                        fontSize: 14.sp,
+                        fontWeight: FontWeight.w500,
+                        color: const Color(0xFFC31E26)))),
+                  SizedBox(height: 10.h),
+
+                  // Red Button & Subscription Terms
+                  SafeArea(
+                    top: false,
+                    bottom: true,
+                    child: Column(
+                      children: [
+                        RedButton(
+                          label: _selectedPlan == 'yearly' ? 'Try for Free' : 'Subscribe Now',
+                          color: const Color(0xFFC31E26),
+                          onTap: () => widget.onPlanSelected(_selectedPlan),
+                          height: 52.h,
+                          fontSize: 16.sp),
+                        SizedBox(height: 8.h),
+                        Text(
+                          _selectedPlan == 'yearly'
+                              ? '3 days free, then \$29.99/year. Cancel anytime.'
+                              : 'Billed immediately at $_monthlyPrice. Cancel anytime.',
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.poppins(
+                            fontSize: 12.sp,
+                            color: const Color(0xFF111827))),
+                        SizedBox(height: 14.h),
+                      ])),
+                ])),
+          ]);
+      });
   }
 
   Widget _buildPlanCard({
@@ -275,9 +267,7 @@ class _TrialStepState extends State<TrialStep> with SingleTickerProviderStateMix
                 color: isSelected
                     ? const Color(0xFFC31E26)
                     : Colors.transparent,
-                width: 1.5,
-              ),
-            ),
+                width: 1.5)),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
@@ -287,29 +277,20 @@ class _TrialStepState extends State<TrialStep> with SingleTickerProviderStateMix
                     children: [
                       Text(
                         title,
-                        style: TextStyle(
+                        style: GoogleFonts.poppins(
                           fontSize: 13.sp,
-                          color: const Color(0xFF64748B),
-                          fontFamily: 'SF Pro',
-                        ),
-                      ),
+                          color: const Color(0xFF111827))),
                       SizedBox(height: 4.h),
                       FittedBox(
                         alignment: Alignment.centerLeft,
                         fit: BoxFit.scaleDown,
                         child: Text(
                           price,
-                          style: TextStyle(
+                          style: GoogleFonts.rubik(
                             fontSize: 17.sp,
-                            fontWeight: FontWeight.w700,
-                            color: const Color(0xFF0F172A),
-                            fontFamily: 'Rubik',
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                            fontWeight: FontWeight.w500,
+                            color: const Color(0xFF111827)))),
+                    ])),
                 SizedBox(width: 6.w),
                 isSelected
                     ? Container(
@@ -317,14 +298,11 @@ class _TrialStepState extends State<TrialStep> with SingleTickerProviderStateMix
                         height: 20.r,
                         decoration: const BoxDecoration(
                           shape: BoxShape.circle,
-                          color: Color(0xFFC31E26),
-                        ),
+                          color: Color(0xFFC31E26)),
                         child: Icon(
                           Icons.check,
                           color: Colors.white,
-                          size: 12.sp,
-                        ),
-                      )
+                          size: 12.sp))
                     : Container(
                         width: 20.r,
                         height: 20.r,
@@ -332,13 +310,8 @@ class _TrialStepState extends State<TrialStep> with SingleTickerProviderStateMix
                           shape: BoxShape.circle,
                           border: Border.all(
                             color: const Color(0xFFCBD5E1),
-                            width: 1.5,
-                          ),
-                        ),
-                      ),
-              ],
-            ),
-          ),
+                            width: 1.5))),
+              ])),
           if (badge != null)
             Positioned(
               top: -10.h,
@@ -347,21 +320,12 @@ class _TrialStepState extends State<TrialStep> with SingleTickerProviderStateMix
                 padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 3.h),
                 decoration: BoxDecoration(
                   color: const Color(0xFFC31E26),
-                  borderRadius: BorderRadius.circular(50.r),
-                ),
+                  borderRadius: BorderRadius.circular(50.r)),
                 child: Text(
                   badge,
-                  style: TextStyle(
-                    fontSize: 11.sp,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
-                    fontFamily: 'Rubik',
-                  ),
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
+                  style: GoogleFonts.rubik(fontSize: 11.sp,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.white)))),
+        ]));
   }
 }

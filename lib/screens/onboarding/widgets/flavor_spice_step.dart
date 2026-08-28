@@ -1,3 +1,4 @@
+import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -72,19 +73,16 @@ class _FlavorSpiceStepState extends State<FlavorSpiceStep> with SingleTickerProv
 
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1000),
-    );
+      duration: const Duration(milliseconds: 1000));
 
     Animation<double> createOpacity(double start, double end) {
       return Tween<double>(begin: 0.0, end: 1.0).animate(
-        CurvedAnimation(parent: _controller, curve: Interval(start, end, curve: Curves.easeOut)),
-      );
+        CurvedAnimation(parent: _controller, curve: Interval(start, end, curve: Curves.easeOut)));
     }
 
     Animation<Offset> createSlide(double start, double end) {
       return Tween<Offset>(begin: const Offset(0, 0.2), end: Offset.zero).animate(
-        CurvedAnimation(parent: _controller, curve: Interval(start, end, curve: Curves.easeOutCubic)),
-      );
+        CurvedAnimation(parent: _controller, curve: Interval(start, end, curve: Curves.easeOutCubic)));
     }
 
     _titleOpacity = createOpacity(0.0, 0.4);
@@ -137,8 +135,7 @@ class _FlavorSpiceStepState extends State<FlavorSpiceStep> with SingleTickerProv
   Widget build(BuildContext context) {
     final currentLevel = _levels.firstWhere(
       (l) => l['title'] == _spice,
-      orElse: () => _levels.first,
-    );
+      orElse: () => _levels.first);
     final chiliCount = int.parse(currentLevel['chillis']!);
 
     return SingleChildScrollView(
@@ -155,16 +152,11 @@ class _FlavorSpiceStepState extends State<FlavorSpiceStep> with SingleTickerProv
                   position: _titleSlide,
                   child: Text(
                     'Your flavor DNA',
-                    style: TextStyle(
+                    style: GoogleFonts.poppins(
                       fontSize: 24.sp,
                       fontWeight: FontWeight.w900,
                       color: const Color(0xFF0D1B3E),
-                      fontFamily: 'SF Pro',
-                      height: 1.2,
-                    ),
-                  ),
-                ),
-              ),
+                      height: 1.2)))),
               SizedBox(height: 8.h),
               FadeTransition(
                 opacity: _subtitleOpacity,
@@ -172,14 +164,9 @@ class _FlavorSpiceStepState extends State<FlavorSpiceStep> with SingleTickerProv
                   position: _subtitleSlide,
                   child: Text(
                     'Move the sliders to match your taste',
-                    style: TextStyle(
+                    style: GoogleFonts.poppins(
                       fontSize: 14.sp,
-                      color: const Color(0xFF9CA3AF),
-                      fontFamily: 'SF Pro',
-                    ),
-                  ),
-                ),
-              ),
+                      color: const Color(0xFF9CA3AF))))),
               SizedBox(height: 20.h),
 
               // Spice Tolerance Section
@@ -192,21 +179,17 @@ class _FlavorSpiceStepState extends State<FlavorSpiceStep> with SingleTickerProv
                     children: [
                       Text(
                         'Spice Tolerance',
-                        style: TextStyle(
+                        style: GoogleFonts.poppins(
                           fontSize: 18.sp,
                           fontWeight: FontWeight.w700,
-                          color: const Color(0xFF0D1B3E),
-                          fontFamily: 'SF Pro',
-                        ),
-                      ),
+                          color: const Color(0xFF0D1B3E))),
                       SizedBox(height: 15.h),
                       Container(
                         padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(16.r),
-                          border: Border.all(color: const Color(0xFFE5E7EB)),
-                        ),
+                          border: Border.all(color: const Color(0xFFE5E7EB))),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
@@ -227,12 +210,8 @@ class _FlavorSpiceStepState extends State<FlavorSpiceStep> with SingleTickerProv
                                           ? 'assets/icones/spice1.svg'
                                           : 'assets/icones/spice3.svg',
                                       width: 25.sp,
-                                      height: 25.sp,
-                                    ),
-                                  ),
-                                );
-                              }),
-                            ),
+                                      height: 25.sp)));
+                              })),
                             const SizedBox(width: 8),
                             Expanded(
                               child: Column(
@@ -241,34 +220,20 @@ class _FlavorSpiceStepState extends State<FlavorSpiceStep> with SingleTickerProv
                                 children: [
                                   Text(
                                     currentLevel['title']!,
-                                    style: TextStyle(
+                                    style: GoogleFonts.poppins(
                                       fontSize: 14.sp,
                                       fontWeight: FontWeight.w700,
-                                      color: const Color(0xFF0D1B3E),
-                                      fontFamily: 'SF Pro',
-                                    ),
-                                  ),
+                                      color: const Color(0xFF0D1B3E))),
                                   FittedBox(
                                     fit: BoxFit.scaleDown,
                                     child: Text(
                                       currentLevel['desc']!,
-                                      style: TextStyle(
+                                      style: GoogleFonts.poppins(
                                         fontSize: 11.sp,
-                                        color: const Color(0xFF9CA3AF),
-                                        fontFamily: 'SF Pro',
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+                                        color: const Color(0xFF9CA3AF)))),
+                                ])),
+                          ])),
+                    ]))),
 
               const SizedBox(height: 16),
 
@@ -286,8 +251,7 @@ class _FlavorSpiceStepState extends State<FlavorSpiceStep> with SingleTickerProv
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(16.r),
-                        border: Border.all(color: const Color(0xFFE5E7EB)),
-                      ),
+                        border: Border.all(color: const Color(0xFFE5E7EB))),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
@@ -298,40 +262,29 @@ class _FlavorSpiceStepState extends State<FlavorSpiceStep> with SingleTickerProv
                                 children: [
                                   Text(
                                     scale['leftEmoji']!,
-                                    style: TextStyle(fontSize: 14.sp),
-                                  ),
+                                    style: TextStyle(fontSize: 14.sp)),
                                   SizedBox(width: 4.w),
                                   Text(
                                     scale['left']!,
-                                    style: TextStyle(
+                                    style: GoogleFonts.poppins(
                                       fontSize: 12.sp,
                                       fontWeight: FontWeight.w600,
-                                      color: const Color(0xFF0D1B3E),
-                                      fontFamily: 'SF Pro',
-                                    ),
-                                  ),
-                                ],
-                              ),
+                                      color: const Color(0xFF0D1B3E))),
+                                ]),
                               Row(
                                 children: [
                                   Text(
                                     scale['right']!,
-                                    style: TextStyle(
+                                    style: GoogleFonts.poppins(
                                       fontSize: 12.sp,
                                       fontWeight: FontWeight.w600,
-                                      color: const Color(0xFF0D1B3E),
-                                      fontFamily: 'SF Pro',
-                                    ),
-                                  ),
+                                      color: const Color(0xFF0D1B3E))),
                                   SizedBox(width: 4.w),
                                   Text(
                                     scale['rightEmoji']!,
-                                    style: TextStyle(fontSize: 14.sp),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
+                                    style: TextStyle(fontSize: 14.sp)),
+                                ]),
+                            ]),
                           SizedBox(height: 8.h),
                           SliderTheme(
                             data: SliderTheme.of(context).copyWith(
@@ -341,8 +294,7 @@ class _FlavorSpiceStepState extends State<FlavorSpiceStep> with SingleTickerProv
                               thumbColor: const Color(0xFFC83A2D),
                               overlayColor: const Color(0xFFC83A2D).withAlpha(32),
                               trackShape: RoundedRectSliderTrackShape(),
-                              overlayShape: SliderComponentShape.noOverlay,
-                            ),
+                              overlayShape: SliderComponentShape.noOverlay),
                             child: Slider(
                               value: _dna[key]!.toDouble(),
                               min: 0,
@@ -353,14 +305,8 @@ class _FlavorSpiceStepState extends State<FlavorSpiceStep> with SingleTickerProv
                                 }
                                 setState(() => _dna[key] = val.toInt());
                                 _notifyChange();
-                              },
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                );
+                              })),
+                        ]))));
               }),
 
               const SizedBox(height: 24),
@@ -377,14 +323,11 @@ class _FlavorSpiceStepState extends State<FlavorSpiceStep> with SingleTickerProv
                       children: [
                         Text(
                           'YOUR PROFILE PREVIEW',
-                          style: TextStyle(
+                          style: GoogleFonts.poppins(
                             fontSize: 12.sp,
                             fontWeight: FontWeight.w700,
                             letterSpacing: 1.2,
-                            color: const Color(0xFF7B8190),
-                            fontFamily: 'SF Pro',
-                          ),
-                        ),
+                            color: const Color(0xFF7B8190))),
                         SizedBox(height: 14.h),
                         Wrap(
                           spacing: 8.w,
@@ -405,19 +348,12 @@ class _FlavorSpiceStepState extends State<FlavorSpiceStep> with SingleTickerProv
                               bgColor: const Color(0xFFDBEAFE), // Light Blue
                               textColor: const Color(0xFF3B82F6), // Blue
                             ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
+                          ]),
+                      ])))),
               SizedBox(height: 30.h),
-            ],
-          );
+            ]);
         }
-      ),
-    );
+      ));
   }
 
   Widget _buildSummaryCapsule({required String label, required Color bgColor, required Color textColor}) {
@@ -425,17 +361,11 @@ class _FlavorSpiceStepState extends State<FlavorSpiceStep> with SingleTickerProv
       padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 6.h),
       decoration: BoxDecoration(
         color: bgColor,
-        borderRadius: BorderRadius.circular(50.r),
-      ),
+        borderRadius: BorderRadius.circular(50.r)),
       child: Text(
         label,
-        style: TextStyle(
-          fontSize: 12.sp,
+        style: GoogleFonts.poppins(fontSize: 12.sp,
           fontWeight: FontWeight.w600,
-          color: textColor,
-          fontFamily: 'SF Pro',
-        ),
-      ),
-    );
+          color: textColor)));
   }
 }

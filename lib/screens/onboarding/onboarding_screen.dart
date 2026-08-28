@@ -124,8 +124,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         setState(() => _isLoading = false);
         _pageController.nextPage(
           duration: const Duration(milliseconds: 300),
-          curve: Curves.easeInOut,
-        );
+          curve: Curves.easeInOut);
       }
     };
     IapService.instance.onPurchaseError = (error) {
@@ -134,8 +133,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         IosToast.show(
           context,
           message: ErrorHelper.getFriendlyMessage(error),
-          type: ToastType.error,
-        );
+          type: ToastType.error);
       }
     };
 
@@ -368,8 +366,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     if (_currentPage <= 22) {
       _pageController.nextPage(
         duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-      );
+        curve: Curves.easeInOut);
     } else if (_currentPage == 23) {
       // ProfileSignupStep handles its own navigation via callbacks
     } else if (_currentPage == 24) {
@@ -385,8 +382,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         // Fallback or dev: skip billing if store is unavailable
         _pageController.nextPage(
           duration: const Duration(milliseconds: 300),
-          curve: Curves.easeInOut,
-        );
+          curve: Curves.easeInOut);
         return;
       }
 
@@ -409,8 +405,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           IosToast.show(
             context,
             message: 'Could not initiate purchase',
-            type: ToastType.error,
-          );
+            type: ToastType.error);
         }
       }
     }
@@ -419,7 +414,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   void _onBack() {
     HapticFeedback.selectionClick();
     FocusScope.of(context).unfocus();
-    if (_currentPage >= 25) return; // Disable back navigation once account creation/OTP phase starts
     if (_currentPage == 20 || _currentPage == 8) return; // Prevent going back during loading steps
     if (_currentPage == 21) {
       // Skip ProfileLoadingStep (20) when going back from SocialProofStep (21)
@@ -436,8 +430,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     if (_currentPage > 0) {
       _pageController.previousPage(
         duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-      );
+        curve: Curves.easeInOut);
     } else {
       Navigator.pushReplacementNamed(context, AppRoutes.welcome);
     }
@@ -476,8 +469,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       IosToast.show(
         context,
         message: 'Please complete account info to save your profile',
-        type: ToastType.warning,
-      );
+        type: ToastType.warning);
       return;
     }
 
@@ -530,21 +522,18 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             frustrations: _frustrations,
             ageSelection: _ageSelection,
             eatingOutSelection: _eatingOutSelection,
-            grocerySelection: _grocerySelection,
-          );
+            grocerySelection: _grocerySelection);
         } else {
           // Atomic Social Registration Flow
           Map<String, dynamic> socialRes;
           if (provider == 'GOOGLE') {
             socialRes = await AuthService.instance.signInWithGoogle(
               isSignup: true,
-              isManualBackendCall: false,
-            );
+              isManualBackendCall: false);
           } else {
             socialRes = await AuthService.instance.signInWithApple(
               isSignup: true,
-              isManualBackendCall: false,
-            );
+              isManualBackendCall: false);
           }
 
           // Start loading ONLY after the social modal has been dismissed by the user
@@ -609,8 +598,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             frustrations: _frustrations,
             ageSelection: _ageSelection,
             eatingOutSelection: _eatingOutSelection,
-            grocerySelection: _grocerySelection,
-          );
+            grocerySelection: _grocerySelection);
         }
       } else {
         await Future.delayed(const Duration(seconds: 2));
@@ -631,8 +619,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         IosToast.show(
           context,
           message: registerResult!['info_message'],
-          type: ToastType.success,
-        );
+          type: ToastType.success);
         Navigator.pushReplacementNamed(context, AppRoutes.home);
         return;
       }
@@ -659,8 +646,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       IosToast.show(
         context,
         message: finalMsg,
-        type: ToastType.error,
-      );
+        type: ToastType.error);
     }
   }
 
@@ -690,8 +676,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             Image.asset(
               'assets/images/logo2.png',
               width: 100.w,
-              fit: BoxFit.contain,
-            ),
+              fit: BoxFit.contain),
             SizedBox(height: 24.h),
             LoadingText(
               text: 'Connecting',
@@ -699,13 +684,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 color: Colors.white,
                 fontSize: 18.sp,
                 fontWeight: FontWeight.w700,
-                fontFamily: 'SF Pro',
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+                fontFamily: 'SF Pro')),
+          ])));
   }
 
   @override
@@ -717,7 +697,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         _onBack();
       },
       child: Scaffold(
-        backgroundColor: const Color(0xFFF1F5F9),
+        backgroundColor: Colors.transparent,
         resizeToAvoidBottomInset: false,
         body: GestureDetector(
           behavior: HitTestBehavior.translucent,
@@ -725,41 +705,41 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           child: Stack(
             fit: StackFit.expand,
             children: [
-              SafeArea(
-                bottom: false,
-                child: Container(
-                  margin: EdgeInsets.only(top: 10.h),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.vertical(top: Radius.circular(32.r)),
-                  ),
+              // Background image fond_page.png
+              Positioned.fill(
+                child: Image.asset(
+                  'assets/images/fond_page.png',
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                  height: double.infinity)),
+                SafeArea(
+                  bottom: false,
+                  child: Container(
+                    margin: EdgeInsets.only(top: 20.h),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.vertical(top: Radius.circular(32.r))),
                   child: Column(
                     children: [
                       // Header: Progress & Back
-                      if (_currentPage != 8 && _currentPage < 25)
+                      if (_currentPage != 8 && _currentPage != 20)
                         Padding(
                           padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 4.h),
                           child: Row(
                             children: [
-                              if (_currentPage != 20) ...[
-                                GestureDetector(
-                                  onTap: _onBack,
-                                  child: Container(
-                                    width: 40.r,
-                                    height: 40.r,
-                                    decoration: const BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      color: Color(0xFFF1F5F9),
-                                    ),
-                                    child: Icon(
-                                      Icons.arrow_back_rounded,
-                                      size: 20.sp,
-                                      color: const Color(0xFF0F172A),
-                                    ),
-                                  ),
-                                ),
-                                SizedBox(width: 16.w),
-                              ],
+                              GestureDetector(
+                                onTap: _onBack,
+                                child: Container(
+                                  width: 40.r,
+                                  height: 40.r,
+                                  decoration: const BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: Color(0xFFF1F5F9)),
+                                  child: Icon(
+                                    Icons.arrow_back_rounded,
+                                    size: 20.sp,
+                                    color: const Color(0xFF0F172A)))),
+                              SizedBox(width: 16.w),
                               Expanded(
                                 child: ClipRRect(
                                   borderRadius: BorderRadius.circular(10.r),
@@ -767,8 +747,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                     children: [
                                       Container(
                                         height: 6.h,
-                                        color: const Color(0xFFF1F5F9),
-                                      ),
+                                        color: const Color(0xFFF1F5F9)),
                                       AnimatedFractionallySizedBox(
                                         duration: const Duration(milliseconds: 400),
                                         widthFactor: (_getEffectiveStep() / 29).clamp(0.0, 1.0),
@@ -776,18 +755,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                           height: 6.h,
                                           decoration: BoxDecoration(
                                             color: const Color(0xFFC31E26),
-                                            borderRadius: BorderRadius.circular(10.r),
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
+                                            borderRadius: BorderRadius.circular(10.r)))),
+                                    ]))),
                               SizedBox(width: 8.w),
-                            ],
-                          ),
-                        ),
+                            ])),
 
                       // Content
                       Expanded(
@@ -801,8 +772,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       FrustrationsStep(
                         initialSelected: _frustrations,
                         onChanged: (val) => setState(() => _frustrations = val),
-                        onContinue: _onContinue,
-                      ), // Step 3
+                        onContinue: _onContinue), // Step 3
                       SavingsStep(onContinue: _onContinue), // Step 4
                       CostingMoreStep(onContinue: _onContinue), // Step 5
                       EatingOutBudgetStep(
@@ -811,21 +781,18 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         onContinue: (savings) {
                           setState(() => _eatingOutSavings = savings);
                           _onContinue();
-                        },
-                      ), // Step 6
+                        }), // Step 6
                       GroceriesBadStep(
                         initialSelected: _grocerySelection,
                         onChanged: (val) => setState(() => _grocerySelection = val),
                         onContinue: (savings) {
                           setState(() => _grocerySavings = savings);
                           _onContinue();
-                        },
-                      ), // Step 7
+                        }), // Step 7
                       TotalSavingsStep(
                         eatingOutSavings: _eatingOutSavings,
                         grocerySavings: _grocerySavings,
-                        onContinue: _onContinue,
-                      ), // Step 8
+                        onContinue: _onContinue), // Step 8
                       CookingSystemLoadingStep(onContinue: _onContinue), // Step 9
                       GoalsStep( // Step 10
                         onContinue: _onContinue,
@@ -841,71 +808,58 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             ].contains(g)).toList();
                             _onboardingGoals = [...selections, ...healthGoals];
                           });
-                        },
-                      ),
+                        }),
                       AgeStep(
                         initialSelected: _ageSelection,
                         onChanged: (val) => setState(() => _ageSelection = val),
-                        onContinue: _onContinue,
-                      ), // Step 11
+                        onContinue: _onContinue), // Step 11
                       CuisinesStep( // Step 12
                         initialSelected: _favoriteCuisines,
                         onChanged: (val) => setState(() => _favoriteCuisines = val),
-                        onContinue: _onContinue,
-                      ),
+                        onContinue: _onContinue),
                       AllergiesStep( // Step 13
                         initialSelected: _selectedAllergy,
                         onChanged: (selected) =>
                             setState(() => _selectedAllergy = selected),
-                        onContinue: _onContinue,
-                      ),
+                        onContinue: _onContinue),
                       DislikesStep( // Step 14
                         initialSelected: _selectedDislikes,
                         onChanged: (selected) =>
                             setState(() => _selectedDislikes = selected),
-                        onContinue: _onContinue,
-                      ),
+                        onContinue: _onContinue),
                       TimePreferenceStep( // Step 15
                         initialSelected: _cookingTime,
                         onChanged: (selected) =>
                             setState(() => _cookingTime = selected),
-                        onContinue: _onContinue,
-                      ),
+                        onContinue: _onContinue),
                       CookingTargetStep( // Step 16
                         initialTarget: _cookingTarget,
                         onChanged: (target) =>
                             setState(() => _cookingTarget = target),
-                        onContinue: _onContinue,
-                      ),
+                        onContinue: _onContinue),
                       
                       HealthyEatingIntroStep( // Step 17
-                        onContinue: _onContinue,
-                      ),
+                        onContinue: _onContinue),
                       MealRepetitionIntroStep( // Step 18
-                        onContinue: _onContinue,
-                      ),
+                        onContinue: _onContinue),
                       CookedHandlesMealsStep( // Step 19
-                        onContinue: _onContinue,
-                      ),
+                        onContinue: _onContinue),
                       FeaturesExcitedStep( // Step 20
                         initialSelected: _featuresExcited,
                         onChanged: (selected) =>
                             setState(() => _featuresExcited = selected),
-                        onContinue: _onContinue,
-                      ),
+                        onContinue: _onContinue),
                       ProfileLoadingStep(onComplete: _onContinue), // step 21
                       SocialProofStep(
                         favoriteCuisines: _favoriteCuisines,
-                        onContinue: _onContinue,
-                      ), // step 22
+                        onContinue: _onContinue), // step 22
                       ProfileSummaryStep(
                         favoriteCuisines: _favoriteCuisines,
                         flavorDna: _flavorDna.keys.toList(),
                         recipeCount: _calculateRecipeCount(),
                         totalSavings: _eatingOutSavings + _grocerySavings,
                         goals: _onboardingGoals,
-                        onContinue: _onContinue,
-                      ), // step 23
+                        onContinue: _onContinue), // step 23
                       ProfileSignupStep(
                         onSignupEmail: () {
                           TermsValidationModal.show(
@@ -913,15 +867,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             onAccepted: () {
                               setState(() => _acceptedTerms = true);
                               _pageController.nextPage(duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
-                            },
-                          );
+                            });
                         },
                         onSignupGoogle: () =>
                             _submitPreferences(provider: 'GOOGLE'),
                         onSignupApple: () =>
                             _submitPreferences(provider: 'APPLE'),
-                        onGuest: () => _submitPreferences(isGuest: true),
-                      ), // step 24
+                        onGuest: () => _submitPreferences(isGuest: true)), // step 24
                       AccountStep(
                         initialEmail: _email,
                         initialPassword: _password,
@@ -947,24 +899,20 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                 _firstName = firstname ?? '';
                                 _lastName = lastname ?? '';
                               });
-                            },
-                      ),
+                            }),
                       OtpStep(
                         email: _email,
                         onComplete: () {
                           _pageController.nextPage(duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
-                        },
-                      ),
+                        }),
                       FreeTrialIntroStep(
                         onContinue: () {
                           _pageController.nextPage(duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
-                        },
-                      ),
+                        }),
                       FreeTrialGuideStep(
                         onContinue: () {
                           _pageController.nextPage(duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
-                        },  
-                      ), // step 25
+                        }), // step 25
                       TrialStep(
                         onPlanSelected: (plan) {
                           setState(() => _selectedPlanId = plan);
@@ -972,8 +920,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         },
                         onSkip: () {
                           _pageController.nextPage(duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
-                        },
-                      ), // step 26
+                        }), // step 26
                       PerfectMealStep(
                         favoriteCuisines: _favoriteCuisines,
                         goals: _onboardingGoals,
@@ -983,8 +930,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             Navigator.pushReplacementNamed(
                               context,
                               AppRoutes.home,
-                              arguments: {'initialTab': 0},
-                            );
+                              arguments: {'initialTab': 0});
                           }
                         },
                         onViewMore: () {
@@ -992,14 +938,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             Navigator.pushReplacementNamed(
                               context,
                               AppRoutes.home,
-                              arguments: {'initialTab': 0},
-                            );
+                              arguments: {'initialTab': 0});
                           }
-                        },
-                      ),  // step 27
-                    ].map((step) => Container(child: step)).toList(),
-                  ),
-                ),
+                        }),  // step 27
+                    ].map((step) => Container(child: step)).toList())),
 
                 // Footer: Continue Button
                 if (_currentPage != 0 && // MealsStep
@@ -1048,8 +990,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                 padding: EdgeInsets.symmetric(vertical: 16.h),
                                 decoration: BoxDecoration(
                                   color: const Color(0xFFE5E7EB),
-                                  borderRadius: BorderRadius.circular(50.r),
-                                ),
+                                  borderRadius: BorderRadius.circular(50.r)),
                                 child: Center(
                                   child: Text(
                                     'Skip — I eat most things',
@@ -1057,12 +998,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                       fontFamily: 'SF Pro',
                                       fontSize: 18.sp,
                                       fontWeight: FontWeight.w700,
-                                      color: const Color(0xFF4B5563),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
+                                      color: const Color(0xFF4B5563)))))),
                             SizedBox(height: 12.h),
                           ],
                           RedButton(
@@ -1081,8 +1017,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                               }
                             } : _onContinue, // Trial step skips billing and goes home
                             height: 55.h,
-                            fontSize: 18.sp,
-                          ),
+                            fontSize: 18.sp),
                           if (_currentPage == 36) ...[
                             // TrialStep
                             SizedBox(height: 12.h),
@@ -1093,9 +1028,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                               style: TextStyle(
                                 fontSize: 14.sp,
                                 color: const Color(0xFF7B8190),
-                                fontFamily: 'SF Pro',
-                              ),
-                            ),
+                                fontFamily: 'SF Pro')),
                           ],
                           // "Sign In" link only for the first onboarding step
                           if (_currentPage == 0) ...[
@@ -1108,40 +1041,23 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                   style: TextStyle(
                                     fontSize: 14.sp,
                                     color: const Color(0xFF7B8190),
-                                    fontFamily: 'SF Pro',
-                                  ),
-                                ),
+                                    fontFamily: 'SF Pro')),
                                 GestureDetector(
                                   onTap: () => Navigator.pushNamed(
                                     context,
-                                    AppRoutes.login,
-                                  ),
+                                    AppRoutes.login),
                                   child: Text(
                                     'Sign In',
                                     style: TextStyle(
                                       fontSize: 14.sp,
                                       fontWeight: FontWeight.w700,
-                                      color: const Color(0xFFC83A2D),
-                                      fontFamily: 'SF Pro',
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
+                                      color: const Color(0xFFC31E26),
+                                      fontFamily: 'SF Pro'))),
+                              ]),
                           ],
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
+                        ]))),
+                ]))),
           if (_isLoading) _buildFullScreenLoading(),
-        ],
-      ),
-    ),
-  ),
-);
-}
+        ]))));
+  }
 }

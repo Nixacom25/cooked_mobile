@@ -1,5 +1,7 @@
+import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../../../widgets/red_button.dart';
 
 class CostingMoreStep extends StatefulWidget {
@@ -34,43 +36,32 @@ class _CostingMoreStepState extends State<CostingMoreStep> with SingleTickerProv
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 900),
-    );
+      duration: const Duration(milliseconds: 900));
 
     _titleOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: const Interval(0.0, 0.4, curve: Curves.easeOut)),
-    );
+      CurvedAnimation(parent: _controller, curve: const Interval(0.0, 0.4, curve: Curves.easeOut)));
     _titleSlide = Tween<Offset>(begin: const Offset(0, 0.15), end: Offset.zero).animate(
-      CurvedAnimation(parent: _controller, curve: const Interval(0.0, 0.4, curve: Curves.easeOutCubic)),
-    );
+      CurvedAnimation(parent: _controller, curve: const Interval(0.0, 0.4, curve: Curves.easeOutCubic)));
 
     _subtitleOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: const Interval(0.1, 0.5, curve: Curves.easeOut)),
-    );
+      CurvedAnimation(parent: _controller, curve: const Interval(0.1, 0.5, curve: Curves.easeOut)));
     _subtitleSlide = Tween<Offset>(begin: const Offset(0, 0.15), end: Offset.zero).animate(
-      CurvedAnimation(parent: _controller, curve: const Interval(0.1, 0.5, curve: Curves.easeOutCubic)),
-    );
+      CurvedAnimation(parent: _controller, curve: const Interval(0.1, 0.5, curve: Curves.easeOutCubic)));
 
     _chartOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: const Interval(0.2, 0.7, curve: Curves.easeOut)),
-    );
+      CurvedAnimation(parent: _controller, curve: const Interval(0.2, 0.7, curve: Curves.easeOut)));
     _chartScale = Tween<double>(begin: 0.96, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: const Interval(0.2, 0.7, curve: Curves.easeOutCubic)),
-    );
+      CurvedAnimation(parent: _controller, curve: const Interval(0.2, 0.7, curve: Curves.easeOutCubic)));
 
     _cardOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: const Interval(0.3, 0.8, curve: Curves.easeOut)),
-    );
+      CurvedAnimation(parent: _controller, curve: const Interval(0.3, 0.8, curve: Curves.easeOut)));
     _cardSlide = Tween<Offset>(begin: const Offset(0, 0.2), end: Offset.zero).animate(
-      CurvedAnimation(parent: _controller, curve: const Interval(0.3, 0.8, curve: Curves.easeOutCubic)),
-    );
+      CurvedAnimation(parent: _controller, curve: const Interval(0.3, 0.8, curve: Curves.easeOutCubic)));
 
     _buttonOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: const Interval(0.4, 0.8, curve: Curves.easeOut)),
-    );
+      CurvedAnimation(parent: _controller, curve: const Interval(0.4, 0.8, curve: Curves.easeOut)));
     _buttonSlide = Tween<Offset>(begin: const Offset(0, 0.2), end: Offset.zero).animate(
-      CurvedAnimation(parent: _controller, curve: const Interval(0.4, 0.8, curve: Curves.easeOutCubic)),
-    );
+      CurvedAnimation(parent: _controller, curve: const Interval(0.4, 0.8, curve: Curves.easeOutCubic)));
 
     _controller.forward();
   }
@@ -95,13 +86,9 @@ class _CostingMoreStepState extends State<CostingMoreStep> with SingleTickerProv
               width: dashWidth,
               height: 1,
               child: DecoratedBox(
-                decoration: BoxDecoration(color: const Color(0xFFE2E8F0)),
-              ),
-            );
-          }),
-        );
-      },
-    );
+                decoration: BoxDecoration(color: const Color(0xFFE2E8F0))));
+          }));
+      });
   }
 
   @override
@@ -125,30 +112,22 @@ class _CostingMoreStepState extends State<CostingMoreStep> with SingleTickerProv
                       child: RichText(
                         textAlign: TextAlign.left,
                         text: TextSpan(
-                          style: TextStyle(
+                          style: GoogleFonts.rubik(
                             fontSize: 30.sp,
-                            fontWeight: FontWeight.w800,
-                            color: const Color(0xFF0F172A),
-                            fontFamily: 'Rubik',
+                            fontWeight: FontWeight.w500,
+                            color: const Color(0xFF111827),
                             height: 1.2,
-                            letterSpacing: -0.3,
-                          ),
+                            letterSpacing: -0.3),
                           children: const [
                             TextSpan(text: 'And it’s '),
                             TextSpan(
                               text: 'costing\n',
-                              style: TextStyle(color: Color(0xFFC31E26)),
-                            ),
+                              style: TextStyle(color: Color(0xFFC31E26))),
                             TextSpan(text: 'more than '),
                             TextSpan(
                               text: 'time',
-                              style: TextStyle(color: Color(0xFFC31E26)),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
+                              style: TextStyle(color: Color(0xFFC31E26))),
+                          ])))),
                   SizedBox(height: 8.h),
                   FadeTransition(
                     opacity: _subtitleOpacity,
@@ -157,19 +136,12 @@ class _CostingMoreStepState extends State<CostingMoreStep> with SingleTickerProv
                       child: Text(
                         'Small decisions become\nexpensive habits',
                         textAlign: TextAlign.left,
-                        style: TextStyle(
+                        style: GoogleFonts.poppins(
                           fontSize: 16.sp,
-                          color: const Color(0xFF475569),
-                          fontFamily: 'SF Pro',
+                          color: const Color(0xFF111827),
                           fontWeight: FontWeight.w400,
-                          height: 1.35,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+                          height: 1.35)))),
+                ])),
 
             SizedBox(height: 16.h),
 
@@ -188,16 +160,13 @@ class _CostingMoreStepState extends State<CostingMoreStep> with SingleTickerProv
                         borderRadius: BorderRadius.circular(24.r),
                         border: Border.all(
                           color: const Color(0xFFF1F5F9),
-                          width: 1.5,
-                        ),
+                          width: 1.5),
                         boxShadow: [
                           BoxShadow(
                             color: Colors.black.withValues(alpha: 0.03),
                             blurRadius: 15,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
+                            offset: const Offset(0, 4)),
+                        ]),
                       child: Stack(
                         children: [
                           // Y-Axis Labels + Horizontal Dotted Grid Lines
@@ -218,19 +187,13 @@ class _CostingMoreStepState extends State<CostingMoreStep> with SingleTickerProv
                                       width: 42.w,
                                       child: Text(
                                         label,
-                                        style: TextStyle(
+                                        style: GoogleFonts.poppins(
                                           fontSize: 11.sp,
                                           color: const Color(0xFF94A3B8),
-                                          fontFamily: 'SF Pro',
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
-                                    ),
+                                          fontWeight: FontWeight.w500))),
                                     Expanded(child: _buildDottedLine()),
-                                  ],
-                                ),
-                            ],
-                          ),
+                                  ]),
+                            ]),
 
                           // Bars Overlay
                           Padding(
@@ -248,24 +211,17 @@ class _CostingMoreStepState extends State<CostingMoreStep> with SingleTickerProv
                                       children: [
                                         Text(
                                           '\$2,080',
-                                          style: TextStyle(
+                                          style: GoogleFonts.rubik(
                                             fontSize: 18.sp,
-                                            fontWeight: FontWeight.w800,
+                                            fontWeight: FontWeight.w500,
                                             color: const Color(0xFFC31E26),
-                                            fontFamily: 'Rubik',
-                                            height: 1.1,
-                                          ),
-                                        ),
+                                            height: 1.1)),
                                         Text(
                                           '/year',
-                                          style: TextStyle(
+                                          style: GoogleFonts.poppins(
                                             fontSize: 11.sp,
-                                            color: const Color(0xFF64748B),
-                                            fontFamily: 'SF Pro',
-                                          ),
-                                        ),
-                                      ],
-                                    ),
+                                            color: const Color(0xFF111827))),
+                                      ]),
                                     SizedBox(height: 6.h),
                                     // Red Bar Body
                                     Container(
@@ -274,8 +230,7 @@ class _CostingMoreStepState extends State<CostingMoreStep> with SingleTickerProv
                                       padding: EdgeInsets.all(10.w),
                                       decoration: BoxDecoration(
                                         color: const Color(0xFFC31E26),
-                                        borderRadius: BorderRadius.circular(16.r),
-                                      ),
+                                        borderRadius: BorderRadius.circular(16.r)),
                                       child: Column(
                                         mainAxisAlignment: MainAxisAlignment.end,
                                         children: [
@@ -284,39 +239,30 @@ class _CostingMoreStepState extends State<CostingMoreStep> with SingleTickerProv
                                             height: 28.r,
                                             decoration: const BoxDecoration(
                                               shape: BoxShape.circle,
-                                              color: Colors.white,
-                                            ),
-                                            child: Icon(
-                                              Icons.restaurant_rounded,
-                                              color: const Color(0xFFC31E26),
-                                              size: 16.sp,
+                                              color: Colors.white),
+                                            child: Padding(
+                                              padding: EdgeInsets.all(6.r),
+                                              child: SvgPicture.asset(
+                                                'assets/icones/recipe.svg',
+                                                colorFilter: const ColorFilter.mode(Color(0xFFC31E26), BlendMode.srcIn),
+                                              ),
                                             ),
                                           ),
                                           SizedBox(height: 6.h),
                                           Text(
                                             'Takeout',
-                                            style: TextStyle(
-                                              fontSize: 13.sp,
-                                              fontWeight: FontWeight.w700,
-                                              color: Colors.white,
-                                              fontFamily: 'Rubik',
-                                            ),
-                                          ),
+                                            style: GoogleFonts.rubik(fontSize: 13.sp,
+                                              fontWeight: FontWeight.w500,
+                                              color: Colors.white)),
                                           SizedBox(height: 2.h),
                                           Text(
                                             '3 Meals / Week',
-                                            style: TextStyle(
+                                            style: GoogleFonts.poppins(
                                               fontSize: 10.sp,
                                               fontWeight: FontWeight.w400,
-                                              color: Colors.white.withValues(alpha: 0.9),
-                                              fontFamily: 'SF Pro',
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
+                                              color: Colors.white.withValues(alpha: 0.9))),
+                                        ])),
+                                  ]),
 
                                 // Home Cooked Bar (Light Grey)
                                 Column(
@@ -327,24 +273,17 @@ class _CostingMoreStepState extends State<CostingMoreStep> with SingleTickerProv
                                       children: [
                                         Text(
                                           '\$540',
-                                          style: TextStyle(
+                                          style: GoogleFonts.rubik(
                                             fontSize: 18.sp,
-                                            fontWeight: FontWeight.w800,
-                                            color: const Color(0xFF475569),
-                                            fontFamily: 'Rubik',
-                                            height: 1.1,
-                                          ),
-                                        ),
+                                            fontWeight: FontWeight.w500,
+                                            color: const Color(0xFF111827),
+                                            height: 1.1)),
                                         Text(
                                           '/year',
-                                          style: TextStyle(
+                                          style: GoogleFonts.poppins(
                                             fontSize: 11.sp,
-                                            color: const Color(0xFF64748B),
-                                            fontFamily: 'SF Pro',
-                                          ),
-                                        ),
-                                      ],
-                                    ),
+                                            color: const Color(0xFF111827))),
+                                      ]),
                                     SizedBox(height: 6.h),
                                     // Grey Bar Body
                                     Container(
@@ -352,9 +291,8 @@ class _CostingMoreStepState extends State<CostingMoreStep> with SingleTickerProv
                                       height: 85.h,
                                       padding: EdgeInsets.all(8.w),
                                       decoration: BoxDecoration(
-                                        color: const Color(0xFFF1F5F9),
-                                        borderRadius: BorderRadius.circular(16.r),
-                                      ),
+                                        color: const Color(0xFFF0F1F3),
+                                        borderRadius: BorderRadius.circular(16.r)),
                                       child: Column(
                                         mainAxisAlignment: MainAxisAlignment.end,
                                         children: [
@@ -363,48 +301,32 @@ class _CostingMoreStepState extends State<CostingMoreStep> with SingleTickerProv
                                             height: 26.r,
                                             decoration: const BoxDecoration(
                                               shape: BoxShape.circle,
-                                              color: Color(0xFF64748B),
-                                            ),
-                                            child: Icon(
-                                              Icons.home_rounded,
-                                              color: Colors.white,
-                                              size: 15.sp,
+                                              color: Color(0xFF64748B)),
+                                            child: Padding(
+                                              padding: EdgeInsets.all(5.r),
+                                              child: SvgPicture.asset(
+                                                'assets/icones/home.svg',
+                                                colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
+                                              ),
                                             ),
                                           ),
                                           SizedBox(height: 4.h),
                                           Text(
                                             'Home Cooked',
-                                            style: TextStyle(
+                                            style: GoogleFonts.rubik(
                                               fontSize: 12.sp,
-                                              fontWeight: FontWeight.w700,
-                                              color: const Color(0xFF0F172A),
-                                              fontFamily: 'Rubik',
-                                            ),
-                                          ),
+                                              fontWeight: FontWeight.w500,
+                                              color: const Color(0xFF111827))),
                                           Text(
                                             'Made at home',
-                                            style: TextStyle(
+                                            style: GoogleFonts.poppins(
                                               fontSize: 9.sp,
                                               fontWeight: FontWeight.w400,
-                                              color: const Color(0xFF64748B),
-                                              fontFamily: 'SF Pro',
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
+                                              color: const Color(0xFF111827))),
+                                        ])),
+                                  ]),
+                              ])),
+                        ])))))),
 
             SizedBox(height: 14.h),
 
@@ -418,23 +340,14 @@ class _CostingMoreStepState extends State<CostingMoreStep> with SingleTickerProv
                   child: Container(
                     padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF1F5F9),
-                      borderRadius: BorderRadius.circular(16.r),
-                    ),
+                      color: const Color(0xFFF0F1F3),
+                      borderRadius: BorderRadius.circular(16.r)),
                     child: Row(
                       children: [
-                        Container(
-                          width: 36.r,
-                          height: 36.r,
-                          decoration: const BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Colors.white,
-                          ),
-                          child: Icon(
-                            Icons.trending_up_rounded,
-                            color: const Color(0xFFC31E26),
-                            size: 20.sp,
-                          ),
+                        SvgPicture.asset(
+                          'assets/icones/nearly.svg',
+                          width: 32.r,
+                          height: 32.r,
                         ),
                         SizedBox(width: 14.w),
                         Expanded(
@@ -443,44 +356,28 @@ class _CostingMoreStepState extends State<CostingMoreStep> with SingleTickerProv
                             children: [
                               RichText(
                                 text: TextSpan(
-                                  style: TextStyle(
+                                  style: GoogleFonts.rubik(
                                     fontSize: 15.sp,
-                                    fontWeight: FontWeight.w700,
-                                    color: const Color(0xFF0F172A),
-                                    fontFamily: 'Rubik',
-                                  ),
+                                    fontWeight: FontWeight.w500,
+                                    color: const Color(0xFF111827)),
                                   children: const [
                                     TextSpan(text: 'That is nearly '),
                                     TextSpan(
                                       text: '4x',
                                       style: TextStyle(
                                         color: Color(0xFFC31E26),
-                                        fontWeight: FontWeight.w800,
-                                      ),
-                                    ),
+                                        fontWeight: FontWeight.w500)),
                                     TextSpan(text: ' more'),
-                                  ],
-                                ),
-                              ),
+                                  ])),
                               SizedBox(height: 2.h),
                               Text(
                                 'Than cooking at home',
-                                style: TextStyle(
+                                style: GoogleFonts.poppins(
                                   fontSize: 13.sp,
-                                  color: const Color(0xFF64748B),
-                                  fontFamily: 'SF Pro',
-                                  fontWeight: FontWeight.w400,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
+                                  color: const Color(0xFF111827),
+                                  fontWeight: FontWeight.w400)),
+                            ])),
+                      ]))))),
 
             // Footer Continue Button
             FadeTransition(
@@ -497,15 +394,8 @@ class _CostingMoreStepState extends State<CostingMoreStep> with SingleTickerProv
                       color: const Color(0xFFC31E26),
                       onTap: widget.onContinue,
                       height: 52.h,
-                      fontSize: 16.sp,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
+                      fontSize: 16.sp))))),
+          ]);
+      });
   }
 }

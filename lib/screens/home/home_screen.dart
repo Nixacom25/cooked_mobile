@@ -4,6 +4,7 @@ import 'dart:ui';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -1074,28 +1075,34 @@ class _HomeTabState extends State<_HomeTab> {
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(24.r),
                             ),
-                            padding: EdgeInsets.all(16.w),
+                            padding: EdgeInsets.symmetric(vertical: 16.h),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                _SectionRow(
-                                  title: 'Saved Recipes',
-                                  onViewAll: savedRecipes.length > 5
-                                      ? () => _goViewAll(
-                                            context,
-                                            ViewAllType.savedRecipes,
-                                            'Saved Recipes',
-                                          )
-                                      : null,
+                                Padding(
+                                  padding: EdgeInsets.symmetric(horizontal: 16.w),
+                                  child: _SectionRow(
+                                    title: 'Saved Recipes',
+                                    onViewAll: savedRecipes.length > 5
+                                        ? () => _goViewAll(
+                                              context,
+                                              ViewAllType.savedRecipes,
+                                              'Saved Recipes',
+                                            )
+                                        : null,
+                                  ),
                                 ),
                                 SizedBox(height: 12.h),
                                 savedRecipes.isEmpty
                                     ? _EmptySavedRecipesCard(
                                         onBrowseTap: () => widget.onExploreTap?.call(),
                                       )
-                                    : _PopulatedSavedRecipesList(
-                                        recipes: savedRecipes,
-                                        searchQuery: searchQuery,
+                                    : Padding(
+                                        padding: EdgeInsets.symmetric(horizontal: 16.w),
+                                        child: _PopulatedSavedRecipesList(
+                                          recipes: savedRecipes,
+                                          searchQuery: searchQuery,
+                                        ),
                                       ),
                               ],
                             ),
@@ -1842,80 +1849,121 @@ class _CircularRecipeAvatarRow extends StatelessWidget {
 }
 
 // ── Empty Saved Recipes Card ────────────────────────────────────────────────────
-class _EmptySavedRecipesCard extends StatelessWidget {
+class _EmptySavedRecipesCard extends StatefulWidget {
   final VoidCallback? onBrowseTap;
 
   const _EmptySavedRecipesCard({this.onBrowseTap});
 
   @override
+  State<_EmptySavedRecipesCard> createState() => _EmptySavedRecipesCardState();
+}
+
+class _EmptySavedRecipesCardState extends State<_EmptySavedRecipesCard> {
+  late final ScrollController _scrollController;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && _scrollController.hasClients) {
+        _scrollController.jumpTo(_scrollController.position.maxScrollExtent / 2);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 2.w),
-      child: Column(
-        children: [
-          Row(
+    return Column(
+      children: [
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final cardWidth = constraints.maxWidth;
+            final itemSize = (cardWidth * 0.42).clamp(120.0, 160.0);
+            final gap = 12.w;
+
+            return SizedBox(
+              height: itemSize,
+              child: SingleChildScrollView(
+                controller: _scrollController,
+                scrollDirection: Axis.horizontal,
+                physics: const BouncingScrollPhysics(),
+                child: Row(
+                  children: [
+                    _buildCollageThumb('assets/images/plat1.png', size: itemSize),
+                    SizedBox(width: gap),
+                    _buildCollageThumb('assets/images/plat2.png', size: itemSize),
+                    SizedBox(width: gap),
+                    _buildCollageThumb('assets/images/plat3.png', size: itemSize),
+                  ],
+                ),
+              ),
+            );
+          },
+        ),
+        SizedBox(height: 20.h),
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16.w),
+          child: Column(
             children: [
-              Expanded(child: _buildCollageThumb('assets/images/plat1.png')),
-              SizedBox(width: 10.w),
-              Expanded(child: _buildCollageThumb('assets/images/plat2.png')),
-              SizedBox(width: 10.w),
-              Expanded(child: _buildCollageThumb('assets/images/plat3.png')),
+              Text(
+                'No saved recipes yet',
+                style: GoogleFonts.rubik(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 20.sp,
+                  color: const Color(0xFF111827),
+                ),
+              ),
+              SizedBox(height: 8.h),
+              Text(
+                'Explore our recipes and save your favorites\nto build your personal collection.',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.poppins(
+                  fontSize: 14.sp,
+                  color: const Color(0xFF64748B),
+                  height: 1.35,
+                ),
+              ),
+              SizedBox(height: 16.h),
+              GestureDetector(
+                onTap: widget.onBrowseTap,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Browse Recipes',
+                      style: GoogleFonts.rubik(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 15.sp,
+                        color: const Color(0xFFC31E26),
+                      ),
+                    ),
+                    SizedBox(width: 4.w),
+                    Icon(
+                      Icons.chevron_right_rounded,
+                      color: const Color(0xFFC31E26),
+                      size: 20.sp,
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
-          SizedBox(height: 18.h),
-          Text(
-            'No saved recipes yet',
-            style: TextStyle(
-              fontFamily: 'Rubik',
-              fontWeight: FontWeight.w800,
-              fontSize: 18.sp,
-              color: const Color(0xFF0F172A),
-            ),
-          ),
-          SizedBox(height: 8.h),
-          Text(
-            'Explore our recipes and save your favorites\nto build your personal collection.',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontFamily: 'Rubik',
-              fontSize: 13.5.sp,
-              color: const Color(0xFF64748B),
-              height: 1.35,
-            ),
-          ),
-          SizedBox(height: 16.h),
-          GestureDetector(
-            onTap: onBrowseTap,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'Browse Recipes',
-                  style: TextStyle(
-                    fontFamily: 'Rubik',
-                    fontWeight: FontWeight.w700,
-                    fontSize: 15.sp,
-                    color: const Color(0xFFC31E26),
-                  ),
-                ),
-                SizedBox(width: 4.w),
-                Icon(
-                  Icons.chevron_right_rounded,
-                  color: const Color(0xFFC31E26),
-                  size: 18.sp,
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
-  Widget _buildCollageThumb(String asset) {
-    return AspectRatio(
-      aspectRatio: 1.0,
+  Widget _buildCollageThumb(String asset, {required double size}) {
+    return SizedBox(
+      width: size,
+      height: size,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(28.r),
         child: Image.asset(
