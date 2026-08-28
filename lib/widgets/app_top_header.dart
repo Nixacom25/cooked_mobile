@@ -13,7 +13,7 @@ class AppTopHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: const Color(0xFFF0F1F3),
+      color: Colors.transparent,
       child: SafeArea(
         bottom: false,
         child: Padding(
@@ -55,7 +55,7 @@ class AppTopHeader extends StatelessWidget {
                       fontFamily: 'Rubik',
                       fontWeight: FontWeight.w700,
                       fontSize: 18.sp,
-                      color: const Color(0xFF0F172A),
+                      color: const Color(0xFFFFFFFF),
                     ),
                   ),
                   const Spacer(),
@@ -67,12 +67,12 @@ class AppTopHeader extends StatelessWidget {
                       width: 36.r,
                       height: 36.r,
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.8),
-                        shape: BoxShape.circle,
+                        color: Colors.white.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(12.r),
                       ),
                       child: Icon(
                         Icons.more_vert_rounded,
-                        color: const Color(0xFF64748B),
+                        color: const Color(0xFFFFFFFF),
                         size: 20.sp,
                       ),
                     ),

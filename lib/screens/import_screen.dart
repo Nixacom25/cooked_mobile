@@ -458,16 +458,30 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
-        backgroundColor: const Color(0xFFF0F1F3),
+        backgroundColor: Colors.white,
         resizeToAvoidBottomInset: false,
-        body: Column(
+        body: Stack(
           children: [
-            // Standard App Top Header
-            const AppTopHeader(),
+            // Background image fond_page.png at top
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              height: 240.h,
+              child: Image.asset(
+                'assets/images/fond_page.png',
+                fit: BoxFit.cover,
+                alignment: Alignment.topCenter,
+              ),
+            ),
+            Column(
+              children: [
+                // Standard App Top Header
+                const AppTopHeader(),
 
-            // Main White Container Sheet
-            Expanded(
-              child: Container(
+                // Main White Container Sheet
+                Expanded(
+                  child: Container(
                 width: double.infinity,
                 decoration: BoxDecoration(
                   color: Colors.white,
@@ -880,8 +894,10 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
             ),
           ],
         ),
-      ),
-    );
+      ],
+    ),
+  ),
+);
   }
 
   Widget _buildImportSearchOverlay() {

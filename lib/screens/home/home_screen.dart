@@ -906,15 +906,28 @@ class _HomeTabState extends State<_HomeTab> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: const Color(0xFFF0F1F3),
-      child: ValueListenableBuilder<String>(
-        valueListenable: _searchQueryNotifier,
-        builder: (context, searchQuery, _) {
-          return CustomScrollView(
-            slivers: [
-              SliverToBoxAdapter(
-                child: const AppTopHeader(),
-              ),
+      color: Colors.white,
+      child: Stack(
+        children: [
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 240.h,
+            child: Image.asset(
+              'assets/images/fond_page.png',
+              fit: BoxFit.cover,
+              alignment: Alignment.topCenter,
+            ),
+          ),
+          ValueListenableBuilder<String>(
+            valueListenable: _searchQueryNotifier,
+            builder: (context, searchQuery, _) {
+              return CustomScrollView(
+                slivers: [
+                  SliverToBoxAdapter(
+                    child: const AppTopHeader(),
+                  ),
               SliverPersistentHeader(
                 pinned: true,
                 delegate: _StickySearchHeaderDelegate(
@@ -1140,7 +1153,9 @@ class _HomeTabState extends State<_HomeTab> {
           );
         },
       ),
-    );
+    ],
+  ),
+);
   }
 }
 
@@ -1153,7 +1168,7 @@ class _HomeHeaderWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: const Color(0xFFF0F1F3),
+      color: Colors.transparent,
       child: SafeArea(
         bottom: false,
         child: Padding(
@@ -1255,7 +1270,7 @@ class _StickySearchHeaderDelegate extends SliverPersistentHeaderDelegate {
       BuildContext context, double shrinkOffset, bool overlapsContent) {
     final isPinned = shrinkOffset > 0;
     return Container(
-      color: const Color(0xFFF0F1F3),
+      color: Colors.transparent,
       child: Container(
         width: double.infinity,
         decoration: BoxDecoration(

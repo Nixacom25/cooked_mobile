@@ -147,15 +147,28 @@ class _ExploreScreenState extends State<ExploreScreen>
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: const Color(0xFFF0F1F3),
-      child: SafeArea(
-        bottom: false,
-        child: RefreshIndicator(
-          onRefresh: _handleRefresh,
-          color: const Color(0xFFC31E26),
-          child: CustomScrollView(
-            physics: const BouncingScrollPhysics(),
-            slivers: [
+      color: Colors.white,
+      child: Stack(
+        children: [
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 240.h,
+            child: Image.asset(
+              'assets/images/fond_page.png',
+              fit: BoxFit.cover,
+              alignment: Alignment.topCenter,
+            ),
+          ),
+          SafeArea(
+            bottom: false,
+            child: RefreshIndicator(
+              onRefresh: _handleRefresh,
+              color: const Color(0xFFC31E26),
+              child: CustomScrollView(
+                physics: const BouncingScrollPhysics(),
+                slivers: [
               // 1. Shared App Header (Home, Explore, Grocery, Import)
               const SliverToBoxAdapter(
                 child: AppTopHeader(),
@@ -194,7 +207,9 @@ class _ExploreScreenState extends State<ExploreScreen>
           ),
         ),
       ),
-    );
+    ],
+  ),
+);
   }
 
   // ── Section 1 (Bottom): "For You" Categories Card (Full Width) ──────────────
@@ -753,7 +768,7 @@ class _StickyExploreHeaderDelegate extends SliverPersistentHeaderDelegate {
       BuildContext context, double shrinkOffset, bool overlapsContent) {
     final isPinned = shrinkOffset > 0;
     return Container(
-      color: const Color(0xFFF0F1F3),
+      color: Colors.transparent,
       child: Container(
         width: double.infinity,
         decoration: BoxDecoration(
