@@ -62,42 +62,50 @@ class _AddToCookbookSheetState extends State<AddToCookbookSheet> {
 
   @override
   Widget build(BuildContext context) {
-    return DraggableScrollableSheet(
-      initialChildSize: 0.6,
-      minChildSize: 0.4,
-      maxChildSize: 0.84,
-      expand: false,
-      builder: (context, scrollController) {
-        return Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
-          ),
-          child: Column(
-            children: [
-              // Drag Handle
-              Container(
-                margin: EdgeInsets.symmetric(vertical: 12.h),
-                width: 36.w,
-                height: 4.h,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE5E7EB),
-                  borderRadius: BorderRadius.circular(2.r),
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+    final isCreate = _mode == _SheetMode.create;
+
+    return AnimatedPadding(
+      padding: EdgeInsets.only(bottom: bottomInset),
+      duration: const Duration(milliseconds: 150),
+      curve: Curves.easeOut,
+      child: DraggableScrollableSheet(
+        initialChildSize: isCreate ? 0.85 : 0.6,
+        minChildSize: 0.4,
+        maxChildSize: 0.88,
+        expand: false,
+        builder: (context, scrollController) {
+          return Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+            ),
+            child: Column(
+              children: [
+                // Drag Handle
+                Container(
+                  margin: EdgeInsets.symmetric(vertical: 12.h),
+                  width: 36.w,
+                  height: 4.h,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE5E7EB),
+                    borderRadius: BorderRadius.circular(2.r),
+                  ),
                 ),
-              ),
-              
-              Expanded(
-                child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 300),
-                  child: _mode == _SheetMode.list
-                      ? _buildListView(scrollController)
-                      : _buildCreateView(),
+                
+                Expanded(
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 300),
+                    child: _mode == _SheetMode.list
+                        ? _buildListView(scrollController)
+                        : _buildCreateView(),
+                  ),
                 ),
-              ),
-            ],
-          ),
-        );
-      },
+              ],
+            ),
+          );
+        },
+      ),
     );
   }
 
@@ -184,7 +192,7 @@ class _AddToCookbookSheetState extends State<AddToCookbookSheet> {
                 ),
               ),
               GestureDetector(
-                onTap: () => setState(() => _mode = _SheetMode.create),
+                onTap: _openNewCookbookModal,
                 child: Text(
                   'New Cookbook',
                   style: TextStyle(
@@ -299,9 +307,26 @@ class _AddToCookbookSheetState extends State<AddToCookbookSheet> {
     );
   }
 
+  void _openNewCookbookModal() {
+    final nav = Navigator.of(context);
+    final recipe = widget.recipe;
+    final onSuccess = widget.onSuccess;
+    nav.pop();
+    showModalBottomSheet(
+      context: nav.context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => CookbookFormModal(
+        initialRecipes: [recipe],
+        onComplete: (cb) {
+          onSuccess?.call();
+        },
+      ),
+    );
+  }
+
   Widget _buildCreateView() {
     return CookbookFormModal(
-      isEmbedded: true,
       initialName: _newCookbookCtrl.text,
       initialRecipes: [widget.recipe],
       onCancel: () => setState(() => _mode = _SheetMode.list),

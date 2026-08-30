@@ -61,19 +61,31 @@ class _CookbookFormModalState extends State<CookbookFormModal> {
 
   @override
   Widget build(BuildContext context) {
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+
     if (widget.isEmbedded) {
-      return _buildContent(context, null);
+      return AnimatedPadding(
+        padding: EdgeInsets.only(bottom: bottomInset),
+        duration: const Duration(milliseconds: 150),
+        curve: Curves.easeOut,
+        child: _buildContent(context, null),
+      );
     }
 
-    return DraggableScrollableSheet(
-      controller: _dragCtrl,
-      initialChildSize: 0.85,
-      minChildSize: 0.5,
-      maxChildSize: 0.88,
-      expand: false,
-      builder: (context, scrollController) {
-        return _buildContent(context, scrollController);
-      },
+    return AnimatedPadding(
+      padding: EdgeInsets.only(bottom: bottomInset),
+      duration: const Duration(milliseconds: 150),
+      curve: Curves.easeOut,
+      child: DraggableScrollableSheet(
+        controller: _dragCtrl,
+        initialChildSize: 0.85,
+        minChildSize: 0.5,
+        maxChildSize: 0.95,
+        expand: false,
+        builder: (context, scrollController) {
+          return _buildContent(context, scrollController);
+        },
+      ),
     );
   }
 
@@ -336,12 +348,12 @@ class _CookbookFormModalState extends State<CookbookFormModal> {
                 if (_isPickingRecipes)
                   _InlineRecipePicker(
                     alreadySelected: _selectedRecipes,
-                    onSelected: (recipes) {
+                    onToggleRecipe: (r) {
                       setState(() {
-                        for (var r in recipes) {
-                          if (!_selectedRecipes.any((x) => x.id == r.id)) {
-                            _selectedRecipes.add(r);
-                          }
+                        if (_selectedRecipes.any((x) => x.id == r.id)) {
+                          _selectedRecipes.removeWhere((x) => x.id == r.id);
+                        } else {
+                          _selectedRecipes.add(r);
                         }
                       });
                     },
@@ -359,9 +371,7 @@ class _CookbookFormModalState extends State<CookbookFormModal> {
                 16.w,
                 12.h,
                 16.w,
-                MediaQuery.of(context).viewInsets.bottom > 0
-                    ? MediaQuery.of(context).viewInsets.bottom + 12.h
-                    : 12.h,
+                12.h,
               ),
               child: SizedBox(
                 width: double.infinity,
@@ -544,9 +554,9 @@ class _SelectedRecipePill extends StatelessWidget {
 
 class _InlineRecipePicker extends StatefulWidget {
   final List<Recipe> alreadySelected;
-  final Function(List<Recipe>) onSelected;
+  final Function(Recipe) onToggleRecipe;
   const _InlineRecipePicker(
-      {required this.alreadySelected, required this.onSelected});
+      {required this.alreadySelected, required this.onToggleRecipe});
 
   @override
   State<_InlineRecipePicker> createState() => _InlineRecipePickerState();
@@ -554,7 +564,6 @@ class _InlineRecipePicker extends StatefulWidget {
 
 class _InlineRecipePickerState extends State<_InlineRecipePicker> {
   List<Recipe>? _allRecipes;
-  final List<Recipe> _selected = [];
   bool _loading = true;
   String _searchQuery = '';
   final TextEditingController _searchCtrl = TextEditingController();
@@ -776,24 +785,14 @@ class _InlineRecipePickerState extends State<_InlineRecipePicker> {
             ),
             itemBuilder: (ctx, i) {
               final r = filtered[i];
-              final isAlready = widget.alreadySelected.any(
+              final isSelected = widget.alreadySelected.any(
                 (x) => x.id == r.id,
               );
-              final isSelected = isAlready || _selected.any((x) => x.id == r.id);
 
               return GestureDetector(
-                onTap: isAlready
-                    ? null
-                    : () {
-                        setState(() {
-                          if (_selected.any((x) => x.id == r.id)) {
-                            _selected.removeWhere((x) => x.id == r.id);
-                          } else {
-                            _selected.add(r);
-                          }
-                        });
-                        widget.onSelected(_selected);
-                      },
+                onTap: () {
+                  widget.onToggleRecipe(r);
+                },
                 child: Container(
                   decoration: BoxDecoration(
                     color: const Color(0xFFFAF6EE),

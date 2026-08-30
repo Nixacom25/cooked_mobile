@@ -79,7 +79,7 @@ class _AppTopHeaderState extends State<AppTopHeader> {
 
   @override
   Widget build(BuildContext context) {
-    final effectiveTextColor = widget.textColor ?? const Color(0xFF0F172A);
+    final effectiveTextColor = widget.textColor ?? Colors.white;
 
     return Container(
       color: Colors.transparent,

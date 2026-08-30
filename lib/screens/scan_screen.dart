@@ -783,39 +783,65 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
             ),
           ),
 
-        // 3. Discreet "Reset/Fix" anchor (Top-right)
-        if (_isCameraInitialized && !_useManualStreaming)
-          Positioned(
-            top: 50.h,
-            right: 20.w,
-            child: GestureDetector(
-              onLongPress: () => _toggleManualStreaming(),
-              child: Icon(
-                Icons.help_outline_rounded,
-                color: Colors.white24,
-                size: 20.sp,
-              ),
-            ),
-          ),
-
-        // 4. Close Icon (Top-left) for Scan mode
+        // 3. Top Header Bar (Close button left, Cooked logo center, Help icon right)
         Positioned(
           top: 50.h,
           left: 20.w,
-          child: GestureDetector(
-            onTap: widget.onClose,
-            child: Container(
-              padding: EdgeInsets.all(8.r),
-              decoration: const BoxDecoration(
-                color: Colors.black26,
-                shape: BoxShape.circle,
+          right: 20.w,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              // Close Icon (Top-left)
+              GestureDetector(
+                onTap: widget.onClose,
+                child: Container(
+                  padding: EdgeInsets.all(8.r),
+                  decoration: const BoxDecoration(
+                    color: Colors.black26,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.close_rounded,
+                    color: Colors.white,
+                    size: 22.sp,
+                  ),
+                ),
               ),
-              child: Icon(
-                Icons.close_rounded,
-                color: Colors.white,
-                size: 22.sp,
+
+              // Cooked Logo (Top-center)
+              Image.asset(
+                'assets/images/logo_fav.png',
+                height: 45.h,
+                fit: BoxFit.contain,
+                errorBuilder: (_, __, ___) => Text(
+                  'Cooked',
+                  style: TextStyle(
+                    fontFamily: 'Rubik',
+                    fontWeight: FontWeight.w900,
+                    fontSize: 22.sp,
+                    color: Colors.white,
+                  ),
+                ),
               ),
-            ),
+
+              // Help / Reset Icon (Top-right)
+              GestureDetector(
+                onLongPress: () => _toggleManualStreaming(),
+                child: Container(
+                  padding: EdgeInsets.all(8.r),
+                  decoration: const BoxDecoration(
+                    color: Colors.transparent,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.help_outline_rounded,
+                    color: Colors.transparent,
+                    size: 20.sp,
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
 
@@ -995,17 +1021,26 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
   Widget _buildGalleryBtn() {
     return GestureDetector(
       onTap: () => _pickAndScan(ImageSource.gallery),
-      child: Container(
-        width: 52.r,
-        height: 52.r,
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          shape: BoxShape.circle,
-        ),
-        child: Icon(
-          Icons.photo_library_outlined,
-          color: const Color(0xFF0F172A),
-          size: 24.sp,
+      child: ClipOval(
+        child: BackdropFilter(
+          filter: ui.ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+          child: Container(
+            width: 52.r,
+            height: 52.r,
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.50),
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.70),
+                width: 1.2,
+              ),
+            ),
+            child: Icon(
+              Icons.photo_library_outlined,
+              color: const Color(0xFF0F172A),
+              size: 24.sp,
+            ),
+          ),
         ),
       ),
     );
@@ -1064,39 +1099,49 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
   }
 
   Widget _buildBottomPillNav() {
-    return Container(
-      height: 54.h,
-      padding: EdgeInsets.all(5.r),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(30.r),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(30.r),
+      child: BackdropFilter(
+        filter: ui.ImageFilter.blur(sigmaX: 25, sigmaY: 25),
+        child: Container(
+          height: 54.h,
+          padding: EdgeInsets.all(5.r),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.45),
+            borderRadius: BorderRadius.circular(30.r),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.70),
+              width: 1.2,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.08),
+                blurRadius: 16,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: Row(
-        children: [
-          _PillTab(
-            label: 'Scan',
-            active: _state == ScanState.scan,
-            onTap: () => _updateState(ScanState.scan),
+          child: Row(
+            children: [
+              _PillTab(
+                label: 'Scan',
+                active: _state == ScanState.scan,
+                onTap: () => _updateState(ScanState.scan),
+              ),
+              _PillTab(
+                key: _typeTabKey,
+                label: 'Type Ingredients',
+                active: _state == ScanState.type,
+                onTap: () => _updateState(ScanState.type),
+              ),
+              _PillTab(
+                label: 'Saved',
+                active: _state == ScanState.saved,
+                onTap: () => _updateState(ScanState.saved),
+              ),
+            ],
           ),
-          _PillTab(
-            key: _typeTabKey,
-            label: 'Type Ingredients',
-            active: _state == ScanState.type,
-            onTap: () => _updateState(ScanState.type),
-          ),
-          _PillTab(
-            label: 'Saved',
-            active: _state == ScanState.saved,
-            onTap: () => _updateState(ScanState.saved),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -2124,6 +2169,15 @@ class _PillTab extends StatelessWidget {
           decoration: BoxDecoration(
             color: active ? const Color(0xFFC83A2D) : Colors.transparent,
             borderRadius: BorderRadius.circular(26.r),
+            boxShadow: active
+                ? [
+                    BoxShadow(
+                      color: const Color(0xFFC83A2D).withValues(alpha: 0.35),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    )
+                  ]
+                : [],
           ),
           child: Text(
             label,
@@ -2132,7 +2186,7 @@ class _PillTab extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
               fontFamily: 'Rubik',
-              color: active ? Colors.white : const Color(0xFF64748B),
+              color: active ? Colors.white : const Color(0xFF0F172A),
               fontWeight: active ? FontWeight.w700 : FontWeight.w600,
               fontSize: 14.sp,
             ),

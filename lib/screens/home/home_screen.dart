@@ -794,11 +794,8 @@ class _NavItemState extends State<_NavItem>
           duration: const Duration(milliseconds: 200),
           margin: EdgeInsets.symmetric(horizontal: 4.w, vertical: 4.h),
           padding: EdgeInsets.symmetric(vertical: 4.h),
-          decoration: BoxDecoration(
-            color: active
-                ? const Color(0xFFC31E26).withValues(alpha: 0.10)
-                : Colors.transparent,
-            borderRadius: BorderRadius.circular(16.r),
+          decoration: const BoxDecoration(
+            color: Colors.transparent,
           ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -869,6 +866,7 @@ class _HomeTabState extends State<_HomeTab> {
     HistoryService.instance.recentlyViewedNotifier.addListener(
       _onHistoryChanged,
     );
+    RecipeService.instance.getMyRecipes();
   }
 
   @override
@@ -1081,7 +1079,7 @@ class _HomeTabState extends State<_HomeTab> {
                           valueListenable: RecipeService.instance.myRecipesNotifier,
                           builder: (context, recipes, _) {
                             final savedRecipes = (recipes ?? [])
-                                .where((r) => !r.isInCookbook && !r.isSuggested)
+                                .where((r) => !r.isPlaceholder)
                                 .toList();
 
                             return Container(
@@ -2172,6 +2170,7 @@ class _CookbooksRowState extends State<_CookbooksRow> {
 
   void _loadData() {
     CookbookService.instance.getMyCookbooks();
+    RecipeService.instance.getMyRecipes();
   }
 
   void triggerHint() {

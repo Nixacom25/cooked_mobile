@@ -495,13 +495,16 @@ class GroceryScreenState extends State<GroceryScreen> with SingleTickerProviderS
                             return const SizedBox.shrink();
                           }
 
+                          const bool showInstacart = false;
+
                           return Positioned(
                             bottom: 120.h,
                             left: 20.w,
                             right: 20.w,
                             child: Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
                               children: [
-                                if (itemsList.isNotEmpty) ...[
+                                if (showInstacart && itemsList.isNotEmpty) ...[
                                   // Instacart button option if items exist
                                   Expanded(
                                     child: GestureDetector(
@@ -567,10 +570,9 @@ class GroceryScreenState extends State<GroceryScreen> with SingleTickerProviderS
                                     ),
                                   ),
                                   SizedBox(width: 12.w),
-                                ] else
-                                  const Spacer(),
+                                ],
 
-                                // Red Pill "+ Add" Button (matching Image 1 mockup!)
+                                // Red Pill "+ Add" Button
                                 GestureDetector(
                                   onTap: () {
                                     HapticFeedback.lightImpact();

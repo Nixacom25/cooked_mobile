@@ -298,5 +298,10 @@ class GroceryService {
 
   void clearData() {
     myGroceriesNotifier.value = null;
+    for (final timer in _toggleDebouncers.values) {
+      timer.cancel();
+    }
+    _toggleDebouncers.clear();
+    _originalToggleStates.clear();
   }
 }

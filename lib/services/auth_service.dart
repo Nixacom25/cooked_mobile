@@ -10,6 +10,7 @@ import 'recipe_service.dart';
 import 'cookbook_service.dart';
 import 'user_service.dart';
 import 'history_service.dart';
+import 'grocery_service.dart';
 import '../core/services/tutorial_service.dart';
 
 class AuthService {
@@ -27,6 +28,7 @@ class AuthService {
     CookbookService.instance.clearData();
     UserService.instance.clearData();
     HistoryService.instance.clearData();
+    GroceryService.instance.clearData();
   }
 
   final GoogleSignIn _googleSignIn = GoogleSignIn(
@@ -182,10 +184,8 @@ class AuthService {
   }) async {
     final url = Uri.parse('${ApiConfig.baseUrl}/auth/login');
     
-    developer.log(
-      'Attempting Login: $url (provider: $provider)',
-      name: 'AuthService',
-    );
+    // Clear any previous session data before logging in
+    _clearAllServiceData();
     
     final response = await http.post(
       url,
