@@ -22,8 +22,10 @@ import '../core/utils/tutorial_helper.dart';
 import '../core/extensions/string_extensions.dart';
 import '../utils/paywall_helper.dart';
 import '../widgets/scan_animation_overlay.dart';
+import '../widgets/red_header_background.dart';
 
 enum ScanState { scan, type, saved, results }
+
 
 class ScanScreen extends StatefulWidget {
   final ValueNotifier<bool> isActiveNotifier;
@@ -59,6 +61,8 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
   final List<RecipeIngredient> _restrictedIngredients = [];
   final List<Recipe> _recipes = [];
   final Set<String> _savedRecipeNames = {};
+  final PageController _resultPageController = PageController();
+  int _currentResultPage = 0;
 
   // GlobalKeys for tutorial
   final GlobalKey _shutterKey = GlobalKey();
@@ -301,11 +305,14 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
 
       // Trigger onboarding instantly if active
       if (!TutorialService.instance.hasSeenScan) {
-        TutorialHelper.showScanOnboardingDialog(
-          context,
-          onTabSwitch: widget.onTabSwitch,
-        );
-        TutorialService.instance.completeScan();
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            TutorialHelper.showScanOnboardingDialog(
+              context,
+              onTabSwitch: widget.onTabSwitch,
+            );
+          }
+        });
       }
 
       if (!_isCameraInitialized) {
@@ -548,17 +555,25 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
     bool showPill = _state != ScanState.results && !isKeyboardOpen;
 
     return Scaffold(
-      backgroundColor: isScan ? Colors.black : const Color(0xFFF0F1F3),
+      backgroundColor: isScan ? Colors.black : Colors.transparent,
       resizeToAvoidBottomInset: false,
       body: Stack(
+        fit: StackFit.expand,
         children: [
-          // 1. Background Content (Camera for Scan, White sheet card for Type/Saved)
+          // 1. Red Header Background for non-scan states
+          if (!isScan)
+            const Positioned.fill(
+              child: RedHeaderBackground(),
+            ),
+
+          // 2. Background Content (Camera for Scan, White sheet card for Type/Saved/Results)
           if (isScan)
             _buildBackground()
           else
             SafeArea(
               bottom: false,
               child: Container(
+                margin: EdgeInsets.only(top: 25.h),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.vertical(
@@ -567,7 +582,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                 ),
                 child: Column(
                   children: [
-                    _buildDynamicHeader(),
+                    if (_state != ScanState.results) _buildDynamicHeader(),
                     Expanded(child: _buildStateContent()),
                     if (showPill)
                       SizedBox(height: _state == ScanState.saved ? 150.h : 90.h)
@@ -656,15 +671,18 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
       );
     }
 
-    // Show white/empty background for non-scan states
+    // Show branded red header background for non-scan states
     if (_state != ScanState.scan) {
       return Stack(
         children: [
-          Container(color: Colors.white),
+          const Positioned.fill(
+            child: RedHeaderBackground(),
+          ),
           if (loadingOverlay != null) loadingOverlay,
         ],
       );
     }
+
 
     // NEW: If we are scanning, show the captured frame (freeze-frame)
     if (_showingSuccessMessage && _capturedImagePath != null) {
@@ -1490,273 +1508,404 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
     if (success) _fetchSavedIngredients();
   }
 
+  String _getEmojiForIngredient(String name) {
+    final lower = name.toLowerCase();
+    if (lower.contains('tomato')) return '🍅';
+    if (lower.contains('garlic')) return '🧄';
+    if (lower.contains('pasta') || lower.contains('fettuccine') || lower.contains('spaghetti')) return '🍝';
+    if (lower.contains('butter')) return '🧈';
+    if (lower.contains('egg')) return '🥚';
+    if (lower.contains('cheese') || lower.contains('parmesan')) return '🧀';
+    if (lower.contains('chicken')) return '🍗';
+    if (lower.contains('rice')) return '🍚';
+    if (lower.contains('onion')) return '🧅';
+    if (lower.contains('oil')) return '🫒';
+    if (lower.contains('salt') || lower.contains('pepper')) return '🧂';
+    return '🥗';
+  }
+
   Widget _buildResultsPage() {
     final int ingredientCount = _ingredients.isNotEmpty
         ? _ingredients.length
         : _typedIngredients.length;
 
-    return ListView(
-      padding: EdgeInsets.symmetric(horizontal: 20.w),
-      children: [
-        // 1. Top Header Close Icon
-        Align(
-          alignment: Alignment.centerLeft,
-          child: GestureDetector(
-            onTap: () {
-              _updateState(ScanState.scan);
-            },
-            child: Container(
-              width: 44.r,
-              height: 44.r,
-              margin: EdgeInsets.only(top: 10.h, bottom: 16.h),
-              decoration: const BoxDecoration(
-                color: Color(0xFFF1F5F9),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.close_rounded,
-                size: 22.sp,
-                color: const Color(0xFF0F172A),
-              ),
-            ),
-          ),
-        ),
-
-        // 2. Section Title: "Recipes you can cook now"
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              "Recipes you can cook now",
-              style: TextStyle(
-                fontFamily: 'Rubik',
-                fontWeight: FontWeight.w800,
-                fontSize: 18.sp,
-                color: const Color(0xFF0F172A),
-              ),
-            ),
-            GestureDetector(
-              onTap: () {
-                Navigator.pushNamed(
-                  context,
-                  AppRoutes.viewAll,
-                  arguments: {'title': 'Recipes', 'recipes': _recipes},
-                );
-              },
-              child: Text(
-                "View All",
-                style: TextStyle(
-                  fontFamily: 'Rubik',
-                  fontWeight: FontWeight.w700,
-                  fontSize: 14.sp,
-                  color: const Color(0xFFC83A2D),
+    return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
+      padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 24.h),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // ── Top Bar inside white card (Cooked Logo + Close Button) ──
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              // Cooked Logo
+              Image.asset(
+                'assets/images/logo2.png',
+                height: 36.h,
+                fit: BoxFit.contain,
+                errorBuilder: (_, __, ___) => Text(
+                  'Cooked',
+                  style: TextStyle(
+                    fontFamily: 'Rubik',
+                    fontWeight: FontWeight.w900,
+                    fontSize: 22.sp,
+                    color: const Color(0xFFC83A2D),
+                  ),
                 ),
               ),
+
+              // Close Button (X)
+              GestureDetector(
+                onTap: () => _updateState(ScanState.scan),
+                child: Container(
+                  width: 38.r,
+                  height: 38.r,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFF1F5F9),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.close_rounded,
+                    size: 20.sp,
+                    color: const Color(0xFF0F172A),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 16.h),
+
+          // Header Title: "Recipes You \n Can Cook Now"
+          Text.rich(
+            TextSpan(
+              children: [
+                TextSpan(
+                  text: 'Recipes You\n',
+                  style: TextStyle(
+                    fontFamily: 'Rubik',
+                    fontSize: 26.sp,
+                    fontWeight: FontWeight.w800,
+                    color: const Color(0xFF0F172A),
+                    height: 1.1,
+                  ),
+                ),
+                TextSpan(
+                  text: 'Can Cook Now',
+                  style: TextStyle(
+                    fontFamily: 'Rubik',
+                    fontSize: 26.sp,
+                    fontWeight: FontWeight.w800,
+                    color: const Color(0xFFC83A2D),
+                    height: 1.1,
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
-        SizedBox(height: 14.h),
+          ),
+          SizedBox(height: 4.h),
+          Text(
+            'We found $ingredientCount items in your kitchen',
+            style: TextStyle(
+              fontFamily: 'Rubik',
+              fontSize: 13.sp,
+              color: const Color(0xFF64748B),
+            ),
+          ),
+          SizedBox(height: 16.h),
 
-        // 3. Recipe Cards List
-        if (_recipes.isEmpty)
-          const Center(child: SkeletonList(height: 120, itemCount: 3))
-        else
-          ..._recipes.take(3).map((recipe) => GestureDetector(
-                onTap: () {
-                  Navigator.pushNamed(
-                    context,
-                    AppRoutes.recipeDetail,
-                    arguments: {'recipe': recipe, 'isPreview': true},
-                  );
-                },
-                child: _buildResultRecipeCard(recipe),
-              )),
+          // Recipe Carousel / Card
+          _buildScanResultCarouselCard(ingredientCount),
+        ],
+      ),
+    );
+  }
 
-        SizedBox(height: 20.h),
+  Widget _buildScanResultCarouselCard(int ingredientCount) {
+    if (_recipes.isEmpty) {
+      return const Center(child: SkeletonList(height: 300, itemCount: 1));
+    }
 
-        // 4. Section Title: "Your Ingredients"
-        Text(
-          "Your Ingredients",
-          style: TextStyle(
-            fontFamily: 'Rubik',
-            fontWeight: FontWeight.w800,
-            fontSize: 18.sp,
-            color: const Color(0xFF0F172A),
+    return Column(
+      children: [
+        SizedBox(
+          height: 520.h,
+          child: PageView.builder(
+            controller: _resultPageController,
+            onPageChanged: (idx) {
+              setState(() => _currentResultPage = idx);
+            },
+            itemCount: _recipes.length,
+            itemBuilder: (context, index) {
+              final recipe = _recipes[index];
+              return _buildScanRecipeDetailCard(recipe, ingredientCount);
+            },
           ),
         ),
-        SizedBox(height: 4.h),
-        Text(
-          "We found $ingredientCount items in your kitchen",
-          style: TextStyle(
-            fontFamily: 'Rubik',
-            fontSize: 14.sp,
-            fontWeight: FontWeight.w400,
-            color: const Color(0xFF94A3B8),
+        SizedBox(height: 12.h),
+
+        // Page Indicator Dots
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: List.generate(
+            _recipes.length > 5 ? 5 : _recipes.length,
+            (i) => AnimatedContainer(
+              duration: const Duration(milliseconds: 250),
+              margin: EdgeInsets.symmetric(horizontal: 4.w),
+              width: _currentResultPage == i ? 10.r : 8.r,
+              height: _currentResultPage == i ? 10.r : 8.r,
+              decoration: BoxDecoration(
+                color: _currentResultPage == i
+                    ? const Color(0xFFC83A2D)
+                    : const Color(0xFFE2E8F0),
+                shape: BoxShape.circle,
+              ),
+            ),
           ),
         ),
-        SizedBox(height: 14.h),
+      ],
+    );
+  }
 
-        // 5. Wrap Chips of Ingredients
-        Wrap(
-          spacing: 8.w,
-          runSpacing: 10.h,
-          children: [
-            ...(_ingredients.isNotEmpty
-                    ? _ingredients.map((i) => i.name)
-                    : _typedIngredients)
-                .map((name) => Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 14.w,
-                        vertical: 8.h,
+  Widget _buildScanRecipeDetailCard(Recipe recipe, int ingredientCount) {
+    final displayIngredients = _ingredients.isNotEmpty
+        ? _ingredients.map((i) => i.name).toList()
+        : _typedIngredients;
+
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal: 2.w),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFAF6ED),
+        borderRadius: BorderRadius.circular(24.r),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 1. Recipe Image (Rounded on all sides, no padding)
+          ClipRRect(
+            borderRadius: BorderRadius.circular(20.r),
+            child: SizedBox(
+              height: 200.h,
+              width: double.infinity,
+              child: (recipe.image != null && recipe.image!.isNotEmpty)
+                  ? (recipe.image!.startsWith('http')
+                      ? Image.network(
+                          recipe.image!,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => Image.asset(
+                            'assets/images/plat1.png',
+                            fit: BoxFit.cover,
+                          ),
+                        )
+                      : Image.asset(
+                          recipe.image!,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => Image.asset(
+                            'assets/images/plat1.png',
+                            fit: BoxFit.cover,
+                          ),
+                        ))
+                  : Image.asset(
+                      'assets/images/plat1.png',
+                      fit: BoxFit.cover,
+                    ),
+            ),
+          ),
+
+          // 2. Recipe Info Body
+          Padding(
+            padding: EdgeInsets.all(16.r),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Title & Heart Row
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        recipe.name,
+                        style: TextStyle(
+                          fontFamily: 'Rubik',
+                          fontSize: 18.sp,
+                          fontWeight: FontWeight.w800,
+                          color: const Color(0xFF0F172A),
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
+                    ),
+                    ValueListenableBuilder<List<Recipe>?>(
+                      valueListenable: RecipeService.instance.myRecipesNotifier,
+                      builder: (context, savedRecipes, _) {
+                        final isSaved = (savedRecipes ?? []).any(
+                          (r) =>
+                              (r.id == recipe.id && recipe.id.isNotEmpty) ||
+                              r.name == recipe.name,
+                        );
+                        return GestureDetector(
+                          onTap: () => _handleSaveRecipe(recipe),
+                          child: Container(
+                            width: 34.r,
+                            height: 34.r,
+                            decoration: const BoxDecoration(
+                              color: Colors.white,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              isSaved ? Icons.favorite : Icons.favorite_outline,
+                              color: const Color(0xFFC83A2D),
+                              size: 18.sp,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+                SizedBox(height: 8.h),
+
+                // Time & Calories Badges
+                Row(
+                  children: [
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFFAF6ED),
-                        borderRadius: BorderRadius.circular(20.r),
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12.r),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
+                          Icon(Icons.access_time_rounded, size: 13.sp, color: const Color(0xFF64748B)),
+                          SizedBox(width: 4.w),
                           Text(
-                            _capitalize(name),
+                            '${recipe.cookTime} min',
                             style: TextStyle(
                               fontFamily: 'Rubik',
+                              fontSize: 12.sp,
                               fontWeight: FontWeight.w600,
-                              fontSize: 14.sp,
-                              color: const Color(0xFF0F172A),
-                            ),
-                          ),
-                          SizedBox(width: 8.w),
-                          GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                _ingredients.removeWhere((i) => i.name == name);
-                                _typedIngredients.remove(name);
-                              });
-                            },
-                            child: Container(
-                              width: 18.r,
-                              height: 18.r,
-                              decoration: const BoxDecoration(
-                                color: Color(0xFF0F172A),
-                                shape: BoxShape.circle,
-                              ),
-                              child: Icon(
-                                Icons.close_rounded,
-                                color: Colors.white,
-                                size: 12.sp,
-                              ),
+                              color: const Color(0xFF64748B),
                             ),
                           ),
                         ],
                       ),
-                    )),
-          ],
-        ),
-
-        SizedBox(height: 24.h),
-
-        // 6. Action Buttons: [ Edit ]  [ Filter ]
-        Row(
-          children: [
-            Expanded(
-              child: GestureDetector(
-                onTap: () => _updateState(ScanState.type),
-                child: Container(
-                  height: 48.h,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF1F5F9),
-                    borderRadius: BorderRadius.circular(24.r),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.edit_outlined,
-                        size: 18.sp,
-                        color: const Color(0xFF0F172A),
+                    ),
+                    SizedBox(width: 8.w),
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12.r),
                       ),
-                      SizedBox(width: 8.w),
-                      Text(
-                        "Edit",
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.local_fire_department_rounded, size: 13.sp, color: const Color(0xFF64748B)),
+                          SizedBox(width: 4.w),
+                          Text(
+                            '${recipe.kcal} kcal',
+                            style: TextStyle(
+                              fontFamily: 'Rubik',
+                              fontSize: 12.sp,
+                              fontWeight: FontWeight.w600,
+                              color: const Color(0xFF64748B),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+
+                SizedBox(height: 12.h),
+                const Divider(color: Color(0xFFE2E8F0), height: 1),
+                SizedBox(height: 12.h),
+
+                // Your Ingredients Header
+                Text(
+                  'Your Ingredients',
+                  style: TextStyle(
+                    fontFamily: 'Rubik',
+                    fontSize: 14.sp,
+                    fontWeight: FontWeight.w800,
+                    color: const Color(0xFF0F172A),
+                  ),
+                ),
+                SizedBox(height: 2.h),
+                Text(
+                  'We found ${displayIngredients.length} items in your kitchen',
+                  style: TextStyle(
+                    fontFamily: 'Rubik',
+                    fontSize: 12.sp,
+                    color: const Color(0xFF94A3B8),
+                  ),
+                ),
+                SizedBox(height: 8.h),
+
+                // Ingredient Chips with Emojis
+                Wrap(
+                  spacing: 6.w,
+                  runSpacing: 6.h,
+                  children: displayIngredients.take(6).map((ingName) {
+                    return Container(
+                      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 5.h),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16.r),
+                      ),
+                      child: Text(
+                        '${_getEmojiForIngredient(ingName)} ${_capitalize(ingName)}',
                         style: TextStyle(
                           fontFamily: 'Rubik',
-                          fontWeight: FontWeight.w700,
-                          fontSize: 15.sp,
+                          fontSize: 12.sp,
+                          fontWeight: FontWeight.w600,
                           color: const Color(0xFF0F172A),
                         ),
                       ),
-                    ],
+                    );
+                  }).toList(),
+                ),
+
+                SizedBox(height: 16.h),
+
+                // View Recipe Primary Button
+                GestureDetector(
+                  onTap: () {
+                    Navigator.pushNamed(
+                      context,
+                      AppRoutes.recipeDetail,
+                      arguments: {'recipe': recipe, 'isPreview': true},
+                    );
+                  },
+                  child: Container(
+                    width: double.infinity,
+                    height: 46.h,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFC83A2D),
+                      borderRadius: BorderRadius.circular(24.r),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      'View Recipe',
+                      style: TextStyle(
+                        fontFamily: 'Rubik',
+                        fontSize: 15.sp,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                    ),
                   ),
                 ),
-              ),
-            ),
-            SizedBox(width: 12.w),
-            Expanded(
-              child: GestureDetector(
-                onTap: () {
-                  // Filter action
-                },
-                child: Container(
-                  height: 48.h,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF1F5F9),
-                    borderRadius: BorderRadius.circular(24.r),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.tune_rounded,
-                        size: 18.sp,
-                        color: const Color(0xFF0F172A),
-                      ),
-                      SizedBox(width: 8.w),
-                      Text(
-                        "Filter",
-                        style: TextStyle(
-                          fontFamily: 'Rubik',
-                          fontWeight: FontWeight.w700,
-                          fontSize: 15.sp,
-                          color: const Color(0xFF0F172A),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-
-        SizedBox(height: 12.h),
-
-        // 7. Full-width Primary Button: "Scan More"
-        GestureDetector(
-          onTap: () => _updateState(ScanState.scan),
-          child: Container(
-            height: 52.h,
-            width: double.infinity,
-            decoration: BoxDecoration(
-              color: const Color(0xFFC83A2D),
-              borderRadius: BorderRadius.circular(28.r),
-            ),
-            alignment: Alignment.center,
-            child: Text(
-              "Scan More",
-              style: TextStyle(
-                fontFamily: 'Rubik',
-                fontWeight: FontWeight.w700,
-                fontSize: 16.sp,
-                color: Colors.white,
-              ),
+              ],
             ),
           ),
-        ),
-
-        SizedBox(height: 30.h),
-      ],
+        ],
+      ),
     );
   }
+
 
   Future<void> _handleSaveRecipe(Recipe r) async {
     HapticFeedback.mediumImpact();
@@ -1806,184 +1955,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
     }
   }
 
-  Widget _buildResultRecipeCard(Recipe recipe) {
-    return Container(
-      margin: EdgeInsets.only(bottom: 14.h),
-      height: 135.h,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24.r),
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(24.r),
-        child: Row(
-          children: [
-            // Left Content: Beige background
-            Expanded(
-              flex: 5,
-              child: Container(
-                color: const Color(0xFFFAF6ED),
-                padding: EdgeInsets.all(14.r),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    // Top: Heart Icon Button
-                    ValueListenableBuilder<List<Recipe>?>(
-                      valueListenable: RecipeService.instance.myRecipesNotifier,
-                      builder: (context, savedRecipes, _) {
-                        final isSaved = (savedRecipes ?? []).any(
-                          (r) =>
-                              (r.id == recipe.id && recipe.id.isNotEmpty) ||
-                              r.name == recipe.name,
-                        );
-                        return GestureDetector(
-                          onTap: () => _handleSaveRecipe(recipe),
-                          child: Container(
-                            width: 32.r,
-                            height: 32.r,
-                            decoration: const BoxDecoration(
-                              color: Colors.white,
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(
-                              isSaved ? Icons.favorite : Icons.favorite_outline,
-                              color: const Color(0xFFC83A2D),
-                              size: 18.sp,
-                            ),
-                          ),
-                        );
-                      },
-                    ),
 
-                    // Middle: Recipe Name
-                    Text(
-                      recipe.name,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontFamily: 'Rubik',
-                        fontWeight: FontWeight.w800,
-                        fontSize: 15.sp,
-                        color: const Color(0xFF0F172A),
-                        height: 1.2,
-                      ),
-                    ),
-
-                    // Bottom: Time & Calories Badges
-                    Row(
-                      children: [
-                        Container(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 8.w,
-                            vertical: 4.h,
-                          ),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFF3EFE4),
-                            borderRadius: BorderRadius.circular(10.r),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.access_time_rounded,
-                                size: 12.sp,
-                                color: const Color(0xFF64748B),
-                              ),
-                              SizedBox(width: 4.w),
-                              Text(
-                                "${recipe.cookTime} min",
-                                style: TextStyle(
-                                  fontFamily: 'Rubik',
-                                  fontSize: 11.sp,
-                                  fontWeight: FontWeight.w600,
-                                  color: const Color(0xFF64748B),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        SizedBox(width: 6.w),
-                        Container(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 8.w,
-                            vertical: 4.h,
-                          ),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFF3EFE4),
-                            borderRadius: BorderRadius.circular(10.r),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.local_fire_department_rounded,
-                                size: 12.sp,
-                                color: const Color(0xFF64748B),
-                              ),
-                              SizedBox(width: 4.w),
-                              Text(
-                                "${recipe.kcal} kcal",
-                                style: TextStyle(
-                                  fontFamily: 'Rubik',
-                                  fontSize: 11.sp,
-                                  fontWeight: FontWeight.w600,
-                                  color: const Color(0xFF64748B),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            // Right Image + Arrow Button
-            Expanded(
-              flex: 4,
-              child: Stack(
-                children: [
-                  Positioned.fill(
-                    child: recipe.image != null
-                        ? Image.network(
-                            recipe.image!,
-                            fit: BoxFit.cover,
-                          )
-                        : Container(
-                            color: Colors.grey[200],
-                            child: Icon(
-                              Icons.restaurant,
-                              color: Colors.grey[400],
-                            ),
-                          ),
-                  ),
-                  Positioned(
-                    top: 10.h,
-                    right: 10.w,
-                    child: Container(
-                      width: 32.r,
-                      height: 32.r,
-                      decoration: const BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        Icons.chevron_right_rounded,
-                        color: const Color(0xFF0F172A),
-                        size: 22.sp,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   void _addTypedIngredient() {
     final text = _ingCtrl.text.trim();

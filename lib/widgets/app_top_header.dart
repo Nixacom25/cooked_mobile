@@ -5,13 +5,82 @@ import '../services/auth_service.dart';
 import '../core/api_config.dart';
 import '../routes/app_routes.dart';
 
-class AppTopHeader extends StatelessWidget {
+class AppTopHeader extends StatefulWidget {
   final double? topPadding;
+  final Color? textColor;
 
-  const AppTopHeader({super.key, this.topPadding});
+  const AppTopHeader({super.key, this.topPadding, this.textColor});
+
+  @override
+  State<AppTopHeader> createState() => _AppTopHeaderState();
+}
+
+class _AppTopHeaderState extends State<AppTopHeader> {
+  @override
+  void initState() {
+    super.initState();
+    _loadUserIfNeeded();
+  }
+
+  Future<void> _loadUserIfNeeded() async {
+    if (UserService.instance.currentUserNotifier.value == null) {
+      try {
+        await UserService.instance.getCurrentUser();
+      } catch (_) {}
+    }
+  }
+
+  Widget _buildAvatar(String? photoUrl) {
+    if (photoUrl != null && photoUrl.isNotEmpty) {
+      return Container(
+        width: 38.r,
+        height: 38.r,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: const Color(0xFFCBD5E1),
+          border: Border.all(
+            color: Colors.white.withValues(alpha: 0.6),
+            width: 1.5.w,
+          ),
+        ),
+        child: ClipOval(
+          child: Image.network(
+            photoUrl,
+            fit: BoxFit.cover,
+            errorBuilder: (_, __, ___) => _buildDefaultUserIcon(),
+          ),
+        ),
+      );
+    }
+    return _buildDefaultUserIcon();
+  }
+
+  Widget _buildDefaultUserIcon() {
+    return Container(
+      width: 38.r,
+      height: 38.r,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: const Color(0xFFCBD5E1),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.6),
+          width: 1.5.w,
+        ),
+      ),
+      child: Center(
+        child: Icon(
+          Icons.person_rounded,
+          color: Colors.white,
+          size: 22.sp,
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
+    final effectiveTextColor = widget.textColor ?? const Color(0xFF0F172A);
+
     return Container(
       color: Colors.transparent,
       child: SafeArea(
@@ -21,33 +90,28 @@ class AppTopHeader extends StatelessWidget {
           child: ValueListenableBuilder<Map<String, dynamic>?>(
             valueListenable: UserService.instance.currentUserNotifier,
             builder: (context, user, _) {
-              String firstName = user?['firstname'] ?? 'Adeel';
-              String? photo = user?['profilePictureUrl'];
+              String rawName = (user?['firstname'] as String?) ??
+                  (user?['firstName'] as String?) ??
+                  (user?['name'] as String?) ??
+                  '';
+              String firstName = rawName.trim();
+              if (firstName.isEmpty) {
+                firstName = 'Chef';
+              }
+
+              String? photo = (user?['profilePictureUrl'] as String?) ??
+                  (user?['avatarUrl'] as String?) ??
+                  (user?['photo'] as String?);
               String? photoUrl;
-              if (photo != null && photo.isNotEmpty) {
+              if (photo != null && photo.trim().isNotEmpty) {
                 photoUrl = photo.startsWith('http')
                     ? photo
                     : '${ApiConfig.baseUrl}$photo';
               }
+
               return Row(
                 children: [
-                  Container(
-                    width: 38.r,
-                    height: 38.r,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: const Color(0xFFCBD5E1),
-                      image: photoUrl != null
-                          ? DecorationImage(
-                              image: NetworkImage(photoUrl),
-                              fit: BoxFit.cover,
-                            )
-                          : const DecorationImage(
-                              image: AssetImage('assets/images/david.png'),
-                              fit: BoxFit.cover,
-                            ),
-                    ),
-                  ),
+                  _buildAvatar(photoUrl),
                   SizedBox(width: 10.w),
                   Text(
                     'Hi, $firstName',
@@ -55,7 +119,7 @@ class AppTopHeader extends StatelessWidget {
                       fontFamily: 'Rubik',
                       fontWeight: FontWeight.w700,
                       fontSize: 18.sp,
-                      color: const Color(0xFFFFFFFF),
+                      color: effectiveTextColor,
                     ),
                   ),
                   const Spacer(),
@@ -67,12 +131,14 @@ class AppTopHeader extends StatelessWidget {
                       width: 36.r,
                       height: 36.r,
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.2),
+                        color: effectiveTextColor == Colors.white
+                            ? Colors.white.withValues(alpha: 0.2)
+                            : const Color(0xFFF1F5F9),
                         borderRadius: BorderRadius.circular(12.r),
                       ),
                       child: Icon(
                         Icons.more_vert_rounded,
-                        color: const Color(0xFFFFFFFF),
+                        color: effectiveTextColor,
                         size: 20.sp,
                       ),
                     ),

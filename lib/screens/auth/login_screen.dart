@@ -6,6 +6,7 @@ import '../../routes/app_routes.dart';
 import '../../services/auth_service.dart';
 import '../../core/widgets/ios_toast.dart';
 import '../../widgets/red_button.dart';
+import '../../widgets/red_header_background.dart';
 import '../../core/utils/error_helper.dart';
 import '../premium/paywall_screen.dart';
 import '../../services/paywall_service.dart';
@@ -179,7 +180,9 @@ class _LoginScreenState extends State<LoginScreen> {
     //   }
     // }
     
-    // TEMPORAIRE : On contourne la vérification d'abonnement et on va direct vers l'accueil.
+    try {
+      await UserService.instance.getCurrentUser();
+    } catch (_) {}
     nav.pushReplacementNamed(AppRoutes.home);
   }
 
@@ -197,12 +200,9 @@ class _LoginScreenState extends State<LoginScreen> {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            // ── Background image fond_page.png ──
-            Image.asset(
-              'assets/images/fond_page.png',
-              fit: BoxFit.cover,
-              width: double.infinity,
-              height: double.infinity,
+            // ── Background gradient ──
+            const Positioned.fill(
+              child: RedHeaderBackground(),
             ),
 
             // ── Header (Back Button & Sign In Title) ──

@@ -11,6 +11,7 @@ import '../models/grocery_item.dart';
 import '../models/recipe.dart';
 import '../core/widgets/ios_toast.dart';
 import '../widgets/app_top_header.dart';
+import '../widgets/red_header_background.dart';
 import '../core/utils/error_helper.dart';
 import '../core/extensions/string_extensions.dart';
 import '../widgets/grocery_skeleton.dart';
@@ -245,21 +246,17 @@ class GroceryScreenState extends State<GroceryScreen> with SingleTickerProviderS
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: const Color(0xFFC31E26),
         resizeToAvoidBottomInset: false,
         body: Stack(
           children: [
-            // Background image fond_page.png at top
+            // Background gradient at top
             Positioned(
               top: 0,
               left: 0,
               right: 0,
               height: 240.h,
-              child: Image.asset(
-                'assets/images/fond_page.png',
-                fit: BoxFit.cover,
-                alignment: Alignment.topCenter,
-              ),
+              child: const RedHeaderBackground(),
             ),
             Column(
               children: [
@@ -494,6 +491,9 @@ class GroceryScreenState extends State<GroceryScreen> with SingleTickerProviderS
                         valueListenable: GroceryService.instance.myGroceriesNotifier,
                         builder: (context, allItems, _) {
                           final itemsList = allItems ?? [];
+                          if (itemsList.isEmpty) {
+                            return const SizedBox.shrink();
+                          }
 
                           return Positioned(
                             bottom: 120.h,

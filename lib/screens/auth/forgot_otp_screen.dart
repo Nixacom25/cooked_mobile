@@ -7,6 +7,7 @@ import '../../core/widgets/ios_toast.dart';
 import '../../core/utils/error_helper.dart';
 import '../../widgets/red_button.dart';
 import '../../widgets/loading_text.dart';
+import '../../widgets/red_header_background.dart';
 
 class ForgotOtpScreen extends StatefulWidget {
   const ForgotOtpScreen({super.key});
@@ -138,12 +139,9 @@ class _ForgotOtpScreenState extends State<ForgotOtpScreen> {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            // Background image fond_page.png
-            Image.asset(
-              'assets/images/fond_page.png',
-              fit: BoxFit.cover,
-              width: double.infinity,
-              height: double.infinity,
+            // Background gradient
+            const Positioned.fill(
+              child: RedHeaderBackground(),
             ),
 
             // Top Header (Back Button & Forgot Password Title)

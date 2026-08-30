@@ -700,29 +700,61 @@ class _RecipeDetailHeaderDelegate extends SliverPersistentHeaderDelegate {
       Colors.white,
       progress,
     )!;
+    final double titleOpacity =
+        (progress > 0.6) ? ((progress - 0.6) / 0.4).clamp(0.0, 1.0) : 0.0;
+    final double curveHeight = (24 * (1 - progress)).r;
 
     return Container(
       color: bgColor,
       child: Stack(
         fit: StackFit.expand,
         children: [
-          // Header Cover Image Card with rounded corners
+          // Header Cover Image (Full bleed without bottom clipping gap)
           Positioned(
             top: 0,
             left: 0,
             right: 0,
             height: maxExtent - shrinkOffset,
-            child: ClipRRect(
-              borderRadius: BorderRadius.vertical(bottom: Radius.circular((32 * (1 - progress)).r)),
-              child: _buildImage(
-                img,
-                MediaQuery.of(context).size.width,
-                maxExtent - shrinkOffset,
-              ),
+            child: _buildImage(
+              img,
+              MediaQuery.of(context).size.width,
+              maxExtent - shrinkOffset,
             ),
           ),
 
-          // Floating Top Bar Buttons (Back & Share)
+          // Bottom White Sheet Overlay with Top Outline & Shadow to hide raw image boundary
+          if (curveHeight > 0)
+            Positioned(
+              bottom: -1,
+              left: 0,
+              right: 0,
+              height: curveHeight,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.vertical(
+                    top: Radius.circular(curveHeight),
+                  ),
+                  border: Border(
+                    top: BorderSide(
+                      color: const Color(0xFFE2E8F0)
+                          .withValues(alpha: (1 - progress)),
+                      width: 1.w,
+                    ),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black
+                          .withValues(alpha: 0.08 * (1 - progress)),
+                      blurRadius: 10,
+                      offset: const Offset(0, -4),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+          // Floating Top Bar Buttons & Collapsed Title
           Positioned(
             top: topPadding + 6.h,
             left: 16.w,
@@ -735,9 +767,22 @@ class _RecipeDetailHeaderDelegate extends SliverPersistentHeaderDelegate {
                   child: Container(
                     width: 42.r,
                     height: 42.r,
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
+                    decoration: BoxDecoration(
+                      color: Color.lerp(
+                        Colors.white,
+                        const Color(0xFFF1F5F9),
+                        progress,
+                      ),
                       shape: BoxShape.circle,
+                      boxShadow: progress < 0.5
+                          ? [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.1),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              )
+                            ]
+                          : [],
                     ),
                     alignment: Alignment.center,
                     child: Icon(
@@ -747,14 +792,48 @@ class _RecipeDetailHeaderDelegate extends SliverPersistentHeaderDelegate {
                     ),
                   ),
                 ),
+                if (titleOpacity > 0)
+                  Expanded(
+                    child: Opacity(
+                      opacity: titleOpacity,
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 12.w),
+                        child: Text(
+                          name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontFamily: 'Rubik',
+                            fontWeight: FontWeight.w700,
+                            fontSize: 16.sp,
+                            color: const Color(0xFF0F172A),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
                 GestureDetector(
                   onTap: onShare,
                   child: Container(
                     width: 42.r,
                     height: 42.r,
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
+                    decoration: BoxDecoration(
+                      color: Color.lerp(
+                        Colors.white,
+                        const Color(0xFFF1F5F9),
+                        progress,
+                      ),
                       shape: BoxShape.circle,
+                      boxShadow: progress < 0.5
+                          ? [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.1),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              )
+                            ]
+                          : [],
                     ),
                     alignment: Alignment.center,
                     child: Icon(

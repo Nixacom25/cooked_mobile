@@ -25,7 +25,9 @@ class _GroceriesBadStepState extends State<GroceriesBadStep> {
   @override
   void initState() {
     super.initState();
-    _selectedValue = widget.initialSelected ?? 'never';
+    _selectedValue = (widget.initialSelected != null && widget.initialSelected!.isNotEmpty)
+        ? widget.initialSelected!
+        : 'never';
   }
 
   int _calculateWaste(String value) {
@@ -71,9 +73,9 @@ class _GroceriesBadStepState extends State<GroceriesBadStep> {
                   fontSize: 14.sp,
                   fontWeight: FontWeight.w400)),
               Text(
-                '~\$$formattedWaste',
+                '\$$formattedWaste',
                 style: GoogleFonts.rubik(
-                  color: const Color(0xFF16A34A),
+                  color: const Color(0xFF15803D),
                   fontSize: 28.sp,
                   fontWeight: FontWeight.w500)),
               SizedBox(width: 6.w),

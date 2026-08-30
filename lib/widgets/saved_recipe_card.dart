@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../models/recipe.dart';
 
@@ -45,7 +46,7 @@ class SavedRecipeCard extends StatelessWidget {
       child: Container(
         height: 125.h,
         decoration: BoxDecoration(
-          color: const Color(0xFFFAF3E6),
+          color: const Color(0xFFFAF5E8),
           borderRadius: BorderRadius.circular(20.r),
         ),
         child: Row(
@@ -53,7 +54,7 @@ class SavedRecipeCard extends StatelessWidget {
             Expanded(
               flex: 5,
               child: Padding(
-                padding: EdgeInsets.all(12.w),
+                padding: EdgeInsets.all(14.r),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -68,23 +69,30 @@ class SavedRecipeCard extends StatelessWidget {
                           shape: BoxShape.circle,
                         ),
                         child: Center(
-                          child: Icon(
-                            pinned ? Icons.favorite : Icons.favorite_border_rounded,
-                            color: const Color(0xFFC31E26),
-                            size: 16.sp,
+                          child: SvgPicture.asset(
+                            pinned
+                                ? 'assets/icones/coeur.svg'
+                                : 'assets/icones/coeur1.svg',
+                            width: 16.r,
+                            height: 16.r,
+                            colorFilter: const ColorFilter.mode(
+                              Color(0xFFC83A2D),
+                              BlendMode.srcIn,
+                            ),
                           ),
                         ),
                       ),
                     ),
                     Text(
                       displayName,
-                      maxLines: 1,
+                      maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         fontFamily: 'Rubik',
                         fontWeight: FontWeight.w700,
                         fontSize: 16.sp,
                         color: const Color(0xFF0F172A),
+                        height: 1.2,
                       ),
                     ),
                     FittedBox(
@@ -95,7 +103,9 @@ class SavedRecipeCard extends StatelessWidget {
                           _buildBadge(Icons.access_time_rounded, prepTimeStr),
                           SizedBox(width: 4.w),
                           _buildBadge(
-                              Icons.local_fire_department_outlined, caloriesStr),
+                            Icons.local_fire_department_outlined,
+                            caloriesStr,
+                          ),
                         ],
                       ),
                     ),
@@ -149,14 +159,14 @@ class SavedRecipeCard extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 12.sp, color: const Color(0xFF475569)),
+          Icon(icon, size: 12.sp, color: const Color(0xFF64748B)),
           SizedBox(width: 4.w),
           Text(
             label,
             style: TextStyle(
               fontFamily: 'Rubik',
               fontSize: 11.sp,
-              color: const Color(0xFF334155),
+              color: const Color(0xFF475569),
               fontWeight: FontWeight.w500,
             ),
           ),

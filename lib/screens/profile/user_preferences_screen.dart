@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+
 import '../../services/user_service.dart';
 import '../../widgets/skeleton_list.dart';
+import '../../widgets/red_header_background.dart';
 import '../../core/widgets/ios_toast.dart';
 import '../onboarding/widgets/dietary_preferences_step.dart';
 import '../onboarding/widgets/allergies_step.dart';
@@ -26,7 +28,6 @@ class UserPreferencesScreen extends StatefulWidget {
 
 class _UserPreferencesScreenState extends State<UserPreferencesScreen> {
   bool _isLoading = true;
-  bool _isSaving = false;
 
   // State for all preferences
   Set<String> _selectedDiet = {};
@@ -91,7 +92,6 @@ class _UserPreferencesScreenState extends State<UserPreferencesScreen> {
   }
 
   Future<void> _savePreferences() async {
-    setState(() => _isSaving = true);
     try {
       await UserService.instance.updatePreferences(
         dietaryPreferences: _selectedDiet.toList(),
@@ -118,7 +118,6 @@ class _UserPreferencesScreenState extends State<UserPreferencesScreen> {
         message: 'Preferences updated successfully!',
         type: ToastType.success,
       );
-      Navigator.pop(context);
     } catch (e) {
       if (!mounted) return;
       IosToast.show(
@@ -126,8 +125,6 @@ class _UserPreferencesScreenState extends State<UserPreferencesScreen> {
         message: 'Failed to update preferences',
         type: ToastType.error,
       );
-    } finally {
-      if (mounted) setState(() => _isSaving = false);
     }
   }
 
@@ -136,29 +133,106 @@ class _UserPreferencesScreenState extends State<UserPreferencesScreen> {
       context,
       MaterialPageRoute(
         builder: (context) => Scaffold(
-          appBar: AppBar(
-            title: Text(title, style: TextStyle(fontSize: 18.sp)),
-            backgroundColor: Colors.white,
-            foregroundColor: const Color(0xFF0D1B3E),
-            elevation: 0,
+          backgroundColor: Colors.transparent,
+          resizeToAvoidBottomInset: false,
+          body: Stack(
+            fit: StackFit.expand,
+            children: [
+              // ── Red background ──
+          const Positioned.fill(
+            child: RedHeaderBackground(),
           ),
-          body: editor,
-          bottomNavigationBar: SafeArea(
-            child: Padding(
-              padding: EdgeInsets.all(16.r),
-              child: ElevatedButton(
-                onPressed: () => Navigator.pop(context),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFC83A2D),
-                  foregroundColor: Colors.white,
-                  minimumSize: Size(double.infinity, 56.h),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30.r),
+              SafeArea(
+                bottom: false,
+                child: Container(
+                  margin: EdgeInsets.only(top: 25.h),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(32.r),
+                    ),
+                  ),
+                  child: Column(
+                    children: [
+                      // Header
+                      Padding(
+                        padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 12.h),
+                        child: Row(
+                          children: [
+                            GestureDetector(
+                              onTap: () => Navigator.pop(context),
+                              child: Container(
+                                width: 42.r,
+                                height: 42.r,
+                                decoration: const BoxDecoration(
+                                  color: Color(0xFFF1F5F9),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(
+                                  Icons.arrow_back_rounded,
+                                  size: 20.sp,
+                                  color: const Color(0xFF0F172A),
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              child: Text(
+                                title,
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontFamily: 'Rubik',
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 18.sp,
+                                  color: const Color(0xFF0F172A),
+                                ),
+                              ),
+                            ),
+                            SizedBox(width: 42.r),
+                          ],
+                        ),
+                      ),
+
+                      // Onboarding Step Component
+                      Expanded(
+                        child: editor,
+                      ),
+
+                      // Confirm & Save Action Button
+                      SafeArea(
+                        child: Padding(
+                          padding: EdgeInsets.fromLTRB(20.w, 8.h, 20.w, 16.h),
+                          child: GestureDetector(
+                            onTap: () async {
+                              Navigator.pop(context);
+                              await _savePreferences();
+                            },
+                            child: Container(
+                              width: double.infinity,
+                              height: 54.h,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFC83A2D),
+                                borderRadius: BorderRadius.circular(27.r),
+                              ),
+                              child: Center(
+                                child: Text(
+                                  'Confirm',
+                                  style: TextStyle(
+                                    fontFamily: 'Rubik',
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 16.sp,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                child: Text('Confirm', style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w700)),
               ),
-            ),
+            ],
           ),
         ),
       ),
@@ -168,225 +242,262 @@ class _UserPreferencesScreenState extends State<UserPreferencesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: Text(
-          'Dietary Preferences',
-          style: TextStyle(
-            color: const Color(0xFF0D1B3E),
-            fontWeight: FontWeight.w700,
-            fontFamily: 'SF Pro',
-            fontSize: 20.sp,
+      backgroundColor: Colors.transparent,
+      resizeToAvoidBottomInset: false,
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          // ── Red background fond_page.png ──
+          const Positioned.fill(
+            child: RedHeaderBackground(),
           ),
-        ),
-        backgroundColor: Colors.white,
-        foregroundColor: const Color(0xFF0D1B3E),
-        elevation: 0,
-        actions: [
-          if (!_isLoading)
-            TextButton(
-              onPressed: _isSaving ? null : _savePreferences,
-              child: Text(
-                _isSaving ? 'Saving...' : 'Save',
-                style: TextStyle(
-                  color: const Color(0xFFC83A2D),
-                  fontWeight: FontWeight.w700,
-                  fontSize: 16.sp,
+          SafeArea(
+            bottom: false,
+            child: Container(
+              margin: EdgeInsets.only(top: 25.h),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(
+                  top: Radius.circular(32.r),
                 ),
               ),
+              child: Column(
+                children: [
+                  // ── Header ──
+                  Padding(
+                    padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 12.h),
+                    child: Row(
+                      children: [
+                        GestureDetector(
+                          onTap: () => Navigator.pop(context),
+                          child: Container(
+                            width: 42.r,
+                            height: 42.r,
+                            decoration: const BoxDecoration(
+                              color: Color(0xFFF1F5F9),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              Icons.arrow_back_rounded,
+                              size: 20.sp,
+                              color: const Color(0xFF0F172A),
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          child: Text(
+                            'Dietary Preferences',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontFamily: 'Rubik',
+                              fontWeight: FontWeight.w700,
+                              fontSize: 18.sp,
+                              color: const Color(0xFF0F172A),
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: 42.r),
+                      ],
+                    ),
+                  ),
+
+                  // ── Content List ──
+                  Expanded(
+                    child: _isLoading
+                        ? Padding(
+                            padding: EdgeInsets.all(20.r),
+                            child: const SkeletonList(height: 70, itemCount: 8),
+                          )
+                        : ListView(
+                            padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
+                            children: [
+                              _buildSectionHeader('Language & Region'),
+                              _buildTile(
+                                'Language & Region',
+                                '$_language, $_country',
+                                () => _openEditor(
+                                  'Language & Region',
+                                  LanguageRegionStep(
+                                    initialLanguage: _language,
+                                    initialCountry: _country,
+                                    initialMeasurementSystem: _measurementSystem,
+                                    onChanged: ({
+                                      required String language,
+                                      required String country,
+                                      required String measurementSystem,
+                                    }) {
+                                      setState(() {
+                                        _language = language;
+                                        _country = country;
+                                        _measurementSystem = measurementSystem;
+                                      });
+                                    },
+                                  ),
+                                ),
+                              ),
+                              SizedBox(height: 24.h),
+                              _buildSectionHeader('Diet & Allergies'),
+                              _buildTile(
+                                'Dietary Profile',
+                                _selectedDiet.join(', '),
+                                () => _openEditor(
+                                  'Dietary Profile',
+                                  DietaryPreferencesStep(
+                                    initialSelected: _selectedDiet,
+                                    onChanged: (val) => setState(() => _selectedDiet = val),
+                                  ),
+                                ),
+                              ),
+                              _buildTile(
+                                'Allergies',
+                                _selectedAllergy.join(', '),
+                                () => _openEditor(
+                                  'Allergies',
+                                  AllergiesStep(
+                                    initialSelected: _selectedAllergy,
+                                    onChanged: (val) =>
+                                        setState(() => _selectedAllergy = val),
+                                  ),
+                                ),
+                              ),
+                              _buildTile(
+                                'Food Dislikes',
+                                _selectedDislikes.join(', '),
+                                () => _openEditor(
+                                  'Food Dislikes',
+                                  DislikesStep(
+                                    initialSelected: _selectedDislikes,
+                                    onChanged: (val) =>
+                                        setState(() => _selectedDislikes = val),
+                                  ),
+                                ),
+                              ),
+                              SizedBox(height: 24.h),
+                              _buildSectionHeader('Cooking & Skills'),
+                              _buildTile(
+                                'Cooking Skill',
+                                _cookingSkill,
+                                () => _openEditor(
+                                  'Cooking Skill',
+                                  CookingSkillStep(
+                                    initialSelected: _cookingSkill,
+                                    onChanged: (val) => setState(() => _cookingSkill = val),
+                                  ),
+                                ),
+                              ),
+                              _buildTile(
+                                'Flavor & Spice',
+                                '$_spiceLevel, ${_flavorDna.length} preferences',
+                                () => _openEditor(
+                                  'Flavor & Spice',
+                                  FlavorSpiceStep(
+                                    initialDna: _flavorDna,
+                                    initialSpice: _spiceLevel,
+                                    onChanged: ({required dna, required spice}) {
+                                      setState(() {
+                                        _flavorDna = dna;
+                                        _spiceLevel = spice;
+                                      });
+                                    },
+                                  ),
+                                ),
+                              ),
+                              _buildTile(
+                                'Time Preference',
+                                _cookingTime,
+                                () => _openEditor(
+                                  'Time Preference',
+                                  TimePreferenceStep(
+                                    initialSelected: _cookingTime,
+                                    onChanged: (val) => setState(() => _cookingTime = val),
+                                  ),
+                                ),
+                              ),
+                              SizedBox(height: 24.h),
+                              _buildSectionHeader('Kitchen & Habits'),
+                              _buildTile(
+                                'Favorite Cuisines',
+                                _favoriteCuisines.join(', '),
+                                () => _openEditor(
+                                  'Favorite Cuisines',
+                                  CuisinesStep(
+                                    initialSelected: _favoriteCuisines,
+                                    onChanged: (val) =>
+                                        setState(() => _favoriteCuisines = val),
+                                  ),
+                                ),
+                              ),
+                              _buildTile(
+                                'Kitchen Appliances',
+                                _kitchenAppliances.join(', '),
+                                () => _openEditor(
+                                  'Kitchen Appliances',
+                                  KitchenStep(
+                                    initialSelected: _kitchenAppliances,
+                                    onChanged: (val) =>
+                                        setState(() => _kitchenAppliances = val),
+                                  ),
+                                ),
+                              ),
+                              _buildTile(
+                                'Meal Planning Style',
+                                _mealPlanningStyle,
+                                () => _openEditor(
+                                  'Meal Planning Style',
+                                  MealPlanningStep(
+                                    initialSelected: _mealPlanningStyle,
+                                    onChanged: (val) =>
+                                        setState(() => _mealPlanningStyle = val),
+                                  ),
+                                ),
+                              ),
+                              _buildTile(
+                                'Cooking Target',
+                                _cookingTarget,
+                                () => _openEditor(
+                                  'Cooking Target',
+                                  CookingTargetStep(
+                                    initialTarget: _cookingTarget,
+                                    onChanged: (val) => setState(() => _cookingTarget = val),
+                                  ),
+                                ),
+                              ),
+                              SizedBox(height: 24.h),
+                              _buildSectionHeader('Other'),
+                              _buildTile(
+                                'Notification Preferences',
+                                _notificationPreferences.join(', '),
+                                () => _openEditor(
+                                  'Notification Preferences',
+                                  NotificationsStep(
+                                    initialSelected: _notificationPreferences,
+                                    onChanged: (val) =>
+                                        setState(() => _notificationPreferences = val),
+                                  ),
+                                ),
+                              ),
+                              _buildTile(
+                                'Onboarding Goals',
+                                _onboardingGoals.join(', '),
+                                () => _openEditor(
+                                  'Onboarding Goals',
+                                  GoalsStep(
+                                    initialSelected: _onboardingGoals,
+                                    onChanged: (val) =>
+                                        setState(() => _onboardingGoals = val),
+                                  ),
+                                ),
+                              ),
+                              SizedBox(height: 40.h),
+                            ],
+                          ),
+                  ),
+                ],
+              ),
             ),
+          ),
         ],
       ),
-      body: _isLoading
-          ? const Padding(
-              padding: EdgeInsets.all(20),
-              child: SkeletonList(height: 70, itemCount: 10),
-            )
-          : ListView(
-              padding: EdgeInsets.all(16.r),
-              children: [
-                _buildSectionHeader('Language & Region'),
-                _buildTile(
-                  'Language & Region',
-                  '$_language, $_country',
-                  () => _openEditor(
-                    'Language & Region',
-                    LanguageRegionStep(
-                      initialLanguage: _language,
-                      initialCountry: _country,
-                      initialMeasurementSystem: _measurementSystem,
-                      onChanged: ({
-                        required String language,
-                        required String country,
-                        required String measurementSystem,
-                      }) {
-                        setState(() {
-                          _language = language;
-                          _country = country;
-                          _measurementSystem = measurementSystem;
-                        });
-                      },
-                    ),
-                  ),
-                ),
-                SizedBox(height: 24.h),
-                _buildSectionHeader('Diet & Allergies'),
-                _buildTile(
-                  'Dietary Profile',
-                  _selectedDiet.join(', '),
-                  () => _openEditor(
-                    'Dietary Profile',
-                    DietaryPreferencesStep(
-                      initialSelected: _selectedDiet,
-                      onChanged: (val) => setState(() => _selectedDiet = val),
-                    ),
-                  ),
-                ),
-                _buildTile(
-                  'Allergies',
-                  _selectedAllergy.join(', '),
-                  () => _openEditor(
-                    'Allergies',
-                    AllergiesStep(
-                      initialSelected: _selectedAllergy,
-                      onChanged: (val) =>
-                          setState(() => _selectedAllergy = val),
-                    ),
-                  ),
-                ),
-                _buildTile(
-                  'Food Dislikes',
-                  _selectedDislikes.join(', '),
-                  () => _openEditor(
-                    'Food Dislikes',
-                    DislikesStep(
-                      initialSelected: _selectedDislikes,
-                      onChanged: (val) =>
-                          setState(() => _selectedDislikes = val),
-                    ),
-                  ),
-                ),
-                SizedBox(height: 24.h),
-                _buildSectionHeader('Cooking & Skills'),
-                _buildTile(
-                  'Cooking Skill',
-                  _cookingSkill,
-                  () => _openEditor(
-                    'Cooking Skill',
-                    CookingSkillStep(
-                      initialSelected: _cookingSkill,
-                      onChanged: (val) => setState(() => _cookingSkill = val),
-                    ),
-                  ),
-                ),
-                _buildTile(
-                  'Flavor & Spice',
-                  '$_spiceLevel, ${_flavorDna.length} preferences',
-                  () => _openEditor(
-                    'Flavor & Spice',
-                    FlavorSpiceStep(
-                      initialDna: _flavorDna,
-                      initialSpice: _spiceLevel,
-                      onChanged: ({required dna, required spice}) {
-                        setState(() {
-                          _flavorDna = dna;
-                          _spiceLevel = spice;
-                        });
-                      },
-                    ),
-                  ),
-                ),
-                _buildTile(
-                  'Time Preference',
-                  _cookingTime,
-                  () => _openEditor(
-                    'Time Preference',
-                    TimePreferenceStep(
-                      initialSelected: _cookingTime,
-                      onChanged: (val) => setState(() => _cookingTime = val),
-                    ),
-                  ),
-                ),
-                SizedBox(height: 24.h),
-                _buildSectionHeader('Kitchen & Habits'),
-                _buildTile(
-                  'Favorite Cuisines',
-                  _favoriteCuisines.join(', '),
-                  () => _openEditor(
-                    'Favorite Cuisines',
-                    CuisinesStep(
-                      initialSelected: _favoriteCuisines,
-                      onChanged: (val) =>
-                          setState(() => _favoriteCuisines = val),
-                    ),
-                  ),
-                ),
-                _buildTile(
-                  'Kitchen Appliances',
-                  _kitchenAppliances.join(', '),
-                  () => _openEditor(
-                    'Kitchen Appliances',
-                    KitchenStep(
-                      initialSelected: _kitchenAppliances,
-                      onChanged: (val) =>
-                          setState(() => _kitchenAppliances = val),
-                    ),
-                  ),
-                ),
-                _buildTile(
-                  'Meal Planning Style',
-                  _mealPlanningStyle,
-                  () => _openEditor(
-                    'Meal Planning Style',
-                    MealPlanningStep(
-                      initialSelected: _mealPlanningStyle,
-                      onChanged: (val) =>
-                          setState(() => _mealPlanningStyle = val),
-                    ),
-                  ),
-                ),
-
-                _buildTile(
-                  'Cooking Target',
-                  _cookingTarget,
-                  () => _openEditor(
-                    'Cooking Target',
-                    CookingTargetStep(
-                      initialTarget: _cookingTarget,
-                      onChanged: (val) => setState(() => _cookingTarget = val),
-                    ),
-                  ),
-                ),
-                SizedBox(height: 24.h),
-                _buildSectionHeader('Other'),
-                _buildTile(
-                  'Notification Preferences',
-                  _notificationPreferences.join(', '),
-                  () => _openEditor(
-                    'Notification Preferences',
-                    NotificationsStep(
-                      initialSelected: _notificationPreferences,
-                      onChanged: (val) =>
-                          setState(() => _notificationPreferences = val),
-                    ),
-                  ),
-                ),
-                _buildTile(
-                  'Onboarding Goals',
-                  _onboardingGoals.join(', '),
-                  () => _openEditor(
-                    'Onboarding Goals',
-                    GoalsStep(
-                      initialSelected: _onboardingGoals,
-                      onChanged: (val) =>
-                          setState(() => _onboardingGoals = val),
-                    ),
-                  ),
-                ),
-
-                SizedBox(height: 40.h),
-              ],
-            ),
     );
   }
 
@@ -396,9 +507,10 @@ class _UserPreferencesScreenState extends State<UserPreferencesScreen> {
       child: Text(
         title.toUpperCase(),
         style: TextStyle(
+          fontFamily: 'Rubik',
           fontSize: 12.sp,
           fontWeight: FontWeight.w700,
-          color: const Color(0xFF7B8190),
+          color: const Color(0xFF64748B),
           letterSpacing: 1.2,
         ),
       ),
@@ -407,16 +519,14 @@ class _UserPreferencesScreenState extends State<UserPreferencesScreen> {
 
   Widget _buildTile(String title, String value, VoidCallback onTap) {
     return Padding(
-      padding: EdgeInsets.only(bottom: 12.h),
-      child: InkWell(
+      padding: EdgeInsets.only(bottom: 10.h),
+      child: GestureDetector(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12.r),
         child: Container(
           padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
           decoration: BoxDecoration(
-            color: const Color(0xFFF9FAFB),
-            borderRadius: BorderRadius.circular(12.r),
-            border: Border.all(color: const Color(0xFFE5E7EB)),
+            color: const Color(0xFFF1F5F9),
+            borderRadius: BorderRadius.circular(16.r),
           ),
           child: Row(
             children: [
@@ -427,19 +537,19 @@ class _UserPreferencesScreenState extends State<UserPreferencesScreen> {
                     Text(
                       title,
                       style: TextStyle(
-                        fontSize: 16.sp,
+                        fontFamily: 'Rubik',
+                        fontSize: 15.sp,
                         fontWeight: FontWeight.w600,
-                        color: const Color(0xFF0D1B3E),
-                        fontFamily: 'SF Pro',
+                        color: const Color(0xFF0F172A),
                       ),
                     ),
                     SizedBox(height: 4.h),
                     Text(
                       value.isEmpty ? 'Not set' : value,
                       style: TextStyle(
-                        fontSize: 14.sp,
-                        color: const Color(0xFF7B8190),
-                        fontFamily: 'SF Pro',
+                        fontFamily: 'Rubik',
+                        fontSize: 13.sp,
+                        color: const Color(0xFF64748B),
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -447,7 +557,7 @@ class _UserPreferencesScreenState extends State<UserPreferencesScreen> {
                   ],
                 ),
               ),
-              Icon(Icons.chevron_right, color: const Color(0xFF7B8190), size: 24.sp),
+              Icon(Icons.chevron_right_rounded, color: const Color(0xFF64748B), size: 22.sp),
             ],
           ),
         ),

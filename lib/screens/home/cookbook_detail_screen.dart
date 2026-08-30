@@ -19,6 +19,8 @@ import '../../widgets/skeleton_loader.dart';
 import '../../widgets/cookbook_form_modal.dart';
 import '../../widgets/add_to_cookbook_sheet.dart';
 import '../../widgets/haptic_context_menu.dart';
+import '../../widgets/app_top_header.dart';
+import '../../widgets/red_header_background.dart';
 
 class CookbookDetailScreen extends StatefulWidget {
   const CookbookDetailScreen({super.key});
@@ -124,19 +126,26 @@ class _CookbookDetailScreenState extends State<CookbookDetailScreen> {
                 .toList();
 
         return Scaffold(
-          backgroundColor: const Color(0xFFF0F1F3),
+          backgroundColor: Colors.transparent,
           resizeToAvoidBottomInset: false,
-          body: SafeArea(
-            bottom: false,
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.vertical(
-                  top: Radius.circular(32.r),
-                ),
+          body: Stack(
+            fit: StackFit.expand,
+            children: [
+              const Positioned.fill(
+                child: RedHeaderBackground(),
               ),
-              child: Column(
-                children: [
+              SafeArea(
+                bottom: false,
+                child: Container(
+                  margin: EdgeInsets.only(top: 25.h),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(32.r),
+                    ),
+                  ),
+                  child: Column(
+                    children: [
                       // ── Top Bar ─────────────────────────────────────────────
                       Padding(
                         padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 12.h),
@@ -289,6 +298,8 @@ class _CookbookDetailScreenState extends State<CookbookDetailScreen> {
                     ],
                   ),
                 ),
+              ),
+            ],
           ),
         );
       },

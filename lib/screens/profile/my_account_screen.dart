@@ -1,25 +1,22 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
-import '../../core/extensions/string_extensions.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:image_picker/image_picker.dart';
-import '../../widgets/skeleton_loader.dart';
-import '../../widgets/red_button.dart';
-import '../../services/user_service.dart';
-import '../../services/auth_service.dart';
-import '../../routes/app_routes.dart';
-import '../../core/api_config.dart';
-import 'package:intl_phone_field/intl_phone_field.dart';
-import '../../core/widgets/ios_toast.dart';
-import '../../core/utils/error_helper.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
+import 'package:intl_phone_field/intl_phone_field.dart';
 
-// ══════════════════════════════════════════════════════════════════════════════
-// MY ACCOUNT SCREEN — HelpCenter-style header, avatar inside the form
-// ══════════════════════════════════════════════════════════════════════════════
+import '../../core/extensions/string_extensions.dart';
+import '../../widgets/skeleton_loader.dart';
+import '../../widgets/red_header_background.dart';
+import '../../services/user_service.dart';
+import '../../core/api_config.dart';
+import '../../core/widgets/ios_toast.dart';
+import '../../core/utils/error_helper.dart';
+
 class MyAccountScreen extends StatefulWidget {
   const MyAccountScreen({super.key});
+
   @override
   State<MyAccountScreen> createState() => _MyAccountScreenState();
 }
@@ -53,8 +50,7 @@ class _MyAccountScreenState extends State<MyAccountScreen> {
       final user = await UserService.instance.getCurrentUser();
       if (!mounted) return;
       setState(() {
-        _nameCtrl.text = '${user['firstname'] ?? ''} ${user['lastname'] ?? ''}'
-            .trim();
+        _nameCtrl.text = '${user['firstname'] ?? ''} ${user['lastname'] ?? ''}'.trim();
         _emailCtrl.text = user['email'] ?? '';
         _phoneNumberStr = user['phone'] ?? '';
         String? photo = user['profilePictureUrl'];
@@ -105,18 +101,6 @@ class _MyAccountScreenState extends State<MyAccountScreen> {
     }
   }
 
-  Future<void> _logout() async {
-    final nav = Navigator.of(context);
-    try {
-      await AuthService.instance.logout();
-      if (!mounted) return;
-      nav.pushNamedAndRemoveUntil(AppRoutes.welcome, (route) => false);
-    } catch (e) {
-      if (!mounted) return;
-      IosToast.show(context, message: ErrorHelper.getFriendlyMessage(e), type: ToastType.error);
-    }
-  }
-
   Future<void> _pickImage() async {
     final picker = ImagePicker();
     final picked = await picker.pickImage(source: ImageSource.gallery);
@@ -136,307 +120,307 @@ class _MyAccountScreenState extends State<MyAccountScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.transparent,
       resizeToAvoidBottomInset: false,
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            Stack(
-              clipBehavior: Clip.none,
-              alignment: Alignment.bottomCenter,
-              children: [
-                // ── Red Header Background ────────────────────────────────────
-                SizedBox(
-                  height: 180.h,
-                  width: double.infinity,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.vertical(
-                      bottom: Radius.circular(15.r),
-                    ), // Match Profile Screen
-                    child: Stack(
-                      fit: StackFit.expand,
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          // ── Red background fond_page.png ──
+          const Positioned.fill(
+            child: RedHeaderBackground(),
+          ),
+          SafeArea(
+            bottom: false,
+            child: Container(
+              margin: EdgeInsets.only(top: 25.h),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(
+                  top: Radius.circular(32.r),
+                ),
+              ),
+              child: Column(
+                children: [
+                  // ── Header (Back Button & Title) ──
+                  Padding(
+                    padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 12.h),
+                    child: Row(
                       children: [
-                        // Background image
-                        Image.asset(
-                          'assets/images/fond4.png',
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => const SizedBox.shrink(),
-                        ),
-                        // Gradient overlay
-                        Container(
-                          decoration: const BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                              stops: [0.0, 0.5],
-                              colors: [Color(0xFFC83A2D), Color(0x63C83A2D)],
+                        GestureDetector(
+                          onTap: () => Navigator.pop(context),
+                          child: Container(
+                            width: 42.r,
+                            height: 42.r,
+                            decoration: const BoxDecoration(
+                              color: Color(0xFFF1F5F9),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              Icons.arrow_back_rounded,
+                              size: 20.sp,
+                              color: const Color(0xFF0F172A),
                             ),
                           ),
                         ),
+                        Expanded(
+                          child: Text(
+                            'My Account',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontFamily: 'Rubik',
+                              fontWeight: FontWeight.w700,
+                              fontSize: 20.sp,
+                              color: const Color(0xFF0F172A),
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: 42.r),
                       ],
                     ),
                   ),
-                ),
-                // ── AppBar Elements ──────────────────────────────────────────
-                Positioned(
-                  top: MediaQuery.of(context).padding.top + 10.h,
-                  left: 10.w,
-                  right: 10.w,
-                  child: Row(
-                    children: [
-                      IconButton(
-                        icon: Icon(Icons.arrow_back, color: Colors.white, size: 24.sp),
-                        onPressed: () => Navigator.pop(context),
-                      ),
-                      SizedBox(width: 4.w),
-                      Text(
-                        'My Account',
-                        style: TextStyle(
-                          fontFamily: 'SF Pro',
-                          fontWeight: FontWeight.w600,
-                          fontSize: 22.sp,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                // ── Overlapping Avatar ───────────────────────────────────────
-                Positioned(
-                  bottom: -50.h,
-                  child: GestureDetector(
-                    onTap: _pickImage,
-                    child: Container(
-                      width: 100.w,
-                      height: 100.h,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.white,
-                        border: Border.all(color: Colors.white, width: 4.r),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
-                            blurRadius: 10.r,
-                            offset: Offset(0, 4.h),
+
+                  // ── Form Content ──
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
+                      child: Column(
+                        children: [
+                          // Avatar
+                          GestureDetector(
+                            onTap: _pickImage,
+                            child: Container(
+                              width: 110.r,
+                              height: 110.r,
+                              decoration: const BoxDecoration(
+                                color: Color(0xFFF1F5F9),
+                                shape: BoxShape.circle,
+                              ),
+                              child: ClipOval(
+                                child: _selectedImageBytes != null
+                                    ? Image.memory(_selectedImageBytes!, fit: BoxFit.cover)
+                                    : _photoUrl != null && _photoUrl!.isNotEmpty
+                                        ? CachedNetworkImage(
+                                            imageUrl: _photoUrl!,
+                                            fit: BoxFit.cover,
+                                            errorWidget: (_, __, ___) => _defaultAvatar(),
+                                          )
+                                        : _defaultAvatar(),
+                              ),
+                            ),
                           ),
+                          SizedBox(height: 12.h),
+
+                          // Change Picture
+                          GestureDetector(
+                            onTap: _pickImage,
+                            child: Text(
+                              'Change Picture',
+                              style: TextStyle(
+                                fontFamily: 'Rubik',
+                                fontWeight: FontWeight.w600,
+                                fontSize: 15.sp,
+                                color: const Color(0xFFC83A2D),
+                              ),
+                            ),
+                          ),
+                          SizedBox(height: 28.h),
+
+                          if (_isLoading)
+                            Column(
+                              children: [
+                                const SkeletonLoader(height: 52, width: double.infinity),
+                                SizedBox(height: 18.h),
+                                const SkeletonLoader(height: 52, width: double.infinity),
+                                SizedBox(height: 18.h),
+                                const SkeletonLoader(height: 52, width: double.infinity),
+                              ],
+                            )
+                          else
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // Name field
+                                _buildLabel('Name'),
+                                SizedBox(height: 8.h),
+                                _buildInputField(
+                                  child: TextField(
+                                    controller: _nameCtrl,
+                                    style: _inputTextStyle(),
+                                    textCapitalization: TextCapitalization.words,
+                                    decoration: _inputDecoration('Name'),
+                                  ),
+                                ),
+                                SizedBox(height: 20.h),
+
+                                // Email field
+                                _buildLabel('Email'),
+                                SizedBox(height: 8.h),
+                                _buildInputField(
+                                  child: TextField(
+                                    controller: _emailCtrl,
+                                    style: _inputTextStyle(),
+                                    keyboardType: TextInputType.emailAddress,
+                                    readOnly: true,
+                                    decoration: _inputDecoration('your-mail@example.com'),
+                                  ),
+                                ),
+                                SizedBox(height: 20.h),
+
+                                // Phone field
+                                _buildLabel('Phone Number'),
+                                SizedBox(height: 8.h),
+                                IntlPhoneField(
+                                  initialValue: _phoneNumberStr.isNotEmpty ? _phoneNumberStr : null,
+                                  controller: _phoneCtrl,
+                                  decoration: InputDecoration(
+                                    hintText: '33 321 22 33',
+                                    hintStyle: TextStyle(
+                                      color: const Color(0xFF94A3B8),
+                                      fontFamily: 'Rubik',
+                                      fontSize: 14.sp,
+                                    ),
+                                    filled: true,
+                                    fillColor: const Color(0xFFF1F5F9),
+                                    contentPadding: EdgeInsets.symmetric(
+                                      horizontal: 16.w,
+                                      vertical: 16.h,
+                                    ),
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(16.r),
+                                      borderSide: BorderSide.none,
+                                    ),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(16.r),
+                                      borderSide: BorderSide.none,
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(16.r),
+                                      borderSide: const BorderSide(
+                                        color: Color(0xFFC83A2D),
+                                        width: 1.5,
+                                      ),
+                                    ),
+                                  ),
+                                  initialCountryCode: 'US',
+                                  onChanged: (phone) {
+                                    _phoneNumberStr = phone.completeNumber;
+                                  },
+                                  style: _inputTextStyle(),
+                                  dropdownIcon: Icon(
+                                    Icons.keyboard_arrow_down_rounded,
+                                    color: const Color(0xFF0F172A),
+                                    size: 20.sp,
+                                  ),
+                                  flagsButtonPadding: EdgeInsets.only(left: 8.w),
+                                  flagsButtonMargin: EdgeInsets.only(right: 8.w),
+                                  showCountryFlag: true,
+                                  showDropdownIcon: true,
+                                  dropdownIconPosition: IconPosition.trailing,
+                                  disableLengthCheck: true,
+                                  textAlignVertical: TextAlignVertical.center,
+                                ),
+                                SizedBox(height: 36.h),
+
+                                // Save Changes Button
+                                GestureDetector(
+                                  onTap: _isSaving ? null : _saveProfile,
+                                  child: Container(
+                                    width: double.infinity,
+                                    height: 54.h,
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFC83A2D),
+                                      borderRadius: BorderRadius.circular(27.r),
+                                    ),
+                                    child: Center(
+                                      child: _isSaving
+                                          ? const SizedBox(
+                                              width: 20,
+                                              height: 20,
+                                              child: CircularProgressIndicator(
+                                                color: Colors.white,
+                                                strokeWidth: 2,
+                                              ),
+                                            )
+                                          : Text(
+                                              'Save Changes',
+                                              style: TextStyle(
+                                                fontFamily: 'Rubik',
+                                                fontWeight: FontWeight.w700,
+                                                fontSize: 16.sp,
+                                                color: Colors.white,
+                                              ),
+                                            ),
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(height: MediaQuery.of(context).viewInsets.bottom + 30.h),
+                              ],
+                            ),
                         ],
                       ),
-                      child: ClipOval(
-                        child: _selectedImageBytes != null
-                            ? Image.memory(
-                                _selectedImageBytes!,
-                                fit: BoxFit.cover,
-                              )
-                            : _photoUrl != null && _photoUrl!.isNotEmpty
-                            ? CachedNetworkImage(
-                                imageUrl: _photoUrl!,
-                                fit: BoxFit.cover,
-                                errorWidget: (_, __, ___) => _defaultAvatar(),
-                              )
-                            : _defaultAvatar(),
-                      ),
                     ),
                   ),
-                ),
-              ],
-            ),
-            SizedBox(height: 60.h),
-
-            // ── Change Picture CTA ───────────────────────────────────────
-            GestureDetector(
-              onTap: _pickImage,
-              child: Text(
-                'Change Picture',
-                style: TextStyle(
-                  fontFamily: 'SF Pro',
-                  fontWeight: FontWeight.w600,
-                  fontSize: 16.sp,
-                  color: const Color(0xFFC83A2D),
-                ),
-              ),
-            ),
-            SizedBox(height: 30.h),
-
-            // ── Form Fields ──────────────────────────────────────────────
-            if (_isLoading)
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 20.h),
-                child: Column(
-                  children: [
-                    const SkeletonLoader(height: 50, width: double.infinity),
-                    SizedBox(height: 18.h),
-                    const SkeletonLoader(height: 50, width: double.infinity),
-                    SizedBox(height: 18.h),
-                    const SkeletonLoader(height: 50, width: double.infinity),
-                  ],
-                ),
-              )
-            else
-              Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20.w),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _label('Name'),
-                  SizedBox(height: 8.h),
-                  _field(
-                    child: TextField(
-                      controller: _nameCtrl,
-                      style: _textStyle(),
-                      textCapitalization: TextCapitalization.words,
-                      decoration: _dec('Name'),
-                    ),
-                  ),
-                  SizedBox(height: 18.h),
-
-                  _label('Email'),
-                  SizedBox(height: 8.h),
-                  _field(
-                    child: TextField(
-                      controller: _emailCtrl,
-                      style: _textStyle(),
-                      keyboardType: TextInputType.emailAddress,
-                      readOnly: true,
-                      decoration: _dec('Email'),
-                    ),
-                  ),
-                  SizedBox(height: 18.h),
-
-                  _label('Phone Number'),
-                  SizedBox(height: 8.h),
-                  IntlPhoneField(
-                    initialValue: _phoneNumberStr.isNotEmpty ? _phoneNumberStr : null,
-                    controller: _phoneCtrl,
-                    decoration: InputDecoration(
-                      hintText: 'XX XXX XX XX',
-                      hintStyle: TextStyle(
-                        color: const Color(0xFFBBBBBB),
-                        fontFamily: 'SF Pro',
-                        fontSize: 14.sp,
-                      ),
-                      filled: true,
-                      fillColor: Colors.white,
-                      contentPadding: EdgeInsets.symmetric(
-                        horizontal: 16.w,
-                        vertical: 16.h,
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12.r),
-                        borderSide: const BorderSide(color: Color(0xFFE8E8E8)),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12.r),
-                        borderSide: const BorderSide(color: Color(0xFFE8E8E8)),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12.r),
-                        borderSide: const BorderSide(
-                          color: Color(0xFFC83A2D),
-                          width: 1.5,
-                        ),
-                      ),
-                    ),
-                    initialCountryCode: 'US',
-                    onChanged: (phone) {
-                      _phoneNumberStr = phone.completeNumber;
-                    },
-                    style: _textStyle(),
-                    dropdownIcon: Icon(
-                      Icons.keyboard_arrow_down_rounded,
-                      color: const Color(0xFF333333),
-                      size: 20.sp,
-                    ),
-                    flagsButtonPadding: EdgeInsets.only(left: 8.w),
-                    flagsButtonMargin: EdgeInsets.only(right: 8.w),
-                    showCountryFlag: true,
-                    showDropdownIcon: true,
-                    dropdownIconPosition: IconPosition.trailing,
-                    disableLengthCheck: true,
-                    textAlignVertical: TextAlignVertical.center,
-                  ),
-                  SizedBox(height: 36.h),
-
-                  RedButton(
-                    label: 'Save Changes',
-                    loadingLabel: 'Recording in progress',
-                    isLoading: _isSaving,
-                    onTap: _saveProfile,
-                  ),
-                  SizedBox(height: 20.h),
-
-                  // Logout Button
-                  SizedBox(
-                    width: double.infinity,
-                    height: 52.h,
-                    child: OutlinedButton(
-                      onPressed: _logout,
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: const Color(0xFFC83A2D),
-                        side: const BorderSide(
-                          color: Color(0xFFC83A2D),
-                          width: 1.5,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12.r),
-                        ),
-                      ),
-                      child: Text(
-                        'Logout',
-                        style: TextStyle(
-                          fontFamily: 'SF Pro',
-                          fontSize: 16.sp,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: MediaQuery.of(context).viewInsets.bottom + 40.h),
                 ],
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
-}
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
-TextStyle _textStyle() => TextStyle(
-  fontFamily: 'SF Pro',
-  fontSize: 15.sp,
-  color: const Color(0xFF1A1A1A),
-);
+  Widget _buildLabel(String text) {
+    return Text(
+      text,
+      style: TextStyle(
+        fontFamily: 'Rubik',
+        fontWeight: FontWeight.w500,
+        fontSize: 14.sp,
+        color: const Color(0xFF64748B),
+      ),
+    );
+  }
 
-Widget _label(String t) => Text(
-  t,
-  style: TextStyle(
-    fontFamily: 'SF Pro',
-    fontWeight: FontWeight.w500,
-    fontSize: 14.sp,
-    color: const Color(0xFF333333),
-  ),
-);
+  Widget _buildInputField({required Widget child}) {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFFF1F5F9),
+        borderRadius: BorderRadius.circular(16.r),
+      ),
+      child: child,
+    );
+  }
 
-Widget _field({required Widget child}) => Container(
-  decoration: BoxDecoration(
-    color: Colors.white,
-    borderRadius: BorderRadius.circular(12.r),
-    border: Border.all(color: const Color(0xFFE8E8E8)),
-  ),
-  child: child,
-);
+  InputDecoration _inputDecoration(String hint) {
+    return InputDecoration(
+      hintText: hint,
+      hintStyle: TextStyle(
+        color: const Color(0xFF94A3B8),
+        fontFamily: 'Rubik',
+        fontSize: 14.sp,
+      ),
+      border: InputBorder.none,
+      contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
+    );
+  }
 
-InputDecoration _dec(String hint) => InputDecoration(
-  hintText: hint,
-  hintStyle: TextStyle(color: const Color(0xFFBBBBBB), fontFamily: 'SF Pro', fontSize: 13.sp),
-  border: InputBorder.none,
-  contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
-);
+  TextStyle _inputTextStyle() {
+    return TextStyle(
+      fontFamily: 'Rubik',
+      fontSize: 15.sp,
+      fontWeight: FontWeight.w500,
+      color: const Color(0xFF0F172A),
+    );
+  }
 
-Widget _defaultAvatar() {
-  return Container(
-    color: const Color(0xFFF0F0F0),
-    child: Icon(Icons.person_rounded, size: 40.sp, color: const Color(0xFFAAAAAA)),
-  );
+  Widget _defaultAvatar() {
+    return Container(
+      color: const Color(0xFFE2E8F0),
+      child: Icon(
+        Icons.person_rounded,
+        size: 50.sp,
+        color: const Color(0xFF94A3B8),
+      ),
+    );
+  }
 }

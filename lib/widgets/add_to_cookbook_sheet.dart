@@ -65,7 +65,7 @@ class _AddToCookbookSheetState extends State<AddToCookbookSheet> {
     return DraggableScrollableSheet(
       initialChildSize: 0.6,
       minChildSize: 0.4,
-      maxChildSize: 0.95,
+      maxChildSize: 0.84,
       expand: false,
       builder: (context, scrollController) {
         return Container(

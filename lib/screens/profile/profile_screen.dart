@@ -1,17 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+
 import '../../routes/app_routes.dart';
 import '../../services/auth_service.dart';
 import '../../services/user_service.dart';
 import '../../core/api_config.dart';
 import '../../models/view_all_type.dart';
 import '../../widgets/skeleton_loader.dart';
+import '../../widgets/red_header_background.dart';
 
-import 'package:cached_network_image/cached_network_image.dart';
-
-// ══════════════════════════════════════════════════════════════════════════════
-// PROFILE SCREEN
-// ══════════════════════════════════════════════════════════════════════════════
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
@@ -86,95 +85,76 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: Column(
+      backgroundColor: Colors.transparent,
+      resizeToAvoidBottomInset: false,
+      body: Stack(
+        fit: StackFit.expand,
         children: [
-          // ── Top Header & Avatar ──
-          SizedBox(
-            height: 230.h,
-            child: Stack(
-              children: [
-                // Red background with pattern overlay
-                SizedBox(
-                  height: 170.h,
-                  width: double.infinity,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.vertical(
-                      bottom: Radius.circular(15.r),
-                    ),
-                    child: Stack(
-                      children: [
-                        // Background Image
-                        Positioned.fill(
-                          child: Image.asset(
-                            'assets/images/fond4.png',
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                        // Red Gradient Overlay
-                        Positioned.fill(
-                          child: Container(
-                            decoration: const BoxDecoration(
-                              gradient: LinearGradient(
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                                stops: [0.0, 0.5],
-                                colors: [Color(0xFFC83A2D), Color(0x63C83A2D)],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+          // ── Red background fond_page.png ──
+          const Positioned.fill(
+            child: RedHeaderBackground(),
+          ),
+          SafeArea(
+            bottom: false,
+            child: Container(
+              margin: EdgeInsets.only(top: 25.h),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(
+                  top: Radius.circular(32.r),
                 ),
-                // AppBar (Back Button & Title)
-                SafeArea(
-                  bottom: false,
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 20.w,
-                      vertical: 16.h,
-                    ),
+              ),
+              child: Column(
+                children: [
+                  // ── Header (Back Button & Title) ──
+                  Padding(
+                    padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 12.h),
                     child: Row(
                       children: [
                         GestureDetector(
                           onTap: () => Navigator.pop(context),
-                          child: Icon(
-                            Icons.arrow_back,
-                            color: Colors.white,
-                            size: 24.sp,
+                          child: Container(
+                            width: 42.r,
+                            height: 42.r,
+                            decoration: const BoxDecoration(
+                              color: Color(0xFFF1F5F9),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              Icons.arrow_back_rounded,
+                              size: 20.sp,
+                              color: const Color(0xFF0F172A),
+                            ),
                           ),
                         ),
-                        SizedBox(width: 12.w),
-                        Text(
-                          'Profile',
-                          style: TextStyle(
-                            fontFamily: 'SF Pro',
-                            fontWeight: FontWeight.w600,
-                            fontSize: 22.sp,
-                            color: Colors.white,
+                        Expanded(
+                          child: Text(
+                            'Profile',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontFamily: 'Rubik',
+                              fontWeight: FontWeight.w700,
+                              fontSize: 20.sp,
+                              color: const Color(0xFF0F172A),
+                            ),
                           ),
                         ),
+                        SizedBox(width: 42.r),
                       ],
                     ),
                   ),
-                ),
-                // Avatar
-                Positioned(
-                  top: 100.h,
-                  left: 0,
-                  right: 0,
-                  child: Align(
-                    alignment: Alignment.center,
+
+                  SizedBox(height: 12.h),
+
+                  // ── Avatar ──
+                  Center(
                     child: Container(
-                      width: 130.w,
-                      height: 130.h,
+                      width: 100.r,
+                      height: 100.r,
                       decoration: const BoxDecoration(
-                        color: Colors.white,
+                        color: Color(0xFFF1F5F9),
                         shape: BoxShape.circle,
                       ),
-                      padding: const EdgeInsets.all(2),
                       child: ClipOval(
                         child: _photoUrl != null && _photoUrl!.isNotEmpty
                             ? CachedNetworkImage(
@@ -186,168 +166,134 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                     ),
                   ),
-                ),
-              ],
-            ),
-          ),
 
-          // ── Name & Phone ──
-          _isLoading
-              ? Padding(
-                  padding: EdgeInsets.symmetric(vertical: 20.h),
-                  child: Column(
-                    children: [
-                      const SkeletonLoader(width: 150, height: 20),
-                      SizedBox(height: 8.h),
-                      const SkeletonLoader(width: 100, height: 14),
-                    ],
-                  ),
-                )
-              : Column(
-                  children: [
-                    Text(
-                      _name.isNotEmpty ? _name : 'User',
-                      style: TextStyle(
-                        fontFamily: 'SF Pro',
-                        fontWeight: FontWeight.w700,
-                        fontSize: 24.sp,
-                        color: const Color(0xFF1A1A1A),
-                      ),
-                    ),
-                    SizedBox(height: 4.h),
-                    Text(
-                      _phone.isNotEmpty ? _phone : '...',
-                      style: TextStyle(
-                        fontFamily: 'SF Pro',
-                        fontSize: 14.sp,
-                        color: const Color(0xFF888888),
-                      ),
-                    ),
-                  ],
-                ),
-          SizedBox(height: 30.h),
+                  SizedBox(height: 12.h),
 
-          // ── Menu items ──
-          Expanded(
-            child: ListView(
-              padding: EdgeInsets.symmetric(horizontal: 30.w),
-              children: [
-                _MenuItem(
-                  icon: Icons.person,
-                  label: 'My Account',
-                  onTap: () =>
-                      Navigator.pushNamed(context, AppRoutes.myAccount),
-                ),
-                _MenuItem(
-                  icon: Icons.book_rounded,
-                  label: 'My Albums',
-                  onTap: () => Navigator.pushNamed(
-                    context,
-                    AppRoutes.viewAll,
-                    arguments: {
-                      'type': ViewAllType.cookbooks,
-                      'title': 'Cookbooks',
-                    },
-                  ),
-                ),
-                _MenuItem(
-                  icon: Icons.restaurant_menu_rounded,
-                  label: 'Dietary Preferences',
-                  onTap: () =>
-                      Navigator.pushNamed(context, AppRoutes.editPreferences),
-                ),
-                _MenuItem(
-                  icon: Icons.password_rounded,
-                  label: 'Security',
-                  onTap: () =>
-                      Navigator.pushNamed(context, AppRoutes.changePassword),
-                ),
-                _MenuItem(
-                  icon: Icons.receipt_long_rounded,
-                  label: 'Activity History',
-                  onTap: () =>
-                      Navigator.pushNamed(context, AppRoutes.activityHistory),
-                ),
-                _MenuItem(
-                  icon: Icons.subscriptions_rounded,
-                  label: 'Subscription',
-                  onTap: () => Navigator.pushNamed(
-                    context,
-                    AppRoutes.subscriptionManagement,
-                  ),
-                ),
-                _MenuItem(
-                  icon: Icons.help_rounded,
-                  label: 'Help Center',
-                  onTap: () =>
-                       Navigator.pushNamed(context, AppRoutes.helpCenter),
-                ),
-                SizedBox(height: 20.h),
-                Divider(height: 1.h, color: Color(0xFFEEEEEE)),
-                SizedBox(height: 20.h),
-                GestureDetector(
-                  onTap: _showLogout,
-                  behavior: HitTestBehavior.opaque,
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(vertical: 12.h),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.logout_rounded,
-                          color: const Color(0xFFC83A2D),
-                          size: 24.sp,
+                  // ── Name & Phone ──
+                  _isLoading
+                      ? Column(
+                          children: [
+                            const SkeletonLoader(width: 140, height: 22),
+                            SizedBox(height: 6.h),
+                            const SkeletonLoader(width: 110, height: 14),
+                          ],
+                        )
+                      : Column(
+                          children: [
+                            Text(
+                              _name.isNotEmpty ? _name : 'Adeel',
+                              style: TextStyle(
+                                fontFamily: 'Rubik',
+                                fontWeight: FontWeight.w700,
+                                fontSize: 22.sp,
+                                color: const Color(0xFF0F172A),
+                              ),
+                            ),
+                            SizedBox(height: 4.h),
+                            Text(
+                              _phone.isNotEmpty ? _phone : '(+1) 234 567 890',
+                              style: TextStyle(
+                                fontFamily: 'Rubik',
+                                fontSize: 14.sp,
+                                color: const Color(0xFF64748B),
+                              ),
+                            ),
+                          ],
                         ),
-                        SizedBox(width: 16.w),
-                        Text(
-                          'Logout',
-                          style: TextStyle(
-                            fontFamily: 'SF Pro',
-                            fontWeight: FontWeight.w500,
-                            fontSize: 16.sp,
-                            color: const Color(0xFFC83A2D),
+
+                  SizedBox(height: 16.h),
+
+                  // ── Menu Items ──
+                  Expanded(
+                    child: ListView(
+                      padding: EdgeInsets.symmetric(horizontal: 24.w),
+                      children: [
+                        _MenuItem(
+                          svgPath: 'assets/icones/people1.svg',
+                          label: 'My Account',
+                          onTap: () =>
+                              Navigator.pushNamed(context, AppRoutes.myAccount),
+                        ),
+                        const Divider(height: 1, thickness: 1, color: Color(0xFFF1F5F9)),
+                        _MenuItem(
+                          svgPath: 'assets/icones/password.svg',
+                          label: 'Change Password',
+                          onTap: () =>
+                              Navigator.pushNamed(context, AppRoutes.changePassword),
+                        ),
+                        const Divider(height: 1, thickness: 1, color: Color(0xFFF1F5F9)),
+                        _MenuItem(
+                          svgPath: 'assets/icones/eating.svg',
+                          label: 'Dietary Preferences',
+                          onTap: () =>
+                              Navigator.pushNamed(context, AppRoutes.editPreferences),
+                        ),
+                        const Divider(height: 1, thickness: 1, color: Color(0xFFF1F5F9)),
+                        _MenuItem(
+                          svgPath: 'assets/icones/billing.svg',
+                          label: 'Subscription',
+                          onTap: () => Navigator.pushNamed(
+                            context,
+                            AppRoutes.subscriptionManagement,
                           ),
                         ),
+                        const Divider(height: 1, thickness: 1, color: Color(0xFFF1F5F9)),
+                        _MenuItem(
+                          svgPath: 'assets/icones/coeur1.svg',
+                          label: 'Favorites',
+                          onTap: () => Navigator.pushNamed(
+                            context,
+                            AppRoutes.viewAll,
+                            arguments: {
+                              'type': ViewAllType.savedRecipes,
+                              'title': 'Your Favorites',
+                            },
+                          ),
+                        ),
+                        const Divider(height: 1, thickness: 1, color: Color(0xFFF1F5F9)),
+                        _MenuItem(
+                          svgPath: 'assets/icones/order.svg',
+                          label: 'Order History',
+                          onTap: () =>
+                              Navigator.pushNamed(context, AppRoutes.activityHistory),
+                        ),
+                        const Divider(height: 1, thickness: 1, color: Color(0xFFF1F5F9)),
+                        _MenuItem(
+                          svgPath: 'assets/icones/help.svg',
+                          label: 'Help Center',
+                          onTap: () =>
+                              Navigator.pushNamed(context, AppRoutes.helpCenter),
+                        ),
+                        const Divider(height: 1, thickness: 1, color: Color(0xFFF1F5F9)),
+                        _MenuItem(
+                          svgPath: 'assets/icones/delete.svg',
+                          label: 'Delete Account',
+                          textColor: const Color(0xFFDC2626),
+                          iconColor: const Color(0xFFDC2626),
+                          chevronColor: const Color(0xFFDC2626),
+                          onTap: () {
+                            showModalBottomSheet(
+                              context: context,
+                              backgroundColor: Colors.transparent,
+                              builder: (_) => const _DeleteAccountSheet(),
+                            );
+                          },
+                        ),
+                        const Divider(height: 1, thickness: 1, color: Color(0xFFF1F5F9)),
+                        _MenuItem(
+                          svgPath: 'assets/icones/logout.svg',
+                          label: 'Logout',
+                          textColor: const Color(0xFFDC2626),
+                          iconColor: const Color(0xFFDC2626),
+                          chevronColor: const Color(0xFFDC2626),
+                          onTap: _showLogout,
+                        ),
+                        SizedBox(height: 40.h),
                       ],
                     ),
                   ),
-                ),
-                SizedBox(height: 12.h),
-                const Divider(height: 1, color: Color(0xFFF3F4F6)),
-                SizedBox(height: 12.h),
-                GestureDetector(
-                  onTap: () {
-                    showModalBottomSheet(
-                      context: context,
-                      backgroundColor: Colors.transparent,
-                      builder: (_) => const _DeleteAccountSheet(),
-                    );
-                  },
-                  behavior: HitTestBehavior.opaque,
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(vertical: 12.h),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.delete_forever_rounded,
-                          color: const Color(0xFFC83A2D),
-                          size: 24.sp,
-                        ),
-                        SizedBox(width: 16.w),
-                        Text(
-                          'Delete Account',
-                          style: TextStyle(
-                            fontFamily: 'SF Pro',
-                            fontWeight: FontWeight.w600,
-                            fontSize: 16.sp,
-                            color: const Color(0xFFC83A2D),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                SizedBox(height: 40.h),
-              ],
+                ],
+              ),
             ),
           ),
         ],
@@ -357,13 +303,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
 }
 
 class _MenuItem extends StatelessWidget {
-  final IconData icon;
+  final String svgPath;
   final String label;
   final VoidCallback onTap;
+  final Color textColor;
+  final Color iconColor;
+  final Color chevronColor;
+
   const _MenuItem({
-    required this.icon,
+    required this.svgPath,
     required this.label,
     required this.onTap,
+    this.textColor = const Color(0xFF0F172A),
+    this.iconColor = const Color(0xFF0F172A),
+    this.chevronColor = const Color(0xFF64748B),
   });
 
   @override
@@ -372,27 +325,59 @@ class _MenuItem extends StatelessWidget {
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
       child: Padding(
-        padding: EdgeInsets.symmetric(vertical: 14.h),
+        padding: EdgeInsets.symmetric(vertical: 16.h),
         child: Row(
           children: [
-            Icon(icon, color: const Color(0xFF333333), size: 24.sp),
+            SizedBox(
+              width: 24.r,
+              height: 24.r,
+              child: Center(
+                child: SvgPicture.asset(
+                  svgPath,
+                  width: 22.r,
+                  height: 22.r,
+                  colorFilter: ColorFilter.mode(iconColor, BlendMode.srcIn),
+                  errorBuilder: (_, __, ___) => Icon(
+                    Icons.circle_outlined,
+                    size: 20.r,
+                    color: iconColor,
+                  ),
+                ),
+              ),
+            ),
             SizedBox(width: 16.w),
             Expanded(
               child: Text(
                 label,
                 style: TextStyle(
-                  fontFamily: 'SF Pro',
-                  fontWeight: FontWeight.w400,
+                  fontFamily: 'Rubik',
+                  fontWeight: FontWeight.w500,
                   fontSize: 16.sp,
-                  color: const Color(0xFF1A1A1A),
+                  color: textColor,
                 ),
               ),
+            ),
+            Icon(
+              Icons.chevron_right_rounded,
+              color: chevronColor,
+              size: 20.sp,
             ),
           ],
         ),
       ),
     );
   }
+}
+
+Widget _defaultAvatar() {
+  return Container(
+    color: const Color(0xFFE2E8F0),
+    child: Icon(
+      Icons.person_rounded,
+      size: 50.sp,
+      color: const Color(0xFF94A3B8),
+    ),
+  );
 }
 
 // ── Logout confirmation sheet ───────────────────────────────────────────────
@@ -431,7 +416,7 @@ class _LogoutSheet extends StatelessWidget {
                 Text(
                   'Logout',
                   style: TextStyle(
-                    fontFamily: 'SF Pro',
+                    fontFamily: 'Rubik',
                     fontWeight: FontWeight.w800,
                     fontSize: 20.sp,
                     color: const Color(0xFF1A1A1A),
@@ -455,7 +440,7 @@ class _LogoutSheet extends StatelessWidget {
                 Text(
                   'Are you sure you want to log out of your account? You will need to enter your credentials to log back in.',
                   style: TextStyle(
-                    fontFamily: 'SF Pro',
+                    fontFamily: 'Rubik',
                     fontSize: 14.sp,
                     color: const Color(0xFF64748B),
                     height: 1.6,
@@ -479,14 +464,14 @@ class _LogoutSheet extends StatelessWidget {
                     width: double.infinity,
                     height: 54.h,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFC83A2D),
+                      color: const Color(0xFFDC2626),
                       borderRadius: BorderRadius.circular(16.r),
                     ),
                     child: Center(
                       child: Text(
                         'Logout',
                         style: TextStyle(
-                          fontFamily: 'SF Pro',
+                          fontFamily: 'Rubik',
                           fontWeight: FontWeight.w700,
                           fontSize: 16.sp,
                           color: Colors.white,
@@ -503,13 +488,6 @@ class _LogoutSheet extends StatelessWidget {
       ),
     );
   }
-}
-
-Widget _defaultAvatar() {
-  return Container(
-    color: const Color(0xFFEEEEEE),
-    child: Icon(Icons.person_rounded, size: 40.sp, color: const Color(0xFFAAAAAA)),
-  );
 }
 
 // ── Delete Account confirmation sheet ───────────────────────────────────────
@@ -555,7 +533,7 @@ class _DeleteAccountSheetState extends State<_DeleteAccountSheet> {
                 Text(
                   'Delete Account',
                   style: TextStyle(
-                    fontFamily: 'SF Pro',
+                    fontFamily: 'Rubik',
                     fontWeight: FontWeight.w800,
                     fontSize: 20.sp,
                     color: const Color(0xFF1A1A1A),
@@ -579,7 +557,7 @@ class _DeleteAccountSheetState extends State<_DeleteAccountSheet> {
                 Text(
                   'Are you sure you want to permanently delete your account? This action cannot be undone and you will lose all your data (Cookbooks, grocery items, etc.).',
                   style: TextStyle(
-                    fontFamily: 'SF Pro',
+                    fontFamily: 'Rubik',
                     fontSize: 14.sp,
                     color: const Color(0xFF64748B),
                     height: 1.6,
@@ -611,7 +589,7 @@ class _DeleteAccountSheetState extends State<_DeleteAccountSheet> {
                     width: double.infinity,
                     height: 54.h,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFC83A2D),
+                      color: const Color(0xFFDC2626),
                       borderRadius: BorderRadius.circular(16.r),
                     ),
                     child: Center(
@@ -624,7 +602,7 @@ class _DeleteAccountSheetState extends State<_DeleteAccountSheet> {
                         : Text(
                             'Delete permanently',
                             style: TextStyle(
-                              fontFamily: 'SF Pro',
+                              fontFamily: 'Rubik',
                               fontWeight: FontWeight.w700,
                               fontSize: 16.sp,
                               color: Colors.white,

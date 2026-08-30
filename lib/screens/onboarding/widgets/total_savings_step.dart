@@ -150,7 +150,7 @@ class _TotalSavingsStepState extends State<TotalSavingsStep> with SingleTickerPr
                           style: GoogleFonts.rubik(
                             fontSize: 52.sp,
                             fontWeight: FontWeight.w500,
-                            color: const Color(0xFF10B981),
+                            color: const Color(0xFF15803D),
                             height: 1.0,
                             letterSpacing: -1.0)),
                         SizedBox(height: 10.h),

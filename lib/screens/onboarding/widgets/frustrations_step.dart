@@ -15,12 +15,13 @@ class FrustrationsStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final selected = initialSelected.isNotEmpty ? initialSelected : const ['dont_know'];
     return SelectionOnboardingStep(
       title: "What's holding you back from cooking more?",
       subtitle: 'Choose the ones that feel most true',
       maxSelections: 3,
       onContinue: onContinue,
-      initialSelected: initialSelected,
+      initialSelected: selected,
       onSelectionChanged: onChanged,
       options: [
         SelectionOption(

@@ -1,18 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import '../../widgets/skeleton_list.dart';
-import '../../widgets/red_button.dart';
 import '../../services/user_service.dart';
-import '../../services/auth_service.dart';
-import '../../models/device_session.dart';
 import '../../core/widgets/ios_toast.dart';
 import '../../core/utils/error_helper.dart';
+import '../../widgets/red_header_background.dart';
 
-// ══════════════════════════════════════════════════════════════════════════════
-// SECURITY SCREEN
-// ══════════════════════════════════════════════════════════════════════════════
 class ChangePasswordScreen extends StatefulWidget {
   const ChangePasswordScreen({super.key});
+
   @override
   State<ChangePasswordScreen> createState() => _ChangePasswordScreenState();
 }
@@ -43,7 +38,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     if (oldPass.isEmpty || newPass.isEmpty || confirmPass.isEmpty) {
       IosToast.show(
         context,
-        message: 'Veuillez remplir tous les champs.',
+        message: 'Please fill in all fields.',
         type: ToastType.error,
       );
       return;
@@ -51,7 +46,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     if (newPass != confirmPass) {
       IosToast.show(
         context,
-        message: 'Les nouveaux mots de passe ne correspondent pas.',
+        message: 'New passwords do not match.',
         type: ToastType.error,
       );
       return;
@@ -66,7 +61,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
       if (!mounted) return;
       IosToast.show(
         context,
-        message: 'Mot de passe modifié avec succès.',
+        message: 'Password updated successfully.',
         type: ToastType.success,
       );
       Navigator.pop(context);
@@ -85,340 +80,189 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.transparent,
       resizeToAvoidBottomInset: false,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        centerTitle: false,
-        titleSpacing: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: const Color(0xFF1A1A1A), size: 24.sp),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          'Security',
-          style: TextStyle(
-            fontFamily: 'SF Pro',
-            fontWeight: FontWeight.w600,
-            fontSize: 22.sp,
-            color: const Color(0xFF1A1A1A),
-          ),
-        ),
-      ),
-      body: SingleChildScrollView(
-        padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 20.h),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Change Password',
-              style: TextStyle(
-                fontFamily: 'SF Pro',
-                fontWeight: FontWeight.w700,
-                fontSize: 18.sp,
-                color: const Color(0xFF1A1A1A),
-              ),
-            ),
-            SizedBox(height: 16.h),
-
-            _label('Current Password'),
-            SizedBox(height: 8.h),
-            _field(
-              child: TextFormField(
-                controller: _oldPasswordCtrl,
-                obscureText: !_showCurrent,
-                style: _textStyle(),
-                decoration: _dec('Enter current password').copyWith(
-                  suffixIcon: GestureDetector(
-                    onTap: () => setState(() => _showCurrent = !_showCurrent),
-                    child: Icon(
-                      _showCurrent
-                          ? Icons.visibility_rounded
-                          : Icons.visibility_off_rounded,
-                      size: 20,
-                      color: const Color(0xFFAAAAAA),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            SizedBox(height: 18.h),
-
-            _label('New Password'),
-            SizedBox(height: 8.h),
-            _field(
-              child: TextFormField(
-                controller: _newPasswordCtrl,
-                obscureText: !_showNew,
-                style: _textStyle(),
-                decoration: _dec('Enter new password').copyWith(
-                  suffixIcon: GestureDetector(
-                    onTap: () => setState(() => _showNew = !_showNew),
-                    child: Icon(
-                      _showNew
-                          ? Icons.visibility_rounded
-                          : Icons.visibility_off_rounded,
-                      size: 20,
-                      color: const Color(0xFFAAAAAA),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            SizedBox(height: 18.h),
-
-            _label('Confirm Password'),
-            SizedBox(height: 8.h),
-            _field(
-              child: TextFormField(
-                controller: _confirmPasswordCtrl,
-                obscureText: !_showConfirm,
-                style: _textStyle(),
-                decoration: _dec('Confirm new password').copyWith(
-                  suffixIcon: GestureDetector(
-                    onTap: () => setState(() => _showConfirm = !_showConfirm),
-                    child: Icon(
-                      _showConfirm
-                          ? Icons.visibility_rounded
-                          : Icons.visibility_off_rounded,
-                      size: 20,
-                      color: const Color(0xFFAAAAAA),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            SizedBox(height: 36.h),
-
-            RedButton(
-              label: 'Save',
-              loadingLabel: 'Recording in progress',
-              isLoading: _isLoading,
-              onTap: _savePassword,
-            ),
-            SizedBox(height: 50.h),
-
-            _buildActiveSessions(),
-            SizedBox(height: MediaQuery.of(context).viewInsets.bottom + 40.h),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildActiveSessions() {
-    return FutureBuilder<List<DeviceSession>>(
-      future: AuthService.instance.getSessions(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const SkeletonList(height: 80, itemCount: 2);
-        }
-
-        final sessions = snapshot.data ?? [];
-
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Active Sessions',
-              style: TextStyle(
-                fontFamily: 'SF Pro',
-                fontWeight: FontWeight.w700,
-                fontSize: 18.sp,
-                color: const Color(0xFF1A1A1A),
-              ),
-            ),
-            SizedBox(height: 6.h),
-            Text(
-              'Here are all the devices that are currently logged in to your account.',
-              style: TextStyle(
-                fontFamily: 'SF Pro',
-                fontSize: 14.sp,
-                height: 1.4,
-                color: const Color(0xFF888888),
-              ),
-            ),
-            SizedBox(height: 24.h),
-            if (sessions.isEmpty)
-              Text(
-                'No active sessions found.',
-                style: TextStyle(
-                  fontFamily: 'SF Pro',
-                  color: const Color(0xFF888888),
-                  fontSize: 14.sp,
-                ),
-              )
-            else
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16.r),
-                  border: Border.all(color: const Color(0xFFEEEEEE), width: 1.w),
-                ),
-                child: Column(
-                  children: sessions.asMap().entries.map((entry) {
-                    final idx = entry.key;
-                    final session = entry.value;
-                    return Column(
-                      children: [
-                        _sessionItem(session),
-                        if (idx < sessions.length - 1)
-                          const Divider(height: 1, color: Color(0xFFEEEEEE)),
-                      ],
-                    );
-                  }).toList(),
-                ),
-              ),
-          ],
-        );
-      },
-    );
-  }
-
-  Widget _sessionItem(DeviceSession session) {
-    IconData icon;
-    final name = session.deviceName.toLowerCase();
-    if (name.contains('iphone') ||
-        name.contains('android') ||
-        name.contains('mobile')) {
-      icon = Icons.phone_iphone_rounded;
-    } else if (name.contains('ipad') || name.contains('tablet')) {
-      icon = Icons.tablet_mac_rounded;
-    } else {
-      icon = Icons.laptop_mac_rounded;
-    }
-
-    final date =
-        "${session.lastActive.day.toString().padLeft(2, '0')}/${session.lastActive.month.toString().padLeft(2, '0')}/${session.lastActive.year}";
-    final subtitle = "${session.location} • $date";
-
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
-      child: Row(
+      body: Stack(
+        fit: StackFit.expand,
         children: [
-          Container(
-            padding: EdgeInsets.all(12.r),
-            decoration: BoxDecoration(
-              color: session.isCurrentSession
-                  ? const Color(0xFFE8F7F0)
-                  : const Color(0xFFF5F5F5),
-              borderRadius: BorderRadius.circular(12.r),
-            ),
-            child: Icon(
-              icon,
-              size: 22.sp,
-              color: session.isCurrentSession
-                  ? const Color(0xFF00B251)
-                  : const Color(0xFF888888),
-            ),
+          // ── Red background fond_page.png ──
+          const Positioned.fill(
+            child: RedHeaderBackground(),
           ),
-          SizedBox(width: 14.w),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Text(
-                      session.deviceName,
-                      style: TextStyle(
-                        fontFamily: 'SF Pro',
-                        fontWeight: FontWeight.w600,
-                        fontSize: 15.sp,
-                        color: const Color(0xFF1A1A1A),
-                      ),
-                    ),
-                    if (session.isCurrentSession) ...[
-                      SizedBox(width: 8.w),
-                      Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 6.w,
-                          vertical: 2.h,
-                        ),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF00B251),
-                          borderRadius: BorderRadius.circular(4.r),
-                        ),
-                        child: Text(
-                          'Current',
-                          style: TextStyle(
-                            fontFamily: 'SF Pro',
-                            fontWeight: FontWeight.w600,
-                            fontSize: 10.sp,
-                            color: Colors.white,
+          SafeArea(
+            bottom: false,
+            child: Container(
+              margin: EdgeInsets.only(top: 25.h),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(
+                  top: Radius.circular(32.r),
+                ),
+              ),
+              child: Column(
+                children: [
+                  // ── Header (Back Button & Title) ──
+                  Padding(
+                    padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 12.h),
+                    child: Row(
+                      children: [
+                        GestureDetector(
+                          onTap: () => Navigator.pop(context),
+                          child: Container(
+                            width: 42.r,
+                            height: 42.r,
+                            decoration: const BoxDecoration(
+                              color: Color(0xFFF1F5F9),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              Icons.arrow_back_rounded,
+                              size: 20.sp,
+                              color: const Color(0xFF0F172A),
+                            ),
                           ),
                         ),
-                      ),
-                    ],
-                  ],
-                ),
-                SizedBox(height: 4.h),
-                Text(
-                  subtitle,
-                  style: TextStyle(
-                    fontFamily: 'SF Pro',
-                    fontSize: 13.sp,
-                    color: const Color(0xFF888888),
+                        Expanded(
+                          child: Text(
+                            'New Password',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontFamily: 'Rubik',
+                              fontWeight: FontWeight.w700,
+                              fontSize: 20.sp,
+                              color: const Color(0xFF0F172A),
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: 42.r),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+
+                  // ── Form Content ──
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildLabel('Password'),
+                          SizedBox(height: 8.h),
+                          _buildPasswordField(
+                            controller: _oldPasswordCtrl,
+                            obscureText: !_showCurrent,
+                            onToggle: () => setState(() => _showCurrent = !_showCurrent),
+                          ),
+                          SizedBox(height: 20.h),
+
+                          _buildLabel('New Password'),
+                          SizedBox(height: 8.h),
+                          _buildPasswordField(
+                            controller: _newPasswordCtrl,
+                            obscureText: !_showNew,
+                            onToggle: () => setState(() => _showNew = !_showNew),
+                          ),
+                          SizedBox(height: 20.h),
+
+                          _buildLabel('Confirm Password'),
+                          SizedBox(height: 8.h),
+                          _buildPasswordField(
+                            controller: _confirmPasswordCtrl,
+                            obscureText: !_showConfirm,
+                            onToggle: () => setState(() => _showConfirm = !_showConfirm),
+                          ),
+                          SizedBox(height: 40.h),
+
+                          // Change Password Button
+                          GestureDetector(
+                            onTap: _isLoading ? null : _savePassword,
+                            child: Container(
+                              width: double.infinity,
+                              height: 54.h,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFC83A2D),
+                                borderRadius: BorderRadius.circular(27.r),
+                              ),
+                              child: Center(
+                                child: _isLoading
+                                    ? const SizedBox(
+                                        width: 20,
+                                        height: 20,
+                                        child: CircularProgressIndicator(
+                                          color: Colors.white,
+                                          strokeWidth: 2,
+                                        ),
+                                      )
+                                    : Text(
+                                        'Change Password',
+                                        style: TextStyle(
+                                          fontFamily: 'Rubik',
+                                          fontWeight: FontWeight.w700,
+                                          fontSize: 16.sp,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                              ),
+                            ),
+                          ),
+                          SizedBox(height: MediaQuery.of(context).viewInsets.bottom + 30.h),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
-          if (!session.isCurrentSession)
-            IconButton(
-              onPressed: () async {
-                try {
-                  await AuthService.instance.revokeSession(session.id);
-                  setState(() {});
-                } catch (e) {
-                  if (mounted) {
-                    IosToast.show(
-                      context,
-                      message: ErrorHelper.getFriendlyMessage(e).replaceAll('Exception: ', ''),
-                      type: ToastType.error,
-                    );
-                  }
-                }
-              },
-              icon: Icon(Icons.logout_rounded, color: const Color(0xFFC83A2D), size: 24.sp),
-            ),
         ],
       ),
     );
   }
+
+  Widget _buildLabel(String text) {
+    return Text(
+      text,
+      style: TextStyle(
+        fontFamily: 'Rubik',
+        fontWeight: FontWeight.w500,
+        fontSize: 14.sp,
+        color: const Color(0xFF64748B),
+      ),
+    );
+  }
+
+  Widget _buildPasswordField({
+    required TextEditingController controller,
+    required bool obscureText,
+    required VoidCallback onToggle,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFFF1F5F9),
+        borderRadius: BorderRadius.circular(16.r),
+      ),
+      child: TextField(
+        controller: controller,
+        obscureText: obscureText,
+        style: TextStyle(
+          fontFamily: 'Rubik',
+          fontSize: 15.sp,
+          fontWeight: FontWeight.w500,
+          color: const Color(0xFF0F172A),
+        ),
+        decoration: InputDecoration(
+          border: InputBorder.none,
+          contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
+          suffixIcon: GestureDetector(
+            onTap: onToggle,
+            child: Icon(
+              obscureText ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+              size: 20.sp,
+              color: const Color(0xFF0F172A),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-TextStyle _textStyle() => TextStyle(
-  fontFamily: 'SF Pro',
-  fontSize: 15.sp,
-  color: const Color(0xFF1A1A1A),
-);
-
-Widget _label(String t) => Text(
-  t,
-  style: TextStyle(
-    fontFamily: 'SF Pro',
-    fontWeight: FontWeight.w500,
-    fontSize: 14.sp,
-    color: const Color(0xFF333333),
-  ),
-);
-
-Widget _field({required Widget child}) => Container(
-  decoration: BoxDecoration(
-    color: Colors.white,
-    borderRadius: BorderRadius.circular(12.r),
-    border: Border.all(color: const Color(0xFFE8E8E8)),
-  ),
-  child: child,
-);
-
-InputDecoration _dec(String hint) => InputDecoration(
-  hintText: hint,
-  hintStyle: TextStyle(color: const Color(0xFFBBBBBB), fontFamily: 'SF Pro', fontSize: 13.sp),
-  border: InputBorder.none,
-  contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
-);

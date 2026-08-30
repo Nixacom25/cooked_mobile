@@ -3,6 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import '../services/tutorial_service.dart';
+import '../../widgets/red_header_background.dart';
 import '../../models/cookbook.dart';
 
 class TutorialHelper {
@@ -113,6 +114,7 @@ class TutorialHelper {
   }) {
     final service = TutorialService.instance;
     if (service.hasSeenScan) return;
+    service.completeScan();
 
     // Ensure we don't have overlapping tutorials
     dismissCurrent();
@@ -141,6 +143,7 @@ class TutorialHelper {
   static void showImportOnboardingDialog(BuildContext context) {
     final service = TutorialService.instance;
     if (service.hasSeenImport) return;
+    service.completeImport();
 
     // Ensure we don't have overlapping tutorials
     dismissCurrent();
@@ -627,8 +630,8 @@ class _ImportOnboardingModalState extends State<ImportOnboardingModal> {
 
   final List<Map<String, dynamic>> _platforms = [
     {
-      'name': 'Instagram2',
-      'asset': 'assets/icones/instagram.svg',
+      'name': 'Instagram',
+      'asset': 'assets/icones/instagram2.svg',
     },
     {
       'name': 'TikTok',
@@ -1313,14 +1316,9 @@ class _CookbookOnboardingModalState extends State<CookbookOnboardingModal> {
       backgroundColor: Colors.transparent,
       body: Stack(
         children: [
-          // Background image fond_page.png
-          Positioned.fill(
-            child: Image.asset(
-              'assets/images/fond_page.png',
-              fit: BoxFit.cover,
-              width: double.infinity,
-              height: double.infinity,
-            ),
+          // Background gradient
+          const Positioned.fill(
+            child: RedHeaderBackground(),
           ),
 
           // Close button

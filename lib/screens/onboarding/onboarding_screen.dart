@@ -38,6 +38,7 @@ import 'widgets/free_trial_guide_step.dart';
 import 'widgets/perfect_meal_step.dart';
 
 import '../../services/auth_service.dart';
+import '../../widgets/red_header_background.dart';
 import '../../services/iap_service.dart';
 import '../../services/revenuecat_service.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
@@ -100,9 +101,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   int _eatingOutSavings = 0;
   int _grocerySavings = 0;
-  String _eatingOutSelection = '';
-  String _grocerySelection = '';
-  List<String> _frustrations = [];
+  String _eatingOutSelection = 'under_50';
+  String _grocerySelection = 'never';
+  List<String> _frustrations = ['dont_know'];
   String _ageSelection = '';
 
   @override
@@ -705,13 +706,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           child: Stack(
             fit: StackFit.expand,
             children: [
-              // Background image fond_page.png
-              Positioned.fill(
-                child: Image.asset(
-                  'assets/images/fond_page.png',
-                  fit: BoxFit.cover,
-                  width: double.infinity,
-                  height: double.infinity)),
+              const Positioned.fill(
+                child: RedHeaderBackground(),
+              ),
                 SafeArea(
                   bottom: false,
                   child: Container(

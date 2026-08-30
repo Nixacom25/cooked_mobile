@@ -7,6 +7,7 @@ import '../../core/widgets/ios_toast.dart';
 import '../../core/utils/error_helper.dart';
 import '../../widgets/red_button.dart';
 import '../../widgets/loading_text.dart';
+import '../../widgets/red_header_background.dart';
 
 class OtpScreen extends StatefulWidget {
   const OtpScreen({super.key});
@@ -133,8 +134,10 @@ class _OtpScreenState extends State<OtpScreen> {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // ── Full-screen food pattern ──
-          Image.asset('assets/images/fond.png', fit: BoxFit.cover),
+          // ── Branded header background ──
+          const Positioned.fill(
+            child: RedHeaderBackground(),
+          ),
 
           // ── Cooked logo — centered on the page ──
           Positioned.fill(
@@ -169,7 +172,7 @@ class _OtpScreenState extends State<OtpScreen> {
               ),
               child: Stack(
                 children: [
-                  // Food pattern inside card
+                  // Branded gradient background inside card
                   Positioned.fill(
                     child: ClipRRect(
                       borderRadius: const BorderRadius.vertical(
@@ -177,10 +180,7 @@ class _OtpScreenState extends State<OtpScreen> {
                       ),
                       child: Opacity(
                         opacity: 0.12,
-                        child: Image.asset(
-                          'assets/images/fond.png',
-                          fit: BoxFit.cover,
-                        ),
+                        child: const RedHeaderBackground(),
                       ),
                     ),
                   ),

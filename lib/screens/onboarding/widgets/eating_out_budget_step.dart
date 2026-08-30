@@ -25,7 +25,9 @@ class _EatingOutBudgetStepState extends State<EatingOutBudgetStep> {
   @override
   void initState() {
     super.initState();
-    _selectedValue = widget.initialSelected ?? 'under_50';
+    _selectedValue = (widget.initialSelected != null && widget.initialSelected!.isNotEmpty)
+        ? widget.initialSelected!
+        : 'under_50';
   }
 
   int _calculateSpend(String value) {
@@ -67,9 +69,9 @@ class _EatingOutBudgetStepState extends State<EatingOutBudgetStep> {
             textBaseline: TextBaseline.alphabetic,
             children: [
               Text(
-                '~\$$formattedSavings',
+                '\$$formattedSavings',
                 style: GoogleFonts.rubik(
-                  color: const Color(0xFF16A34A),
+                  color: const Color(0xFF15803D),
                   fontSize: 28.sp,
                   fontWeight: FontWeight.w500)),
               SizedBox(width: 6.w),

@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:url_launcher/url_launcher.dart';
+
 import '../../core/widgets/legal_content_modal.dart';
 import '../../core/widgets/terms_validation_modal.dart';
+import '../../widgets/red_header_background.dart';
 
-// ══════════════════════════════════════════════════════════════════════════════
-// HELP CENTER SCREEN
-// ══════════════════════════════════════════════════════════════════════════════
 class HelpCenterScreen extends StatefulWidget {
   const HelpCenterScreen({super.key});
 
@@ -15,35 +14,6 @@ class HelpCenterScreen extends StatefulWidget {
 }
 
 class _HelpCenterScreenState extends State<HelpCenterScreen> {
-  final _scrollCtrl = ScrollController();
-
-  // Total height of the expanded header (image area)
-  double get _headerExpandedH => 130.0.h;
-  // Height of the collapsed pinned bar (status bar height + compact bar)
-  double get _collapsedBarH => 60.0.h;
-  // How many px of scroll make the header fully collapse
-  double get _collapseRange => _headerExpandedH - _collapsedBarH;
-
-  double _scrollOffset = 0;
-
-  @override
-  void initState() {
-    super.initState();
-    _scrollCtrl.addListener(_onScroll);
-  }
-
-  void _onScroll() {
-    final offset = _scrollCtrl.offset.clamp(0.0, _collapseRange);
-    if (offset != _scrollOffset) setState(() => _scrollOffset = offset);
-  }
-
-  @override
-  void dispose() {
-    _scrollCtrl.removeListener(_onScroll);
-    _scrollCtrl.dispose();
-    super.dispose();
-  }
-
   Future<void> _openUrl(String url) async {
     final uri = Uri.parse(url);
     try {
@@ -56,9 +26,6 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
   void _showPolicy(String title, String content) {
     LegalContentModal.show(context, title: title, content: content);
   }
-
-  // 0.0 = expanded, 1.0 = fully collapsed
-  double get _collapseFraction => _scrollOffset / _collapseRange;
 
   static const _faqs = [
     (
@@ -85,159 +52,161 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final statusH = MediaQuery.of(context).padding.top;
-
-    // Progress values for individual elements
-    final descOpacity = (1.0 - _collapseFraction * 2.5).clamp(0.0, 1.0);
-    final titleSlide = _collapseFraction; // 0→1: subtitle slides up into bar
-
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.transparent,
+      resizeToAvoidBottomInset: false,
       body: Stack(
+        fit: StackFit.expand,
         children: [
-          // ── Scrollable body ─────────────────────────────────────────────
-          CustomScrollView(
-            controller: _scrollCtrl,
-            slivers: [
-              // Transparent spacer = header height
-              SliverToBoxAdapter(
-                child: SizedBox(height: _headerExpandedH + statusH),
-              ),
-
-              // ── Contact options ────────────────────────────────────────
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: EdgeInsets.fromLTRB(18.w, 24.h, 18.w, 0),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: _ContactCard(
-                          icon: Icons.email_rounded,
-                          label: 'Email',
-                          subtitle: 'contact@cookedapp.com',
-                          onTap: () => _openUrl('mailto:contact@cookedapp.com'),
-                        ),
-                      ),
-                      SizedBox(width: 16.w),
-                      Expanded(
-                        child: _ContactCard(
-                          icon: Icons.phone_rounded,
-                          label: 'Phone Number',
-                          subtitle: '+1 (234) 567-890',
-                          onTap: () => _openUrl('tel:+1234567890'),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              // ── Legal policies grid ───────────────────────────────────
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: EdgeInsets.fromLTRB(18.w, 28.h, 18.w, 0),
-                  child: Text(
-                    'Legal & Policies',
-                    style: TextStyle(
-                      fontFamily: 'SF Pro',
-                      fontWeight: FontWeight.w800,
-                      fontSize: 18.sp,
-                      color: const Color(0xFF1A1A1A),
-                    ),
-                  ),
-                ),
-              ),
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: EdgeInsets.fromLTRB(18.w, 0, 18.w, 0),
-                  child: GridView.count(
-                    crossAxisCount: 2,
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    crossAxisSpacing: 14.w,
-                    mainAxisSpacing: 14.h,
-                    childAspectRatio: 2.5,
-                    children: [
-                      _PolicyButton(
-                        icon: Icons.description_rounded,
-                        label: 'Terms & Conditions',
-                        onTap: () => _showPolicy('Terms & Conditions', dummyTerms),
-                      ),
-                      _PolicyButton(
-                        icon: Icons.receipt_long_rounded,
-                        label: 'Refund & Cancellation',
-                        onTap: () => _showPolicy('Refund & Cancellation', dummyRefund),
-                      ),
-                      _PolicyButton(
-                        icon: Icons.policy_rounded,
-                        label: 'Privacy Policy',
-                        onTap: () => _showPolicy('Privacy Policy', dummyPrivacy),
-                      ),
-                      _PolicyButton(
-                        icon: Icons.cookie_rounded,
-                        label: 'Cookie Policy',
-                        onTap: () => _showPolicy('Cookie Policy', dummyCookies),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              // ── FAQs ──────────────────────────────────────────────────
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: EdgeInsets.fromLTRB(18.w, 32.h, 18.w, 12.h),
-                  child: Text(
-                    'FAQ',
-                    style: TextStyle(
-                      fontFamily: 'SF Pro',
-                      fontWeight: FontWeight.w800,
-                      fontSize: 18.sp,
-                      color: const Color(0xFF1A1A1A),
-                    ),
-                  ),
-                ),
-              ),
-              SliverPadding(
-                padding: EdgeInsets.fromLTRB(18.w, 0, 18.w, 24.h),
-                sliver: SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (_, i) =>
-                        _FaqItem(question: _faqs[i].$1, answer: _faqs[i].$2),
-                    childCount: _faqs.length,
-                  ),
-                ),
-              ),
-            ],
+          // ── Red background fond_page.png ──
+          const Positioned.fill(
+            child: RedHeaderBackground(),
           ),
-
-          // ── Animated header overlay ────────────────────────────────────
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            height: _headerExpandedH + statusH - _scrollOffset,
-            child: ClipRRect(
-              borderRadius: _collapseFraction < 0.95
-                  ? BorderRadius.vertical(bottom: Radius.circular(15.r))
-                  : BorderRadius.zero,
-              child: Stack(
-                fit: StackFit.expand,
+          SafeArea(
+            bottom: false,
+            child: Container(
+              margin: EdgeInsets.only(top: 25.h),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(
+                  top: Radius.circular(32.r),
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Background image
-                  Image.asset(
-                    'assets/images/fond4.png',
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                  // ── Header (Back Button & Title) ──
+                  Padding(
+                    padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 12.h),
+                    child: Row(
+                      children: [
+                        GestureDetector(
+                          onTap: () => Navigator.pop(context),
+                          child: Container(
+                            width: 42.r,
+                            height: 42.r,
+                            decoration: const BoxDecoration(
+                              color: Color(0xFFF1F5F9),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              Icons.arrow_back_rounded,
+                              size: 20.sp,
+                              color: const Color(0xFF0F172A),
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          child: Text(
+                            'Help Center',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontFamily: 'Rubik',
+                              fontWeight: FontWeight.w700,
+                              fontSize: 20.sp,
+                              color: const Color(0xFF0F172A),
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: 42.r),
+                      ],
+                    ),
                   ),
-                  // Gradient overlay
-                  Container(
-                    decoration: const BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        stops: [0.0, 0.5],
-                        colors: [Color(0xFFC83A2D), Color(0x63C83A2D)],
+
+                  // ── Content ──
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Tell us how we can help 👋\nChapters are standing by for service & support!',
+                            style: TextStyle(
+                              fontFamily: 'Rubik',
+                              fontWeight: FontWeight.w400,
+                              fontSize: 15.sp,
+                              color: const Color(0xFF0F172A),
+                              height: 1.5,
+                            ),
+                          ),
+                          SizedBox(height: 24.h),
+
+                          // Email Card
+                          _buildContactCard(
+                            icon: Icons.mail_outline_rounded,
+                            title: 'Email',
+                            subtitle: 'Send to your email',
+                            onTap: () => _openUrl('mailto:contact@cookedapp.com'),
+                          ),
+                          SizedBox(height: 14.h),
+
+                          // Phone Card
+                          _buildContactCard(
+                            icon: Icons.phone_outlined,
+                            title: 'Phone Number',
+                            subtitle: 'Send to your phone',
+                            onTap: () => _openUrl('tel:+1234567890'),
+                          ),
+                          SizedBox(height: 28.h),
+
+                          // Legal Policies
+                          Text(
+                            'Legal & Policies',
+                            style: TextStyle(
+                              fontFamily: 'Rubik',
+                              fontWeight: FontWeight.w700,
+                              fontSize: 18.sp,
+                              color: const Color(0xFF0F172A),
+                            ),
+                          ),
+                          SizedBox(height: 14.h),
+                          GridView.count(
+                            crossAxisCount: 2,
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            crossAxisSpacing: 12.w,
+                            mainAxisSpacing: 12.h,
+                            childAspectRatio: 2.3,
+                            children: [
+                              _PolicyButton(
+                                icon: Icons.description_outlined,
+                                label: 'Terms & Conditions',
+                                onTap: () => _showPolicy('Terms & Conditions', dummyTerms),
+                              ),
+                              _PolicyButton(
+                                icon: Icons.receipt_long_outlined,
+                                label: 'Refund Policy',
+                                onTap: () => _showPolicy('Refund & Cancellation', dummyRefund),
+                              ),
+                              _PolicyButton(
+                                icon: Icons.policy_outlined,
+                                label: 'Privacy Policy',
+                                onTap: () => _showPolicy('Privacy Policy', dummyPrivacy),
+                              ),
+                              _PolicyButton(
+                                icon: Icons.cookie_outlined,
+                                label: 'Cookie Policy',
+                                onTap: () => _showPolicy('Cookie Policy', dummyCookies),
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: 28.h),
+
+                          // FAQ Section
+                          Text(
+                            'FAQ',
+                            style: TextStyle(
+                              fontFamily: 'Rubik',
+                              fontWeight: FontWeight.w700,
+                              fontSize: 18.sp,
+                              color: const Color(0xFF0F172A),
+                            ),
+                          ),
+                          SizedBox(height: 14.h),
+                          ..._faqs.map((faq) => _FaqItem(question: faq.$1, answer: faq.$2)),
+                          SizedBox(height: 30.h),
+                        ],
                       ),
                     ),
                   ),
@@ -245,106 +214,73 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
               ),
             ),
           ),
-
-          // ── Pinned floating bar (always on top) ────────────────────────
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: AnimatedContainer(
-              duration: Duration.zero,
-              color: _collapseFraction >= 0.98
-                  ? Colors.white.withValues(alpha: 0.95)
-                  : Colors.transparent,
-              child: SafeArea(
-                bottom: false,
-                child: SizedBox(
-                  height: _collapsedBarH,
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 18.w,
-                      vertical: 10.h,
-                    ),
-                    child: Row(
-                      children: [
-                        // Back button
-                        GestureDetector(
-                          onTap: () => Navigator.pop(context),
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 150),
-                            width: 36.w,
-                            height: 36.h,
-                            decoration: BoxDecoration(
-                              color: Colors.transparent,
-                            ),
-                            child: Icon(
-                              Icons.arrow_back,
-                              size: 24.sp,
-                              color: _collapseFraction >= 0.98
-                                  ? const Color(0xFF1A1A1A)
-                                  : Colors.white,
-                            ),
-                          ),
-                        ),
-                        SizedBox(width: 5.w),
-                        // Title always visible, changes color
-                        Text(
-                          'Help Center',
-                          style: TextStyle(
-                            fontFamily: 'SF Pro',
-                            fontWeight: FontWeight.w800,
-                            fontSize: 24.sp,
-                            color: _collapseFraction >= 0.98
-                                ? const Color(0xFF1A1A1A)
-                                : Colors.white,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-
-          // ── Expanded header content (title + description, fades out) ───
-          Positioned(
-            top: statusH + _collapsedBarH,
-            left: 0,
-            right: 0,
-            child: Opacity(
-              opacity: descOpacity,
-              child: Transform.translate(
-                offset: Offset(0, -titleSlide * 30),
-                child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 20.w),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Tell us how we can help 👋\nChapter are standing by for service & support!',
-                        style: TextStyle(
-                          fontFamily: 'SF Pro',
-                          fontWeight: FontWeight.w200,
-                          fontSize: 16.sp,
-                          color: Colors.white,
-                          height: 1.4,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildContactCard({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 18.h),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF1F5F9),
+          borderRadius: BorderRadius.circular(16.r),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 44.r,
+              height: 44.r,
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+              ),
+              child: Center(
+                child: Icon(
+                  icon,
+                  size: 22.sp,
+                  color: const Color(0xFFC83A2D),
+                ),
+              ),
+            ),
+            SizedBox(width: 16.w),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontFamily: 'Rubik',
+                    fontWeight: FontWeight.w700,
+                    fontSize: 16.sp,
+                    color: const Color(0xFF0F172A),
+                  ),
+                ),
+                SizedBox(height: 2.h),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    fontFamily: 'Rubik',
+                    fontSize: 13.sp,
+                    color: const Color(0xFF64748B),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
 }
 
-// ── Policy button tile ─────────────────────────────────────────────────────────
 class _PolicyButton extends StatelessWidget {
   final IconData icon;
   final String label;
@@ -360,33 +296,26 @@ class _PolicyButton extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
+        padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
         decoration: BoxDecoration(
-          color: const Color(0xFFF5F5F5),
+          color: const Color(0xFFF1F5F9),
           borderRadius: BorderRadius.circular(14.r),
-          border: Border.all(color: const Color(0xFFEEEEEE)),
         ),
         child: Row(
           children: [
-            Container(
-              width: 36.w,
-              height: 36.h,
-              decoration: BoxDecoration(
-                color: const Color(0xFFFFEEEE),
-                borderRadius: BorderRadius.circular(10.r),
-              ),
-              child: Icon(icon, size: 18.sp, color: const Color(0xFFC83A2D)),
-            ),
-            SizedBox(width: 10.w),
+            Icon(icon, size: 20.sp, color: const Color(0xFFC83A2D)),
+            SizedBox(width: 8.w),
             Expanded(
               child: Text(
                 label,
                 style: TextStyle(
-                  fontFamily: 'SF Pro',
-                  fontWeight: FontWeight.w600,
+                  fontFamily: 'Rubik',
+                  fontWeight: FontWeight.w500,
                   fontSize: 12.sp,
-                  color: const Color(0xFF1A1A1A),
+                  color: const Color(0xFF0F172A),
                 ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
           ],
@@ -396,7 +325,6 @@ class _PolicyButton extends StatelessWidget {
   }
 }
 
-// ── FAQ expandable item ────────────────────────────────────────────────────────
 class _FaqItem extends StatefulWidget {
   final String question;
   final String answer;
@@ -419,13 +347,8 @@ class _FaqItemState extends State<_FaqItem> {
         margin: EdgeInsets.only(bottom: 12.h),
         padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
         decoration: BoxDecoration(
-          color: _expanded ? const Color(0xFFFFF5F5) : const Color(0xFFF5F5F5),
-          borderRadius: BorderRadius.circular(14.r),
-          border: Border.all(
-            color: _expanded
-                ? const Color(0xFFC83A2D).withValues(alpha: 0.3)
-                : const Color(0xFFEEEEEE),
-          ),
+          color: const Color(0xFFF1F5F9),
+          borderRadius: BorderRadius.circular(16.r),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -436,12 +359,10 @@ class _FaqItemState extends State<_FaqItem> {
                   child: Text(
                     widget.question,
                     style: TextStyle(
-                      fontFamily: 'SF Pro',
-                      fontWeight: FontWeight.w700,
+                      fontFamily: 'Rubik',
+                      fontWeight: FontWeight.w600,
                       fontSize: 14.sp,
-                      color: _expanded
-                          ? const Color(0xFFC83A2D)
-                          : const Color(0xFF1A1A1A),
+                      color: const Color(0xFF0F172A),
                     ),
                   ),
                 ),
@@ -450,9 +371,7 @@ class _FaqItemState extends State<_FaqItem> {
                       ? Icons.keyboard_arrow_up_rounded
                       : Icons.keyboard_arrow_down_rounded,
                   size: 20.sp,
-                  color: _expanded
-                      ? const Color(0xFFC83A2D)
-                      : const Color(0xFF888888),
+                  color: const Color(0xFF64748B),
                 ),
               ],
             ),
@@ -461,67 +380,13 @@ class _FaqItemState extends State<_FaqItem> {
               Text(
                 widget.answer,
                 style: TextStyle(
-                  fontFamily: 'SF Pro',
+                  fontFamily: 'Rubik',
                   fontSize: 13.sp,
-                  color: const Color(0xFF555555),
+                  color: const Color(0xFF64748B),
                   height: 1.5,
                 ),
               ),
             ],
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ── Contact card ───────────────────────────────────────────────────────────────
-class _ContactCard extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String subtitle;
-  final VoidCallback onTap;
-  const _ContactCard({
-    required this.icon,
-    required this.label,
-    required this.subtitle,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: EdgeInsets.symmetric(vertical: 24.h, horizontal: 20.w),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          border: Border.all(color: const Color(0xFFEEEEEE)),
-          borderRadius: BorderRadius.circular(16.r),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(icon, size: 36.sp, color: const Color(0xFFC83A2D)),
-            SizedBox(height: 24.h),
-            Text(
-              label,
-              style: TextStyle(
-                fontFamily: 'SF Pro',
-                fontWeight: FontWeight.w700,
-                fontSize: 16.sp,
-                color: const Color(0xFF1A1A1A),
-              ),
-            ),
-            SizedBox(height: 4.h),
-            Text(
-              subtitle,
-              style: TextStyle(
-                fontFamily: 'SF Pro',
-                fontSize: 13.sp,
-                color: const Color(0xFFAAAAAA),
-              ),
-            ),
           ],
         ),
       ),

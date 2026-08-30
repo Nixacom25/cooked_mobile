@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../widgets/app_search_field.dart';
 import '../widgets/app_top_header.dart';
+import '../widgets/red_header_background.dart';
 import '../widgets/saved_recipe_card.dart';
 import '../routes/app_routes.dart';
 import '../services/recipe_service.dart';
@@ -147,196 +148,280 @@ class _ExploreScreenState extends State<ExploreScreen>
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Colors.white,
-      child: Stack(
-        children: [
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            height: 240.h,
-            child: Image.asset(
-              'assets/images/fond_page.png',
-              fit: BoxFit.cover,
-              alignment: Alignment.topCenter,
-            ),
-          ),
-          SafeArea(
-            bottom: false,
-            child: RefreshIndicator(
-              onRefresh: _handleRefresh,
-              color: const Color(0xFFC31E26),
-              child: CustomScrollView(
-                physics: const BouncingScrollPhysics(),
-                slivers: [
-              // 1. Shared App Header (Home, Explore, Grocery, Import)
-              const SliverToBoxAdapter(
-                child: AppTopHeader(),
-              ),
-
-              // 2. Sticky Header (Explore Title, Search Field, Filter Suggestions)
-              SliverPersistentHeader(
-                pinned: true,
-                delegate: _StickyExploreHeaderDelegate(
-                  onSearchTap: () => _toggleSearch(true),
-                  filterTags: _filterTags,
+      color: const Color(0xFFF1F5F9),
+      child: RefreshIndicator(
+        onRefresh: _handleRefresh,
+        color: const Color(0xFFF1F5F9),
+        child: SingleChildScrollView(
+          physics: const ClampingScrollPhysics(),
+          child: Stack(
+            children: [
+                // ── Red Top Header Background (Gradient) - Scrolls with content ──
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  height: 260.h,
+                  child: const RedHeaderBackground(),
                 ),
-              ),
 
-              // 3. Main Body Content
-              SliverPadding(
-                padding: EdgeInsets.only(bottom: 140.h),
-                sliver: SliverList(
-                  delegate: SliverChildListDelegate([
-                    // Bottom half of Explore Card ("For You" section)
-                    _buildForYouSectionCard(),
+              // ── Scrollable Body Column ──
+              Column(
+                children: [
+                  // 1. Shared App Header over red background
+                  const AppTopHeader(textColor: Colors.white),
 
-                    SizedBox(height: 14.h),
+                  SizedBox(height: 8.h),
 
-                    // Section 2: Cuisines Card (Full Width like Home)
-                    _buildCuisinesSectionCard(),
+                  // 2. Fused Top Card: Explore Header, Search, Filters & "For You" Section
+                  _buildTopExploreAndForYouCard(),
 
-                    SizedBox(height: 14.h),
+                  SizedBox(height: 16.h),
 
-                    // Section 3: Popular Now Card (Full Width like Home & Shared Recipe Cards)
-                    _buildPopularNowSectionCard(),
-                  ]),
-                ),
+                  // 3. Card 2: Cuisines Card
+                  _buildCuisinesSectionCard(),
+
+                  SizedBox(height: 16.h),
+
+                  // 4. Card 3: Popular Now Card
+                  _buildPopularNowSectionCard(),
+
+                  SizedBox(height: 140.h),
+                ],
               ),
             ],
           ),
         ),
       ),
-    ],
-  ),
-);
+    );
   }
 
-  // ── Section 1 (Bottom): "For You" Categories Card (Full Width) ──────────────
-  Widget _buildForYouSectionCard() {
+  // ── Fused Top Card: Explore Header, Search, Filters & "For You" Section ───────
+  Widget _buildTopExploreAndForYouCard() {
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 20.h),
+      padding: EdgeInsets.symmetric(vertical: 16.h),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.vertical(
-          bottom: Radius.circular(24.r),
-        ),
+        borderRadius: BorderRadius.circular(24.r),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // "For You" Section (Categories)
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                "For You",
-                style: TextStyle(
-                  fontFamily: 'Rubik',
-                  fontSize: 18.sp,
-                  fontWeight: FontWeight.w800,
-                  color: const Color(0xFF0F172A),
-                ),
-              ),
-              GestureDetector(
-                onTap: () {
-                  Navigator.pushNamed(
-                    context,
-                    AppRoutes.viewAll,
-                    arguments: {
-                      'type': ViewAllType.exploreCategories,
-                      'title': 'Popular Categories',
-                    },
-                  );
-                },
-                child: Text(
-                  "View All",
+          // ── Explore Title & Search Field Bar ──
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16.w),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Explore",
                   style: TextStyle(
                     fontFamily: 'Rubik',
-                    fontSize: 14.sp,
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xFFC31E26),
+                    fontSize: 22.sp,
+                    fontWeight: FontWeight.w800,
+                    color: const Color(0xFF0F172A),
                   ),
                 ),
-              ),
-            ],
+                SizedBox(height: 12.h),
+
+                GestureDetector(
+                  onTap: () => _toggleSearch(true),
+                  child: AbsorbPointer(
+                    child: AppSearchField(
+                      backgroundColor: const Color(0xFFF1F5F9),
+                      borderColor: const Color(0xFFF1F5F9),
+                      onChanged: (_) {},
+                      hintText: 'Search your recipes',
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
 
           SizedBox(height: 14.h),
 
-          // For You Cards (First 2 categories displayed dynamically)
-          FutureBuilder<List<Map<String, dynamic>>>(
-            future: _categoriesFuture,
-            builder: (context, snapshot) {
-              final categories = snapshot.data ?? [];
-              
-              final List<Map<String, String>> fallbackCategories = [
-                {
-                  "name": "Autumn's Favorite",
-                  "count": "18 recipes",
-                  "image": "assets/images/explore_autumn.png",
-                },
-                {
-                  "name": "Spring Delights",
-                  "count": "24 recipes",
-                  "image": "assets/images/explore_summer.png",
-                },
-              ];
+          // ── Filter Tags Row (Full Width Across Card) ──
+          SizedBox(
+            height: 38.h,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              padding: EdgeInsets.symmetric(horizontal: 16.w),
+              itemCount: _filterTags.length,
+              itemBuilder: (context, i) {
+                final tag = _filterTags[i];
+                return Padding(
+                  padding: EdgeInsets.only(right: 8.w),
+                  child: GestureDetector(
+                    onTap: () {
+                      Navigator.pushNamed(
+                        context,
+                        AppRoutes.viewAll,
+                        arguments: {
+                          'type': ViewAllType.exploreRecipesByCategory,
+                          'title': tag["name"]!,
+                          'category': tag["name"]!,
+                        },
+                      );
+                    },
+                    child: Container(
+                      padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 8.h),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFAF6EE),
+                        borderRadius: BorderRadius.circular(20.r),
+                        border: Border.all(
+                          color: const Color(0xFFF3E8D3),
+                          width: 1.w,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            tag["icon"]!,
+                            style: TextStyle(fontSize: 14.sp),
+                          ),
+                          SizedBox(width: 6.w),
+                          Text(
+                            tag["name"]!,
+                            style: TextStyle(
+                              fontFamily: 'Rubik',
+                              fontSize: 13.sp,
+                              fontWeight: FontWeight.w700,
+                              color: const Color(0xFF0F172A),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
 
-              final cat1 = categories.isNotEmpty ? categories[0] : null;
-              final cat2 = categories.length > 1 ? categories[1] : null;
+          SizedBox(height: 24.h),
 
-              final name1 = cat1 != null ? (cat1['name'] as String? ?? "Autumn's Favorite") : fallbackCategories[0]["name"]!;
-              final count1 = cat1 != null ? "${cat1['recipeCount'] ?? 18} recipes" : fallbackCategories[0]["count"]!;
-              final img1 = cat1 != null ? (cat1['image'] as String? ?? fallbackCategories[0]["image"]!) : fallbackCategories[0]["image"]!;
-
-              final name2 = cat2 != null ? (cat2['name'] as String? ?? "Spring Delights") : fallbackCategories[1]["name"]!;
-              final count2 = cat2 != null ? "${cat2['recipeCount'] ?? 24} recipes" : fallbackCategories[1]["count"]!;
-              final img2 = cat2 != null ? (cat2['image'] as String? ?? fallbackCategories[1]["image"]!) : fallbackCategories[1]["image"]!;
-
-              return Row(
-                children: [
-                  Expanded(
-                    child: _buildCategoryCard(
-                      title: name1,
-                      subtitle: count1,
-                      imagePath: img1,
+          // ── "For You" Section ──
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16.w),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      "For You",
+                      style: TextStyle(
+                        fontFamily: 'Rubik',
+                        fontSize: 18.sp,
+                        fontWeight: FontWeight.w800,
+                        color: const Color(0xFF0F172A),
+                      ),
+                    ),
+                    GestureDetector(
                       onTap: () {
                         Navigator.pushNamed(
                           context,
                           AppRoutes.viewAll,
                           arguments: {
-                            'type': ViewAllType.exploreRecipesByCategory,
-                            'title': name1,
-                            'category': name1,
+                            'type': ViewAllType.exploreCategories,
+                            'title': 'Popular Categories',
                           },
                         );
                       },
+                      child: Text(
+                        "View All",
+                        style: TextStyle(
+                          fontFamily: 'Rubik',
+                          fontSize: 14.sp,
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFFC31E26),
+                        ),
+                      ),
                     ),
-                  ),
-                  SizedBox(width: 14.w),
-                  Expanded(
-                    child: _buildCategoryCard(
-                      title: name2,
-                      subtitle: count2,
-                      imagePath: img2,
-                      onTap: () {
-                        Navigator.pushNamed(
-                          context,
-                          AppRoutes.viewAll,
-                          arguments: {
-                            'type': ViewAllType.exploreRecipesByCategory,
-                            'title': name2,
-                            'category': name2,
-                          },
-                        );
+                  ],
+                ),
+
+                SizedBox(height: 14.h),
+
+                // ── For You Category Cards ──
+                FutureBuilder<List<Map<String, dynamic>>>(
+                  future: _categoriesFuture,
+                  builder: (context, snapshot) {
+                    final categories = snapshot.data ?? [];
+
+                    final List<Map<String, String>> fallbackCategories = [
+                      {
+                        "name": "Autumn's Favorite",
+                        "count": "18 recipes",
+                        "image": "assets/images/explore_autumn.png",
                       },
-                    ),
-                  ),
-                ],
-              );
-            },
+                      {
+                        "name": "Spring Delights",
+                        "count": "24 recipes",
+                        "image": "assets/images/explore_summer.png",
+                      },
+                    ];
+
+                    final cat1 = categories.isNotEmpty ? categories[0] : null;
+                    final cat2 = categories.length > 1 ? categories[1] : null;
+
+                    final name1 = cat1 != null ? (cat1['name'] as String? ?? "Autumn's Favorite") : fallbackCategories[0]["name"]!;
+                    final count1 = cat1 != null ? "${cat1['recipeCount'] ?? 18} recipes" : fallbackCategories[0]["count"]!;
+                    final img1 = cat1 != null ? (cat1['image'] as String? ?? fallbackCategories[0]["image"]!) : fallbackCategories[0]["image"]!;
+
+                    final name2 = cat2 != null ? (cat2['name'] as String? ?? "Spring Delights") : fallbackCategories[1]["name"]!;
+                    final count2 = cat2 != null ? "${cat2['recipeCount'] ?? 24} recipes" : fallbackCategories[1]["count"]!;
+                    final img2 = cat2 != null ? (cat2['image'] as String? ?? fallbackCategories[1]["image"]!) : fallbackCategories[1]["image"]!;
+
+                    return Row(
+                      children: [
+                        Expanded(
+                          child: _buildCategoryCard(
+                            title: name1,
+                            subtitle: count1,
+                            imagePath: img1,
+                            onTap: () {
+                              Navigator.pushNamed(
+                                context,
+                                AppRoutes.viewAll,
+                                arguments: {
+                                  'type': ViewAllType.exploreRecipesByCategory,
+                                  'title': name1,
+                                  'category': name1,
+                                },
+                              );
+                            },
+                          ),
+                        ),
+                        SizedBox(width: 14.w),
+                        Expanded(
+                          child: _buildCategoryCard(
+                            title: name2,
+                            subtitle: count2,
+                            imagePath: img2,
+                            onTap: () {
+                              Navigator.pushNamed(
+                                context,
+                                AppRoutes.viewAll,
+                                arguments: {
+                                  'type': ViewAllType.exploreRecipesByCategory,
+                                  'title': name2,
+                                  'category': name2,
+                                },
+                              );
+                            },
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -434,7 +519,7 @@ class _ExploreScreenState extends State<ExploreScreen>
 
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.fromLTRB(16.w, 20.h, 16.w, 20.h),
+      padding: EdgeInsets.symmetric(vertical: 20.h),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(24.r),
@@ -442,40 +527,43 @@ class _ExploreScreenState extends State<ExploreScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                "Cuisines",
-                style: TextStyle(
-                  fontFamily: 'Rubik',
-                  fontSize: 18.sp,
-                  fontWeight: FontWeight.w800,
-                  color: const Color(0xFF0F172A),
-                ),
-              ),
-              GestureDetector(
-                onTap: () {
-                  Navigator.pushNamed(
-                    context,
-                    AppRoutes.viewAll,
-                    arguments: {
-                      'type': ViewAllType.exploreCuisines,
-                      'title': 'Cuisines',
-                    },
-                  );
-                },
-                child: Text(
-                  "View All",
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16.w),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  "Cuisines",
                   style: TextStyle(
                     fontFamily: 'Rubik',
-                    fontSize: 14.sp,
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xFFC31E26),
+                    fontSize: 18.sp,
+                    fontWeight: FontWeight.w800,
+                    color: const Color(0xFF0F172A),
                   ),
                 ),
-              ),
-            ],
+                GestureDetector(
+                  onTap: () {
+                    Navigator.pushNamed(
+                      context,
+                      AppRoutes.viewAll,
+                      arguments: {
+                        'type': ViewAllType.exploreCuisines,
+                        'title': 'Cuisines',
+                      },
+                    );
+                  },
+                  child: Text(
+                    "View All",
+                    style: TextStyle(
+                      fontFamily: 'Rubik',
+                      fontSize: 14.sp,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFFC31E26),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
 
           SizedBox(height: 16.h),
@@ -491,6 +579,7 @@ class _ExploreScreenState extends State<ExploreScreen>
                 height: 125.h,
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
+                  padding: EdgeInsets.symmetric(horizontal: 16.w),
                   itemCount: list.length,
                   itemBuilder: (context, i) {
                     final item = list[i];
@@ -753,144 +842,3 @@ class _ExploreScreenState extends State<ExploreScreen>
   }
 }
 
-// ── Sticky Explore Header Delegate ──────────────────────────────────────────────
-class _StickyExploreHeaderDelegate extends SliverPersistentHeaderDelegate {
-  final VoidCallback onSearchTap;
-  final List<Map<String, String>> filterTags;
-
-  _StickyExploreHeaderDelegate({
-    required this.onSearchTap,
-    required this.filterTags,
-  });
-
-  @override
-  Widget build(
-      BuildContext context, double shrinkOffset, bool overlapsContent) {
-    final isPinned = shrinkOffset > 0;
-    return Container(
-      color: Colors.transparent,
-      child: Container(
-        width: double.infinity,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: isPinned
-              ? BorderRadius.circular(24.r)
-              : BorderRadius.vertical(top: Radius.circular(24.r)),
-          boxShadow: isPinned
-              ? [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.08),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ]
-              : [],
-        ),
-        padding: EdgeInsets.fromLTRB(16.w, 14.h, 16.w, 10.h),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              "Explore",
-              style: TextStyle(
-                fontFamily: 'Rubik',
-                fontSize: 22.sp,
-                fontWeight: FontWeight.w800,
-                color: const Color(0xFF0F172A),
-              ),
-            ),
-            SizedBox(height: 10.h),
-
-            // Search Field Bar
-            GestureDetector(
-              onTap: onSearchTap,
-              child: AbsorbPointer(
-                child: Container(
-                  height: 46.h,
-                  padding: EdgeInsets.symmetric(horizontal: 16.w),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF1F5F9),
-                    borderRadius: BorderRadius.circular(24.r),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.search_rounded,
-                        size: 20.sp,
-                        color: const Color(0xFF94A3B8),
-                      ),
-                      SizedBox(width: 10.w),
-                      Text(
-                        "Search your recipes",
-                        style: TextStyle(
-                          fontFamily: 'Rubik',
-                          fontSize: 15.sp,
-                          color: const Color(0xFF94A3B8),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-
-            SizedBox(height: 12.h),
-
-            // Filter Tags Row
-            SizedBox(
-              height: 36.h,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                itemCount: filterTags.length,
-                itemBuilder: (context, i) {
-                  final tag = filterTags[i];
-                  return Padding(
-                    padding: EdgeInsets.only(right: 8.w),
-                    child: Container(
-                      padding: EdgeInsets.symmetric(
-                          horizontal: 12.w, vertical: 6.h),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFAF6EE),
-                        borderRadius: BorderRadius.circular(20.r),
-                      ),
-                      child: Row(
-                        children: [
-                          Text(
-                            tag["icon"]!,
-                            style: TextStyle(fontSize: 13.sp),
-                          ),
-                          SizedBox(width: 6.w),
-                          Text(
-                            tag["name"]!,
-                            style: TextStyle(
-                              fontFamily: 'Rubik',
-                              fontSize: 13.sp,
-                              fontWeight: FontWeight.w700,
-                              color: const Color(0xFF0F172A),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  @override
-  double get maxExtent => 165.h;
-
-  @override
-  double get minExtent => 165.h;
-
-  @override
-  bool shouldRebuild(covariant _StickyExploreHeaderDelegate oldDelegate) {
-    return false;
-  }
-}

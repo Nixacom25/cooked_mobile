@@ -5,6 +5,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../routes/app_routes.dart';
 import '../../widgets/app_search_field.dart';
+import '../../widgets/red_header_background.dart';
 import '../../widgets/recipe_card.dart';
 import '../../models/recipe.dart';
 import '../../models/cookbook.dart';
@@ -24,7 +25,6 @@ import '../../widgets/haptic_context_menu.dart';
 import '../../core/utils/error_helper.dart';
 import '../../widgets/recent_import_tile.dart';
 import '../../widgets/saved_recipe_card.dart';
-import '../../widgets/app_top_header.dart';
 
 // ══════════════════════════════════════════════════════════════════════════════
 // VIEW ALL SCREEN
@@ -86,13 +86,18 @@ class _ViewAllScreenState extends State<ViewAllScreen> {
     final bool showPlus = type == ViewAllType.cookbooks;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF0F1F3),
+      backgroundColor: Colors.transparent,
       resizeToAvoidBottomInset: false,
-      body: Column(
+      body: Stack(
+        fit: StackFit.expand,
         children: [
-          const AppTopHeader(),
-          Expanded(
+          const Positioned.fill(
+            child: RedHeaderBackground(),
+          ),
+          SafeArea(
+            bottom: false,
             child: Container(
+              margin: EdgeInsets.only(top: 20.h),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.vertical(
@@ -187,7 +192,9 @@ class _ViewAllScreenState extends State<ViewAllScreen> {
                                   ? 'Search category ...'
                                   : type == ViewAllType.exploreRecipesByCuisine
                                       ? 'Search ${title.toLowerCase()} recipes...'
-                                      : 'Search recipes, cookbooks...',
+                                      : type == ViewAllType.recentlyViewed
+                                          ? 'Search recently viewed recipes..'
+                                          : 'Search recipes, cookbooks....',
                       backgroundColor: const Color(0xFFF1F5F9),
                       borderColor: Colors.transparent,
                       borderRadius: 16.r,
@@ -748,29 +755,55 @@ class _RecipesGridState extends State<_RecipesGrid> {
             _type == ViewAllType.savedRecipes ||
             _type == ViewAllType.recentlyViewed ||
             _type == ViewAllType.explore) {
-          return ListView.separated(
-            padding: EdgeInsets.fromLTRB(16.w, 4.h, 16.w, 20.h),
-            itemCount: displayList.length,
-            separatorBuilder: (_, __) => SizedBox(height: 12.h),
-            itemBuilder: (ctx, i) {
-              final r = displayList[i];
-              final isSaved =
-                  r.isInCookbook ||
-                  savedIds.contains(r.id) ||
-                  _validatedRecipeIds.contains(r.id);
+          final showSectionHeader = _type == ViewAllType.recentlyViewed;
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (showSectionHeader)
+                Padding(
+                  padding: EdgeInsets.fromLTRB(16.w, 0.h, 16.w, 12.h),
+                  child: Text(
+                    'Recipes',
+                    style: TextStyle(
+                      fontFamily: 'Rubik',
+                      fontWeight: FontWeight.w800,
+                      fontSize: 20.sp,
+                      color: const Color(0xFF0F172A),
+                    ),
+                  ),
+                ),
+              Expanded(
+                child: ListView.separated(
+                  padding: EdgeInsets.fromLTRB(16.w, 4.h, 16.w, 20.h),
+                  itemCount: displayList.length,
+                  separatorBuilder: (_, __) => SizedBox(height: 12.h),
+                  itemBuilder: (ctx, i) {
+                    final r = displayList[i];
+                    final isSaved =
+                        r.isInCookbook ||
+                        savedIds.contains(r.id) ||
+                        _validatedRecipeIds.contains(r.id);
 
-              return SavedRecipeCard(
-                recipe: r,
-                isPinned: isSaved,
-                onTap: () async {
-                  await Navigator.pushNamed(
-                    ctx,
-                    AppRoutes.recipeDetail,
-                    arguments: {'recipe': r, 'isPreview': !isSaved},
-                  );
-                },
-              );
-            },
+                    return SavedRecipeCard(
+                      recipe: r,
+                      isPinned: isSaved,
+                      onPinTap: () async {
+                        try {
+                          await RecipeService.instance.getMyRecipes(forceRefresh: true);
+                        } catch (_) {}
+                      },
+                      onTap: () async {
+                        await Navigator.pushNamed(
+                          ctx,
+                          AppRoutes.recipeDetail,
+                          arguments: {'recipe': r, 'isPreview': !isSaved},
+                        );
+                      },
+                    );
+                  },
+                ),
+              ),
+            ],
           );
         }
 
@@ -1307,39 +1340,42 @@ class _StaticCookbooksGridState extends State<_StaticCookbooksGrid> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(
-              child: ClipRRect(
-                borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
-                child: Container(
-                  width: double.infinity,
-                  color: const Color(0xFFF2F1EF),
-                  child: isNetwork
-                      ? CachedNetworkImage(
-                          imageUrl: bustedImageUrl,
-                          cacheKey: imgUrl,
-                          fit: BoxFit.cover,
-                          placeholder: (context, url) => const Center(
-                            child: SizedBox(
-                              width: 24,
-                              height: 24,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Color(0xFFC83A2D),
+              child: Padding(
+                padding: EdgeInsets.all(4.r),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(20.r),
+                  child: Container(
+                    width: double.infinity,
+                    color: const Color(0xFFF2F1EF),
+                    child: isNetwork
+                        ? CachedNetworkImage(
+                            imageUrl: bustedImageUrl,
+                            cacheKey: imgUrl,
+                            fit: BoxFit.cover,
+                            placeholder: (context, url) => const Center(
+                              child: SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Color(0xFFC83A2D),
+                                ),
                               ),
                             ),
-                          ),
-                          errorWidget: (context, url, error) => Image.asset(
-                            fallbackImg,
+                            errorWidget: (context, url, error) => Image.asset(
+                              fallbackImg,
+                              fit: BoxFit.cover,
+                            ),
+                          )
+                        : Image.asset(
+                            imgUrl != null && imgUrl.isNotEmpty ? imgUrl : fallbackImg,
                             fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => Image.asset(
+                              fallbackImg,
+                              fit: BoxFit.cover,
+                            ),
                           ),
-                        )
-                      : Image.asset(
-                          imgUrl != null && imgUrl.isNotEmpty ? imgUrl : fallbackImg,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => Image.asset(
-                            fallbackImg,
-                            fit: BoxFit.cover,
-                          ),
-                        ),
+                  ),
                 ),
               ),
             ),

@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter/services.dart';
 import '../widgets/app_search_field.dart';
 import '../widgets/app_top_header.dart';
+import '../widgets/red_header_background.dart';
 import '../services/recipe_service.dart';
 import '../models/recipe.dart';
 import '../routes/app_routes.dart';
@@ -130,8 +131,11 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
   void _onActiveStateChanged() {
     if (widget.isActiveNotifier?.value ?? false) {
       if (!TutorialService.instance.hasSeenImport) {
-        TutorialHelper.showImportOnboardingDialog(context);
-        TutorialService.instance.completeImport();
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            TutorialHelper.showImportOnboardingDialog(context);
+          }
+        });
       }
     }
   }
@@ -153,20 +157,7 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
     } catch (_) {}
   }
 
-  void _onPlatformTap(String domain) async {
-    HapticFeedback.lightImpact();
-    final d = await Clipboard.getData('text/plain');
-    if (d?.text != null && d!.text!.contains(domain)) {
-      _linkCtrl.text = d.text!;
-      if (mounted) {
-        IosToast.show(context, message: 'Link pasted from clipboard', type: ToastType.success);
-      }
-    } else {
-      if (mounted) {
-        IosToast.show(context, message: 'Paste a $domain recipe link in the box below', type: ToastType.warning);
-      }
-    }
-  }
+
 
   Future<void> _showWebPreview(String url, String title) async {
     showModalBottomSheet(
@@ -462,17 +453,13 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
         resizeToAvoidBottomInset: false,
         body: Stack(
           children: [
-            // Background image fond_page.png at top
+            // Background gradient at top
             Positioned(
               top: 0,
               left: 0,
               right: 0,
               height: 240.h,
-              child: Image.asset(
-                'assets/images/fond_page.png',
-                fit: BoxFit.cover,
-                alignment: Alignment.topCenter,
-              ),
+              child: const RedHeaderBackground(),
             ),
             Column(
               children: [
@@ -521,26 +508,22 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
                       // Social Platforms Row (Instagram, TikTok, Facebook, YouTube)
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
+                        children: const [
                           _SocialPlatformCard(
                             label: 'Instagram',
                             asset: 'assets/icones/instagram2.svg',
-                            onTap: () => _onPlatformTap('instagram.com'),
                           ),
                           _SocialPlatformCard(
                             label: 'TikTok',
                             asset: 'assets/icones/tiktok2.svg',
-                            onTap: () => _onPlatformTap('tiktok.com'),
                           ),
                           _SocialPlatformCard(
                             label: 'Facebook',
                             asset: 'assets/icones/facebook2.svg',
-                            onTap: () => _onPlatformTap('facebook.com'),
                           ),
                           _SocialPlatformCard(
                             label: 'YouTube',
                             asset: 'assets/icones/youtube.svg',
-                            onTap: () => _onPlatformTap('youtube.com'),
                           ),
                         ],
                       ),
@@ -1138,68 +1121,63 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
 class _SocialPlatformCard extends StatelessWidget {
   final String label;
   final String asset;
-  final VoidCallback onTap;
 
   const _SocialPlatformCard({
     required this.label,
     required this.asset,
-    required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 76.w,
-        height: 76.h,
-        decoration: BoxDecoration(
-          color: const Color(0xFFF1F5F9),
-          borderRadius: BorderRadius.circular(16.r),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 34.r,
-              height: 34.r,
-              decoration: const BoxDecoration(
-                color: Color(0xFF0F172A),
-                shape: BoxShape.circle,
-              ),
-              child: Center(
-                child: asset.endsWith('.svg')
-                    ? SvgPicture.asset(
-                        asset,
-                        width: 18.r,
-                        height: 18.r,
-                        fit: BoxFit.contain,
-                      )
-                    : Image.asset(
-                        asset,
-                        width: 18.r,
-                        height: 18.r,
-                        fit: BoxFit.contain,
-                        errorBuilder: (_, __, ___) => Icon(
-                          Icons.link_rounded,
-                          color: Colors.white,
-                          size: 18.sp,
-                        ),
+    return Container(
+      width: 76.w,
+      height: 76.h,
+      decoration: BoxDecoration(
+        color: const Color(0xFFF1F5F9),
+        borderRadius: BorderRadius.circular(16.r),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 34.r,
+            height: 34.r,
+            decoration: const BoxDecoration(
+              color: Color(0xFF0F172A),
+              shape: BoxShape.circle,
+            ),
+            child: Center(
+              child: asset.endsWith('.svg')
+                  ? SvgPicture.asset(
+                      asset,
+                      width: 18.r,
+                      height: 18.r,
+                      fit: BoxFit.contain,
+                    )
+                  : Image.asset(
+                      asset,
+                      width: 18.r,
+                      height: 18.r,
+                      fit: BoxFit.contain,
+                      errorBuilder: (_, __, ___) => Icon(
+                        Icons.link_rounded,
+                        color: Colors.white,
+                        size: 18.sp,
                       ),
-              ),
+                    ),
             ),
-            SizedBox(height: 6.h),
-            Text(
-              label,
-              style: TextStyle(
-                fontFamily: 'Rubik',
-                fontWeight: FontWeight.w600,
-                fontSize: 11.sp,
-                color: const Color(0xFF0F172A),
-              ),
+          ),
+          SizedBox(height: 6.h),
+          Text(
+            label,
+            style: TextStyle(
+              fontFamily: 'Rubik',
+              fontWeight: FontWeight.w600,
+              fontSize: 11.sp,
+              color: const Color(0xFF0F172A),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
