@@ -5,6 +5,8 @@ import '../services/auth_service.dart';
 import '../core/api_config.dart';
 import '../routes/app_routes.dart';
 
+import 'glass_icon_button.dart';
+
 class AppTopHeader extends StatefulWidget {
   final double? topPadding;
   final Color? textColor;
@@ -127,15 +129,10 @@ class _AppTopHeaderState extends State<AppTopHeader> {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16.r),
                     ),
-                    icon: Container(
-                      width: 36.r,
-                      height: 36.r,
-                      decoration: BoxDecoration(
-                        color: effectiveTextColor == Colors.white
-                            ? Colors.white.withValues(alpha: 0.2)
-                            : const Color(0xFFF1F5F9),
-                        borderRadius: BorderRadius.circular(12.r),
-                      ),
+                    icon: GlassIconButton(
+                      size: 36.r,
+                      shape: BoxShape.rectangle,
+                      borderRadius: BorderRadius.circular(12.r),
                       child: Icon(
                         Icons.more_vert_rounded,
                         color: effectiveTextColor,

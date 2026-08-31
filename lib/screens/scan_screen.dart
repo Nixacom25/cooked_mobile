@@ -12,6 +12,8 @@ import '../core/utils/error_helper.dart';
 import '../services/ingredient_service.dart';
 import '../services/recipe_service.dart';
 import '../widgets/skeleton_loader.dart';
+import '../widgets/glass_icon_button.dart';
+import '../widgets/red_button.dart';
 import '../widgets/loading_text.dart';
 import '../widgets/skeleton_list.dart';
 import '../widgets/add_to_cookbook_sheet.dart';
@@ -703,20 +705,13 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                GestureDetector(
+                GlassIconButton(
                   onTap: widget.onClose,
-                  child: Container(
-                    width: 44.r,
-                    height: 44.r,
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      Icons.close_rounded,
-                      color: const Color(0xFF0F172A),
-                      size: 22.sp,
-                    ),
+                  size: 44.r,
+                  child: Icon(
+                    Icons.close_rounded,
+                    color: const Color(0xFF0F172A),
+                    size: 22.sp,
                   ),
                 ),
                 Text(
@@ -793,19 +788,13 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               // Close Icon (Top-left)
-              GestureDetector(
+              GlassIconButton(
                 onTap: widget.onClose,
-                child: Container(
-                  padding: EdgeInsets.all(8.r),
-                  decoration: const BoxDecoration(
-                    color: Colors.black26,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    Icons.close_rounded,
-                    color: Colors.white,
-                    size: 22.sp,
-                  ),
+                size: 38.r,
+                child: Icon(
+                  Icons.close_rounded,
+                  color: Colors.white,
+                  size: 22.sp,
                 ),
               ),
 
@@ -889,20 +878,13 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
       padding: EdgeInsets.fromLTRB(16.w, 20.h, 16.w, 16.h),
       child: Row(
         children: [
-          GestureDetector(
+          GlassIconButton(
             onTap: widget.onClose,
-            child: Container(
-              width: 44.r,
-              height: 44.r,
-              decoration: const BoxDecoration(
-                color: Color(0xFFF1F5F9),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.close_rounded,
-                size: 22.sp,
-                color: const Color(0xFF0F172A),
-              ),
+            size: 44.r,
+            child: Icon(
+              Icons.close_rounded,
+              size: 22.sp,
+              color: const Color(0xFF0F172A),
             ),
           ),
           Expanded(
@@ -1019,51 +1001,30 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
   }
 
   Widget _buildGalleryBtn() {
-    return GestureDetector(
+    return GlassIconButton(
       onTap: () => _pickAndScan(ImageSource.gallery),
-      child: ClipOval(
-        child: BackdropFilter(
-          filter: ui.ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-          child: Container(
-            width: 52.r,
-            height: 52.r,
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.50),
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.70),
-                width: 1.2,
-              ),
-            ),
-            child: Icon(
-              Icons.photo_library_outlined,
-              color: const Color(0xFF0F172A),
-              size: 24.sp,
-            ),
-          ),
-        ),
+      size: 52.r,
+      child: Icon(
+        Icons.photo_library_outlined,
+        color: const Color(0xFF0F172A),
+        size: 24.sp,
       ),
     );
   }
 
   Widget _buildShutterBtn() {
-    return GestureDetector(
+    return GlassIconButton(
+      key: _shutterKey,
       onTap: () => _pickAndScan(ImageSource.camera),
+      size: 76.r,
+      glassColor: Colors.white.withValues(alpha: 0.35),
+      borderColor: Colors.white.withValues(alpha: 0.85),
       child: Container(
-        key: _shutterKey,
-        width: 76.r,
-        height: 76.r,
-        padding: EdgeInsets.all(4.r),
-        decoration: BoxDecoration(
-          color: Colors.transparent,
+        width: 54.r,
+        height: 54.r,
+        decoration: const BoxDecoration(
+          color: Colors.white,
           shape: BoxShape.circle,
-          border: Border.all(color: Colors.white, width: 4.r),
-        ),
-        child: Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            shape: BoxShape.circle,
-          ),
         ),
       ),
     );

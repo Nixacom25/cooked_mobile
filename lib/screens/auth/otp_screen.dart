@@ -5,6 +5,7 @@ import '../../routes/app_routes.dart';
 import '../../services/auth_service.dart';
 import '../../core/widgets/ios_toast.dart';
 import '../../core/utils/error_helper.dart';
+import '../../widgets/glass_icon_button.dart';
 import '../../widgets/red_button.dart';
 import '../../widgets/loading_text.dart';
 import '../../widgets/red_header_background.dart';
@@ -307,29 +308,16 @@ class _OtpScreenState extends State<OtpScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                GestureDetector(
+                GlassIconButton(
                   onTap: () {
                     HapticFeedback.selectionClick();
                     Navigator.pop(context);
                   },
-                  child: Container(
-                    width: 42,
-                    height: 42,
-                    decoration: BoxDecoration(
-                      color: Color(0xffF8F5EF),
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.3),
-                          blurRadius: 8,
-                        ),
-                      ],
-                    ),
-                    child: const Icon(
-                      Icons.arrow_back_rounded,
-                      size: 24,
-                      color: AppColors.textDark,
-                    ),
+                  size: 42,
+                  child: const Icon(
+                    Icons.arrow_back_rounded,
+                    size: 24,
+                    color: AppColors.textDark,
                   ),
                 ),
                 const Text(

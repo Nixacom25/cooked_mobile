@@ -49,6 +49,7 @@ dependencies:
   hive_flutter: ^1.1.0
   in_app_review: ^2.0.12
   google_fonts: ^6.2.1
+  rive: ^0.13.0
 
 dev_dependencies:
   flutter_test:
@@ -69,6 +70,7 @@ flutter_launcher_icons:
 flutter:
   uses-material-design: true
   assets:
+    - assets/cooked.riv
     - assets/images/
     - assets/icones/
     - assets/favicon/

@@ -19,6 +19,7 @@ import '../../widgets/skeleton_loader.dart';
 import '../../widgets/cookbook_form_modal.dart';
 import '../../widgets/add_to_cookbook_sheet.dart';
 import '../../widgets/haptic_context_menu.dart';
+import '../../widgets/glass_icon_button.dart';
 import '../../widgets/app_top_header.dart';
 import '../../widgets/red_header_background.dart';
 
@@ -151,20 +152,13 @@ class _CookbookDetailScreenState extends State<CookbookDetailScreen> {
                         padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 12.h),
                         child: Row(
                           children: [
-                            GestureDetector(
+                            GlassIconButton(
                               onTap: () => Navigator.pop(context),
-                              child: Container(
-                                width: 42.r,
-                                height: 42.r,
-                                decoration: const BoxDecoration(
-                                  color: Color(0xFFF1F5F9),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Icon(
-                                  Icons.arrow_back_rounded,
-                                  size: 20.sp,
-                                  color: const Color(0xFF0F172A),
-                                ),
+                              size: 42.r,
+                              child: Icon(
+                                Icons.arrow_back_rounded,
+                                size: 20.sp,
+                                color: const Color(0xFF0F172A),
                               ),
                             ),
                             Expanded(
@@ -181,7 +175,7 @@ class _CookbookDetailScreenState extends State<CookbookDetailScreen> {
                             ),
                             if (_cookbook != null &&
                                 !_cookbook!.id.startsWith('static_'))
-                              GestureDetector(
+                              GlassIconButton(
                                 onTap: () async {
                                   final result = await showModalBottomSheet(
                                     context: context,
@@ -197,18 +191,11 @@ class _CookbookDetailScreenState extends State<CookbookDetailScreen> {
                                     _load();
                                   }
                                 },
-                                child: Container(
-                                  width: 42.r,
-                                  height: 42.r,
-                                  decoration: const BoxDecoration(
-                                    color: Color(0xFFF1F5F9),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: Icon(
-                                    Icons.add_rounded,
-                                    color: const Color(0xFF0F172A),
-                                    size: 22.sp,
-                                  ),
+                                size: 42.r,
+                                child: Icon(
+                                  Icons.add_rounded,
+                                  color: const Color(0xFF0F172A),
+                                  size: 22.sp,
                                 ),
                               )
                             else

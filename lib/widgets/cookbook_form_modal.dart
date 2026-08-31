@@ -9,6 +9,7 @@ import '../services/cookbook_service.dart';
 import '../services/recipe_service.dart';
 import '../core/widgets/ios_toast.dart';
 import '../core/utils/error_helper.dart';
+import '../widgets/glass_icon_button.dart';
 import '../widgets/skeleton_list.dart';
 
 class CookbookFormModal extends StatefulWidget {
@@ -108,7 +109,7 @@ class _CookbookFormModalState extends State<CookbookFormModal> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 // Top Left Circle Back Button
-                GestureDetector(
+                GlassIconButton(
                   onTap: () {
                     if (_isPickingRecipes) {
                       setState(() => _isPickingRecipes = false);
@@ -123,18 +124,11 @@ class _CookbookFormModalState extends State<CookbookFormModal> {
                       Navigator.pop(context);
                     }
                   },
-                  child: Container(
-                    width: 42.r,
-                    height: 42.r,
-                    decoration: const BoxDecoration(
-                      color: Color(0xFFF1F5F9),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      Icons.arrow_back_rounded,
-                      color: const Color(0xFF0F172A),
-                      size: 20.sp,
-                    ),
+                  size: 42.r,
+                  child: Icon(
+                    Icons.arrow_back_rounded,
+                    color: const Color(0xFF0F172A),
+                    size: 20.sp,
                   ),
                 ),
 
@@ -154,7 +148,7 @@ class _CookbookFormModalState extends State<CookbookFormModal> {
                 ),
 
                 // Top Right Circle Action Button (+ when picking recipes, Close X when on form)
-                GestureDetector(
+                GlassIconButton(
                   onTap: () {
                     if (_isPickingRecipes) {
                       // Shortcut to add new recipe/scan
@@ -165,18 +159,11 @@ class _CookbookFormModalState extends State<CookbookFormModal> {
                       Navigator.pop(context);
                     }
                   },
-                  child: Container(
-                    width: 42.r,
-                    height: 42.r,
-                    decoration: const BoxDecoration(
-                      color: Color(0xFFF1F5F9),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      _isPickingRecipes ? Icons.add_rounded : Icons.close_rounded,
-                      color: const Color(0xFF0F172A),
-                      size: 22.sp,
-                    ),
+                  size: 42.r,
+                  child: Icon(
+                    _isPickingRecipes ? Icons.add_rounded : Icons.close_rounded,
+                    color: const Color(0xFF0F172A),
+                    size: 22.sp,
                   ),
                 ),
               ],

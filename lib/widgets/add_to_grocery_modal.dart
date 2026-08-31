@@ -4,6 +4,7 @@ import '../models/recipe.dart';
 import '../services/grocery_service.dart';
 import '../core/widgets/ios_toast.dart';
 import '../core/utils/error_helper.dart';
+import 'glass_icon_button.dart';
 import 'red_button.dart';
 
 class AddToGroceryModal extends StatefulWidget {
@@ -134,9 +135,14 @@ class _AddToGroceryModalState extends State<AddToGroceryModal> {
                     color: const Color(0xFF0F172A),
                   ),
                 ),
-                IconButton(
-                  onPressed: () => Navigator.pop(context),
-                  icon: Icon(Icons.close_rounded, size: 22.sp, color: const Color(0xFF64748B)),
+                GlassIconButton(
+                  onTap: () => Navigator.pop(context),
+                  size: 38.r,
+                  child: Icon(
+                    Icons.close_rounded,
+                    size: 20.sp,
+                    color: const Color(0xFF64748B),
+                  ),
                 ),
               ],
             ),

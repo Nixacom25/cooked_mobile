@@ -6,6 +6,8 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../core/extensions/string_extensions.dart';
 import '../../models/recipe.dart';
+import '../../widgets/glass_icon_button.dart';
+import '../../widgets/red_button.dart';
 import '../../services/recipe_service.dart';
 import '../../core/widgets/ios_toast.dart';
 import '../../core/utils/error_helper.dart';
@@ -797,34 +799,13 @@ class _RecipeDetailHeaderDelegate extends SliverPersistentHeaderDelegate {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                GestureDetector(
+                GlassIconButton(
                   onTap: () => Navigator.pop(context),
-                  child: Container(
-                    width: 42.r,
-                    height: 42.r,
-                    decoration: BoxDecoration(
-                      color: Color.lerp(
-                        Colors.white,
-                        const Color(0xFFF1F5F9),
-                        progress,
-                      ),
-                      shape: BoxShape.circle,
-                      boxShadow: progress < 0.5
-                          ? [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.1),
-                                blurRadius: 8,
-                                offset: const Offset(0, 2),
-                              )
-                            ]
-                          : [],
-                    ),
-                    alignment: Alignment.center,
-                    child: Icon(
-                      Icons.arrow_back_rounded,
-                      size: 20.sp,
-                      color: const Color(0xFF0F172A),
-                    ),
+                  size: 42.r,
+                  child: Icon(
+                    Icons.arrow_back_rounded,
+                    size: 20.sp,
+                    color: const Color(0xFF0F172A),
                   ),
                 ),
                 if (titleOpacity > 0)
@@ -848,34 +829,13 @@ class _RecipeDetailHeaderDelegate extends SliverPersistentHeaderDelegate {
                       ),
                     ),
                   ),
-                GestureDetector(
+                GlassIconButton(
                   onTap: onShare,
-                  child: Container(
-                    width: 42.r,
-                    height: 42.r,
-                    decoration: BoxDecoration(
-                      color: Color.lerp(
-                        Colors.white,
-                        const Color(0xFFF1F5F9),
-                        progress,
-                      ),
-                      shape: BoxShape.circle,
-                      boxShadow: progress < 0.5
-                          ? [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.1),
-                                blurRadius: 8,
-                                offset: const Offset(0, 2),
-                              )
-                            ]
-                          : [],
-                    ),
-                    alignment: Alignment.center,
-                    child: Icon(
-                      Icons.ios_share_rounded,
-                      size: 20.sp,
-                      color: const Color(0xFF0F172A),
-                    ),
+                  size: 42.r,
+                  child: Icon(
+                    Icons.share_outlined,
+                    size: 20.sp,
+                    color: const Color(0xFF0F172A),
                   ),
                 ),
               ],

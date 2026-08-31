@@ -5,6 +5,7 @@ import '../../routes/app_routes.dart';
 import '../../services/auth_service.dart';
 import '../../core/widgets/ios_toast.dart';
 import '../../core/utils/error_helper.dart';
+import '../../widgets/glass_icon_button.dart';
 import '../../widgets/red_button.dart';
 import '../../widgets/loading_text.dart';
 import '../../widgets/red_header_background.dart';
@@ -151,23 +152,16 @@ class _ForgotOtpScreenState extends State<ForgotOtpScreen> {
               right: 20.w,
               child: Row(
                 children: [
-                  GestureDetector(
+                  GlassIconButton(
                     onTap: () {
                       HapticFeedback.selectionClick();
                       Navigator.pop(context);
                     },
-                    child: Container(
-                      width: 40.w,
-                      height: 40.w,
-                      decoration: const BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        Icons.arrow_back,
-                        size: 20.sp,
-                        color: Colors.black,
-                      ),
+                    size: 40.r,
+                    child: Icon(
+                      Icons.arrow_back,
+                      size: 20.sp,
+                      color: Colors.black,
                     ),
                   ),
                   SizedBox(width: 16.w),

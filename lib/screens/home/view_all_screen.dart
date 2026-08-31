@@ -14,6 +14,7 @@ import '../../services/recipe_service.dart';
 import '../../services/history_service.dart';
 import '../../services/cookbook_service.dart';
 import '../../services/grocery_service.dart';
+import '../../core/api_config.dart';
 import '../../core/widgets/ios_toast.dart';
 import '../../models/view_all_type.dart';
 import '../../core/extensions/string_extensions.dart';
@@ -23,6 +24,7 @@ import '../../widgets/add_to_cookbook_sheet.dart';
 import '../../widgets/cookbook_form_modal.dart';
 import '../../widgets/haptic_context_menu.dart';
 import '../../core/utils/error_helper.dart';
+import '../../widgets/glass_icon_button.dart';
 import '../../widgets/recent_import_tile.dart';
 import '../../widgets/saved_recipe_card.dart';
 
@@ -111,20 +113,13 @@ class _ViewAllScreenState extends State<ViewAllScreen> {
                     padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 12.h),
                     child: Row(
                       children: [
-                        GestureDetector(
+                        GlassIconButton(
                           onTap: () => Navigator.pop(context),
-                          child: Container(
-                            width: 42.r,
-                            height: 42.r,
-                            decoration: const BoxDecoration(
-                              color: Color(0xFFF1F5F9),
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(
-                              Icons.arrow_back_rounded,
-                              size: 20.sp,
-                              color: const Color(0xFF0F172A),
-                            ),
+                          size: 42.r,
+                          child: Icon(
+                            Icons.arrow_back_rounded,
+                            size: 20.sp,
+                            color: const Color(0xFF0F172A),
                           ),
                         ),
                         Expanded(
@@ -146,7 +141,7 @@ class _ViewAllScreenState extends State<ViewAllScreen> {
                           ),
                         ),
                         if (showPlus)
-                          GestureDetector(
+                          GlassIconButton(
                             onTap: () async {
                               await showModalBottomSheet(
                                 context: context,
@@ -155,18 +150,11 @@ class _ViewAllScreenState extends State<ViewAllScreen> {
                                 builder: (context) => const CookbookFormModal(),
                               );
                             },
-                            child: Container(
-                              width: 42.r,
-                              height: 42.r,
-                              decoration: const BoxDecoration(
-                                color: Color(0xFFF1F5F9),
-                                shape: BoxShape.circle,
-                              ),
-                              child: Icon(
-                                Icons.add_rounded,
-                                color: const Color(0xFF0F172A),
-                                size: 22.sp,
-                              ),
+                            size: 42.r,
+                            child: Icon(
+                              Icons.add_rounded,
+                              color: const Color(0xFF0F172A),
+                              size: 22.sp,
                             ),
                           )
                         else
@@ -1205,12 +1193,21 @@ class _StaticCookbooksGridState extends State<_StaticCookbooksGrid> {
   late final int _refreshTimestamp;
 
   final List<Map<String, dynamic>> _fallbackCuisines = [
+    {"name": "French", "image": "assets/cuisine/french.png"},
     {"name": "Italian", "image": "assets/cuisine/italian.png"},
     {"name": "Mexican", "image": "assets/cuisine/mexican.png"},
+    {"name": "Greek", "image": "assets/cuisine/greek.png"},
+    {"name": "Japanese", "image": "assets/cuisine/japanese.png"},
+    {"name": "Korean", "image": "assets/cuisine/korean.png"},
+    {"name": "Mediterranean", "image": "assets/cuisine/mediterranean.png"},
+    {"name": "Caribbean", "image": "assets/cuisine/caribbean.png"},
     {"name": "Asian", "image": "assets/cuisine/chinese.png"},
     {"name": "Indian", "image": "assets/cuisine/indian.png"},
-    {"name": "Spanish", "image": "assets/images/plat5.png"},
-    {"name": "Japanese", "image": "assets/cuisine/japanese.png"},
+    {"name": "West African", "image": "assets/cuisine/west-african.png"},
+    {"name": "East African", "image": "assets/cuisine/east-african.png"},
+    {"name": "Middle Eastern", "image": "assets/cuisine/middle-east.png"},
+    {"name": "Thai", "image": "assets/cuisine/thai.png"},
+    {"name": "Spanish", "image": "assets/cuisine/spanish.png"},
   ];
 
   @override
@@ -1225,17 +1222,22 @@ class _StaticCookbooksGridState extends State<_StaticCookbooksGrid> {
   }
 
   String _getFallbackImage(String name) {
-    final lower = name.toLowerCase();
+    final lower = name.toLowerCase().trim();
+    if (lower.contains('french')) return 'assets/cuisine/french.png';
     if (lower.contains('italian')) return 'assets/cuisine/italian.png';
     if (lower.contains('mexican')) return 'assets/cuisine/mexican.png';
-    if (lower.contains('asian') || lower.contains('chinese')) return 'assets/cuisine/chinese.png';
-    if (lower.contains('indian')) return 'assets/cuisine/indian.png';
+    if (lower.contains('greek')) return 'assets/cuisine/greek.png';
     if (lower.contains('japanese')) return 'assets/cuisine/japanese.png';
-    if (lower.contains('spanish')) return 'assets/images/plat5.png';
+    if (lower.contains('korean')) return 'assets/cuisine/korean.png';
     if (lower.contains('mediterranean')) return 'assets/cuisine/mediterranean.png';
     if (lower.contains('caribbean')) return 'assets/cuisine/caribbean.png';
+    if (lower.contains('asian') || lower.contains('chinese')) return 'assets/cuisine/chinese.png';
+    if (lower.contains('indian')) return 'assets/cuisine/indian.png';
+    if (lower.contains('west african')) return 'assets/cuisine/west-african.png';
+    if (lower.contains('east african')) return 'assets/cuisine/east-african.png';
+    if (lower.contains('middle')) return 'assets/cuisine/middle-east.png';
     if (lower.contains('thai')) return 'assets/cuisine/thai.png';
-    if (lower.contains('african')) return 'assets/cuisine/west-african.png';
+    if (lower.contains('spanish')) return 'assets/cuisine/spanish.png';
     return 'assets/cuisine/others.png';
   }
 
@@ -1309,10 +1311,14 @@ class _StaticCookbooksGridState extends State<_StaticCookbooksGrid> {
     String fallbackImg,
     int count,
   ) {
-    final bustedImageUrl = imgUrl != null && imgUrl.isNotEmpty
-        ? '$imgUrl${imgUrl.contains('?') ? '&' : '?'}t=$_refreshTimestamp'
-        : '';
-    final isNetwork = imgUrl != null && imgUrl.startsWith('http');
+    final String rawUrl = imgUrl?.trim() ?? '';
+    final String resolvedUrl = rawUrl.startsWith('/')
+        ? '${ApiConfig.baseUrl}$rawUrl'
+        : rawUrl;
+    final isNetwork = resolvedUrl.startsWith('http://') || resolvedUrl.startsWith('https://');
+    final bustedImageUrl = isNetwork
+        ? '$resolvedUrl${resolvedUrl.contains('?') ? '&' : '?'}t=$_refreshTimestamp'
+        : resolvedUrl;
 
     return GestureDetector(
       onTap: () {

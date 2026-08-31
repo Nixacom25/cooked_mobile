@@ -12,6 +12,7 @@ import '../../widgets/red_header_background.dart';
 import '../../services/user_service.dart';
 import '../../core/api_config.dart';
 import '../../core/widgets/ios_toast.dart';
+import '../../widgets/glass_icon_button.dart';
 import '../../core/utils/error_helper.dart';
 
 class MyAccountScreen extends StatefulWidget {
@@ -146,20 +147,13 @@ class _MyAccountScreenState extends State<MyAccountScreen> {
                     padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 12.h),
                     child: Row(
                       children: [
-                        GestureDetector(
+                        GlassIconButton(
                           onTap: () => Navigator.pop(context),
-                          child: Container(
-                            width: 42.r,
-                            height: 42.r,
-                            decoration: const BoxDecoration(
-                              color: Color(0xFFF1F5F9),
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(
-                              Icons.arrow_back_rounded,
-                              size: 20.sp,
-                              color: const Color(0xFF0F172A),
-                            ),
+                          size: 42.r,
+                          child: Icon(
+                            Icons.arrow_back_rounded,
+                            size: 20.sp,
+                            color: const Color(0xFF0F172A),
                           ),
                         ),
                         Expanded(

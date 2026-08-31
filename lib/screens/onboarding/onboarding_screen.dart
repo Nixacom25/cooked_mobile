@@ -47,6 +47,7 @@ import '../../core/utils/error_helper.dart';
 
 import '../../core/widgets/terms_validation_modal.dart';
 import 'onboarding_storage.dart';
+import '../../widgets/glass_icon_button.dart';
 import '../../widgets/red_button.dart';
 import '../../widgets/loading_text.dart';
 
@@ -724,18 +725,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 4.h),
                           child: Row(
                             children: [
-                              GestureDetector(
+                              GlassIconButton(
                                 onTap: _onBack,
-                                child: Container(
-                                  width: 40.r,
-                                  height: 40.r,
-                                  decoration: const BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: Color(0xFFF1F5F9)),
-                                  child: Icon(
-                                    Icons.arrow_back_rounded,
-                                    size: 20.sp,
-                                    color: const Color(0xFF0F172A)))),
+                                size: 40.r,
+                                child: Icon(
+                                  Icons.arrow_back_rounded,
+                                  size: 20.sp,
+                                  color: const Color(0xFF0F172A),
+                                ),
+                              ),
                               SizedBox(width: 16.w),
                               Expanded(
                                 child: ClipRRect(

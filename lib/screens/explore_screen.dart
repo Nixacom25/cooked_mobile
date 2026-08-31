@@ -10,7 +10,9 @@ import '../widgets/saved_recipe_card.dart';
 import '../routes/app_routes.dart';
 import '../services/recipe_service.dart';
 import '../models/recipe.dart';
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import '../models/view_all_type.dart';
+import '../core/api_config.dart';
 
 // ══════════════════════════════════════════════════════════════════════════════
 // EXPLORE SCREEN (Full Width Cards Parity with Home & Reusable Components)
@@ -45,10 +47,15 @@ class _ExploreScreenState extends State<ExploreScreen>
 
   void _refreshData({bool force = false}) {
     if (!mounted) return;
+    if (force) {
+      _refreshTimestamp = DateTime.now().millisecondsSinceEpoch;
+      try {
+        DefaultCacheManager().emptyCache();
+        PaintingBinding.instance.imageCache.clear();
+        PaintingBinding.instance.imageCache.clearLiveImages();
+      } catch (_) {}
+    }
     setState(() {
-      if (force) {
-        _refreshTimestamp = DateTime.now().millisecondsSinceEpoch;
-      }
       _cuisinesFuture = RecipeService.instance.getExploreCuisines(forceRefresh: force);
       _categoriesFuture = RecipeService.instance.getExploreCategories(forceRefresh: force);
       _popularFuture = RecipeService.instance.getPopularRecipes(size: 10, forceRefresh: force);
@@ -58,15 +65,11 @@ class _ExploreScreenState extends State<ExploreScreen>
   @override
   void initState() {
     super.initState();
-    _refreshData(force: false);
+    _refreshData(force: true);
 
     HomeScreen.activeTabNotifier.addListener(_onTabChanged);
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _refreshData(force: true);
-    });
-
-    _refreshTimer = Timer.periodic(const Duration(minutes: 5), (_) {
+    _refreshTimer = Timer.periodic(const Duration(minutes: 2), (_) {
       _refreshData(force: true);
     });
 
@@ -434,7 +437,10 @@ class _ExploreScreenState extends State<ExploreScreen>
     required String imagePath,
     required VoidCallback onTap,
   }) {
-    final isNetwork = imagePath.startsWith('http');
+    final String resolvedUrl = imagePath.startsWith('/')
+        ? '${ApiConfig.baseUrl}$imagePath'
+        : imagePath;
+    final isNetwork = resolvedUrl.startsWith('http://') || resolvedUrl.startsWith('https://');
 
     return GestureDetector(
       onTap: onTap,
@@ -453,7 +459,7 @@ class _ExploreScreenState extends State<ExploreScreen>
                 width: double.infinity,
                 child: isNetwork
                     ? CachedNetworkImage(
-                        imageUrl: _bustedUrl(imagePath),
+                        imageUrl: _bustedUrl(resolvedUrl),
                         fit: BoxFit.cover,
                         placeholder: (_, __) => Container(color: Colors.grey[200]),
                         errorWidget: (_, __, ___) => Image.asset(
@@ -508,13 +514,58 @@ class _ExploreScreenState extends State<ExploreScreen>
     );
   }
 
+  String _getCuisineImagePath(String name, String? img) {
+    if (img != null && img.trim().isNotEmpty) {
+      final trimmed = img.trim();
+      if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+        return trimmed;
+      }
+      if (trimmed.startsWith('/')) {
+        return '${ApiConfig.baseUrl}$trimmed';
+      }
+      if (trimmed.startsWith('assets/')) {
+        return trimmed;
+      }
+    }
+
+    final lower = name.toLowerCase().trim();
+    if (lower.contains('french')) return 'assets/cuisine/french.png';
+    if (lower.contains('italian')) return 'assets/cuisine/italian.png';
+    if (lower.contains('mexican')) return 'assets/cuisine/mexican.png';
+    if (lower.contains('greek')) return 'assets/cuisine/greek.png';
+    if (lower.contains('japanese')) return 'assets/cuisine/japanese.png';
+    if (lower.contains('korean')) return 'assets/cuisine/korean.png';
+    if (lower.contains('mediterranean')) return 'assets/cuisine/mediterranean.png';
+    if (lower.contains('caribbean')) return 'assets/cuisine/caribbean.png';
+    if (lower.contains('asian') || lower.contains('chinese')) return 'assets/cuisine/chinese.png';
+    if (lower.contains('indian')) return 'assets/cuisine/indian.png';
+    if (lower.contains('west african')) return 'assets/cuisine/west-african.png';
+    if (lower.contains('east african')) return 'assets/cuisine/east-african.png';
+    if (lower.contains('middle')) return 'assets/cuisine/middle-east.png';
+    if (lower.contains('thai')) return 'assets/cuisine/thai.png';
+    if (lower.contains('spanish')) return 'assets/cuisine/spanish.png';
+
+    return 'assets/cuisine/others.png';
+  }
+
   // ── Section 2: Cuisines Card (Full Width) ───────────────────────────────────
   Widget _buildCuisinesSectionCard() {
     final List<Map<String, String>> fallbackCuisines = [
-      {"name": "Italian", "count": "21 recipes", "image": "assets/images/italian.png"},
-      {"name": "Mexican", "count": "28 recipes", "image": "assets/images/mexican.png"},
-      {"name": "Asian", "count": "17 recipes", "image": "assets/images/chinese.png"},
-      {"name": "Indian", "count": "32 recipes", "image": "assets/images/indian.png"},
+      {"name": "French", "count": "24 recipes", "image": "assets/cuisine/french.png"},
+      {"name": "Italian", "count": "21 recipes", "image": "assets/cuisine/italian.png"},
+      {"name": "Mexican", "count": "28 recipes", "image": "assets/cuisine/mexican.png"},
+      {"name": "Greek", "count": "19 recipes", "image": "assets/cuisine/greek.png"},
+      {"name": "Japanese", "count": "25 recipes", "image": "assets/cuisine/japanese.png"},
+      {"name": "Korean", "count": "22 recipes", "image": "assets/cuisine/korean.png"},
+      {"name": "Mediterranean", "count": "30 recipes", "image": "assets/cuisine/mediterranean.png"},
+      {"name": "Caribbean", "count": "15 recipes", "image": "assets/cuisine/caribbean.png"},
+      {"name": "Asian", "count": "17 recipes", "image": "assets/cuisine/chinese.png"},
+      {"name": "Indian", "count": "32 recipes", "image": "assets/cuisine/indian.png"},
+      {"name": "West African", "count": "26 recipes", "image": "assets/cuisine/west-african.png"},
+      {"name": "East African", "count": "18 recipes", "image": "assets/cuisine/east-african.png"},
+      {"name": "Middle Eastern", "count": "20 recipes", "image": "assets/cuisine/middle-east.png"},
+      {"name": "Thai", "count": "23 recipes", "image": "assets/cuisine/thai.png"},
+      {"name": "Spanish", "count": "16 recipes", "image": "assets/cuisine/spanish.png"},
     ];
 
     return Container(
@@ -583,12 +634,13 @@ class _ExploreScreenState extends State<ExploreScreen>
                   itemCount: list.length,
                   itemBuilder: (context, i) {
                     final item = list[i];
-                    final name = (item['name'] as String?) ?? fallbackCuisines[i % fallbackCuisines.length]['name']!;
+                    final name = (item['name'] as String?) ?? 'Cuisine';
                     final count = item['count'] != null
                         ? item['count'].toString()
-                        : fallbackCuisines[i % fallbackCuisines.length]['count']!;
-                    final imgPath = item['image'] ?? fallbackCuisines[i % fallbackCuisines.length]['image']!;
-                    final isNetwork = imgPath is String && imgPath.startsWith('http');
+                        : (item['recipeCount'] != null ? "${item['recipeCount']} recipes" : "0 recipes");
+                    final rawImgPath = item['image'] as String?;
+                    final imgPath = _getCuisineImagePath(name, rawImgPath);
+                    final isNetwork = imgPath.startsWith('http');
 
                     return Padding(
                       padding: EdgeInsets.only(right: 18.w),
@@ -623,7 +675,7 @@ class _ExploreScreenState extends State<ExploreScreen>
                                         fit: BoxFit.cover,
                                         placeholder: (_, __) => Container(color: Colors.grey[200]),
                                         errorWidget: (_, __, ___) => Image.asset(
-                                          fallbackCuisines[i % fallbackCuisines.length]['image']!,
+                                          _getCuisineImagePath(name, null),
                                           fit: BoxFit.cover,
                                         ),
                                       )

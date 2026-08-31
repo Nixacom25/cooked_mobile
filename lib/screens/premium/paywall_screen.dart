@@ -7,6 +7,7 @@ import '../../services/iap_service.dart';
 import '../../services/revenuecat_service.dart';
 import '../../core/utils/error_helper.dart';
 import '../../services/user_service.dart';
+import '../../widgets/glass_icon_button.dart';
 import '../../widgets/red_button.dart';
 import '../../widgets/skeleton_loader.dart';
 import '../../core/widgets/legal_content_modal.dart';
@@ -188,9 +189,10 @@ class _PaywallScreenState extends State<PaywallScreen> {
                           ),
                         ),
                       ),
-                      IconButton(
-                        icon: const Icon(Icons.close, color: Color(0xFF7B8190), size: 28),
-                        onPressed: () => Navigator.pop(context, false),
+                      GlassIconButton(
+                        onTap: () => Navigator.pop(context, false),
+                        size: 40.r,
+                        child: Icon(Icons.close_rounded, color: const Color(0xFF7B8190), size: 22.sp),
                       ),
                     ],
                   ),
