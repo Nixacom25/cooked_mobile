@@ -359,18 +359,16 @@ class _AddToCookbookSheetState extends State<AddToCookbookSheet> {
     try {
       if (!isSelected) {
         // OPTIMISTIC UI: Close the sheet and notify immediately!
+        RecipeService.instance.markRecipeAsSaved(widget.recipe);
         widget.onSuccess?.call();
         if (mounted) Navigator.of(context).pop();
 
         CookbookService.instance.addRecipeToCookbook(cookbookId, widget.recipe.id).catchError((e) {
-           // On background error, we just swallow or show a global toast if we had context
            debugPrint('Background add to cookbook failed: $e');
            return Cookbook(id: '', name: '', recipes: [], createdAt: DateTime.now(), updatedAt: DateTime.now(), isPlaceholder: true);
         });
         
-        if (widget.recipe.isSuggested) {
-          RecipeService.instance.validateRecipe(widget.recipe.id).catchError((_) => widget.recipe);
-        }
+        RecipeService.instance.validateRecipe(widget.recipe.id).catchError((_) => widget.recipe);
       } else {
         await CookbookService.instance.removeRecipeFromCookbook(cookbookId, widget.recipe.id).catchError((e) {
            if (mounted) {

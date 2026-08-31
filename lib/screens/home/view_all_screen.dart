@@ -1218,9 +1218,9 @@ class _StaticCookbooksGridState extends State<_StaticCookbooksGrid> {
     super.initState();
     _refreshTimestamp = DateTime.now().millisecondsSinceEpoch;
     if (widget.type == ViewAllType.exploreCategories) {
-      _future = RecipeService.instance.getExploreCategories();
+      _future = RecipeService.instance.getExploreCategories(forceRefresh: true);
     } else {
-      _future = RecipeService.instance.getExploreCuisines();
+      _future = RecipeService.instance.getExploreCuisines(forceRefresh: true);
     }
   }
 
@@ -1350,7 +1350,6 @@ class _StaticCookbooksGridState extends State<_StaticCookbooksGrid> {
                     child: isNetwork
                         ? CachedNetworkImage(
                             imageUrl: bustedImageUrl,
-                            cacheKey: imgUrl,
                             fit: BoxFit.cover,
                             placeholder: (context, url) => const Center(
                               child: SizedBox(

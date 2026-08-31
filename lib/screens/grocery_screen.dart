@@ -279,46 +279,17 @@ class GroceryScreenState extends State<GroceryScreen> with SingleTickerProviderS
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Header Title Row: "Grocery List" + Calendar Button
+                          // Header Title Row: "Grocery List"
                           Padding(
                             padding: EdgeInsets.fromLTRB(20.w, 20.h, 20.w, 8.h),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  'Grocery List',
-                                  style: TextStyle(
-                                    fontFamily: 'Rubik',
-                                    fontWeight: FontWeight.w800,
-                                    fontSize: 24.sp,
-                                    color: const Color(0xFF0F172A),
-                                  ),
-                                ),
-                                GestureDetector(
-                                  onTap: () async {
-                                    HapticFeedback.lightImpact();
-                                    await showDatePicker(
-                                      context: context,
-                                      initialDate: DateTime.now(),
-                                      firstDate: DateTime(2020),
-                                      lastDate: DateTime(2030),
-                                    );
-                                  },
-                                  child: Container(
-                                    width: 42.r,
-                                    height: 42.r,
-                                    decoration: const BoxDecoration(
-                                      color: Color(0xFFF1F5F9),
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: Icon(
-                                      Icons.calendar_today_outlined,
-                                      color: const Color(0xFF0F172A),
-                                      size: 18.sp,
-                                    ),
-                                  ),
-                                ),
-                              ],
+                            child: Text(
+                              'Grocery List',
+                              style: TextStyle(
+                                fontFamily: 'Rubik',
+                                fontWeight: FontWeight.w800,
+                                fontSize: 24.sp,
+                                color: const Color(0xFF0F172A),
+                              ),
                             ),
                           ),
 
@@ -1121,36 +1092,15 @@ class _AddGrocerySheetState extends State<_AddGrocerySheet> {
             ),
           ),
 
-          // Header Title Row: "Add Grocery" + Calendar Button
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Add Grocery',
-                style: TextStyle(
-                  fontFamily: 'Rubik',
-                  fontWeight: FontWeight.w800,
-                  fontSize: 22.sp,
-                  color: const Color(0xFF0F172A),
-                ),
-              ),
-              GestureDetector(
-                onTap: _pickDate,
-                child: Container(
-                  width: 42.r,
-                  height: 42.r,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFFF1F5F9),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    Icons.calendar_today_outlined,
-                    color: const Color(0xFF0F172A),
-                    size: 18.sp,
-                  ),
-                ),
-              ),
-            ],
+          // Header Title Row: "Add Grocery"
+          Text(
+            'Add Grocery',
+            style: TextStyle(
+              fontFamily: 'Rubik',
+              fontWeight: FontWeight.w800,
+              fontSize: 22.sp,
+              color: const Color(0xFF0F172A),
+            ),
           ),
 
           SizedBox(height: 20.h),

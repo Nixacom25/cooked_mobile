@@ -811,7 +811,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
 
               // Cooked Logo (Top-center)
               Image.asset(
-                'assets/images/logo_fav.png',
+                'assets/images/logo2.png',
                 height: 45.h,
                 fit: BoxFit.contain,
                 errorBuilder: (_, __, ___) => Text(

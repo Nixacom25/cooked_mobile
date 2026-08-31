@@ -13,6 +13,8 @@ import '../../widgets/add_to_grocery_modal.dart';
 import '../../widgets/add_to_cookbook_sheet.dart';
 import '../../widgets/skeleton_loader.dart';
 import '../../services/user_service.dart';
+import '../../services/cookbook_service.dart';
+import '../../models/cookbook.dart';
 
 enum DetailTab { steps, ingredients }
 
@@ -274,6 +276,28 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
         ),
       ),
     );
+  }
+
+  bool _checkIsInCookbook(Recipe? r, List<Recipe>? savedRecipes, List<Cookbook>? cookbooks) {
+    if (r == null) return false;
+    if (r.isInCookbook) return true;
+
+    if (savedRecipes != null) {
+      final inSaved = savedRecipes.any(
+        (saved) => (saved.id == r.id || (saved.name.isNotEmpty && saved.name.toLowerCase() == r.name.toLowerCase())),
+      );
+      if (inSaved) return true;
+    }
+
+    if (cookbooks != null) {
+      for (final cb in cookbooks) {
+        if (cb.recipes.any((item) => item.id == r.id || (item.name.isNotEmpty && item.name.toLowerCase() == r.name.toLowerCase()))) {
+          return true;
+        }
+      }
+    }
+
+    return false;
   }
 
   @override
@@ -581,45 +605,56 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                       ],
                     ),
 
-                  // Bottom Action Button (Add to Cookbook)
+                  // Bottom Action Button (Add / Added to Cookbook)
                   Positioned(
                     bottom: 0,
                     left: 0,
                     right: 0,
-                    child: Container(
-                      color: Colors.white,
-                      padding: EdgeInsets.fromLTRB(20.w, 10.h, 20.w, 10.h + bottomPad),
-                      child: GestureDetector(
-                        onTap: () async {
-                          if (r == null) return;
-                          showModalBottomSheet(
-                            context: context,
-                            backgroundColor: Colors.transparent,
-                            isScrollControlled: true,
-                            builder: (_) => AddToCookbookSheet(
-                              recipe: r,
-                            ),
-                          );
-                        },
-                        child: Container(
-                          height: 52.h,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFF1F5F9),
-                            borderRadius: BorderRadius.circular(28.r),
-                          ),
-                          child: Center(
-                            child: Text(
-                              'Add to Cookbook',
-                              style: TextStyle(
-                                fontFamily: 'Rubik',
-                                fontWeight: FontWeight.w700,
-                                fontSize: 15.sp,
-                                color: const Color(0xFF0F172A),
+                    child: ValueListenableBuilder<List<Recipe>?>(
+                      valueListenable: RecipeService.instance.myRecipesNotifier,
+                      builder: (context, savedRecipes, _) {
+                        return ValueListenableBuilder<List<Cookbook>?>(
+                          valueListenable: CookbookService.instance.myCookbooksNotifier,
+                          builder: (context, cookbooks, _) {
+                            final bool isAdded = _checkIsInCookbook(r, savedRecipes, cookbooks);
+                            return Container(
+                              color: Colors.white,
+                              padding: EdgeInsets.fromLTRB(20.w, 10.h, 20.w, 10.h + bottomPad),
+                              child: GestureDetector(
+                                onTap: () async {
+                                  if (r == null) return;
+                                  showModalBottomSheet(
+                                    context: context,
+                                    backgroundColor: Colors.transparent,
+                                    isScrollControlled: true,
+                                    builder: (_) => AddToCookbookSheet(
+                                      recipe: r,
+                                    ),
+                                  );
+                                },
+                                child: Container(
+                                  height: 52.h,
+                                  decoration: BoxDecoration(
+                                    color: isAdded ? const Color(0xFFC83A2D) : const Color(0xFFF1F5F9),
+                                    borderRadius: BorderRadius.circular(28.r),
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      isAdded ? 'Added to Cookbook' : 'Add to Cookbook',
+                                      style: TextStyle(
+                                        fontFamily: 'Rubik',
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: 15.sp,
+                                        color: isAdded ? Colors.white : const Color(0xFF0F172A),
+                                      ),
+                                    ),
+                                  ),
+                                ),
                               ),
-                            ),
-                          ),
-                        ),
-                      ),
+                            );
+                          },
+                        );
+                      },
                     ),
                   ),
                 ],

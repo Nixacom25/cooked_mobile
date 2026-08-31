@@ -536,14 +536,12 @@ class RecipeService {
       final List<dynamic> data = jsonDecode(response.body);
       final results = data.map((item) => Map<String, dynamic>.from(item)).toList();
 
-      if (forceRefresh) {
-        for (final item in results) {
-          final imageUrl = item['image'] as String?;
-          if (imageUrl != null && imageUrl.isNotEmpty) {
-            try {
-              CachedNetworkImageProvider(imageUrl).evict().catchError((_) => false);
-            } catch (_) {}
-          }
+      for (final item in results) {
+        final imageUrl = item['image'] as String?;
+        if (imageUrl != null && imageUrl.isNotEmpty) {
+          try {
+            CachedNetworkImageProvider(imageUrl).evict().catchError((_) => false);
+          } catch (_) {}
         }
       }
 
@@ -572,14 +570,12 @@ class RecipeService {
       final List<dynamic> data = jsonDecode(response.body);
       final results = data.map((item) => Map<String, dynamic>.from(item)).toList();
 
-      if (forceRefresh) {
-        for (final item in results) {
-          final imageUrl = item['image'] as String?;
-          if (imageUrl != null && imageUrl.isNotEmpty) {
-            try {
-              CachedNetworkImageProvider(imageUrl).evict().catchError((_) => false);
-            } catch (_) {}
-          }
+      for (final item in results) {
+        final imageUrl = item['image'] as String?;
+        if (imageUrl != null && imageUrl.isNotEmpty) {
+          try {
+            CachedNetworkImageProvider(imageUrl).evict().catchError((_) => false);
+          } catch (_) {}
         }
       }
 
@@ -822,15 +818,40 @@ class RecipeService {
     }
   }
 
+  void markRecipeAsSaved(Recipe recipe) {
+    final updated = recipe.copyWith(
+      isInCookbook: true,
+      isValidated: true,
+      isSuggested: false,
+    );
+    final current = myRecipesNotifier.value ?? [];
+    final idx = current.indexWhere(
+      (r) => r.id == recipe.id || (r.name.isNotEmpty && r.name.toLowerCase() == recipe.name.toLowerCase()),
+    );
+    final List<Recipe> newList = List<Recipe>.from(current);
+    if (idx != -1) {
+      newList[idx] = updated;
+    } else {
+      newList.insert(0, updated);
+    }
+    myRecipesNotifier.value = newList;
+
+    try {
+      final jsonList = newList.map((r) => r.toJson()).toList();
+      DatabaseService.instance.writeCacheRaw('my_recipes_cache_v3', jsonEncode(jsonList));
+    } catch (_) {}
+
+    getMyRecipes(forceRefresh: true).catchError((_) => <Recipe>[]);
+  }
+
   Future<Recipe> validateRecipe(String id) async {
     // 1. Optimistic local update
-    if (myRecipesNotifier.value != null) {
-      final newList = List<Recipe>.from(myRecipesNotifier.value!);
-      final idx = newList.indexWhere((r) => r.id == id);
-      if (idx != -1) {
-        newList[idx] = newList[idx].copyWith(isValidated: true);
-        myRecipesNotifier.value = newList;
-      }
+    final current = myRecipesNotifier.value ?? [];
+    final idx = current.indexWhere((r) => r.id == id);
+    if (idx != -1) {
+      final newList = List<Recipe>.from(current);
+      newList[idx] = newList[idx].copyWith(isValidated: true, isInCookbook: true);
+      myRecipesNotifier.value = newList;
     }
 
     final url = Uri.parse('${ApiConfig.baseUrl}/recipes/$id/validate');
@@ -839,17 +860,23 @@ class RecipeService {
       if (response.statusCode == 200) {
         final validated = Recipe.fromJson(jsonDecode(response.body));
         
-        // Update local state with the actual backend result (handles ID changes if cloned)
-        if (myRecipesNotifier.value != null) {
-          final newList = List<Recipe>.from(myRecipesNotifier.value!);
-          final idx = newList.indexWhere((r) => r.id == id || r.name.toLowerCase() == validated.name.toLowerCase());
-          if (idx != -1) {
-            newList[idx] = validated;
-          } else {
-            newList.insert(0, validated);
-          }
-          myRecipesNotifier.value = newList;
+        // Update local state with the actual backend result
+        final currentSaved = myRecipesNotifier.value ?? [];
+        final existingIndex = currentSaved.indexWhere(
+          (r) => r.id == id || (r.name.isNotEmpty && r.name.toLowerCase() == validated.name.toLowerCase()),
+        );
+        final List<Recipe> newList = List<Recipe>.from(currentSaved);
+        if (existingIndex != -1) {
+          newList[existingIndex] = validated;
+        } else {
+          newList.insert(0, validated);
         }
+        myRecipesNotifier.value = newList;
+
+        try {
+          final jsonList = newList.map((r) => r.toJson()).toList();
+          DatabaseService.instance.writeCacheRaw('my_recipes_cache_v3', jsonEncode(jsonList));
+        } catch (_) {}
 
         // Background cleanup
         _removeTemporarySuggestion(validated.name).catchError((_) => null);
