@@ -417,13 +417,26 @@ class _CookbookFormModalState extends State<CookbookFormModal> {
 
     setState(() => _isSaving = true);
     try {
-      final recipeIds = _selectedRecipes.map((r) => r.id).toList();
+      final List<String> validRecipeIds = [];
+      for (int i = 0; i < _selectedRecipes.length; i++) {
+        Recipe r = _selectedRecipes[i];
+        if (r.id.isEmpty) {
+          r = await RecipeService.instance.createRecipe(r);
+          _selectedRecipes[i] = r;
+        } else {
+          r = await RecipeService.instance.validateRecipe(r.id).catchError((_) => r);
+          _selectedRecipes[i] = r;
+        }
+        RecipeService.instance.markRecipeAsSaved(r);
+        validRecipeIds.add(r.id);
+      }
+
       Cookbook cb;
       if (_isEdit) {
         cb = await CookbookService.instance
-            .updateCookbook(widget.cookbook!.id, name, recipeIds);
+            .updateCookbook(widget.cookbook!.id, name, validRecipeIds);
       } else {
-        cb = await CookbookService.instance.createCookbook(name, recipeIds);
+        cb = await CookbookService.instance.createCookbook(name, validRecipeIds);
       }
 
       if (!mounted) return;

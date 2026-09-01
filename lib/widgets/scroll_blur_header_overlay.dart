@@ -1,9 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 
-/// Instagram & iOS-style liquid frosted glass scroll header overlay.
-/// As the user scrolls down, a heavy Gaussian blur and dark translucent gradient
-/// smoothly veil the top status bar & header area, creating an authentic Instagram scroll blur effect.
 class ScrollBlurHeaderOverlay extends StatefulWidget {
   final Widget child;
   final ScrollController? scrollController;
@@ -12,18 +9,16 @@ class ScrollBlurHeaderOverlay extends StatefulWidget {
   final Color? primaryGradientColor;
   final Color? secondaryGradientColor;
   final bool isDarkBackground;
-  final bool isInstagramStyle;
 
   const ScrollBlurHeaderOverlay({
     super.key,
     required this.child,
     this.scrollController,
-    this.fadeThreshold = 45.0,
-    this.maxBlur = 24.0,
+    this.fadeThreshold = 35.0,
+    this.maxBlur = 28.0,
     this.primaryGradientColor,
     this.secondaryGradientColor,
     this.isDarkBackground = false,
-    this.isInstagramStyle = true,
   });
 
   @override
@@ -82,25 +77,18 @@ class _ScrollBlurHeaderOverlayState extends State<ScrollBlurHeaderOverlay> {
     final double progress = (_scrollOffset / widget.fadeThreshold).clamp(0.0, 1.0);
     final double blurSigma = progress * widget.maxBlur;
     final double statusBarHeight = MediaQuery.of(context).padding.top;
-    final double totalOverlayHeight = statusBarHeight > 0 ? statusBarHeight : MediaQuery.of(context).viewPadding.top;
+    final double baseHeight = statusBarHeight > 0 ? statusBarHeight : MediaQuery.of(context).viewPadding.top;
+    final double totalOverlayHeight = baseHeight + 25.0;
 
-    // Instagram-style multi-stop gradient colors (dark translucent blur at top)
-    final List<Color> gradientColors = widget.isInstagramStyle
-        ? [
-            Colors.black.withValues(alpha: 0.65 * progress),
-            Colors.black.withValues(alpha: 0.38 * progress),
-            Colors.black.withValues(alpha: 0.12 * progress),
-            Colors.transparent,
-          ]
-        : [
-            (widget.primaryGradientColor ?? const Color(0xFFB00812)).withValues(alpha: 0.80 * progress),
-            (widget.secondaryGradientColor ?? const Color(0xFFD66F6C)).withValues(alpha: 0.15 * progress),
-            Colors.transparent,
-          ];
+    // Instagram Translucent Dark Mirror Glass Gradient (Mirrors underlying content with heavy blur without white block)
+    final List<Color> gradientColors = [
+      (widget.primaryGradientColor ?? Colors.black).withValues(alpha: 0.68 * progress),
+      (widget.secondaryGradientColor ?? Colors.black.withValues(alpha: 0.38)).withValues(alpha: 0.38 * progress),
+      Colors.black.withValues(alpha: 0.10 * progress),
+      Colors.transparent,
+    ];
 
-    final List<double> gradientStops = widget.isInstagramStyle
-        ? const [0.0, 0.40, 0.75, 1.0]
-        : const [0.0, 0.65, 1.0];
+    final List<double> gradientStops = const [0.0, 0.42, 0.75, 1.0];
 
     return NotificationListener<ScrollNotification>(
       onNotification: _handleScrollNotification,
@@ -109,7 +97,7 @@ class _ScrollBlurHeaderOverlayState extends State<ScrollBlurHeaderOverlay> {
         children: [
           widget.child,
 
-          // ── Instagram Frosted Glass Blur & Multi-Stop Dark Translucent Header ──
+          // ── Instagram Liquid Frosted Glass Header Overlay ──
           Positioned(
             top: 0,
             left: 0,
@@ -119,20 +107,36 @@ class _ScrollBlurHeaderOverlayState extends State<ScrollBlurHeaderOverlay> {
               ignoring: true,
               child: AnimatedOpacity(
                 duration: const Duration(milliseconds: 100),
+                curve: Curves.easeOut,
                 opacity: progress > 0.005 ? 1.0 : 0.0,
-                child: ClipRect(
-                  child: BackdropFilter(
-                    filter: ImageFilter.blur(
-                      sigmaX: blurSigma,
-                      sigmaY: blurSigma,
-                    ),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: gradientColors,
-                          stops: gradientStops,
+                child: ShaderMask(
+                  shaderCallback: (rect) {
+                    return const LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.black,
+                        Colors.black,
+                        Colors.transparent,
+                      ],
+                      stops: [0.0, 0.35, 1.0],
+                    ).createShader(rect);
+                  },
+                  blendMode: BlendMode.dstIn,
+                  child: ClipRect(
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(
+                        sigmaX: blurSigma,
+                        sigmaY: blurSigma,
+                      ),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: gradientColors,
+                            stops: gradientStops,
+                          ),
                         ),
                       ),
                     ),

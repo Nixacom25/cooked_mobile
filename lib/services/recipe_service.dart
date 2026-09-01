@@ -667,46 +667,22 @@ class RecipeService {
     if (response.statusCode == 200) {
       final recipe = Recipe.fromJson(jsonDecode(response.body));
       
-      // 1. Insert partial skeleton (placeholder)
-      if (recentImportsNotifier.value != null) {
-        final placeholder = Recipe(
-          id: 'pending_${DateTime.now().millisecondsSinceEpoch}',
-          name: 'Importing recipe...',
-          cookTime: 0,
-          kcal: 0,
-          steps: [],
-          equipment: [],
-          ingredients: [],
-          isPublic: false,
-          isFavorite: false,
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
-          isPlaceholder: true,
-          isSuggested: true,
-        );
-        recentImportsNotifier.value = [placeholder, ...recentImportsNotifier.value!];
-      }
-      if (myRecipesNotifier.value != null) {
-        final placeholder = Recipe(
-          id: 'pending_my_${DateTime.now().millisecondsSinceEpoch}',
-          name: 'Importing recipe...',
-          cookTime: 0,
-          kcal: 0,
-          steps: [],
-          equipment: [],
-          ingredients: [],
-          isPublic: false,
-          isFavorite: false,
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
-          isPlaceholder: true,
-          isSuggested: true,
-        );
-        myRecipesNotifier.value = [placeholder, ...myRecipesNotifier.value!];
-      }
+      // 1. Instantly update recentImportsNotifier & myRecipesNotifier with the imported recipe
+      final currentRecent = recentImportsNotifier.value ?? [];
+      recentImportsNotifier.value = [
+        recipe,
+        ...currentRecent.where((r) => !r.isPlaceholder && r.id != recipe.id)
+      ];
 
-      await getMyRecipes(forceRefresh: true);
-      await getRecentImports(forceRefresh: true);
+      final currentMy = myRecipesNotifier.value ?? [];
+      myRecipesNotifier.value = [
+        recipe,
+        ...currentMy.where((r) => !r.isPlaceholder && r.id != recipe.id)
+      ];
+
+      // 2. Refresh lists in background to stay in sync with backend database
+      getMyRecipes(forceRefresh: true).catchError((_) => <Recipe>[]);
+      getRecentImports(forceRefresh: true).catchError((_) => <Recipe>[]);
       CookbookService.instance.getMyCookbooks(forceRefresh: true).then((_) => null).catchError((_) => null);
       return recipe;
     } else {

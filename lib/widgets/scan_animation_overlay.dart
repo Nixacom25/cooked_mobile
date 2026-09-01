@@ -26,8 +26,6 @@ class ScanAnimationOverlay extends StatefulWidget {
 }
 
 class _ScanAnimationOverlayState extends State<ScanAnimationOverlay> {
-  Artboard? _riveArtboard;
-  String? _errorMessage;
   Timer? _minAnimationTimer;
   Timer? _maxTimeoutTimer;
   bool _minAnimationFinished = false;
@@ -35,7 +33,6 @@ class _ScanAnimationOverlayState extends State<ScanAnimationOverlay> {
   @override
   void initState() {
     super.initState();
-    _loadRiveFile();
     if (!widget.showTestControls) {
       // Allow 1 quick scan loop (2.0s) minimum before dismissing once AI data is ready
       _minAnimationTimer = Timer(const Duration(milliseconds: 2000), () {
@@ -76,52 +73,6 @@ class _ScanAnimationOverlayState extends State<ScanAnimationOverlay> {
     }
   }
 
-  Future<void> _loadRiveFile() async {
-    try {
-      final bytes = await rootBundle.load('assets/cooked.riv');
-      final file = RiveFile.import(
-        bytes,
-        assetLoader: CallbackAssetLoader((asset, bytes) async {
-          // Returning false allows Rive to decode embedded graphics and font assets!
-          return false;
-        }),
-      );
-      
-      final artboard = file.artboardByName('MAIN') ?? file.mainArtboard;
-
-      final smName = artboard.stateMachines.isNotEmpty
-          ? artboard.stateMachines.first.name
-          : 'State Machine 1';
-      final controller = StateMachineController.fromArtboard(
-        artboard,
-        smName,
-        onStateChange: (stateMachineName, stateName) {
-          debugPrint('RIVE_STATE_CHANGE: $stateMachineName -> $stateName');
-        },
-      );
-      if (controller != null) {
-        artboard.addController(controller);
-      } else if (artboard.animations.isNotEmpty) {
-        artboard.addController(
-          SimpleAnimation(artboard.animations.first.name),
-        );
-      }
-
-      if (mounted) {
-        setState(() {
-          _riveArtboard = artboard;
-        });
-      }
-    } catch (e, stack) {
-      debugPrint('RIVE_LOAD_ERROR: $e\n$stack');
-      if (mounted) {
-        setState(() {
-          _errorMessage = e.toString();
-        });
-      }
-    }
-  }
-
   @override
   void dispose() {
     _minAnimationTimer?.cancel();
@@ -138,32 +89,37 @@ class _ScanAnimationOverlayState extends State<ScanAnimationOverlay> {
       child: Stack(
         children: [
           Positioned.fill(
-            child: _errorMessage != null
-                ? Center(
-                    child: Padding(
-                      padding: EdgeInsets.all(24.w),
-                      child: Text(
-                        "Erreur Rive: $_errorMessage",
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Colors.red,
-                          fontSize: 14.sp,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  )
-                : _riveArtboard != null
-                    ? Rive(
-                        artboard: _riveArtboard!,
-                        fit: BoxFit.contain,
-                        antialiasing: true,
-                      )
-                    : const Center(
-                        child: CircularProgressIndicator(
-                          color: Color(0xFFC83A2D),
-                        ),
-                      ),
+            child: RiveAnimation.asset(
+              'assets/cooked.riv',
+              fit: BoxFit.contain,
+              antialiasing: true,
+              artboard: 'MAIN',
+              onInit: (artboard) {
+                // 1. Add and activate all timeline animations
+                for (final anim in artboard.animations) {
+                  artboard.addController(
+                    SimpleAnimation(anim.name, autoplay: true),
+                  );
+                }
+                // 2. Add and activate state machine controller
+                if (artboard.stateMachines.isNotEmpty) {
+                  final smName = artboard.stateMachines.first.name;
+                  final controller = StateMachineController.fromArtboard(
+                    artboard,
+                    smName,
+                  );
+                  if (controller != null) {
+                    controller.isActive = true;
+                    artboard.addController(controller);
+                  }
+                }
+              },
+              placeHolder: const Center(
+                child: CircularProgressIndicator(
+                  color: Color(0xFFC83A2D),
+                ),
+              ),
+            ),
           ),
           if (widget.showTestControls)
             Positioned(

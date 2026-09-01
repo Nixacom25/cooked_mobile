@@ -358,17 +358,24 @@ class _AddToCookbookSheetState extends State<AddToCookbookSheet> {
 
     try {
       if (!isSelected) {
-        // OPTIMISTIC UI: Close the sheet and notify immediately!
-        RecipeService.instance.markRecipeAsSaved(widget.recipe);
+        // 1. Ensure recipe is created/persisted in database FIRST if its ID is empty, or validated if suggested!
+        Recipe targetRecipe = widget.recipe;
+        if (targetRecipe.id.isEmpty) {
+          targetRecipe = await RecipeService.instance.createRecipe(targetRecipe);
+        } else {
+          targetRecipe = await RecipeService.instance.validateRecipe(targetRecipe.id).catchError((_) => targetRecipe);
+        }
+
+        // 2. Mark local state as saved
+        RecipeService.instance.markRecipeAsSaved(targetRecipe);
         widget.onSuccess?.call();
         if (mounted) Navigator.of(context).pop();
 
-        CookbookService.instance.addRecipeToCookbook(cookbookId, widget.recipe.id).catchError((e) {
+        // 3. Add to cookbook in backend DB & update state
+        await CookbookService.instance.addRecipeToCookbook(cookbookId, targetRecipe.id).catchError((e) {
            debugPrint('Background add to cookbook failed: $e');
            return Cookbook(id: '', name: '', recipes: [], createdAt: DateTime.now(), updatedAt: DateTime.now(), isPlaceholder: true);
         });
-        
-        RecipeService.instance.validateRecipe(widget.recipe.id).catchError((_) => widget.recipe);
       } else {
         await CookbookService.instance.removeRecipeFromCookbook(cookbookId, widget.recipe.id).catchError((e) {
            if (mounted) {
@@ -387,6 +394,7 @@ class _AddToCookbookSheetState extends State<AddToCookbookSheet> {
             _selectedIds.add(cookbookId);
           }
         });
+        IosToast.show(context, message: ErrorHelper.getFriendlyMessage(e), type: ToastType.error);
       }
     } finally {
       if (mounted) {

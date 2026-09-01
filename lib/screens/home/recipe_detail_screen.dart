@@ -713,7 +713,7 @@ class _RecipeDetailHeaderDelegate extends SliverPersistentHeaderDelegate {
   });
 
   @override
-  double get maxExtent => 340.h;
+  double get maxExtent => 280.h;
   @override
   double get minExtent => topPadding + 60.h;
   @override
