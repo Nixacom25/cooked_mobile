@@ -249,12 +249,21 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
     });
 
     try {
-      // Step 1: Validate/Detect typed ingredients from DB
-      final detectResult = await RecipeService.instance.validateTypedIngredients(allIngredients);
+      final scanResult = await RecipeService.instance.scanTyped(allIngredients);
 
       final List<RecipeIngredient> allowed =
-          (detectResult['allowed_ingredients'] as List? ?? [])
+          (scanResult['allowed_ingredients'] as List? ?? [])
               .map((i) => RecipeIngredient.fromJson(i))
+              .toList();
+
+      final List<RecipeIngredient> restricted =
+          (scanResult['restricted_ingredients'] as List? ?? [])
+              .map((i) => RecipeIngredient.fromJson(i))
+              .toList();
+
+      final List<Recipe> generatedRecipes =
+          (scanResult['recipes'] as List? ?? [])
+              .map((j) => Recipe.fromJson(j))
               .toList();
 
       if (mounted) {
@@ -262,21 +271,13 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
           _ingredients.clear();
           _ingredients.addAll(allowed);
           _restrictedIngredients.clear();
+          _restrictedIngredients.addAll(restricted);
           
-          _overlayDetectedIngredients = allowed;
-        });
-      }
-
-      // Step 2: Generate Recipes
-      final List<String> ingredientNames = allowed.map((i) => i.name).toList();
-      final generatedRecipes = await RecipeService.instance.generateAiRecipes(ingredientNames);
-
-      if (mounted) {
-        setState(() {
           _recipes.clear();
           _recipes.addAll(generatedRecipes);
           _typedIngredients.clear();
           
+          _overlayDetectedIngredients = allowed;
           _overlayGeneratedRecipes = generatedRecipes;
         });
       }
@@ -2016,17 +2017,21 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
     });
 
     try {
-      final detectResult =
-          await RecipeService.instance.detectIngredients(photo);
+      final scanResult = await RecipeService.instance.scan(photo);
 
       final List<RecipeIngredient> detectedAllowed =
-          (detectResult['allowed_ingredients'] as List? ?? [])
+          (scanResult['allowed_ingredients'] as List? ?? [])
               .map((j) => RecipeIngredient.fromJson(j))
               .toList();
 
       final List<RecipeIngredient> detectedRestricted =
-          (detectResult['restricted_ingredients'] as List? ?? [])
+          (scanResult['restricted_ingredients'] as List? ?? [])
               .map((j) => RecipeIngredient.fromJson(j))
+              .toList();
+
+      final List<Recipe> generatedRecipes =
+          (scanResult['recipes'] as List? ?? [])
+              .map((j) => Recipe.fromJson(j))
               .toList();
 
       if (mounted) {
@@ -2037,21 +2042,10 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
           _restrictedIngredients.clear();
           _restrictedIngredients.addAll(detectedRestricted);
 
-          _overlayDetectedIngredients = detectedAllowed;
-        });
-      }
-
-      final List<String> ingredientNames =
-          detectedAllowed.map((i) => i.name).toList();
-
-      final generatedRecipes =
-          await RecipeService.instance.generateAiRecipes(ingredientNames);
-
-      if (mounted) {
-        setState(() {
           _recipes.clear();
           _recipes.addAll(generatedRecipes);
 
+          _overlayDetectedIngredients = detectedAllowed;
           _overlayGeneratedRecipes = generatedRecipes;
         });
       }

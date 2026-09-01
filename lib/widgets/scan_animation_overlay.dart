@@ -28,14 +28,30 @@ class ScanAnimationOverlay extends StatefulWidget {
 class _ScanAnimationOverlayState extends State<ScanAnimationOverlay> {
   Artboard? _riveArtboard;
   String? _errorMessage;
-  Timer? _completionTimer;
+  Timer? _minAnimationTimer;
+  Timer? _maxTimeoutTimer;
+  bool _minAnimationFinished = false;
 
   @override
   void initState() {
     super.initState();
     _loadRiveFile();
     if (!widget.showTestControls) {
-      _checkCompletion();
+      // Allow 1 quick scan loop (2.0s) minimum before dismissing once AI data is ready
+      _minAnimationTimer = Timer(const Duration(milliseconds: 2000), () {
+        if (mounted) {
+          setState(() {
+            _minAnimationFinished = true;
+          });
+          _tryComplete();
+        }
+      });
+      // Safety max timeout (12s) to guarantee screen transition
+      _maxTimeoutTimer = Timer(const Duration(seconds: 12), () {
+        if (mounted) {
+          widget.onAnimationComplete();
+        }
+      });
     }
   }
 
@@ -43,7 +59,20 @@ class _ScanAnimationOverlayState extends State<ScanAnimationOverlay> {
   void didUpdateWidget(ScanAnimationOverlay oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (!widget.showTestControls) {
-      _checkCompletion();
+      _tryComplete();
+    }
+  }
+
+  void _tryComplete() {
+    if (widget.showTestControls) return;
+
+    // Transition as soon as AI response arrives (recipes or ingredients non-null)
+    final bool hasData =
+        widget.generatedRecipes != null || widget.detectedIngredients != null;
+
+    if (_minAnimationFinished && hasData) {
+      _maxTimeoutTimer?.cancel();
+      widget.onAnimationComplete();
     }
   }
 
@@ -93,21 +122,10 @@ class _ScanAnimationOverlayState extends State<ScanAnimationOverlay> {
     }
   }
 
-  void _checkCompletion() {
-    if (widget.generatedRecipes != null && widget.generatedRecipes!.isNotEmpty) {
-      _completionTimer?.cancel();
-      // Allow full Rive animation cycle (25 seconds) to play completely without cutting off early
-      _completionTimer = Timer(const Duration(seconds: 25), () {
-        if (mounted) {
-          widget.onAnimationComplete();
-        }
-      });
-    }
-  }
-
   @override
   void dispose() {
-    _completionTimer?.cancel();
+    _minAnimationTimer?.cancel();
+    _maxTimeoutTimer?.cancel();
     super.dispose();
   }
 

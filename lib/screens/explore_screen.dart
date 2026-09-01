@@ -7,6 +7,7 @@ import '../widgets/app_search_field.dart';
 import '../widgets/app_top_header.dart';
 import '../widgets/red_header_background.dart';
 import '../widgets/saved_recipe_card.dart';
+import '../widgets/scroll_blur_header_overlay.dart';
 import '../routes/app_routes.dart';
 import '../services/recipe_service.dart';
 import '../models/recipe.dart';
@@ -155,10 +156,12 @@ class _ExploreScreenState extends State<ExploreScreen>
       child: RefreshIndicator(
         onRefresh: _handleRefresh,
         color: const Color(0xFFF1F5F9),
-        child: SingleChildScrollView(
-          physics: const ClampingScrollPhysics(),
-          child: Stack(
-            children: [
+        child: ScrollBlurHeaderOverlay(
+          isDarkBackground: true,
+          child: SingleChildScrollView(
+            physics: const ClampingScrollPhysics(),
+            child: Stack(
+              children: [
                 // ── Red Top Header Background (Gradient) - Scrolls with content ──
                 Positioned(
                   top: 0,
@@ -196,8 +199,9 @@ class _ExploreScreenState extends State<ExploreScreen>
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   // ── Fused Top Card: Explore Header, Search, Filters & "For You" Section ───────
   Widget _buildTopExploreAndForYouCard() {

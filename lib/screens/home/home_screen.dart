@@ -21,6 +21,7 @@ import '../../widgets/app_search_field.dart';
 import '../../widgets/app_top_header.dart';
 import '../../widgets/red_header_background.dart';
 import '../../widgets/saved_recipe_card.dart';
+import '../../widgets/scroll_blur_header_overlay.dart';
 import '../../services/recipe_service.dart';
 import '../../services/cookbook_service.dart';
 import '../../models/recipe.dart';
@@ -903,10 +904,12 @@ class _HomeTabState extends State<_HomeTab> {
       child: ValueListenableBuilder<String>(
         valueListenable: _searchQueryNotifier,
         builder: (context, searchQuery, _) {
-          return SingleChildScrollView(
-            physics: const ClampingScrollPhysics(),
-            child: Stack(
-              children: [
+          return ScrollBlurHeaderOverlay(
+            isDarkBackground: true,
+            child: SingleChildScrollView(
+              physics: const ClampingScrollPhysics(),
+              child: Stack(
+                children: [
                 // ── Red Top Header Background (Gradient) - Scrolls with content ──
                 Positioned(
                   top: 0,
@@ -1175,11 +1178,12 @@ class _HomeTabState extends State<_HomeTab> {
                   ),
                 ],
               ),
-            );
-          },
-        ),
-      );
-    }
+            ),
+          );
+        },
+      ),
+    );
+  }
 }
 
 
