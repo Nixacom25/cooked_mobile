@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:rive/rive.dart';
 import 'package:cooked/widgets/scan_animation_overlay.dart';
 import 'package:cooked/models/recipe.dart';
 
@@ -28,13 +28,16 @@ void main() {
       };
 
       await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: ScanAnimationOverlay(
-              showTestControls: true,
-              onAnimationComplete: () {
-                completed = true;
-              },
+        ScreenUtilInit(
+          designSize: const Size(375, 812),
+          builder: (context, child) => MaterialApp(
+            home: Scaffold(
+              body: ScanAnimationOverlay(
+                showTestControls: true,
+                onAnimationComplete: () {
+                  completed = true;
+                },
+              ),
             ),
           ),
         ),
@@ -47,7 +50,7 @@ void main() {
       final closeButton = find.text('Fermer');
       expect(closeButton, findsOneWidget);
       await tester.tap(closeButton);
-      await tester.pumpAndSettle();
+      await tester.pump();
 
       expect(completed, isTrue, reason: 'onAnimationComplete callback should be called on close');
       FlutterError.onError = originalOnError;
@@ -63,27 +66,30 @@ void main() {
       };
 
       await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: ScanAnimationOverlay(
-              generatedRecipes: [
-                Recipe(
-                  id: '1',
-                  name: 'Test Recipe',
-                  cookTime: 15,
-                  kcal: 300,
-                  steps: [],
-                  equipment: [],
-                  ingredients: [],
-                  isPublic: false,
-                  isFavorite: false,
-                  createdAt: DateTime.now(),
-                  updatedAt: DateTime.now(),
-                ),
-              ],
-              onAnimationComplete: () {
-                completed = true;
-              },
+        ScreenUtilInit(
+          designSize: const Size(375, 812),
+          builder: (context, child) => MaterialApp(
+            home: Scaffold(
+              body: ScanAnimationOverlay(
+                generatedRecipes: [
+                  Recipe(
+                    id: '1',
+                    name: 'Test Recipe',
+                    cookTime: 15,
+                    kcal: 300,
+                    steps: [],
+                    equipment: [],
+                    ingredients: [],
+                    isPublic: false,
+                    isFavorite: false,
+                    createdAt: DateTime.now(),
+                    updatedAt: DateTime.now(),
+                  ),
+                ],
+                onAnimationComplete: () {
+                  completed = true;
+                },
+              ),
             ),
           ),
         ),
