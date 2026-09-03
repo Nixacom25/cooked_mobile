@@ -147,7 +147,16 @@ class _ScanAnimationOverlayState extends State<ScanAnimationOverlay> {
 class _RiveScanPreloader {
   static FileLoader? _cachedLoader;
 
-  static FileLoader getLoader() {
+  static FileLoader? getLoader() {
+    final bool isTestEnv = WidgetsBinding.instance.runtimeType
+        .toString()
+        .toLowerCase()
+        .contains('test');
+
+    if (isTestEnv) {
+      return null;
+    }
+
     return _cachedLoader ??= FileLoader.fromAsset(
       'assets/cooked.riv',
       riveFactory: Factory.rive,
@@ -167,7 +176,7 @@ class _FallbackScanAnimation extends StatefulWidget {
 }
 
 class _FallbackScanAnimationState extends State<_FallbackScanAnimation> {
-  late final FileLoader _fileLoader;
+  FileLoader? _fileLoader;
 
   @override
   void initState() {
@@ -182,13 +191,13 @@ class _FallbackScanAnimationState extends State<_FallbackScanAnimation> {
         .toLowerCase()
         .contains('test');
 
-    if (isTestEnv) {
+    if (isTestEnv || _fileLoader == null) {
       return const _NativeSpinnerFallback();
     }
 
     return SizedBox.expand(
       child: RiveWidgetBuilder(
-        fileLoader: _fileLoader,
+        fileLoader: _fileLoader!,
         artboardSelector: const ArtboardDefault(),
         stateMachineSelector: const StateMachineDefault(),
         onLoaded: (RiveLoaded state) {
