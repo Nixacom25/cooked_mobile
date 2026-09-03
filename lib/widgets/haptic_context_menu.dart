@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class HapticMenuAction {
@@ -23,6 +24,7 @@ class HapticContextMenu {
     required Offset targetPosition,
     double menuWidth = 220,
   }) async {
+    HapticFeedback.mediumImpact();
     await showGeneralDialog(
       context: context,
       barrierDismissible: true,
@@ -106,21 +108,22 @@ class _HapticMenuOverlay extends StatelessWidget {
             child: ClipRRect(
               borderRadius: BorderRadius.circular(20.r),
               child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+                filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
                 child: Container(
                   width: menuWidth.w,
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.75), // Glass background for modal
+                    color: Colors.white.withValues(alpha: 0.65), // Translucent frosted glass
                     borderRadius: BorderRadius.circular(20.r),
                     border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.5),
-                      width: 1.2,
+                      color: Colors.white.withValues(alpha: 0.8),
+                      width: 1.2.w,
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.08),
-                        blurRadius: 24,
-                        spreadRadius: 2,
+                        color: Colors.black.withValues(alpha: 0.12),
+                        blurRadius: 28,
+                        spreadRadius: 1,
+                        offset: const Offset(0, 8),
                       ),
                     ],
                   ),

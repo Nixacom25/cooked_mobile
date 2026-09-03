@@ -1,10 +1,7 @@
 import 'dart:async';
-import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:rive/rive.dart' hide LinearGradient, Image;
-import 'package:video_player/video_player.dart';
+import 'package:rive/rive.dart';
 import '../models/recipe.dart';
 
 class ScanAnimationOverlay extends StatefulWidget {
@@ -31,15 +28,11 @@ class _ScanAnimationOverlayState extends State<ScanAnimationOverlay> {
   Timer? _minAnimationTimer;
   Timer? _maxTimeoutTimer;
   bool _minAnimationFinished = false;
-  Artboard? _artboard;
-  StateMachineController? _riveController;
-  VideoPlayerController? _videoController;
-  bool _isVideoInitialized = false;
 
   @override
   void initState() {
     super.initState();
-    _loadAnimationAsset();
+    _RiveScanPreloader.preload();
 
     if (!widget.showTestControls) {
       // Allow 1 quick scan loop (2.0s) minimum before dismissing once AI data is ready
@@ -57,113 +50,6 @@ class _ScanAnimationOverlayState extends State<ScanAnimationOverlay> {
           widget.onAnimationComplete();
         }
       });
-    }
-  }
-
-  Future<void> _loadAnimationAsset() async {
-    final bool isTestEnv = WidgetsBinding.instance.runtimeType.toString().toLowerCase().contains('test');
-
-    if (!isTestEnv) {
-      // 1. Try loading MOV video asset first
-      try {
-        final movController = VideoPlayerController.asset('assets/cooked.mov');
-        await movController.initialize();
-        movController.setLooping(true);
-        movController.play();
-        if (mounted) {
-          setState(() {
-            _videoController = movController;
-            _isVideoInitialized = true;
-          });
-          return;
-        }
-      } catch (_) {
-        // Try MP4 if MOV is not present
-        try {
-          final mp4Controller = VideoPlayerController.asset('assets/cooked.mp4');
-          await mp4Controller.initialize();
-          mp4Controller.setLooping(true);
-          mp4Controller.play();
-          if (mounted) {
-            setState(() {
-              _videoController = mp4Controller;
-              _isVideoInitialized = true;
-            });
-            return;
-          }
-        } catch (_) {
-          // Fallback to Rive
-        }
-      }
-    }
-
-    // 2. Fallback to Rive file
-    await _loadRiveAnimation();
-  }
-
-  Future<void> _loadRiveAnimation() async {
-    final bool isTestEnv = WidgetsBinding.instance.runtimeType.toString().toLowerCase().contains('test');
-    if (isTestEnv) {
-      // In headless unit/widget tests, native Rive FFI bindings are unavailable.
-      // Render fallback scanner component.
-      return;
-    }
-
-    try {
-      Uint8List? dynamicImageBytes;
-      if (widget.imagePath != null && widget.imagePath!.isNotEmpty) {
-        try {
-          final imgFile = File(widget.imagePath!);
-          if (await imgFile.exists()) {
-            dynamicImageBytes = await imgFile.readAsBytes();
-          } else {
-            final ByteData assetData = await rootBundle.load(widget.imagePath!);
-            dynamicImageBytes = assetData.buffer.asUint8List();
-          }
-        } catch (e) {
-          debugPrint('Could not load scanned image bytes for Rive: $e');
-        }
-      }
-
-      final data = await rootBundle.load('assets/cooked.riv');
-      final file = RiveFile.import(
-        data,
-        assetLoader: CallbackAssetLoader((asset, bytes) async {
-          if (asset is ImageAsset && dynamicImageBytes != null) {
-            await asset.decode(dynamicImageBytes);
-            return true;
-          }
-          return false;
-        }),
-      );
-      final artboard = file.mainArtboard;
-
-      // 1. Activate State Machine controller if present
-      if (artboard.stateMachines.isNotEmpty) {
-        final smName = artboard.stateMachines.first.name;
-        final controller = StateMachineController.fromArtboard(
-          artboard,
-          smName,
-        );
-        if (controller != null) {
-          controller.isActive = true;
-          _riveController = controller;
-          artboard.addController(controller);
-        }
-      } else if (artboard.animations.isNotEmpty) {
-        // 2. Activate ONLY primary timeline animation if no State Machine
-        artboard.addController(
-          SimpleAnimation(artboard.animations.first.name, autoplay: true),
-        );
-      }
-
-      if (mounted) {
-        setState(() {
-          _artboard = artboard;
-        });
-      }
-    } catch (e) {
-      debugPrint('Error loading cooked.riv animation: $e');
     }
   }
 
@@ -192,7 +78,6 @@ class _ScanAnimationOverlayState extends State<ScanAnimationOverlay> {
   void dispose() {
     _minAnimationTimer?.cancel();
     _maxTimeoutTimer?.cancel();
-    _videoController?.dispose();
     super.dispose();
   }
 
@@ -204,23 +89,8 @@ class _ScanAnimationOverlayState extends State<ScanAnimationOverlay> {
       color: Colors.white,
       child: Stack(
         children: [
-          Positioned.fill(
-            child: _isVideoInitialized && _videoController != null
-                ? FittedBox(
-                    fit: BoxFit.cover,
-                    child: SizedBox(
-                      width: _videoController!.value.size.width,
-                      height: _videoController!.value.size.height,
-                      child: VideoPlayer(_videoController!),
-                    ),
-                  )
-                : (_artboard != null
-                    ? Rive(
-                        artboard: _artboard!,
-                        fit: BoxFit.contain,
-                        antialiasing: true,
-                      )
-                    : const _FallbackScanAnimation()),
+          const Positioned.fill(
+            child: _FallbackScanAnimation(),
           ),
           if (widget.showTestControls)
             Positioned(
@@ -269,6 +139,26 @@ class _ScanAnimationOverlayState extends State<ScanAnimationOverlay> {
   }
 }
 
+/// Remplace l'ancien spinner natif : essaie de jouer assets/cooked.riv,
+/// et si le fichier est absent / corrompu / mal déclaré, retombe sur
+/// l'animation Flutter native (_NativeSpinnerFallback) pour ne jamais
+/// bloquer l'écran.
+/// Gestionnaire de pré-chargement en mémoire pour annuler toute latence d'E/S
+class _RiveScanPreloader {
+  static FileLoader? _cachedLoader;
+
+  static FileLoader getLoader() {
+    return _cachedLoader ??= FileLoader.fromAsset(
+      'assets/cooked.riv',
+      riveFactory: Factory.rive,
+    )..file(); // Pré-charge les octets en arrière-plan immédiatement
+  }
+
+  static void preload() {
+    getLoader();
+  }
+}
+
 class _FallbackScanAnimation extends StatefulWidget {
   const _FallbackScanAnimation();
 
@@ -276,7 +166,75 @@ class _FallbackScanAnimation extends StatefulWidget {
   State<_FallbackScanAnimation> createState() => _FallbackScanAnimationState();
 }
 
-class _FallbackScanAnimationState extends State<_FallbackScanAnimation>
+class _FallbackScanAnimationState extends State<_FallbackScanAnimation> {
+  late final FileLoader _fileLoader;
+
+  @override
+  void initState() {
+    super.initState();
+    _fileLoader = _RiveScanPreloader.getLoader();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bool isTestEnv = WidgetsBinding.instance.runtimeType
+        .toString()
+        .toLowerCase()
+        .contains('test');
+
+    if (isTestEnv) {
+      return const _NativeSpinnerFallback();
+    }
+
+    return SizedBox.expand(
+      child: RiveWidgetBuilder(
+        fileLoader: _fileLoader,
+        artboardSelector: const ArtboardDefault(),
+        stateMachineSelector: const StateMachineDefault(),
+        onLoaded: (RiveLoaded state) {
+          debugPrint('✅ Rive animation cooked.riv loaded with 0-latency!');
+          try {
+            // ignore: deprecated_member_use
+            final burst = state.controller.stateMachine.boolean('burstActive');
+            burst?.value = true;
+          } catch (e) {
+            debugPrint('Rive input burstActive notice: $e');
+          }
+        },
+        onFailed: (Object error, StackTrace stackTrace) {
+          debugPrint('❌ RIVE LOAD ERROR: $error\n$stackTrace');
+        },
+        builder: (context, state) {
+          switch (state) {
+            case RiveLoaded loadedState:
+              return RepaintBoundary(
+                child: RiveWidget(
+                  controller: loadedState.controller,
+                  fit: Fit.cover,
+                ),
+              );
+            case RiveFailed():
+              debugPrint('⚠️ Rive state is RiveFailed, using fallback spinner');
+              return const _NativeSpinnerFallback();
+            case RiveLoading():
+              return const _NativeSpinnerFallback();
+          }
+        },
+      ),
+    );
+  }
+}
+
+/// Ancien spinner Flutter natif, conservé tel quel comme filet de sécurité
+/// final si ni la vidéo ni le Rive ne peuvent être chargés.
+class _NativeSpinnerFallback extends StatefulWidget {
+  const _NativeSpinnerFallback();
+
+  @override
+  State<_NativeSpinnerFallback> createState() => _NativeSpinnerFallbackState();
+}
+
+class _NativeSpinnerFallbackState extends State<_NativeSpinnerFallback>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
 

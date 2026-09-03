@@ -50,11 +50,10 @@ import 'package:rive/rive.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   try {
-    await RiveFile.initialize();
+    await RiveNative.init();
   } catch (e) {
-    debugPrint('RiveFile.initialize warning: $e');
+    debugPrint('RiveNative.init warning: $e');
   }
-
   await Firebase.initializeApp();
 
   FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;

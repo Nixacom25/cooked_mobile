@@ -34,7 +34,7 @@ class RedButton extends StatelessWidget {
     final bool effectiveDisabled = isDisabled || isLoading || onTap == null;
     final Color buttonColor = effectiveDisabled 
         ? (color?.withOpacity(0.5) ?? const Color(0xFFE5E7EB)) 
-        : (color ?? const Color(0xFFC31E26));
+        : (color ?? const Color(0xFFC83A2D));
     final Color effectiveTextColor = effectiveDisabled 
         ? (textColor?.withOpacity(0.7) ?? const Color(0xFF9CA3AF)) 
         : (textColor ?? Colors.white);

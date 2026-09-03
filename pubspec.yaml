@@ -1,7 +1,7 @@
 name: cooked
 description: "A new Flutter project."
 publish_to: 'none' 
-version: 1.0.1+66
+version: 1.0.1+67
 
 environment:
   sdk: ^3.10.0
@@ -49,7 +49,7 @@ dependencies:
   hive_flutter: ^1.1.0
   in_app_review: ^2.0.12
   google_fonts: ^6.2.1
-  rive: ^0.13.0
+  rive: ^0.14.11
   video_player: ^2.9.2
 
 dev_dependencies:
@@ -64,7 +64,7 @@ dev_dependencies:
 flutter_launcher_icons:
   android: true
   ios: true
-  image_path: "assets/images/logo_favicon.png"
+  image_path: "assets/images/logo_favi.png"
   min_sdk_android: 21
   remove_alpha_ios: true
 

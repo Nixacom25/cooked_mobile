@@ -268,7 +268,8 @@ class _CookbookDetailScreenState extends State<CookbookDetailScreen> {
                                           AppRoutes.recipeDetail,
                                           arguments: {
                                             'recipe': r,
-                                            'isPreview': false
+                                            'isPreview': false,
+                                            'cookbookId': _cookbookId,
                                           },
                                         ),
                                         onLongPressStart: (details) {

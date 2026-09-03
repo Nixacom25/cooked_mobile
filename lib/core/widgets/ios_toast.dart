@@ -1,4 +1,6 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 enum ToastType { success, error, warning }
 
@@ -49,59 +51,60 @@ class _IosToastWidgetState extends State<_IosToastWidget> {
   }
 
   Future<void> _playSequence() async {
-    // 1. Apparition au centre
+    // 1. Pop-in from top
     await Future.delayed(const Duration(milliseconds: 50));
     if (!mounted) return;
     setState(() => _isPopped = true);
 
-    // Attendre la fin du pop-in
-    await Future.delayed(const Duration(milliseconds: 300));
+    await Future.delayed(const Duration(milliseconds: 250));
     if (!mounted) return;
 
-    // 2. Expansion
+    // 2. Expand text pill
     setState(() => _isExpanded = true);
 
-    // 3. Rester visible pendant 4 secondes
-    await Future.delayed(const Duration(seconds: 4));
+    // 3. Stay visible for 3.5 seconds
+    await Future.delayed(const Duration(milliseconds: 3500));
     if (!mounted) return;
 
-    // 4. Shrink (réduction de la card vers l'icône)
+    // 4. Shrink
     setState(() => _isExpanded = false);
 
-    // Attendre la fin du shrink
-    await Future.delayed(const Duration(milliseconds: 300));
+    await Future.delayed(const Duration(milliseconds: 250));
     if (!mounted) return;
 
-    // 5. Disparition vers le haut
+    // 5. Slide up away
     setState(() => _isDisappearing = true);
 
-    // Attendre la fin de l'animation de slide
-    await Future.delayed(const Duration(milliseconds: 500));
+    await Future.delayed(const Duration(milliseconds: 400));
     if (!mounted) return;
 
     widget.onDismiss();
   }
 
-  Color get _backgroundColor {
+  Color get _glassBackgroundColor {
     switch (widget.type) {
       case ToastType.success:
-        return const Color(0xFFE8F5E9); // Vert doux (Aqua/mint)
+        return const Color(0xFF064E3B).withValues(alpha: 0.48); // Frosted translucent emerald glass
       case ToastType.error:
-        return const Color(0xFFFFEBEE); // Rouge doux
+        return const Color(0xFF7F1D1D).withValues(alpha: 0.48); // Frosted translucent crimson glass
       case ToastType.warning:
-        return const Color(0xFFFFF3E0); // Orange/Jaune doux
+        return const Color(0xFF78350F).withValues(alpha: 0.48); // Frosted translucent amber glass
+    }
+  }
+
+  Color get _borderColor {
+    switch (widget.type) {
+      case ToastType.success:
+        return const Color(0xFF6EE7B7).withValues(alpha: 0.55);
+      case ToastType.error:
+        return const Color(0xFFFCA5A5).withValues(alpha: 0.55);
+      case ToastType.warning:
+        return const Color(0xFFFDE047).withValues(alpha: 0.55);
     }
   }
 
   Color get _iconColor {
-    switch (widget.type) {
-      case ToastType.success:
-        return const Color(0xFF43A047);
-      case ToastType.error:
-        return const Color(0xFFE53935);
-      case ToastType.warning:
-        return const Color(0xFFFB8C00);
-    }
+    return Colors.white;
   }
 
   IconData get _iconData {
@@ -111,13 +114,12 @@ class _IosToastWidgetState extends State<_IosToastWidget> {
       case ToastType.error:
         return Icons.cancel_rounded;
       case ToastType.warning:
-        return Icons.error_rounded;
+        return Icons.warning_amber_rounded;
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    // Ignorer les clics pour que l'utilisateur puisse interagir avec l'app
     return IgnorePointer(
       child: Material(
         color: Colors.transparent,
@@ -126,10 +128,9 @@ class _IosToastWidgetState extends State<_IosToastWidget> {
             AnimatedPositioned(
               duration: const Duration(milliseconds: 500),
               curve: Curves.easeOutCubic,
-              // Au début et à la fin: hors de l'écran en haut. Sinon: en haut avec marge.
               top: (!_isPopped || _isDisappearing)
                   ? (MediaQuery.of(context).padding.top - 100)
-                  : (MediaQuery.of(context).padding.top + 16),
+                  : (MediaQuery.of(context).padding.top + 16.h),
               left: 0,
               right: 0,
               child: AnimatedOpacity(
@@ -140,67 +141,74 @@ class _IosToastWidgetState extends State<_IosToastWidget> {
                   curve: Curves.easeOutBack,
                   scale: _isPopped ? 1.0 : 0.8,
                   child: Center(
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 300),
-                      curve: Curves.easeInOutCubic,
-                      constraints: const BoxConstraints(minHeight: 50),
-                      decoration: BoxDecoration(
-                        color: _backgroundColor,
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.08),
-                            blurRadius: 15,
-                            offset: const Offset(0, 5),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(24.r),
+                      child: BackdropFilter(
+                        filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 300),
+                          curve: Curves.easeInOutCubic,
+                          constraints: BoxConstraints(minHeight: 46.h),
+                          decoration: BoxDecoration(
+                            color: _glassBackgroundColor,
+                            borderRadius: BorderRadius.circular(24.r),
+                            border: Border.all(
+                              color: _borderColor,
+                              width: 1.2.w,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.16),
+                                blurRadius: 24,
+                                spreadRadius: 1,
+                                offset: const Offset(0, 8),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Icon(_iconData, color: _iconColor, size: 20),
-                          AnimatedSize(
-                            duration: const Duration(milliseconds: 300),
-                            curve: Curves.easeInOutCubic,
-                            alignment: Alignment.centerLeft,
-                            child: _isExpanded
-                                ? AnimatedOpacity(
-                                    duration: const Duration(milliseconds: 200),
-                                    opacity: 1.0,
-                                    child: Padding(
-                                      padding: const EdgeInsets.only(
-                                        left: 8.0,
-                                        right: 4,
-                                      ),
-                                      child: ConstrainedBox(
-                                        constraints: BoxConstraints(
-                                          maxWidth:
-                                              MediaQuery.of(
-                                                context,
-                                              ).size.width *
-                                              0.7,
-                                        ),
-                                        child: Text(
-                                          widget.message,
-                                          style: TextStyle(
-                                            color: _iconColor.withValues(alpha: 0.9),
-                                            fontWeight: FontWeight.w700,
-                                            fontFamily: 'SF Pro',
-                                            fontSize: 13,
-                                            height: 1.2,
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 16.w,
+                            vertical: 10.h,
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Icon(_iconData, color: _iconColor, size: 20.sp),
+                              AnimatedSize(
+                                duration: const Duration(milliseconds: 300),
+                                curve: Curves.easeInOutCubic,
+                                alignment: Alignment.centerLeft,
+                                child: _isExpanded
+                                    ? AnimatedOpacity(
+                                        duration: const Duration(milliseconds: 200),
+                                        opacity: 1.0,
+                                        child: Padding(
+                                          padding: EdgeInsets.only(
+                                            left: 8.w,
+                                            right: 4.w,
+                                          ),
+                                          child: ConstrainedBox(
+                                            constraints: BoxConstraints(
+                                              maxWidth: MediaQuery.of(context).size.width * 0.7,
+                                            ),
+                                            child: Text(
+                                              widget.message,
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.w700,
+                                                fontFamily: 'Rubik',
+                                                fontSize: 13.sp,
+                                                height: 1.2,
+                                              ),
+                                            ),
                                           ),
                                         ),
-                                      ),
-                                    ),
-                                  )
-                                : const SizedBox(width: 0, height: 20),
+                                      )
+                                    : SizedBox(width: 0, height: 20.h),
+                              ),
+                            ],
                           ),
-                        ],
+                        ),
                       ),
                     ),
                   ),
@@ -213,3 +221,4 @@ class _IosToastWidgetState extends State<_IosToastWidget> {
     );
   }
 }
+

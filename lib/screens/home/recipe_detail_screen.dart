@@ -32,6 +32,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
   bool _isInitialized = false;
   bool _isLoading = false;
   String? _infoMessage;
+  String? _cookbookId;
   String? _error;
   Recipe? _recipe;
   int _currentServings = 2;
@@ -85,6 +86,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
       final String? id = args['recipeId'] as String?;
       _isPreview = args['isPreview'] ?? false;
       _infoMessage = args['infoMessage'] as String?;
+      _cookbookId = args['cookbookId'] as String?;
 
       if (r != null) {
         final currentUserId = UserService.instance.currentUserNotifier.value?['id'];
@@ -618,20 +620,53 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                               child: GestureDetector(
                                 onTap: () async {
                                   if (r == null) return;
-                                  showModalBottomSheet(
-                                    context: context,
-                                    backgroundColor: Colors.transparent,
-                                    isScrollControlled: true,
-                                    builder: (_) => AddToCookbookSheet(
-                                      recipe: r,
-                                    ),
-                                  );
+                                        HapticFeedback.mediumImpact();
+                                  if (isAdded) {
+                                    if (_cookbookId != null && _cookbookId!.isNotEmpty) {
+                                      try {
+                                        await CookbookService.instance.removeRecipeFromCookbook(_cookbookId!, r.id);
+                                        if (context.mounted) {
+                                          IosToast.show(
+                                            context,
+                                            message: 'Removed from cookbook',
+                                            type: ToastType.success,
+                                          );
+                                        }
+                                      } catch (e) {
+                                        if (context.mounted) {
+                                          IosToast.show(
+                                            context,
+                                            message: ErrorHelper.getFriendlyMessage(e),
+                                            type: ToastType.error,
+                                          );
+                                        }
+                                      }
+                                    } else {
+                                      showModalBottomSheet(
+                                        context: context,
+                                        backgroundColor: Colors.transparent,
+                                        isScrollControlled: true,
+                                        builder: (_) => AddToCookbookSheet(
+                                          recipe: r,
+                                        ),
+                                      );
+                                    }
+                                  } else {
+                                    showModalBottomSheet(
+                                      context: context,
+                                      backgroundColor: Colors.transparent,
+                                      isScrollControlled: true,
+                                      builder: (_) => AddToCookbookSheet(
+                                        recipe: r,
+                                      ),
+                                    );
+                                  }
                                 },
                                 child: AnimatedContainer(
                                   duration: const Duration(milliseconds: 200),
                                   height: 52.h,
                                   decoration: BoxDecoration(
-                                    color: isAdded ? const Color(0xFFF1F5F9) : const Color(0xFFC31E26),
+                                    color: isAdded ? const Color(0xFFF1F5F9) : const Color(0xFFC83A2D),
                                     borderRadius: BorderRadius.circular(28.r),
                                     border: isAdded
                                         ? Border.all(color: const Color(0xFFE2E8F0), width: 1.w)

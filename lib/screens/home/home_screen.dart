@@ -656,7 +656,7 @@ class _FloatingBottomNav extends StatelessWidget {
                                           ? FontWeight.w700
                                           : FontWeight.w600,
                                       color: currentIndex == 2
-                                          ? const Color(0xFFC31E26)
+                                          ? const Color(0xFFC83A2D)
                                           : const Color(0xFF475569),
                                     ),
                                   ),
@@ -688,43 +688,109 @@ class _FloatingBottomNav extends StatelessWidget {
               ),
             ),
 
-            // Red Camera Floating Circle FAB with Scan SVG Icon
+            // Red Camera Floating Circle FAB with Breathing Pulse Glow Animation
             Positioned(
               top: -26.h,
-              child: GestureDetector(
+              child: _AnimatedScanButton(
                 onTap: onCameraTap,
-                child: Container(
-                  key: scanTabKey,
-                  width: 56.r,
-                  height: 56.r,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFC31E26),
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFFC31E26).withValues(alpha: 0.32),
-                        blurRadius: 12.r,
-                        offset: Offset(0, 5.h),
-                      ),
-                    ],
-                  ),
-                  child: Center(
-                    child: SvgPicture.asset(
-                      'assets/icones/scans1.svg',
-                      width: 30.w,
-                      height: 30.h,
-                      colorFilter: const ColorFilter.mode(
-                        Colors.white,
-                        BlendMode.srcIn,
-                      ),
-                    ),
-                  ),
-                ),
+                scanTabKey: scanTabKey,
               ),
             ),
           ],
         ),
       ),
+    );
+  }
+}
+
+class _AnimatedScanButton extends StatefulWidget {
+  final VoidCallback onTap;
+  final GlobalKey scanTabKey;
+
+  const _AnimatedScanButton({
+    required this.onTap,
+    required this.scanTabKey,
+  });
+
+  @override
+  State<_AnimatedScanButton> createState() => _AnimatedScanButtonState();
+}
+
+class _AnimatedScanButtonState extends State<_AnimatedScanButton>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+  late Animation<double> _glowAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2000),
+    )..repeat(reverse: true);
+
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 1.07).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+
+    _glowAnimation = Tween<double>(begin: 0.28, end: 0.65).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        final scale = _scaleAnimation.value;
+        final glowAlpha = _glowAnimation.value;
+
+        return GestureDetector(
+          onTap: () {
+            HapticFeedback.mediumImpact();
+            widget.onTap();
+          },
+          child: Transform.scale(
+            scale: scale,
+            child: Container(
+              key: widget.scanTabKey,
+              width: 56.r,
+              height: 56.r,
+              decoration: BoxDecoration(
+                color: const Color(0xFFC83A2D),
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFFC83A2D).withValues(alpha: glowAlpha),
+                    blurRadius: (12 * scale).r,
+                    spreadRadius: (1.5 * (scale - 1.0)).r,
+                    offset: Offset(0, 5.h),
+                  ),
+                ],
+              ),
+              child: Center(
+                child: SvgPicture.asset(
+                  'assets/icones/scans1.svg',
+                  width: 30.w,
+                  height: 30.h,
+                  colorFilter: const ColorFilter.mode(
+                    Colors.white,
+                    BlendMode.srcIn,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }
