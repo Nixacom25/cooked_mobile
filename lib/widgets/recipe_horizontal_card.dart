@@ -86,7 +86,9 @@ class RecipeHorizontalCard extends StatelessWidget {
                                 ? Icons.favorite_rounded
                                 : Icons.favorite_border_rounded,
                             size: 18.sp,
-                            color: const Color(0xFFC31E26),
+                            color: isFavorite
+                                ? const Color(0xFFC31E26)
+                                : const Color(0xFF94A3B8),
                           ),
                         ),
                       )

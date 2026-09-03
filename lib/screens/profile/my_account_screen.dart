@@ -14,6 +14,8 @@ import '../../core/api_config.dart';
 import '../../core/widgets/ios_toast.dart';
 import '../../widgets/glass_icon_button.dart';
 import '../../core/utils/error_helper.dart';
+import '../../widgets/alphabet_avatar.dart';
+import '../../widgets/app_loading_indicator.dart';
 
 class MyAccountScreen extends StatefulWidget {
   const MyAccountScreen({super.key});
@@ -103,19 +105,7 @@ class _MyAccountScreenState extends State<MyAccountScreen> {
   }
 
   Future<void> _pickImage() async {
-    final picker = ImagePicker();
-    final picked = await picker.pickImage(source: ImageSource.gallery);
-    if (picked != null) {
-      final compressed = await FlutterImageCompress.compressWithFile(
-        picked.path,
-        minWidth: 500,
-        minHeight: 500,
-        quality: 70,
-      );
-      if (compressed != null) {
-        setState(() => _selectedImageBytes = compressed);
-      }
-    }
+    await AlphabetAvatar.showPhotoPicker(context);
   }
 
   @override
@@ -180,33 +170,19 @@ class _MyAccountScreenState extends State<MyAccountScreen> {
                       child: Column(
                         children: [
                           // Avatar
-                          GestureDetector(
-                            onTap: _pickImage,
-                            child: Container(
-                              width: 110.r,
-                              height: 110.r,
-                              decoration: const BoxDecoration(
-                                color: Color(0xFFF1F5F9),
-                                shape: BoxShape.circle,
-                              ),
-                              child: ClipOval(
-                                child: _selectedImageBytes != null
-                                    ? Image.memory(_selectedImageBytes!, fit: BoxFit.cover)
-                                    : _photoUrl != null && _photoUrl!.isNotEmpty
-                                        ? CachedNetworkImage(
-                                            imageUrl: _photoUrl!,
-                                            fit: BoxFit.cover,
-                                            errorWidget: (_, __, ___) => _defaultAvatar(),
-                                          )
-                                        : _defaultAvatar(),
-                              ),
-                            ),
+                          AlphabetAvatar(
+                            name: _nameCtrl.text.isNotEmpty ? _nameCtrl.text : 'Chef',
+                            photoUrl: _photoUrl,
+                            imageBytes: _selectedImageBytes,
+                            size: 100.r,
+                            showEditBadge: true,
+                            onTap: () => AlphabetAvatar.showPhotoPicker(context),
                           ),
                           SizedBox(height: 12.h),
 
                           // Change Picture
                           GestureDetector(
-                            onTap: _pickImage,
+                            onTap: () => AlphabetAvatar.showPhotoPicker(context),
                             child: Text(
                               'Change Picture',
                               style: TextStyle(
@@ -322,7 +298,7 @@ class _MyAccountScreenState extends State<MyAccountScreen> {
                                     width: double.infinity,
                                     height: 54.h,
                                     decoration: BoxDecoration(
-                                      color: const Color(0xFFC83A2D),
+                                      color: const Color(0xFFC31E26),
                                       borderRadius: BorderRadius.circular(27.r),
                                     ),
                                     child: Center(
@@ -330,9 +306,8 @@ class _MyAccountScreenState extends State<MyAccountScreen> {
                                           ? const SizedBox(
                                               width: 20,
                                               height: 20,
-                                              child: CircularProgressIndicator(
+                                              child: AppLoadingIndicator(
                                                 color: Colors.white,
-                                                strokeWidth: 2,
                                               ),
                                             )
                                           : Text(

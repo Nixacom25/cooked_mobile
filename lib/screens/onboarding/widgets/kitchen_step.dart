@@ -132,26 +132,71 @@ class _KitchenStepState extends State<KitchenStep> {
                 color: const Color(0xFF7B8190))),
             SizedBox(height: 8.h),
             Container(
+              height: 52.h,
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(12.r),
-                border: Border.all(color: const Color(0xFFE5E7EB))),
-              child: TextField(
-                controller: _othersController,
-                focusNode: _othersFocusNode,
-                onSubmitted: (_) => _addCustomEquipment(),
-                textCapitalization: TextCapitalization.words,
-                style: GoogleFonts.poppins(fontSize: 14.sp,
-                  color: const Color(0xFF1A1A1A)),
-                decoration: InputDecoration(
-                  hintText: 'Enter equipment and press Enter',
-                  hintStyle: GoogleFonts.poppins(fontSize: 14.sp,
-                    color: Colors.grey[400]),
-                  border: InputBorder.none,
-                  contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
-                  suffixIcon: IconButton(
-                    icon: const Icon(Icons.add_rounded, color: Color(0xFFC83A2D)),
-                    onPressed: _addCustomEquipment)))),
+                borderRadius: BorderRadius.circular(24.r),
+                border: Border.all(
+                  color: const Color(0xFFE2E8F0),
+                  width: 1.2,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.04),
+                    blurRadius: 10,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+              ),
+              padding: EdgeInsets.symmetric(horizontal: 16.w),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _othersController,
+                      focusNode: _othersFocusNode,
+                      onSubmitted: (_) => _addCustomEquipment(),
+                      textCapitalization: TextCapitalization.words,
+                      style: GoogleFonts.poppins(
+                        fontSize: 14.sp,
+                        fontWeight: FontWeight.w500,
+                        color: const Color(0xFF1A1A1A),
+                      ),
+                      decoration: InputDecoration(
+                        hintText: 'Enter equipment and press Enter',
+                        hintStyle: GoogleFonts.poppins(
+                          fontSize: 14.sp,
+                          color: const Color(0xFF94A3B8),
+                        ),
+                        border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
+                        isDense: true,
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 8.w),
+                  GestureDetector(
+                    onTap: _addCustomEquipment,
+                    behavior: HitTestBehavior.opaque,
+                    child: Container(
+                      width: 32.r,
+                      height: 32.r,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFC31E26),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.add_rounded,
+                        color: Colors.white,
+                        size: 20.sp,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
             if (customEquipment.isNotEmpty) ...[
               SizedBox(height: 12.h),
               Wrap(

@@ -150,7 +150,29 @@ class UserService {
       }),
     );
 
-    if (response.statusCode != 200) {
+    if (response.statusCode == 200) {
+      if (currentUserNotifier.value != null) {
+        final updated = Map<String, dynamic>.from(currentUserNotifier.value!);
+        updated['dietaryPreferences'] = dietaryPreferences;
+        updated['allergies'] = allergies;
+        updated['foodDislikes'] = foodDislikes;
+        updated['flavorDna'] = flavorDna;
+        updated['spiceLevel'] = spiceLevel;
+        updated['cookingSkill'] = cookingSkill;
+        updated['cookingTimePreference'] = cookingTimePreference;
+        updated['cookingFrequency'] = cookingFrequency;
+        updated['cookingTarget'] = cookingTarget;
+        updated['favoriteCuisines'] = favoriteCuisines;
+        updated['kitchenAppliances'] = kitchenAppliances;
+        updated['mealPlanningStyle'] = mealPlanningStyle;
+        updated['notificationPreferences'] = notificationPreferences;
+        updated['onboardingGoals'] = onboardingGoals;
+        if (language != null) updated['language'] = language;
+        if (country != null) updated['country'] = country;
+        if (measurementSystem != null) updated['measurementSystem'] = measurementSystem;
+        currentUserNotifier.value = updated;
+      }
+    } else {
       throw Exception(
         _extractErrorMessage(response.body, 'Unable to save your preferences.'),
       );

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 
 import '../../routes/app_routes.dart';
 import '../../services/auth_service.dart';
@@ -10,6 +9,8 @@ import '../../core/api_config.dart';
 import '../../models/view_all_type.dart';
 import '../../widgets/skeleton_loader.dart';
 import '../../widgets/red_header_background.dart';
+import '../../widgets/alphabet_avatar.dart';
+import '../../widgets/app_loading_indicator.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -148,22 +149,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                   // ── Avatar ──
                   Center(
-                    child: Container(
-                      width: 100.r,
-                      height: 100.r,
-                      decoration: const BoxDecoration(
-                        color: Color(0xFFF1F5F9),
-                        shape: BoxShape.circle,
-                      ),
-                      child: ClipOval(
-                        child: _photoUrl != null && _photoUrl!.isNotEmpty
-                            ? CachedNetworkImage(
-                                imageUrl: _photoUrl!,
-                                fit: BoxFit.cover,
-                                errorWidget: (_, __, ___) => _defaultAvatar(),
-                              )
-                            : _defaultAvatar(),
-                      ),
+                    child: AlphabetAvatar(
+                      name: _name.isNotEmpty ? _name : 'Chef',
+                      photoUrl: _photoUrl,
+                      size: 96.r,
+                      showEditBadge: true,
+                      onTap: () => AlphabetAvatar.showPhotoPicker(context),
                     ),
                   ),
 
@@ -368,18 +359,6 @@ class _MenuItem extends StatelessWidget {
     );
   }
 }
-
-Widget _defaultAvatar() {
-  return Container(
-    color: const Color(0xFFE2E8F0),
-    child: Icon(
-      Icons.person_rounded,
-      size: 50.sp,
-      color: const Color(0xFF94A3B8),
-    ),
-  );
-}
-
 // ── Logout confirmation sheet ───────────────────────────────────────────────
 class _LogoutSheet extends StatelessWidget {
   const _LogoutSheet();
@@ -597,7 +576,7 @@ class _DeleteAccountSheetState extends State<_DeleteAccountSheet> {
                         ? const SizedBox(
                             width: 20, 
                             height: 20, 
-                            child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
+                            child: AppLoadingIndicator(color: Colors.white)
                           )
                         : Text(
                             'Delete permanently',

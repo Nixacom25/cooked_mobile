@@ -7,13 +7,13 @@ import 'package:share_plus/share_plus.dart';
 import '../../core/extensions/string_extensions.dart';
 import '../../models/recipe.dart';
 import '../../widgets/glass_icon_button.dart';
-import '../../widgets/red_button.dart';
 import '../../services/recipe_service.dart';
 import '../../core/widgets/ios_toast.dart';
 import '../../core/utils/error_helper.dart';
 import '../../widgets/add_to_grocery_modal.dart';
 import '../../widgets/add_to_cookbook_sheet.dart';
 import '../../widgets/skeleton_loader.dart';
+import '../../widgets/app_loading_indicator.dart';
 import '../../services/user_service.dart';
 import '../../services/cookbook_service.dart';
 import '../../models/cookbook.dart';
@@ -155,7 +155,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
           barrierColor: Colors.black26,
           barrierDismissible: false,
           builder: (context) => const Center(
-            child: CircularProgressIndicator(color: Color(0xFFC83A2D)),
+            child: AppLoadingIndicator(),
           ),
         );
         try {
@@ -391,48 +391,68 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                             recipeId: r?.id,
                             recipe: r,
                             topPadding: MediaQuery.of(context).padding.top,
+                            scrollOffset: _scrollOffset,
                           ),
                         ),
 
                         // Title and Favorite Row
                         SliverPadding(
-                          padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 0),
+                          padding: EdgeInsets.fromLTRB(20.w, 4.h, 20.w, 0),
                           sliver: SliverToBoxAdapter(
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    name,
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(
-                                      fontFamily: 'Rubik',
-                                      fontWeight: FontWeight.w800,
-                                      fontSize: 22.sp,
-                                      color: const Color(0xFF0F172A),
-                                    ),
-                                  ),
-                                ),
-                                SizedBox(width: 12.w),
-                                GestureDetector(
-                                  onTap: () {
-                                    HapticFeedback.lightImpact();
-                                    if (r != null) {
-                                      setState(() {
-                                        r.isFavorite = !r.isFavorite;
-                                      });
-                                    }
+                            child: ValueListenableBuilder<List<Recipe>?>(
+                              valueListenable: RecipeService.instance.myRecipesNotifier,
+                              builder: (context, savedRecipes, _) {
+                                return ValueListenableBuilder<List<Cookbook>?>(
+                                  valueListenable: CookbookService.instance.myCookbooksNotifier,
+                                  builder: (context, cookbooks, _) {
+                                    final bool isFav = (r != null && r.isFavorite) || _checkIsInCookbook(r, savedRecipes, cookbooks);
+                                    return Row(
+                                      crossAxisAlignment: CrossAxisAlignment.center,
+                                      children: [
+                                        Expanded(
+                                          child: Text(
+                                            name,
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: TextStyle(
+                                              fontFamily: 'Rubik',
+                                              fontWeight: FontWeight.w800,
+                                              fontSize: 22.sp,
+                                              color: const Color(0xFF0F172A),
+                                            ),
+                                          ),
+                                        ),
+                                        SizedBox(width: 12.w),
+                                        GestureDetector(
+                                          onTap: () async {
+                                            HapticFeedback.lightImpact();
+                                            if (r != null) {
+                                              final newFavState = !isFav;
+                                              setState(() {
+                                                r.isFavorite = newFavState;
+                                              });
+                                              if (newFavState) {
+                                                RecipeService.instance.markRecipeAsSaved(r);
+                                                IosToast.show(context, message: 'Recipe saved to favorites!', type: ToastType.success);
+                                              } else {
+                                                if (r.id.isNotEmpty) {
+                                                  RecipeService.instance.deleteRecipe(r.id);
+                                                }
+                                                IosToast.show(context, message: 'Recipe removed from saved', type: ToastType.success);
+                                              }
+                                            }
+                                          },
+                                          child: Icon(
+                                            isFav ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+                                            color: isFav ? const Color(0xFFC31E26) : const Color(0xFF94A3B8),
+                                            size: 26.sp,
+                                          ),
+                                        ),
+                                      ],
+                                    );
                                   },
-                                  child: Icon(
-                                    r != null && r.isFavorite
-                                        ? Icons.favorite_rounded
-                                        : Icons.favorite_border_rounded,
-                                    color: const Color(0xFFDC2626),
-                                    size: 26.sp,
-                                  ),
-                                ),
-                              ],
+                                );
+                              },
                             ),
                           ),
                         ),
@@ -462,71 +482,44 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                           ),
                         ),
 
-                        // Add to Grocery & Calendar Row
+                        // Add to Grocery Button Row
                         SliverToBoxAdapter(
                           child: Padding(
                             padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: GestureDetector(
-                                    onTap: () {
-                                      if (r != null) {
-                                        showModalBottomSheet(
-                                          context: context,
-                                          isScrollControlled: true,
-                                          backgroundColor: Colors.transparent,
-                                          builder: (context) => AddToGroceryModal(
-                                            recipe: r,
-                                            currentServings: _currentServings,
-                                            originalServings: _originalServings,
-                                          ),
-                                        );
-                                      }
-                                    },
-                                    child: Container(
-                                      height: 48.h,
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFFC83A2D),
-                                        borderRadius: BorderRadius.circular(24.r),
-                                      ),
-                                      child: Center(
-                                        child: Text(
-                                          'Add to Grocery',
-                                          style: TextStyle(
-                                            fontFamily: 'Rubik',
-                                            fontWeight: FontWeight.w700,
-                                            fontSize: 15.sp,
-                                            color: Colors.white,
-                                          ),
-                                        ),
-                                      ),
+                            child: GestureDetector(
+                              onTap: () {
+                                if (r != null) {
+                                  showModalBottomSheet(
+                                    context: context,
+                                    isScrollControlled: true,
+                                    backgroundColor: Colors.transparent,
+                                    builder: (context) => AddToGroceryModal(
+                                      recipe: r,
+                                      currentServings: _currentServings,
+                                      originalServings: _originalServings,
+                                    ),
+                                  );
+                                }
+                              },
+                              child: Container(
+                                width: double.infinity,
+                                height: 48.h,
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFC83A2D),
+                                  borderRadius: BorderRadius.circular(24.r),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    'Add to Grocery',
+                                    style: TextStyle(
+                                      fontFamily: 'Rubik',
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 15.sp,
+                                      color: Colors.white,
                                     ),
                                   ),
                                 ),
-                                SizedBox(width: 12.w),
-                                GestureDetector(
-                                  onTap: () {
-                                    HapticFeedback.lightImpact();
-                                    IosToast.show(context, message: 'Meal planning coming soon!', type: ToastType.success);
-                                  },
-                                  child: Container(
-                                    width: 48.h,
-                                    height: 48.h,
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFFF1F5F9),
-                                      borderRadius: BorderRadius.circular(16.r),
-                                    ),
-                                    child: Center(
-                                      child: Icon(
-                                        Icons.calendar_today_rounded,
-                                        size: 20.sp,
-                                        color: const Color(0xFF0F172A),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
+                              ),
                             ),
                           ),
                         ),
@@ -634,20 +627,24 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                                     ),
                                   );
                                 },
-                                child: Container(
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 200),
                                   height: 52.h,
                                   decoration: BoxDecoration(
-                                    color: isAdded ? const Color(0xFFC83A2D) : const Color(0xFFF1F5F9),
+                                    color: isAdded ? const Color(0xFFF1F5F9) : const Color(0xFFC31E26),
                                     borderRadius: BorderRadius.circular(28.r),
+                                    border: isAdded
+                                        ? Border.all(color: const Color(0xFFE2E8F0), width: 1.w)
+                                        : null,
                                   ),
                                   child: Center(
                                     child: Text(
-                                      isAdded ? 'Added to Cookbook' : 'Add to Cookbook',
+                                      isAdded ? 'Remove from Cookbook' : 'Add to Cookbook',
                                       style: TextStyle(
                                         fontFamily: 'Rubik',
                                         fontWeight: FontWeight.w700,
                                         fontSize: 15.sp,
-                                        color: isAdded ? Colors.white : const Color(0xFF0F172A),
+                                        color: isAdded ? const Color(0xFF475569) : Colors.white,
                                       ),
                                     ),
                                   ),
@@ -699,6 +696,7 @@ class _RecipeDetailHeaderDelegate extends SliverPersistentHeaderDelegate {
   final String? recipeId;
   final Recipe? recipe;
   final double topPadding;
+  final ValueNotifier<double>? scrollOffset;
 
   const _RecipeDetailHeaderDelegate({
     required this.img,
@@ -710,6 +708,7 @@ class _RecipeDetailHeaderDelegate extends SliverPersistentHeaderDelegate {
     this.recipeId,
     this.recipe,
     required this.topPadding,
+    this.scrollOffset,
   });
 
   @override
@@ -721,7 +720,8 @@ class _RecipeDetailHeaderDelegate extends SliverPersistentHeaderDelegate {
     return img != oldDelegate.img ||
         name != oldDelegate.name ||
         isPreview != oldDelegate.isPreview ||
-        topPadding != oldDelegate.topPadding;
+        topPadding != oldDelegate.topPadding ||
+        scrollOffset != oldDelegate.scrollOffset;
   }
 
   @override
@@ -737,9 +737,7 @@ class _RecipeDetailHeaderDelegate extends SliverPersistentHeaderDelegate {
       Colors.white,
       progress,
     )!;
-    final double titleOpacity =
-        (progress > 0.6) ? ((progress - 0.6) / 0.4).clamp(0.0, 1.0) : 0.0;
-    final double curveHeight = (24 * (1 - progress)).r;
+    final double curveHeight = (12 * (1 - progress)).r;
 
     return Container(
       color: bgColor,
@@ -808,27 +806,39 @@ class _RecipeDetailHeaderDelegate extends SliverPersistentHeaderDelegate {
                     color: const Color(0xFF0F172A),
                   ),
                 ),
-                if (titleOpacity > 0)
-                  Expanded(
-                    child: Opacity(
-                      opacity: titleOpacity,
-                      child: Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 12.w),
-                        child: Text(
-                          name,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontFamily: 'Rubik',
-                            fontWeight: FontWeight.w700,
-                            fontSize: 16.sp,
-                            color: const Color(0xFF0F172A),
+                Expanded(
+                  child: ValueListenableBuilder<double>(
+                    valueListenable: scrollOffset ?? ValueNotifier(0.0),
+                    builder: (context, currentOffset, _) {
+                      final double titleStartOffset = maxShrinkOffset + 40.h;
+                      final double titleEndOffset = titleStartOffset + 25.h;
+                      final double opacity = (currentOffset >= titleStartOffset)
+                          ? ((currentOffset - titleStartOffset) / (titleEndOffset - titleStartOffset)).clamp(0.0, 1.0)
+                          : 0.0;
+
+                      if (opacity <= 0) return const SizedBox.shrink();
+
+                      return Opacity(
+                        opacity: opacity,
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 12.w),
+                          child: Text(
+                            name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontFamily: 'Rubik',
+                              fontWeight: FontWeight.w700,
+                              fontSize: 16.sp,
+                              color: const Color(0xFF0F172A),
+                            ),
                           ),
                         ),
-                      ),
-                    ),
+                      );
+                    },
                   ),
+                ),
                 GlassIconButton(
                   onTap: onShare,
                   size: 42.r,

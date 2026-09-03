@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -9,6 +10,7 @@ import '../services/recipe_service.dart';
 import '../services/cookbook_service.dart';
 import '../core/widgets/ios_toast.dart';
 import '../core/utils/error_helper.dart';
+import 'app_loading_indicator.dart';
 import 'cookbook_form_modal.dart';
 
 enum _SheetMode { list, create }
@@ -75,12 +77,20 @@ class _AddToCookbookSheetState extends State<AddToCookbookSheet> {
         maxChildSize: 0.88,
         expand: false,
         builder: (context, scrollController) {
-          return Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
-            ),
-            child: Column(
+          return ClipRRect(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(28.r)),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.88),
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(28.r)),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.5),
+                    width: 1.w,
+                  ),
+                ),
+                child: Column(
               children: [
                 // Drag Handle
                 Container(
@@ -103,8 +113,10 @@ class _AddToCookbookSheetState extends State<AddToCookbookSheet> {
                 ),
               ],
             ),
-          );
-        },
+          ),
+        ),
+      );
+    },
       ),
     );
   }
@@ -214,7 +226,7 @@ class _AddToCookbookSheetState extends State<AddToCookbookSheet> {
             valueListenable: CookbookService.instance.myCookbooksNotifier,
             builder: (context, cookbooks, _) {
               if (cookbooks == null) {
-                return const Center(child: CircularProgressIndicator(color: Color(0xFFC83A2D)));
+                return const Center(child: AppLoadingIndicator());
               }
 
               return ListView.builder(

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../widgets/app_loading_indicator.dart';
 import '../widgets/app_search_field.dart';
 import '../widgets/app_top_header.dart';
 import '../widgets/red_header_background.dart';
@@ -153,9 +154,8 @@ class _ExploreScreenState extends State<ExploreScreen>
   Widget build(BuildContext context) {
     return Container(
       color: const Color(0xFFF1F5F9),
-      child: RefreshIndicator(
+      child: AppRefreshIndicator(
         onRefresh: _handleRefresh,
-        color: const Color(0xFFF1F5F9),
         child: ScrollBlurHeaderOverlay(
           isDarkBackground: true,
           child: SingleChildScrollView(
@@ -311,12 +311,12 @@ class _ExploreScreenState extends State<ExploreScreen>
           SizedBox(height: 24.h),
 
           // ── "For You" Section ──
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16.w),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16.w),
+                child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
@@ -351,84 +351,88 @@ class _ExploreScreenState extends State<ExploreScreen>
                     ),
                   ],
                 ),
+              ),
 
-                SizedBox(height: 14.h),
+              SizedBox(height: 14.h),
 
-                // ── For You Category Cards ──
-                FutureBuilder<List<Map<String, dynamic>>>(
-                  future: _categoriesFuture,
-                  builder: (context, snapshot) {
-                    final categories = snapshot.data ?? [];
+              // ── For You Category Cards (Horizontal Scrollable) ──
+              FutureBuilder<List<Map<String, dynamic>>>(
+                future: _categoriesFuture,
+                builder: (context, snapshot) {
+                  final categories = snapshot.data ?? [];
 
-                    final List<Map<String, String>> fallbackCategories = [
-                      {
-                        "name": "Autumn's Favorite",
-                        "count": "18 recipes",
-                        "image": "assets/images/explore_autumn.png",
-                      },
-                      {
-                        "name": "Spring Delights",
-                        "count": "24 recipes",
-                        "image": "assets/images/explore_summer.png",
-                      },
-                    ];
+                  final List<Map<String, String>> fallbackCategories = [
+                    {
+                      "name": "High Protein",
+                      "count": "15 recipes",
+                      "image": "assets/images/explore_autumn.png",
+                    },
+                    {
+                      "name": "Comfort Food",
+                      "count": "20 recipes",
+                      "image": "assets/images/explore_summer.png",
+                    },
+                    {
+                      "name": "Quick & Easy",
+                      "count": "18 recipes",
+                      "image": "assets/images/explore_autumn.png",
+                    },
+                    {
+                      "name": "Healthy & Clean",
+                      "count": "22 recipes",
+                      "image": "assets/images/explore_summer.png",
+                    },
+                    {
+                      "name": "Low Carb",
+                      "count": "14 recipes",
+                      "image": "assets/images/explore_autumn.png",
+                    },
+                  ];
 
-                    final cat1 = categories.isNotEmpty ? categories[0] : null;
-                    final cat2 = categories.length > 1 ? categories[1] : null;
+                  final list = categories.isNotEmpty ? categories : fallbackCategories;
 
-                    final name1 = cat1 != null ? (cat1['name'] as String? ?? "Autumn's Favorite") : fallbackCategories[0]["name"]!;
-                    final count1 = cat1 != null ? "${cat1['recipeCount'] ?? 18} recipes" : fallbackCategories[0]["count"]!;
-                    final img1 = cat1 != null ? (cat1['image'] as String? ?? fallbackCategories[0]["image"]!) : fallbackCategories[0]["image"]!;
+                  return SizedBox(
+                    height: 200.h,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      padding: EdgeInsets.symmetric(horizontal: 16.w),
+                      itemCount: list.length,
+                      itemBuilder: (context, i) {
+                        final item = list[i];
+                        final name = (item['name'] as String?) ?? "Category";
+                        final count = item['count'] != null
+                            ? item['count'].toString()
+                            : (item['recipeCount'] != null ? "${item['recipeCount']} recipes" : "0 recipes");
+                        final img = (item['image'] as String?) ?? "assets/images/explore_autumn.png";
 
-                    final name2 = cat2 != null ? (cat2['name'] as String? ?? "Spring Delights") : fallbackCategories[1]["name"]!;
-                    final count2 = cat2 != null ? "${cat2['recipeCount'] ?? 24} recipes" : fallbackCategories[1]["count"]!;
-                    final img2 = cat2 != null ? (cat2['image'] as String? ?? fallbackCategories[1]["image"]!) : fallbackCategories[1]["image"]!;
-
-                    return Row(
-                      children: [
-                        Expanded(
-                          child: _buildCategoryCard(
-                            title: name1,
-                            subtitle: count1,
-                            imagePath: img1,
-                            onTap: () {
-                              Navigator.pushNamed(
-                                context,
-                                AppRoutes.viewAll,
-                                arguments: {
-                                  'type': ViewAllType.exploreRecipesByCategory,
-                                  'title': name1,
-                                  'category': name1,
-                                },
-                              );
-                            },
+                        return Padding(
+                          padding: EdgeInsets.only(right: 14.w),
+                          child: SizedBox(
+                            width: 160.w,
+                            child: _buildCategoryCard(
+                              title: name,
+                              subtitle: count,
+                              imagePath: img,
+                              onTap: () {
+                                Navigator.pushNamed(
+                                  context,
+                                  AppRoutes.viewAll,
+                                  arguments: {
+                                    'type': ViewAllType.exploreRecipesByCategory,
+                                    'title': name,
+                                    'category': name,
+                                  },
+                                );
+                              },
+                            ),
                           ),
-                        ),
-                        SizedBox(width: 14.w),
-                        Expanded(
-                          child: _buildCategoryCard(
-                            title: name2,
-                            subtitle: count2,
-                            imagePath: img2,
-                            onTap: () {
-                              Navigator.pushNamed(
-                                context,
-                                AppRoutes.viewAll,
-                                arguments: {
-                                  'type': ViewAllType.exploreRecipesByCategory,
-                                  'title': name2,
-                                  'category': name2,
-                                },
-                              );
-                            },
-                          ),
-                        ),
-                      ],
-                    );
-                  },
-                ),
-              ],
-            ),
+                        );
+                      },
+                    ),
+                  );
+                },
+              ),
+            ],
           ),
         ],
       ),
@@ -482,7 +486,7 @@ class _ExploreScreenState extends State<ExploreScreen>
               ),
             ),
             Padding(
-              padding: EdgeInsets.all(12.r),
+              padding: EdgeInsets.fromLTRB(12.w, 10.h, 12.w, 10.h),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [

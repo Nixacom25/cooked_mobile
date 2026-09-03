@@ -133,104 +133,108 @@ class _UserPreferencesScreenState extends State<UserPreferencesScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => Scaffold(
-          backgroundColor: Colors.transparent,
-          resizeToAvoidBottomInset: false,
-          body: Stack(
-            fit: StackFit.expand,
-            children: [
-              // ── Red background ──
-          const Positioned.fill(
-            child: RedHeaderBackground(),
-          ),
-              SafeArea(
-                bottom: false,
-                child: Container(
-                  margin: EdgeInsets.only(top: 25.h),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.vertical(
-                      top: Radius.circular(32.r),
+        builder: (context) => PopScope(
+          onPopInvokedWithResult: (didPop, result) {
+            _savePreferences();
+          },
+          child: Scaffold(
+            backgroundColor: Colors.transparent,
+            resizeToAvoidBottomInset: false,
+            body: Stack(
+              fit: StackFit.expand,
+              children: [
+                // ── Red background ──
+                const Positioned.fill(
+                  child: RedHeaderBackground(),
+                ),
+                SafeArea(
+                  bottom: false,
+                  child: Container(
+                    margin: EdgeInsets.only(top: 25.h),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.vertical(
+                        top: Radius.circular(32.r),
+                      ),
                     ),
-                  ),
-                  child: Column(
-                    children: [
-                      // Header
-                      Padding(
-                        padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 12.h),
-                        child: Row(
-                          children: [
-                            GlassIconButton(
-                              onTap: () => Navigator.pop(context),
-                              size: 42.r,
-                              child: Icon(
-                                Icons.arrow_back_rounded,
-                                size: 20.sp,
-                                color: const Color(0xFF0F172A),
-                              ),
-                            ),
-                            Expanded(
-                              child: Text(
-                                title,
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  fontFamily: 'Rubik',
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 18.sp,
+                    child: Column(
+                      children: [
+                        // Header
+                        Padding(
+                          padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 12.h),
+                          child: Row(
+                            children: [
+                              GlassIconButton(
+                                onTap: () => Navigator.pop(context),
+                                size: 42.r,
+                                child: Icon(
+                                  Icons.arrow_back_rounded,
+                                  size: 20.sp,
                                   color: const Color(0xFF0F172A),
                                 ),
                               ),
-                            ),
-                            SizedBox(width: 42.r),
-                          ],
-                        ),
-                      ),
-
-                      // Onboarding Step Component
-                      Expanded(
-                        child: editor,
-                      ),
-
-                      // Confirm & Save Action Button
-                      SafeArea(
-                        child: Padding(
-                          padding: EdgeInsets.fromLTRB(20.w, 8.h, 20.w, 16.h),
-                          child: GestureDetector(
-                            onTap: () async {
-                              Navigator.pop(context);
-                              await _savePreferences();
-                            },
-                            child: Container(
-                              width: double.infinity,
-                              height: 54.h,
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFC83A2D),
-                                borderRadius: BorderRadius.circular(27.r),
-                              ),
-                              child: Center(
+                              Expanded(
                                 child: Text(
-                                  'Confirm',
+                                  title,
+                                  textAlign: TextAlign.center,
                                   style: TextStyle(
                                     fontFamily: 'Rubik',
                                     fontWeight: FontWeight.w700,
-                                    fontSize: 16.sp,
-                                    color: Colors.white,
+                                    fontSize: 18.sp,
+                                    color: const Color(0xFF0F172A),
+                                  ),
+                                ),
+                              ),
+                              SizedBox(width: 42.r),
+                            ],
+                          ),
+                        ),
+
+                        // Onboarding Step Component
+                        Expanded(
+                          child: editor,
+                        ),
+
+                        // Confirm & Save Action Button
+                        SafeArea(
+                          child: Padding(
+                            padding: EdgeInsets.fromLTRB(20.w, 8.h, 20.w, 16.h),
+                            child: GestureDetector(
+                              onTap: () => Navigator.pop(context),
+                              child: Container(
+                                width: double.infinity,
+                                height: 54.h,
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFC83A2D),
+                                  borderRadius: BorderRadius.circular(27.r),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    'Confirm',
+                                    style: TextStyle(
+                                      fontFamily: 'Rubik',
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 16.sp,
+                                      color: Colors.white,
+                                    ),
                                   ),
                                 ),
                               ),
                             ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
-    );
+    ).then((_) {
+      _savePreferences();
+    });
   }
 
   @override

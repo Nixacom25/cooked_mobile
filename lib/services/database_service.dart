@@ -56,7 +56,19 @@ class DatabaseService {
     return cacheBox.get(key);
   }
 
-  Future<void> clearCache() async {
-    await cacheBox.clear();
+  Future<void> clearCache({List<String> preserveKeys = const []}) async {
+    if (preserveKeys.isEmpty) {
+      await cacheBox.clear();
+    } else {
+      final preserved = <String, String>{};
+      for (final key in preserveKeys) {
+        final val = cacheBox.get(key);
+        if (val != null) preserved[key] = val;
+      }
+      await cacheBox.clear();
+      for (final entry in preserved.entries) {
+        await cacheBox.put(entry.key, entry.value);
+      }
+    }
   }
 }

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../core/extensions/string_extensions.dart';
 import 'skeleton_loader.dart';
-import 'animated_validation_button.dart';
 
 class RecentImportTile extends StatelessWidget {
   final String img;
@@ -120,13 +120,38 @@ class RecentImportTile extends StatelessWidget {
             ),
           ),
           if (isSuggested)
-            AnimatedValidationButton(
-              isValidated: isValidated,
+            GestureDetector(
               onTap: onValidate,
-              useWhiteBackground: true,
-              autoAnimate: false,
-              index: index,
-              disableSlide: false,
+              child: Container(
+                width: 36.r,
+                height: 36.r,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.08),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Center(
+                  child: SvgPicture.asset(
+                    isValidated
+                        ? 'assets/icones/coeur.svg'
+                        : 'assets/icones/coeur1.svg',
+                    width: 18.r,
+                    height: 18.r,
+                    colorFilter: ColorFilter.mode(
+                      isValidated
+                          ? const Color(0xFFC83A2D)
+                          : const Color(0xFF94A3B8),
+                      BlendMode.srcIn,
+                    ),
+                  ),
+                ),
+              ),
             ),
         ],
       ),

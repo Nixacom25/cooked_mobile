@@ -3,6 +3,7 @@ import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../../../widgets/app_loading_indicator.dart';
 
 class ProfileLoadingStep extends StatefulWidget {
   final VoidCallback onComplete;
@@ -117,10 +118,7 @@ class _ProfileLoadingStepState extends State<ProfileLoadingStep> with TickerProv
       leading = SizedBox(
         width: 22.r,
         height: 22.r,
-        child: const CircularProgressIndicator(
-          strokeWidth: 2.5,
-          valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFC31E26)),
-          backgroundColor: Color(0xFFE2E8F0)));
+        child: const AppLoadingIndicator());
     } else {
       leading = Container(
         width: 22.r,

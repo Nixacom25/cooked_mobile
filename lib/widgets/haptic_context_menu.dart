@@ -27,7 +27,7 @@ class HapticContextMenu {
       context: context,
       barrierDismissible: true,
       barrierLabel: 'Dismiss',
-      barrierColor: Colors.black.withValues(alpha: 0.2),
+      barrierColor: Colors.transparent, // No dark overlay on the screen when modal opens
       transitionDuration: const Duration(milliseconds: 250),
       pageBuilder: (context, anim1, anim2) {
         return _HapticMenuOverlay(
@@ -37,13 +37,11 @@ class HapticContextMenu {
         );
       },
       transitionBuilder: (context, anim1, anim2, child) {
-        // Calculate the origin for the scale transition
-        // We want it to scale from the target position
         return FadeTransition(
           opacity: anim1,
           child: ScaleTransition(
-            alignment: Alignment.center, // Simplified for now, but could be dynamic
-            scale: Tween<double>(begin: 0.8, end: 1.0).animate(
+            alignment: Alignment.center,
+            scale: Tween<double>(begin: 0.85, end: 1.0).animate(
               CurvedAnimation(parent: anim1, curve: Curves.easeOutCubic),
             ),
             child: child,
@@ -68,18 +66,18 @@ class _HapticMenuOverlay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
-    
+
     // Adjust position to stay within screen bounds
     double top = targetPosition.dy;
     double left = targetPosition.dx;
-    
-    // Total menu height estimation (approx 56h per item)
+
+    // Total menu height estimation (approx 52h per item)
     final menuHeight = actions.length * 52.h;
-    
+
     if (top + menuHeight > screenSize.height - 40.h) {
       top = screenSize.height - menuHeight - 40.h;
     }
-    
+
     if (left + (menuWidth.w / 2) > screenSize.width - 20.w) {
       left = screenSize.width - menuWidth.w - 20.w;
     } else if (left - (menuWidth.w / 2) < 20.w) {
@@ -92,15 +90,7 @@ class _HapticMenuOverlay extends StatelessWidget {
       backgroundColor: Colors.transparent,
       body: Stack(
         children: [
-          // Blur background
-          Positioned.fill(
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-              child: Container(color: Colors.transparent),
-            ),
-          ),
-          
-          // Dismiss area
+          // Dismiss tap area without dark overlay
           Positioned.fill(
             child: GestureDetector(
               onTap: () => Navigator.pop(context),
@@ -109,49 +99,52 @@ class _HapticMenuOverlay extends StatelessWidget {
             ),
           ),
 
-          // Menu Content
+          // Menu Content with Glassmorphism Overlay background
           Positioned(
             top: top,
             left: left,
-            child: Container(
-              width: menuWidth.w,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16.r),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.1),
-                    blurRadius: 30,
-                    spreadRadius: 5,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(20.r),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+                child: Container(
+                  width: menuWidth.w,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.75), // Glass background for modal
+                    borderRadius: BorderRadius.circular(20.r),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.5),
+                      width: 1.2,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.08),
+                        blurRadius: 24,
+                        spreadRadius: 2,
+                      ),
+                    ],
                   ),
-                ],
-                border: Border.all(
-                  color: Colors.black.withValues(alpha: 0.05),
-                  width: 0.5,
-                ),
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(16.r),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: actions.asMap().entries.map((entry) {
-                    final i = entry.key;
-                    final action = entry.value;
-                    final isLast = i == actions.length - 1;
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: actions.asMap().entries.map((entry) {
+                      final i = entry.key;
+                      final action = entry.value;
+                      final isLast = i == actions.length - 1;
 
-                    return Column(
-                      children: [
-                        _MenuTile(
-                          action: action,
-                        ),
-                        if (!isLast)
-                          Container(
-                            height: 0.5,
-                            color: Colors.black.withValues(alpha: 0.05),
+                      return Column(
+                        children: [
+                          _MenuTile(
+                            action: action,
                           ),
-                      ],
-                    );
-                  }).toList(),
+                          if (!isLast)
+                            Container(
+                              height: 0.5,
+                              color: Colors.black.withValues(alpha: 0.08),
+                            ),
+                        ],
+                      );
+                    }).toList(),
+                  ),
                 ),
               ),
             ),
@@ -184,7 +177,9 @@ class _MenuTile extends StatelessWidget {
             children: [
               Icon(
                 action.icon,
-                color: action.isDestructive ? const Color(0xFFFF453A) : const Color(0xFF1A1A1A),
+                color: action.isDestructive
+                    ? const Color(0xFFFF453A)
+                    : const Color(0xFF1A1A1A),
                 size: 20.sp,
               ),
               SizedBox(width: 12.w),
@@ -192,7 +187,9 @@ class _MenuTile extends StatelessWidget {
                 child: Text(
                   action.title,
                   style: TextStyle(
-                    color: action.isDestructive ? const Color(0xFFFF453A) : const Color(0xFF1A1A1A),
+                    color: action.isDestructive
+                        ? const Color(0xFFFF453A)
+                        : const Color(0xFF1A1A1A),
                     fontSize: 16.sp,
                     fontWeight: FontWeight.w400,
                     fontFamily: 'SF Pro',

@@ -15,6 +15,7 @@ import '../widgets/red_header_background.dart';
 import '../core/utils/error_helper.dart';
 import '../core/extensions/string_extensions.dart';
 import '../widgets/grocery_skeleton.dart';
+import '../widgets/app_loading_indicator.dart';
 
 // ══════════════════════════════════════════════════════════════════════════════
 // GROCERY SCREEN
@@ -507,9 +508,8 @@ class GroceryScreenState extends State<GroceryScreen> with SingleTickerProviderS
                                               SizedBox(
                                                 width: 18.w,
                                                 height: 18.w,
-                                                child: const CircularProgressIndicator(
-                                                  strokeWidth: 2.5,
-                                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                                child: const AppLoadingIndicator(
+                                                  color: Colors.white,
                                                 ),
                                               ),
                                               SizedBox(width: 8.w),
@@ -552,11 +552,11 @@ class GroceryScreenState extends State<GroceryScreen> with SingleTickerProviderS
                                   child: Container(
                                     padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 14.h),
                                     decoration: BoxDecoration(
-                                      color: const Color(0xFFC83A2D),
+                                      color: const Color(0xFFC31E26),
                                       borderRadius: BorderRadius.circular(28.r),
                                       boxShadow: [
                                         BoxShadow(
-                                          color: const Color(0xFFC83A2D).withValues(alpha: 0.35),
+                                          color: const Color(0xFFC31E26).withValues(alpha: 0.35),
                                           blurRadius: 12.r,
                                           offset: Offset(0, 4.h),
                                         ),
@@ -767,10 +767,7 @@ class _ItemRow extends StatelessWidget {
                   SizedBox(
                     width: 22.r,
                     height: 22.r,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2.w,
-                      valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFC83A2D)),
-                    ),
+                    child: const AppLoadingIndicator(),
                   )
                 else
                   _AnimatedCheckbox(isBought: item.isBought),
@@ -1418,9 +1415,8 @@ class _AddGrocerySheetState extends State<_AddGrocerySheet> {
                           ? SizedBox(
                               width: 20.w,
                               height: 20.w,
-                              child: const CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                              child: const AppLoadingIndicator(
+                                color: Colors.white,
                               ),
                             )
                           : Text(
@@ -1467,10 +1463,15 @@ class _InlineAddRowState extends State<_InlineAddRow> {
   void _onFocusChange() {
     if (!_focusNode.hasFocus) {
       if (!_isSaving) {
-        setState(() {
-          _isEditing = false;
-          _inputController.clear();
-        });
+        final text = _inputController.text.trim();
+        if (text.isNotEmpty) {
+          _submit();
+        } else {
+          setState(() {
+            _isEditing = false;
+            _inputController.clear();
+          });
+        }
       }
     }
   }
@@ -1484,8 +1485,14 @@ class _InlineAddRowState extends State<_InlineAddRow> {
   }
 
   Future<void> _submit() async {
+    if (_isSaving) return;
     final rawText = _inputController.text.trim();
     if (rawText.isEmpty) {
+      if (mounted) {
+        setState(() {
+          _isEditing = false;
+        });
+      }
       return;
     }
 
@@ -1523,9 +1530,11 @@ class _InlineAddRowState extends State<_InlineAddRow> {
         source: 'manual',
       );
       _inputController.clear();
-      setState(() {
-        _isEditing = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isEditing = false;
+        });
+      }
     } catch (e) {
       if (mounted) {
         IosToast.show(context, message: ErrorHelper.getFriendlyMessage(e), type: ToastType.error);
@@ -1618,7 +1627,7 @@ class _InlineAddRowState extends State<_InlineAddRow> {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: const Color(0xFFC83A2D),
+                    color: const Color(0xFFC31E26),
                     width: 2.w,
                   ),
                 ),
@@ -1628,48 +1637,55 @@ class _InlineAddRowState extends State<_InlineAddRow> {
                     height: 10.r,
                     decoration: const BoxDecoration(
                       shape: BoxShape.circle,
-                      color: Color(0xFFC83A2D),
+                      color: Color(0xFFC31E26),
                     ),
                   ),
                 ),
               ),
-              SizedBox(width: 14.w),
+              SizedBox(width: 12.w),
               Expanded(
-                child: TextField(
-                  controller: _inputController,
-                  focusNode: _focusNode,
-                  style: TextStyle(
-                    fontFamily: 'Rubik',
-                    fontSize: 15.sp,
-                    color: const Color(0xFF0F172A),
+                child: Container(
+                  padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFAFCFE),
+                    borderRadius: BorderRadius.circular(16.r),
                   ),
-                  decoration: InputDecoration(
-                    hintText: 'e.g. Garlic - 2 cloves',
-                    hintStyle: TextStyle(
+                  child: TextField(
+                    controller: _inputController,
+                    focusNode: _focusNode,
+                    style: TextStyle(
                       fontFamily: 'Rubik',
                       fontSize: 15.sp,
-                      color: const Color(0xFF94A3B8),
+                      color: const Color(0xFF0F172A),
                     ),
-                    border: InputBorder.none,
-                    isDense: true,
+                    decoration: InputDecoration(
+                      hintText: 'e.g. Garlic - 2 cloves',
+                      hintStyle: TextStyle(
+                        fontFamily: 'Rubik',
+                        fontSize: 15.sp,
+                        color: const Color(0xFF94A3B8),
+                      ),
+                      border: InputBorder.none,
+                      enabledBorder: InputBorder.none,
+                      focusedBorder: InputBorder.none,
+                      errorBorder: InputBorder.none,
+                      disabledBorder: InputBorder.none,
+                      focusedErrorBorder: InputBorder.none,
+                      contentPadding: EdgeInsets.symmetric(vertical: 10.h),
+                      isDense: true,
+                    ),
+                    onSubmitted: (_) => _submit(),
                   ),
-                  onSubmitted: (_) => _submit(),
                 ),
               ),
-              if (_isSaving)
+              if (_isSaving) ...[
+                SizedBox(width: 10.w),
                 SizedBox(
                   width: 18.r,
                   height: 18.r,
-                  child: const CircularProgressIndicator(
-                    strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFC83A2D)),
-                  ),
-                )
-              else
-                IconButton(
-                  icon: Icon(Icons.check, color: const Color(0xFFC83A2D), size: 20.sp),
-                  onPressed: _submit,
+                  child: const AppLoadingIndicator(),
                 ),
+              ],
             ],
           ),
         ),

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class AppColors {
-  static const Color primary = Color(0xFFC83A2D);
+  static const Color primary = Color(0xFFC31E26);
   static const Color darkBlue = Color(0xFF1F4277);
   static const Color green = Color(0xFF1F9D57);
   static const Color yellow = Color(0xFFF2C94C);
@@ -64,6 +64,18 @@ class AppTheme {
       ),
       hintStyle: const TextStyle(color: AppColors.textMuted, fontSize: 14),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+    ),
+    popupMenuTheme: PopupMenuThemeData(
+      color: const Color(0xEBF8FAFC),
+      surfaceTintColor: Colors.transparent,
+      elevation: 12,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: const BorderSide(
+          color: Color(0xCCFFFFFF),
+          width: 1.2,
+        ),
+      ),
     ),
   );
 }

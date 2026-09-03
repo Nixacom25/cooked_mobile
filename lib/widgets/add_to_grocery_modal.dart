@@ -60,31 +60,36 @@ class _AddToGroceryModalState extends State<AddToGroceryModal> {
 
     setState(() => _isSaving = true);
     try {
-      final selectedItems = <RecipeIngredient>[];
+      final selectedItems = <({String name, String quantity, String? icon})>[];
       for (int i = 0; i < widget.recipe.ingredients.length; i++) {
         if (_selectedIngredients[i]) {
-          selectedItems.add(widget.recipe.ingredients[i]);
+          final ing = widget.recipe.ingredients[i];
+          selectedItems.add((
+            name: ing.name,
+            quantity: _formatScaledQuantity(ing),
+            icon: ing.icon,
+          ));
         }
       }
 
-      for (var ing in selectedItems) {
-        await GroceryService.instance.addGroceryItem(
-          name: ing.name,
-          quantity: _formatScaledQuantity(ing),
-          icon: ing.icon,
-          recipeId: widget.recipe.id,
-          date: _isSpecificDate ? (_selectedDate ?? DateTime.now()) : null,
-          source: 'recipe',
-        );
-      }
+      final count = selectedItems.length;
+
+      await GroceryService.instance.addMultipleGroceryItems(
+        items: selectedItems,
+        recipeId: widget.recipe.id,
+        date: _isSpecificDate ? (_selectedDate ?? DateTime.now()) : null,
+        source: 'recipe',
+      );
 
       if (!mounted) return;
-      Navigator.pop(context);
+
       IosToast.show(
         context,
-        message: 'Ingredients added to shopping list',
+        message: '$count ingredient${count > 1 ? 's' : ''} added to Grocery List',
         type: ToastType.success,
       );
+
+      Navigator.pop(context);
     } catch (e) {
       if (!mounted) return;
       setState(() => _isSaving = false);
@@ -127,7 +132,7 @@ class _AddToGroceryModalState extends State<AddToGroceryModal> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Add to Shopping List',
+                  'Add to Grocery List',
                   style: TextStyle(
                     fontFamily: 'Rubik',
                     fontWeight: FontWeight.w700,

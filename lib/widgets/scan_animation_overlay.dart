@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:rive/rive.dart' hide LinearGradient, Image;
+import 'package:video_player/video_player.dart';
 import '../models/recipe.dart';
 
 class ScanAnimationOverlay extends StatefulWidget {
@@ -29,10 +30,15 @@ class _ScanAnimationOverlayState extends State<ScanAnimationOverlay> {
   Timer? _minAnimationTimer;
   Timer? _maxTimeoutTimer;
   bool _minAnimationFinished = false;
+  Artboard? _artboard;
+  VideoPlayerController? _videoController;
+  bool _isVideoInitialized = false;
 
   @override
   void initState() {
     super.initState();
+    _loadAnimationAsset();
+
     if (!widget.showTestControls) {
       // Allow 1 quick scan loop (2.0s) minimum before dismissing once AI data is ready
       _minAnimationTimer = Timer(const Duration(milliseconds: 2000), () {
@@ -49,6 +55,77 @@ class _ScanAnimationOverlayState extends State<ScanAnimationOverlay> {
           widget.onAnimationComplete();
         }
       });
+    }
+  }
+
+  Future<void> _loadAnimationAsset() async {
+    // 1. Try loading MOV video asset first
+    try {
+      final movController = VideoPlayerController.asset('assets/cooked.mov');
+      await movController.initialize();
+      movController.setLooping(true);
+      movController.play();
+      if (mounted) {
+        setState(() {
+          _videoController = movController;
+          _isVideoInitialized = true;
+        });
+        return;
+      }
+    } catch (_) {
+      // Try MP4 if MOV is not present
+      try {
+        final mp4Controller = VideoPlayerController.asset('assets/cooked.mp4');
+        await mp4Controller.initialize();
+        mp4Controller.setLooping(true);
+        mp4Controller.play();
+        if (mounted) {
+          setState(() {
+            _videoController = mp4Controller;
+            _isVideoInitialized = true;
+          });
+          return;
+        }
+      } catch (_) {
+        // Fallback to Rive
+      }
+    }
+
+    // 2. Fallback to Rive file
+    await _loadRiveAnimation();
+  }
+
+  Future<void> _loadRiveAnimation() async {
+    try {
+      final data = await rootBundle.load('assets/cooked.riv');
+      final file = RiveFile.import(data);
+      final artboard = file.mainArtboard;
+
+      // 1. Activate State Machine controller if present
+      if (artboard.stateMachines.isNotEmpty) {
+        final smName = artboard.stateMachines.first.name;
+        final controller = StateMachineController.fromArtboard(
+          artboard,
+          smName,
+        );
+        if (controller != null) {
+          controller.isActive = true;
+          artboard.addController(controller);
+        }
+      } else if (artboard.animations.isNotEmpty) {
+        // 2. Activate ONLY primary timeline animation if no State Machine
+        artboard.addController(
+          SimpleAnimation(artboard.animations.first.name, autoplay: true),
+        );
+      }
+
+      if (mounted) {
+        setState(() {
+          _artboard = artboard;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading cooked.riv animation: $e');
     }
   }
 
@@ -77,6 +154,7 @@ class _ScanAnimationOverlayState extends State<ScanAnimationOverlay> {
   void dispose() {
     _minAnimationTimer?.cancel();
     _maxTimeoutTimer?.cancel();
+    _videoController?.dispose();
     super.dispose();
   }
 
@@ -89,37 +167,22 @@ class _ScanAnimationOverlayState extends State<ScanAnimationOverlay> {
       child: Stack(
         children: [
           Positioned.fill(
-            child: RiveAnimation.asset(
-              'assets/cooked.riv',
-              fit: BoxFit.contain,
-              antialiasing: true,
-              artboard: 'MAIN',
-              onInit: (artboard) {
-                // 1. Add and activate all timeline animations
-                for (final anim in artboard.animations) {
-                  artboard.addController(
-                    SimpleAnimation(anim.name, autoplay: true),
-                  );
-                }
-                // 2. Add and activate state machine controller
-                if (artboard.stateMachines.isNotEmpty) {
-                  final smName = artboard.stateMachines.first.name;
-                  final controller = StateMachineController.fromArtboard(
-                    artboard,
-                    smName,
-                  );
-                  if (controller != null) {
-                    controller.isActive = true;
-                    artboard.addController(controller);
-                  }
-                }
-              },
-              placeHolder: const Center(
-                child: CircularProgressIndicator(
-                  color: Color(0xFFC83A2D),
-                ),
-              ),
-            ),
+            child: _isVideoInitialized && _videoController != null
+                ? FittedBox(
+                    fit: BoxFit.cover,
+                    child: SizedBox(
+                      width: _videoController!.value.size.width,
+                      height: _videoController!.value.size.height,
+                      child: VideoPlayer(_videoController!),
+                    ),
+                  )
+                : (_artboard != null
+                    ? Rive(
+                        artboard: _artboard!,
+                        fit: BoxFit.contain,
+                        antialiasing: true,
+                      )
+                    : const _FallbackScanAnimation()),
           ),
           if (widget.showTestControls)
             Positioned(
@@ -162,6 +225,92 @@ class _ScanAnimationOverlayState extends State<ScanAnimationOverlay> {
                 ),
               ),
             ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FallbackScanAnimation extends StatefulWidget {
+  const _FallbackScanAnimation();
+
+  @override
+  State<_FallbackScanAnimation> createState() => _FallbackScanAnimationState();
+}
+
+class _FallbackScanAnimationState extends State<_FallbackScanAnimation>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          AnimatedBuilder(
+            animation: _controller,
+            builder: (context, child) {
+              return Transform.rotate(
+                angle: _controller.value * 2 * 3.14159,
+                child: Container(
+                  width: 100.r,
+                  height: 100.r,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: SweepGradient(
+                      colors: [
+                        const Color(0xFFC83A2D).withValues(alpha: 0.0),
+                        const Color(0xFFC83A2D).withValues(alpha: 0.8),
+                        const Color(0xFFC83A2D),
+                      ],
+                    ),
+                  ),
+                  child: Padding(
+                    padding: EdgeInsets.all(4.r),
+                    child: Container(
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Center(
+                        child: Icon(
+                          Icons.restaurant_menu_rounded,
+                          size: 40.sp,
+                          color: const Color(0xFFC83A2D),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+          SizedBox(height: 24.h),
+          Text(
+            'Analyzing recipe...',
+            style: TextStyle(
+              fontFamily: 'Rubik',
+              fontWeight: FontWeight.w700,
+              fontSize: 16.sp,
+              color: const Color(0xFF0F172A),
+            ),
+          ),
         ],
       ),
     );

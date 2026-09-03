@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -10,6 +11,7 @@ import '../services/recipe_service.dart';
 import '../core/widgets/ios_toast.dart';
 import '../core/utils/error_helper.dart';
 import '../widgets/glass_icon_button.dart';
+import '../widgets/app_loading_indicator.dart';
 import '../widgets/skeleton_list.dart';
 
 class CookbookFormModal extends StatefulWidget {
@@ -93,14 +95,24 @@ class _CookbookFormModalState extends State<CookbookFormModal> {
   Widget _buildContent(BuildContext context, ScrollController? scrollController) {
     final bool canSave = _nameCtrl.text.trim().isNotEmpty && !_isSaving;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: widget.isEmbedded
-            ? BorderRadius.zero
-            : BorderRadius.vertical(top: Radius.circular(32.r)),
-      ),
-      child: Column(
+    return ClipRRect(
+      borderRadius: widget.isEmbedded
+          ? BorderRadius.zero
+          : BorderRadius.vertical(top: Radius.circular(32.r)),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.88),
+            borderRadius: widget.isEmbedded
+                ? BorderRadius.zero
+                : BorderRadius.vertical(top: Radius.circular(32.r)),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.5),
+              width: 1.w,
+            ),
+          ),
+          child: Column(
         children: [
           // ── Header Row ──
           Padding(
@@ -379,8 +391,7 @@ class _CookbookFormModalState extends State<CookbookFormModal> {
                       ? SizedBox(
                           width: 20.w,
                           height: 20.w,
-                          child: const CircularProgressIndicator(
-                            strokeWidth: 2,
+                          child: const AppLoadingIndicator(
                             color: Colors.white,
                           ),
                         )
@@ -399,7 +410,9 @@ class _CookbookFormModalState extends State<CookbookFormModal> {
           ),
         ],
       ),
-    );
+    ),
+  ),
+);
   }
 
   Future<void> _pickRecipes() async {

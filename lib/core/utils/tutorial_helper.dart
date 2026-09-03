@@ -558,7 +558,7 @@ class _ScanOnboardingModalState extends State<ScanOnboardingModal> {
                           height: 6.h,
                           decoration: BoxDecoration(
                             color: _currentPage == i
-                                ? const Color(0xFFC83A2D)
+                                ? const Color(0xFFC31E26)
                                 : const Color(0xFFE2E8F0),
                             borderRadius: BorderRadius.circular(3.r),
                           ),
@@ -575,7 +575,7 @@ class _ScanOnboardingModalState extends State<ScanOnboardingModal> {
                       child: ElevatedButton(
                         onPressed: _onNext,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFC83A2D),
+                          backgroundColor: const Color(0xFFC31E26),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(26.r),
                           ),
@@ -796,7 +796,7 @@ class _ImportOnboardingModalState extends State<ImportOnboardingModal> {
                       width: double.infinity,
                       height: 48.h,
                       decoration: BoxDecoration(
-                        color: const Color(0xFFC83A2D),
+                        color: const Color(0xFFC31E26),
                         borderRadius: BorderRadius.circular(24.r),
                       ),
                       child: Center(
@@ -887,7 +887,7 @@ class _ImportOnboardingModalState extends State<ImportOnboardingModal> {
                             height: 6.h,
                             decoration: BoxDecoration(
                               color: _currentPage == i
-                                  ? const Color(0xFFC83A2D)
+                                  ? const Color(0xFFC31E26)
                                   : const Color(0xFFE2E8F0),
                               borderRadius: BorderRadius.circular(3.r),
                             ),
@@ -985,7 +985,7 @@ class _ImportFlowDiagram extends StatelessWidget {
             ),
           ),
         ),
-        Icon(Icons.arrow_forward_rounded, size: 12.sp, color: const Color(0xFFC83A2D)),
+        Icon(Icons.arrow_forward_rounded, size: 12.sp, color: const Color(0xFFC31E26)),
 
         // Card 2: Share
         _FlowCard(
@@ -994,17 +994,17 @@ class _ImportFlowDiagram extends StatelessWidget {
             'assets/icones/shared.svg',
             width: 26.w,
             height: 26.w,
-            colorFilter: const ColorFilter.mode(Color(0xFFC83A2D), BlendMode.srcIn),
+            colorFilter: const ColorFilter.mode(Color(0xFFC31E26), BlendMode.srcIn),
           ),
         ),
-        Icon(Icons.arrow_forward_rounded, size: 12.sp, color: const Color(0xFFC83A2D)),
+        Icon(Icons.arrow_forward_rounded, size: 12.sp, color: const Color(0xFFC31E26)),
 
         // Card 3: Cooked
         _FlowCard(
           label: 'Cooked',
           child: Image.asset('assets/images/logoo.png', width: 34.w, height: 34.w),
         ),
-        Icon(Icons.arrow_forward_rounded, size: 12.sp, color: const Color(0xFFC83A2D)),
+        Icon(Icons.arrow_forward_rounded, size: 12.sp, color: const Color(0xFFC31E26)),
 
         // Card 4: Import
         _FlowCard(
@@ -1013,7 +1013,7 @@ class _ImportFlowDiagram extends StatelessWidget {
             'assets/icones/import2.svg',
             width: 24.w,
             height: 24.w,
-            colorFilter: const ColorFilter.mode(Color(0xFFC83A2D), BlendMode.srcIn),
+            colorFilter: const ColorFilter.mode(Color(0xFFC31E26), BlendMode.srcIn),
           ),
         ),
       ],
@@ -1183,7 +1183,7 @@ class _TutorialContent extends StatelessWidget {
                     child: Container(
                       padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 10.h),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFC83A2D),
+                        color: const Color(0xFFC31E26),
                         borderRadius: BorderRadius.circular(20.r),
                       ),
                       child: Text(
@@ -1399,7 +1399,7 @@ class _CookbookOnboardingModalState extends State<CookbookOnboardingModal> {
                             Icon(
                               Icons.check_circle_rounded,
                               size: 18.sp,
-                              color: const Color(0xFFC83A2D),
+                              color: const Color(0xFFC31E26),
                             ),
                             SizedBox(width: 12.w),
                             Expanded(
@@ -1434,7 +1434,7 @@ class _CookbookOnboardingModalState extends State<CookbookOnboardingModal> {
                               height: 6.h,
                               decoration: BoxDecoration(
                                 color: _currentPage == i
-                                    ? const Color(0xFFC83A2D)
+                                    ? const Color(0xFFC31E26)
                                     : const Color(0xFFFFD1D1),
                                 borderRadius: BorderRadius.circular(3.r),
                               ),
@@ -1444,7 +1444,7 @@ class _CookbookOnboardingModalState extends State<CookbookOnboardingModal> {
                         ElevatedButton(
                           onPressed: _onNext,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFFC83A2D),
+                            backgroundColor: const Color(0xFFC31E26),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(26.r),
                             ),
@@ -1515,7 +1515,7 @@ class _IngredientsDetectedCard extends StatelessWidget {
                   fontFamily: 'Rubik',
                   fontSize: 14.sp,
                   fontWeight: FontWeight.w700,
-                  color: const Color(0xFFC83A2D),
+                  color: const Color(0xFFC31E26),
                 ),
               ),
             ],

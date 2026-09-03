@@ -69,12 +69,11 @@ class SavingsDetailsScreen extends StatelessWidget {
                       valueListenable: RecipeService.instance.myRecipesNotifier,
                       builder: (context, recipes, _) {
                         final myRecipes = recipes ?? [];
-                        final validRecipes = myRecipes
-                            .where((r) => r.totalPrice != null && r.totalPrice! > 0)
-                            .toList();
-
-                        final displayRecipes =
-                            validRecipes.isNotEmpty ? validRecipes : myRecipes;
+                        final displayRecipes = myRecipes.where((r) {
+                          final origin = r.origin?.toUpperCase();
+                          if (origin == 'IMPORT' || origin == 'MANUAL') return false;
+                          return origin == 'SCAN' || origin == 'SUGGESTED' || (r.isSuggested && (r.sourceUrl == null || r.sourceUrl!.isEmpty));
+                        }).toList();
 
                         double totalSaved = 0.0;
                         for (var r in displayRecipes) {
@@ -96,7 +95,7 @@ class SavingsDetailsScreen extends StatelessWidget {
                                     size: 60.sp, color: Colors.grey[300]),
                                 SizedBox(height: 16.h),
                                 Text(
-                                  "No savings yet",
+                                  "No scan savings yet",
                                   style: TextStyle(
                                     fontFamily: 'Rubik',
                                     fontSize: 16.sp,
@@ -128,12 +127,12 @@ class SavingsDetailsScreen extends StatelessWidget {
                                     ),
                                     SizedBox(height: 4.h),
                                     Text(
-                                      "\$${totalSaved.toStringAsFixed(0)}",
+                                      "~\$${totalSaved.toStringAsFixed(0)}",
                                       style: TextStyle(
                                         fontFamily: 'Rubik',
                                         fontSize: 54.sp,
                                         fontWeight: FontWeight.w800,
-                                        color: const Color(0xFF15803D),
+                                        color: const Color(0xFF10B981),
                                       ),
                                     ),
                                     SizedBox(height: 4.h),
@@ -156,23 +155,32 @@ class SavingsDetailsScreen extends StatelessWidget {
                             // Saved Recipe Cards List using shared RecipeHorizontalCard
                             SliverPadding(
                               padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 50.h),
-                              sliver: SliverList(
-                                delegate: SliverChildBuilderDelegate(
-                                  (context, index) {
-                                    final recipe = displayRecipes[index];
-                                    return SavedRecipeCard(
-                                      recipe: recipe,
-                                      onTap: () {
-                                        Navigator.pushNamed(
-                                          context,
-                                          AppRoutes.recipeDetail,
-                                          arguments: {'recipe': recipe},
-                                        );
-                                      },
-                                    );
-                                  },
-                                  childCount: displayRecipes.length,
-                                ),
+                              sliver: SliverList.separated(
+                                itemCount: displayRecipes.length,
+                                separatorBuilder: (context, index) => SizedBox(height: 14.h),
+                                itemBuilder: (context, index) {
+                                  final recipe = displayRecipes[index];
+                                  double itemSavings = 14.0;
+                                  if (recipe.totalPrice != null && recipe.totalPrice! > 0) {
+                                    double makeAtHome = recipe.totalPrice!;
+                                    double orderNearby = makeAtHome * 2.5 + 5.0;
+                                    itemSavings = orderNearby - makeAtHome;
+                                  }
+
+                                  return SavedRecipeCard(
+                                    recipe: recipe,
+                                    isSavingsMode: true,
+                                    subtitle: "Scanned at home",
+                                    savingsBadgeText: "+${itemSavings.toStringAsFixed(0)}\$",
+                                    onTap: () {
+                                      Navigator.pushNamed(
+                                        context,
+                                        AppRoutes.recipeDetail,
+                                        arguments: {'recipe': recipe},
+                                      );
+                                    },
+                                  );
+                                },
                               ),
                             ),
                           ],

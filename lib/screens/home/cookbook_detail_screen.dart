@@ -22,6 +22,7 @@ import '../../widgets/haptic_context_menu.dart';
 import '../../widgets/glass_icon_button.dart';
 import '../../widgets/app_top_header.dart';
 import '../../widgets/red_header_background.dart';
+import '../../widgets/saved_recipe_card.dart';
 
 class CookbookDetailScreen extends StatefulWidget {
   const CookbookDetailScreen({super.key});
@@ -256,8 +257,12 @@ class _CookbookDetailScreenState extends State<CookbookDetailScreen> {
                                         SizedBox(height: 14.h),
                                     itemBuilder: (ctx, i) {
                                       final r = recipes[i];
-                                      return _HorizontalRecipeCard(
+                                      return SavedRecipeCard(
                                         recipe: r,
+                                        isPinned: r.isPinned,
+                                        onPinTap: () {
+                                          RecipeService.instance.togglePin(r.id);
+                                        },
                                         onTap: () => Navigator.pushNamed(
                                           context,
                                           AppRoutes.recipeDetail,
@@ -266,11 +271,6 @@ class _CookbookDetailScreenState extends State<CookbookDetailScreen> {
                                             'isPreview': false
                                           },
                                         ),
-                                        onFavoriteTap: () {
-                                          setState(() {
-                                            r.isFavorite = !r.isFavorite;
-                                          });
-                                        },
                                         onLongPressStart: (details) {
                                           _showRecipeContextMenu(
                                             ctx,
@@ -346,6 +346,7 @@ class _CookbookDetailScreenState extends State<CookbookDetailScreen> {
             showModalBottomSheet(
               context: context,
               backgroundColor: Colors.transparent,
+              barrierColor: Colors.transparent,
               isScrollControlled: true,
               builder: (_) => AddToCookbookSheet(recipe: r),
             );
@@ -572,214 +573,3 @@ class _CookbookDetailScreenState extends State<CookbookDetailScreen> {
   }
 }
 
-class _HorizontalRecipeCard extends StatelessWidget {
-  final Recipe recipe;
-  final VoidCallback onTap;
-  final VoidCallback onFavoriteTap;
-  final Function(LongPressStartDetails)? onLongPressStart;
-
-  const _HorizontalRecipeCard({
-    required this.recipe,
-    required this.onTap,
-    required this.onFavoriteTap,
-    this.onLongPressStart,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final String imagePath = recipe.image ?? 'assets/images/plat1.png';
-    final int rawTime = (recipe.prepTime ?? 0) > 0
-        ? recipe.prepTime!
-        : (recipe.cookTime > 0 ? recipe.cookTime : 10);
-    final int calories = recipe.kcal > 0 ? recipe.kcal : 217;
-
-    return GestureDetector(
-      onTap: onTap,
-      onLongPressStart: onLongPressStart,
-      child: Container(
-        height: 140.h,
-        decoration: BoxDecoration(
-          color: const Color(0xFFFAF5E8),
-          borderRadius: BorderRadius.circular(24.r),
-        ),
-        child: Row(
-          children: [
-            // Left content area
-            Expanded(
-              child: Padding(
-                padding: EdgeInsets.fromLTRB(14.w, 12.h, 12.w, 12.h),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    // Favorite heart button
-                    GestureDetector(
-                      onTap: onFavoriteTap,
-                      child: Container(
-                        width: 32.r,
-                        height: 32.r,
-                        decoration: const BoxDecoration(
-                          color: Colors.white,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          recipe.isFavorite
-                              ? Icons.favorite_rounded
-                              : Icons.favorite_border_rounded,
-                          size: 18.sp,
-                          color: const Color(0xFFDC2626),
-                        ),
-                      ),
-                    ),
-
-                    SizedBox(height: 6.h),
-
-                    // Recipe Title
-                    Text(
-                      recipe.name.toTitleCase(),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontFamily: 'Rubik',
-                        fontWeight: FontWeight.w800,
-                        fontSize: 16.sp,
-                        color: const Color(0xFF0F172A),
-                        height: 1.25,
-                      ),
-                    ),
-
-                    SizedBox(height: 8.h),
-
-                    // Badges row: time & calories
-                    Row(
-                      children: [
-                        // Time pill
-                        Container(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 8.w,
-                            vertical: 4.h,
-                          ),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFF1EAD9),
-                            borderRadius: BorderRadius.circular(10.r),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.access_time_rounded,
-                                size: 13.sp,
-                                color: const Color(0xFF475569),
-                              ),
-                              SizedBox(width: 4.w),
-                              Text(
-                                '$rawTime min',
-                                style: TextStyle(
-                                  fontFamily: 'Rubik',
-                                  fontWeight: FontWeight.w500,
-                                  fontSize: 11.sp,
-                                  color: const Color(0xFF475569),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        SizedBox(width: 6.w),
-
-                        // Calories pill
-                        Container(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 8.w,
-                            vertical: 4.h,
-                          ),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFF1EAD9),
-                            borderRadius: BorderRadius.circular(10.r),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.local_fire_department_rounded,
-                                size: 13.sp,
-                                color: const Color(0xFF475569),
-                              ),
-                              SizedBox(width: 4.w),
-                              Text(
-                                '$calories kcal',
-                                style: TextStyle(
-                                  fontFamily: 'Rubik',
-                                  fontWeight: FontWeight.w500,
-                                  fontSize: 11.sp,
-                                  color: const Color(0xFF475569),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            // Right image area with chevron overlay button
-            SizedBox(
-              width: 145.w,
-              height: double.infinity,
-              child: Stack(
-                children: [
-                  Positioned.fill(
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.horizontal(
-                        right: Radius.circular(24.r),
-                      ),
-                      child: imagePath.startsWith('http')
-                          ? CachedNetworkImage(
-                              imageUrl: imagePath,
-                              fit: BoxFit.cover,
-                              errorWidget: (_, __, ___) => Image.asset(
-                                'assets/images/plat1.png',
-                                fit: BoxFit.cover,
-                              ),
-                            )
-                          : Image.asset(
-                              imagePath,
-                              fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) => Image.asset(
-                                'assets/images/plat1.png',
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                    ),
-                  ),
-
-                  // Overlay chevron button
-                  Positioned(
-                    top: 10.r,
-                    right: 10.r,
-                    child: Container(
-                      width: 34.r,
-                      height: 34.r,
-                      decoration: const BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        Icons.chevron_right_rounded,
-                        size: 20.sp,
-                        color: const Color(0xFF0F172A),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}

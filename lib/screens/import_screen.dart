@@ -771,7 +771,7 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
                                           fontFamily: 'Rubik',
                                           fontWeight: FontWeight.w700,
                                           fontSize: 14.sp,
-                                          color: const Color(0xFFC83A2D),
+                                          color: const Color(0xFFC31E26),
                                         ),
                                       ),
                                     ),
@@ -814,7 +814,11 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
                                     sourceAsset = 'assets/images/facebook.png';
                                   }
 
-                                  final bool isSaved = _validatedRecipeIds.contains(r.id) || r.isInCookbook;
+                                  final savedList = RecipeService.instance.myRecipesNotifier.value ?? [];
+                                  final bool isSaved = _validatedRecipeIds.contains(r.id) ||
+                                      r.isInCookbook ||
+                                      r.isFavorite ||
+                                      savedList.any((rec) => rec.id == r.id || (rec.name.isNotEmpty && rec.name.toLowerCase() == r.name.toLowerCase()));
 
                                   return GestureDetector(
                                     onTap: () {
@@ -1268,7 +1272,7 @@ class _WebSearchResults extends StatelessWidget {
                   fontFamily: 'Rubik',
                   fontSize: 13.sp,
                   fontWeight: FontWeight.w600,
-                  color: const Color(0xFFC83A2D),
+                  color: const Color(0xFFC31E26),
                 ),
               ),
             ),
@@ -1345,7 +1349,7 @@ class _SearchResultTile extends StatelessWidget {
             child: Container(
               padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
               decoration: BoxDecoration(
-                color: const Color(0xFFC83A2D),
+                color: const Color(0xFFC31E26),
                 borderRadius: BorderRadius.circular(20.r),
               ),
               child: Text(

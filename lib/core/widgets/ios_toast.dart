@@ -18,7 +18,7 @@ class IosToast {
         },
       ),
     );
-    Overlay.of(context).insert(entry);
+    Overlay.of(context, rootOverlay: true).insert(entry);
   }
 }
 
@@ -149,7 +149,7 @@ class _IosToastWidgetState extends State<_IosToastWidget> {
                         borderRadius: BorderRadius.circular(20),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.08),
+                            color: Colors.black.withValues(alpha: 0.08),
                             blurRadius: 15,
                             offset: const Offset(0, 5),
                           ),
@@ -188,7 +188,7 @@ class _IosToastWidgetState extends State<_IosToastWidget> {
                                         child: Text(
                                           widget.message,
                                           style: TextStyle(
-                                            color: _iconColor.withOpacity(0.9),
+                                            color: _iconColor.withValues(alpha: 0.9),
                                             fontWeight: FontWeight.w700,
                                             fontFamily: 'SF Pro',
                                             fontSize: 13,

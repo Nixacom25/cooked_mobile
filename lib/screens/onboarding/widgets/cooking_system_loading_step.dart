@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../widgets/red_button.dart';
+import '../../../widgets/app_loading_indicator.dart';
 
 class CookingSystemLoadingStep extends StatefulWidget {
   final VoidCallback onContinue;
@@ -68,10 +69,7 @@ class _CookingSystemLoadingStepState extends State<CookingSystemLoadingStep> wit
       leadingIcon = SizedBox(
         width: 22.r,
         height: 22.r,
-        child: CircularProgressIndicator(
-          strokeWidth: 2.2,
-          valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFC31E26)),
-          backgroundColor: const Color(0xFFFFEDD5)));
+        child: const AppLoadingIndicator());
     } else {
       leadingIcon = Container(
         width: 22.r,

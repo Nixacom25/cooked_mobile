@@ -15,6 +15,7 @@ import '../widgets/skeleton_loader.dart';
 import '../widgets/glass_icon_button.dart';
 import '../widgets/red_button.dart';
 import '../widgets/loading_text.dart';
+import '../widgets/app_loading_indicator.dart';
 import '../widgets/skeleton_list.dart';
 import '../widgets/add_to_cookbook_sheet.dart';
 import '../models/recipe.dart';
@@ -801,8 +802,8 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
 
               // Cooked Logo (Top-center)
               Image.asset(
-                'assets/images/logo2.png',
-                height: 45.h,
+                'assets/images/logo1.png',
+                height: 30.h,
                 fit: BoxFit.contain,
                 errorBuilder: (_, __, ___) => Text(
                   'Cooked',
@@ -1762,7 +1763,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                             ),
                             child: Icon(
                               isSaved ? Icons.favorite : Icons.favorite_outline,
-                              color: const Color(0xFFC83A2D),
+                              color: isSaved ? const Color(0xFFC83A2D) : const Color(0xFF94A3B8),
                               size: 18.sp,
                             ),
                           ),
@@ -1922,7 +1923,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
         barrierColor: Colors.black26,
         barrierDismissible: false,
         builder: (context) => const Center(
-          child: CircularProgressIndicator(color: Color(0xFFC83A2D)),
+          child: AppLoadingIndicator(),
         ),
       );
 

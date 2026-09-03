@@ -49,7 +49,11 @@ import 'package:rive/rive.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await RiveFile.initialize();
+  try {
+    await RiveFile.initialize();
+  } catch (e) {
+    debugPrint('RiveFile.initialize warning: $e');
+  }
 
   await Firebase.initializeApp();
 

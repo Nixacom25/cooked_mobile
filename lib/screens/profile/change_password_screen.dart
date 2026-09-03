@@ -5,6 +5,7 @@ import '../../core/widgets/ios_toast.dart';
 import '../../core/utils/error_helper.dart';
 import '../../widgets/glass_icon_button.dart';
 import '../../widgets/red_header_background.dart';
+import '../../widgets/app_loading_indicator.dart';
 
 class ChangePasswordScreen extends StatefulWidget {
   const ChangePasswordScreen({super.key});
@@ -174,7 +175,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                               width: double.infinity,
                               height: 54.h,
                               decoration: BoxDecoration(
-                                color: const Color(0xFFC83A2D),
+                                color: const Color(0xFFC31E26),
                                 borderRadius: BorderRadius.circular(27.r),
                               ),
                               child: Center(
@@ -182,9 +183,8 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                                     ? const SizedBox(
                                         width: 20,
                                         height: 20,
-                                        child: CircularProgressIndicator(
+                                        child: AppLoadingIndicator(
                                           color: Colors.white,
-                                          strokeWidth: 2,
                                         ),
                                       )
                                     : Text(

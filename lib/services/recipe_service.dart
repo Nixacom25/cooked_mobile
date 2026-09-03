@@ -49,7 +49,7 @@ class RecipeService {
 
   Future<void> clearCache() async {
     _cache.clear();
-    await DatabaseService.instance.clearCache();
+    await DatabaseService.instance.clearCache(preserveKeys: [_tempSuggestionsKey]);
   }
 
   Future<Map<String, String>> _getHeaders() async {
@@ -380,30 +380,31 @@ class RecipeService {
   }
 
   Future<List<Recipe>> getHomeSuggestions({bool forceRefresh = false}) async {
-    if (!forceRefresh && homeSuggestionsNotifier.value != null) {
+    if (!forceRefresh && homeSuggestionsNotifier.value != null && homeSuggestionsNotifier.value!.isNotEmpty) {
       return homeSuggestionsNotifier.value!;
     }
 
     const cacheKey = 'home_suggestions';
-    if (!forceRefresh && _cache.containsKey(cacheKey)) {
+    if (!forceRefresh && _cache.containsKey(cacheKey) && (_cache[cacheKey] as List<Recipe>).isNotEmpty) {
       return _cache[cacheKey] as List<Recipe>;
     }
 
-    final url = Uri.parse('${ApiConfig.baseUrl}/recipes/suggested');
-    final response = await http.get(url, headers: await _getHeaders());
+    List<Recipe> backendResults = [];
+    try {
+      final url = Uri.parse('${ApiConfig.baseUrl}/recipes/suggested');
+      final response = await http.get(url, headers: await _getHeaders());
 
-    if (response.statusCode == 200) {
-      final results = await compute(_parseRecipesList, response.body);
-      
-      // Merge with temporary local suggestions
-      final merged = await _mergeTemporarySuggestions(results);
-      
-      _cache[cacheKey] = merged;
-      homeSuggestionsNotifier.value = merged;
-      return merged;
-    } else {
-      throw Exception('Unable to load home suggestions.');
-    }
+      if (response.statusCode == 200) {
+        backendResults = await compute(_parseRecipesList, response.body);
+      }
+    } catch (_) {}
+
+    // Merge with temporary local scan suggestions
+    final merged = await _mergeTemporarySuggestions(backendResults);
+    
+    _cache[cacheKey] = merged;
+    homeSuggestionsNotifier.value = merged;
+    return merged;
   }
 
   static const String _tempSuggestionsKey = 'temp_suggestions_v1';
@@ -462,10 +463,8 @@ class RecipeService {
     // Save back
     await DatabaseService.instance.writeCacheRaw(_tempSuggestionsKey, jsonEncode(current.map((r) => r.toJson()).toList()));
     
-    // Refresh notifier if already has data
-    if (homeSuggestionsNotifier.value != null) {
-      await getHomeSuggestions(forceRefresh: true);
-    }
+    // Always refresh notifier immediately
+    await getHomeSuggestions(forceRefresh: true);
   }
 
   Future<void> _removeTemporarySuggestion(String name) async {

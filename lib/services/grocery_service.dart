@@ -131,6 +131,65 @@ class GroceryService {
     }
   }
 
+  Future<List<GroceryItem>> addMultipleGroceryItems({
+    required List<({String name, String quantity, String? icon})> items,
+    String? recipeId,
+    DateTime? date,
+    String? source,
+  }) async {
+    if (items.isEmpty) return myGroceriesNotifier.value ?? [];
+
+    final url = Uri.parse('${ApiConfig.baseUrl}/grocery-items');
+    final headers = await _getHeaders();
+
+    // 1. Insert placeholders optimistic update
+    if (myGroceriesNotifier.value != null) {
+      final placeholders = items.map((ing) => GroceryItem(
+        id: 'pending_${DateTime.now().microsecondsSinceEpoch}_${ing.name}',
+        ingredientName: ing.name,
+        ingredientIcon: ing.icon,
+        quantity: ing.quantity,
+        isBought: false,
+        plannedDate: date,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+        isPlaceholder: true,
+      )).toList();
+      myGroceriesNotifier.value = [...placeholders, ...myGroceriesNotifier.value!];
+    }
+
+    try {
+      // 2. Post all items concurrently in parallel
+      await Future.wait(items.map((ing) async {
+        final response = await _reliableRequest(() async => http.post(
+          url,
+          headers: headers,
+          body: jsonEncode({
+            'ingredientName': ing.name,
+            'ingredientIcon': ing.icon,
+            'quantity': ing.quantity,
+            'recipeId': recipeId,
+            'plannedDate': date?.toIso8601String().split('T')[0],
+          }),
+        ));
+        if (response.statusCode == 200 || response.statusCode == 201) {
+          AnalyticsService.instance.logGroceryItemAdded(name: ing.name, source: source);
+        }
+      }));
+
+      // 3. Single refresh at the end
+      return await getMyGroceries(forceRefresh: true);
+    } catch (e) {
+      // Remove placeholders on error
+      if (myGroceriesNotifier.value != null) {
+        myGroceriesNotifier.value = myGroceriesNotifier.value!
+            .where((item) => !item.isPlaceholder)
+            .toList();
+      }
+      rethrow;
+    }
+  }
+
   Future<InstacartLinkResponse> createInstacartShoppingLink() async {
     final itemsCount = myGroceriesNotifier.value?.length ?? 0;
     AnalyticsService.instance.logInstacartRequestStarted(itemCount: itemsCount);

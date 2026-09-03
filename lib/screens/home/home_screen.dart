@@ -868,6 +868,7 @@ class _HomeTabState extends State<_HomeTab> {
       _onHistoryChanged,
     );
     RecipeService.instance.getMyRecipes();
+    RecipeService.instance.getHomeSuggestions();
   }
 
   @override
@@ -1469,73 +1470,87 @@ class _CookbookCardTile extends StatelessWidget {
           onRefresh?.call();
         }
       },
-      child: Container(
-        padding: EdgeInsets.all(12.w),
-        decoration: BoxDecoration(
-          color: const Color(0xFFFAF3E6),
-          borderRadius: BorderRadius.circular(20.r),
-        ),
-        child: isMain
-            ? Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(16.r),
-                      child: CookbookCover(cookbook: cookbook),
-                    ),
-                  ),
-                  SizedBox(height: 10.h),
-                  Text(
-                    cookbook.name.isEmpty
-                        ? cookbook.name
-                        : cookbook.name[0].toUpperCase() +
-                            cookbook.name.substring(1).toLowerCase(),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontFamily: 'Rubik',
-                      fontWeight: FontWeight.w700,
-                      fontSize: 16.sp,
-                      color: const Color(0xFF0F172A),
-                    ),
-                  ),
-                  SizedBox(height: 4.h),
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.restaurant_menu_rounded,
-                        size: 14.sp,
-                        color: const Color(0xFF475569),
-                      ),
-                      SizedBox(width: 4.w),
-                      Text(
-                        '${cookbook.recipes.length} Recipes',
-                        style: TextStyle(
-                          fontFamily: 'Rubik',
-                          fontSize: 13.sp,
-                          color: const Color(0xFF475569),
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      const Spacer(),
-                      Icon(
-                        Icons.chevron_right_rounded,
-                        size: 18.sp,
-                        color: const Color(0xFF475569),
-                      ),
-                    ],
-                  ),
-                ],
-              )
-            : Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  _buildOverlappingThumbnails(cookbook),
-                  Column(
+      onLongPressStart: (details) {
+        HapticContextMenu.show(
+          context,
+          targetPosition: details.globalPosition,
+          actions: [
+            HapticMenuAction(
+              title: cookbook.isPinned ? 'Unpin Cookbook' : 'Pin Cookbook',
+              icon: cookbook.isPinned
+                  ? Icons.push_pin_rounded
+                  : Icons.push_pin_outlined,
+              onTap: () async {
+                try {
+                  await CookbookService.instance.togglePin(cookbook.id);
+                  onRefresh?.call();
+                } catch (_) {}
+              },
+            ),
+            HapticMenuAction(
+              title: 'Edit Cookbook',
+              icon: Icons.edit_outlined,
+              onTap: () async {
+                final result = await showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                  builder: (context) => CookbookFormModal(cookbook: cookbook),
+                );
+                if (result is Cookbook || result == 'deleted') {
+                  CookbookService.instance.getMyCookbooks(forceRefresh: true);
+                  onRefresh?.call();
+                }
+              },
+            ),
+            HapticMenuAction(
+              title: 'Delete Cookbook',
+              icon: Icons.delete_outline_rounded,
+              isDestructive: true,
+              onTap: () async {
+                try {
+                  await CookbookService.instance.deleteCookbook(cookbook.id);
+                  if (context.mounted) {
+                    IosToast.show(
+                      context,
+                      message: 'Cookbook deleted',
+                      type: ToastType.success,
+                    );
+                  }
+                  onRefresh?.call();
+                } catch (e) {
+                  if (context.mounted) {
+                    IosToast.show(
+                      context,
+                      message: 'Failed to delete cookbook',
+                      type: ToastType.error,
+                    );
+                  }
+                }
+              },
+            ),
+          ],
+        );
+      },
+      child: Stack(
+        children: [
+          Container(
+            padding: EdgeInsets.all(12.w),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFAF3E6),
+              borderRadius: BorderRadius.circular(20.r),
+            ),
+            child: isMain
+                ? Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      Expanded(
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(16.r),
+                          child: CookbookCover(cookbook: cookbook),
+                        ),
+                      ),
+                      SizedBox(height: 10.h),
                       Text(
                         cookbook.name.isEmpty
                             ? cookbook.name
@@ -1546,16 +1561,16 @@ class _CookbookCardTile extends StatelessWidget {
                         style: TextStyle(
                           fontFamily: 'Rubik',
                           fontWeight: FontWeight.w700,
-                          fontSize: 14.sp,
+                          fontSize: 16.sp,
                           color: const Color(0xFF0F172A),
                         ),
                       ),
-                      SizedBox(height: 2.h),
+                      SizedBox(height: 4.h),
                       Row(
                         children: [
                           Icon(
                             Icons.restaurant_menu_rounded,
-                            size: 13.sp,
+                            size: 14.sp,
                             color: const Color(0xFF475569),
                           ),
                           SizedBox(width: 4.w),
@@ -1563,7 +1578,7 @@ class _CookbookCardTile extends StatelessWidget {
                             '${cookbook.recipes.length} Recipes',
                             style: TextStyle(
                               fontFamily: 'Rubik',
-                              fontSize: 12.sp,
+                              fontSize: 13.sp,
                               color: const Color(0xFF475569),
                               fontWeight: FontWeight.w500,
                             ),
@@ -1571,15 +1586,83 @@ class _CookbookCardTile extends StatelessWidget {
                           const Spacer(),
                           Icon(
                             Icons.chevron_right_rounded,
-                            size: 16.sp,
+                            size: 18.sp,
                             color: const Color(0xFF475569),
                           ),
                         ],
                       ),
                     ],
+                  )
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      _buildOverlappingThumbnails(cookbook),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            cookbook.name.isEmpty
+                                ? cookbook.name
+                                : cookbook.name[0].toUpperCase() +
+                                    cookbook.name.substring(1).toLowerCase(),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontFamily: 'Rubik',
+                              fontWeight: FontWeight.w700,
+                              fontSize: 14.sp,
+                              color: const Color(0xFF0F172A),
+                            ),
+                          ),
+                          SizedBox(height: 2.h),
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.restaurant_menu_rounded,
+                                size: 13.sp,
+                                color: const Color(0xFF475569),
+                              ),
+                              SizedBox(width: 4.w),
+                              Text(
+                                '${cookbook.recipes.length} Recipes',
+                                style: TextStyle(
+                                  fontFamily: 'Rubik',
+                                  fontSize: 12.sp,
+                                  color: const Color(0xFF475569),
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              const Spacer(),
+                              Icon(
+                                Icons.chevron_right_rounded,
+                                size: 16.sp,
+                                color: const Color(0xFF475569),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+          ),
+          if (cookbook.isPinned)
+            Positioned(
+              top: 10.h,
+              right: 10.w,
+              child: Icon(
+                Icons.push_pin_rounded,
+                size: 20.sp,
+                color: const Color(0xFFC83A2D),
+                shadows: const [
+                  Shadow(
+                    color: Colors.black26,
+                    blurRadius: 4,
                   ),
                 ],
               ),
+            ),
+        ],
       ),
     );
   }
@@ -1896,6 +1979,73 @@ class _PopulatedSavedRecipesList extends StatelessWidget {
               ctx,
               AppRoutes.recipeDetail,
               arguments: {'recipe': r, 'isPreview': false},
+            );
+          },
+          onLongPressStart: (details) {
+            HapticContextMenu.show(
+              ctx,
+              targetPosition: details.globalPosition,
+              actions: [
+                HapticMenuAction(
+                  title: r.isPinned ? 'Unpin Recipe' : 'Pin Recipe',
+                  icon: r.isPinned
+                      ? Icons.push_pin_rounded
+                      : Icons.push_pin_outlined,
+                  onTap: () {
+                    RecipeService.instance.togglePin(r.id);
+                  },
+                ),
+                HapticMenuAction(
+                  title: r.isInCookbook ? 'Remove from Cookbook' : 'Add to Cookbook',
+                  icon: r.isInCookbook
+                      ? Icons.remove_circle_outline_rounded
+                      : Icons.add_circle_outline_rounded,
+                  isDestructive: r.isInCookbook,
+                  onTap: () {
+                    showModalBottomSheet(
+                      context: ctx,
+                      backgroundColor: Colors.transparent,
+                      barrierColor: Colors.transparent,
+                      isScrollControlled: true,
+                      builder: (_) => AddToCookbookSheet(recipe: r),
+                    );
+                  },
+                ),
+                HapticMenuAction(
+                  title: 'Share Recipe',
+                  icon: Icons.ios_share_rounded,
+                  onTap: () async {
+                    try {
+                      final rawLink =
+                          await RecipeService.instance.getShareLink(r.id);
+                      final link = rawLink
+                          .replaceAll(
+                            'cooked.nixacom.com',
+                            'link.cookedapp.com',
+                          )
+                          .replaceAll(
+                            'https://cookedapp.app',
+                            'https://link.cookedapp.com',
+                          );
+                      final name = r.name;
+                      final creatorStr = r.creator != null
+                          ? "${r.creator!.displayName}'s "
+                          : "";
+                      final template =
+                          "Check out $creatorStr$name on Cooked 🙌\n$link";
+                      Share.share(template);
+                    } catch (_) {}
+                  },
+                ),
+                HapticMenuAction(
+                  title: 'Delete Recipe',
+                  icon: Icons.delete_outline_rounded,
+                  isDestructive: true,
+                  onTap: () {
+                    RecipeService.instance.deleteRecipe(r.id);
+                  },
+                ),
+              ],
             );
           },
         );
@@ -3104,10 +3254,16 @@ class _SavingsCardState extends State<_SavingsCard>
       valueListenable: RecipeService.instance.myRecipesNotifier,
       builder: (context, recipes, _) {
         final myRecipes = recipes ?? [];
-        if (myRecipes.isEmpty) return const SizedBox.shrink();
+        final scanRecipes = myRecipes.where((r) {
+          final origin = r.origin?.toUpperCase();
+          if (origin == 'IMPORT' || origin == 'MANUAL') return false;
+          return origin == 'SCAN' || origin == 'SUGGESTED' || (r.isSuggested && (r.sourceUrl == null || r.sourceUrl!.isEmpty));
+        }).toList();
+
+        if (scanRecipes.isEmpty) return const SizedBox.shrink();
 
         double totalSaved = 0.0;
-        for (var r in myRecipes) {
+        for (var r in scanRecipes) {
           if (r.totalPrice != null && r.totalPrice! > 0) {
             double makeAtHome = r.totalPrice!;
             double orderNearby = makeAtHome * 2.5 + 5.0;
