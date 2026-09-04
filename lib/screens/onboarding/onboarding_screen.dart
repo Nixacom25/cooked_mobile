@@ -622,7 +622,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           context,
           message: registerResult!['info_message'],
           type: ToastType.success);
-        Navigator.pushReplacementNamed(context, AppRoutes.home);
+        Navigator.pushNamedAndRemoveUntil(context, AppRoutes.home, (route) => false);
         return;
       }
 
@@ -922,17 +922,19 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         cookingTime: _cookingTime,
                         onStartCooking: () {
                           if (mounted) {
-                            Navigator.pushReplacementNamed(
+                            Navigator.pushNamedAndRemoveUntil(
                               context,
                               AppRoutes.home,
+                              (route) => false,
                               arguments: {'initialTab': 0});
                           }
                         },
                         onViewMore: () {
                           if (mounted) {
-                            Navigator.pushReplacementNamed(
+                            Navigator.pushNamedAndRemoveUntil(
                               context,
                               AppRoutes.home,
+                              (route) => false,
                               arguments: {'initialTab': 0});
                           }
                         }),  // step 27

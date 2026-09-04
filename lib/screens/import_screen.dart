@@ -290,12 +290,12 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
 
   void _onSearchChanged(String val) {
     if (_searchDebounce?.isActive ?? false) _searchDebounce!.cancel();
-    if (val.trim().length < 2) {
+    if (val.trim().isEmpty) {
       setState(() => _suggestedWebRecipes = []);
       _importSearchOverlayEntry?.markNeedsBuild();
       return;
     }
-    _searchDebounce = Timer(const Duration(milliseconds: 300), () async {
+    _searchDebounce = Timer(const Duration(milliseconds: 150), () async {
       try {
         final res = await IngredientService.instance.searchIngredients(val.trim());
         if (mounted) {

@@ -655,6 +655,30 @@ class RecipeService {
     }
   }
 
+  static const String _recentImportsCacheKey = 'recent_imports_cache_v3';
+
+  Future<void> _saveLocalRecentImports(List<Recipe> recipes) async {
+    try {
+      final jsonList = recipes.map((r) => r.toJson()).toList();
+      await DatabaseService.instance.writeCacheRaw(_recentImportsCacheKey, jsonEncode(jsonList));
+    } catch (e) {
+      debugPrint('Failed to save local recent imports: $e');
+    }
+  }
+
+  List<Recipe> _loadLocalRecentImports() {
+    try {
+      final raw = DatabaseService.instance.readCacheRaw(_recentImportsCacheKey);
+      if (raw != null && raw.isNotEmpty) {
+        final List<dynamic> decoded = jsonDecode(raw);
+        return decoded.map((j) => Recipe.fromJson(j)).toList();
+      }
+    } catch (e) {
+      debugPrint('Failed to load local recent imports: $e');
+    }
+    return [];
+  }
+
   Future<Recipe> importRecipeFromUrl(String url) async {
     final endpoint = Uri.parse('${ApiConfig.baseUrl}/recipes/import');
     final response = await http.post(
@@ -667,11 +691,18 @@ class RecipeService {
       final recipe = Recipe.fromJson(jsonDecode(response.body));
       
       // 1. Instantly update recentImportsNotifier & myRecipesNotifier with the imported recipe
-      final currentRecent = recentImportsNotifier.value ?? [];
-      recentImportsNotifier.value = [
-        recipe,
-        ...currentRecent.where((r) => !r.isPlaceholder && r.id != recipe.id)
-      ];
+      final currentRecent = recentImportsNotifier.value ?? _loadLocalRecentImports();
+      
+      final filteredRecent = currentRecent.where((r) {
+        if (r.id == recipe.id) return false;
+        if (r.sourceUrl != null && recipe.sourceUrl != null && r.sourceUrl!.trim().toLowerCase() == recipe.sourceUrl!.trim().toLowerCase()) return false;
+        if (r.name.isNotEmpty && recipe.name.isNotEmpty && r.name.trim().toLowerCase() == recipe.name.trim().toLowerCase()) return false;
+        return true;
+      }).toList();
+
+      final newRecentList = [recipe, ...filteredRecent];
+      recentImportsNotifier.value = newRecentList;
+      await _saveLocalRecentImports(newRecentList);
 
       final currentMy = myRecipesNotifier.value ?? [];
       myRecipesNotifier.value = [
@@ -756,21 +787,80 @@ class RecipeService {
   }
 
   Future<List<Recipe>> getRecentImports({int page = 0, int size = 6, bool forceRefresh = false}) async {
-    if (!forceRefresh && page == 0 && recentImportsNotifier.value != null) {
+    // If not force refresh, and notifier has data, return it
+    if (!forceRefresh && page == 0 && recentImportsNotifier.value != null && recentImportsNotifier.value!.isNotEmpty) {
       return recentImportsNotifier.value!;
     }
-    final url = Uri.parse(
-      '${ApiConfig.baseUrl}/recipes/imports?page=$page&size=$size',
-    );
-    final response = await http.get(url, headers: await _getHeaders());
 
-    if (response.statusCode == 200) {
-      final recipes = await compute(_parseExploreRecipesData, response.body);
-      recentImportsNotifier.value = recipes;
-      return recipes;
-    } else {
-      throw Exception('Unable to load recent imports.');
+    // Ensure we load from local storage if notifier is currently null
+    if (recentImportsNotifier.value == null) {
+      final local = _loadLocalRecentImports();
+      if (local.isNotEmpty) {
+        recentImportsNotifier.value = local;
+      }
     }
+
+    try {
+      final url = Uri.parse(
+        '${ApiConfig.baseUrl}/recipes/imports?page=$page&size=$size',
+      );
+      final response = await http.get(url, headers: await _getHeaders());
+
+      if (response.statusCode == 200) {
+        final backendRecipes = await compute(_parseExploreRecipesData, response.body);
+        
+        final localImports = _loadLocalRecentImports();
+        final currentNotifier = recentImportsNotifier.value ?? [];
+
+        final Map<String, Recipe> mergedMap = {};
+
+        // 1. Add backend recipes
+        for (var r in backendRecipes) {
+          final key = r.id.isNotEmpty ? r.id : (r.sourceUrl != null && r.sourceUrl!.isNotEmpty ? r.sourceUrl! : r.name.toLowerCase());
+          mergedMap[key] = r;
+        }
+
+        // 2. Add current notifier items (takes precedence for newly imported ones)
+        for (var r in currentNotifier) {
+          final key = r.id.isNotEmpty ? r.id : (r.sourceUrl != null && r.sourceUrl!.isNotEmpty ? r.sourceUrl! : r.name.toLowerCase());
+          if (!mergedMap.containsKey(key)) {
+            mergedMap[key] = r;
+          } else {
+            final existing = mergedMap[key]!;
+            mergedMap[key] = existing.copyWith(
+              sourceUrl: r.sourceUrl ?? existing.sourceUrl,
+              isInCookbook: r.isInCookbook || existing.isInCookbook,
+              isValidated: r.isValidated || existing.isValidated,
+            );
+          }
+        }
+
+        // 3. Add stored local imports
+        for (var r in localImports) {
+          final key = r.id.isNotEmpty ? r.id : (r.sourceUrl != null && r.sourceUrl!.isNotEmpty ? r.sourceUrl! : r.name.toLowerCase());
+          if (!mergedMap.containsKey(key)) {
+            mergedMap[key] = r;
+          }
+        }
+
+        final List<Recipe> mergedList = mergedMap.values.toList();
+        mergedList.sort((a, b) {
+          final aTime = a.createdAt;
+          final bTime = b.createdAt;
+          return bTime.compareTo(aTime);
+        });
+
+        recentImportsNotifier.value = mergedList;
+        await _saveLocalRecentImports(mergedList);
+        return mergedList;
+      }
+    } catch (e) {
+      debugPrint('getRecentImports backend error: $e');
+    }
+
+    final fallback = recentImportsNotifier.value ?? _loadLocalRecentImports();
+    recentImportsNotifier.value = fallback;
+    return fallback;
   }
 
   Future<http.Response> _reliableRequest(
@@ -877,6 +967,7 @@ class RecipeService {
       recentImportsNotifier.value = recentImportsNotifier.value!
           .where((r) => r.id != id)
           .toList();
+      _saveLocalRecentImports(recentImportsNotifier.value!);
     }
     if (homeSuggestionsNotifier.value != null) {
       homeSuggestionsNotifier.value = homeSuggestionsNotifier.value!

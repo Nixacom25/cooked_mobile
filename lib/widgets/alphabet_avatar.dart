@@ -6,7 +6,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
-
 import '../services/user_service.dart';
 import '../core/widgets/ios_toast.dart';
 import '../core/utils/error_helper.dart';
@@ -19,6 +18,8 @@ class AlphabetAvatar extends StatelessWidget {
   final VoidCallback? onTap;
   final bool showEditBadge;
 
+  final double? borderWidth;
+
   const AlphabetAvatar({
     super.key,
     required this.name,
@@ -27,6 +28,7 @@ class AlphabetAvatar extends StatelessWidget {
     this.size = 40,
     this.onTap,
     this.showEditBadge = false,
+    this.borderWidth,
   });
 
   String get _firstLetter {
@@ -68,11 +70,11 @@ class AlphabetAvatar extends StatelessWidget {
       context: context,
       barrierDismissible: true,
       barrierLabel: 'Dismiss',
-      barrierColor: Colors.black.withValues(alpha: 0.55),
-      transitionDuration: const Duration(milliseconds: 250),
+      barrierColor: Colors.black.withValues(alpha: 0.62),
+      transitionDuration: const Duration(milliseconds: 350),
       pageBuilder: (ctx, anim1, anim2) {
         return BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+          filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
           child: SafeArea(
             child: Stack(
               children: [
@@ -92,143 +94,115 @@ class AlphabetAvatar extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.center,
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        // Enlarged Profile Photo with sleek white border & shadow
+                        // Enlarged Hero Profile Photo
                         Container(
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             border: Border.all(
-                              color: Colors.white,
-                              width: 3.5.w,
+                              color: Colors.white.withValues(alpha: 0.4),
+                              width: 1.w,
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.35),
-                                blurRadius: 24,
-                                offset: const Offset(0, 8),
+                                color: Colors.black.withValues(alpha: 0.45),
+                                blurRadius: 32.r,
+                                offset: Offset(0, 12.h),
                               ),
                             ],
                           ),
                           child: AlphabetAvatar(
                             name: name,
                             photoUrl: photoUrl,
-                            size: 130.r,
+                            size: 240.r,
+                            borderWidth: 0,
                             showEditBadge: false,
                           ),
                         ),
-                        SizedBox(height: 20.h),
+                        SizedBox(height: 24.h),
 
-                        // Action Menu Card styled like header bottom / bottom nav frosted glass
+                        // Action Menu Card styled with premium frosted glass finish
                         ClipRRect(
-                          borderRadius: BorderRadius.circular(22.r),
+                          borderRadius: BorderRadius.circular(28.r),
                           child: BackdropFilter(
-                            filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
+                            filter: ImageFilter.blur(sigmaX: 35, sigmaY: 35),
                             child: Container(
-                              width: 290.w,
+                              width: 310.w,
+                              padding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 10.w),
                               decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(22.r),
+                                gradient: LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                  colors: [
+                                    Colors.white.withValues(alpha: 0.25),
+                                    Colors.white.withValues(alpha: 0.10),
+                                    const Color(0xFF0F172A).withValues(alpha: 0.70),
+                                  ],
+                                  stops: const [0.0, 0.35, 1.0],
+                                ),
+                                borderRadius: BorderRadius.circular(28.r),
                                 border: Border.all(
-                                  color: Colors.white.withValues(alpha: 0.35),
+                                  color: Colors.white.withValues(alpha: 0.38),
                                   width: 1.2,
                                 ),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.3),
-                                    blurRadius: 24,
-                                    offset: const Offset(0, 8),
+                                    color: Colors.black.withValues(alpha: 0.35),
+                                    blurRadius: 32.r,
+                                    offset: Offset(0, 12.h),
+                                  ),
+                                  BoxShadow(
+                                    color: Colors.white.withValues(alpha: 0.12),
+                                    blurRadius: 10.r,
+                                    spreadRadius: -2.r,
+                                    offset: const Offset(0, 1),
                                   ),
                                 ],
                               ),
                               child: Material(
-                                color: const Color(0xFF1E293B).withValues(alpha: 0.88),
-                                borderRadius: BorderRadius.circular(22.r),
-                                child: Padding(
-                                  padding: EdgeInsets.symmetric(
-                                    vertical: 6.h,
-                                    horizontal: 8.w,
-                                  ),
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      ListTile(
-                                        dense: true,
-                                        contentPadding: EdgeInsets.symmetric(
-                                          horizontal: 12.w,
-                                          vertical: 2.h,
-                                        ),
-                                        leading: Icon(
-                                          Icons.image_outlined,
-                                          color: Colors.white,
-                                          size: 22.sp,
-                                        ),
-                                        title: Text(
-                                          'Choose from library',
-                                          style: TextStyle(
-                                            fontFamily: 'Rubik',
-                                            fontSize: 15.sp,
-                                            fontWeight: FontWeight.w400,
-                                            color: Colors.white,
-                                          ),
-                                        ),
-                                        onTap: () => Navigator.pop(ctx, 'gallery'),
+                                color: Colors.transparent,
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    // 1. Choose from library
+                                    _buildPickerItem(
+                                      icon: Icons.photo_library_outlined,
+                                      title: 'Choose from library',
+                                      color: Colors.white,
+                                      onTap: () => Navigator.pop(ctx, 'gallery'),
+                                    ),
+                                    Padding(
+                                      padding: EdgeInsets.symmetric(horizontal: 12.w),
+                                      child: Divider(
+                                        color: Colors.white.withValues(alpha: 0.15),
+                                        height: 1.h,
+                                        thickness: 0.8,
                                       ),
-                                      Divider(
-                                        height: 1,
-                                        color: Colors.white.withValues(alpha: 0.12),
-                                        indent: 12.w,
-                                        endIndent: 12.w,
+                                    ),
+
+                                    // 2. Take photo
+                                    _buildPickerItem(
+                                      icon: Icons.camera_alt_outlined,
+                                      title: 'Take photo',
+                                      color: Colors.white,
+                                      onTap: () => Navigator.pop(ctx, 'camera'),
+                                    ),
+                                    Padding(
+                                      padding: EdgeInsets.symmetric(horizontal: 12.w),
+                                      child: Divider(
+                                        color: Colors.white.withValues(alpha: 0.15),
+                                        height: 1.h,
+                                        thickness: 0.8,
                                       ),
-                                      ListTile(
-                                        dense: true,
-                                        contentPadding: EdgeInsets.symmetric(
-                                          horizontal: 12.w,
-                                          vertical: 2.h,
-                                        ),
-                                        leading: Icon(
-                                          Icons.camera_alt_outlined,
-                                          color: Colors.white,
-                                          size: 22.sp,
-                                        ),
-                                        title: Text(
-                                          'Take photo',
-                                          style: TextStyle(
-                                            fontFamily: 'Rubik',
-                                            fontSize: 15.sp,
-                                            fontWeight: FontWeight.w400,
-                                            color: Colors.white,
-                                          ),
-                                        ),
-                                        onTap: () => Navigator.pop(ctx, 'camera'),
-                                      ),
-                                      Divider(
-                                        height: 1,
-                                        color: Colors.white.withValues(alpha: 0.12),
-                                        indent: 12.w,
-                                        endIndent: 12.w,
-                                      ),
-                                      ListTile(
-                                        dense: true,
-                                        contentPadding: EdgeInsets.symmetric(
-                                          horizontal: 12.w,
-                                          vertical: 2.h,
-                                        ),
-                                        leading: Icon(
-                                          Icons.delete_outline_rounded,
-                                          color: const Color(0xFFF87171),
-                                          size: 22.sp,
-                                        ),
-                                        title: Text(
-                                          'Delete',
-                                          style: TextStyle(
-                                            fontFamily: 'Rubik',
-                                            fontSize: 15.sp,
-                                            fontWeight: FontWeight.w500,
-                                            color: const Color(0xFFF87171),
-                                          ),
-                                        ),
-                                        onTap: () => Navigator.pop(ctx, 'delete'),
-                                      ),
-                                    ],
-                                  ),
+                                    ),
+
+                                    // 3. Delete
+                                    _buildPickerItem(
+                                      icon: Icons.delete_outline_rounded,
+                                      title: 'Delete',
+                                      color: const Color(0xFFFF6B6B),
+                                      onTap: () => Navigator.pop(ctx, 'delete'),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ),
@@ -244,12 +218,16 @@ class AlphabetAvatar extends StatelessWidget {
         );
       },
       transitionBuilder: (ctx, anim1, anim2, child) {
+        final double scaleProgress = CurvedAnimation(
+          parent: anim1,
+          curve: Curves.easeOutBack,
+          reverseCurve: Curves.easeInCubic,
+        ).value;
+
         return FadeTransition(
           opacity: anim1,
-          child: ScaleTransition(
-            scale: Tween<double>(begin: 0.92, end: 1.0).animate(
-              CurvedAnimation(parent: anim1, curve: Curves.easeOutCubic),
-            ),
+          child: Transform.scale(
+            scale: Tween<double>(begin: 0.25, end: 1.0).transform(scaleProgress),
             child: child,
           ),
         );
@@ -275,9 +253,9 @@ class AlphabetAvatar extends StatelessWidget {
       return;
     }
 
-    final ImageSource? source = action == 'camera'
+    final ImageSource? source = (action == 'camera')
         ? ImageSource.camera
-        : (action == 'gallery' ? ImageSource.gallery : null);
+        : (action == 'gallery' || action == 'facebook' ? ImageSource.gallery : null);
 
     if (source != null) {
       try {
@@ -307,6 +285,59 @@ class AlphabetAvatar extends StatelessWidget {
     }
   }
 
+  static Widget _buildPickerItem({
+    required IconData icon,
+    required String title,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        splashColor: Colors.white.withValues(alpha: 0.15),
+        highlightColor: Colors.white.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(16.r),
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
+          child: Row(
+            children: [
+              Container(
+                padding: EdgeInsets.all(8.r),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.12),
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.25),
+                    width: 0.8,
+                  ),
+                ),
+                child: Icon(icon, color: color, size: 20.sp),
+              ),
+              SizedBox(width: 14.w),
+              Text(
+                title,
+                style: TextStyle(
+                  fontFamily: 'Rubik',
+                  fontSize: 16.sp,
+                  fontWeight: FontWeight.w500,
+                  color: color,
+                  letterSpacing: -0.2,
+                ),
+              ),
+              const Spacer(),
+              Icon(
+                Icons.chevron_right_rounded,
+                color: color.withValues(alpha: 0.5),
+                size: 20.sp,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final effectiveLetter = _firstLetter;
@@ -327,16 +358,20 @@ class AlphabetAvatar extends StatelessWidget {
       avatarContent = _buildLetterAvatar(effectiveLetter, fontSize, strokeWidth);
     }
 
+    final double effectiveBorderWidth = borderWidth ?? (size * 0.04).clamp(1.5, 3.5);
+
     Widget mainAvatar = Container(
       width: size,
       height: size,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         color: const Color(0xFFF8FAFC),
-        border: Border.all(
-          color: Colors.white,
-          width: (size * 0.04).clamp(1.5, 3.5),
-        ),
+        border: effectiveBorderWidth > 0
+            ? Border.all(
+                color: Colors.white,
+                width: effectiveBorderWidth,
+              )
+            : null,
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.1),

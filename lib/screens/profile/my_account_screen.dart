@@ -1,9 +1,6 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
 
 import '../../core/extensions/string_extensions.dart';
@@ -102,10 +99,6 @@ class _MyAccountScreenState extends State<MyAccountScreen> {
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
-  }
-
-  Future<void> _pickImage() async {
-    await AlphabetAvatar.showPhotoPicker(context);
   }
 
   @override
@@ -379,17 +372,6 @@ class _MyAccountScreenState extends State<MyAccountScreen> {
       fontSize: 15.sp,
       fontWeight: FontWeight.w500,
       color: const Color(0xFF0F172A),
-    );
-  }
-
-  Widget _defaultAvatar() {
-    return Container(
-      color: const Color(0xFFE2E8F0),
-      child: Icon(
-        Icons.person_rounded,
-        size: 50.sp,
-        color: const Color(0xFF94A3B8),
-      ),
     );
   }
 }

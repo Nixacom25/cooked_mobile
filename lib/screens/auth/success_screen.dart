@@ -74,9 +74,10 @@ class SuccessScreen extends StatelessWidget {
                 height: 52.h,
                 fontSize: 16.sp,
                 onTap: () {
-                  Navigator.pushReplacementNamed(
+                  Navigator.pushNamedAndRemoveUntil(
                     context,
                     AppRoutes.home,
+                    (route) => false,
                     arguments: {'initialTab': 0},
                   );
                 },

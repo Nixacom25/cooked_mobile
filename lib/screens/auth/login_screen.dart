@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import '../../core/theme/app_theme.dart';
 import '../../routes/app_routes.dart';
 import '../../services/auth_service.dart';
 import '../../core/widgets/ios_toast.dart';
@@ -9,9 +8,6 @@ import '../../widgets/glass_icon_button.dart';
 import '../../widgets/red_button.dart';
 import '../../widgets/red_header_background.dart';
 import '../../core/utils/error_helper.dart';
-import '../premium/paywall_screen.dart';
-import '../../services/paywall_service.dart';
-import '../../core/api_config.dart';
 import '../../services/user_service.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -184,7 +180,7 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       await UserService.instance.getCurrentUser();
     } catch (_) {}
-    nav.pushReplacementNamed(AppRoutes.home);
+    nav.pushNamedAndRemoveUntil(AppRoutes.home, (route) => false);
   }
 
   @override

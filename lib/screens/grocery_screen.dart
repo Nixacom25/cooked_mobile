@@ -467,7 +467,7 @@ class GroceryScreenState extends State<GroceryScreen> with SingleTickerProviderS
                             return const SizedBox.shrink();
                           }
 
-                          const bool showInstacart = false;
+                          final bool showInstacart = true;
 
                           return Positioned(
                             bottom: 120.h,
@@ -993,7 +993,7 @@ class _AddGrocerySheetState extends State<_AddGrocerySheet> {
     final query = _nameController.text.trim();
     if (_searchDebounce?.isActive ?? false) _searchDebounce!.cancel();
 
-    if (query.length < 2 || query.toLowerCase() == _lastSelectedName.toLowerCase()) {
+    if (query.isEmpty || query.toLowerCase() == _lastSelectedName.toLowerCase()) {
       if (_suggestedIngredients.isNotEmpty) {
         setState(() => _suggestedIngredients = []);
       }
@@ -1002,7 +1002,7 @@ class _AddGrocerySheetState extends State<_AddGrocerySheet> {
     
     _lastSelectedName = '';
 
-    _searchDebounce = Timer(const Duration(milliseconds: 300), () async {
+    _searchDebounce = Timer(const Duration(milliseconds: 150), () async {
       final results = await IngredientService.instance.searchIngredients(query);
       if (mounted) setState(() => _suggestedIngredients = results);
     });
@@ -1039,26 +1039,6 @@ class _AddGrocerySheetState extends State<_AddGrocerySheet> {
     _nameController.dispose();
     _qtyController.dispose();
     super.dispose();
-  }
-
-  Future<void> _pickDate() async {
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: _date,
-      firstDate: DateTime(2020),
-      lastDate: DateTime(2030),
-      builder: (ctx, child) => Theme(
-        data: Theme.of(ctx).copyWith(
-          colorScheme: const ColorScheme.light(
-            primary: Color(0xFFC83A2D),
-            onPrimary: Colors.white,
-            onSurface: Color(0xFF0F172A),
-          ),
-        ),
-        child: child!,
-      ),
-    );
-    if (picked != null) setState(() => _date = picked);
   }
 
   @override
@@ -1174,7 +1154,7 @@ class _AddGrocerySheetState extends State<_AddGrocerySheet> {
 
                   // Field 2: Item Entry Row
                   Text(
-                    'Recipe',
+                    'Ingredient',
                     style: TextStyle(
                       fontFamily: 'Rubik',
                       fontWeight: FontWeight.w600,

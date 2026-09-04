@@ -29,7 +29,6 @@ import '../../models/cookbook.dart';
 import '../../widgets/recipe_card.dart';
 import '../../widgets/cookbook_cover.dart';
 import '../../core/widgets/ios_toast.dart';
-import '../../core/api_config.dart';
 import '../../core/utils/tutorial_helper.dart';
 import '../../widgets/add_to_cookbook_sheet.dart';
 import '../../widgets/cookbook_form_modal.dart';
@@ -299,14 +298,24 @@ class _HomeScreenState extends State<HomeScreen>
   @override
   Widget build(BuildContext context) {
     final isKeyboardOpen = MediaQuery.of(context).viewInsets.bottom > 0;
-    return Scaffold(
-      backgroundColor: const Color(0xFFC31E26),
-      resizeToAvoidBottomInset: false,
-      extendBody: true,
-      body: NotificationListener<ScrollNotification>(
-        onNotification: _handleScroll,
-        child: Stack(
-          children: [
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        if (_currentTab != 0) {
+          _switchTab(0);
+        } else {
+          SystemNavigator.pop();
+        }
+      },
+      child: Scaffold(
+        backgroundColor: const Color(0xFFC31E26),
+        resizeToAvoidBottomInset: false,
+        extendBody: true,
+        body: NotificationListener<ScrollNotification>(
+          onNotification: _handleScroll,
+          child: Stack(
+            children: [
             IndexedStack(index: _currentTab, children: _tabWidgets),
 
             // Test animation FAB raised above bottom nav
@@ -467,8 +476,9 @@ class _HomeScreenState extends State<HomeScreen>
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }
 
 // ── Floating pill bottom nav ───────────────────────────────────────────────────

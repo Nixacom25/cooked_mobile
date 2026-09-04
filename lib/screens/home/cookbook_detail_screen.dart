@@ -2,9 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:share_plus/share_plus.dart';
-
 import '../../routes/app_routes.dart';
 import '../../widgets/app_search_field.dart';
 import '../../models/cookbook.dart';
@@ -20,7 +18,6 @@ import '../../widgets/cookbook_form_modal.dart';
 import '../../widgets/add_to_cookbook_sheet.dart';
 import '../../widgets/haptic_context_menu.dart';
 import '../../widgets/glass_icon_button.dart';
-import '../../widgets/app_top_header.dart';
 import '../../widgets/red_header_background.dart';
 import '../../widgets/saved_recipe_card.dart';
 

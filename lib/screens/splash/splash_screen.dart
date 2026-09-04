@@ -50,18 +50,18 @@ class _SplashScreenState extends State<SplashScreen>
         final bool isUserPremium = UserService.instance.isPremium;
         if (!isUserPremium) {
           await AuthService.instance.logout();
-          Navigator.pushReplacementNamed(context, AppRoutes.welcome);
+          Navigator.pushNamedAndRemoveUntil(context, AppRoutes.welcome, (route) => false);
         } else {
-          Navigator.pushReplacementNamed(context, AppRoutes.home);
+          Navigator.pushNamedAndRemoveUntil(context, AppRoutes.home, (route) => false);
         }
       } catch (e) {
         // If token is invalid or expired, force logout and go to welcome
         await AuthService.instance.logout();
         if (!mounted) return;
-        Navigator.pushReplacementNamed(context, AppRoutes.welcome);
+        Navigator.pushNamedAndRemoveUntil(context, AppRoutes.welcome, (route) => false);
       }
     } else {
-      Navigator.pushReplacementNamed(context, AppRoutes.welcome);
+      Navigator.pushNamedAndRemoveUntil(context, AppRoutes.welcome, (route) => false);
     }
   }
 

@@ -168,7 +168,7 @@ class _FallbackScanAnimationState extends State<_FallbackScanAnimation> {
     if (!isTestEnv) {
       _fileLoader = FileLoader.fromAsset(
         'assets/cooked.riv',
-        riveFactory: Factory.flutter,
+        riveFactory: Factory.rive,
       )..file();
     }
   }

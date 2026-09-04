@@ -357,8 +357,18 @@ class _CookedAppState extends State<CookedApp> with WidgetsBindingObserver {
 
               // 🛡️ Navigation Guard
               if (isLoggedIn) {
-                if (name == AppRoutes.welcome || name == AppRoutes.login) {
-                  return MaterialPageRoute(builder: (_) => const HomeScreen());
+                if (name == AppRoutes.welcome ||
+                    name == AppRoutes.login ||
+                    name == AppRoutes.otp ||
+                    name == AppRoutes.success ||
+                    name == AppRoutes.forgotPassword ||
+                    name == AppRoutes.forgotOtp ||
+                    name == AppRoutes.resetPassword ||
+                    name == AppRoutes.forgotSuccess) {
+                  return MaterialPageRoute(
+                    builder: (_) => const HomeScreen(),
+                    settings: settings,
+                  );
                 }
               }
 
