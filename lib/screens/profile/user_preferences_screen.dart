@@ -358,6 +358,7 @@ class _UserPreferencesScreenState extends State<UserPreferencesScreen> {
                                   'Food Dislikes',
                                   DislikesStep(
                                     initialSelected: _selectedDislikes,
+                                    isFromProfile: true,
                                     onChanged: (val) =>
                                         setState(() => _selectedDislikes = val),
                                   ),

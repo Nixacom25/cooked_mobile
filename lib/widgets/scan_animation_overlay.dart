@@ -10,6 +10,7 @@ class ScanAnimationOverlay extends StatefulWidget {
   final VoidCallback onAnimationComplete;
   final String? imagePath;
   final bool showTestControls;
+  final bool skipImageAnalysis;
 
   const ScanAnimationOverlay({
     super.key,
@@ -18,6 +19,7 @@ class ScanAnimationOverlay extends StatefulWidget {
     required this.onAnimationComplete,
     this.imagePath,
     this.showTestControls = false,
+    this.skipImageAnalysis = false,
   });
 
   @override
@@ -32,11 +34,11 @@ class _ScanAnimationOverlayState extends State<ScanAnimationOverlay> {
   @override
   void initState() {
     super.initState();
-    _RiveScanPreloader.preload();
 
     if (!widget.showTestControls) {
-      // Allow 1 quick scan loop (2.0s) minimum before dismissing once AI data is ready
-      _minAnimationTimer = Timer(const Duration(milliseconds: 2000), () {
+      // If skipping image analysis (from Type/Saved tabs), min duration is shorter (500ms vs 2000ms)
+      final int minDurationMs = widget.skipImageAnalysis ? 500 : 2000;
+      _minAnimationTimer = Timer(Duration(milliseconds: minDurationMs), () {
         if (mounted) {
           setState(() {
             _minAnimationFinished = true;
@@ -89,8 +91,10 @@ class _ScanAnimationOverlayState extends State<ScanAnimationOverlay> {
       color: Colors.white,
       child: Stack(
         children: [
-          const Positioned.fill(
-            child: _FallbackScanAnimation(),
+          Positioned.fill(
+            child: _FallbackScanAnimation(
+              skipImageAnalysis: widget.skipImageAnalysis,
+            ),
           ),
           if (widget.showTestControls)
             Positioned(
@@ -143,33 +147,9 @@ class _ScanAnimationOverlayState extends State<ScanAnimationOverlay> {
 /// et si le fichier est absent / corrompu / mal déclaré, retombe sur
 /// l'animation Flutter native (_NativeSpinnerFallback) pour ne jamais
 /// bloquer l'écran.
-/// Gestionnaire de pré-chargement en mémoire pour annuler toute latence d'E/S
-class _RiveScanPreloader {
-  static FileLoader? _cachedLoader;
-
-  static FileLoader? getLoader() {
-    final bool isTestEnv = WidgetsBinding.instance.runtimeType
-        .toString()
-        .toLowerCase()
-        .contains('test');
-
-    if (isTestEnv) {
-      return null;
-    }
-
-    return _cachedLoader ??= FileLoader.fromAsset(
-      'assets/cooked.riv',
-      riveFactory: Factory.rive,
-    )..file(); // Pré-charge les octets en arrière-plan immédiatement
-  }
-
-  static void preload() {
-    getLoader();
-  }
-}
-
 class _FallbackScanAnimation extends StatefulWidget {
-  const _FallbackScanAnimation();
+  final bool skipImageAnalysis;
+  const _FallbackScanAnimation({this.skipImageAnalysis = false});
 
   @override
   State<_FallbackScanAnimation> createState() => _FallbackScanAnimationState();
@@ -181,18 +161,22 @@ class _FallbackScanAnimationState extends State<_FallbackScanAnimation> {
   @override
   void initState() {
     super.initState();
-    _fileLoader = _RiveScanPreloader.getLoader();
-  }
-
-  @override
-  Widget build(BuildContext context) {
     final bool isTestEnv = WidgetsBinding.instance.runtimeType
         .toString()
         .toLowerCase()
         .contains('test');
+    if (!isTestEnv) {
+      _fileLoader = FileLoader.fromAsset(
+        'assets/cooked.riv',
+        riveFactory: Factory.flutter,
+      )..file();
+    }
+  }
 
-    if (isTestEnv || _fileLoader == null) {
-      return const _NativeSpinnerFallback();
+  @override
+  Widget build(BuildContext context) {
+    if (_fileLoader == null) {
+      return _NativeSpinnerFallback(skipImageAnalysis: widget.skipImageAnalysis);
     }
 
     return SizedBox.expand(
@@ -201,14 +185,37 @@ class _FallbackScanAnimationState extends State<_FallbackScanAnimation> {
         artboardSelector: const ArtboardDefault(),
         stateMachineSelector: const StateMachineDefault(),
         onLoaded: (RiveLoaded state) {
-          debugPrint('✅ Rive animation cooked.riv loaded with 0-latency!');
+          debugPrint('✅ Rive animation cooked.riv loaded using Factory.flutter!');
+          final sm = state.controller.stateMachine;
+          final artboard = state.controller.artboard;
+
+          // If skipImageAnalysis is requested (Type / Saved tabs), fast-forward past scanning intro instantly
+          if (widget.skipImageAnalysis) {
+            try {
+              sm.advance(3.0, true);
+              artboard.advance(3.0);
+            } catch (e) {
+              debugPrint('Rive advance notice: $e');
+            }
+          }
+
           try {
             // ignore: deprecated_member_use
-            final burst = state.controller.stateMachine.boolean('burstActive');
+            final burst = sm.boolean('burstActive');
             burst?.value = true;
           } catch (e) {
             debugPrint('Rive input burstActive notice: $e');
           }
+
+          try {
+            // ignore: deprecated_member_use
+            final skipScan = sm.boolean('skipScan') ??
+                // ignore: deprecated_member_use
+                sm.boolean('directRecipes') ??
+                // ignore: deprecated_member_use
+                sm.boolean('cookingPhase');
+            skipScan?.value = widget.skipImageAnalysis;
+          } catch (_) {}
         },
         onFailed: (Object error, StackTrace stackTrace) {
           debugPrint('❌ RIVE LOAD ERROR: $error\n$stackTrace');
@@ -224,9 +231,10 @@ class _FallbackScanAnimationState extends State<_FallbackScanAnimation> {
               );
             case RiveFailed():
               debugPrint('⚠️ Rive state is RiveFailed, using fallback spinner');
-              return const _NativeSpinnerFallback();
+              return _NativeSpinnerFallback(skipImageAnalysis: widget.skipImageAnalysis);
             case RiveLoading():
-              return const _NativeSpinnerFallback();
+              // Do not display spinner before Rive launches - keep background clean
+              return const SizedBox.expand();
           }
         },
       ),
@@ -237,7 +245,8 @@ class _FallbackScanAnimationState extends State<_FallbackScanAnimation> {
 /// Ancien spinner Flutter natif, conservé tel quel comme filet de sécurité
 /// final si ni la vidéo ni le Rive ne peuvent être chargés.
 class _NativeSpinnerFallback extends StatefulWidget {
-  const _NativeSpinnerFallback();
+  final bool skipImageAnalysis;
+  const _NativeSpinnerFallback({this.skipImageAnalysis = false});
 
   @override
   State<_NativeSpinnerFallback> createState() => _NativeSpinnerFallbackState();
@@ -308,7 +317,7 @@ class _NativeSpinnerFallbackState extends State<_NativeSpinnerFallback>
           ),
           SizedBox(height: 24.h),
           Text(
-            'Analyzing recipe...',
+            widget.skipImageAnalysis ? 'Generating recipes...' : 'Analyzing recipe...',
             style: TextStyle(
               fontFamily: 'Rubik',
               fontWeight: FontWeight.w700,

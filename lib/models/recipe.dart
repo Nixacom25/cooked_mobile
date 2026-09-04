@@ -23,7 +23,7 @@ class Recipe {
   final String? origin;
   final String? cuisine;
   final bool isSuggested;
-  final bool isInCookbook;
+  bool isInCookbook;
   final bool isPinned;
   final bool isValidated;
   final bool isPlaceholder;

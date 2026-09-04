@@ -719,24 +719,14 @@ class _AnimatedScanButton extends StatefulWidget {
 class _AnimatedScanButtonState extends State<_AnimatedScanButton>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
-  late Animation<double> _scaleAnimation;
-  late Animation<double> _glowAnimation;
 
   @override
   void initState() {
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 2000),
+      duration: const Duration(milliseconds: 1600),
     )..repeat(reverse: true);
-
-    _scaleAnimation = Tween<double>(begin: 1.0, end: 1.07).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
-
-    _glowAnimation = Tween<double>(begin: 0.28, end: 0.65).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
   }
 
   @override
@@ -747,50 +737,83 @@ class _AnimatedScanButtonState extends State<_AnimatedScanButton>
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, child) {
-        final scale = _scaleAnimation.value;
-        final glowAlpha = _glowAnimation.value;
+    final double iconSize = 30.r;
+    final double barHeight = 3.h;
+    final double maxMove = iconSize - barHeight;
 
-        return GestureDetector(
-          onTap: () {
-            HapticFeedback.mediumImpact();
-            widget.onTap();
-          },
-          child: Transform.scale(
-            scale: scale,
-            child: Container(
-              key: widget.scanTabKey,
-              width: 56.r,
-              height: 56.r,
-              decoration: BoxDecoration(
-                color: const Color(0xFFC83A2D),
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFFC83A2D).withValues(alpha: glowAlpha),
-                    blurRadius: (12 * scale).r,
-                    spreadRadius: (1.5 * (scale - 1.0)).r,
-                    offset: Offset(0, 5.h),
-                  ),
-                ],
-              ),
-              child: Center(
-                child: SvgPicture.asset(
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.mediumImpact();
+        widget.onTap();
+      },
+      child: Container(
+        key: widget.scanTabKey,
+        width: 56.r,
+        height: 56.r,
+        decoration: BoxDecoration(
+          color: const Color(0xFFC83A2D),
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFFC83A2D).withValues(alpha: 0.45),
+              blurRadius: 10.r,
+              offset: Offset(0, 4.h),
+            ),
+          ],
+        ),
+        child: Center(
+          child: SizedBox(
+            width: iconSize,
+            height: iconSize,
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                SvgPicture.asset(
                   'assets/icones/scans1.svg',
-                  width: 30.w,
-                  height: 30.h,
+                  width: iconSize,
+                  height: iconSize,
                   colorFilter: const ColorFilter.mode(
                     Colors.white,
                     BlendMode.srcIn,
                   ),
                 ),
-              ),
+                AnimatedBuilder(
+                  animation: _controller,
+                  builder: (context, child) {
+                    final topPos = CurvedAnimation(
+                      parent: _controller,
+                      curve: Curves.easeInOut,
+                    ).value * maxMove;
+
+                    return Positioned(
+                      top: topPos,
+                      left: 0,
+                      right: 0,
+                      child: Center(
+                        child: Container(
+                          width: iconSize,
+                          height: barHeight,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(2.r),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.white.withValues(alpha: 0.85),
+                                blurRadius: 4,
+                                spreadRadius: 0.5,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ],
             ),
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 }

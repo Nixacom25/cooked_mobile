@@ -229,6 +229,24 @@ class UserService {
     await getCurrentUser();
   }
 
+  Future<void> deleteProfilePhoto() async {
+    try {
+      final url = Uri.parse('${ApiConfig.baseUrl}/user/profile-photo');
+      final response = await http.delete(url, headers: await _getHeaders());
+      if (response.statusCode == 200 || response.statusCode == 204) {
+        await getCurrentUser();
+        return;
+      }
+    } catch (_) {}
+
+    // Fallback: update local user state
+    if (currentUserNotifier.value != null) {
+      final updated = Map<String, dynamic>.from(currentUserNotifier.value!);
+      updated['profilePictureUrl'] = null;
+      currentUserNotifier.value = updated;
+    }
+  }
+
   Future<List<ActivityLog>> getActivities({int page = 0, int size = 20}) async {
     final url = Uri.parse(
       '${ApiConfig.baseUrl}/activities?page=$page&size=$size',

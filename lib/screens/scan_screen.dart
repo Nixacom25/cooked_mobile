@@ -635,6 +635,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                 detectedIngredients: _overlayDetectedIngredients,
                 generatedRecipes: _overlayGeneratedRecipes,
                 imagePath: _capturedImagePath,
+                skipImageAnalysis: _state == ScanState.type || _state == ScanState.saved,
                 onAnimationComplete: () {
                   setState(() {
                     _showAnimationOverlay = false;
@@ -1613,7 +1614,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
           ),
           SizedBox(height: 4.h),
           Text(
-            'We found $ingredientCount items in your kitchen',
+            'We found ${_recipes.length} ${_recipes.length == 1 ? "recipe" : "recipes"} for you',
             style: TextStyle(
               fontFamily: 'Rubik',
               fontSize: 13.sp,

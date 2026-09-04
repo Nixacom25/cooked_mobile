@@ -282,16 +282,9 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
     );
   }
 
-  bool _checkIsInCookbook(Recipe? r, List<Recipe>? savedRecipes, List<Cookbook>? cookbooks) {
+  bool _checkIsInCookbook(Recipe? r, List<Cookbook>? cookbooks) {
     if (r == null) return false;
     if (r.isInCookbook) return true;
-
-    if (savedRecipes != null) {
-      final inSaved = savedRecipes.any(
-        (saved) => (saved.id == r.id || (saved.name.isNotEmpty && saved.name.toLowerCase() == r.name.toLowerCase())),
-      );
-      if (inSaved) return true;
-    }
 
     if (cookbooks != null) {
       for (final cb in cookbooks) {
@@ -301,6 +294,19 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
       }
     }
 
+    return false;
+  }
+
+  bool _checkIsFavorite(Recipe? r, List<Recipe>? savedRecipes) {
+    if (r == null) return false;
+    if (r.isFavorite) return true;
+
+    if (savedRecipes != null) {
+      final inSaved = savedRecipes.any(
+        (saved) => (saved.id == r.id || (saved.name.isNotEmpty && saved.name.toLowerCase() == r.name.toLowerCase())),
+      );
+      if (inSaved) return true;
+    }
     return false;
   }
 
@@ -404,55 +410,55 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                             child: ValueListenableBuilder<List<Recipe>?>(
                               valueListenable: RecipeService.instance.myRecipesNotifier,
                               builder: (context, savedRecipes, _) {
-                                return ValueListenableBuilder<List<Cookbook>?>(
-                                  valueListenable: CookbookService.instance.myCookbooksNotifier,
-                                  builder: (context, cookbooks, _) {
-                                    final bool isFav = (r != null && r.isFavorite) || _checkIsInCookbook(r, savedRecipes, cookbooks);
-                                    return Row(
-                                      crossAxisAlignment: CrossAxisAlignment.center,
-                                      children: [
-                                        Expanded(
-                                          child: Text(
-                                            name,
-                                            maxLines: 2,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: TextStyle(
-                                              fontFamily: 'Rubik',
-                                              fontWeight: FontWeight.w800,
-                                              fontSize: 22.sp,
-                                              color: const Color(0xFF0F172A),
-                                            ),
-                                          ),
+                                final bool isFav = _checkIsFavorite(r, savedRecipes);
+                                return Row(
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        name,
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                          fontFamily: 'Rubik',
+                                          fontWeight: FontWeight.w800,
+                                          fontSize: 22.sp,
+                                          color: const Color(0xFF0F172A),
                                         ),
-                                        SizedBox(width: 12.w),
-                                        GestureDetector(
-                                          onTap: () async {
-                                            HapticFeedback.lightImpact();
-                                            if (r != null) {
-                                              final newFavState = !isFav;
-                                              setState(() {
-                                                r.isFavorite = newFavState;
-                                              });
-                                              if (newFavState) {
-                                                RecipeService.instance.markRecipeAsSaved(r);
-                                                IosToast.show(context, message: 'Recipe saved to favorites!', type: ToastType.success);
-                                              } else {
-                                                if (r.id.isNotEmpty) {
-                                                  RecipeService.instance.deleteRecipe(r.id);
-                                                }
-                                                IosToast.show(context, message: 'Recipe removed from saved', type: ToastType.success);
-                                              }
+                                      ),
+                                    ),
+                                    SizedBox(width: 12.w),
+                                    GestureDetector(
+                                      onTap: () async {
+                                        HapticFeedback.lightImpact();
+                                        if (r != null) {
+                                          final newFavState = !isFav;
+                                          setState(() {
+                                            r.isFavorite = newFavState;
+                                          });
+                                          if (newFavState) {
+                                            RecipeService.instance.markRecipeAsSaved(r);
+                                            IosToast.show(context, message: 'Recipe saved to favorites!', type: ToastType.success);
+                                          } else {
+                                            if (r.id.isNotEmpty) {
+                                              RecipeService.instance.deleteRecipe(r.id);
                                             }
-                                          },
-                                          child: Icon(
-                                            isFav ? Icons.favorite_rounded : Icons.favorite_border_rounded,
-                                            color: isFav ? const Color(0xFFC31E26) : const Color(0xFF94A3B8),
-                                            size: 26.sp,
-                                          ),
-                                        ),
-                                      ],
-                                    );
-                                  },
+                                            if (savedRecipes != null) {
+                                              RecipeService.instance.myRecipesNotifier.value = savedRecipes
+                                                  .where((item) => item.id != r.id && (item.name.isEmpty || item.name.toLowerCase() != r.name.toLowerCase()))
+                                                  .toList();
+                                            }
+                                            IosToast.show(context, message: 'Recipe removed from saved', type: ToastType.success);
+                                          }
+                                        }
+                                      },
+                                      child: Icon(
+                                        isFav ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+                                        color: isFav ? const Color(0xFFC31E26) : const Color(0xFF94A3B8),
+                                        size: 26.sp,
+                                      ),
+                                    ),
+                                  ],
                                 );
                               },
                             ),
@@ -607,86 +613,158 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                     bottom: 0,
                     left: 0,
                     right: 0,
-                    child: ValueListenableBuilder<List<Recipe>?>(
-                      valueListenable: RecipeService.instance.myRecipesNotifier,
-                      builder: (context, savedRecipes, _) {
-                        return ValueListenableBuilder<List<Cookbook>?>(
-                          valueListenable: CookbookService.instance.myCookbooksNotifier,
-                          builder: (context, cookbooks, _) {
-                            final bool isAdded = _checkIsInCookbook(r, savedRecipes, cookbooks);
-                            return Container(
-                              color: Colors.white,
-                              padding: EdgeInsets.fromLTRB(20.w, 10.h, 20.w, 10.h + bottomPad),
-                              child: GestureDetector(
-                                onTap: () async {
-                                  if (r == null) return;
-                                        HapticFeedback.mediumImpact();
-                                  if (isAdded) {
-                                    if (_cookbookId != null && _cookbookId!.isNotEmpty) {
-                                      try {
-                                        await CookbookService.instance.removeRecipeFromCookbook(_cookbookId!, r.id);
-                                        if (context.mounted) {
-                                          IosToast.show(
-                                            context,
-                                            message: 'Removed from cookbook',
-                                            type: ToastType.success,
-                                          );
-                                        }
-                                      } catch (e) {
-                                        if (context.mounted) {
-                                          IosToast.show(
-                                            context,
-                                            message: ErrorHelper.getFriendlyMessage(e),
-                                            type: ToastType.error,
-                                          );
-                                        }
-                                      }
-                                    } else {
-                                      showModalBottomSheet(
-                                        context: context,
-                                        backgroundColor: Colors.transparent,
-                                        isScrollControlled: true,
-                                        builder: (_) => AddToCookbookSheet(
-                                          recipe: r,
-                                        ),
-                                      );
-                                    }
-                                  } else {
-                                    showModalBottomSheet(
-                                      context: context,
-                                      backgroundColor: Colors.transparent,
-                                      isScrollControlled: true,
-                                      builder: (_) => AddToCookbookSheet(
-                                        recipe: r,
-                                      ),
-                                    );
-                                  }
-                                },
-                                child: AnimatedContainer(
-                                  duration: const Duration(milliseconds: 200),
-                                  height: 52.h,
-                                  decoration: BoxDecoration(
-                                    color: isAdded ? const Color(0xFFF1F5F9) : const Color(0xFFC83A2D),
-                                    borderRadius: BorderRadius.circular(28.r),
-                                    border: isAdded
-                                        ? Border.all(color: const Color(0xFFE2E8F0), width: 1.w)
-                                        : null,
-                                  ),
-                                  child: Center(
-                                    child: Text(
-                                      isAdded ? 'Remove from Cookbook' : 'Add to Cookbook',
+                    child: ValueListenableBuilder<List<Cookbook>?>(
+                      valueListenable: CookbookService.instance.myCookbooksNotifier,
+                      builder: (context, cookbooks, _) {
+                        final bool isAdded = _checkIsInCookbook(r, cookbooks);
+                        return Container(
+                          color: Colors.white,
+                          padding: EdgeInsets.fromLTRB(20.w, 10.h, 20.w, 10.h + bottomPad),
+                          child: GestureDetector(
+                            onTap: () async {
+                              if (r == null) return;
+                              HapticFeedback.mediumImpact();
+                              if (isAdded) {
+                                final removeBoth = await showDialog<bool?>(
+                                  context: context,
+                                  builder: (ctx) => AlertDialog(
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24.r)),
+                                    backgroundColor: Colors.white,
+                                    title: Text(
+                                      'Remove from Cookbook',
                                       style: TextStyle(
                                         fontFamily: 'Rubik',
-                                        fontWeight: FontWeight.w700,
-                                        fontSize: 15.sp,
-                                        color: isAdded ? const Color(0xFF475569) : Colors.white,
+                                        fontWeight: FontWeight.w800,
+                                        fontSize: 18.sp,
+                                        color: const Color(0xFF0F172A),
                                       ),
                                     ),
+                                    content: Text(
+                                      'Do you also want to remove this recipe from Saved Recipes?',
+                                      style: TextStyle(
+                                        fontFamily: 'Rubik',
+                                        fontSize: 14.sp,
+                                        color: const Color(0xFF64748B),
+                                        height: 1.4,
+                                      ),
+                                    ),
+                                    actionsPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () => Navigator.pop(ctx, false),
+                                        child: Text(
+                                          'No',
+                                          style: TextStyle(
+                                            fontFamily: 'Rubik',
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 15.sp,
+                                            color: const Color(0xFF64748B),
+                                          ),
+                                        ),
+                                      ),
+                                      ElevatedButton(
+                                        onPressed: () => Navigator.pop(ctx, true),
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: const Color(0xFFC31E26),
+                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+                                          elevation: 0,
+                                        ),
+                                        child: Text(
+                                          'Yes',
+                                          style: TextStyle(
+                                            fontFamily: 'Rubik',
+                                            fontWeight: FontWeight.w700,
+                                            fontSize: 15.sp,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+
+                                if (removeBoth != null) {
+                                  // 1. Remove from all cookbooks
+                                  r.isInCookbook = false;
+                                  if (cookbooks != null) {
+                                    for (final cb in cookbooks) {
+                                      if (cb.recipes.any((item) => item.id == r.id || (item.name.isNotEmpty && item.name.toLowerCase() == r.name.toLowerCase()))) {
+                                        CookbookService.instance.removeRecipeFromCookbook(cb.id, r.id).catchError((_) => Cookbook(id: '', name: '', recipes: [], createdAt: DateTime.now(), updatedAt: DateTime.now()));
+                                      }
+                                    }
+                                    final updatedCookbooks = cookbooks.map((cb) {
+                                      final updatedRecipes = cb.recipes.where((item) => item.id != r.id && (item.name.isEmpty || item.name.toLowerCase() != r.name.toLowerCase())).toList();
+                                      return Cookbook(
+                                        id: cb.id,
+                                        name: cb.name,
+                                        recipes: updatedRecipes,
+                                        createdAt: cb.createdAt,
+                                        updatedAt: DateTime.now(),
+                                        isPinned: cb.isPinned,
+                                        isPlaceholder: cb.isPlaceholder,
+                                      );
+                                    }).toList();
+                                    CookbookService.instance.myCookbooksNotifier.value = updatedCookbooks;
+                                  }
+
+                                  if (removeBoth == true) {
+                                    // Yes: Remove from Cookbook + Saved Recipes, and unfill heart
+                                    r.isFavorite = false;
+                                    if (r.id.isNotEmpty) {
+                                      RecipeService.instance.deleteRecipe(r.id).catchError((_) => false);
+                                    }
+                                    final saved = RecipeService.instance.myRecipesNotifier.value;
+                                    if (saved != null) {
+                                      RecipeService.instance.myRecipesNotifier.value = saved
+                                          .where((item) => item.id != r.id && (item.name.isEmpty || item.name.toLowerCase() != r.name.toLowerCase()))
+                                          .toList();
+                                    }
+                                    if (context.mounted) {
+                                      IosToast.show(context, message: 'Removed from Cookbook and Saved Recipes', type: ToastType.success);
+                                    }
+                                  } else {
+                                    // No: Remove only from Cookbook, keep it saved/hearted
+                                    if (context.mounted) {
+                                      IosToast.show(context, message: 'Removed from Cookbook', type: ToastType.success);
+                                    }
+                                  }
+
+                                  if (mounted) setState(() {});
+                                }
+                              } else {
+                                showModalBottomSheet(
+                                  context: context,
+                                  backgroundColor: Colors.transparent,
+                                  isScrollControlled: true,
+                                  builder: (_) => AddToCookbookSheet(
+                                    recipe: r,
+                                  ),
+                                );
+                              }
+                            },
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 200),
+                              height: 52.h,
+                              decoration: BoxDecoration(
+                                color: isAdded ? const Color(0xFFF1F5F9) : const Color(0xFFC83A2D),
+                                borderRadius: BorderRadius.circular(28.r),
+                                border: isAdded
+                                    ? Border.all(color: const Color(0xFFE2E8F0), width: 1.w)
+                                    : null,
+                              ),
+                              child: Center(
+                                child: Text(
+                                  isAdded ? 'Remove from Cookbook' : 'Add to Cookbook',
+                                  style: TextStyle(
+                                    fontFamily: 'Rubik',
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 15.sp,
+                                    color: isAdded ? const Color(0xFF475569) : Colors.white,
                                   ),
                                 ),
                               ),
-                            );
-                          },
+                            ),
+                          ),
                         );
                       },
                     ),

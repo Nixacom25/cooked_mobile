@@ -436,12 +436,13 @@ class _CookbookFormModalState extends State<CookbookFormModal> {
         if (r.id.isEmpty) {
           r = await RecipeService.instance.createRecipe(r);
           _selectedRecipes[i] = r;
+          validRecipeIds.add(r.id);
         } else {
-          r = await RecipeService.instance.validateRecipe(r.id).catchError((_) => r);
-          _selectedRecipes[i] = r;
+          validRecipeIds.add(r.id);
+          // Trigger validation in background asynchronously so saving isn't blocked by network latency
+          RecipeService.instance.validateRecipe(r.id).catchError((_) => r);
         }
         RecipeService.instance.markRecipeAsSaved(r);
-        validRecipeIds.add(r.id);
       }
 
       Cookbook cb;

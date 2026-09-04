@@ -8,12 +8,14 @@ class DislikesStep extends StatefulWidget {
   final Set<String> initialSelected;
   final Function(Set<String> selected) onChanged;
   final VoidCallback? onContinue;
+  final bool isFromProfile;
 
   const DislikesStep({
     super.key,
     required this.initialSelected,
     required this.onChanged,
     this.onContinue,
+    this.isFromProfile = false,
   });
 
   @override
@@ -99,6 +101,8 @@ class _DislikesStepState extends State<DislikesStep> {
 
   @override
   Widget build(BuildContext context) {
+    final bool showInput = widget.isFromProfile || widget.onContinue == null;
+
     return Column(
       children: [
         Expanded(
@@ -127,79 +131,81 @@ class _DislikesStepState extends State<DislikesStep> {
                 ),
                 SizedBox(height: 20.h),
 
-                // Custom Dislike Input Field
-                Container(
-                  height: 52.h,
-                  margin: EdgeInsets.only(bottom: 20.h),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(24.r),
-                    border: Border.all(
-                      color: const Color(0xFFE2E8F0),
-                      width: 1.2,
+                // Custom Dislike Input Field (Displayed ONLY when in Profile / Settings)
+                if (showInput) ...[
+                  Container(
+                    height: 52.h,
+                    margin: EdgeInsets.only(bottom: 20.h),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(24.r),
+                      border: Border.all(
+                        color: const Color(0xFFE2E8F0),
+                        width: 1.2,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.04),
+                          blurRadius: 10,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
                     ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.04),
-                        blurRadius: 10,
-                        offset: const Offset(0, 3),
-                      ),
-                    ],
-                  ),
-                  padding: EdgeInsets.symmetric(horizontal: 16.w),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.block_rounded,
-                        color: const Color(0xFFC31E26),
-                        size: 20.sp,
-                      ),
-                      SizedBox(width: 12.w),
-                      Expanded(
-                        child: TextField(
-                          controller: _customController,
-                          textCapitalization: TextCapitalization.sentences,
-                          style: GoogleFonts.rubik(
-                            fontSize: 14.sp,
-                            fontWeight: FontWeight.w500,
-                            color: const Color(0xFF0F172A),
-                          ),
-                          decoration: InputDecoration(
-                            hintText: 'Type a food you dislike (e.g. Pork, Mayo)...',
-                            hintStyle: GoogleFonts.rubik(
+                    padding: EdgeInsets.symmetric(horizontal: 16.w),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.block_rounded,
+                          color: const Color(0xFFC31E26),
+                          size: 20.sp,
+                        ),
+                        SizedBox(width: 12.w),
+                        Expanded(
+                          child: TextField(
+                            controller: _customController,
+                            textCapitalization: TextCapitalization.sentences,
+                            style: GoogleFonts.rubik(
                               fontSize: 14.sp,
-                              color: const Color(0xFF94A3B8),
+                              fontWeight: FontWeight.w500,
+                              color: const Color(0xFF0F172A),
                             ),
-                            border: InputBorder.none,
-                            enabledBorder: InputBorder.none,
-                            focusedBorder: InputBorder.none,
-                            isDense: true,
-                            contentPadding: EdgeInsets.zero,
-                          ),
-                          onSubmitted: (_) => _addCustomDislike(),
-                        ),
-                      ),
-                      SizedBox(width: 8.w),
-                      GestureDetector(
-                        onTap: _addCustomDislike,
-                        behavior: HitTestBehavior.opaque,
-                        child: Container(
-                          width: 32.r,
-                          height: 32.r,
-                          decoration: const BoxDecoration(
-                            color: Color(0xFFC31E26),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(
-                            Icons.add_rounded,
-                            color: Colors.white,
-                            size: 20.sp,
+                            decoration: InputDecoration(
+                              hintText: 'Type a food you dislike (e.g. Pork, Mayo)...',
+                              hintStyle: GoogleFonts.rubik(
+                                fontSize: 14.sp,
+                                color: const Color(0xFF94A3B8),
+                              ),
+                              border: InputBorder.none,
+                              enabledBorder: InputBorder.none,
+                              focusedBorder: InputBorder.none,
+                              isDense: true,
+                              contentPadding: EdgeInsets.zero,
+                            ),
+                            onSubmitted: (_) => _addCustomDislike(),
                           ),
                         ),
-                      ),
-                    ],
+                        SizedBox(width: 8.w),
+                        GestureDetector(
+                          onTap: _addCustomDislike,
+                          behavior: HitTestBehavior.opaque,
+                          child: Container(
+                            width: 32.r,
+                            height: 32.r,
+                            decoration: const BoxDecoration(
+                              color: Color(0xFFC31E26),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              Icons.add_rounded,
+                              color: Colors.white,
+                              size: 20.sp,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
+                ],
 
                 // Predefined Suggestions Grid (Wrap)
                 Wrap(
@@ -240,8 +246,8 @@ class _DislikesStepState extends State<DislikesStep> {
                   }).toList(),
                 ),
 
-                // Cream Banner Token (#FAF4E5) - Displayed ONLY in Onboarding (when onContinue is provided)
-                if (widget.onContinue != null) ...[
+                // Cream Banner Token (#FAF4E5) - Displayed ONLY in Onboarding
+                if (!widget.isFromProfile && widget.onContinue != null) ...[
                   SizedBox(height: 28.h),
                   Container(
                     width: double.infinity,

@@ -375,7 +375,7 @@ class _AddToCookbookSheetState extends State<AddToCookbookSheet> {
         if (targetRecipe.id.isEmpty) {
           targetRecipe = await RecipeService.instance.createRecipe(targetRecipe);
         } else {
-          targetRecipe = await RecipeService.instance.validateRecipe(targetRecipe.id).catchError((_) => targetRecipe);
+          RecipeService.instance.validateRecipe(targetRecipe.id).catchError((_) => targetRecipe);
         }
 
         // 2. Mark local state as saved

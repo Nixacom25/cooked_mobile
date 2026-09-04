@@ -16,7 +16,7 @@ class PaywallHelper {
 
     if (!context.mounted) return;
 
-    final result = await Navigator.push<bool>(
+    await Navigator.push<bool>(
       context,
       MaterialPageRoute(
         builder: (context) => PaywallScreen(
@@ -26,17 +26,6 @@ class PaywallHelper {
         fullscreenDialog: true,
       ),
     );
-
-    // If dismissed without purchase and was standard flow, show the offer flow
-    if (result != true && flowType == PaywallFlowType.standard) {
-      if (context.mounted) {
-        // Short delay for smoother transition
-        await Future.delayed(const Duration(milliseconds: 300));
-        if (context.mounted) {
-          show(context, flowType: PaywallFlowType.offer);
-        }
-      }
-    }
   }
 
   // Vérifie si l'erreur nécessite l'affichage du paywall

@@ -84,23 +84,16 @@ class _IosToastWidgetState extends State<_IosToastWidget> {
   Color get _glassBackgroundColor {
     switch (widget.type) {
       case ToastType.success:
-        return const Color(0xFF064E3B).withValues(alpha: 0.48); // Frosted translucent emerald glass
+        return const Color(0xFF16A34A).withValues(alpha: 0.78); // Vibrant green with glass finish
       case ToastType.error:
-        return const Color(0xFF7F1D1D).withValues(alpha: 0.48); // Frosted translucent crimson glass
+        return const Color(0xFFDC2626).withValues(alpha: 0.78); // Vibrant red with glass finish
       case ToastType.warning:
-        return const Color(0xFF78350F).withValues(alpha: 0.48); // Frosted translucent amber glass
+        return const Color(0xFFD97706).withValues(alpha: 0.78); // Vibrant amber with glass finish
     }
   }
 
   Color get _borderColor {
-    switch (widget.type) {
-      case ToastType.success:
-        return const Color(0xFF6EE7B7).withValues(alpha: 0.55);
-      case ToastType.error:
-        return const Color(0xFFFCA5A5).withValues(alpha: 0.55);
-      case ToastType.warning:
-        return const Color(0xFFFDE047).withValues(alpha: 0.55);
-    }
+    return Colors.white.withValues(alpha: 0.35);
   }
 
   Color get _iconColor {
