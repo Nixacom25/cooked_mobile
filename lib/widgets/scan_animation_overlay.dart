@@ -166,10 +166,12 @@ class _FallbackScanAnimationState extends State<_FallbackScanAnimation> {
         .toLowerCase()
         .contains('test');
     if (!isTestEnv) {
+      // 1. Utilisation de Factory.flutter pour être compatible avec Impeller (iOS)
+      // 2. Suppression de l'appel manuel ..file() qui provoquait une race condition
       _fileLoader = FileLoader.fromAsset(
         'assets/cooked.riv',
-        riveFactory: Factory.rive,
-      )..file();
+        riveFactory: Factory.flutter,
+      );
     }
   }
 
