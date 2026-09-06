@@ -157,6 +157,9 @@ class _FallbackScanAnimation extends StatefulWidget {
 
 class _FallbackScanAnimationState extends State<_FallbackScanAnimation> {
   FileLoader? _fileLoader;
+  Timer? _riveLoadTimeoutTimer;
+  bool _riveLoaded = false;
+  bool _forceFallback = false;
 
   @override
   void initState() {
@@ -172,12 +175,31 @@ class _FallbackScanAnimationState extends State<_FallbackScanAnimation> {
         'assets/cooked.riv',
         riveFactory: Factory.flutter,
       );
+
+      // Safety net: if Rive hasn't finished loading (or failed loudly) within
+      // a few seconds - e.g. a native-side failure that never surfaces as a
+      // catchable Dart error and leaves RiveWidgetBuilder stuck in its
+      // "loading" state - force the native spinner instead of a blank screen.
+      _riveLoadTimeoutTimer = Timer(const Duration(seconds: 5), () {
+        if (mounted && !_riveLoaded) {
+          debugPrint('⏱️ Rive load timed out, falling back to native spinner');
+          setState(() {
+            _forceFallback = true;
+          });
+        }
+      });
     }
   }
 
   @override
+  void dispose() {
+    _riveLoadTimeoutTimer?.cancel();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    if (_fileLoader == null) {
+    if (_fileLoader == null || _forceFallback) {
       return _NativeSpinnerFallback(skipImageAnalysis: widget.skipImageAnalysis);
     }
 
@@ -188,6 +210,8 @@ class _FallbackScanAnimationState extends State<_FallbackScanAnimation> {
         stateMachineSelector: const StateMachineDefault(),
         onLoaded: (RiveLoaded state) {
           debugPrint('✅ Rive animation cooked.riv loaded using Factory.flutter!');
+          _riveLoaded = true;
+          _riveLoadTimeoutTimer?.cancel();
           final sm = state.controller.stateMachine;
           final artboard = state.controller.artboard;
 
@@ -221,6 +245,7 @@ class _FallbackScanAnimationState extends State<_FallbackScanAnimation> {
         },
         onFailed: (Object error, StackTrace stackTrace) {
           debugPrint('❌ RIVE LOAD ERROR: $error\n$stackTrace');
+          _riveLoadTimeoutTimer?.cancel();
         },
         builder: (context, state) {
           switch (state) {
