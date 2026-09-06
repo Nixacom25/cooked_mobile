@@ -2654,7 +2654,7 @@ class _CookbooksRowState extends State<_CookbooksRow> {
                               CookbookService.instance
                                   .togglePin(cb.id)
                                   .then((updated) {
-                                    if (mounted) {
+                                    if (context.mounted) {
                                       IosToast.show(
                                         context,
                                         message: updated.isPinned
@@ -2665,7 +2665,7 @@ class _CookbooksRowState extends State<_CookbooksRow> {
                                     }
                                   })
                                   .catchError((e) {
-                                    if (mounted) {
+                                    if (context.mounted) {
                                       IosToast.show(
                                         context,
                                         message: 'Operation failed',
@@ -2684,7 +2684,7 @@ class _CookbooksRowState extends State<_CookbooksRow> {
                               CookbookService.instance
                                   .deleteCookbook(cb.id)
                                   .then((_) {
-                                    if (mounted) {
+                                    if (context.mounted) {
                                       IosToast.show(
                                         context,
                                         message: 'Cookbook deleted',
@@ -2693,7 +2693,7 @@ class _CookbooksRowState extends State<_CookbooksRow> {
                                     }
                                   })
                                   .catchError((e) {
-                                    if (mounted) {
+                                    if (context.mounted) {
                                       IosToast.show(
                                         context,
                                         message: 'Failed to delete cookbook',

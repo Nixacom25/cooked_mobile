@@ -184,7 +184,7 @@ class _CookbookDetailScreenState extends State<CookbookDetailScreen> {
                                     ),
                                   );
                                   if (result == 'deleted') {
-                                    if (mounted) Navigator.pop(context, true);
+                                    if (context.mounted) Navigator.pop(context, true);
                                   } else if (result is Cookbook) {
                                     _load();
                                   }
@@ -316,7 +316,7 @@ class _CookbookDetailScreenState extends State<CookbookDetailScreen> {
             RecipeService.instance
                 .togglePin(r.id)
                 .then((updated) {
-                  if (mounted) {
+                  if (context.mounted) {
                     IosToast.show(
                       context,
                       message: updated.isPinned
@@ -327,7 +327,7 @@ class _CookbookDetailScreenState extends State<CookbookDetailScreen> {
                   }
                 })
                 .catchError((e) {
-                  if (mounted) {
+                  if (context.mounted) {
                     IosToast.show(
                       context,
                       message: 'Failed to pin recipe',
@@ -358,7 +358,7 @@ class _CookbookDetailScreenState extends State<CookbookDetailScreen> {
             CookbookService.instance
                 .removeRecipeFromCookbook(_cookbook!.id, r.id)
                 .catchError((e) {
-                  if (mounted) {
+                  if (context.mounted) {
                     IosToast.show(
                       context,
                       message: ErrorHelper.getFriendlyMessage(e),
@@ -391,9 +391,9 @@ class _CookbookDetailScreenState extends State<CookbookDetailScreen> {
                   r.creator != null ? "${r.creator!.displayName}'s " : "";
               final template = "Check out $creatorStr$name on Cooked 🙌\n$link";
 
-              Share.share(template);
+              SharePlus.instance.share(ShareParams(text: template));
             } catch (e) {
-              if (mounted) {
+              if (context.mounted) {
                 IosToast.show(
                   context,
                   message: ErrorHelper.getFriendlyMessage(e),

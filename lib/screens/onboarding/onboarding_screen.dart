@@ -615,6 +615,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         await OnboardingStorage.clear();
       }
 
+      if (!mounted) return;
+
       bool isFallbackLogin = registerResult?['info_message'] != null;
 
       if (isFallbackLogin) {

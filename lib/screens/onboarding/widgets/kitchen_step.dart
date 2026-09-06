@@ -45,8 +45,9 @@ class _KitchenStepState extends State<KitchenStep> {
     _othersFocusNode.addListener(() {
       if (_othersFocusNode.hasFocus) {
         Future.delayed(const Duration(milliseconds: 300), () {
+          if (!mounted) return;
           final context = _othersFocusNode.context;
-          if (context != null) {
+          if (context != null && context.mounted) {
             Scrollable.ensureVisible(context, duration: const Duration(milliseconds: 300), alignment: 0.5);
           }
         });

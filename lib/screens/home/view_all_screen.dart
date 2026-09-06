@@ -1038,7 +1038,7 @@ class _RecipesGridState extends State<_RecipesGrid> {
 
     // 2. Perform backend validation
     RecipeService.instance.validateRecipe(r.id).catchError((e) {
-      if (mounted) {
+      if (ctx.mounted) {
         IosToast.show(
           ctx,
           message: ErrorHelper.getFriendlyMessage(e),
@@ -1051,7 +1051,7 @@ class _RecipesGridState extends State<_RecipesGrid> {
     // 3. Wait for the falling animation to complete (700ms in AnimatedValidationButton)
     await Future.delayed(const Duration(milliseconds: 800));
 
-    if (!mounted) return;
+    if (!ctx.mounted) return;
 
     // 4. Show the modal
     showModalBottomSheet(

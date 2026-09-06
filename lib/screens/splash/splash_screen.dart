@@ -41,15 +41,17 @@ class _SplashScreenState extends State<SplashScreen>
     if (!mounted) return;
 
     final token = await AuthService.instance.getToken();
+    if (!mounted) return;
     if (token != null && token.isNotEmpty) {
       try {
         // Verify token by fetching user data
         await UserService.instance.getCurrentUser();
         if (!mounted) return;
-        
+
         final bool isUserPremium = UserService.instance.isPremium;
         if (!isUserPremium) {
           await AuthService.instance.logout();
+          if (!mounted) return;
           Navigator.pushNamedAndRemoveUntil(context, AppRoutes.welcome, (route) => false);
         } else {
           Navigator.pushNamedAndRemoveUntil(context, AppRoutes.home, (route) => false);

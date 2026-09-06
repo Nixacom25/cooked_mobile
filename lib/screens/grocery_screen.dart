@@ -185,6 +185,7 @@ class GroceryScreenState extends State<GroceryScreen> with SingleTickerProviderS
         }
       }
 
+      if (!context.mounted) return;
       if (launched) {
         AnalyticsService.instance.logInstacartRedirectSuccess(mode: 'launched');
       } else {
@@ -192,7 +193,7 @@ class GroceryScreenState extends State<GroceryScreen> with SingleTickerProviderS
         _showInstacartErrorDialog(context, 'Unable to open Instacart. Please check your internet connection.', items);
       }
     } catch (e) {
-      if (!mounted) return;
+      if (!context.mounted) return;
       final errorMsg = ErrorHelper.getFriendlyMessage(e);
       _showInstacartErrorDialog(context, errorMsg, items);
     } finally {
@@ -708,7 +709,7 @@ class GroceryScreenState extends State<GroceryScreen> with SingleTickerProviderS
               }
             }
 
-            if (mounted) {
+            if (context.mounted) {
               IosToast.show(
                 context,
                 message: 'Grocery items saved successfully',
@@ -716,7 +717,7 @@ class GroceryScreenState extends State<GroceryScreen> with SingleTickerProviderS
               );
             }
           } catch (e) {
-            if (mounted) {
+            if (context.mounted) {
               IosToast.show(
                 context,
                 message: ErrorHelper.getFriendlyMessage(e),
