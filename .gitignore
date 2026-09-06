@@ -42,7 +42,6 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
-
 # ios setup
 /ios_setup/
 
@@ -51,3 +50,6 @@ app.*.map.json
 /android/app/*.jks
 /android/key.properties
 /ios/Runner/GoogleService-Info.plist
+
+# FVM Version Cache
+.fvm/
