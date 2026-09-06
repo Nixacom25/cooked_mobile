@@ -1,6 +1,6 @@
 import 'dart:ui';
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -60,7 +60,12 @@ class AlphabetAvatar extends StatelessWidget {
     return true;
   }
 
-  static Future<void> showPhotoPicker(BuildContext context) async {
+  static Future<void> showPhotoPicker(BuildContext context, {bool compact = false}) async {
+    if (compact) {
+      await _showCompactPhotoPicker(context);
+      return;
+    }
+
     final picker = ImagePicker();
     final user = UserService.instance.currentUserNotifier.value;
     final String name = (user?['firstname'] as String? ?? user?['name'] as String? ?? 'User').trim();
@@ -234,6 +239,120 @@ class AlphabetAvatar extends StatelessWidget {
       },
     );
 
+    if (!context.mounted) return;
+    await _handlePickerAction(context, action, picker);
+  }
+
+  // ── Compact glass dropdown, anchored under the tapped avatar ──
+  // (used by the home header; mirrors the "⋮" Profile/Logout menu style)
+  static Future<void> _showCompactPhotoPicker(BuildContext context) async {
+    HapticFeedback.mediumImpact();
+    final picker = ImagePicker();
+
+    final RenderBox? avatarBox = context.findRenderObject() as RenderBox?;
+    final RenderBox? overlay = Navigator.of(context).overlay?.context.findRenderObject() as RenderBox?;
+
+    double topPos = 100.h;
+    double leftPos = 16.w;
+    if (avatarBox != null && overlay != null) {
+      final Offset topLeft = avatarBox.localToGlobal(Offset.zero, ancestor: overlay);
+      topPos = topLeft.dy + avatarBox.size.height + 8.h;
+      leftPos = topLeft.dx;
+    }
+
+    final action = await showGeneralDialog<String>(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: 'Dismiss',
+      barrierColor: Colors.transparent,
+      transitionDuration: const Duration(milliseconds: 200),
+      pageBuilder: (ctx, anim1, anim2) {
+        return Stack(
+          children: [
+            Positioned.fill(
+              child: GestureDetector(
+                onTap: () => Navigator.of(ctx).pop(),
+                behavior: HitTestBehavior.opaque,
+                child: const SizedBox.expand(),
+              ),
+            ),
+            Positioned(
+              top: topPos,
+              left: leftPos,
+              child: Material(
+                color: Colors.transparent,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(24.r),
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+                    child: Container(
+                      width: 210.w,
+                      padding: EdgeInsets.symmetric(vertical: 6.h, horizontal: 6.w),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.28),
+                        borderRadius: BorderRadius.circular(24.r),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.65),
+                          width: 1.5.w,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.08),
+                            blurRadius: 20,
+                            offset: const Offset(0, 6),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _buildCompactMenuItem(
+                            icon: Icons.photo_library_outlined,
+                            label: 'Choose from library',
+                            color: const Color(0xFF0F172A),
+                            onTap: () => Navigator.pop(ctx, 'gallery'),
+                          ),
+                          _buildCompactMenuItem(
+                            icon: Icons.camera_alt_outlined,
+                            label: 'Take photo',
+                            color: const Color(0xFF0F172A),
+                            onTap: () => Navigator.pop(ctx, 'camera'),
+                          ),
+                          _buildCompactMenuItem(
+                            icon: Icons.delete_outline_rounded,
+                            label: 'Delete',
+                            color: const Color(0xFFC31E26),
+                            onTap: () => Navigator.pop(ctx, 'delete'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+      transitionBuilder: (ctx, anim1, anim2, child) {
+        return FadeTransition(
+          opacity: anim1,
+          child: ScaleTransition(
+            alignment: Alignment.topLeft,
+            scale: Tween<double>(begin: 0.85, end: 1.0).animate(
+              CurvedAnimation(parent: anim1, curve: Curves.easeOutCubic),
+            ),
+            child: child,
+          ),
+        );
+      },
+    );
+
+    if (!context.mounted) return;
+    await _handlePickerAction(context, action, picker);
+  }
+
+  static Future<void> _handlePickerAction(BuildContext context, String? action, ImagePicker picker) async {
     if (action == null) return;
 
     if (action == 'delete') {
@@ -283,6 +402,41 @@ class AlphabetAvatar extends StatelessWidget {
         }
       }
     }
+  }
+
+  static Widget _buildCompactMenuItem({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(18.r),
+        onTap: onTap,
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
+          child: Row(
+            children: [
+              Icon(icon, size: 20.sp, color: color),
+              SizedBox(width: 10.w),
+              Expanded(
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    fontFamily: 'Rubik',
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14.sp,
+                    color: color,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   static Widget _buildPickerItem({

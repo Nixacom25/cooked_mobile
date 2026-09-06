@@ -1,5 +1,6 @@
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../services/user_service.dart';
 import '../services/auth_service.dart';
@@ -34,6 +35,7 @@ class _AppTopHeaderState extends State<AppTopHeader> {
   }
 
   void _showGlassProfileMenu(BuildContext context) {
+    HapticFeedback.mediumImpact();
     final RenderBox? button = context.findRenderObject() as RenderBox?;
     final RenderBox? overlay = Navigator.of(context).overlay?.context.findRenderObject() as RenderBox?;
     
@@ -223,11 +225,13 @@ class _AppTopHeaderState extends State<AppTopHeader> {
 
               return Row(
                 children: [
-                  AlphabetAvatar(
-                    name: firstName,
-                    photoUrl: photoUrl,
-                    size: 38.r,
-                    onTap: () => AlphabetAvatar.showPhotoPicker(context),
+                  Builder(
+                    builder: (avatarContext) => AlphabetAvatar(
+                      name: firstName,
+                      photoUrl: photoUrl,
+                      size: 38.r,
+                      onTap: () => AlphabetAvatar.showPhotoPicker(avatarContext, compact: true),
+                    ),
                   ),
                   SizedBox(width: 10.w),
                   GestureDetector(
