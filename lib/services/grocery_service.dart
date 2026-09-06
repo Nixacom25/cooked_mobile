@@ -240,7 +240,7 @@ class GroceryService {
           final url = Uri.parse('${ApiConfig.baseUrl}/grocery-items/$id/toggle');
           await _reliableRequest(() async => http.put(url, headers: await _getHeaders()));
         } catch (e) {
-          print('Error syncing toggle state for grocery $id: $e');
+          debugPrint('Error syncing toggle state for grocery $id: $e');
           // On total failure, refresh list to revert UI
           await getMyGroceries(forceRefresh: true);
         }
@@ -350,7 +350,7 @@ class GroceryService {
         http.delete(url, headers: await _getHeaders());
         items.remove(item);
       } catch (e) {
-        print('Error auto-cleaning item ${item.id}: $e');
+        debugPrint('Error auto-cleaning item ${item.id}: $e');
       }
     }
   }

@@ -227,7 +227,7 @@ class AuthService {
   }) async {
     try {
       // 1. Google Sign-In attempt
-      print('DEBUG: Starting Google Sign-In process (isSignup: $isSignup)...');
+      developer.log('DEBUG: Starting Google Sign-In process (isSignup: $isSignup)...', name: 'AuthService');
       
       // Force account selection by signing out first
       try {
@@ -237,22 +237,22 @@ class AuthService {
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
       
       if (googleUser == null) {
-        print('DEBUG: Google Sign-In CANCELLED by user');
+        developer.log('DEBUG: Google Sign-In CANCELLED by user', name: 'AuthService');
         throw Exception('Google sign in cancelled');
       }
       
-      print('DEBUG: Google account selected: ${googleUser.email}');
+      developer.log('DEBUG: Google account selected: ${googleUser.email}', name: 'AuthService');
 
       // 2. Obtain Authentication Details
       final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
       final String? idToken = googleAuth.idToken;
 
       if (idToken == null) {
-        print('DEBUG: ID Token is NULL');
+        developer.log('DEBUG: ID Token is NULL', name: 'AuthService');
         throw Exception('Missing ID Token from Google');
       }
 
-      print('DEBUG: Google Sign-In SUCCESS locally.');
+      developer.log('DEBUG: Google Sign-In SUCCESS locally.', name: 'AuthService');
 
       if (!isManualBackendCall) {
         return {
@@ -276,7 +276,7 @@ class AuthService {
         'phone': phone,
       };
       
-      print('DEBUG: Sending request to Backend: $url');
+      developer.log('DEBUG: Sending request to Backend: $url', name: 'AuthService');
       // Clear any previous session data before starting fresh
       _clearAllServiceData();
       
@@ -286,7 +286,7 @@ class AuthService {
         body: jsonEncode(requestBody),
       ).timeout(const Duration(seconds: 15));
 
-      print('DEBUG: Backend response status: ${response.statusCode}');
+      developer.log('DEBUG: Backend response status: ${response.statusCode}', name: 'AuthService');
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -299,7 +299,7 @@ class AuthService {
         throw Exception(_extractErrorMessage(response.body, 'Incorrect credentials, please try again'));
       }
     } catch (e) {
-      print('DEBUG: Google Sign-In ERROR: $e');
+      developer.log('DEBUG: Google Sign-In ERROR: $e', name: 'AuthService');
       throw Exception(_extractErrorMessage(e.toString(), 'Incorrect credentials, please try again'));
     }
   }

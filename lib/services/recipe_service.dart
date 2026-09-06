@@ -324,8 +324,8 @@ class RecipeService {
       CookbookService.instance.getMyCookbooks(forceRefresh: true).then((_) => null).catchError((_) => null);
       return saved;
     } else {
-      print('Failed to save recipe: ${response.statusCode}');
-      print('Response body: ${response.body}');
+      debugPrint('Failed to save recipe: ${response.statusCode}');
+      debugPrint('Response body: ${response.body}');
       throw Exception('Failed to save recipe: ${response.body}');
     }
   }
