@@ -2132,7 +2132,7 @@ class _PopulatedSavedRecipesList extends StatelessWidget {
                           : "";
                       final template =
                           "Check out $creatorStr$name on Cooked 🙌\n$link";
-                      Share.share(template);
+                      SharePlus.instance.share(ShareParams(text: template));
                     } catch (_) {}
                   },
                 ),
@@ -3094,7 +3094,12 @@ class _SuggestedRecipesSectionState extends State<_SuggestedRecipesSection> {
                 final template =
                     "Check out $creatorStr$name on Cooked 🙌\n$link";
 
-                Share.share(template, sharePositionOrigin: sharePositionOrigin);
+                SharePlus.instance.share(
+                  ShareParams(
+                    text: template,
+                    sharePositionOrigin: sharePositionOrigin,
+                  ),
+                );
               } catch (e) {
                 if (ctx.mounted) {
                   IosToast.show(
@@ -3194,9 +3199,11 @@ class _SuggestedRecipesSectionState extends State<_SuggestedRecipesSection> {
                   final template =
                       "Check out $creatorStr$name on Cooked 🙌\n$link";
 
-                  Share.share(
-                    template,
-                    sharePositionOrigin: sharePositionOrigin,
+                  SharePlus.instance.share(
+                    ShareParams(
+                      text: template,
+                      sharePositionOrigin: sharePositionOrigin,
+                    ),
                   );
                 } catch (e) {
                   if (ctx.mounted) {

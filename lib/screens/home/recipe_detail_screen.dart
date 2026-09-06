@@ -186,7 +186,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
 
       final template = "Check out $creatorStr$name on Cooked 🙌\n$link";
 
-      Share.share(template);
+      SharePlus.instance.share(ShareParams(text: template));
     } catch (e) {
       if (!mounted) return;
       IosToast.show(

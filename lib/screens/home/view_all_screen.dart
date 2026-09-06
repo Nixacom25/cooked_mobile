@@ -871,7 +871,7 @@ class _RecipesGridState extends State<_RecipesGrid> {
                                       : "";
                                   final template =
                                       "Check out $creatorStr$name on Cooked 🙌\n$link";
-                                  Share.share(template);
+                                  SharePlus.instance.share(ShareParams(text: template));
                                 } catch (_) {}
                               },
                             ),
@@ -952,9 +952,11 @@ class _RecipesGridState extends State<_RecipesGrid> {
                         final creatorStr = r.creator != null ? "${r.creator!.displayName}'s " : "";
                         final template = "Check out $creatorStr$name on Cooked 🙌\n$link";
 
-                        Share.share(
-                          template,
-                          sharePositionOrigin: sharePositionOrigin,
+                        SharePlus.instance.share(
+                          ShareParams(
+                            text: template,
+                            sharePositionOrigin: sharePositionOrigin,
+                          ),
                         );
                       } catch (e) {
                         if (ctx.mounted) {
