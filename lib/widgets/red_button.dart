@@ -33,10 +33,10 @@ class RedButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final bool effectiveDisabled = isDisabled || isLoading || onTap == null;
     final Color buttonColor = effectiveDisabled 
-        ? (color?.withOpacity(0.5) ?? const Color(0xFFE5E7EB)) 
+        ? (color?.withValues(alpha: 0.5) ?? const Color(0xFFE5E7EB))
         : (color ?? const Color(0xFFC83A2D));
     final Color effectiveTextColor = effectiveDisabled 
-        ? (textColor?.withOpacity(0.7) ?? const Color(0xFF9CA3AF)) 
+        ? (textColor?.withValues(alpha: 0.7) ?? const Color(0xFF9CA3AF))
         : (textColor ?? Colors.white);
 
     return GestureDetector(
@@ -50,7 +50,7 @@ class RedButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(30.r),
           boxShadow: effectiveDisabled ? [] : [
             BoxShadow(
-              color: buttonColor.withOpacity(0.3),
+              color: buttonColor.withValues(alpha: 0.3),
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),

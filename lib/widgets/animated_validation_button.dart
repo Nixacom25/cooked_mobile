@@ -156,12 +156,12 @@ class _AnimatedValidationButtonState extends State<AnimatedValidationButton> wit
                   child: Container(
                     decoration: BoxDecoration(
                       color: widget.useWhiteBackground 
-                          ? Colors.white.withOpacity(0.9) 
-                          : const Color(0xFFC83A2D).withOpacity(0.1),
+                          ? Colors.white.withValues(alpha: 0.9)
+                          : const Color(0xFFC83A2D).withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                       boxShadow: widget.useWhiteBackground ? [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.08),
+                          color: Colors.black.withValues(alpha: 0.08),
                           blurRadius: 10,
                           offset: const Offset(0, 4),
                         )
@@ -172,7 +172,7 @@ class _AnimatedValidationButtonState extends State<AnimatedValidationButton> wit
                 // Base outline icon
                 Icon(
                   widget.useWhiteBackground ? Icons.add_circle_outline_rounded : Icons.add_rounded,
-                  color: const Color(0xFFAAAAAA).withOpacity((1.0 - _opacityAnimation.value).clamp(0.0, 1.0)),
+                  color: const Color(0xFFAAAAAA).withValues(alpha: (1.0 - _opacityAnimation.value).clamp(0.0, 1.0)),
                   size: widget.useWhiteBackground ? 20.sp : 18.sp,
                 ),
                 // Falling filled icon

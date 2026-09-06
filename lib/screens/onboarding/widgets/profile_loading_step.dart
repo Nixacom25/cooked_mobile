@@ -208,7 +208,7 @@ class _ProfileLoadingStepState extends State<ProfileLoadingStep> with TickerProv
                                 child: BackdropFilter(
                                   filter: ImageFilter.blur(sigmaX: blurSigma, sigmaY: blurSigma),
                                   child: Container(
-                                    color: Colors.white.withOpacity(0.1)))),
+                                    color: Colors.white.withValues(alpha: 0.1)))),
                           ]))));
                 });
             })),

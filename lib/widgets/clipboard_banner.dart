@@ -124,7 +124,7 @@ class _ClipboardBannerState extends State<ClipboardBanner> with SingleTickerProv
                       borderRadius: BorderRadius.circular(24.r),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.12),
+                          color: Colors.black.withValues(alpha: 0.12),
                           blurRadius: 20,
                           offset: const Offset(0, 10),
                         ),
@@ -138,7 +138,7 @@ class _ClipboardBannerState extends State<ClipboardBanner> with SingleTickerProv
                           width: 44.w,
                           height: 44.h,
                           decoration: BoxDecoration(
-                            color: const Color(0xFFC83A2D).withOpacity(0.1),
+                            color: const Color(0xFFC83A2D).withValues(alpha: 0.1),
                             shape: BoxShape.circle,
                           ),
                           child: AnimatedBuilder(
@@ -225,7 +225,7 @@ class _ClipboardBannerState extends State<ClipboardBanner> with SingleTickerProv
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
+                              color: Colors.black.withValues(alpha: 0.1),
                               blurRadius: 4,
                               offset: const Offset(0, 2),
                             ),

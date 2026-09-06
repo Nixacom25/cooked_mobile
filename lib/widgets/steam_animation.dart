@@ -134,14 +134,14 @@ class _SteamPainter extends CustomPainter {
       }
       
       currentOpacity = currentOpacity.clamp(0.0, 1.0);
-      Color particleColor = color.withOpacity(currentOpacity);
+      Color particleColor = color.withValues(alpha: currentOpacity);
 
       // Use a radial gradient for a fuzzy edge instead of maskFilter (which breaks on some devices)
       final rect = Rect.fromCircle(center: Offset(p.x, p.y), radius: p.size / 2);
       final gradient = RadialGradient(
         colors: [
           particleColor,
-          particleColor.withOpacity(0.0), // Fade to transparent at the edges
+          particleColor.withValues(alpha: 0.0), // Fade to transparent at the edges
         ],
       );
 

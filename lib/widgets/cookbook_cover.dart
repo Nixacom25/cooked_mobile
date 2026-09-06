@@ -117,7 +117,7 @@ class CookbookCover extends StatelessWidget {
         child: Container(
           padding: EdgeInsets.all(12.w),
           decoration: BoxDecoration(
-            color: const Color(0xFFC83A2D).withOpacity(0.05),
+            color: const Color(0xFFC83A2D).withValues(alpha: 0.05),
             shape: BoxShape.circle,
           ),
           child: Image.asset(
@@ -125,7 +125,7 @@ class CookbookCover extends StatelessWidget {
             width: 45.w,
             height: 45.h,
             fit: BoxFit.cover,
-            color: const Color(0xFFC83A2D).withOpacity(0.3),
+            color: const Color(0xFFC83A2D).withValues(alpha: 0.3),
             colorBlendMode: BlendMode.srcIn,
           ),
         ),

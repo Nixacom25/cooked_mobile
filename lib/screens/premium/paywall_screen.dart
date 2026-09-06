@@ -305,7 +305,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                 color: Colors.white,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     offset: const Offset(0, -4),
                     blurRadius: 10,
                   ),
@@ -458,7 +458,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
               ),
               if (!isLast)
                 Expanded(
-                  child: Container(width: 5.w, color: color.withOpacity(0.2)),
+                  child: Container(width: 5.w, color: color.withValues(alpha: 0.2)),
                 ),
             ],
           ),
