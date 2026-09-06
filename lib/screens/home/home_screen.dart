@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math' as math;
 import 'dart:ui';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -9,8 +8,6 @@ import 'package:share_plus/share_plus.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import '../../services/auth_service.dart';
-import '../../services/user_service.dart';
 import '../../routes/app_routes.dart';
 import '../../widgets/scan_animation_overlay.dart';
 import '../explore_screen.dart';
@@ -2762,119 +2759,6 @@ class _CookbooksRowState extends State<_CookbooksRow> {
     );
   }
 }
-
-// ══════════════════════════════════════════════════════════════════════════════
-// RECENTLY VIEWED (home horizontal row)
-// ══════════════════════════════════════════════════════════════════════════════
-class _RecentlyViewedRow extends StatelessWidget {
-  final List<Recipe> recipes;
-  const _RecentlyViewedRow({super.key, required this.recipes});
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 55.h,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        padding: EdgeInsets.symmetric(horizontal: 18.w),
-        itemCount: recipes.length,
-        itemBuilder: (_, i) {
-          final r = recipes[i];
-          return Padding(
-            padding: EdgeInsets.only(right: i < recipes.length - 1 ? 12 : 0),
-            child: GestureDetector(
-              onTap: () {
-                HistoryService.instance.addToHistory(r);
-                Navigator.pushNamed(
-                  context,
-                  AppRoutes.recipeDetail,
-                  arguments: {'recipe': r},
-                );
-              },
-              child: Container(
-                constraints: BoxConstraints(maxWidth: 180.w),
-                padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF2F1EF),
-                  borderRadius: BorderRadius.circular(10.r),
-                  border: Border.all(
-                    color: const Color(0xFFEDEDED),
-                    width: 1.2,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.04),
-                      blurRadius: 8,
-                    ),
-                  ],
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 38.w,
-                      height: 38.h,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFFFFFF),
-                        borderRadius: BorderRadius.circular(5.r),
-                      ),
-                      alignment: Alignment.center,
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(5.r),
-                        child: _buildThumbnail(r.image),
-                      ),
-                    ),
-                    SizedBox(width: 10.w),
-                    Flexible(
-                      child: Text(
-                        r.name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontFamily: 'Open Sans',
-                          fontWeight: FontWeight.w800,
-                          fontSize: 14.sp,
-                          color: const Color(0xFF1A1A1A),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildThumbnail(String? image) {
-    const fallback = 'assets/images/recipes.png';
-    if (image == null || image.isEmpty || image == 'null') {
-      return Image.asset(fallback, fit: BoxFit.cover);
-    }
-    if (image.startsWith('http')) {
-      return CachedNetworkImage(
-        imageUrl: image,
-        width: 38.w,
-        height: 38.h,
-        fit: BoxFit.cover,
-        placeholder: (_, __) => Container(color: const Color(0xFFEEEEEE)),
-        errorWidget: (_, __, ___) => Image.asset(fallback, fit: BoxFit.cover),
-      );
-    }
-    return Image.asset(
-      image,
-      width: 38.w,
-      height: 38.h,
-      fit: BoxFit.cover,
-      errorBuilder: (_, __, ___) => Image.asset(fallback, fit: BoxFit.cover),
-    );
-  }
-}
-
-// ══════════════════════════════════════════════════════════════════════════════
-
 
 // ══════════════════════════════════════════════════════════════════════════════
 // SUGGESTED RECIPES SECTION
