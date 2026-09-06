@@ -48,7 +48,7 @@ class ScanScreen extends StatefulWidget {
 
 class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
   ScanState _state = ScanState.scan;
-  bool _showingSuccessMessage = false;
+  final bool _showingSuccessMessage = false;
   final TextEditingController _ingCtrl = TextEditingController();
   final List<String> _typedIngredients = [];
   List<Map<String, dynamic>> _savedIngredients = [];

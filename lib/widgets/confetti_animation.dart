@@ -5,10 +5,10 @@ import '../models/recipe.dart';
 class ConfettiAnimation extends StatefulWidget {
   final Widget child;
   final List<RecipeIngredient>? ingredients;
-  const ConfettiAnimation({Key? key, required this.child, this.ingredients}) : super(key: key);
+  const ConfettiAnimation({super.key, required this.child, this.ingredients});
 
   @override
-  _ConfettiAnimationState createState() => _ConfettiAnimationState();
+  State<ConfettiAnimation> createState() => _ConfettiAnimationState();
 }
 
 class _ConfettiAnimationState extends State<ConfettiAnimation>
@@ -116,7 +116,7 @@ class _ConfettiAnimationState extends State<ConfettiAnimation>
               ),
             ),
           );
-        }).toList(),
+        }),
         widget.child,
       ],
     );
