@@ -189,9 +189,9 @@ class _ProfileLoadingStepState extends State<ProfileLoadingStep> with TickerProv
                   return Transform(
                     alignment: Alignment.center,
                     transform: Matrix4.identity()
-                      ..translate(0.0, translateY, 0.0)
+                      ..translateByDouble(0.0, translateY, 0.0, 1.0)
                       ..rotateZ(rotationZ)
-                      ..scale(scale),
+                      ..scaleByDouble(scale, scale, scale, 1.0),
                     child: Center(
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(20.r),
