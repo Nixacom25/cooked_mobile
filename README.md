@@ -1,21 +1,23 @@
-# app_ecommerce
+# Cooked
 
-A new Flutter project.
+Application mobile Flutter permettant d'importer des recettes depuis les réseaux sociaux
+(TikTok, Instagram, YouTube) via le partage système, de les organiser en cookbooks, de
+générer des listes de courses et de gérer un abonnement premium.
 
-## Getting Started
+## Stack technique
 
-This project is a starting point for a Flutter application.
+- Flutter / Dart
+- Hive (cache local des requêtes API avec TTL)
+- Firebase (Analytics, Crashlytics, Performance)
+- RevenueCat / `in_app_purchase` pour les abonnements
+- `receive_sharing_intent` / `app_links` pour l'import et le deep linking
 
-A few resources to get you started if this is your first Flutter project:
+Voir [`TECHNICAL_DOCUMENTATION.md`](./TECHNICAL_DOCUMENTATION.md) pour le détail de
+l'architecture, des services et de la configuration native iOS/Android.
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+## Démarrer
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
-
-https://xhamster.com/videos/spot-light-real-orgasm-innocence-3443393
-https://xhamster.com/videos/chloe-orgazm-5639182
-https://xhamster.com/videos/extreme-loud-bbc-fuck-xhvXkNr
-https://xhamster.com/videos/bbc-makes-her-squirt-and-fucks-out-to-her-6251688
+```bash
+flutter pub get
+flutter run
+```
