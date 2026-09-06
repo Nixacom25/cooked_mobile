@@ -106,12 +106,11 @@ class _MealPlanningStepState extends State<MealPlanningStep> {
                 : null),
           child: Row(
             children: [
-              Container(
-                child: SvgPicture.asset(
-                  'assets/icones/${opt['icon']}',
-                  height: 32.sp,
-                  width: 32.sp,
-                  placeholderBuilder: (context) => const SizedBox.shrink())),
+              SvgPicture.asset(
+                'assets/icones/${opt['icon']}',
+                height: 32.sp,
+                width: 32.sp,
+                placeholderBuilder: (context) => const SizedBox.shrink()),
               SizedBox(width: 16.w),
               Expanded(
                 child: Column(

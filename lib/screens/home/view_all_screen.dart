@@ -237,8 +237,9 @@ class _ViewAllScreenState extends State<ViewAllScreen> {
     ValueNotifier<List<Recipe>?>? notifier;
     if (type == ViewAllType.savedRecipes) {
       notifier = RecipeService.instance.myRecipesNotifier;
-    } else if (type == ViewAllType.imports)
+    } else if (type == ViewAllType.imports) {
       notifier = RecipeService.instance.recentImportsNotifier;
+    }
 
     if (notifier == null) return const SizedBox.shrink();
 

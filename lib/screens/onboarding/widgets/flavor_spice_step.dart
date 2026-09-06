@@ -316,7 +316,7 @@ class _FlavorSpiceStepState extends State<FlavorSpiceStep> with SingleTickerProv
                 opacity: _summaryOpacity,
                 child: SlideTransition(
                   position: _summarySlide,
-                  child: Container(
+                  child: SizedBox(
                     width: double.infinity,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,

@@ -318,12 +318,10 @@ class _ContactCard extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Container(
-              child: Icon(
-                icon,
-                color: const Color(0xFFC31E26),
-                size: 40.sp,
-              ),
+            Icon(
+              icon,
+              color: const Color(0xFFC31E26),
+              size: 40.sp,
             ),
             SizedBox(width: 14.w),
             Expanded(
