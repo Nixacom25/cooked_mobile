@@ -1,8 +1,10 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart' show defaultTargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:rive/rive.dart';
 import '../models/recipe.dart';
+import '../core/widgets/ios_toast.dart';
 
 class ScanAnimationOverlay extends StatefulWidget {
   final List<RecipeIngredient>? detectedIngredients;
@@ -188,6 +190,13 @@ class _FallbackScanAnimationState extends State<_FallbackScanAnimation> {
       _riveLoadTimeoutTimer = Timer(const Duration(seconds: 5), () {
         if (mounted && !_riveLoaded) {
           debugPrint('⏱️ Rive load timed out, falling back to native spinner');
+          if (context.mounted) {
+            IosToast.show(
+              context,
+              message: '⏱️ Scan animation timed out (${defaultTargetPlatform.name}), using fallback',
+              type: ToastType.warning,
+            );
+          }
           setState(() {
             _forceFallback = true;
           });
@@ -253,6 +262,13 @@ class _FallbackScanAnimationState extends State<_FallbackScanAnimation> {
         onFailed: (Object error, StackTrace stackTrace) {
           debugPrint('❌ RIVE LOAD ERROR: $error\n$stackTrace');
           _riveLoadTimeoutTimer?.cancel();
+          if (context.mounted) {
+            IosToast.show(
+              context,
+              message: '❌ Scan animation failed (${defaultTargetPlatform.name}): $error',
+              type: ToastType.error,
+            );
+          }
         },
         builder: (context, state) {
           switch (state) {
