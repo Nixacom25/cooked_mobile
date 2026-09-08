@@ -74,7 +74,18 @@ class _ScanAnimationOverlayState extends State<ScanAnimationOverlay> {
 
     if (_minAnimationFinished && hasData) {
       _maxTimeoutTimer?.cancel();
-      widget.onAnimationComplete();
+      // Defer to after the current frame: this can be reached synchronously
+      // from didUpdateWidget while the framework is still building the
+      // widget tree (e.g. ScanScreen rebuilding a Positioned ancestor), and
+      // calling onAnimationComplete() there - which triggers setState() on
+      // the parent ScanScreen - crashes with "setState() or markNeedsBuild()
+      // called during build". Confirmed via a real Crashlytics fatal crash
+      // report (Tecno / Android 13 devices).
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          widget.onAnimationComplete();
+        }
+      });
     }
   }
 
