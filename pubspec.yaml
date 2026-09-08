@@ -1,7 +1,7 @@
 name: cooked
 description: "A new Flutter project."
 publish_to: 'none' 
-version: 1.0.1+71
+version: 1.0.1+72
 
 environment:
   sdk: ^3.10.0
@@ -72,6 +72,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/cooked.riv
+    - assets/animations/
     - assets/images/
     - assets/icones/
     - assets/favicon/
