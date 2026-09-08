@@ -9,12 +9,17 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group('ScanAnimationOverlay & Rive Asset Verification', () {
-    test('Verify cooked.riv asset file exists and is readable binary', () async {
-      final file = File('assets/cooked.riv');
-      expect(file.existsSync(), isTrue, reason: 'assets/cooked.riv must exist in project root');
+    test('Verify cooked.riv and cooked_no_scan.riv asset files exist and are readable binary', () async {
+      for (final path in [
+        'assets/animations/cooked.riv',
+        'assets/animations/cooked_no_scan.riv',
+      ]) {
+        final file = File(path);
+        expect(file.existsSync(), isTrue, reason: '$path must exist');
 
-      final bytes = await file.readAsBytes();
-      expect(bytes.length, greaterThan(0), reason: 'assets/cooked.riv file must not be empty');
+        final bytes = await file.readAsBytes();
+        expect(bytes.length, greaterThan(0), reason: '$path file must not be empty');
+      }
     });
 
     testWidgets('ScanAnimationOverlay renders placeholder initially and triggers completion callback', (WidgetTester tester) async {

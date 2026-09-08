@@ -143,10 +143,10 @@ class _ScanAnimationOverlayState extends State<ScanAnimationOverlay> {
   }
 }
 
-/// Remplace l'ancien spinner natif : essaie de jouer assets/cooked.riv,
-/// et si le fichier est absent / corrompu / mal déclaré, retombe sur
-/// l'animation Flutter native (_NativeSpinnerFallback) pour ne jamais
-/// bloquer l'écran.
+/// Remplace l'ancien spinner natif : essaie de jouer assets/animations/cooked.riv
+/// (ou cooked_no_scan.riv pour Type Ingredients / Saved), et si le fichier est
+/// absent / corrompu / mal déclaré, retombe sur l'animation Flutter native
+/// (_NativeSpinnerFallback) pour ne jamais bloquer l'écran.
 class _FallbackScanAnimation extends StatefulWidget {
   final bool skipImageAnalysis;
   const _FallbackScanAnimation({this.skipImageAnalysis = false});
@@ -171,8 +171,13 @@ class _FallbackScanAnimationState extends State<_FallbackScanAnimation> {
     if (!isTestEnv) {
       // 1. Utilisation de Factory.flutter pour être compatible avec Impeller (iOS)
       // 2. Suppression de l'appel manuel ..file() qui provoquait une race condition
+      // 3. Le flux "Scan" (analyse d'une photo) joue l'animation complète avec le
+      //    scan ; les flux "Type Ingredients" / "Saved" (skipImageAnalysis) jouent
+      //    une variante sans la séquence de scan.
       _fileLoader = FileLoader.fromAsset(
-        'assets/cooked.riv',
+        widget.skipImageAnalysis
+            ? 'assets/animations/cooked_no_scan.riv'
+            : 'assets/animations/cooked.riv',
         riveFactory: Factory.flutter,
       );
 
@@ -209,7 +214,9 @@ class _FallbackScanAnimationState extends State<_FallbackScanAnimation> {
         artboardSelector: const ArtboardDefault(),
         stateMachineSelector: const StateMachineDefault(),
         onLoaded: (RiveLoaded state) {
-          debugPrint('✅ Rive animation cooked.riv loaded using Factory.flutter!');
+          debugPrint(
+            '✅ Rive animation ${widget.skipImageAnalysis ? 'cooked_no_scan.riv' : 'cooked.riv'} loaded using Factory.flutter!',
+          );
           _riveLoaded = true;
           _riveLoadTimeoutTimer?.cancel();
           final sm = state.controller.stateMachine;
