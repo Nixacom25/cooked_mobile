@@ -93,3 +93,5 @@ flutter:
         - asset: assets/fonts/Rubik/Rubik-VariableFont_wght.ttf
         - asset: assets/fonts/Rubik/Rubik-Italic-VariableFont_wght.ttf
           style: italic
+
+          
