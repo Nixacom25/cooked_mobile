@@ -1,8 +1,6 @@
 name: iOS TestFlight Release
 
 on:
-  # Disabled: pushing to main no longer auto-triggers a TestFlight release.
-  # Uncomment to restore automatic releases on every push to main.
   push:
     branches: [ "main" ]
   workflow_dispatch:
