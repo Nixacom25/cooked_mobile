@@ -58,7 +58,7 @@ jobs:
         serviceAccountJson: service_account.json
         packageName: com.cookedapp.app
         releaseFiles: build/app/outputs/bundle/release/app-release.aab
-        track: internal
+        tracks: internal
         status: draft
 
     - name: Upload Artifact
