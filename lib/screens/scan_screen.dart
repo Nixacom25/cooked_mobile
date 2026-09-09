@@ -419,7 +419,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
 
       _cameraController = CameraController(
         backCam,
-        ResolutionPreset.medium, // Stable resolution
+        ResolutionPreset.high, // Sharper live preview/capture than medium, still stable
         enableAudio: false,
         imageFormatGroup: ImageFormatGroup.jpeg, // Fixes ImageReader_JNI buffer spam on Android
       );
