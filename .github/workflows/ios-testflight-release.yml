@@ -102,6 +102,20 @@ jobs:
     - name: Build IPA
       run: flutter build ipa --release --export-options-plist=ios/ExportOptions.plist
 
+    - name: Upload dSYMs to Crashlytics
+      continue-on-error: true
+      run: |
+        DSYM_DIR="build/ios/archive/Runner.xcarchive/dSYMs"
+        UPLOAD_SYMBOLS="ios/Pods/FirebaseCrashlytics/upload-symbols"
+        if [ -d "$DSYM_DIR" ] && [ -f "$UPLOAD_SYMBOLS" ]; then
+          "$UPLOAD_SYMBOLS" -gsp ios/Runner/GoogleService-Info.plist -p ios "$DSYM_DIR" || \
+            echo "dSYM upload failed - crash reports for this build won't be symbolicated, but continuing anyway."
+        else
+          echo "Skipping dSYM upload: dSYM directory or upload-symbols binary not found."
+          echo "DSYM_DIR exists: $([ -d "$DSYM_DIR" ] && echo yes || echo no)"
+          echo "UPLOAD_SYMBOLS exists: $([ -f "$UPLOAD_SYMBOLS" ] && echo yes || echo no)"
+        fi
+
     - name: Upload to TestFlight
       env:
         API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
