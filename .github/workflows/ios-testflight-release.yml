@@ -106,17 +106,26 @@ jobs:
 
     - name: Upload dSYMs to Crashlytics
       continue-on-error: true
+      env:
+        FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
       run: |
         DSYM_DIR="build/ios/archive/Runner.xcarchive/dSYMs"
-        UPLOAD_SYMBOLS="ios/Pods/FirebaseCrashlytics/upload-symbols"
-        if [ -d "$DSYM_DIR" ] && [ -f "$UPLOAD_SYMBOLS" ]; then
-          "$UPLOAD_SYMBOLS" -gsp ios/Runner/GoogleService-Info.plist -p ios "$DSYM_DIR" || \
-            echo "dSYM upload failed - crash reports for this build won't be symbolicated, but continuing anyway."
-        else
-          echo "Skipping dSYM upload: dSYM directory or upload-symbols binary not found."
-          echo "DSYM_DIR exists: $([ -d "$DSYM_DIR" ] && echo yes || echo no)"
-          echo "UPLOAD_SYMBOLS exists: $([ -f "$UPLOAD_SYMBOLS" ] && echo yes || echo no)"
+        if [ ! -d "$DSYM_DIR" ]; then
+          echo "Skipping dSYM upload: no dSYM directory found at $DSYM_DIR"
+          exit 0
         fi
+        if [ -z "$FIREBASE_TOKEN" ]; then
+          echo "Skipping dSYM upload: FIREBASE_TOKEN secret is not set."
+          echo "Generate one with 'firebase login:ci' and add it as a repo secret named FIREBASE_TOKEN."
+          exit 0
+        fi
+
+        APP_ID=$(/usr/libexec/PlistBuddy -c "Print :GOOGLE_APP_ID" ios/Runner/GoogleService-Info.plist)
+        echo "Uploading dSYMs for Firebase app $APP_ID"
+
+        npm install -g firebase-tools
+        firebase crashlytics:symbols:upload --app="$APP_ID" --token="$FIREBASE_TOKEN" "$DSYM_DIR" || \
+          echo "dSYM upload failed - crash reports for this build won't be symbolicated, but continuing anyway."
 
     - name: Upload to TestFlight
       env:
