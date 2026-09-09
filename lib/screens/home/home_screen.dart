@@ -656,6 +656,7 @@ class _FloatingBottomNav extends StatelessWidget {
                                 children: [
                                   Text(
                                     'Scan Recipe',
+                                    textAlign: TextAlign.center,
                                     style: TextStyle(
                                       fontFamily: 'Rubik',
                                       fontSize: 11.sp,
