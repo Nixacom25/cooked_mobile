@@ -2072,6 +2072,23 @@ class _PopulatedSavedRecipesList extends StatelessWidget {
           onPinTap: () {
             RecipeService.instance.togglePin(r.id);
           },
+          onFavoriteTap: () {
+            HapticFeedback.lightImpact();
+            final newFavState = !r.isFavorite;
+            r.isFavorite = newFavState;
+            if (newFavState) {
+              RecipeService.instance.markRecipeAsSaved(r);
+              IosToast.show(ctx, message: 'Recipe saved to favorites!', type: ToastType.success);
+            } else {
+              if (r.id.isNotEmpty) {
+                RecipeService.instance.deleteRecipe(r.id);
+              }
+              final current = RecipeService.instance.myRecipesNotifier.value ?? [];
+              RecipeService.instance.myRecipesNotifier.value =
+                  current.where((item) => item.id != r.id).toList();
+              IosToast.show(ctx, message: 'Recipe removed from saved', type: ToastType.success);
+            }
+          },
           onTap: () {
             HistoryService.instance.addToHistory(r);
             Navigator.pushNamed(

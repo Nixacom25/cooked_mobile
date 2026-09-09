@@ -2,7 +2,9 @@ import 'home/home_screen.dart';
 import 'dart:async';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../core/widgets/ios_toast.dart';
 import '../widgets/app_loading_indicator.dart';
 import '../widgets/app_search_field.dart';
 import '../widgets/app_top_header.dart';
@@ -805,6 +807,22 @@ class _ExploreScreenState extends State<ExploreScreen>
                           AppRoutes.recipeDetail,
                           arguments: {'recipe': r},
                         );
+                      },
+                      onFavoriteTap: () {
+                        HapticFeedback.lightImpact();
+                        final newFavState = !r.isFavorite;
+                        setState(() {
+                          r.isFavorite = newFavState;
+                        });
+                        if (newFavState) {
+                          RecipeService.instance.markRecipeAsSaved(r);
+                          IosToast.show(context, message: 'Recipe saved to favorites!', type: ToastType.success);
+                        } else {
+                          if (r.id.isNotEmpty) {
+                            RecipeService.instance.deleteRecipe(r.id);
+                          }
+                          IosToast.show(context, message: 'Recipe removed from saved', type: ToastType.success);
+                        }
                       },
                     );
                   },

@@ -260,6 +260,22 @@ class _CookbookDetailScreenState extends State<CookbookDetailScreen> {
                                         onPinTap: () {
                                           RecipeService.instance.togglePin(r.id);
                                         },
+                                        onFavoriteTap: () {
+                                          HapticFeedback.lightImpact();
+                                          final newFavState = !r.isFavorite;
+                                          setState(() {
+                                            r.isFavorite = newFavState;
+                                          });
+                                          if (newFavState) {
+                                            RecipeService.instance.markRecipeAsSaved(r);
+                                            IosToast.show(ctx, message: 'Recipe saved to favorites!', type: ToastType.success);
+                                          } else {
+                                            if (r.id.isNotEmpty) {
+                                              RecipeService.instance.deleteRecipe(r.id);
+                                            }
+                                            IosToast.show(ctx, message: 'Recipe removed from saved', type: ToastType.success);
+                                          }
+                                        },
                                         onTap: () => Navigator.pushNamed(
                                           context,
                                           AppRoutes.recipeDetail,

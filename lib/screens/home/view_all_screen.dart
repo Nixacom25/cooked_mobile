@@ -1,5 +1,6 @@
 import 'package:cooked/widgets/recipe_grid_skeleton.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -810,6 +811,25 @@ class _RecipesGridState extends State<_RecipesGrid> {
                         try {
                           await RecipeService.instance.togglePin(r.id);
                         } catch (_) {}
+                      },
+                      onFavoriteTap: () {
+                        HapticFeedback.lightImpact();
+                        final newFavState = !r.isFavorite;
+                        setState(() {
+                          r.isFavorite = newFavState;
+                        });
+                        if (newFavState) {
+                          RecipeService.instance.markRecipeAsSaved(r);
+                          IosToast.show(ctx, message: 'Recipe saved to favorites!', type: ToastType.success);
+                        } else {
+                          if (r.id.isNotEmpty) {
+                            RecipeService.instance.deleteRecipe(r.id);
+                          }
+                          final current = RecipeService.instance.myRecipesNotifier.value ?? [];
+                          RecipeService.instance.myRecipesNotifier.value =
+                              current.where((item) => item.id != r.id).toList();
+                          IosToast.show(ctx, message: 'Recipe removed from saved', type: ToastType.success);
+                        }
                       },
                       onTap: () async {
                         await Navigator.pushNamed(
