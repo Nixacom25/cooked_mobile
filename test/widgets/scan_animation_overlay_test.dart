@@ -9,102 +9,131 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group('ScanAnimationOverlay & Rive Asset Verification', () {
-    test('Verify cooked.riv and cooked_no_scan.riv asset files exist and are readable binary', () async {
-      for (final path in [
-        'assets/animations/cooked.riv',
-        'assets/animations/cooked_no_scan.riv',
-      ]) {
-        final file = File(path);
-        expect(file.existsSync(), isTrue, reason: '$path must exist');
+    test(
+      'Verify cooked.riv and cooked_no_scan.riv asset files exist and are readable binary',
+      () async {
+        for (final path in [
+          'assets/animations/cooked.riv',
+          'assets/animations/cooked_no_scan.riv',
+        ]) {
+          final file = File(path);
+          expect(file.existsSync(), isTrue, reason: '$path must exist');
 
-        final bytes = await file.readAsBytes();
-        expect(bytes.length, greaterThan(0), reason: '$path file must not be empty');
-      }
-    });
+          final bytes = await file.readAsBytes();
+          expect(
+            bytes.length,
+            greaterThan(0),
+            reason: '$path file must not be empty',
+          );
+        }
+      },
+    );
 
-    testWidgets('ScanAnimationOverlay renders placeholder initially and triggers completion callback', (WidgetTester tester) async {
-      bool completed = false;
+    testWidgets(
+      'ScanAnimationOverlay renders placeholder initially and triggers completion callback',
+      (WidgetTester tester) async {
+        bool completed = false;
 
-      // Ignore expected headless desktop FFI font symbol lookup log during test execution
-      final originalOnError = FlutterError.onError;
-      FlutterError.onError = (FlutterErrorDetails details) {
-        if (details.exception.toString().contains('makeFont')) return;
-        originalOnError?.call(details);
-      };
+        // Ignore expected headless desktop FFI font symbol lookup log during test execution
+        final originalOnError = FlutterError.onError;
+        FlutterError.onError = (FlutterErrorDetails details) {
+          if (details.exception.toString().contains('makeFont')) return;
+          originalOnError?.call(details);
+        };
 
-      await tester.pumpWidget(
-        ScreenUtilInit(
-          designSize: const Size(375, 812),
-          builder: (context, child) => MaterialApp(
-            home: Scaffold(
-              body: ScanAnimationOverlay(
-                showTestControls: true,
-                onAnimationComplete: () {
-                  completed = true;
-                },
+        await tester.pumpWidget(
+          ScreenUtilInit(
+            designSize: const Size(375, 812),
+            builder: (context, child) => MaterialApp(
+              home: Scaffold(
+                body: ScanAnimationOverlay(
+                  showTestControls: true,
+                  imagePath: 'assets/images/scan.png',
+                  onAnimationComplete: () {
+                    completed = true;
+                  },
+                ),
               ),
             ),
           ),
-        ),
-      );
+        );
 
-      // Verify widget mounts cleanly without throwing exceptions
-      expect(find.byType(ScanAnimationOverlay), findsOneWidget);
+        // Verify widget mounts cleanly without throwing exceptions
+        expect(find.byType(ScanAnimationOverlay), findsOneWidget);
+        expect(find.byType(Image), findsOneWidget);
 
-      // Tap close/fermer button in test controls
-      final closeButton = find.text('Fermer');
-      expect(closeButton, findsOneWidget);
-      await tester.tap(closeButton);
-      await tester.pump();
+        await tester.pump(const Duration(seconds: 3));
+        expect(find.byType(Image), findsNothing);
 
-      expect(completed, isTrue, reason: 'onAnimationComplete callback should be called on close');
-      FlutterError.onError = originalOnError;
-    });
+        // Choose Android so the test exercises the Rive branch.
+        final testButton = find.text('Tester');
+        expect(testButton, findsOneWidget);
+        await tester.tap(testButton);
+        await tester.pump();
+        expect(find.text('Choisir la plateforme'), findsOneWidget);
+        await tester.tap(find.text('Android'));
+        await tester.pump(const Duration(seconds: 3));
+        await tester.pump();
 
-    testWidgets('ScanAnimationOverlay completes automatically when data is provided', (WidgetTester tester) async {
-      bool completed = false;
+        expect(completed, isFalse);
+        await tester.tap(find.text('Fermer'));
+        expect(completed, isTrue);
+        FlutterError.onError = originalOnError;
+      },
+    );
 
-      final originalOnError = FlutterError.onError;
-      FlutterError.onError = (FlutterErrorDetails details) {
-        if (details.exception.toString().contains('makeFont')) return;
-        originalOnError?.call(details);
-      };
+    testWidgets(
+      'ScanAnimationOverlay completes automatically when data is provided',
+      (WidgetTester tester) async {
+        bool completed = false;
 
-      await tester.pumpWidget(
-        ScreenUtilInit(
-          designSize: const Size(375, 812),
-          builder: (context, child) => MaterialApp(
-            home: Scaffold(
-              body: ScanAnimationOverlay(
-                generatedRecipes: [
-                  Recipe(
-                    id: '1',
-                    name: 'Test Recipe',
-                    cookTime: 15,
-                    kcal: 300,
-                    steps: [],
-                    equipment: [],
-                    ingredients: [],
-                    isPublic: false,
-                    isFavorite: false,
-                    createdAt: DateTime.now(),
-                    updatedAt: DateTime.now(),
-                  ),
-                ],
-                onAnimationComplete: () {
-                  completed = true;
-                },
+        final originalOnError = FlutterError.onError;
+        FlutterError.onError = (FlutterErrorDetails details) {
+          if (details.exception.toString().contains('makeFont')) return;
+          originalOnError?.call(details);
+        };
+
+        await tester.pumpWidget(
+          ScreenUtilInit(
+            designSize: const Size(375, 812),
+            builder: (context, child) => MaterialApp(
+              home: Scaffold(
+                body: ScanAnimationOverlay(
+                  generatedRecipes: [
+                    Recipe(
+                      id: '1',
+                      name: 'Test Recipe',
+                      cookTime: 15,
+                      kcal: 300,
+                      steps: [],
+                      equipment: [],
+                      ingredients: [],
+                      isPublic: false,
+                      isFavorite: false,
+                      createdAt: DateTime.now(),
+                      updatedAt: DateTime.now(),
+                    ),
+                  ],
+                  onAnimationComplete: () {
+                    completed = true;
+                  },
+                ),
               ),
             ),
           ),
-        ),
-      );
+        );
 
-      // Fast-forward timer by 2.1 seconds to trigger minimum animation duration
-      await tester.pump(const Duration(milliseconds: 2100));
+        // The image scan lasts 3 seconds before the Rive animation starts.
+        await tester.pump(const Duration(milliseconds: 3000));
 
-      expect(completed, isTrue, reason: 'Animation overlay must trigger onAnimationComplete when recipes are ready');
-      FlutterError.onError = originalOnError;
-    });
+        expect(
+          completed,
+          isTrue,
+          reason:
+              'Animation overlay must trigger onAnimationComplete when recipes are ready',
+        );
+        FlutterError.onError = originalOnError;
+      },
+    );
   });
 }

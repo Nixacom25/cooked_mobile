@@ -313,169 +313,169 @@ class _HomeScreenState extends State<HomeScreen>
           onNotification: _handleScroll,
           child: Stack(
             children: [
-            IndexedStack(index: _currentTab, children: _tabWidgets),
+              IndexedStack(index: _currentTab, children: _tabWidgets),
 
-            // Test animation FAB raised above bottom nav
-            if (kDebugMode && _currentTab == 0)
-              Positioned(
-                right: 16.w,
-                bottom: 95.h,
-                child: FloatingActionButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => Scaffold(
-                          body: ScanAnimationOverlay(
-                            showTestControls: true,
-                            imagePath: 'assets/images/fridge_mockup.png',
-                            detectedIngredients: [
-                              RecipeIngredient(
-                                id: 'i1',
-                                name: "Tomates",
-                                amount: 2.0,
-                                unit: "pcs",
-                                quantity: "2 pcs",
-                                image: "assets/images/ing1.png",
-                              ),
-                              RecipeIngredient(
-                                id: 'i2',
-                                name: "Oignons",
-                                amount: 1.0,
-                                unit: "pc",
-                                quantity: "1 pc",
-                                image: "assets/images/ing2.png",
-                              ),
-                              RecipeIngredient(
-                                id: 'i3',
-                                name: "Ail",
-                                amount: 3.0,
-                                unit: "gousses",
-                                quantity: "3 gousses",
-                                image: "assets/images/ing3.png",
-                              ),
-                              RecipeIngredient(
-                                id: 'i4',
-                                name: "Poulet",
-                                amount: 500.0,
-                                unit: "g",
-                                quantity: "500 g",
-                                image: "assets/images/ing4.png",
-                              ),
-                              RecipeIngredient(
-                                id: 'i5',
-                                name: "Carottes",
-                                amount: 2.0,
-                                unit: "pcs",
-                                quantity: "2 pcs",
-                                image: "assets/images/ing5.png",
-                              ),
-                            ],
-                            generatedRecipes: [
-                              Recipe(
-                                id: 'r1',
-                                name: 'Poulet rôti aux légumes',
-                                cookTime: 45,
-                                kcal: 450,
-                                steps: [],
-                                equipment: [],
-                                isPublic: true,
-                                isFavorite: false,
-                                createdAt: DateTime.now(),
-                                updatedAt: DateTime.now(),
-                                image: 'assets/images/plat1.png',
-                                ingredients: [],
-                              ),
-                              Recipe(
-                                id: 'r2',
-                                name: 'Salade fraîcheur',
-                                cookTime: 0,
-                                kcal: 200,
-                                steps: [],
-                                equipment: [],
-                                isPublic: true,
-                                isFavorite: false,
-                                createdAt: DateTime.now(),
-                                updatedAt: DateTime.now(),
-                                image: 'assets/images/plat2.png',
-                                ingredients: [],
-                              ),
-                              Recipe(
-                                id: 'r3',
-                                name: 'Mijoté de poulet',
-                                cookTime: 60,
-                                kcal: 550,
-                                steps: [],
-                                equipment: [],
-                                isPublic: true,
-                                isFavorite: false,
-                                createdAt: DateTime.now(),
-                                updatedAt: DateTime.now(),
-                                image: 'assets/images/plat3.png',
-                                ingredients: [],
-                              ),
-                            ],
-                            onAnimationComplete: () {
-                              Navigator.pop(context);
-                            },
+              // Test animation FAB raised above bottom nav
+              if (kDebugMode && _currentTab == 0)
+                Positioned(
+                  right: 16.w,
+                  bottom: 95.h,
+                  child: FloatingActionButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => Scaffold(
+                            body: ScanAnimationOverlay(
+                              showTestControls: true,
+                              imagePath: 'assets/images/scan.png',
+                              detectedIngredients: [
+                                RecipeIngredient(
+                                  id: 'i1',
+                                  name: "Tomates",
+                                  amount: 2.0,
+                                  unit: "pcs",
+                                  quantity: "2 pcs",
+                                  image: "assets/images/ing1.png",
+                                ),
+                                RecipeIngredient(
+                                  id: 'i2',
+                                  name: "Oignons",
+                                  amount: 1.0,
+                                  unit: "pc",
+                                  quantity: "1 pc",
+                                  image: "assets/images/ing2.png",
+                                ),
+                                RecipeIngredient(
+                                  id: 'i3',
+                                  name: "Ail",
+                                  amount: 3.0,
+                                  unit: "gousses",
+                                  quantity: "3 gousses",
+                                  image: "assets/images/ing3.png",
+                                ),
+                                RecipeIngredient(
+                                  id: 'i4',
+                                  name: "Poulet",
+                                  amount: 500.0,
+                                  unit: "g",
+                                  quantity: "500 g",
+                                  image: "assets/images/ing4.png",
+                                ),
+                                RecipeIngredient(
+                                  id: 'i5',
+                                  name: "Carottes",
+                                  amount: 2.0,
+                                  unit: "pcs",
+                                  quantity: "2 pcs",
+                                  image: "assets/images/ing5.png",
+                                ),
+                              ],
+                              generatedRecipes: [
+                                Recipe(
+                                  id: 'r1',
+                                  name: 'Poulet rôti aux légumes',
+                                  cookTime: 45,
+                                  kcal: 450,
+                                  steps: [],
+                                  equipment: [],
+                                  isPublic: true,
+                                  isFavorite: false,
+                                  createdAt: DateTime.now(),
+                                  updatedAt: DateTime.now(),
+                                  image: 'assets/images/plat1.png',
+                                  ingredients: [],
+                                ),
+                                Recipe(
+                                  id: 'r2',
+                                  name: 'Salade fraîcheur',
+                                  cookTime: 0,
+                                  kcal: 200,
+                                  steps: [],
+                                  equipment: [],
+                                  isPublic: true,
+                                  isFavorite: false,
+                                  createdAt: DateTime.now(),
+                                  updatedAt: DateTime.now(),
+                                  image: 'assets/images/plat2.png',
+                                  ingredients: [],
+                                ),
+                                Recipe(
+                                  id: 'r3',
+                                  name: 'Mijoté de poulet',
+                                  cookTime: 60,
+                                  kcal: 550,
+                                  steps: [],
+                                  equipment: [],
+                                  isPublic: true,
+                                  isFavorite: false,
+                                  createdAt: DateTime.now(),
+                                  updatedAt: DateTime.now(),
+                                  image: 'assets/images/plat3.png',
+                                  ingredients: [],
+                                ),
+                              ],
+                              onAnimationComplete: () {
+                                Navigator.pop(context);
+                              },
+                            ),
                           ),
                         ),
-                      ),
-                    );
-                  },
-                  child: const Icon(Icons.animation),
+                      );
+                    },
+                    child: const Icon(Icons.animation),
+                  ),
                 ),
-              ),
 
-            ValueListenableBuilder<bool>(
-              valueListenable: _isScanInResultsMode,
-              builder: (context, inResultsMode, _) {
-                return ValueListenableBuilder<bool>(
-                  valueListenable: _isImportLoading,
-                  builder: (context, isImportLoading, _) {
-                    final isScanningTab = (_currentTab == 2);
-                    final hideNav = isScanningTab || isImportLoading;
+              ValueListenableBuilder<bool>(
+                valueListenable: _isScanInResultsMode,
+                builder: (context, inResultsMode, _) {
+                  return ValueListenableBuilder<bool>(
+                    valueListenable: _isImportLoading,
+                    builder: (context, isImportLoading, _) {
+                      final isScanningTab = (_currentTab == 2);
+                      final hideNav = isScanningTab || isImportLoading;
 
-                    return Stack(
-                      children: [
-                        // Custom Bottom Navigation Bar overlaid entirely on top
-                        Positioned(
-                          left: 0,
-                          right: 0,
-                          bottom: 0,
-                          child: SlideTransition(
-                            position: _navSlide,
-                            child: hideNav || isKeyboardOpen
-                                ? const SizedBox.shrink()
-                                : _FloatingBottomNav(
-                                    currentIndex: _currentTab,
-                                    navVisible: _navVisible,
-                                    onTap: _switchTab,
-                                    onCameraTap: () {
-                                      if (_currentTab == 2) {
-                                        _toggleNav();
-                                      } else {
-                                        _switchTab(2);
-                                      }
-                                    },
-                                    scanTabKey: _scanTabKey,
-                                    groceryTabKey: _groceryTabKey,
-                                    importTabKey: _importTabKey,
-                                  ),
+                      return Stack(
+                        children: [
+                          // Custom Bottom Navigation Bar overlaid entirely on top
+                          Positioned(
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            child: SlideTransition(
+                              position: _navSlide,
+                              child: hideNav || isKeyboardOpen
+                                  ? const SizedBox.shrink()
+                                  : _FloatingBottomNav(
+                                      currentIndex: _currentTab,
+                                      navVisible: _navVisible,
+                                      onTap: _switchTab,
+                                      onCameraTap: () {
+                                        if (_currentTab == 2) {
+                                          _toggleNav();
+                                        } else {
+                                          _switchTab(2);
+                                        }
+                                      },
+                                      scanTabKey: _scanTabKey,
+                                      groceryTabKey: _groceryTabKey,
+                                      importTabKey: _importTabKey,
+                                    ),
+                            ),
                           ),
-                        ),
-                      ],
-                    );
-                  },
-                );
-              },
-            ),
-          ],
+                        ],
+                      );
+                    },
+                  );
+                },
+              ),
+            ],
+          ),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 }
 
 // ── Floating pill bottom nav ───────────────────────────────────────────────────
@@ -714,10 +714,7 @@ class _AnimatedScanButton extends StatefulWidget {
   final VoidCallback onTap;
   final GlobalKey scanTabKey;
 
-  const _AnimatedScanButton({
-    required this.onTap,
-    required this.scanTabKey,
-  });
+  const _AnimatedScanButton({required this.onTap, required this.scanTabKey});
 
   @override
   State<_AnimatedScanButton> createState() => _AnimatedScanButtonState();
@@ -737,13 +734,15 @@ class _AnimatedScanButtonState extends State<_AnimatedScanButton>
       duration: const Duration(milliseconds: 2000),
     )..repeat(reverse: true);
 
-    _scaleAnimation = Tween<double>(begin: 1.0, end: 1.07).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+    _scaleAnimation = Tween<double>(
+      begin: 1.0,
+      end: 1.07,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
 
-    _glowAnimation = Tween<double>(begin: 0.28, end: 0.65).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+    _glowAnimation = Tween<double>(
+      begin: 0.28,
+      end: 0.65,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
   @override
@@ -868,9 +867,7 @@ class _NavItemState extends State<_NavItem>
           duration: const Duration(milliseconds: 200),
           margin: EdgeInsets.symmetric(horizontal: 4.w, vertical: 4.h),
           padding: EdgeInsets.symmetric(vertical: 4.h),
-          decoration: const BoxDecoration(
-            color: Colors.transparent,
-          ),
+          decoration: const BoxDecoration(color: Colors.transparent),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -881,9 +878,7 @@ class _NavItemState extends State<_NavItem>
                   width: 22.w,
                   height: 22.h,
                   colorFilter: ColorFilter.mode(
-                    active
-                        ? const Color(0xFFC31E26)
-                        : const Color(0xFF64748B),
+                    active ? const Color(0xFFC31E26) : const Color(0xFF64748B),
                     BlendMode.srcIn,
                   ),
                 ),
@@ -984,19 +979,19 @@ class _HomeTabState extends State<_HomeTab> {
               physics: const ClampingScrollPhysics(),
               child: Stack(
                 children: [
-                // ── Red Top Header Background (Gradient) - Scrolls with content ──
-                Positioned(
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  height: 260.h,
-                  child: const RedHeaderBackground(),
-                ),
-                Column(
-                  children: [
-                    // Top Header over red background (White text/icons)
-                    const AppTopHeader(textColor: Colors.white),
-                    SizedBox(height: 8.h),
+                  // ── Red Top Header Background (Gradient) - Scrolls with content ──
+                  Positioned(
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    height: 260.h,
+                    child: const RedHeaderBackground(),
+                  ),
+                  Column(
+                    children: [
+                      // Top Header over red background (White text/icons)
+                      const AppTopHeader(textColor: Colors.white),
+                      SizedBox(height: 8.h),
 
                       if (searchQuery.isEmpty) ...[
                         // ── CARD 1: TOP CARD (Search + Cookbooks) ──
@@ -1032,27 +1027,30 @@ class _HomeTabState extends State<_HomeTab> {
                               const _SavingsCard(),
                               SizedBox(height: 16.h),
                               ValueListenableBuilder<List<Cookbook>?>(
-                                valueListenable:
-                                    CookbookService.instance.myCookbooksNotifier,
+                                valueListenable: CookbookService
+                                    .instance
+                                    .myCookbooksNotifier,
                                 builder: (context, cookbooks, _) {
                                   final count = cookbooks?.length ?? 0;
                                   return Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       _SectionRow(
                                         title: 'Your Cookbooks',
                                         onViewAll: count > 3
                                             ? () => _goViewAll(
-                                                  context,
-                                                  ViewAllType.cookbooks,
-                                                  'Cookbooks',
-                                                )
+                                                context,
+                                                ViewAllType.cookbooks,
+                                                'Cookbooks',
+                                              )
                                             : null,
                                       ),
                                       SizedBox(height: 12.h),
                                       (cookbooks == null || cookbooks.isEmpty)
                                           ? _EmptyCookbookCard(
-                                              firstCookbookKey: widget.firstCookbookKey,
+                                              firstCookbookKey:
+                                                  widget.firstCookbookKey,
                                               onRefresh: widget.onRefresh,
                                             )
                                           : _PopulatedCookbooksLayout(
@@ -1070,7 +1068,8 @@ class _HomeTabState extends State<_HomeTab> {
 
                         // ── CARD 2: RECENTLY VIEWED ──
                         ValueListenableBuilder<List<Recipe>>(
-                          valueListenable: HistoryService.instance.recentlyViewedNotifier,
+                          valueListenable:
+                              HistoryService.instance.recentlyViewedNotifier,
                           builder: (context, recent, _) {
                             if (recent.isEmpty) return const SizedBox.shrink();
                             final displayRecent = recent.take(10).toList();
@@ -1084,16 +1083,17 @@ class _HomeTabState extends State<_HomeTab> {
                                   ),
                                   padding: EdgeInsets.all(16.w),
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       _SectionRow(
                                         title: 'Recently Viewed',
                                         onViewAll: recent.length > 5
                                             ? () => _goViewAll(
-                                                  context,
-                                                  ViewAllType.recentlyViewed,
-                                                  'Recently Viewed',
-                                                )
+                                                context,
+                                                ViewAllType.recentlyViewed,
+                                                'Recently Viewed',
+                                              )
                                             : null,
                                       ),
                                       SizedBox(height: 12.h),
@@ -1111,7 +1111,8 @@ class _HomeTabState extends State<_HomeTab> {
 
                         // ── CARD 3: SUGGESTED FOR YOU ──
                         ValueListenableBuilder<List<Recipe>?>(
-                          valueListenable: RecipeService.instance.homeSuggestionsNotifier,
+                          valueListenable:
+                              RecipeService.instance.homeSuggestionsNotifier,
                           builder: (context, suggestions, _) {
                             final list = suggestions ?? [];
                             if (list.isEmpty) return const SizedBox.shrink();
@@ -1126,16 +1127,17 @@ class _HomeTabState extends State<_HomeTab> {
                                   ),
                                   padding: EdgeInsets.all(16.w),
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       _SectionRow(
                                         title: 'Suggested for you',
                                         onViewAll: list.length > 5
                                             ? () => _goViewAll(
-                                                  context,
-                                                  ViewAllType.explore,
-                                                  'Suggested for you',
-                                                )
+                                                context,
+                                                ViewAllType.explore,
+                                                'Suggested for you',
+                                              )
                                             : null,
                                       ),
                                       SizedBox(height: 12.h),
@@ -1153,7 +1155,8 @@ class _HomeTabState extends State<_HomeTab> {
 
                         // ── CARD 4: SAVED RECIPES ──
                         ValueListenableBuilder<List<Recipe>?>(
-                          valueListenable: RecipeService.instance.myRecipesNotifier,
+                          valueListenable:
+                              RecipeService.instance.myRecipesNotifier,
                           builder: (context, recipes, _) {
                             final savedRecipes = (recipes ?? [])
                                 .where((r) => !r.isPlaceholder)
@@ -1171,25 +1174,30 @@ class _HomeTabState extends State<_HomeTab> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Padding(
-                                    padding: EdgeInsets.symmetric(horizontal: 16.w),
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: 16.w,
+                                    ),
                                     child: _SectionRow(
                                       title: 'Saved Recipes',
                                       onViewAll: savedRecipes.length > 5
                                           ? () => _goViewAll(
-                                                context,
-                                                ViewAllType.savedRecipes,
-                                                'Saved Recipes',
-                                              )
+                                              context,
+                                              ViewAllType.savedRecipes,
+                                              'Saved Recipes',
+                                            )
                                           : null,
                                     ),
                                   ),
                                   SizedBox(height: 12.h),
                                   savedRecipes.isEmpty
                                       ? _EmptySavedRecipesCard(
-                                          onBrowseTap: () => widget.onExploreTap?.call(),
+                                          onBrowseTap: () =>
+                                              widget.onExploreTap?.call(),
                                         )
                                       : Padding(
-                                          padding: EdgeInsets.symmetric(horizontal: 16.w),
+                                          padding: EdgeInsets.symmetric(
+                                            horizontal: 16.w,
+                                          ),
                                           child: _PopulatedSavedRecipesList(
                                             recipes: savedRecipes,
                                             searchQuery: searchQuery,
@@ -1203,9 +1211,7 @@ class _HomeTabState extends State<_HomeTab> {
                         SizedBox(height: 16.h),
 
                         // ── CARD 5: HELP US IMPROVE COOKED ──
-                        _FeedbackCard(
-                          onTap: () => _showFeedbackModal(context),
-                        ),
+                        _FeedbackCard(onTap: () => _showFeedbackModal(context)),
                         SizedBox(height: 120.h),
                       ] else ...[
                         // Search Active State
@@ -1229,13 +1235,16 @@ class _HomeTabState extends State<_HomeTab> {
                               ),
                               SizedBox(height: 16.h),
                               ValueListenableBuilder<List<Recipe>?>(
-                                valueListenable: RecipeService.instance.myRecipesNotifier,
+                                valueListenable:
+                                    RecipeService.instance.myRecipesNotifier,
                                 builder: (context, recipes, _) {
                                   final allRecipes = recipes ?? [];
                                   final filtered = allRecipes
-                                      .where((r) => r.name
-                                          .toLowerCase()
-                                          .contains(searchQuery.trim().toLowerCase()))
+                                      .where(
+                                        (r) => r.name.toLowerCase().contains(
+                                          searchQuery.trim().toLowerCase(),
+                                        ),
+                                      )
                                       .toList();
                                   return _PopulatedSavedRecipesList(
                                     recipes: filtered,
@@ -1259,8 +1268,6 @@ class _HomeTabState extends State<_HomeTab> {
     );
   }
 }
-
-
 
 // ── Section row ────────────────────────────────────────────────────────────────
 class _SectionRow extends StatelessWidget {
@@ -1391,10 +1398,7 @@ class _PopulatedCookbooksLayout extends StatelessWidget {
   final List<Cookbook> cookbooks;
   final VoidCallback? onRefresh;
 
-  const _PopulatedCookbooksLayout({
-    required this.cookbooks,
-    this.onRefresh,
-  });
+  const _PopulatedCookbooksLayout({required this.cookbooks, this.onRefresh});
 
   @override
   Widget build(BuildContext context) {
@@ -1628,7 +1632,7 @@ class _CookbookCardTile extends StatelessWidget {
                         cookbook.name.isEmpty
                             ? cookbook.name
                             : cookbook.name[0].toUpperCase() +
-                                cookbook.name.substring(1).toLowerCase(),
+                                  cookbook.name.substring(1).toLowerCase(),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
@@ -1678,7 +1682,7 @@ class _CookbookCardTile extends StatelessWidget {
                             cookbook.name.isEmpty
                                 ? cookbook.name
                                 : cookbook.name[0].toUpperCase() +
-                                    cookbook.name.substring(1).toLowerCase(),
+                                      cookbook.name.substring(1).toLowerCase(),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
@@ -1727,12 +1731,7 @@ class _CookbookCardTile extends StatelessWidget {
                 Icons.push_pin_rounded,
                 size: 20.sp,
                 color: const Color(0xFFC83A2D),
-                shadows: const [
-                  Shadow(
-                    color: Colors.black26,
-                    blurRadius: 4,
-                  ),
-                ],
+                shadows: const [Shadow(color: Colors.black26, blurRadius: 4)],
               ),
             ),
         ],
@@ -1755,7 +1754,11 @@ class _CookbookCardTile extends StatelessWidget {
           color: Color(0xFFE2E8F0),
           shape: BoxShape.circle,
         ),
-        child: Icon(Icons.menu_book_rounded, size: 16.sp, color: const Color(0xFF475569)),
+        child: Icon(
+          Icons.menu_book_rounded,
+          size: 16.sp,
+          color: const Color(0xFF475569),
+        ),
       );
     }
 
@@ -1777,7 +1780,10 @@ class _CookbookCardTile extends StatelessWidget {
                     ? CachedNetworkImage(
                         imageUrl: images[idx],
                         fit: BoxFit.cover,
-                        errorWidget: (_, __, ___) => Image.asset('assets/images/recipes.png', fit: BoxFit.cover),
+                        errorWidget: (_, __, ___) => Image.asset(
+                          'assets/images/recipes.png',
+                          fit: BoxFit.cover,
+                        ),
                       )
                     : Image.asset(images[idx], fit: BoxFit.cover),
               ),
@@ -1830,9 +1836,7 @@ class _CircularRecipeAvatarRow extends StatelessWidget {
                         width: 2.2,
                       ),
                     ),
-                    child: ClipOval(
-                      child: _buildThumbnail(r.image),
-                    ),
+                    child: ClipOval(child: _buildThumbnail(r.image)),
                   ),
                   SizedBox(height: 6.h),
                   Text(
@@ -1897,7 +1901,9 @@ class _EmptySavedRecipesCardState extends State<_EmptySavedRecipesCard> {
     _scrollController = ScrollController();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted && _scrollController.hasClients) {
-        _scrollController.jumpTo(_scrollController.position.maxScrollExtent / 2);
+        _scrollController.jumpTo(
+          _scrollController.position.maxScrollExtent / 2,
+        );
       }
     });
   }
@@ -1926,11 +1932,23 @@ class _EmptySavedRecipesCardState extends State<_EmptySavedRecipesCard> {
                 physics: const BouncingScrollPhysics(),
                 child: Row(
                   children: [
-                    _buildCollageThumb('assets/images/saved1.png', width: itemW, height: 140.h),
+                    _buildCollageThumb(
+                      'assets/images/saved1.png',
+                      width: itemW,
+                      height: 140.h,
+                    ),
                     SizedBox(width: gap),
-                    _buildCollageThumb('assets/images/saved2.png', width: itemW, height: 140.h),
+                    _buildCollageThumb(
+                      'assets/images/saved2.png',
+                      width: itemW,
+                      height: 140.h,
+                    ),
                     SizedBox(width: gap),
-                    _buildCollageThumb('assets/images/saved3.png', width: itemW, height: 140.h),
+                    _buildCollageThumb(
+                      'assets/images/saved3.png',
+                      width: itemW,
+                      height: 140.h,
+                    ),
                   ],
                 ),
               ),
@@ -1990,7 +2008,11 @@ class _EmptySavedRecipesCardState extends State<_EmptySavedRecipesCard> {
     );
   }
 
-  Widget _buildCollageThumb(String asset, {required double width, required double height}) {
+  Widget _buildCollageThumb(
+    String asset, {
+    required double width,
+    required double height,
+  }) {
     return SizedBox(
       width: width,
       height: height,
@@ -2001,7 +2023,11 @@ class _EmptySavedRecipesCardState extends State<_EmptySavedRecipesCard> {
           fit: BoxFit.cover,
           errorBuilder: (_, __, ___) => Container(
             color: const Color(0xFFF1F5F9),
-            child: Icon(Icons.restaurant, color: const Color(0xFF94A3B8), size: 30.sp),
+            child: Icon(
+              Icons.restaurant,
+              color: const Color(0xFF94A3B8),
+              size: 30.sp,
+            ),
           ),
         ),
       ),
@@ -2069,7 +2095,9 @@ class _PopulatedSavedRecipesList extends StatelessWidget {
                   },
                 ),
                 HapticMenuAction(
-                  title: r.isInCookbook ? 'Remove from Cookbook' : 'Add to Cookbook',
+                  title: r.isInCookbook
+                      ? 'Remove from Cookbook'
+                      : 'Add to Cookbook',
                   icon: r.isInCookbook
                       ? Icons.remove_circle_outline_rounded
                       : Icons.add_circle_outline_rounded,
@@ -2089,8 +2117,9 @@ class _PopulatedSavedRecipesList extends StatelessWidget {
                   icon: Icons.ios_share_rounded,
                   onTap: () async {
                     try {
-                      final rawLink =
-                          await RecipeService.instance.getShareLink(r.id);
+                      final rawLink = await RecipeService.instance.getShareLink(
+                        r.id,
+                      );
                       final link = rawLink
                           .replaceAll(
                             'cooked.nixacom.com',
@@ -3224,7 +3253,9 @@ class _SavingsCardState extends State<_SavingsCard>
         final scanRecipes = myRecipes.where((r) {
           final origin = r.origin?.toUpperCase();
           if (origin == 'IMPORT' || origin == 'MANUAL') return false;
-          return origin == 'SCAN' || origin == 'SUGGESTED' || (r.isSuggested && (r.sourceUrl == null || r.sourceUrl!.isEmpty));
+          return origin == 'SCAN' ||
+              origin == 'SUGGESTED' ||
+              (r.isSuggested && (r.sourceUrl == null || r.sourceUrl!.isEmpty));
         }).toList();
 
         if (scanRecipes.isEmpty) return const SizedBox.shrink();
@@ -3247,7 +3278,9 @@ class _SavingsCardState extends State<_SavingsCard>
           builder: (context, child) {
             return Align(
               alignment: Alignment.topCenter,
-              heightFactor: _scaleAnimation.value < 0 ? 0.0 : _scaleAnimation.value,
+              heightFactor: _scaleAnimation.value < 0
+                  ? 0.0
+                  : _scaleAnimation.value,
               child: child,
             );
           },
@@ -3348,5 +3381,3 @@ class _SavingsCardState extends State<_SavingsCard>
     );
   }
 }
-
-
