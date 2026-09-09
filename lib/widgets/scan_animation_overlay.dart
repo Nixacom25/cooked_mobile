@@ -189,8 +189,8 @@ class _FallbackScanAnimationState extends State<_FallbackScanAnimation> {
       //    une variante sans la séquence de scan.
       _fileLoader = FileLoader.fromAsset(
         widget.skipImageAnalysis
-            ? 'assets/animations/cooked_no_scan.riv'
-            : 'assets/animations/cooked.riv',
+            ? 'assets/animations/cookednew.riv'
+            : 'assets/animations/cookednew.riv',
         riveFactory: Factory.flutter,
       );
 
