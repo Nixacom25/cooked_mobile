@@ -24,6 +24,7 @@ import '../core/utils/tutorial_helper.dart';
 import '../core/extensions/string_extensions.dart';
 import '../utils/paywall_helper.dart';
 import '../widgets/scan_animation_overlay.dart';
+import '../widgets/confetti_animation.dart';
 import '../widgets/red_header_background.dart';
 
 enum ScanState { scan, type, saved, results }
@@ -94,6 +95,10 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
   bool _showAnimationOverlay = false;
   List<RecipeIngredient>? _overlayDetectedIngredients;
   List<Recipe>? _overlayGeneratedRecipes;
+
+  // Results celebration: confetti burst shown briefly when recipes appear
+  bool _showConfetti = false;
+  Timer? _confettiTimer;
 
   late final AnimationController _scannerController;
 
@@ -545,6 +550,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
     _disposeCamera();
     _ingCtrl.dispose();
     _analysisTimer?.cancel();
+    _confettiTimer?.cancel();
     super.dispose();
   }
 
@@ -640,7 +646,21 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                     _showAnimationOverlay = false;
                   });
                   _updateState(ScanState.results);
+                  HapticFeedback.mediumImpact();
+                  _confettiTimer?.cancel();
+                  setState(() => _showConfetti = true);
+                  _confettiTimer = Timer(const Duration(seconds: 3), () {
+                    if (mounted) setState(() => _showConfetti = false);
+                  });
                 },
+              ),
+            ),
+
+          // 8. Confetti burst when results first appear
+          if (_showConfetti)
+            Positioned.fill(
+              child: IgnorePointer(
+                child: ConfettiAnimation(child: SizedBox.expand()),
               ),
             ),
         ],
