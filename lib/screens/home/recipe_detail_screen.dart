@@ -299,7 +299,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
 
   bool _checkIsFavorite(Recipe? r, List<Recipe>? savedRecipes) {
     if (r == null) return false;
-    if (r.isFavorite) return true;
+    if (r.isFavorite || r.isInCookbook) return true;
 
     if (savedRecipes != null) {
       final inSaved = savedRecipes.any(

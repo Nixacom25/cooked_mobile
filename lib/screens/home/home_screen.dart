@@ -654,19 +654,42 @@ class _FloatingBottomNav extends StatelessWidget {
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.end,
                                 children: [
-                                  Text(
-                                    'Scan Recipe',
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      fontFamily: 'Rubik',
-                                      fontSize: 11.sp,
-                                      fontWeight: currentIndex == 2
-                                          ? FontWeight.w700
-                                          : FontWeight.w600,
-                                      color: currentIndex == 2
-                                          ? const Color(0xFFC83A2D)
-                                          : const Color(0xFF475569),
-                                    ),
+                                  LayoutBuilder(
+                                    builder: (context, constraints) {
+                                      final labelStyle = TextStyle(
+                                        fontFamily: 'Rubik',
+                                        fontSize: 11.sp,
+                                        fontWeight: currentIndex == 2
+                                            ? FontWeight.w700
+                                            : FontWeight.w600,
+                                        color: currentIndex == 2
+                                            ? const Color(0xFFC83A2D)
+                                            : const Color(0xFF475569),
+                                      );
+                                      final labelMeasure = TextPainter(
+                                        text: TextSpan(
+                                          text: 'Scan Recipe',
+                                          style: labelStyle,
+                                        ),
+                                        textDirection: Directionality.of(context),
+                                        textScaler: MediaQuery.textScalerOf(context),
+                                      )..layout();
+                                      final label = labelMeasure.width <= constraints.maxWidth
+                                          ? 'Scan Recipe'
+                                          : 'Scan';
+
+                                      return SizedBox(
+                                        width: double.infinity,
+                                        child: Text(
+                                          label,
+                                          maxLines: 1,
+                                          softWrap: false,
+                                          overflow: TextOverflow.clip,
+                                          textAlign: TextAlign.center,
+                                          style: labelStyle,
+                                        ),
+                                      );
+                                    },
                                   ),
                                 ],
                               ),
@@ -2075,7 +2098,8 @@ class _PopulatedSavedRecipesList extends StatelessWidget {
           },
           onFavoriteTap: () {
             HapticFeedback.lightImpact();
-            final newFavState = !r.isFavorite;
+            final wasRegistered = r.isFavorite || r.isInCookbook;
+            final newFavState = !wasRegistered;
             r.isFavorite = newFavState;
             if (newFavState) {
               RecipeService.instance.markRecipeAsSaved(r);
@@ -2084,6 +2108,8 @@ class _PopulatedSavedRecipesList extends StatelessWidget {
               if (r.id.isNotEmpty) {
                 RecipeService.instance.deleteRecipe(r.id);
               }
+              r.isFavorite = false;
+              r.isInCookbook = false;
               final current = RecipeService.instance.myRecipesNotifier.value ?? [];
               RecipeService.instance.myRecipesNotifier.value =
                   current.where((item) => item.id != r.id).toList();

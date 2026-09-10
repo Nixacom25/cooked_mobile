@@ -99,6 +99,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
   // Results celebration: confetti burst shown briefly when recipes appear
   bool _showConfetti = false;
   Timer? _confettiTimer;
+  Timer? _celebrationHapticTimer;
 
   late final AnimationController _scannerController;
 
@@ -419,7 +420,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
 
       _cameraController = CameraController(
         backCam,
-        ResolutionPreset.high, // Sharper live preview/capture than medium, still stable
+        ResolutionPreset.veryHigh,
         enableAudio: false,
         imageFormatGroup: ImageFormatGroup.jpeg, // Fixes ImageReader_JNI buffer spam on Android
       );
@@ -551,7 +552,33 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
     _ingCtrl.dispose();
     _analysisTimer?.cancel();
     _confettiTimer?.cancel();
+    _celebrationHapticTimer?.cancel();
     super.dispose();
+  }
+
+  void _startResultsCelebration() {
+    _confettiTimer?.cancel();
+    _celebrationHapticTimer?.cancel();
+
+    HapticFeedback.mediumImpact();
+    var pulse = 0;
+    _celebrationHapticTimer = Timer.periodic(
+      const Duration(milliseconds: 180),
+      (timer) {
+        pulse++;
+        if (pulse.isEven) {
+          HapticFeedback.selectionClick();
+        } else {
+          HapticFeedback.lightImpact();
+        }
+        if (pulse >= 5) timer.cancel();
+      },
+    );
+
+    if (mounted) setState(() => _showConfetti = true);
+    _confettiTimer = Timer(const Duration(seconds: 3), () {
+      if (mounted) setState(() => _showConfetti = false);
+    });
   }
 
   @override
@@ -646,12 +673,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                     _showAnimationOverlay = false;
                   });
                   _updateState(ScanState.results);
-                  HapticFeedback.mediumImpact();
-                  _confettiTimer?.cancel();
-                  setState(() => _showConfetti = true);
-                  _confettiTimer = Timer(const Duration(seconds: 3), () {
-                    if (mounted) setState(() => _showConfetti = false);
-                  });
+                  _startResultsCelebration();
                 },
               ),
             ),
@@ -2027,7 +2049,8 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
       }
     } else {
       final picker = ImagePicker();
-      photo = await picker.pickImage(source: source, imageQuality: 70);
+      // Keep the original gallery resolution for better preview and vision accuracy.
+      photo = await picker.pickImage(source: source);
       if (_cameraController != null && _isCameraInitialized) {
         await _cameraController!.pausePreview();
       }

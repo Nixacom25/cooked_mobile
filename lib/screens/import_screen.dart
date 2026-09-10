@@ -65,6 +65,7 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
   Timer? _searchDebounce;
   List<Map<String, dynamic>> _suggestedWebRecipes = [];
   bool _isShowingWebPreview = false;
+  String? _webPreviewUrl;
 
   List<String> _trendingRecipes = [
     'High protein dinner',
@@ -161,34 +162,67 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
 
 
   Future<void> _showWebPreview(String url, String title) async {
-    // Guard against stacking multiple preview sheets: a slow-loading webview
-    // can tempt users into tapping "View this recipe" again on another
-    // result, opening a new full-screen sheet on top of the last one each
-    // time, leaving a stack of pages to dismiss one by one.
-    if (_isShowingWebPreview) return;
+    final normalizedUrl = url.trim();
+    final uri = Uri.tryParse(normalizedUrl);
+    if (uri == null || !uri.hasScheme || (uri.scheme != 'http' && uri.scheme != 'https')) {
+      IosToast.show(context, message: 'This recipe link is unavailable.', type: ToastType.error);
+      return;
+    }
+
+    // Search results live in a root OverlayEntry. Temporarily hide it while
+    // preserving the results so the user can return and choose another one.
+    bool restoreSearchResults = _isSearchingModal && _searchResults.isNotEmpty;
+    if (_isSearchingModal) _dismissSearchModalForPreview(preserveResults: true);
+
+    // Only one preview route may exist. This also absorbs repeated taps while
+    // the first WebView is still being created.
+    if (_isShowingWebPreview || _webPreviewUrl == normalizedUrl) return;
     _isShowingWebPreview = true;
+    _webPreviewUrl = normalizedUrl;
 
-    await showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.zero),
-      ),
-      builder: (context) {
-        return _RecipeWebPreviewModal(
-          url: url,
-          title: title,
-          onImport: () {
-            Navigator.pop(context);
-            _importFromUrl(url);
-          },
-        );
-      },
-    );
+    try {
+      await showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        useSafeArea: true,
+        backgroundColor: Colors.white,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.zero),
+        ),
+        builder: (modalContext) {
+          return _RecipeWebPreviewModal(
+            url: normalizedUrl,
+            title: title,
+            onImport: () {
+              restoreSearchResults = false;
+              Navigator.pop(modalContext);
+              _importFromUrl(normalizedUrl);
+            },
+          );
+        },
+      );
+    } finally {
+      _isShowingWebPreview = false;
+      _webPreviewUrl = null;
+      if (restoreSearchResults && mounted) {
+        _toggleSearchModal(true);
+      }
+    }
+  }
 
-    _isShowingWebPreview = false;
+  void _dismissSearchModalForPreview({bool preserveResults = false}) {
+    _searchDebounce?.cancel();
+    _importSearchController.stop();
+    _removeImportSearchOverlay();
+    if (!mounted) return;
+    setState(() {
+      _isSearchingModal = false;
+      if (!preserveResults) {
+        _overlaySearchCtrl.clear();
+        _searchResults = [];
+        _suggestedWebRecipes = [];
+      }
+    });
   }
 
   Future<void> _importFromUrl(String url) async {
@@ -429,6 +463,19 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
         }
       });
     }
+  }
+
+  void _searchTrendingInModal(String term) {
+    final query = term.trim();
+    if (query.isEmpty) return;
+
+    _toggleSearchModal(true);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _overlaySearchCtrl.text = query;
+      setState(() => _suggestedWebRecipes = []);
+      _handleWebSearch(query);
+    });
   }
 
   bool _isSearchingModal = false;
@@ -736,8 +783,7 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
                           children: _trendingRecipes.map((name) => _TrendingChip(
                             name: name,
                             onImport: () {
-                              _searchCtrl.text = name;
-                              _handleWebSearch(name);
+                              _searchTrendingInModal(name);
                             },
                           )).toList(),
                         ),
@@ -1407,12 +1453,9 @@ class _RecipeWebPreviewModalState extends State<_RecipeWebPreviewModal> {
         NavigationDelegate(
           onPageFinished: (_) => setState(() => _isLoading = false),
           onNavigationRequest: (request) {
-            final uri = Uri.parse(request.url);
-            final targetUri = Uri.parse(widget.url);
-            if (uri.host == targetUri.host || _isLoading) {
-              return NavigationDecision.navigate;
-            }
-            return NavigationDecision.prevent;
+            // Keep redirects, recipe hosts, and consent pages inside this one
+            // WebView instead of opening or stacking another page.
+            return NavigationDecision.navigate;
           },
         ),
       )

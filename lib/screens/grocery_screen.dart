@@ -238,7 +238,7 @@ class GroceryScreenState extends State<GroceryScreen> with SingleTickerProviderS
                                 }
 
                                 return ListView.builder(
-                                  padding: EdgeInsets.only(bottom: 220.h + MediaQuery.of(context).viewInsets.bottom),
+                                  padding: EdgeInsets.only(bottom: 190.h + MediaQuery.of(context).viewInsets.bottom),
                                   itemCount: grouped.length + 1,
                                   itemBuilder: (_, gi) {
                                     if (gi == grouped.length) {
@@ -365,7 +365,7 @@ class GroceryScreenState extends State<GroceryScreen> with SingleTickerProviderS
                         ],
                       ),
 
-                      // ── Floating Action Bar: Red Pill "+ Add" Button ────────────────
+                      // ── Floating action: Add grocery item ───────────────────────────
                       ValueListenableBuilder<List<GroceryItem>?>(
                         valueListenable: GroceryService.instance.myGroceriesNotifier,
                         builder: (context, allItems, _) {
@@ -375,19 +375,19 @@ class GroceryScreenState extends State<GroceryScreen> with SingleTickerProviderS
                           }
 
                           return Positioned(
-                            bottom: 150.h,
+                            bottom: 132.h,
                             left: 20.w,
                             right: 20.w,
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.end,
                               children: [
-                                // Red Pill "+ Add" Button
                                 GestureDetector(
                                   onTap: () {
                                     HapticFeedback.lightImpact();
                                     _showAddGrocerySheet(context, itemsList);
                                   },
                                   child: Container(
+                                    constraints: BoxConstraints(minWidth: 120.w),
                                     padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 14.h),
                                     decoration: BoxDecoration(
                                       color: const Color(0xFFC31E26),

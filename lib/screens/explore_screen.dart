@@ -810,7 +810,8 @@ class _ExploreScreenState extends State<ExploreScreen>
                       },
                       onFavoriteTap: () {
                         HapticFeedback.lightImpact();
-                        final newFavState = !r.isFavorite;
+                        final wasRegistered = r.isFavorite || r.isInCookbook;
+                        final newFavState = !wasRegistered;
                         setState(() {
                           r.isFavorite = newFavState;
                         });
@@ -821,6 +822,8 @@ class _ExploreScreenState extends State<ExploreScreen>
                           if (r.id.isNotEmpty) {
                             RecipeService.instance.deleteRecipe(r.id);
                           }
+                          r.isFavorite = false;
+                          r.isInCookbook = false;
                           IosToast.show(context, message: 'Recipe removed from saved', type: ToastType.success);
                         }
                       },

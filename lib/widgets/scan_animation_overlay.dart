@@ -37,6 +37,7 @@ class _ScanAnimationOverlayState extends State<ScanAnimationOverlay> {
   Timer? _maxTimeoutTimer;
   Timer? _imageScanTimer;
   bool _minAnimationFinished = false;
+  bool _completionRequested = false;
   bool _showRive = false;
   _AnimationPlatform? _testPlatform;
   VideoPlayerController? _videoController;
@@ -59,7 +60,13 @@ class _ScanAnimationOverlayState extends State<ScanAnimationOverlay> {
     }
 
     _showRive = widget.skipImageAnalysis;
-    if (!_showRive) {
+    if (widget.skipImageAnalysis) {
+      if (defaultTargetPlatform == TargetPlatform.iOS) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) _showAnimation();
+        });
+      }
+    } else {
       _imageScanTimer = Timer(const Duration(seconds: 3), () {
         _showAnimation();
       });
@@ -76,11 +83,12 @@ class _ScanAnimationOverlayState extends State<ScanAnimationOverlay> {
           _tryComplete();
         }
       });
-      // Safety max timeout (12s) to guarantee screen transition
+      // Keep the celebration visible until recipes are actually available.
+      // The timer only releases its own resources; it must never show an empty
+      // results page while the AI request is still running.
       _maxTimeoutTimer = Timer(const Duration(seconds: 12), () {
-        if (mounted) {
-          widget.onAnimationComplete();
-        }
+        _maxTimeoutTimer = null;
+        _tryComplete();
       });
     }
   }
@@ -96,11 +104,12 @@ class _ScanAnimationOverlayState extends State<ScanAnimationOverlay> {
   void _tryComplete() {
     if (widget.showTestControls) return;
 
-    // Transition as soon as AI response arrives (recipes or ingredients non-null)
-    final bool hasData =
-        widget.generatedRecipes != null || widget.detectedIngredients != null;
+    // Ingredients can arrive before recipe generation. Keep the animation
+    // running until there is real content to show in Scan Results.
+    final bool hasRecipes = widget.generatedRecipes?.isNotEmpty == true;
 
-    if (_minAnimationFinished && hasData) {
+    if (_minAnimationFinished && hasRecipes && !_completionRequested) {
+      _completionRequested = true;
       _maxTimeoutTimer?.cancel();
       // Defer to after the current frame: this can be reached synchronously
       // from didUpdateWidget while the framework is still building the

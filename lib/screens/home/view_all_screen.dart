@@ -806,6 +806,7 @@ class _RecipesGridState extends State<_RecipesGrid> {
 
                     return SavedRecipeCard(
                       recipe: r,
+                      isRegistered: isSaved,
                       isPinned: isSaved,
                       onPinTap: () async {
                         try {
@@ -814,7 +815,8 @@ class _RecipesGridState extends State<_RecipesGrid> {
                       },
                       onFavoriteTap: () {
                         HapticFeedback.lightImpact();
-                        final newFavState = !r.isFavorite;
+                        final wasRegistered = r.isFavorite || r.isInCookbook;
+                        final newFavState = !wasRegistered;
                         setState(() {
                           r.isFavorite = newFavState;
                         });
@@ -825,6 +827,8 @@ class _RecipesGridState extends State<_RecipesGrid> {
                           if (r.id.isNotEmpty) {
                             RecipeService.instance.deleteRecipe(r.id);
                           }
+                          r.isFavorite = false;
+                          r.isInCookbook = false;
                           final current = RecipeService.instance.myRecipesNotifier.value ?? [];
                           RecipeService.instance.myRecipesNotifier.value =
                               current.where((item) => item.id != r.id).toList();

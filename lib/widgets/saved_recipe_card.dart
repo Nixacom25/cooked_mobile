@@ -4,13 +4,14 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../models/recipe.dart';
 
-class SavedRecipeCard extends StatelessWidget {
+class SavedRecipeCard extends StatefulWidget {
   final Recipe? recipe;
   final String? title;
   final String? subtitle;
   final String? time;
   final String? kcal;
   final String? image;
+  final bool? isRegistered;
   final bool isPinned;
   final bool isSavingsMode;
   final String? savingsBadgeText;
@@ -28,6 +29,7 @@ class SavedRecipeCard extends StatelessWidget {
     this.time,
     this.kcal,
     this.image,
+    this.isRegistered,
     this.isPinned = false,
     this.isSavingsMode = false,
     this.savingsBadgeText,
@@ -39,15 +41,55 @@ class SavedRecipeCard extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    final String displayName = title ?? recipe?.name ?? 'Recipe';
-    final String? imgPath = image ?? recipe?.image;
+  State<SavedRecipeCard> createState() => _SavedRecipeCardState();
+}
 
-    if (isSavingsMode) {
+class _SavedRecipeCardState extends State<SavedRecipeCard> {
+  late bool _isFavorite;
+
+  bool _isRegistered(Recipe? recipe, bool? registered) {
+    return registered ?? (recipe?.isFavorite == true ||
+      recipe?.isInCookbook == true);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _isFavorite = _isRegistered(widget.recipe, widget.isRegistered);
+  }
+
+  @override
+  void didUpdateWidget(covariant SavedRecipeCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final oldFavorite = _isRegistered(oldWidget.recipe, oldWidget.isRegistered);
+    final newFavorite = _isRegistered(widget.recipe, widget.isRegistered);
+    if (oldFavorite != newFavorite && newFavorite != _isFavorite) {
+      _isFavorite = newFavorite;
+    }
+  }
+
+  void _handleFavoriteTap() {
+    if (widget.onFavoriteTap == null) {
+      widget.onPinTap?.call();
+      return;
+    }
+
+    setState(() {
+      _isFavorite = !_isFavorite;
+    });
+    widget.onFavoriteTap!.call();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final String displayName = widget.title ?? widget.recipe?.name ?? 'Recipe';
+    final String? imgPath = widget.image ?? widget.recipe?.image;
+
+    if (widget.isSavingsMode) {
       return GestureDetector(
-        onTap: onTap,
-        onLongPressStart: onLongPressStart,
-        onLongPress: onLongPress,
+        onTap: widget.onTap,
+        onLongPressStart: widget.onLongPressStart,
+        onLongPress: widget.onLongPress,
         child: Container(
           height: 135.h,
           decoration: BoxDecoration(
@@ -81,7 +123,7 @@ class SavedRecipeCard extends StatelessWidget {
                           ),
                           SizedBox(height: 6.h),
                           Text(
-                            subtitle ?? 'Scanned at home',
+                            widget.subtitle ?? 'Scanned at home',
                             style: TextStyle(
                               fontFamily: 'Rubik',
                               fontWeight: FontWeight.w400,
@@ -98,7 +140,7 @@ class SavedRecipeCard extends StatelessWidget {
                           borderRadius: BorderRadius.circular(20.r),
                         ),
                         child: Text(
-                          savingsBadgeText ?? '+14\$',
+                          widget.savingsBadgeText ?? '+14\$',
                           style: TextStyle(
                             fontFamily: 'Rubik',
                             fontWeight: FontWeight.w700,
@@ -127,19 +169,19 @@ class SavedRecipeCard extends StatelessWidget {
       );
     }
 
-    final int timeVal = (recipe?.prepTime != null && recipe!.prepTime! > 0)
-        ? recipe!.prepTime!
-        : ((recipe?.cookTime ?? 0) > 0 ? recipe!.cookTime : 10);
-    final String prepTimeStr = time ?? '$timeVal min';
+    final int timeVal = (widget.recipe?.prepTime != null && widget.recipe!.prepTime! > 0)
+        ? widget.recipe!.prepTime!
+        : ((widget.recipe?.cookTime ?? 0) > 0 ? widget.recipe!.cookTime : 10);
+    final String prepTimeStr = widget.time ?? '$timeVal min';
 
-    final int kcalVal = (recipe?.kcal ?? 0) > 0 ? recipe!.kcal : 217;
-    final String caloriesStr = kcal ?? '$kcalVal kcal';
-    final bool pinned = recipe?.isPinned ?? isPinned;
+    final int kcalVal = (widget.recipe?.kcal ?? 0) > 0 ? widget.recipe!.kcal : 217;
+    final String caloriesStr = widget.kcal ?? '$kcalVal kcal';
+    final bool pinned = widget.recipe?.isPinned ?? widget.isPinned;
 
     return GestureDetector(
-      onTap: onTap,
-      onLongPressStart: onLongPressStart,
-      onLongPress: onLongPress,
+      onTap: widget.onTap,
+      onLongPressStart: widget.onLongPressStart,
+      onLongPress: widget.onLongPress,
       child: Container(
         height: 135.h,
         decoration: BoxDecoration(
@@ -157,7 +199,8 @@ class SavedRecipeCard extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     GestureDetector(
-                      onTap: onFavoriteTap ?? onPinTap,
+                      behavior: HitTestBehavior.opaque,
+                      onTap: _handleFavoriteTap,
                       child: Container(
                         width: 32.r,
                         height: 32.r,
@@ -167,13 +210,13 @@ class SavedRecipeCard extends StatelessWidget {
                         ),
                         child: Center(
                           child: SvgPicture.asset(
-                            (recipe?.isFavorite ?? false)
+                            _isFavorite
                                 ? 'assets/icones/coeur.svg'
                                 : 'assets/icones/coeur1.svg',
                             width: 16.r,
                             height: 16.r,
                             colorFilter: ColorFilter.mode(
-                              (recipe?.isFavorite ?? false)
+                              _isFavorite
                                   ? const Color(0xFFC83A2D)
                                   : const Color(0xFF94A3B8),
                               BlendMode.srcIn,
@@ -227,7 +270,7 @@ class SavedRecipeCard extends StatelessWidget {
                       bottom: 10.h,
                       right: 10.w,
                       child: GestureDetector(
-                        onTap: onPinTap,
+                        onTap: widget.onPinTap,
                         child: Icon(
                           Icons.push_pin_rounded,
                           size: 20.sp,

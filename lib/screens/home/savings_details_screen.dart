@@ -169,6 +169,7 @@ class SavingsDetailsScreen extends StatelessWidget {
 
                                   return SavedRecipeCard(
                                     recipe: recipe,
+                                    isRegistered: true,
                                     isSavingsMode: true,
                                     subtitle: "Scanned at home",
                                     savingsBadgeText: "+${itemSavings.toStringAsFixed(0)}\$",

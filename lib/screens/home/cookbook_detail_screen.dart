@@ -256,13 +256,15 @@ class _CookbookDetailScreenState extends State<CookbookDetailScreen> {
                                       final r = recipes[i];
                                       return SavedRecipeCard(
                                         recipe: r,
+                                        isRegistered: true,
                                         isPinned: r.isPinned,
                                         onPinTap: () {
                                           RecipeService.instance.togglePin(r.id);
                                         },
                                         onFavoriteTap: () {
                                           HapticFeedback.lightImpact();
-                                          final newFavState = !r.isFavorite;
+                                          final wasRegistered = r.isFavorite || r.isInCookbook;
+                                          final newFavState = !wasRegistered;
                                           setState(() {
                                             r.isFavorite = newFavState;
                                           });
@@ -273,6 +275,8 @@ class _CookbookDetailScreenState extends State<CookbookDetailScreen> {
                                             if (r.id.isNotEmpty) {
                                               RecipeService.instance.deleteRecipe(r.id);
                                             }
+                                              r.isFavorite = false;
+                                              r.isInCookbook = false;
                                             IosToast.show(ctx, message: 'Recipe removed from saved', type: ToastType.success);
                                           }
                                         },
