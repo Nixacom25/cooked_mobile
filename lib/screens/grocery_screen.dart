@@ -2,11 +2,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../services/grocery_service.dart';
 import '../services/recipe_service.dart';
 import '../services/ingredient_service.dart';
-import '../services/analytics_service.dart';
 import '../models/grocery_item.dart';
 import '../models/recipe.dart';
 import '../core/widgets/ios_toast.dart';
@@ -29,7 +27,6 @@ class GroceryScreen extends StatefulWidget {
 class GroceryScreenState extends State<GroceryScreen> with SingleTickerProviderStateMixin {
   final Set<String> _collapsedGroups = {};
   bool _initializedDefaults = false;
-  bool _isInstacartLoading = false;
 
   late AnimationController _hintController;
   late Animation<Offset> _hintAnimation;
@@ -150,97 +147,6 @@ class GroceryScreenState extends State<GroceryScreen> with SingleTickerProviderS
         IosToast.show(context, message: ErrorHelper.getFriendlyMessage(e), type: ToastType.error);
       }
     }
-  }
-
-  Future<void> _handleInstacartShop(BuildContext context, List<GroceryItem> items) async {
-    if (items.isEmpty) {
-      IosToast.show(context, message: 'Your grocery list is empty', type: ToastType.error);
-      return;
-    }
-
-    HapticFeedback.mediumImpact();
-    AnalyticsService.instance.logInstacartCtaClicked(itemCount: items.length);
-
-    setState(() => _isInstacartLoading = true);
-
-    try {
-      final response = await GroceryService.instance.createInstacartShoppingLink();
-
-      if (!mounted) return;
-      final Uri targetUri = Uri.parse(response.deepLinkUrl ?? response.url);
-      final Uri fallbackWebUri = Uri.parse(response.url);
-
-      bool launched = false;
-      try {
-        if (await canLaunchUrl(targetUri)) {
-          launched = await launchUrl(targetUri, mode: LaunchMode.externalApplication);
-        }
-      } catch (_) {}
-
-      if (!launched) {
-        try {
-          launched = await launchUrl(fallbackWebUri, mode: LaunchMode.externalApplication);
-        } catch (e) {
-          launched = await launchUrl(fallbackWebUri, mode: LaunchMode.inAppBrowserView);
-        }
-      }
-
-      if (!context.mounted) return;
-      if (launched) {
-        AnalyticsService.instance.logInstacartRedirectSuccess(mode: 'launched');
-      } else {
-        AnalyticsService.instance.logInstacartRedirectFailed(error: 'Could not launch URL');
-        _showInstacartErrorDialog(context, 'Unable to open Instacart. Please check your internet connection.', items);
-      }
-    } catch (e) {
-      if (!context.mounted) return;
-      final errorMsg = ErrorHelper.getFriendlyMessage(e);
-      _showInstacartErrorDialog(context, errorMsg, items);
-    } finally {
-      if (mounted) {
-        setState(() => _isInstacartLoading = false);
-      }
-    }
-  }
-
-  void _showInstacartErrorDialog(BuildContext context, String message, List<GroceryItem> items) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
-        title: Row(
-          children: [
-            Icon(Icons.shopping_bag_outlined, color: const Color(0xFF003D29), size: 24.sp),
-            SizedBox(width: 8.w),
-            Text(
-              'Instacart Connection',
-              style: TextStyle(fontFamily: 'Rubik', fontWeight: FontWeight.bold, fontSize: 16.sp),
-            ),
-          ],
-        ),
-        content: Text(
-          message,
-          style: TextStyle(fontFamily: 'Rubik', fontSize: 14.sp, color: const Color(0xFF4A4A4A)),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF003D29),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
-            ),
-            onPressed: () {
-              Navigator.pop(ctx);
-              _handleInstacartShop(context, items);
-            },
-            child: const Text('Retry', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-          ),
-        ],
-      ),
-    );
   }
 
   @override
@@ -468,82 +374,13 @@ class GroceryScreenState extends State<GroceryScreen> with SingleTickerProviderS
                             return const SizedBox.shrink();
                           }
 
-                          final bool showInstacart = true;
-
                           return Positioned(
-                            bottom: 120.h,
+                            bottom: 150.h,
                             left: 20.w,
                             right: 20.w,
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.end,
                               children: [
-                                if (showInstacart && itemsList.isNotEmpty) ...[
-                                  // Instacart button option if items exist
-                                  Expanded(
-                                    child: GestureDetector(
-                                      onTap: _isInstacartLoading
-                                          ? null
-                                          : () => _handleInstacartShop(context, itemsList),
-                                      child: AnimatedContainer(
-                                        duration: const Duration(milliseconds: 200),
-                                        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
-                                        decoration: BoxDecoration(
-                                          gradient: const LinearGradient(
-                                            colors: [Color(0xFF003D29), Color(0xFF0D6B34)],
-                                            begin: Alignment.centerLeft,
-                                            end: Alignment.centerRight,
-                                          ),
-                                          borderRadius: BorderRadius.circular(30.r),
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color: const Color(0xFF003D29).withValues(alpha: 0.35),
-                                              blurRadius: 14.r,
-                                              offset: Offset(0, 5.h),
-                                            ),
-                                          ],
-                                        ),
-                                        child: Row(
-                                          mainAxisAlignment: MainAxisAlignment.center,
-                                          children: [
-                                            if (_isInstacartLoading) ...[
-                                              SizedBox(
-                                                width: 18.w,
-                                                height: 18.w,
-                                                child: const AppLoadingIndicator(
-                                                  color: Colors.white,
-                                                ),
-                                              ),
-                                              SizedBox(width: 8.w),
-                                              Text(
-                                                'Connecting...',
-                                                style: TextStyle(
-                                                  fontFamily: 'Rubik',
-                                                  fontWeight: FontWeight.bold,
-                                                  fontSize: 14.sp,
-                                                  color: Colors.white,
-                                                ),
-                                              ),
-                                            ] else ...[
-                                              Icon(Icons.shopping_cart_outlined, color: Colors.white, size: 18.sp),
-                                              SizedBox(width: 6.w),
-                                              Text(
-                                                'Instacart',
-                                                style: TextStyle(
-                                                  fontFamily: 'Rubik',
-                                                  fontWeight: FontWeight.w700,
-                                                  fontSize: 14.sp,
-                                                  color: Colors.white,
-                                                ),
-                                              ),
-                                            ],
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  SizedBox(width: 12.w),
-                                ],
-
                                 // Red Pill "+ Add" Button
                                 GestureDetector(
                                   onTap: () {

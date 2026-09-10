@@ -64,6 +64,7 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
 
   Timer? _searchDebounce;
   List<Map<String, dynamic>> _suggestedWebRecipes = [];
+  bool _isShowingWebPreview = false;
 
   List<String> _trendingRecipes = [
     'High protein dinner',
@@ -160,7 +161,14 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
 
 
   Future<void> _showWebPreview(String url, String title) async {
-    showModalBottomSheet(
+    // Guard against stacking multiple preview sheets: a slow-loading webview
+    // can tempt users into tapping "View this recipe" again on another
+    // result, opening a new full-screen sheet on top of the last one each
+    // time, leaving a stack of pages to dismiss one by one.
+    if (_isShowingWebPreview) return;
+    _isShowingWebPreview = true;
+
+    await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
@@ -179,6 +187,8 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
         );
       },
     );
+
+    _isShowingWebPreview = false;
   }
 
   Future<void> _importFromUrl(String url) async {

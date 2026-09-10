@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:http/http.dart' as http;
 import '../core/api_config.dart';
 import '../models/grocery_item.dart';
-import '../models/instacart_link_response.dart';
 import 'auth_service.dart';
 import 'analytics_service.dart';
 import 'package:flutter/foundation.dart';
@@ -186,38 +185,6 @@ class GroceryService {
             .where((item) => !item.isPlaceholder)
             .toList();
       }
-      rethrow;
-    }
-  }
-
-  Future<InstacartLinkResponse> createInstacartShoppingLink() async {
-    final itemsCount = myGroceriesNotifier.value?.length ?? 0;
-    AnalyticsService.instance.logInstacartRequestStarted(itemCount: itemsCount);
-
-    final url = Uri.parse('${ApiConfig.baseUrl}/grocery-items/instacart');
-    try {
-      final response = await _reliableRequest(() async => http.post(
-        url,
-        headers: await _getHeaders(),
-      ));
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final instacartRes = InstacartLinkResponse.fromJson(data);
-
-        AnalyticsService.instance.logInstacartRequestSuccess(
-          url: instacartRes.url,
-          itemCount: instacartRes.itemCount,
-        );
-
-        return instacartRes;
-      } else if (response.statusCode == 400) {
-        throw Exception('Your grocery list is empty. Add ingredients from a recipe to get started.');
-      } else {
-        throw Exception('Unable to connect to Instacart right now. Please try again.');
-      }
-    } catch (e) {
-      AnalyticsService.instance.logInstacartRequestFailed(error: e.toString());
       rethrow;
     }
   }
