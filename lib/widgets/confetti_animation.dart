@@ -1,11 +1,9 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
-import '../models/recipe.dart';
 
 class ConfettiAnimation extends StatefulWidget {
   final Widget child;
-  final List<RecipeIngredient>? ingredients;
-  const ConfettiAnimation({super.key, required this.child, this.ingredients});
+  const ConfettiAnimation({super.key, required this.child});
 
   @override
   State<ConfettiAnimation> createState() => _ConfettiAnimationState();
@@ -48,31 +46,20 @@ class _ConfettiAnimationState extends State<ConfettiAnimation>
         particle.y = -40; // start slightly higher
         particle.speed = newParticle.speed;
         particle.size = newParticle.size;
-        particle.emoji = newParticle.emoji;
         particle.color = newParticle.color;
+        particle.isRibbon = newParticle.isRibbon;
       }
     }
   }
 
   _ConfettiParticle _createParticle(Size size) {
-    // 50% chance emoji, 50% chance square confetti
-    bool isEmoji = _random.nextDouble() > 0.4;
-    String? emoji;
-    Color? color;
-
-    if (isEmoji) {
-      // Basil leaves, Mint leaves, Chili peppers
-      List<String> emojis = ["🌿", "🍃", "🌶️"];
-      emoji = emojis[_random.nextInt(emojis.length)];
-    } else {
-      // Small diced pieces (red/orange/yellow)
-      List<Color> colors = [
-        Colors.red.shade400,
-        Colors.orange.shade400,
-        Colors.yellow.shade500,
-      ];
-      color = colors[_random.nextInt(colors.length)];
-    }
+    final List<Color> colors = [
+      Colors.red.shade400,
+      Colors.orange.shade400,
+      Colors.yellow.shade500,
+      Colors.blue.shade400,
+      Colors.green.shade400,
+    ];
 
     return _ConfettiParticle(
       x: _random.nextDouble() * size.width,
@@ -80,8 +67,8 @@ class _ConfettiAnimationState extends State<ConfettiAnimation>
       speed: 3.0 + _random.nextDouble() * 4.0, // Increased speed
       rotationSpeed: (_random.nextDouble() - 0.5) * 0.1, // rotation
       size: 15.0 + _random.nextDouble() * 20.0, // size 15-35
-      emoji: emoji,
-      color: color,
+      color: colors[_random.nextInt(colors.length)],
+      isRibbon: _random.nextDouble() < 0.35,
     );
   }
 
@@ -123,22 +110,14 @@ class _ConfettiAnimationState extends State<ConfettiAnimation>
   }
 
   Widget _buildParticleWidget(_ConfettiParticle particle) {
-    if (particle.emoji != null) {
-      return Text(
-        particle.emoji!,
-        style: TextStyle(fontSize: particle.size),
-      );
-    } else {
-      // Small colored square
-      return Container(
-        width: particle.size * 0.6,
-        height: particle.size * 0.6,
-        decoration: BoxDecoration(
-          color: particle.color,
-          borderRadius: BorderRadius.circular(2.0), // slightly rounded squares
-        ),
-      );
-    }
+    return Container(
+      width: particle.isRibbon ? particle.size * 0.42 : particle.size * 0.6,
+      height: particle.isRibbon ? particle.size * 1.8 : particle.size * 0.6,
+      decoration: BoxDecoration(
+        color: particle.color,
+        borderRadius: BorderRadius.circular(particle.isRibbon ? 3.0 : 2.0),
+      ),
+    );
   }
 }
 
@@ -149,8 +128,8 @@ class _ConfettiParticle {
   double rotation = 0;
   double rotationSpeed;
   double size;
-  String? emoji;
   Color? color;
+  bool isRibbon;
 
   _ConfettiParticle({
     required this.x,
@@ -158,8 +137,8 @@ class _ConfettiParticle {
     required this.speed,
     required this.rotationSpeed,
     required this.size,
-    this.emoji,
     this.color,
+    this.isRibbon = false,
   });
 }
 
