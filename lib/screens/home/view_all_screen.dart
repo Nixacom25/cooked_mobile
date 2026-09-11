@@ -22,6 +22,7 @@ import '../../models/view_all_type.dart';
 import '../../core/extensions/string_extensions.dart';
 import '../../widgets/cookbook_grid_skeleton.dart';
 import '../../widgets/skeleton_loader.dart';
+import '../../widgets/skeleton_list.dart';
 import '../../widgets/add_to_cookbook_sheet.dart';
 import '../../widgets/cookbook_form_modal.dart';
 import '../../widgets/haptic_context_menu.dart';
@@ -584,6 +585,31 @@ class _RecipesGridState extends State<_RecipesGrid> {
   late ViewAllType _type;
   final Set<String> _validatedRecipeIds = {};
 
+  // _buildGrid() renders these types as a single-column list of wide cards
+  // (SavedRecipeCard / RecentImportTile), not a 2-column grid - the loading
+  // skeleton must match that shape or it visibly "jumps" once data arrives.
+  bool get _isSingleColumnList =>
+      _type == ViewAllType.savedRecipes ||
+      _type == ViewAllType.recentlyViewed ||
+      _type == ViewAllType.imports ||
+      _type == ViewAllType.explore ||
+      _type == ViewAllType.exploreRecipesByCuisine ||
+      _type == ViewAllType.exploreRecipesByCategory;
+
+  Widget _buildLoadingSkeleton() {
+    if (_isSingleColumnList) {
+      return SkeletonList(
+        itemCount: 6,
+        height: _type == ViewAllType.imports ? 110 : 135,
+        borderRadius: 24,
+        padding: const EdgeInsets.fromLTRB(16, 4, 16, 20),
+      );
+    }
+    return const RecipeGridSkeleton(
+      padding: EdgeInsets.fromLTRB(16, 4, 16, 20),
+    );
+  }
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -1140,9 +1166,7 @@ class _RecipesGridState extends State<_RecipesGrid> {
         valueListenable: notifier,
         builder: (context, recipes, _) {
           if (recipes == null) {
-            return const RecipeGridSkeleton(
-              padding: EdgeInsets.fromLTRB(16, 4, 16, 20),
-            );
+            return _buildLoadingSkeleton();
           }
 
           final displayList = (_type == ViewAllType.savedRecipes)
@@ -1158,9 +1182,7 @@ class _RecipesGridState extends State<_RecipesGrid> {
       future: _future,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const RecipeGridSkeleton(
-            padding: EdgeInsets.fromLTRB(16, 4, 16, 20),
-          );
+          return _buildLoadingSkeleton();
         }
 
         final recipes = snapshot.data ?? [];
