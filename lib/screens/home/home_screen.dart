@@ -1837,60 +1837,61 @@ class _CircularRecipeAvatarRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 105.h,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        padding: EdgeInsets.symmetric(horizontal: 4.w),
-        itemCount: recipes.length,
-        separatorBuilder: (_, __) => SizedBox(width: 14.w),
-        itemBuilder: (context, i) {
-          final r = recipes[i];
-          return GestureDetector(
-            onTap: () {
-              HistoryService.instance.addToHistory(r);
-              Navigator.pushNamed(
-                context,
-                AppRoutes.recipeDetail,
-                arguments: {'recipe': r},
-              );
-            },
-            child: SizedBox(
-              width: 70.w,
-              child: Column(
-                children: [
-                  Container(
-                    width: 62.r,
-                    height: 62.r,
-                    padding: EdgeInsets.all(2.r),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: const Color(0xFFC31E26),
-                        width: 2.2,
+    // A fixed-height ListView can't grow to fit a fully unwrapped recipe
+    // name (no line limit / no ellipsis), so this scrolls a plain Row
+    // instead - it sizes naturally to the tallest item's wrapped text.
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: EdgeInsets.symmetric(horizontal: 4.w),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          for (int i = 0; i < recipes.length; i++) ...[
+            if (i > 0) SizedBox(width: 14.w),
+            GestureDetector(
+              onTap: () {
+                HistoryService.instance.addToHistory(recipes[i]);
+                Navigator.pushNamed(
+                  context,
+                  AppRoutes.recipeDetail,
+                  arguments: {'recipe': recipes[i]},
+                );
+              },
+              child: SizedBox(
+                width: 80.w,
+                child: Column(
+                  children: [
+                    Container(
+                      width: 72.r,
+                      height: 72.r,
+                      padding: EdgeInsets.all(2.r),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: const Color(0xFFC31E26),
+                          width: 2.5.w,
+                        ),
+                      ),
+                      child: ClipOval(child: _buildThumbnail(recipes[i].image)),
+                    ),
+                    SizedBox(height: 6.h),
+                    Text(
+                      recipes[i].name,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontFamily: 'Rubik',
+                        fontWeight: FontWeight.w700,
+                        fontSize: 12.sp,
+                        color: const Color(0xFF0F172A),
+                        height: 1.15,
                       ),
                     ),
-                    child: ClipOval(child: _buildThumbnail(r.image)),
-                  ),
-                  SizedBox(height: 6.h),
-                  Text(
-                    r.name,
-                    maxLines: 2,
-                    textAlign: TextAlign.center,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontFamily: 'Rubik',
-                      fontWeight: FontWeight.w700,
-                      fontSize: 12.sp,
-                      color: const Color(0xFF0F172A),
-                      height: 1.15,
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          );
-        },
+          ],
+        ],
       ),
     );
   }
