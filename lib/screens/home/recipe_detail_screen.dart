@@ -1247,7 +1247,12 @@ class _IngredientsList extends StatelessWidget {
         }),
         if (showSavings) ...[
           SizedBox(height: 24.h),
-          _SavingsBreakdownCard(totalPrice: totalPrice ?? 3.50),
+          _SavingsBreakdownCard(
+            // Scale the recipe's base price by the same serving ratio used
+            // for ingredient quantities, so the savings estimate updates
+            // immediately when the user changes the serving count.
+            totalPrice: (totalPrice ?? 3.50) * currentServings / originalServings,
+          ),
           SizedBox(height: 16.h),
         ],
       ],
