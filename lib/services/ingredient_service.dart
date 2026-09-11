@@ -129,7 +129,7 @@ class IngredientService {
 
     for (var r in rawResults) {
       final name = (r['name'] ?? '').toString();
-      if (name.isNotEmpty) {
+      if (name.isNotEmpty && name.toLowerCase().contains(qLower)) {
         uniqueMap[name.toLowerCase()] = r;
       }
     }

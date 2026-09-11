@@ -803,19 +803,22 @@ class _RecipesGridState extends State<_RecipesGrid> {
                         r.isInCookbook ||
                         savedIds.contains(r.id) ||
                         _validatedRecipeIds.contains(r.id);
+                    final canPinRecipe = _type != ViewAllType.explore &&
+                        _type != ViewAllType.exploreRecipesByCuisine &&
+                        _type != ViewAllType.exploreRecipesByCategory;
 
                     return SavedRecipeCard(
                       recipe: r,
                       isRegistered: isSaved,
-                      isPinned: isSaved,
-                      onPinTap: () async {
+                      isPinned: canPinRecipe && isSaved,
+                      onPinTap: canPinRecipe ? () async {
                         try {
                           await RecipeService.instance.togglePin(r.id);
                         } catch (_) {}
-                      },
+                      } : null,
                       onFavoriteTap: () {
                         HapticFeedback.lightImpact();
-                        final wasRegistered = r.isFavorite || r.isInCookbook;
+                        final wasRegistered = RecipeService.instance.isRecipeSaved(r);
                         final newFavState = !wasRegistered;
                         setState(() {
                           r.isFavorite = newFavState;
@@ -847,7 +850,8 @@ class _RecipesGridState extends State<_RecipesGrid> {
                           ctx,
                           targetPosition: details.globalPosition,
                           actions: [
-                            HapticMenuAction(
+                            if (canPinRecipe)
+                              HapticMenuAction(
                               title: r.isPinned ? 'Unpin Recipe' : 'Pin Recipe',
                               icon: r.isPinned
                                   ? Icons.push_pin_rounded
@@ -855,7 +859,7 @@ class _RecipesGridState extends State<_RecipesGrid> {
                               onTap: () {
                                 RecipeService.instance.togglePin(r.id);
                               },
-                            ),
+                              ),
                             HapticMenuAction(
                               title: r.isInCookbook
                                   ? 'Remove from Cookbook'

@@ -801,6 +801,7 @@ class _ExploreScreenState extends State<ExploreScreen>
                     final r = displayList[i];
                     return SavedRecipeCard(
                       recipe: r,
+                      isRegistered: RecipeService.instance.isRecipeSaved(r),
                       onTap: () {
                         Navigator.pushNamed(
                           context,
@@ -810,7 +811,7 @@ class _ExploreScreenState extends State<ExploreScreen>
                       },
                       onFavoriteTap: () {
                         HapticFeedback.lightImpact();
-                        final wasRegistered = r.isFavorite || r.isInCookbook;
+                        final wasRegistered = RecipeService.instance.isRecipeSaved(r);
                         final newFavState = !wasRegistered;
                         setState(() {
                           r.isFavorite = newFavState;

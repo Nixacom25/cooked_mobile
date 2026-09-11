@@ -33,6 +33,8 @@ class RecipeService {
   final ValueNotifier<List<Recipe>?> myRecipesNotifier = ValueNotifier(null);
   final ValueNotifier<List<Recipe>?> recentImportsNotifier = ValueNotifier(null);
   final ValueNotifier<List<Recipe>?> homeSuggestionsNotifier = ValueNotifier(null);
+  final ValueNotifier<Map<String, bool>> favoriteStatesNotifier =
+      ValueNotifier(<String, bool>{});
   
   // Cache for explore data
   final Map<String, dynamic> _cache = {};
@@ -213,6 +215,7 @@ class RecipeService {
 
   Future<List<Recipe>> getMyRecipes({bool forceRefresh = false}) async {
     if (!forceRefresh && myRecipesNotifier.value != null) {
+      _hydrateFavoriteStates(myRecipesNotifier.value!);
       return myRecipesNotifier.value!;
     }
 
@@ -222,7 +225,9 @@ class RecipeService {
         final cachedStr = DatabaseService.instance.readCacheRaw('my_recipes_cache_v3');
         if (cachedStr != null) {
           final List<dynamic> data = jsonDecode(cachedStr);
-          myRecipesNotifier.value = data.map((json) => Recipe.fromJson(json)).toList();
+          final cachedRecipes = data.map((json) => Recipe.fromJson(json)).toList();
+          myRecipesNotifier.value = cachedRecipes;
+          _hydrateFavoriteStates(cachedRecipes);
         }
       } catch (e) {
         debugPrint('Failed to load recipe cache: $e');
@@ -235,6 +240,7 @@ class RecipeService {
     if (response.statusCode == 200) {
       final recipes = await compute(_parseRecipesList, response.body);
       myRecipesNotifier.value = recipes;
+      _hydrateFavoriteStates(recipes);
       
       try {
         await DatabaseService.instance.writeCacheRaw('my_recipes_cache_v3', response.body);
@@ -883,7 +889,53 @@ class RecipeService {
     }
   }
 
-  void markRecipeAsSaved(Recipe recipe) {
+  String _favoriteKey(Recipe recipe) {
+    if (recipe.id.isNotEmpty) return 'id:${recipe.id}';
+    return 'name:${recipe.name.trim().toLowerCase()}';
+  }
+
+  bool isRecipeSaved(Recipe recipe) {
+    final sharedState = favoriteStatesNotifier.value[_favoriteKey(recipe)];
+    return sharedState ?? (recipe.isFavorite || recipe.isInCookbook);
+  }
+
+  void _hydrateFavoriteStates(Iterable<Recipe> recipes) {
+    final states = Map<String, bool>.from(favoriteStatesNotifier.value);
+    for (final recipe in recipes) {
+      states[_favoriteKey(recipe)] = true;
+    }
+    favoriteStatesNotifier.value = states;
+  }
+
+  void _publishFavoriteState(Recipe recipe, bool isFavorite) {
+    final key = _favoriteKey(recipe);
+    final states = Map<String, bool>.from(favoriteStatesNotifier.value)
+      ..[key] = isFavorite;
+    favoriteStatesNotifier.value = states;
+
+    void updateList(ValueNotifier<List<Recipe>?> notifier) {
+      final current = notifier.value;
+      if (current == null) return;
+      var changed = false;
+      final updated = current.map((item) {
+        if (_favoriteKey(item) != key) return item;
+        changed = true;
+        item.isFavorite = isFavorite;
+        item.isInCookbook = isFavorite;
+        return item;
+      }).toList();
+      if (changed) notifier.value = updated;
+    }
+
+    updateList(myRecipesNotifier);
+    updateList(recentImportsNotifier);
+    updateList(homeSuggestionsNotifier);
+    recipe.isFavorite = isFavorite;
+    recipe.isInCookbook = isFavorite;
+  }
+
+  Future<void> markRecipeAsSaved(Recipe recipe) async {
+    _publishFavoriteState(recipe, true);
     final updated = recipe.copyWith(
       isInCookbook: true,
       isValidated: true,
@@ -906,7 +958,16 @@ class RecipeService {
       DatabaseService.instance.writeCacheRaw('my_recipes_cache_v3', jsonEncode(jsonList));
     } catch (_) {}
 
-    getMyRecipes(forceRefresh: true).catchError((_) => <Recipe>[]);
+    if (recipe.id.isNotEmpty && !recipe.id.startsWith('pending_')) {
+      try {
+        final saved = await validateRecipe(recipe.id);
+        _publishFavoriteState(saved, true);
+      } catch (_) {
+        await getMyRecipes(forceRefresh: true);
+      }
+    } else {
+      await getMyRecipes(forceRefresh: true);
+    }
   }
 
   Future<Recipe> validateRecipe(String id) async {
@@ -957,6 +1018,27 @@ class RecipeService {
   }
 
   Future<bool> deleteRecipe(String id) async {
+    Recipe? existing;
+    for (final collection in <List<Recipe>?>[
+      myRecipesNotifier.value,
+      recentImportsNotifier.value,
+      homeSuggestionsNotifier.value,
+    ]) {
+      for (final recipe in collection ?? <Recipe>[]) {
+        if (recipe.id == id) {
+          existing = recipe;
+          break;
+        }
+      }
+      if (existing != null) break;
+    }
+    if (existing != null) _publishFavoriteState(existing, false);
+    if (existing == null && id.isNotEmpty) {
+      final states = Map<String, bool>.from(favoriteStatesNotifier.value)
+        ..['id:$id'] = false;
+      favoriteStatesNotifier.value = states;
+    }
+
     // 1. Optimistic remove
     if (myRecipesNotifier.value != null) {
       myRecipesNotifier.value = myRecipesNotifier.value!
@@ -994,6 +1076,7 @@ class RecipeService {
     myRecipesNotifier.value = null;
     recentImportsNotifier.value = null;
     homeSuggestionsNotifier.value = null;
+    favoriteStatesNotifier.value = <String, bool>{};
     clearCache();
   }
 

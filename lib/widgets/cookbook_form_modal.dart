@@ -13,6 +13,7 @@ import '../core/utils/error_helper.dart';
 import '../widgets/glass_icon_button.dart';
 import '../widgets/app_loading_indicator.dart';
 import '../widgets/skeleton_list.dart';
+import '../screens/home/home_screen.dart';
 
 class CookbookFormModal extends StatefulWidget {
   final Cookbook? cookbook;
@@ -620,11 +621,11 @@ class _InlineRecipePickerState extends State<_InlineRecipePicker> {
   void _handleShortcutTap(String target) {
     Navigator.of(context).pop();
     if (target == 'scan') {
-      Navigator.pushNamed(context, AppRoutes.scan);
+      HomeScreen.tabRequestNotifier.value = 2;
     } else if (target == 'import') {
-      Navigator.pushNamed(context, AppRoutes.import);
+      HomeScreen.tabRequestNotifier.value = 4;
     } else if (target == 'explore') {
-      Navigator.pushNamed(context, AppRoutes.home);
+      HomeScreen.tabRequestNotifier.value = 1;
     }
   }
 

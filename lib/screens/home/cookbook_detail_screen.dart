@@ -263,7 +263,7 @@ class _CookbookDetailScreenState extends State<CookbookDetailScreen> {
                                         },
                                         onFavoriteTap: () {
                                           HapticFeedback.lightImpact();
-                                          final wasRegistered = r.isFavorite || r.isInCookbook;
+                                          final wasRegistered = RecipeService.instance.isRecipeSaved(r);
                                           final newFavState = !wasRegistered;
                                           setState(() {
                                             r.isFavorite = newFavState;

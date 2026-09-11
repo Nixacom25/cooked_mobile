@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../models/recipe.dart';
+import '../services/recipe_service.dart';
 
 class SavedRecipeCard extends StatefulWidget {
   final Recipe? recipe;
@@ -48,14 +49,33 @@ class _SavedRecipeCardState extends State<SavedRecipeCard> {
   late bool _isFavorite;
 
   bool _isRegistered(Recipe? recipe, bool? registered) {
-    return registered ?? (recipe?.isFavorite == true ||
-      recipe?.isInCookbook == true);
+    if (recipe == null) return registered ?? false;
+    return RecipeService.instance.isRecipeSaved(recipe);
   }
 
   @override
   void initState() {
     super.initState();
     _isFavorite = _isRegistered(widget.recipe, widget.isRegistered);
+    RecipeService.instance.favoriteStatesNotifier.addListener(_onFavoriteStateChanged);
+  }
+
+  void _onFavoriteStateChanged() {
+    final recipe = widget.recipe;
+    if (recipe == null || !mounted) return;
+    final key = recipe.id.isNotEmpty
+        ? 'id:${recipe.id}'
+        : 'name:${recipe.name.trim().toLowerCase()}';
+    final sharedState = RecipeService.instance.favoriteStatesNotifier.value[key];
+    if (sharedState != null && sharedState != _isFavorite) {
+      setState(() => _isFavorite = sharedState);
+    }
+  }
+
+  @override
+  void dispose() {
+    RecipeService.instance.favoriteStatesNotifier.removeListener(_onFavoriteStateChanged);
+    super.dispose();
   }
 
   @override
@@ -74,10 +94,10 @@ class _SavedRecipeCardState extends State<SavedRecipeCard> {
       return;
     }
 
-    setState(() {
-      _isFavorite = !_isFavorite;
-    });
     widget.onFavoriteTap!.call();
+    if (widget.recipe != null) {
+      setState(() => _isFavorite = RecipeService.instance.isRecipeSaved(widget.recipe!));
+    }
   }
 
   @override

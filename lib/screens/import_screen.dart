@@ -61,6 +61,8 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
   bool _isImporting = false;
   bool _isSearching = false;
   List<Map<String, dynamic>> _searchResults = [];
+  int _webSearchRequestId = 0;
+  int _suggestionRequestId = 0;
 
   Timer? _searchDebounce;
   List<Map<String, dynamic>> _suggestedWebRecipes = [];
@@ -162,6 +164,7 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
 
 
   Future<void> _showWebPreview(String url, String title) async {
+    FocusScope.of(context).unfocus();
     final normalizedUrl = url.trim();
     final uri = Uri.tryParse(normalizedUrl);
     if (uri == null || !uri.hasScheme || (uri.scheme != 'http' && uri.scheme != 'https')) {
@@ -302,7 +305,10 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
   }
 
   Future<void> _handleWebSearch(String val) async {
-    if (val.trim().isEmpty) return;
+    final query = val.trim();
+    if (query.isEmpty) return;
+    FocusScope.of(context).unfocus();
+    final requestId = ++_webSearchRequestId;
     HapticFeedback.selectionClick();
     setState(() {
       _isSearching = true;
@@ -310,8 +316,8 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
     });
     _importSearchOverlayEntry?.markNeedsBuild();
     try {
-      final res = await RecipeService.instance.searchWeb(val.trim());
-      if (mounted) {
+      final res = await RecipeService.instance.searchWeb(query);
+      if (mounted && requestId == _webSearchRequestId) {
         setState(() {
           _searchResults = res;
           _isSearching = false;
@@ -319,7 +325,7 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
         _importSearchOverlayEntry?.markNeedsBuild();
       }
     } catch (e) {
-      if (mounted) {
+      if (mounted && requestId == _webSearchRequestId) {
         setState(() => _isSearching = false);
         _importSearchOverlayEntry?.markNeedsBuild();
         if (PaywallHelper.handleError(context, e)) return;
@@ -334,6 +340,7 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
 
   void _onSearchChanged(String val) {
     if (_searchDebounce?.isActive ?? false) _searchDebounce!.cancel();
+    final suggestionRequestId = ++_suggestionRequestId;
     if (val.trim().isEmpty) {
       setState(() => _suggestedWebRecipes = []);
       _importSearchOverlayEntry?.markNeedsBuild();
@@ -341,15 +348,40 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
     }
     _searchDebounce = Timer(const Duration(milliseconds: 150), () async {
       try {
-        final res = await IngredientService.instance.searchIngredients(val.trim());
-        if (mounted) {
+        final query = val.trim().toLowerCase();
+        final res = await IngredientService.instance.searchIngredients(query);
+        if (mounted && suggestionRequestId == _suggestionRequestId) {
+          final names = [
+            'Chicken',
+            'Chicken Tacos',
+            'Chicken Pasta',
+            'Chicken Stir-Fry',
+            'Chicken Curry',
+            'Chicken Salad',
+            'Cheese Pasta',
+            'Chocolate Cake',
+          ].where((name) => name.toLowerCase().contains(query));
+          final merged = <String, Map<String, dynamic>>{
+            for (final item in res)
+              if ((item['name'] ?? '').toString().toLowerCase().contains(query))
+                (item['name'] as String).toLowerCase(): item,
+          };
+          for (final name in names) {
+            merged.putIfAbsent(name.toLowerCase(), () => {'name': name, 'icon': '🍽️'});
+          }
           setState(() {
-            _suggestedWebRecipes = res.take(5).toList();
+            _suggestedWebRecipes = merged.values.take(8).toList();
           });
           _importSearchOverlayEntry?.markNeedsBuild();
         }
       } catch (_) {}
     });
+  }
+
+  void _submitWebSearch(String value) {
+    FocusScope.of(context).unfocus();
+    setState(() => _suggestedWebRecipes = []);
+    _handleWebSearch(value);
   }
 
   String _capitalize(String text) {
@@ -715,23 +747,19 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
                         Container(
                           margin: EdgeInsets.only(top: 8.h),
                           constraints: BoxConstraints(maxHeight: 250.h),
-                          decoration: BoxDecoration(
+                          child: Material(
                             color: Colors.white,
-                            borderRadius: BorderRadius.circular(16.r),
-                            border: Border.all(color: const Color(0xFFE2E8F0)),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.05),
-                                blurRadius: 10,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: ListView.builder(
-                            shrinkWrap: true,
-                            padding: EdgeInsets.zero,
-                            itemCount: _suggestedWebRecipes.length,
-                            itemBuilder: (ctx, i) {
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16.r),
+                              side: const BorderSide(color: Color(0xFFE2E8F0)),
+                            ),
+                            elevation: 3,
+                            shadowColor: Colors.black.withValues(alpha: 0.05),
+                            child: ListView.builder(
+                              shrinkWrap: true,
+                              padding: EdgeInsets.zero,
+                              itemCount: _suggestedWebRecipes.length,
+                              itemBuilder: (ctx, i) {
                               final res = _suggestedWebRecipes[i];
                               return ListTile(
                                 title: Text(
@@ -744,10 +772,11 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
                                   final title = _capitalize(res['name'] ?? '');
                                   setState(() => _suggestedWebRecipes = []);
                                   _searchCtrl.text = title;
-                                  _handleWebSearch(title);
+                                    _searchTrendingInModal(title);
                                 },
                               );
-                            },
+                              },
+                            ),
                           ),
                         ),
 
@@ -1034,7 +1063,7 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
                                       icon: item['icon'],
                                       onImport: () {
                                         _overlaySearchCtrl.text = item['name']!;
-                                        _handleWebSearch(item['name']!);
+                                        _submitWebSearch(item['name']!);
                                       },
                                     ),
                                   )).toList(),
@@ -1067,7 +1096,7 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
                                     name: name,
                                     onImport: () {
                                       _overlaySearchCtrl.text = name;
-                                      _handleWebSearch(name);
+                                      _submitWebSearch(name);
                                     },
                                   ),
                                 )).toList(),
@@ -1098,7 +1127,7 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
                                     title: Text(name, style: TextStyle(fontFamily: 'Rubik', fontSize: 14.sp)),
                                     onTap: () {
                                       _overlaySearchCtrl.text = name;
-                                      _handleWebSearch(name);
+                                      _submitWebSearch(name);
                                     },
                                   );
                                 }),
@@ -1154,12 +1183,10 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
                         suffixIcon: Icons.check_circle_rounded,
                         borderColor: val > 0.5 ? const Color(0xFFEEEEEE) : Colors.transparent,
                         onSuffixTap: () {
-                          setState(() => _suggestedWebRecipes = []);
-                          _handleWebSearch(_overlaySearchCtrl.text);
+                          _submitWebSearch(_overlaySearchCtrl.text);
                         },
                         onSubmitted: (v) {
-                          setState(() => _suggestedWebRecipes = []);
-                          _handleWebSearch(v);
+                          _submitWebSearch(v);
                         },
                         onChanged: (v) {
                           setState(() => _searchResults = []);

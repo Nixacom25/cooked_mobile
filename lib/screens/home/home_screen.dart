@@ -44,6 +44,7 @@ class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key, this.initialTab = 0, this.initialUrl});
 
   static final ValueNotifier<int> activeTabNotifier = ValueNotifier<int>(0);
+  static final ValueNotifier<int?> tabRequestNotifier = ValueNotifier<int?>(null);
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -82,6 +83,7 @@ class _HomeScreenState extends State<HomeScreen>
     _navVisible = _currentTab != 2;
     _scanActiveNotifier.value = _currentTab == 2;
     _importActiveNotifier.value = _currentTab == 4;
+    HomeScreen.tabRequestNotifier.addListener(_handleTabRequest);
 
     _tabWidgets = [
       _HomeTab(
@@ -204,11 +206,19 @@ class _HomeScreenState extends State<HomeScreen>
 
   @override
   void dispose() {
+    HomeScreen.tabRequestNotifier.removeListener(_handleTabRequest);
     routeObserver.unsubscribe(this);
     _navCtrl.dispose();
     _scanActiveNotifier.dispose();
     _isScanInResultsMode.dispose();
     super.dispose();
+  }
+
+  void _handleTabRequest() {
+    final requestedTab = HomeScreen.tabRequestNotifier.value;
+    if (requestedTab == null || !mounted) return;
+    HomeScreen.tabRequestNotifier.value = null;
+    _switchTab(requestedTab);
   }
 
   @override
@@ -2098,7 +2108,7 @@ class _PopulatedSavedRecipesList extends StatelessWidget {
           },
           onFavoriteTap: () {
             HapticFeedback.lightImpact();
-            final wasRegistered = r.isFavorite || r.isInCookbook;
+            final wasRegistered = RecipeService.instance.isRecipeSaved(r);
             final newFavState = !wasRegistered;
             r.isFavorite = newFavState;
             if (newFavState) {

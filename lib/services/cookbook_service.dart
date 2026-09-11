@@ -136,13 +136,18 @@ class CookbookService {
           
           final cookbook = Cookbook.fromJson(json);
           _cache[cookbook.id] = cookbook;
-          
-          // Background refresh to get the real object and remove placeholder
-          try {
-            await getMyCookbooks(forceRefresh: true);
-          } catch (e) {
-             debugPrint('Non-critical background refresh failed: $e');
-          }
+
+          // Publish the server result immediately. Refresh in the background
+          // so the modal closes without waiting for a second network request.
+          final current = myCookbooksNotifier.value ?? [];
+          myCookbooksNotifier.value = [
+            cookbook,
+            ...current.where((item) => item.id != placeholder?.id && item.id != cookbook.id),
+          ];
+          getMyCookbooks(forceRefresh: true).catchError((error) {
+            debugPrint('Non-critical background refresh failed: $error');
+            return <Cookbook>[];
+          });
           return cookbook;
         } catch (e, stack) {
           debugPrint('CRITICAL ERROR parsing new cookbook: $e');

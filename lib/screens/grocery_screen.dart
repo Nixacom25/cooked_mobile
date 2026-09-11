@@ -238,7 +238,9 @@ class GroceryScreenState extends State<GroceryScreen> with SingleTickerProviderS
                                 }
 
                                 return ListView.builder(
-                                  padding: EdgeInsets.only(bottom: 190.h + MediaQuery.of(context).viewInsets.bottom),
+                                  padding: EdgeInsets.only(
+                                    bottom: MediaQuery.of(context).padding.bottom + 190.h + MediaQuery.of(context).viewInsets.bottom,
+                                  ),
                                   itemCount: grouped.length + 1,
                                   itemBuilder: (_, gi) {
                                     if (gi == grouped.length) {
@@ -375,7 +377,7 @@ class GroceryScreenState extends State<GroceryScreen> with SingleTickerProviderS
                           }
 
                           return Positioned(
-                            bottom: 132.h,
+                            bottom: MediaQuery.of(context).padding.bottom + 112.h,
                             left: 20.w,
                             right: 20.w,
                             child: Row(

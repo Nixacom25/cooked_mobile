@@ -75,20 +75,27 @@ class _ScrollBlurHeaderOverlayState extends State<ScrollBlurHeaderOverlay> {
   @override
   Widget build(BuildContext context) {
     final double progress = (_scrollOffset / widget.fadeThreshold).clamp(0.0, 1.0);
-    final double blurSigma = progress * widget.maxBlur;
+    final double blurSigma = progress * widget.maxBlur.clamp(18.0, 32.0);
     final double statusBarHeight = MediaQuery.of(context).padding.top;
     final double baseHeight = statusBarHeight > 0 ? statusBarHeight : MediaQuery.of(context).viewPadding.top;
-    final double totalOverlayHeight = baseHeight + 25.0;
+    // Cover the full app header, not only the status bar. This lets content
+    // pass underneath the same frosted surface as an Instagram-style header.
+    final double totalOverlayHeight = baseHeight + 76.0;
 
     // Instagram Translucent Dark Mirror Glass Gradient (Mirrors underlying content with heavy blur without white block)
+    final Color primary = widget.isDarkBackground ? Colors.black :
+      (widget.primaryGradientColor ?? Colors.white);
+    final Color secondary = widget.isDarkBackground ? Colors.black :
+      (widget.secondaryGradientColor ?? primary);
     final List<Color> gradientColors = [
-      (widget.primaryGradientColor ?? Colors.black).withValues(alpha: 0.68 * progress),
-      (widget.secondaryGradientColor ?? Colors.black.withValues(alpha: 0.38)).withValues(alpha: 0.38 * progress),
-      Colors.black.withValues(alpha: 0.10 * progress),
+        primary.withValues(alpha: 0.86 * progress),
+        secondary.withValues(alpha: 0.62 * progress),
+        (widget.isDarkBackground ? Colors.black : Colors.white)
+          .withValues(alpha: 0.28 * progress),
       Colors.transparent,
     ];
 
-    final List<double> gradientStops = const [0.0, 0.42, 0.75, 1.0];
+    final List<double> gradientStops = const [0.0, 0.36, 0.72, 1.0];
 
     return NotificationListener<ScrollNotification>(
       onNotification: _handleScrollNotification,
@@ -117,9 +124,10 @@ class _ScrollBlurHeaderOverlayState extends State<ScrollBlurHeaderOverlay> {
                       colors: [
                         Colors.black,
                         Colors.black,
+                        Colors.black54,
                         Colors.transparent,
                       ],
-                      stops: [0.0, 0.35, 1.0],
+                      stops: [0.0, 0.28, 0.72, 1.0],
                     ).createShader(rect);
                   },
                   blendMode: BlendMode.dstIn,
