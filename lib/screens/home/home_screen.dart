@@ -1858,7 +1858,7 @@ class _CircularRecipeAvatarRow extends StatelessWidget {
                 );
               },
               child: SizedBox(
-                width: 80.w,
+                width: 72.r,
                 child: Column(
                   children: [
                     Container(
