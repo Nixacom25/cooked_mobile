@@ -297,21 +297,17 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
     return false;
   }
 
-  bool _checkIsFavorite(Recipe? r, List<Recipe>? savedRecipes) {
+  bool _checkIsFavorite(Recipe? r) {
     if (r == null) return false;
     // Shared, authoritative state (kept in sync by markRecipeAsSaved/
-    // markRecipeAsUnsaved/deleteRecipe across every screen) takes priority
-    // over this specific Recipe instance's own fields, which can be stale
-    // if it was toggled elsewhere via a different object with the same id.
-    if (RecipeService.instance.isRecipeSaved(r)) return true;
-
-    if (savedRecipes != null) {
-      final inSaved = savedRecipes.any(
-        (saved) => (saved.id == r.id || (saved.name.isNotEmpty && saved.name.toLowerCase() == r.name.toLowerCase())),
-      );
-      if (inSaved) return true;
-    }
-    return false;
+    // markRecipeAsUnsaved/deleteRecipe across every screen), with the same
+    // fallback (recipe.isFavorite / isInCookbook) used everywhere else, e.g.
+    // SavedRecipeCard. A previous version additionally matched this recipe
+    // against myRecipesNotifier BY NAME as a fallback, which produced false
+    // positives whenever an unrelated saved recipe happened to share the
+    // same name - showing a filled heart here while the list (which only
+    // uses isRecipeSaved) correctly showed it as not saved.
+    return RecipeService.instance.isRecipeSaved(r);
   }
 
   @override
@@ -414,7 +410,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                             child: ValueListenableBuilder<List<Recipe>?>(
                               valueListenable: RecipeService.instance.myRecipesNotifier,
                               builder: (context, savedRecipes, _) {
-                                final bool isFav = _checkIsFavorite(r, savedRecipes);
+                                final bool isFav = _checkIsFavorite(r);
                                 return Row(
                                   crossAxisAlignment: CrossAxisAlignment.center,
                                   children: [
