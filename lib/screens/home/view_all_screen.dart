@@ -930,14 +930,15 @@ class _RecipesGridState extends State<_RecipesGrid> {
                                 } catch (_) {}
                               },
                             ),
-                            HapticMenuAction(
-                              title: 'Delete Recipe',
-                              icon: Icons.delete_outline_rounded,
-                              isDestructive: true,
-                              onTap: () {
-                                RecipeService.instance.deleteRecipe(r.id);
-                              },
-                            ),
+                            if (canPinRecipe)
+                              HapticMenuAction(
+                                title: 'Delete Recipe',
+                                icon: Icons.delete_outline_rounded,
+                                isDestructive: true,
+                                onTap: () {
+                                  RecipeService.instance.deleteRecipe(r.id);
+                                },
+                              ),
                           ],
                         );
                       },
