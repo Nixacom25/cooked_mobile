@@ -299,7 +299,11 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
 
   bool _checkIsFavorite(Recipe? r, List<Recipe>? savedRecipes) {
     if (r == null) return false;
-    if (r.isFavorite || r.isInCookbook) return true;
+    // Shared, authoritative state (kept in sync by markRecipeAsSaved/
+    // markRecipeAsUnsaved/deleteRecipe across every screen) takes priority
+    // over this specific Recipe instance's own fields, which can be stale
+    // if it was toggled elsewhere via a different object with the same id.
+    if (RecipeService.instance.isRecipeSaved(r)) return true;
 
     if (savedRecipes != null) {
       final inSaved = savedRecipes.any(
@@ -440,6 +444,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                                             RecipeService.instance.markRecipeAsSaved(r);
                                             IosToast.show(context, message: 'Recipe saved to favorites!', type: ToastType.success);
                                           } else {
+                                            RecipeService.instance.markRecipeAsUnsaved(r);
                                             if (r.id.isNotEmpty) {
                                               RecipeService.instance.deleteRecipe(r.id);
                                             }
@@ -710,6 +715,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                                   if (removeBoth == true) {
                                     // Yes: Remove from Cookbook + Saved Recipes, and unfill heart
                                     r.isFavorite = false;
+                                    RecipeService.instance.markRecipeAsUnsaved(r);
                                     if (r.id.isNotEmpty) {
                                       RecipeService.instance.deleteRecipe(r.id).catchError((_) => false);
                                     }

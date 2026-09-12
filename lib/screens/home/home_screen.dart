@@ -2116,6 +2116,7 @@ class _PopulatedSavedRecipesList extends StatelessWidget {
               RecipeService.instance.markRecipeAsSaved(r);
               IosToast.show(ctx, message: 'Recipe saved to favorites!', type: ToastType.success);
             } else {
+              RecipeService.instance.markRecipeAsUnsaved(r);
               if (r.id.isNotEmpty) {
                 RecipeService.instance.deleteRecipe(r.id);
               }

@@ -970,6 +970,17 @@ class RecipeService {
     }
   }
 
+  /// Marks a recipe as no longer saved/favorited in the shared local state
+  /// (favoriteStatesNotifier + myRecipes/recentImports/homeSuggestions),
+  /// regardless of whether it has a real backend id. Callers that also want
+  /// the backend copy removed should additionally call [deleteRecipe] when
+  /// `recipe.id` is non-empty - deleteRecipe already publishes this same
+  /// state, but only for recipes it can identify by id, so UI callers must
+  /// not skip publishing entirely just because there's no id to delete.
+  void markRecipeAsUnsaved(Recipe recipe) {
+    _publishFavoriteState(recipe, false);
+  }
+
   Future<Recipe> validateRecipe(String id) async {
     // 1. Optimistic local update
     final current = myRecipesNotifier.value ?? [];

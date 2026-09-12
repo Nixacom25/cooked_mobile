@@ -81,9 +81,13 @@ class _SavedRecipeCardState extends State<SavedRecipeCard> {
   @override
   void didUpdateWidget(covariant SavedRecipeCard oldWidget) {
     super.didUpdateWidget(oldWidget);
-    final oldFavorite = _isRegistered(oldWidget.recipe, oldWidget.isRegistered);
+    // _isRegistered() reads live shared state (favoriteStatesNotifier /
+    // RecipeService.isRecipeSaved), so querying it for both "old" and "new"
+    // widget always returns the same value when recipe is the same mutable
+    // object - that comparison can never detect a real change. Just
+    // re-sync unconditionally whenever it differs from our local cache.
     final newFavorite = _isRegistered(widget.recipe, widget.isRegistered);
-    if (oldFavorite != newFavorite && newFavorite != _isFavorite) {
+    if (newFavorite != _isFavorite) {
       _isFavorite = newFavorite;
     }
   }

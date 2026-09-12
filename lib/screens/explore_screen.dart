@@ -820,6 +820,7 @@ class _ExploreScreenState extends State<ExploreScreen>
                           RecipeService.instance.markRecipeAsSaved(r);
                           IosToast.show(context, message: 'Recipe saved to favorites!', type: ToastType.success);
                         } else {
+                          RecipeService.instance.markRecipeAsUnsaved(r);
                           if (r.id.isNotEmpty) {
                             RecipeService.instance.deleteRecipe(r.id);
                           }
