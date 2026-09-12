@@ -882,6 +882,11 @@ class _ExploreScreenState extends State<ExploreScreen>
                             controller: _overlaySearchCtrl,
                             hintText: 'Search recipes...',
                             onChanged: (val) {
+                              // An OverlayEntry doesn't rebuild on the host
+                              // State's setState() - it must be told
+                              // explicitly, or the results below never
+                              // update while typing.
+                              _searchOverlayEntry?.markNeedsBuild();
                               if (mounted) setState(() {});
                             },
                           ),
@@ -904,15 +909,65 @@ class _ExploreScreenState extends State<ExploreScreen>
                   ),
                   const Divider(height: 1),
                   Expanded(
-                    child: Center(
-                      child: Text(
-                        "Search results will appear here",
-                        style: TextStyle(
-                          fontFamily: 'Rubik',
-                          fontSize: 14.sp,
-                          color: const Color(0xFF94A3B8),
-                        ),
-                      ),
+                    child: FutureBuilder<List<Recipe>>(
+                      future: _popularFuture,
+                      builder: (context, snapshot) {
+                        final query = _overlaySearchCtrl.text.trim().toLowerCase();
+                        if (query.isEmpty) {
+                          return Center(
+                            child: Text(
+                              "Search results will appear here",
+                              style: TextStyle(
+                                fontFamily: 'Rubik',
+                                fontSize: 14.sp,
+                                color: const Color(0xFF94A3B8),
+                              ),
+                            ),
+                          );
+                        }
+
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return const Center(child: AppLoadingIndicator());
+                        }
+
+                        final matches = (snapshot.data ?? [])
+                            .where((r) => r.name.toLowerCase().contains(query))
+                            .toList();
+
+                        if (matches.isEmpty) {
+                          return Center(
+                            child: Text(
+                              "No recipes match \"${_overlaySearchCtrl.text.trim()}\"",
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontFamily: 'Rubik',
+                                fontSize: 14.sp,
+                                color: const Color(0xFF94A3B8),
+                              ),
+                            ),
+                          );
+                        }
+
+                        return ListView.separated(
+                          padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 20.h),
+                          itemCount: matches.length,
+                          separatorBuilder: (_, __) => SizedBox(height: 12.h),
+                          itemBuilder: (context, i) {
+                            final r = matches[i];
+                            return SavedRecipeCard(
+                              recipe: r,
+                              onTap: () {
+                                _toggleSearch(false);
+                                Navigator.pushNamed(
+                                  context,
+                                  AppRoutes.recipeDetail,
+                                  arguments: {'recipe': r, 'isPreview': true},
+                                );
+                              },
+                            );
+                          },
+                        );
+                      },
                     ),
                   ),
                 ],
