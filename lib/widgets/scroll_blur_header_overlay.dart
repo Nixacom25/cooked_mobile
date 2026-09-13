@@ -90,8 +90,7 @@ class _ScrollBlurHeaderOverlayState extends State<ScrollBlurHeaderOverlay> {
     final List<Color> gradientColors = [
         primary.withValues(alpha: 0.86 * progress),
         secondary.withValues(alpha: 0.62 * progress),
-        (widget.isDarkBackground ? Colors.black : Colors.white)
-          .withValues(alpha: 0.28 * progress),
+        primary.withValues(alpha: 0.28 * progress),
       Colors.transparent,
     ];
 

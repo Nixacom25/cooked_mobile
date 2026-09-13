@@ -1014,7 +1014,9 @@ class _HomeTabState extends State<_HomeTab> {
         valueListenable: _searchQueryNotifier,
         builder: (context, searchQuery, _) {
           return ScrollBlurHeaderOverlay(
-            isDarkBackground: true,
+            isDarkBackground: false,
+            primaryGradientColor: const Color(0xFFE2E8F0),
+            secondaryGradientColor: const Color(0xFFE2E8F0),
             child: SingleChildScrollView(
               physics: const ClampingScrollPhysics(),
               child: Stack(

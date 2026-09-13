@@ -159,7 +159,9 @@ class _ExploreScreenState extends State<ExploreScreen>
       child: AppRefreshIndicator(
         onRefresh: _handleRefresh,
         child: ScrollBlurHeaderOverlay(
-          isDarkBackground: true,
+          isDarkBackground: false,
+          primaryGradientColor: const Color(0xFFE2E8F0),
+          secondaryGradientColor: const Color(0xFFE2E8F0),
           child: SingleChildScrollView(
             physics: const ClampingScrollPhysics(),
             child: Stack(
