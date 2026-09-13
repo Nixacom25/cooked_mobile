@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart' show ScrollDirection;
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:share_plus/share_plus.dart';
@@ -19,6 +18,7 @@ import '../../widgets/app_search_field.dart';
 import '../../widgets/app_top_header.dart';
 import '../../widgets/red_header_background.dart';
 import '../../widgets/saved_recipe_card.dart';
+import '../../widgets/recipe_shortcut_card.dart';
 import '../../widgets/scroll_blur_header_overlay.dart';
 import '../../services/recipe_service.dart';
 import '../../services/cookbook_service.dart';
@@ -57,7 +57,6 @@ class _HomeScreenState extends State<HomeScreen>
   late int _currentTab;
   late int _previousTab;
   late bool _navVisible;
-  bool _navShrunk = false; // shrinks the bottom nav while scrolling down a page
   final bool _scrollBusy = false; // debounce guard
   late final AnimationController _navCtrl;
   late final Animation<Offset> _navSlide;
@@ -298,20 +297,6 @@ class _HomeScreenState extends State<HomeScreen>
     }
   }
 
-  // Called by scroll notifications from child scrollables - shrinks the
-  // floating bottom nav to 2/3 size while the page scrolls down, and
-  // restores it full-size as soon as the page scrolls back up. Full
-  // hide-on-scroll was disabled per earlier feedback; this only shrinks it.
-  bool _handleScroll(ScrollNotification notif) {
-    if (notif is UserScrollNotification && notif.direction != ScrollDirection.idle) {
-      final shrink = notif.direction == ScrollDirection.reverse;
-      if (shrink != _navShrunk) {
-        setState(() => _navShrunk = shrink);
-      }
-    }
-    return false;
-  }
-
   @override
   Widget build(BuildContext context) {
     final isKeyboardOpen = MediaQuery.of(context).viewInsets.bottom > 0;
@@ -333,9 +318,7 @@ class _HomeScreenState extends State<HomeScreen>
         backgroundColor: const Color(0xFFF1F5F9),
         resizeToAvoidBottomInset: false,
         extendBody: true,
-        body: NotificationListener<ScrollNotification>(
-          onNotification: _handleScroll,
-          child: Stack(
+        body: Stack(
             children: [
               IndexedStack(index: _currentTab, children: _tabWidgets),
 
@@ -471,26 +454,20 @@ class _HomeScreenState extends State<HomeScreen>
                               position: _navSlide,
                               child: hideNav || isKeyboardOpen
                                   ? const SizedBox.shrink()
-                                  : AnimatedScale(
-                                      scale: _navShrunk ? (2 / 3) : 1.0,
-                                      alignment: Alignment.bottomCenter,
-                                      duration: const Duration(milliseconds: 220),
-                                      curve: Curves.easeOut,
-                                      child: _FloatingBottomNav(
-                                        currentIndex: _currentTab,
-                                        navVisible: _navVisible,
-                                        onTap: _switchTab,
-                                        onCameraTap: () {
-                                          if (_currentTab == 2) {
-                                            _toggleNav();
-                                          } else {
-                                            _switchTab(2);
-                                          }
-                                        },
-                                        scanTabKey: _scanTabKey,
-                                        groceryTabKey: _groceryTabKey,
-                                        importTabKey: _importTabKey,
-                                      ),
+                                  : _FloatingBottomNav(
+                                      currentIndex: _currentTab,
+                                      navVisible: _navVisible,
+                                      onTap: _switchTab,
+                                      onCameraTap: () {
+                                        if (_currentTab == 2) {
+                                          _toggleNav();
+                                        } else {
+                                          _switchTab(2);
+                                        }
+                                      },
+                                      scanTabKey: _scanTabKey,
+                                      groceryTabKey: _groceryTabKey,
+                                      importTabKey: _importTabKey,
                                     ),
                             ),
                           ),
@@ -502,7 +479,6 @@ class _HomeScreenState extends State<HomeScreen>
               ),
             ],
           ),
-        ),
       ),
     );
   }
@@ -2171,6 +2147,31 @@ class _PopulatedSavedRecipesList extends StatelessWidget {
                 fontFamily: 'Rubik',
                 fontSize: 13.sp,
                 color: const Color(0xFF94A3B8),
+              ),
+            ),
+            SizedBox(height: 24.h),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16.w),
+              child: Row(
+                children: [
+                  RecipeShortcutCard(
+                    title: 'Explore',
+                    icon: Icons.search_rounded,
+                    onTap: () => HomeScreen.tabRequestNotifier.value = 1,
+                  ),
+                  SizedBox(width: 12.w),
+                  RecipeShortcutCard(
+                    title: 'Scan',
+                    icon: Icons.crop_free_rounded,
+                    onTap: () => HomeScreen.tabRequestNotifier.value = 2,
+                  ),
+                  SizedBox(width: 12.w),
+                  RecipeShortcutCard(
+                    title: 'Import',
+                    icon: Icons.file_download_outlined,
+                    onTap: () => HomeScreen.tabRequestNotifier.value = 4,
+                  ),
+                ],
               ),
             ),
           ],

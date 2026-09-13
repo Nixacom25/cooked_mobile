@@ -654,22 +654,18 @@ class _RecipesGridState extends State<_RecipesGrid> {
             .getExploreRecipes(cuisine: cuisine, size: 50)
             .then((results) async {
               if (results.isNotEmpty) return results;
+              if (cuisine == null || cuisine.isEmpty) return <Recipe>[];
               final myRecs = RecipeService.instance.myRecipesNotifier.value ?? [];
               final suggestions = RecipeService.instance.homeSuggestionsNotifier.value ?? [];
-              final combined = [...myRecs, ...suggestions];
-              if (cuisine != null && cuisine.isNotEmpty) {
-                final q = cuisine.toLowerCase();
-                final matches = combined
-                    .where(
-                      (r) =>
-                          (r.cuisine != null &&
-                              r.cuisine!.toLowerCase().contains(q)) ||
-                          r.name.toLowerCase().contains(q),
-                    )
-                    .toList();
-                if (matches.isNotEmpty) return matches;
-              }
-              return combined;
+              final q = cuisine.toLowerCase();
+              return [...myRecs, ...suggestions]
+                  .where(
+                    (r) =>
+                        (r.cuisine != null &&
+                            r.cuisine!.toLowerCase().contains(q)) ||
+                        r.name.toLowerCase().contains(q),
+                  )
+                  .toList();
             });
         break;
       case ViewAllType.exploreRecipesByCategory:
@@ -680,24 +676,20 @@ class _RecipesGridState extends State<_RecipesGrid> {
             .getExploreRecipes(category: category, size: 50)
             .then((results) async {
               if (results.isNotEmpty) return results;
+              if (category == null || category.isEmpty) return <Recipe>[];
               final myRecs = RecipeService.instance.myRecipesNotifier.value ?? [];
               final suggestions = RecipeService.instance.homeSuggestionsNotifier.value ?? [];
-              final combined = [...myRecs, ...suggestions];
-              if (category != null && category.isNotEmpty) {
-                final q = category.toLowerCase();
-                final matches = combined
-                    .where(
-                      (r) =>
-                          (r.categories != null &&
-                              r.categories!.any(
-                                (c) => c.toLowerCase().contains(q),
-                              )) ||
-                          r.name.toLowerCase().contains(q),
-                    )
-                    .toList();
-                if (matches.isNotEmpty) return matches;
-              }
-              return combined;
+              final q = category.toLowerCase();
+              return [...myRecs, ...suggestions]
+                  .where(
+                    (r) =>
+                        (r.categories != null &&
+                            r.categories!.any(
+                              (c) => c.toLowerCase().contains(q),
+                            )) ||
+                        r.name.toLowerCase().contains(q),
+                  )
+                  .toList();
             });
         break;
       case ViewAllType.groceryHistory:
@@ -737,7 +729,10 @@ class _RecipesGridState extends State<_RecipesGrid> {
     }
 
     if (displayList.isEmpty) {
-      return const Center(child: Text("No recipes match your search."));
+      final message = widget.searchQuery.trim().isNotEmpty
+          ? "No recipes match your search."
+          : "No recipes found.";
+      return Center(child: Text(message));
     }
 
     return ValueListenableBuilder<List<Recipe>?>(

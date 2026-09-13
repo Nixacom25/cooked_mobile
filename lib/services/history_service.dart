@@ -32,28 +32,52 @@ class HistoryService {
     recentlyViewedNotifier.value = [];
   }
 
+  List<Recipe> _decode(List<String> jsonList) {
+    return jsonList
+        .map((item) {
+          try {
+            return Recipe.fromJson(jsonDecode(item));
+          } catch (e) {
+            debugPrint('HistoryService: Failed to decode item: $e');
+            return null;
+          }
+        })
+        .whereType<Recipe>()
+        .toList();
+  }
+
   Future<void> loadHistory() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final List<String>? jsonList = prefs.getStringList(_getKey());
+      final key = _getKey();
+      List<Recipe> recipes = _decode(prefs.getStringList(key) ?? []);
 
-      if (jsonList != null) {
-        debugPrint('HistoryService: Found ${jsonList.length} items in persistence');
-        final List<Recipe> recipes = jsonList
-            .map((item) {
-              try {
-                return Recipe.fromJson(jsonDecode(item));
-              } catch (e) {
-                debugPrint('HistoryService: Failed to decode item: $e');
-                return null;
-              }
-            })
-            .whereType<Recipe>()
-            .toList();
-        recentlyViewedNotifier.value = recipes;
-      } else {
-        debugPrint('HistoryService: No history found in persistence');
+      // A recipe viewed before the logged-in user finished loading is
+      // persisted under the guest key; fold it into the real user's
+      // history once so it doesn't silently disappear after login.
+      const guestKey = '${_baseKey}_guest';
+      if (key != guestKey) {
+        final guestJsonList = prefs.getStringList(guestKey);
+        if (guestJsonList != null && guestJsonList.isNotEmpty) {
+          final guestRecipes = _decode(guestJsonList);
+          for (final r in guestRecipes.reversed) {
+            recipes.removeWhere((existing) =>
+                (existing.id.isNotEmpty && existing.id == r.id) ||
+                (existing.name.toLowerCase() == r.name.toLowerCase()));
+            recipes.insert(0, r);
+          }
+          if (recipes.length > 15) {
+            recipes = recipes.sublist(0, 15);
+          }
+          await prefs.setStringList(
+            key,
+            recipes.map((r) => jsonEncode(r.toJson())).toList(),
+          );
+          await prefs.remove(guestKey);
+        }
       }
+
+      recentlyViewedNotifier.value = recipes;
     } catch (e) {
       debugPrint('Error loading history: $e');
     }

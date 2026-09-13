@@ -70,20 +70,12 @@ class SavingsDetailsScreen extends StatelessWidget {
                       builder: (context, recipes, _) {
                         final myRecipes = recipes ?? [];
                         final displayRecipes = myRecipes.where((r) {
-                          final origin = r.origin?.toUpperCase();
-                          if (origin == 'IMPORT' || origin == 'MANUAL') return false;
-                          return origin == 'SCAN' || origin == 'SUGGESTED' || (r.isSuggested && (r.sourceUrl == null || r.sourceUrl!.isEmpty));
+                          return r.origin?.toUpperCase() == 'SCAN';
                         }).toList();
 
                         double totalSaved = 0.0;
                         for (var r in displayRecipes) {
-                          if (r.totalPrice != null && r.totalPrice! > 0) {
-                            double makeAtHome = r.totalPrice!;
-                            double orderNearby = makeAtHome * 2.5 + 5.0;
-                            totalSaved += (orderNearby - makeAtHome);
-                          } else {
-                            totalSaved += 14.0;
-                          }
+                          totalSaved += r.totalPrice ?? 0.0;
                         }
 
                         if (displayRecipes.isEmpty) {
@@ -127,7 +119,7 @@ class SavingsDetailsScreen extends StatelessWidget {
                                     ),
                                     SizedBox(height: 4.h),
                                     Text(
-                                      "~\$${totalSaved.toStringAsFixed(0)}",
+                                      "\$${totalSaved.toStringAsFixed(0)}",
                                       style: TextStyle(
                                         fontFamily: 'Rubik',
                                         fontSize: 54.sp,
@@ -160,19 +152,14 @@ class SavingsDetailsScreen extends StatelessWidget {
                                 separatorBuilder: (context, index) => SizedBox(height: 14.h),
                                 itemBuilder: (context, index) {
                                   final recipe = displayRecipes[index];
-                                  double itemSavings = 14.0;
-                                  if (recipe.totalPrice != null && recipe.totalPrice! > 0) {
-                                    double makeAtHome = recipe.totalPrice!;
-                                    double orderNearby = makeAtHome * 2.5 + 5.0;
-                                    itemSavings = orderNearby - makeAtHome;
-                                  }
+                                  final itemPrice = recipe.totalPrice ?? 0.0;
 
                                   return SavedRecipeCard(
                                     recipe: recipe,
                                     isRegistered: true,
                                     isSavingsMode: true,
                                     subtitle: "Scanned at home",
-                                    savingsBadgeText: "+${itemSavings.toStringAsFixed(0)}\$",
+                                    savingsBadgeText: "+${itemPrice.toStringAsFixed(0)}\$",
                                     onTap: () {
                                       Navigator.pushNamed(
                                         context,

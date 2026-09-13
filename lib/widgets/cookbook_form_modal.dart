@@ -13,6 +13,7 @@ import '../core/utils/error_helper.dart';
 import '../widgets/glass_icon_button.dart';
 import '../widgets/app_loading_indicator.dart';
 import '../widgets/skeleton_list.dart';
+import '../widgets/recipe_shortcut_card.dart';
 import '../screens/home/home_screen.dart';
 
 class CookbookFormModal extends StatefulWidget {
@@ -707,19 +708,19 @@ class _InlineRecipePickerState extends State<_InlineRecipePicker> {
             padding: EdgeInsets.symmetric(horizontal: 16.w),
             child: Row(
               children: [
-                _buildShortcutCard(
+                RecipeShortcutCard(
                   title: 'Scan',
                   icon: Icons.crop_free_rounded,
                   onTap: () => _handleShortcutTap('scan'),
                 ),
                 SizedBox(width: 12.w),
-                _buildShortcutCard(
+                RecipeShortcutCard(
                   title: 'Import',
                   icon: Icons.file_download_outlined,
                   onTap: () => _handleShortcutTap('import'),
                 ),
                 SizedBox(width: 12.w),
-                _buildShortcutCard(
+                RecipeShortcutCard(
                   title: 'Explore',
                   icon: Icons.search_rounded,
                   onTap: () => _handleShortcutTap('explore'),
@@ -907,50 +908,4 @@ class _InlineRecipePickerState extends State<_InlineRecipePicker> {
     );
   }
 
-  Widget _buildShortcutCard({
-    required String title,
-    required IconData icon,
-    required VoidCallback onTap,
-  }) {
-    return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        child: Container(
-          padding: EdgeInsets.symmetric(vertical: 20.h),
-          decoration: BoxDecoration(
-            color: const Color(0xFFF8FAFC),
-            borderRadius: BorderRadius.circular(20.r),
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                width: 44.r,
-                height: 44.r,
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  icon,
-                  color: const Color(0xFF0F172A),
-                  size: 20.sp,
-                ),
-              ),
-              SizedBox(height: 10.h),
-              Text(
-                title,
-                style: TextStyle(
-                  fontFamily: 'Rubik',
-                  fontWeight: FontWeight.w700,
-                  fontSize: 13.sp,
-                  color: const Color(0xFF0F172A),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 }

@@ -10,6 +10,7 @@ import '../widgets/app_search_field.dart';
 import '../widgets/app_top_header.dart';
 import '../widgets/red_header_background.dart';
 import '../widgets/saved_recipe_card.dart';
+import '../widgets/recipe_shortcut_card.dart';
 import '../widgets/scroll_blur_header_overlay.dart';
 import '../routes/app_routes.dart';
 import '../services/recipe_service.dart';
@@ -447,6 +448,22 @@ class _ExploreScreenState extends State<ExploreScreen> {
                     fontSize: 13.sp,
                     color: const Color(0xFF94A3B8),
                   ),
+                ),
+                SizedBox(height: 24.h),
+                Row(
+                  children: [
+                    RecipeShortcutCard(
+                      title: 'Scan',
+                      icon: Icons.crop_free_rounded,
+                      onTap: () => HomeScreen.tabRequestNotifier.value = 2,
+                    ),
+                    SizedBox(width: 12.w),
+                    RecipeShortcutCard(
+                      title: 'Import',
+                      icon: Icons.file_download_outlined,
+                      onTap: () => HomeScreen.tabRequestNotifier.value = 4,
+                    ),
+                  ],
                 ),
               ],
             ),
