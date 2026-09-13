@@ -42,11 +42,13 @@ class ViewAllScreen extends StatefulWidget {
 
 class _ViewAllScreenState extends State<ViewAllScreen> {
   final ValueNotifier<String> _searchQueryNotifier = ValueNotifier('');
+  final TextEditingController _searchController = TextEditingController();
   Key _gridKey = UniqueKey();
 
   @override
   void dispose() {
     _searchQueryNotifier.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 
@@ -172,6 +174,7 @@ class _ViewAllScreenState extends State<ViewAllScreen> {
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: 16.w),
                     child: AppSearchField(
+                      controller: _searchController,
                       onChanged: (val) {
                         _searchQueryNotifier.value = val;
                       },
