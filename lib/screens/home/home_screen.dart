@@ -962,6 +962,11 @@ class _HomeTab extends StatefulWidget {
 
 class _HomeTabState extends State<_HomeTab> {
   final ValueNotifier<String> _searchQueryNotifier = ValueNotifier('');
+  // Shared across both AppSearchField instances below (the "browse" card and
+  // the "search active" state) so the typed text survives the switch between
+  // them - each TextField would otherwise manage its own internal buffer,
+  // which resets to empty the moment the layout swaps mid-keystroke.
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
@@ -976,6 +981,7 @@ class _HomeTabState extends State<_HomeTab> {
   @override
   void dispose() {
     _searchQueryNotifier.dispose();
+    _searchController.dispose();
     HistoryService.instance.recentlyViewedNotifier.removeListener(
       _onHistoryChanged,
     );
@@ -1050,6 +1056,7 @@ class _HomeTabState extends State<_HomeTab> {
                               ),
                               SizedBox(height: 12.h),
                               AppSearchField(
+                                controller: _searchController,
                                 backgroundColor: const Color(0xFFF1F3F5),
                                 borderColor: const Color(0xFFF1F3F5),
                                 onChanged: (val) {
@@ -1260,6 +1267,7 @@ class _HomeTabState extends State<_HomeTab> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               AppSearchField(
+                                controller: _searchController,
                                 backgroundColor: const Color(0xFFF1F3F5),
                                 borderColor: const Color(0xFFF1F3F5),
                                 onChanged: (val) {
