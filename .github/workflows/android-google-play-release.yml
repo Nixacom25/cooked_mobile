@@ -1,10 +1,8 @@
 name: Android Google Play Release
 
 on:
-  # Disabled: pushing to main no longer auto-triggers a Google Play release.
-  # Uncomment to restore automatic releases on every push to main.
-  # push:
-  #   branches: [ "main" ]
+  push:
+    branches: [ "main" ]
   workflow_dispatch:
 
 jobs:
