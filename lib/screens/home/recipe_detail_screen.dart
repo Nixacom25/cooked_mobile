@@ -1250,10 +1250,14 @@ class _IngredientsList extends StatelessWidget {
         if (showSavings) ...[
           SizedBox(height: 24.h),
           _SavingsBreakdownCard(
-            // Scale the recipe's base price by the same serving ratio used
-            // for ingredient quantities, so the savings estimate updates
-            // immediately when the user changes the serving count.
-            totalPrice: (totalPrice ?? 3.50) * currentServings / originalServings,
+            // Per-serving base cost, derived once from the original recipe
+            // data. The card scales both figures linearly from this base
+            // whenever servings change, instead of recalculating from an
+            // already-scaled total.
+            pricePerServing: (totalPrice != null && totalPrice! > 0 && originalServings > 0)
+                ? totalPrice! / originalServings
+                : 3.50,
+            servings: currentServings,
           ),
           SizedBox(height: 16.h),
         ],
@@ -1466,14 +1470,18 @@ class _ServingsButton extends StatelessWidget {
 }
 
 class _SavingsBreakdownCard extends StatelessWidget {
-  final double totalPrice;
-  const _SavingsBreakdownCard({required this.totalPrice});
+  final double pricePerServing;
+  final int servings;
+  const _SavingsBreakdownCard({required this.pricePerServing, required this.servings});
 
   @override
   Widget build(BuildContext context) {
-    double makeAtHome = totalPrice > 0 ? totalPrice : 3.50;
-    double orderNearby = makeAtHome * 2.5 + 5.0;
-    if (orderNearby < 14.75) orderNearby = 14.75;
+    double homePerServing = pricePerServing > 0 ? pricePerServing : 3.50;
+    double restaurantPerServing = homePerServing * 2.5 + 5.0;
+    if (restaurantPerServing < 14.75) restaurantPerServing = 14.75;
+
+    double makeAtHome = homePerServing * servings;
+    double orderNearby = restaurantPerServing * servings;
     double savings = orderNearby - makeAtHome;
 
     return Container(

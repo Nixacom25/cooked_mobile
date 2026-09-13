@@ -11,6 +11,7 @@ class AppSearchField extends StatelessWidget {
   final IconData? suffixIcon;
   final VoidCallback? onSuffixTap;
   final double? borderRadius;
+  final FocusNode? focusNode;
 
   const AppSearchField({
     super.key,
@@ -23,6 +24,7 @@ class AppSearchField extends StatelessWidget {
     this.suffixIcon,
     this.onSuffixTap,
     this.borderRadius,
+    this.focusNode,
   });
 
   @override
@@ -41,6 +43,7 @@ class AppSearchField extends StatelessWidget {
           Expanded(
             child: TextField(
               controller: controller,
+              focusNode: focusNode,
               onChanged: onChanged,
               onSubmitted: onSubmitted,
               textCapitalization: TextCapitalization.words,

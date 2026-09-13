@@ -28,13 +28,9 @@ class ExploreScreen extends StatefulWidget {
   State<ExploreScreen> createState() => _ExploreScreenState();
 }
 
-class _ExploreScreenState extends State<ExploreScreen>
-    with SingleTickerProviderStateMixin {
+class _ExploreScreenState extends State<ExploreScreen> {
   final _searchCtrl = TextEditingController();
-  final _overlaySearchCtrl = TextEditingController();
-  late AnimationController _animationController;
-  late Animation<double> _fadeAnimation;
-  OverlayEntry? _searchOverlayEntry;
+  final _searchFocusNode = FocusNode();
 
   late Future<List<Map<String, dynamic>>> _cuisinesFuture;
   late Future<List<Map<String, dynamic>>> _categoriesFuture;
@@ -80,43 +76,6 @@ class _ExploreScreenState extends State<ExploreScreen>
     _searchCtrl.addListener(() {
       if (mounted) setState(() {});
     });
-
-    _animationController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 100),
-    );
-
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.easeIn),
-    );
-  }
-
-  void _toggleSearch(bool searching) {
-    if (searching) {
-      _animationController.forward();
-      _showOverlay();
-    } else {
-      _animationController.reverse().then((_) {
-        if (mounted) {
-          _searchCtrl.clear();
-          _overlaySearchCtrl.clear();
-          _removeOverlay();
-        }
-      });
-    }
-  }
-
-  void _showOverlay() {
-    _removeOverlay();
-    _searchOverlayEntry = OverlayEntry(
-      builder: (context) => _buildSearchOverlay(),
-    );
-    Overlay.of(context, rootOverlay: true).insert(_searchOverlayEntry!);
-  }
-
-  void _removeOverlay() {
-    _searchOverlayEntry?.remove();
-    _searchOverlayEntry = null;
   }
 
   void _onTabChanged() {
@@ -130,8 +89,7 @@ class _ExploreScreenState extends State<ExploreScreen>
     HomeScreen.activeTabNotifier.removeListener(_onTabChanged);
     _refreshTimer?.cancel();
     _searchCtrl.dispose();
-    _overlaySearchCtrl.dispose();
-    _animationController.dispose();
+    _searchFocusNode.dispose();
     super.dispose();
   }
 
@@ -209,6 +167,7 @@ class _ExploreScreenState extends State<ExploreScreen>
 
   // ── Fused Top Card: Explore Header, Search, Filters & "For You" Section ───────
   Widget _buildTopExploreAndForYouCard() {
+    final searchQuery = _searchCtrl.text.trim();
     return Container(
       width: double.infinity,
       padding: EdgeInsets.symmetric(vertical: 16.h),
@@ -236,16 +195,15 @@ class _ExploreScreenState extends State<ExploreScreen>
                 ),
                 SizedBox(height: 12.h),
 
-                GestureDetector(
-                  onTap: () => _toggleSearch(true),
-                  child: AbsorbPointer(
-                    child: AppSearchField(
-                      backgroundColor: const Color(0xFFF1F5F9),
-                      borderColor: const Color(0xFFF1F5F9),
-                      onChanged: (_) {},
-                      hintText: 'Search your recipes',
-                    ),
-                  ),
+                // Live, inline search field (like Home) instead of a tap
+                // target that launched a full-screen overlay/modal.
+                AppSearchField(
+                  key: const ValueKey('explore_search_field'),
+                  controller: _searchCtrl,
+                  focusNode: _searchFocusNode,
+                  backgroundColor: const Color(0xFFF1F5F9),
+                  borderColor: const Color(0xFFF1F5F9),
+                  hintText: 'Search your recipes',
                 ),
               ],
             ),
@@ -253,6 +211,9 @@ class _ExploreScreenState extends State<ExploreScreen>
 
           SizedBox(height: 14.h),
 
+          if (searchQuery.isNotEmpty)
+            _buildInlineSearchResults(searchQuery)
+          else ...[
           // ── Filter Tags Row (Full Width Across Card) ──
           SizedBox(
             height: 38.h,
@@ -438,8 +399,84 @@ class _ExploreScreenState extends State<ExploreScreen>
               ),
             ],
           ),
+          ],
         ],
       ),
+    );
+  }
+
+  // ── Inline Search Results (replaces the old full-screen overlay) ──────────
+  Widget _buildInlineSearchResults(String query) {
+    return FutureBuilder<List<Recipe>>(
+      future: _popularFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Padding(
+            padding: EdgeInsets.symmetric(vertical: 32.h),
+            child: const Center(child: AppLoadingIndicator()),
+          );
+        }
+
+        final lowerQuery = query.toLowerCase();
+        final matches = (snapshot.data ?? [])
+            .where((r) => r.name.toLowerCase().contains(lowerQuery))
+            .toList();
+
+        if (matches.isEmpty) {
+          return Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 32.h),
+            child: Column(
+              children: [
+                Icon(Icons.search_off_rounded, size: 40.sp, color: const Color(0xFFCBD5E1)),
+                SizedBox(height: 12.h),
+                Text(
+                  'No recipes found',
+                  style: TextStyle(
+                    fontFamily: 'Rubik',
+                    fontSize: 15.sp,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF0F172A),
+                  ),
+                ),
+                SizedBox(height: 4.h),
+                Text(
+                  'Try a different search term.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: 'Rubik',
+                    fontSize: 13.sp,
+                    color: const Color(0xFF94A3B8),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+
+        return Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16.w),
+          child: ListView.separated(
+            padding: EdgeInsets.zero,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: matches.length,
+            separatorBuilder: (_, __) => SizedBox(height: 12.h),
+            itemBuilder: (context, i) {
+              final r = matches[i];
+              return SavedRecipeCard(
+                recipe: r,
+                onTap: () {
+                  Navigator.pushNamed(
+                    context,
+                    AppRoutes.recipeDetail,
+                    arguments: {'recipe': r, 'isPreview': true},
+                  );
+                },
+              );
+            },
+          ),
+        );
+      },
     );
   }
 
@@ -863,122 +900,5 @@ class _ExploreScreenState extends State<ExploreScreen>
     );
   }
 
-  // ── Search Overlay ──────────────────────────────────────────────────────────
-  Widget _buildSearchOverlay() {
-    return AnimatedBuilder(
-      animation: _animationController,
-      builder: (context, child) {
-        return FadeTransition(
-          opacity: _fadeAnimation,
-          child: Material(
-            color: Colors.white,
-            child: SafeArea(
-              child: Column(
-                children: [
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: AppSearchField(
-                            controller: _overlaySearchCtrl,
-                            hintText: 'Search recipes...',
-                            onChanged: (val) {
-                              // An OverlayEntry doesn't rebuild on the host
-                              // State's setState() - it must be told
-                              // explicitly, or the results below never
-                              // update while typing.
-                              _searchOverlayEntry?.markNeedsBuild();
-                              if (mounted) setState(() {});
-                            },
-                          ),
-                        ),
-                        SizedBox(width: 10.w),
-                        GestureDetector(
-                          onTap: () => _toggleSearch(false),
-                          child: Text(
-                            "Cancel",
-                            style: TextStyle(
-                              fontFamily: 'Rubik',
-                              fontSize: 15.sp,
-                              fontWeight: FontWeight.w600,
-                              color: const Color(0xFFC31E26),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const Divider(height: 1),
-                  Expanded(
-                    child: FutureBuilder<List<Recipe>>(
-                      future: _popularFuture,
-                      builder: (context, snapshot) {
-                        final query = _overlaySearchCtrl.text.trim().toLowerCase();
-                        if (query.isEmpty) {
-                          return Center(
-                            child: Text(
-                              "Search results will appear here",
-                              style: TextStyle(
-                                fontFamily: 'Rubik',
-                                fontSize: 14.sp,
-                                color: const Color(0xFF94A3B8),
-                              ),
-                            ),
-                          );
-                        }
-
-                        if (snapshot.connectionState == ConnectionState.waiting) {
-                          return const Center(child: AppLoadingIndicator());
-                        }
-
-                        final matches = (snapshot.data ?? [])
-                            .where((r) => r.name.toLowerCase().contains(query))
-                            .toList();
-
-                        if (matches.isEmpty) {
-                          return Center(
-                            child: Text(
-                              "No recipes match \"${_overlaySearchCtrl.text.trim()}\"",
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontFamily: 'Rubik',
-                                fontSize: 14.sp,
-                                color: const Color(0xFF94A3B8),
-                              ),
-                            ),
-                          );
-                        }
-
-                        return ListView.separated(
-                          padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 20.h),
-                          itemCount: matches.length,
-                          separatorBuilder: (_, __) => SizedBox(height: 12.h),
-                          itemBuilder: (context, i) {
-                            final r = matches[i];
-                            return SavedRecipeCard(
-                              recipe: r,
-                              onTap: () {
-                                _toggleSearch(false);
-                                Navigator.pushNamed(
-                                  context,
-                                  AppRoutes.recipeDetail,
-                                  arguments: {'recipe': r, 'isPreview': true},
-                                );
-                              },
-                            );
-                          },
-                        );
-                      },
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
 }
 

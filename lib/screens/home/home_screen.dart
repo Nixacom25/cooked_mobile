@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' show ScrollDirection;
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:share_plus/share_plus.dart';
@@ -56,6 +57,7 @@ class _HomeScreenState extends State<HomeScreen>
   late int _currentTab;
   late int _previousTab;
   late bool _navVisible;
+  bool _navShrunk = false; // shrinks the bottom nav while scrolling down a page
   final bool _scrollBusy = false; // debounce guard
   late final AnimationController _navCtrl;
   late final Animation<Offset> _navSlide;
@@ -296,9 +298,17 @@ class _HomeScreenState extends State<HomeScreen>
     }
   }
 
-  // Called by scroll notifications from child scrollables
+  // Called by scroll notifications from child scrollables - shrinks the
+  // floating bottom nav to 2/3 size while the page scrolls down, and
+  // restores it full-size as soon as the page scrolls back up. Full
+  // hide-on-scroll was disabled per earlier feedback; this only shrinks it.
   bool _handleScroll(ScrollNotification notif) {
-    // Disabled nav hiding as requested – bottom nav stays visible except on Scan tab
+    if (notif is UserScrollNotification && notif.direction != ScrollDirection.idle) {
+      final shrink = notif.direction == ScrollDirection.reverse;
+      if (shrink != _navShrunk) {
+        setState(() => _navShrunk = shrink);
+      }
+    }
     return false;
   }
 
@@ -316,7 +326,11 @@ class _HomeScreenState extends State<HomeScreen>
         }
       },
       child: Scaffold(
-        backgroundColor: const Color(0xFFC31E26),
+        // Each tab paints its own full-bleed gray background on top of this,
+        // so this is only ever visible in the gap below short content (e.g.
+        // few/no search results with the keyboard open). It used to be red,
+        // which then showed through as an unexplained red patch there.
+        backgroundColor: const Color(0xFFF1F5F9),
         resizeToAvoidBottomInset: false,
         extendBody: true,
         body: NotificationListener<ScrollNotification>(
@@ -457,20 +471,26 @@ class _HomeScreenState extends State<HomeScreen>
                               position: _navSlide,
                               child: hideNav || isKeyboardOpen
                                   ? const SizedBox.shrink()
-                                  : _FloatingBottomNav(
-                                      currentIndex: _currentTab,
-                                      navVisible: _navVisible,
-                                      onTap: _switchTab,
-                                      onCameraTap: () {
-                                        if (_currentTab == 2) {
-                                          _toggleNav();
-                                        } else {
-                                          _switchTab(2);
-                                        }
-                                      },
-                                      scanTabKey: _scanTabKey,
-                                      groceryTabKey: _groceryTabKey,
-                                      importTabKey: _importTabKey,
+                                  : AnimatedScale(
+                                      scale: _navShrunk ? (2 / 3) : 1.0,
+                                      alignment: Alignment.bottomCenter,
+                                      duration: const Duration(milliseconds: 220),
+                                      curve: Curves.easeOut,
+                                      child: _FloatingBottomNav(
+                                        currentIndex: _currentTab,
+                                        navVisible: _navVisible,
+                                        onTap: _switchTab,
+                                        onCameraTap: () {
+                                          if (_currentTab == 2) {
+                                            _toggleNav();
+                                          } else {
+                                            _switchTab(2);
+                                          }
+                                        },
+                                        scanTabKey: _scanTabKey,
+                                        groceryTabKey: _groceryTabKey,
+                                        importTabKey: _importTabKey,
+                                      ),
                                     ),
                             ),
                           ),
@@ -967,6 +987,11 @@ class _HomeTabState extends State<_HomeTab> {
   // them - each TextField would otherwise manage its own internal buffer,
   // which resets to empty the moment the layout swaps mid-keystroke.
   final TextEditingController _searchController = TextEditingController();
+  // Also shared across both instances so the keyboard stays open across that
+  // same swap - an internally-created FocusNode gets disposed with the old
+  // TextField, which drops focus and dismisses the keyboard the moment
+  // searchQuery flips from empty to non-empty on the first keystroke.
+  final FocusNode _searchFocusNode = FocusNode();
 
   @override
   void initState() {
@@ -982,6 +1007,7 @@ class _HomeTabState extends State<_HomeTab> {
   void dispose() {
     _searchQueryNotifier.dispose();
     _searchController.dispose();
+    _searchFocusNode.dispose();
     HistoryService.instance.recentlyViewedNotifier.removeListener(
       _onHistoryChanged,
     );
@@ -1009,6 +1035,13 @@ class _HomeTabState extends State<_HomeTab> {
   @override
   Widget build(BuildContext context) {
     return Container(
+      // Explicit width/height so this gray backdrop always fills the tab's
+      // full allotted space instead of shrink-wrapping the scroll content -
+      // IndexedStack only gives loose constraints, so a short content height
+      // (e.g. while searching, with the rest of the page hidden) used to
+      // leave a gap below it exposing the Scaffold's red backgroundColor.
+      width: double.infinity,
+      height: double.infinity,
       color: const Color(0xFFF1F5F9),
       child: ValueListenableBuilder<String>(
         valueListenable: _searchQueryNotifier,
@@ -1035,37 +1068,62 @@ class _HomeTabState extends State<_HomeTab> {
                       const AppTopHeader(textColor: Colors.white),
                       SizedBox(height: 8.h),
 
-                      if (searchQuery.isEmpty) ...[
-                        // ── CARD 1: TOP CARD (Search + Cookbooks) ──
-                        Container(
-                          width: double.infinity,
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(24.r),
-                          ),
-                          padding: EdgeInsets.all(16.w),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'What would you like to cook today?',
-                                style: TextStyle(
-                                  fontFamily: 'Rubik',
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 18.sp,
-                                  color: const Color(0xFF0F172A),
-                                ),
+                      // ── CARD 1: TOP CARD (Search + Cookbooks / Search Results) ──
+                      // The AppSearchField instance below is now permanent -
+                      // only the content around it swaps with searchQuery.
+                      // It used to live in two separate Containers that got
+                      // inserted/removed by an `if/else`, which unmounted and
+                      // recreated the TextField's Element (and its keyboard
+                      // connection) on the very first keystroke, dropping
+                      // focus and swallowing characters typed during the swap.
+                      Container(
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(24.r),
+                        ),
+                        padding: EdgeInsets.all(16.w),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Visibility (not an `if` in this children list) so
+                            // this greeting always occupies the same slot before
+                            // the search field instead of being inserted/removed -
+                            // even keyed reordering has edge cases, so the field
+                            // below is kept at one fixed index no matter what.
+                            Visibility(
+                              visible: searchQuery.isEmpty,
+                              maintainState: true,
+                              maintainAnimation: true,
+                              maintainSize: false,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'What would you like to cook today?',
+                                    style: TextStyle(
+                                      fontFamily: 'Rubik',
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 18.sp,
+                                      color: const Color(0xFF0F172A),
+                                    ),
+                                  ),
+                                  SizedBox(height: 12.h),
+                                ],
                               ),
-                              SizedBox(height: 12.h),
-                              AppSearchField(
-                                controller: _searchController,
-                                backgroundColor: const Color(0xFFF1F3F5),
-                                borderColor: const Color(0xFFF1F3F5),
-                                onChanged: (val) {
-                                  _searchQueryNotifier.value = val;
-                                },
-                                hintText: 'Search your recipes',
-                              ),
+                            ),
+                            AppSearchField(
+                              key: const ValueKey('home_search_field'),
+                              controller: _searchController,
+                              focusNode: _searchFocusNode,
+                              backgroundColor: const Color(0xFFF1F3F5),
+                              borderColor: const Color(0xFFF1F3F5),
+                              onChanged: (val) {
+                                _searchQueryNotifier.value = val;
+                              },
+                              hintText: 'Search your recipes',
+                            ),
+                            if (searchQuery.isEmpty) ...[
                               SizedBox(height: 16.h),
                               const _SavingsCard(),
                               SizedBox(height: 16.h),
@@ -1104,11 +1162,33 @@ class _HomeTabState extends State<_HomeTab> {
                                   );
                                 },
                               ),
+                            ] else ...[
+                              SizedBox(height: 16.h),
+                              ValueListenableBuilder<List<Recipe>?>(
+                                valueListenable:
+                                    RecipeService.instance.myRecipesNotifier,
+                                builder: (context, recipes, _) {
+                                  final allRecipes = recipes ?? [];
+                                  final filtered = allRecipes
+                                      .where(
+                                        (r) => r.name.toLowerCase().contains(
+                                          searchQuery.trim().toLowerCase(),
+                                        ),
+                                      )
+                                      .toList();
+                                  return _PopulatedSavedRecipesList(
+                                    recipes: filtered,
+                                    searchQuery: searchQuery,
+                                  );
+                                },
+                              ),
                             ],
-                          ),
+                          ],
                         ),
-                        SizedBox(height: 16.h),
+                      ),
+                      SizedBox(height: 16.h),
 
+                      if (searchQuery.isEmpty) ...[
                         // ── CARD 2: RECENTLY VIEWED ──
                         ValueListenableBuilder<List<Recipe>>(
                           valueListenable:
@@ -1124,20 +1204,23 @@ class _HomeTabState extends State<_HomeTab> {
                                     color: Colors.white,
                                     borderRadius: BorderRadius.circular(24.r),
                                   ),
-                                  padding: EdgeInsets.all(16.w),
+                                  padding: EdgeInsets.symmetric(vertical: 16.h),
                                   child: Column(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
-                                      _SectionRow(
-                                        title: 'Recently Viewed',
-                                        onViewAll: recent.length > 5
-                                            ? () => _goViewAll(
-                                                context,
-                                                ViewAllType.recentlyViewed,
-                                                'Recently Viewed',
-                                              )
-                                            : null,
+                                      Padding(
+                                        padding: EdgeInsets.symmetric(horizontal: 16.w),
+                                        child: _SectionRow(
+                                          title: 'Recently Viewed',
+                                          onViewAll: recent.length > 5
+                                              ? () => _goViewAll(
+                                                  context,
+                                                  ViewAllType.recentlyViewed,
+                                                  'Recently Viewed',
+                                                )
+                                              : null,
+                                        ),
                                       ),
                                       SizedBox(height: 12.h),
                                       _CircularRecipeAvatarRow(
@@ -1168,20 +1251,23 @@ class _HomeTabState extends State<_HomeTab> {
                                     color: Colors.white,
                                     borderRadius: BorderRadius.circular(24.r),
                                   ),
-                                  padding: EdgeInsets.all(16.w),
+                                  padding: EdgeInsets.symmetric(vertical: 16.h),
                                   child: Column(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
-                                      _SectionRow(
-                                        title: 'Suggested for you',
-                                        onViewAll: list.length > 5
-                                            ? () => _goViewAll(
-                                                context,
-                                                ViewAllType.explore,
-                                                'Suggested for you',
-                                              )
-                                            : null,
+                                      Padding(
+                                        padding: EdgeInsets.symmetric(horizontal: 16.w),
+                                        child: _SectionRow(
+                                          title: 'Suggested for you',
+                                          onViewAll: list.length > 5
+                                              ? () => _goViewAll(
+                                                  context,
+                                                  ViewAllType.explore,
+                                                  'Suggested for you',
+                                                )
+                                              : null,
+                                        ),
                                       ),
                                       SizedBox(height: 12.h),
                                       _CircularRecipeAvatarRow(
@@ -1257,48 +1343,6 @@ class _HomeTabState extends State<_HomeTab> {
                         _FeedbackCard(onTap: () => _showFeedbackModal(context)),
                         SizedBox(height: 120.h),
                       ] else ...[
-                        // Search Active State
-                        Container(
-                          width: double.infinity,
-                          padding: EdgeInsets.all(16.w),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(24.r),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              AppSearchField(
-                                controller: _searchController,
-                                backgroundColor: const Color(0xFFF1F3F5),
-                                borderColor: const Color(0xFFF1F3F5),
-                                onChanged: (val) {
-                                  _searchQueryNotifier.value = val;
-                                },
-                                hintText: 'Search your recipes',
-                              ),
-                              SizedBox(height: 16.h),
-                              ValueListenableBuilder<List<Recipe>?>(
-                                valueListenable:
-                                    RecipeService.instance.myRecipesNotifier,
-                                builder: (context, recipes, _) {
-                                  final allRecipes = recipes ?? [];
-                                  final filtered = allRecipes
-                                      .where(
-                                        (r) => r.name.toLowerCase().contains(
-                                          searchQuery.trim().toLowerCase(),
-                                        ),
-                                      )
-                                      .toList();
-                                  return _PopulatedSavedRecipesList(
-                                    recipes: filtered,
-                                    searchQuery: searchQuery,
-                                  );
-                                },
-                              ),
-                            ],
-                          ),
-                        ),
                         SizedBox(height: 120.h),
                       ],
                     ],
@@ -1852,7 +1896,7 @@ class _CircularRecipeAvatarRow extends StatelessWidget {
     // instead - it sizes naturally to the tallest item's wrapped text.
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
-      padding: EdgeInsets.symmetric(horizontal: 4.w),
+      padding: EdgeInsets.symmetric(horizontal: 16.w),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -2102,7 +2146,37 @@ class _PopulatedSavedRecipesList extends StatelessWidget {
       displayList = displayList.take(5).toList();
     }
 
-    if (displayList.isEmpty) return const SizedBox.shrink();
+    if (displayList.isEmpty) {
+      if (searchQuery.trim().isEmpty) return const SizedBox.shrink();
+      return Padding(
+        padding: EdgeInsets.symmetric(vertical: 32.h),
+        child: Column(
+          children: [
+            Icon(Icons.search_off_rounded, size: 40.sp, color: const Color(0xFFCBD5E1)),
+            SizedBox(height: 12.h),
+            Text(
+              'No recipes found',
+              style: TextStyle(
+                fontFamily: 'Rubik',
+                fontSize: 15.sp,
+                fontWeight: FontWeight.w700,
+                color: const Color(0xFF0F172A),
+              ),
+            ),
+            SizedBox(height: 4.h),
+            Text(
+              'Try a different search term.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontFamily: 'Rubik',
+                fontSize: 13.sp,
+                color: const Color(0xFF94A3B8),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
 
     return ListView.separated(
       padding: EdgeInsets.zero,
