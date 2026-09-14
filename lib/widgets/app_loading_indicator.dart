@@ -97,10 +97,11 @@ class _AppRefreshIndicatorState extends State<AppRefreshIndicator> {
       child: Stack(
         alignment: Alignment.topCenter,
         children: [
-          widget.child,
+          // The spinner sits in the gap revealed above the content, instead
+          // of floating on top of it mid-list.
           if (_dragOffset > 0 || _isRefreshing)
             Positioned(
-              top: MediaQuery.of(context).padding.top + 8.h + (_dragOffset * 0.35),
+              top: 8.h + (_dragOffset * 0.25),
               child: AnimatedOpacity(
                 duration: const Duration(milliseconds: 150),
                 opacity: progress,
@@ -127,6 +128,13 @@ class _AppRefreshIndicatorState extends State<AppRefreshIndicator> {
                 ),
               ),
             ),
+          // Content itself slides down to reveal the spinner above it,
+          // matching the classic pull-to-refresh feel instead of the
+          // spinner overlapping unmoving content.
+          Transform.translate(
+            offset: Offset(0, _dragOffset),
+            child: widget.child,
+          ),
         ],
       ),
     );

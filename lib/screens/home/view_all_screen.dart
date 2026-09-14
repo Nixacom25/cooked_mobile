@@ -21,6 +21,7 @@ import '../../core/widgets/ios_toast.dart';
 import '../../models/view_all_type.dart';
 import '../../core/extensions/string_extensions.dart';
 import '../../widgets/cookbook_grid_skeleton.dart';
+import '../../widgets/cookbook_card_tile.dart';
 import '../../widgets/skeleton_loader.dart';
 import '../../widgets/skeleton_list.dart';
 import '../../widgets/add_to_cookbook_sheet.dart';
@@ -57,7 +58,7 @@ class _ViewAllScreenState extends State<ViewAllScreen> {
       if (type == ViewAllType.exploreCuisines) {
         await RecipeService.instance.getExploreCuisines(forceRefresh: true);
       } else if (type == ViewAllType.exploreCategories) {
-        await RecipeService.instance.getExploreCategories(forceRefresh: true);
+        await RecipeService.instance.getActiveExploreCategories(forceRefresh: true);
       } else if (type == ViewAllType.savedRecipes) {
         await RecipeService.instance.getMyRecipes(forceRefresh: true);
       } else if (type == ViewAllType.imports) {
@@ -269,73 +270,6 @@ class _ViewAllScreenState extends State<ViewAllScreen> {
 // ══════════════════════════════════════════════════════════════════════════════
 // COOKBOOKS GRID
 // ══════════════════════════════════════════════════════════════════════════════
-class _OverlappingAvatars extends StatelessWidget {
-  final List<String> imageUrls;
-  const _OverlappingAvatars({required this.imageUrls});
-
-  @override
-  Widget build(BuildContext context) {
-    final List<String> defaultAssets = [
-      'assets/images/plat1.png',
-      'assets/images/plat2.png',
-      'assets/images/plat3.png',
-    ];
-
-    List<Widget> avatarWidgets = [];
-    for (int i = 0; i < 3; i++) {
-      String path = i < imageUrls.length && imageUrls[i].isNotEmpty
-          ? imageUrls[i]
-          : defaultAssets[i % defaultAssets.length];
-
-      avatarWidgets.add(
-        Positioned(
-          left: (i * 22).w,
-          child: Container(
-            width: 36.r,
-            height: 36.r,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: Colors.white, width: 2.r),
-              color: const Color(0xFFF1F5F9),
-            ),
-            child: ClipOval(
-              child: path.startsWith('http')
-                  ? CachedNetworkImage(
-                      imageUrl: path,
-                      fit: BoxFit.cover,
-                      errorWidget: (_, __, ___) => Image.asset(
-                        defaultAssets[i % defaultAssets.length],
-                        fit: BoxFit.cover,
-                      ),
-                    )
-                  : Image.asset(
-                      path,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => Image.asset(
-                        defaultAssets[i % defaultAssets.length],
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-            ),
-          ),
-        ),
-      );
-    }
-
-    return SizedBox(
-      height: 36.r,
-      width: (36 + 2 * 22).w,
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: avatarWidgets,
-      ),
-    );
-  }
-}
-
-// ══════════════════════════════════════════════════════════════════════════════
-// COOKBOOKS GRID
-// ══════════════════════════════════════════════════════════════════════════════
 class _CookbooksGrid extends StatefulWidget {
   final String searchQuery;
   const _CookbooksGrid({super.key, this.searchQuery = ''});
@@ -359,9 +293,15 @@ class _CookbooksGridState extends State<_CookbooksGrid> {
       valueListenable: CookbookService.instance.myCookbooksNotifier,
       builder: (context, cookbooks, _) {
         if (cookbooks == null) {
-          return CookbookGridSkeleton(
-            childAspectRatio: 1.15,
+          return ListView.separated(
             padding: EdgeInsets.fromLTRB(16.w, 4.h, 16.w, 20.h),
+            itemCount: 5,
+            separatorBuilder: (_, __) => SizedBox(height: 14.h),
+            itemBuilder: (_, __) => SkeletonLoader(
+              width: double.infinity,
+              height: 96.h,
+              borderRadius: 20,
+            ),
           );
         }
 
@@ -382,188 +322,25 @@ class _CookbooksGridState extends State<_CookbooksGrid> {
         }
 
         return GridView.builder(
-          padding: EdgeInsets.fromLTRB(16.w, 4.h, 16.w, 20.h),
+          padding: EdgeInsets.fromLTRB(
+            16.w,
+            4.h,
+            16.w,
+            20.h + MediaQuery.of(context).padding.bottom,
+          ),
           itemCount: displayList.length,
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 2,
-            crossAxisSpacing: 14.w,
+            crossAxisSpacing: 12.w,
             mainAxisSpacing: 14.h,
-            childAspectRatio: 1.15,
+            childAspectRatio: 1.5,
           ),
           itemBuilder: (ctx, i) {
             final cb = displayList[i];
-            final imageUrls = cb.recipes
-                .map((r) => r.image ?? '')
-                .where((img) => img.isNotEmpty)
-                .toList();
-
-            return GestureDetector(
-              onTap: () async {
-                final result = await Navigator.pushNamed(
-                  ctx,
-                  AppRoutes.cookbookDetail,
-                  arguments: {'cookbook': cb},
-                );
-                if (result == true) {
-                  CookbookService.instance.getMyCookbooks(forceRefresh: true);
-                }
-              },
-              onLongPressStart: (details) {
-                HapticContextMenu.show(
-                  ctx,
-                  targetPosition: details.globalPosition,
-                  actions: [
-                    HapticMenuAction(
-                      title: 'Add Recipes',
-                      icon: Icons.add_circle_outline_rounded,
-                      onTap: () async {
-                        final result = await showModalBottomSheet(
-                          context: ctx,
-                          isScrollControlled: true,
-                          backgroundColor: Colors.transparent,
-                          builder: (context) => CookbookFormModal(cookbook: cb),
-                        );
-                        if (result is Cookbook || result == 'deleted') {
-                          CookbookService.instance.getMyCookbooks(
-                            forceRefresh: true,
-                          );
-                        }
-                      },
-                    ),
-                    HapticMenuAction(
-                      title: 'Edit Cookbook',
-                      icon: Icons.edit_outlined,
-                      onTap: () async {
-                        final result = await showModalBottomSheet(
-                          context: ctx,
-                          isScrollControlled: true,
-                          backgroundColor: Colors.transparent,
-                          builder: (context) => CookbookFormModal(cookbook: cb),
-                        );
-                        if (result is Cookbook || result == 'deleted') {
-                          CookbookService.instance.getMyCookbooks(
-                            forceRefresh: true,
-                          );
-                        }
-                      },
-                    ),
-                    HapticMenuAction(
-                      title: cb.isPinned ? 'Unpin Cookbook' : 'Pin Cookbook',
-                      icon: cb.isPinned
-                          ? Icons.push_pin_rounded
-                          : Icons.push_pin_outlined,
-                      onTap: () async {
-                        try {
-                          await CookbookService.instance.togglePin(cb.id);
-                          CookbookService.instance.getMyCookbooks(
-                            forceRefresh: true,
-                          );
-                        } catch (_) {}
-                      },
-                    ),
-                    HapticMenuAction(
-                      title: 'Delete Cookbook',
-                      icon: Icons.delete_outline_rounded,
-                      isDestructive: true,
-                      onTap: () async {
-                        try {
-                          await CookbookService.instance.deleteCookbook(cb.id);
-                          if (ctx.mounted) {
-                            IosToast.show(
-                              ctx,
-                              message: 'Cookbook deleted',
-                              type: ToastType.success,
-                            );
-                          }
-                        } catch (e) {
-                          if (ctx.mounted) {
-                            IosToast.show(
-                              ctx,
-                              message: 'Failed to delete cookbook',
-                              type: ToastType.error,
-                            );
-                          }
-                        }
-                      },
-                    ),
-                  ],
-                );
-              },
-              child: Stack(
-                children: [
-                  Container(
-                    padding: EdgeInsets.all(14.r),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFAF5E8),
-                      borderRadius: BorderRadius.circular(20.r),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        _OverlappingAvatars(imageUrls: imageUrls),
-                        SizedBox(height: 8.h),
-                        Text(
-                          cb.name.toTitleCase(),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontFamily: 'Rubik',
-                            fontWeight: FontWeight.w800,
-                            fontSize: 15.sp,
-                            color: const Color(0xFF0F172A),
-                          ),
-                        ),
-                        SizedBox(height: 6.h),
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.flatware_rounded,
-                              size: 15.sp,
-                              color: const Color(0xFF64748B),
-                            ),
-                            SizedBox(width: 4.w),
-                            Expanded(
-                              child: Text(
-                                '${cb.recipes.length} Recipes',
-                                style: TextStyle(
-                                  fontFamily: 'Rubik',
-                                  fontWeight: FontWeight.w500,
-                                  fontSize: 13.sp,
-                                  color: const Color(0xFF64748B),
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                            Icon(
-                              Icons.chevron_right_rounded,
-                              size: 18.sp,
-                              color: const Color(0xFF64748B),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                  if (cb.isPinned)
-                    Positioned(
-                      top: 10.h,
-                      right: 10.w,
-                      child: Icon(
-                        Icons.push_pin_rounded,
-                        size: 20.sp,
-                        color: const Color(0xFFC83A2D),
-                        shadows: const [
-                          Shadow(
-                            color: Colors.black26,
-                            blurRadius: 4,
-                          ),
-                        ],
-                      ),
-                    ),
-                ],
-              ),
+            return CookbookCardTile(
+              cookbook: cb,
+              isMain: false,
+              onRefresh: () => CookbookService.instance.getMyCookbooks(forceRefresh: true),
             );
           },
         );
@@ -743,7 +520,7 @@ class _RecipesGridState extends State<_RecipesGrid> {
 
         if (_type == ViewAllType.imports) {
           return ListView.builder(
-            padding: const EdgeInsets.fromLTRB(16, 4, 16, 20),
+            padding: EdgeInsets.fromLTRB(16, 4, 16, 20 + MediaQuery.of(context).padding.bottom),
             itemCount: displayList.length,
             itemBuilder: (ctx, i) {
               final r = displayList[i];
@@ -1219,7 +996,7 @@ class _CreatorsGridState extends State<_CreatorsGrid> {
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return GridView.builder(
-            padding: const EdgeInsets.fromLTRB(16, 4, 16, 20),
+            padding: EdgeInsets.fromLTRB(16, 4, 16, 20 + MediaQuery.of(context).padding.bottom),
             itemCount: 9,
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 3,
@@ -1367,7 +1144,7 @@ class _StaticCookbooksGridState extends State<_StaticCookbooksGrid> {
     super.initState();
     _refreshTimestamp = DateTime.now().millisecondsSinceEpoch;
     if (widget.type == ViewAllType.exploreCategories) {
-      _future = RecipeService.instance.getExploreCategories(forceRefresh: true);
+      _future = RecipeService.instance.getActiveExploreCategories(forceRefresh: true);
     } else {
       _future = RecipeService.instance.getExploreCuisines(forceRefresh: true);
     }

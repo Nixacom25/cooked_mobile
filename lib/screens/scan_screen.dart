@@ -1273,7 +1273,12 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
         // ── SCROLLABLE LIST PART ──────────────────────────────────────────
         Expanded(
           child: ListView(
-            padding: EdgeInsets.fromLTRB(22.w, 5.h, 22.w, bottomInset + 120.h),
+            padding: EdgeInsets.fromLTRB(
+              22.w,
+              5.h,
+              22.w,
+              bottomInset + 120.h + MediaQuery.of(context).padding.bottom,
+            ),
             children: [
               if (_ingCtrl.text.isEmpty) ...[
                 SizedBox(height: 5.h),

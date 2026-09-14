@@ -591,6 +591,103 @@ class RecipeService {
     }
   }
 
+  // The public /recipes/explore/categories endpoint's count query is broken
+  // (always 0). This derives real categories + counts + images directly
+  // from actual EXPLORE recipes (always reachable, no auth edge cases),
+  // then narrows to active-only using the admin taxonomy list when that
+  // call succeeds - same active/inactive rule as cuisines, without ever
+  // blocking the section from showing if that second call fails.
+  /// Pure, network-free: counts categories + picks a representative image
+  /// straight from an already-fetched recipe list. No await, cannot fail.
+  List<Map<String, dynamic>> categoriesFromRecipeList(List<Recipe> recipes) {
+    final Map<String, int> counts = {};
+    final Map<String, String> images = {};
+    for (final r in recipes) {
+      for (final cat in (r.categories ?? [])) {
+        final name = cat.trim();
+        if (name.isEmpty) continue;
+        counts[name] = (counts[name] ?? 0) + 1;
+        if ((images[name] ?? '').isEmpty && (r.image ?? '').isNotEmpty) {
+          images[name] = r.image!;
+        }
+      }
+    }
+    final list = counts.keys
+        .map((name) => {
+              'name': name,
+              'recipeCount': counts[name],
+              'image': images[name] ?? '',
+            })
+        .toList();
+    list.sort((a, b) => (b['recipeCount'] as int).compareTo(a['recipeCount'] as int));
+    return list;
+  }
+
+  /// Best-effort admin taxonomy lookup: {name -> (active, image)}. Never
+  /// throws - callers degrade to "keep everything, use recipe photos" when
+  /// this comes back empty (auth edge case, network hiccup, etc).
+  Future<Map<String, Map<String, dynamic>>> _fetchAdminCategoryTaxonomy() async {
+    try {
+      final url = Uri.parse('${ApiConfig.baseUrl}/api/admin/categories?type=CATEGORY');
+      final response = await http.get(url, headers: await _getHeaders());
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        return {
+          for (final raw in data.map((e) => Map<String, dynamic>.from(e)))
+            (raw['name'] as String).trim(): raw,
+        };
+      }
+    } catch (_) {}
+    return {};
+  }
+
+  /// Merges recipe-derived categories with the admin taxonomy: drops a name
+  /// only when the admin list positively marks it inactive (an unmanaged tag
+  /// with no admin entry still shows), and swaps in the admin's own image
+  /// when one is set for that category, keeping the recipe photo otherwise.
+  Future<List<Map<String, dynamic>>> _applyAdminTaxonomy(
+    List<Map<String, dynamic>> derived,
+  ) async {
+    if (derived.isEmpty) return derived;
+    final taxonomy = await _fetchAdminCategoryTaxonomy();
+    if (taxonomy.isEmpty) return derived;
+
+    final list = derived
+        .where((item) {
+          final entry = taxonomy[item['name']];
+          return entry == null || entry['active'] == true;
+        })
+        .map((item) {
+          final entry = taxonomy[item['name']];
+          final adminImage = entry?['image'] as String?;
+          if (adminImage != null && adminImage.isNotEmpty) {
+            return {...item, 'image': adminImage};
+          }
+          return item;
+        })
+        .toList();
+    list.sort((a, b) => (b['recipeCount'] as int).compareTo(a['recipeCount'] as int));
+    return list;
+  }
+
+  Future<List<Map<String, dynamic>>> getActiveExploreCategories({bool forceRefresh = false}) async {
+    List<Recipe> recipes = [];
+    try {
+      recipes = await getExploreRecipes(size: 100, forceRefresh: forceRefresh);
+    } catch (_) {}
+    // Any hiccup on the primary call (timeout, transient error) - fall back
+    // to the popular-recipes endpoint, which this screen already relies on
+    // successfully elsewhere, instead of letting the whole future fail and
+    // silently hiding the section.
+    if (recipes.isEmpty) {
+      try {
+        recipes = await getPopularRecipes(size: 50, forceRefresh: forceRefresh);
+      } catch (_) {}
+    }
+    if (recipes.isEmpty) return [];
+
+    return _applyAdminTaxonomy(categoriesFromRecipeList(recipes));
+  }
 
   Future<List<Creator>> getTopCreators({int page = 0, int size = 10}) async {
     final url = Uri.parse(

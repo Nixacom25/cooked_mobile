@@ -75,7 +75,13 @@ class SavingsDetailsScreen extends StatelessWidget {
 
                         double totalSaved = 0.0;
                         for (var r in displayRecipes) {
-                          totalSaved += r.totalPrice ?? 0.0;
+                          if (r.totalPrice != null && r.totalPrice! > 0) {
+                            double makeAtHome = r.totalPrice!;
+                            double orderNearby = makeAtHome * 2.5 + 5.0;
+                            totalSaved += (orderNearby - makeAtHome);
+                          } else {
+                            totalSaved += 14.0;
+                          }
                         }
 
                         if (displayRecipes.isEmpty) {
@@ -124,7 +130,7 @@ class SavingsDetailsScreen extends StatelessWidget {
                                         fontFamily: 'Rubik',
                                         fontSize: 54.sp,
                                         fontWeight: FontWeight.w800,
-                                        color: const Color(0xFF10B981),
+                                        color: const Color(0xFF15803D),
                                       ),
                                     ),
                                     SizedBox(height: 4.h),
@@ -146,20 +152,30 @@ class SavingsDetailsScreen extends StatelessWidget {
 
                             // Saved Recipe Cards List using shared RecipeHorizontalCard
                             SliverPadding(
-                              padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 50.h),
+                              padding: EdgeInsets.fromLTRB(
+                                16.w,
+                                16.h,
+                                16.w,
+                                50.h + MediaQuery.of(context).padding.bottom,
+                              ),
                               sliver: SliverList.separated(
                                 itemCount: displayRecipes.length,
                                 separatorBuilder: (context, index) => SizedBox(height: 14.h),
                                 itemBuilder: (context, index) {
                                   final recipe = displayRecipes[index];
-                                  final itemPrice = recipe.totalPrice ?? 0.0;
+                                  double itemSavings = 14.0;
+                                  if (recipe.totalPrice != null && recipe.totalPrice! > 0) {
+                                    double makeAtHome = recipe.totalPrice!;
+                                    double orderNearby = makeAtHome * 2.5 + 5.0;
+                                    itemSavings = orderNearby - makeAtHome;
+                                  }
 
                                   return SavedRecipeCard(
                                     recipe: recipe,
                                     isRegistered: true,
                                     isSavingsMode: true,
                                     subtitle: "Scanned at home",
-                                    savingsBadgeText: "+${itemPrice.toStringAsFixed(0)}\$",
+                                    savingsBadgeText: "+${itemSavings.toStringAsFixed(0)}\$",
                                     onTap: () {
                                       Navigator.pushNamed(
                                         context,

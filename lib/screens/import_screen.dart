@@ -566,7 +566,12 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
                 child: ClipRRect(
                   borderRadius: BorderRadius.vertical(top: Radius.circular(32.r)),
                   child: ListView(
-                    padding: EdgeInsets.fromLTRB(20.w, 20.h, 20.w, bottomInset + 120.h),
+                    padding: EdgeInsets.fromLTRB(
+                      20.w,
+                      20.h,
+                      20.w,
+                      bottomInset + 120.h + MediaQuery.of(context).padding.bottom,
+                    ),
                     children: [
                       // Header Title: "Import"
                       Text(
@@ -1568,7 +1573,12 @@ class _RecipeWebPreviewModalState extends State<_RecipeWebPreviewModal> {
                   color: Colors.white,
                   border: Border(top: BorderSide(color: Color(0xFFE5E7EB), width: 1)),
                 ),
-                padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 30.h),
+                padding: EdgeInsets.fromLTRB(
+                  16.w,
+                  12.h,
+                  16.w,
+                  30.h + MediaQuery.of(context).padding.bottom,
+                ),
                 child: RedButton(
                   label: 'Import to Cooked',
                   loadingLabel: 'Importing',

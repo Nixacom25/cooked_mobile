@@ -247,7 +247,7 @@ class _CookbookDetailScreenState extends State<CookbookDetailScreen> {
                                       16.w,
                                       4.h,
                                       16.w,
-                                      20.h,
+                                      20.h + MediaQuery.of(context).padding.bottom,
                                     ),
                                     itemCount: recipes.length,
                                     separatorBuilder: (_, __) =>

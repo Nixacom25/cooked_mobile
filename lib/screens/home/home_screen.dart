@@ -26,6 +26,7 @@ import '../../models/recipe.dart';
 import '../../models/cookbook.dart';
 import '../../widgets/recipe_card.dart';
 import '../../widgets/cookbook_cover.dart';
+import '../../widgets/cookbook_card_tile.dart';
 import '../../core/widgets/ios_toast.dart';
 import '../../core/utils/tutorial_helper.dart';
 import '../../widgets/add_to_cookbook_sheet.dart';
@@ -801,11 +802,11 @@ class _AnimatedScanButtonState extends State<_AnimatedScanButton>
               width: 56.r,
               height: 56.r,
               decoration: BoxDecoration(
-                color: const Color(0xFFC83A2D),
+                color: const Color(0xFFC31E26),
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFFC83A2D).withValues(alpha: glowAlpha),
+                    color: const Color(0xFFC31E26).withValues(alpha: glowAlpha),
                     blurRadius: (12 * scale).r,
                     spreadRadius: (1.5 * (scale - 1.0)).r,
                     offset: Offset(0, 5.h),
@@ -1098,6 +1099,15 @@ class _HomeTabState extends State<_HomeTab> {
                                 _searchQueryNotifier.value = val;
                               },
                               hintText: 'Search your recipes',
+                              suffixIcon: searchQuery.isNotEmpty
+                                  ? Icons.close_rounded
+                                  : null,
+                              onSuffixTap: searchQuery.isNotEmpty
+                                  ? () {
+                                      _searchController.clear();
+                                      _searchQueryNotifier.value = '';
+                                    }
+                                  : null,
                             ),
                             if (searchQuery.isEmpty) ...[
                               SizedBox(height: 16.h),
@@ -1115,7 +1125,7 @@ class _HomeTabState extends State<_HomeTab> {
                                     children: [
                                       _SectionRow(
                                         title: 'Your Cookbooks',
-                                        onViewAll: count > 3
+                                        onViewAll: count >= 3
                                             ? () => _goViewAll(
                                                 context,
                                                 ViewAllType.cookbooks,
@@ -1317,9 +1327,9 @@ class _HomeTabState extends State<_HomeTab> {
 
                         // ── CARD 5: HELP US IMPROVE COOKED ──
                         _FeedbackCard(onTap: () => _showFeedbackModal(context)),
-                        SizedBox(height: 120.h),
+                        SizedBox(height: 120.h + MediaQuery.of(context).padding.bottom),
                       ] else ...[
-                        SizedBox(height: 120.h),
+                        SizedBox(height: 120.h + MediaQuery.of(context).padding.bottom),
                       ],
                     ],
                   ),
@@ -1478,7 +1488,7 @@ class _PopulatedCookbooksLayout extends StatelessWidget {
         children: [
           Expanded(
             flex: 5,
-            child: _CookbookCardTile(
+            child: CookbookCardTile(
               cookbook: mainCookbook,
               isMain: true,
               onRefresh: onRefresh,
@@ -1491,7 +1501,7 @@ class _PopulatedCookbooksLayout extends StatelessWidget {
               children: [
                 Expanded(
                   child: secondCookbook != null
-                      ? _CookbookCardTile(
+                      ? CookbookCardTile(
                           cookbook: secondCookbook,
                           isMain: false,
                           onRefresh: onRefresh,
@@ -1501,7 +1511,7 @@ class _PopulatedCookbooksLayout extends StatelessWidget {
                 SizedBox(height: 10.h),
                 Expanded(
                   child: thirdCookbook != null
-                      ? _CookbookCardTile(
+                      ? CookbookCardTile(
                           cookbook: thirdCookbook,
                           isMain: false,
                           onRefresh: onRefresh,
@@ -1586,278 +1596,6 @@ class _AddCookbookCardTile extends StatelessWidget {
   }
 }
 
-class _CookbookCardTile extends StatelessWidget {
-  final Cookbook cookbook;
-  final bool isMain;
-  final VoidCallback? onRefresh;
-
-  const _CookbookCardTile({
-    required this.cookbook,
-    required this.isMain,
-    this.onRefresh,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () async {
-        final result = await Navigator.pushNamed(
-          context,
-          AppRoutes.cookbookDetail,
-          arguments: {'cookbook': cookbook},
-        );
-        if (result == true) {
-          CookbookService.instance.getMyCookbooks();
-          onRefresh?.call();
-        }
-      },
-      onLongPressStart: (details) {
-        HapticContextMenu.show(
-          context,
-          targetPosition: details.globalPosition,
-          actions: [
-            HapticMenuAction(
-              title: cookbook.isPinned ? 'Unpin Cookbook' : 'Pin Cookbook',
-              icon: cookbook.isPinned
-                  ? Icons.push_pin_rounded
-                  : Icons.push_pin_outlined,
-              onTap: () async {
-                try {
-                  await CookbookService.instance.togglePin(cookbook.id);
-                  onRefresh?.call();
-                } catch (_) {}
-              },
-            ),
-            HapticMenuAction(
-              title: 'Edit Cookbook',
-              icon: Icons.edit_outlined,
-              onTap: () async {
-                final result = await showModalBottomSheet(
-                  context: context,
-                  isScrollControlled: true,
-                  backgroundColor: Colors.transparent,
-                  builder: (context) => CookbookFormModal(cookbook: cookbook),
-                );
-                if (result is Cookbook || result == 'deleted') {
-                  CookbookService.instance.getMyCookbooks(forceRefresh: true);
-                  onRefresh?.call();
-                }
-              },
-            ),
-            HapticMenuAction(
-              title: 'Delete Cookbook',
-              icon: Icons.delete_outline_rounded,
-              isDestructive: true,
-              onTap: () async {
-                try {
-                  await CookbookService.instance.deleteCookbook(cookbook.id);
-                  if (context.mounted) {
-                    IosToast.show(
-                      context,
-                      message: 'Cookbook deleted',
-                      type: ToastType.success,
-                    );
-                  }
-                  onRefresh?.call();
-                } catch (e) {
-                  if (context.mounted) {
-                    IosToast.show(
-                      context,
-                      message: 'Failed to delete cookbook',
-                      type: ToastType.error,
-                    );
-                  }
-                }
-              },
-            ),
-          ],
-        );
-      },
-      child: Stack(
-        children: [
-          Container(
-            padding: EdgeInsets.all(12.w),
-            decoration: BoxDecoration(
-              color: const Color(0xFFFAF3E6),
-              borderRadius: BorderRadius.circular(20.r),
-            ),
-            child: isMain
-                ? Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(16.r),
-                          child: CookbookCover(cookbook: cookbook),
-                        ),
-                      ),
-                      SizedBox(height: 10.h),
-                      Text(
-                        cookbook.name.isEmpty
-                            ? cookbook.name
-                            : cookbook.name[0].toUpperCase() +
-                                  cookbook.name.substring(1).toLowerCase(),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontFamily: 'Rubik',
-                          fontWeight: FontWeight.w700,
-                          fontSize: 16.sp,
-                          color: const Color(0xFF0F172A),
-                        ),
-                      ),
-                      SizedBox(height: 4.h),
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.restaurant_menu_rounded,
-                            size: 14.sp,
-                            color: const Color(0xFF475569),
-                          ),
-                          SizedBox(width: 4.w),
-                          Text(
-                            '${cookbook.recipes.length} Recipes',
-                            style: TextStyle(
-                              fontFamily: 'Rubik',
-                              fontSize: 13.sp,
-                              color: const Color(0xFF475569),
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          const Spacer(),
-                          Icon(
-                            Icons.chevron_right_rounded,
-                            size: 18.sp,
-                            color: const Color(0xFF475569),
-                          ),
-                        ],
-                      ),
-                    ],
-                  )
-                : Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      _buildOverlappingThumbnails(cookbook),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            cookbook.name.isEmpty
-                                ? cookbook.name
-                                : cookbook.name[0].toUpperCase() +
-                                      cookbook.name.substring(1).toLowerCase(),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontFamily: 'Rubik',
-                              fontWeight: FontWeight.w700,
-                              fontSize: 14.sp,
-                              color: const Color(0xFF0F172A),
-                            ),
-                          ),
-                          SizedBox(height: 2.h),
-                          Row(
-                            children: [
-                              Icon(
-                                Icons.restaurant_menu_rounded,
-                                size: 13.sp,
-                                color: const Color(0xFF475569),
-                              ),
-                              SizedBox(width: 4.w),
-                              Text(
-                                '${cookbook.recipes.length} Recipes',
-                                style: TextStyle(
-                                  fontFamily: 'Rubik',
-                                  fontSize: 12.sp,
-                                  color: const Color(0xFF475569),
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              const Spacer(),
-                              Icon(
-                                Icons.chevron_right_rounded,
-                                size: 16.sp,
-                                color: const Color(0xFF475569),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-          ),
-          if (cookbook.isPinned)
-            Positioned(
-              top: 10.h,
-              right: 10.w,
-              child: Icon(
-                Icons.push_pin_rounded,
-                size: 20.sp,
-                color: const Color(0xFFC83A2D),
-                shadows: const [Shadow(color: Colors.black26, blurRadius: 4)],
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildOverlappingThumbnails(Cookbook cb) {
-    final List<String> images = cb.recipes
-        .map((r) => r.image)
-        .where((img) => img != null && img.isNotEmpty)
-        .cast<String>()
-        .toList();
-
-    if (images.isEmpty) {
-      return Container(
-        width: 32.r,
-        height: 32.r,
-        decoration: const BoxDecoration(
-          color: Color(0xFFE2E8F0),
-          shape: BoxShape.circle,
-        ),
-        child: Icon(
-          Icons.menu_book_rounded,
-          size: 16.sp,
-          color: const Color(0xFF475569),
-        ),
-      );
-    }
-
-    return SizedBox(
-      height: 34.r,
-      child: Stack(
-        children: List.generate(images.take(3).length, (idx) {
-          return Positioned(
-            left: idx * 18.w,
-            child: Container(
-              width: 34.r,
-              height: 34.r,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(color: const Color(0xFFFAF3E6), width: 2),
-              ),
-              child: ClipOval(
-                child: images[idx].startsWith('http')
-                    ? CachedNetworkImage(
-                        imageUrl: images[idx],
-                        fit: BoxFit.cover,
-                        errorWidget: (_, __, ___) => Image.asset(
-                          'assets/images/recipes.png',
-                          fit: BoxFit.cover,
-                        ),
-                      )
-                    : Image.asset(images[idx], fit: BoxFit.cover),
-              ),
-            ),
-          );
-        }),
-      ),
-    );
-  }
-}
 
 // ── Circular Recipe Avatars ─────────────────────────────────────────────────────
 class _CircularRecipeAvatarRow extends StatelessWidget {
@@ -3391,13 +3129,9 @@ class _SavingsCardState extends State<_SavingsCard>
       valueListenable: RecipeService.instance.myRecipesNotifier,
       builder: (context, recipes, _) {
         final myRecipes = recipes ?? [];
-        final scanRecipes = myRecipes.where((r) {
-          final origin = r.origin?.toUpperCase();
-          if (origin == 'IMPORT' || origin == 'MANUAL') return false;
-          return origin == 'SCAN' ||
-              origin == 'SUGGESTED' ||
-              (r.isSuggested && (r.sourceUrl == null || r.sourceUrl!.isEmpty));
-        }).toList();
+        final scanRecipes = myRecipes
+            .where((r) => r.origin?.toUpperCase() == 'SCAN')
+            .toList();
 
         if (scanRecipes.isEmpty) return const SizedBox.shrink();
 

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -389,8 +390,8 @@ class GroceryScreenState extends State<GroceryScreen> with SingleTickerProviderS
                                     _showAddGrocerySheet(context, itemsList);
                                   },
                                   child: Container(
-                                    constraints: BoxConstraints(minWidth: 120.w),
-                                    padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 14.h),
+                                    constraints: BoxConstraints(minWidth: 96.w),
+                                    padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 14.h),
                                     decoration: BoxDecoration(
                                       color: const Color(0xFFC31E26),
                                       borderRadius: BorderRadius.circular(28.r),
@@ -495,23 +496,131 @@ class GroceryScreenState extends State<GroceryScreen> with SingleTickerProviderS
   }
 
   Future<bool?> _showDeleteConfirm(BuildContext context, String name) {
-    return showDialog<bool>(
+    return showGeneralDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
-        title: Text('Delete Item', style: TextStyle(fontFamily: 'Rubik', fontWeight: FontWeight.bold, fontSize: 16.sp)),
-        content: Text('Are you sure you want to delete "$name" from your grocery list?', style: TextStyle(fontFamily: 'Rubik', fontSize: 14.sp)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel', style: TextStyle(fontFamily: 'Rubik', color: Colors.grey)),
+      barrierDismissible: true,
+      barrierLabel: 'Dismiss',
+      barrierColor: Colors.transparent,
+      transitionDuration: const Duration(milliseconds: 200),
+      pageBuilder: (ctx, anim1, anim2) {
+        return Center(
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 36.w),
+            child: Material(
+              color: Colors.transparent,
+              child: ClipRRect(
+              borderRadius: BorderRadius.circular(24.r),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+                child: Container(
+                  padding: EdgeInsets.fromLTRB(20.w, 22.h, 20.w, 16.h),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.28),
+                    borderRadius: BorderRadius.circular(24.r),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.65),
+                      width: 1.5.w,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.08),
+                        blurRadius: 20,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Delete Item',
+                        style: TextStyle(
+                          fontFamily: 'Rubik',
+                          fontWeight: FontWeight.w800,
+                          fontSize: 18.sp,
+                          color: const Color(0xFF0F172A),
+                        ),
+                      ),
+                      SizedBox(height: 8.h),
+                      Text(
+                        'Are you sure you want to delete "$name" from your grocery list?',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontFamily: 'Rubik',
+                          fontSize: 14.sp,
+                          color: const Color(0xFF475569),
+                          height: 1.4,
+                        ),
+                      ),
+                      SizedBox(height: 20.h),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextButton(
+                              onPressed: () => Navigator.pop(ctx, false),
+                              style: TextButton.styleFrom(
+                                padding: EdgeInsets.symmetric(vertical: 12.h),
+                                backgroundColor: Colors.white.withValues(alpha: 0.5),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16.r),
+                                ),
+                              ),
+                              child: Text(
+                                'Cancel',
+                                style: TextStyle(
+                                  fontFamily: 'Rubik',
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 15.sp,
+                                  color: const Color(0xFF475569),
+                                ),
+                              ),
+                            ),
+                          ),
+                          SizedBox(width: 10.w),
+                          Expanded(
+                            child: TextButton(
+                              onPressed: () => Navigator.pop(ctx, true),
+                              style: TextButton.styleFrom(
+                                padding: EdgeInsets.symmetric(vertical: 12.h),
+                                backgroundColor: const Color(0xFFC31E26),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16.r),
+                                ),
+                              ),
+                              child: Text(
+                                'Delete',
+                                style: TextStyle(
+                                  fontFamily: 'Rubik',
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 15.sp,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            ),
           ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Delete', style: TextStyle(fontFamily: 'Rubik', color: Color(0xFFC83A2D), fontWeight: FontWeight.bold)),
+        );
+      },
+      transitionBuilder: (ctx, anim1, anim2, child) {
+        return FadeTransition(
+          opacity: anim1,
+          child: ScaleTransition(
+            alignment: Alignment.center,
+            scale: Tween<double>(begin: 0.9, end: 1.0).animate(
+              CurvedAnimation(parent: anim1, curve: Curves.easeOutCubic),
+            ),
+            child: child,
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -525,10 +634,11 @@ class GroceryScreenState extends State<GroceryScreen> with SingleTickerProviderS
         allItems: allItems,
         onSaveBatch: (draftItems, selectedRecipe, date) async {
           try {
-            for (final item in draftItems) {
-              await GroceryService.instance.addGroceryItem(
-                name: item['name']!,
-                quantity: item['qty']!,
+            if (draftItems.isNotEmpty) {
+              await GroceryService.instance.addMultipleGroceryItems(
+                items: draftItems
+                    .map((item) => (name: item['name']!, quantity: item['qty']!, icon: null))
+                    .toList(),
                 date: date,
                 source: 'manual',
               );
@@ -536,12 +646,12 @@ class GroceryScreenState extends State<GroceryScreen> with SingleTickerProviderS
 
             if (selectedRecipe != null) {
               final fullRecipe = await RecipeService.instance.getRecipe(selectedRecipe.id);
-              for (var ing in fullRecipe.ingredients) {
-                await GroceryService.instance.addGroceryItem(
-                  name: ing.name,
-                  quantity: ing.quantity,
+              if (fullRecipe.ingredients.isNotEmpty) {
+                await GroceryService.instance.addMultipleGroceryItems(
+                  items: fullRecipe.ingredients
+                      .map((ing) => (name: ing.name, quantity: ing.quantity, icon: ing.icon))
+                      .toList(),
                   date: date,
-                  icon: ing.icon,
                   recipeId: fullRecipe.id,
                   source: 'recipe',
                 );

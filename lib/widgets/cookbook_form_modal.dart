@@ -1,8 +1,8 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import '../routes/app_routes.dart';
 import '../models/recipe.dart';
 import '../core/extensions/string_extensions.dart';
 import '../models/cookbook.dart';
@@ -63,6 +63,154 @@ class _CookbookFormModalState extends State<CookbookFormModal> {
   }
 
   bool get _isEdit => widget.cookbook != null;
+
+  // Glass dropdown (same look as the header's account menu) offering the
+  // three ways to add a recipe: navigate the underlying HomeScreen tab and
+  // dismiss this whole sheet so the destination tab is visible.
+  void _showAddOptionsMenu(BuildContext buttonContext) {
+    HapticFeedback.mediumImpact();
+    final RenderBox? button = buttonContext.findRenderObject() as RenderBox?;
+    final RenderBox? overlay =
+        Navigator.of(buttonContext).overlay?.context.findRenderObject() as RenderBox?;
+
+    double topPos = 60.h;
+    if (button != null && overlay != null) {
+      final position = RelativeRect.fromRect(
+        Rect.fromPoints(
+          button.localToGlobal(Offset.zero, ancestor: overlay),
+          button.localToGlobal(button.size.bottomRight(Offset.zero), ancestor: overlay),
+        ),
+        Offset.zero & overlay.size,
+      );
+      topPos = position.top + button.size.height + 5.h;
+    }
+
+    void goToTab(int tabIndex) {
+      Navigator.of(context).pop();
+      HomeScreen.tabRequestNotifier.value = tabIndex;
+    }
+
+    showGeneralDialog(
+      context: buttonContext,
+      barrierDismissible: true,
+      barrierLabel: 'Dismiss',
+      barrierColor: Colors.transparent,
+      transitionDuration: const Duration(milliseconds: 200),
+      pageBuilder: (ctx, anim1, anim2) {
+        Widget menuItem({
+          required IconData icon,
+          required String label,
+          required VoidCallback onTap,
+        }) {
+          return InkWell(
+            borderRadius: BorderRadius.circular(18.r),
+            onTap: () {
+              Navigator.of(ctx).pop();
+              onTap();
+            },
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
+              child: Row(
+                children: [
+                  Icon(icon, size: 20.sp, color: const Color(0xFF0F172A)),
+                  SizedBox(width: 10.w),
+                  Expanded(
+                    child: Text(
+                      label,
+                      style: TextStyle(
+                        fontFamily: 'Rubik',
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14.sp,
+                        color: const Color(0xFF0F172A),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        return Stack(
+          children: [
+            Positioned.fill(
+              child: GestureDetector(
+                onTap: () => Navigator.of(ctx).pop(),
+                behavior: HitTestBehavior.opaque,
+                child: const SizedBox.expand(),
+              ),
+            ),
+            Positioned(
+              top: topPos,
+              right: 16.w,
+              child: Material(
+                color: Colors.transparent,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(24.r),
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+                    child: Container(
+                      width: 150.w,
+                      padding: EdgeInsets.symmetric(vertical: 6.h, horizontal: 6.w),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.28),
+                        borderRadius: BorderRadius.circular(24.r),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.65),
+                          width: 1.5.w,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.08),
+                            blurRadius: 20,
+                            offset: const Offset(0, 6),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          menuItem(
+                            icon: Icons.search_rounded,
+                            label: 'Explore',
+                            onTap: () => goToTab(1),
+                          ),
+                          SizedBox(height: 2.h),
+                          menuItem(
+                            icon: Icons.crop_free_rounded,
+                            label: 'Scan',
+                            onTap: () => goToTab(2),
+                          ),
+                          SizedBox(height: 2.h),
+                          menuItem(
+                            icon: Icons.file_download_outlined,
+                            label: 'Import',
+                            onTap: () => goToTab(4),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+      transitionBuilder: (ctx, anim1, anim2, child) {
+        return FadeTransition(
+          opacity: anim1,
+          child: ScaleTransition(
+            alignment: Alignment.topRight,
+            scale: Tween<double>(begin: 0.85, end: 1.0).animate(
+              CurvedAnimation(parent: anim1, curve: Curves.easeOutCubic),
+            ),
+            child: child,
+          ),
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -162,23 +310,26 @@ class _CookbookFormModalState extends State<CookbookFormModal> {
                 ),
 
                 // Top Right Circle Action Button (+ when picking recipes, Close X when on form)
-                GlassIconButton(
-                  onTap: () {
-                    if (_isPickingRecipes) {
-                      // Shortcut to add new recipe/scan
-                      Navigator.pushNamed(context, AppRoutes.scan);
-                    } else if (widget.onCancel != null) {
-                      widget.onCancel!();
-                    } else {
-                      Navigator.pop(context);
-                    }
+                Builder(
+                  builder: (btnContext) {
+                    return GlassIconButton(
+                      onTap: () {
+                        if (_isPickingRecipes) {
+                          _showAddOptionsMenu(btnContext);
+                        } else if (widget.onCancel != null) {
+                          widget.onCancel!();
+                        } else {
+                          Navigator.pop(context);
+                        }
+                      },
+                      size: 42.r,
+                      child: Icon(
+                        _isPickingRecipes ? Icons.add_rounded : Icons.close_rounded,
+                        color: const Color(0xFF0F172A),
+                        size: 22.sp,
+                      ),
+                    );
                   },
-                  size: 42.r,
-                  child: Icon(
-                    _isPickingRecipes ? Icons.add_rounded : Icons.close_rounded,
-                    color: const Color(0xFF0F172A),
-                    size: 22.sp,
-                  ),
                 ),
               ],
             ),

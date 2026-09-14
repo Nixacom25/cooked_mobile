@@ -38,6 +38,13 @@ class _ExploreScreenState extends State<ExploreScreen> {
   late Future<List<Recipe>> _popularFuture;
   Timer? _refreshTimer;
 
+  // Background refreshes (the periodic timer, pull-to-refresh) keep showing
+  // this last-known-good data instead of resetting to a loading spinner -
+  // only the very first load (cache still null) shows one.
+  List<Map<String, dynamic>>? _cuisinesCache;
+  List<Map<String, dynamic>>? _categoriesCache;
+  List<Recipe>? _popularCache;
+
   int _refreshTimestamp = DateTime.now().millisecondsSinceEpoch;
 
   String _bustedUrl(String? url) {
@@ -58,9 +65,12 @@ class _ExploreScreenState extends State<ExploreScreen> {
     }
     setState(() {
       _cuisinesFuture = RecipeService.instance.getExploreCuisines(forceRefresh: force);
-      _categoriesFuture = RecipeService.instance.getExploreCategories(forceRefresh: force);
       _popularFuture = RecipeService.instance.getPopularRecipes(size: 10, forceRefresh: force);
+      _categoriesFuture = RecipeService.instance.getActiveExploreCategories(forceRefresh: force);
     });
+    _cuisinesFuture.then((v) { if (mounted) setState(() => _cuisinesCache = v); }).catchError((_) {});
+    _popularFuture.then((v) { if (mounted) setState(() => _popularCache = v); }).catchError((_) {});
+    _categoriesFuture.then((v) { if (mounted) setState(() => _categoriesCache = v); }).catchError((_) {});
   }
 
   @override
@@ -155,7 +165,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                   // 4. Card 3: Popular Now Card
                   _buildPopularNowSectionCard(),
 
-                  SizedBox(height: 140.h),
+                  SizedBox(height: 140.h + MediaQuery.of(context).padding.bottom),
                 ],
               ),
             ],
@@ -205,6 +215,10 @@ class _ExploreScreenState extends State<ExploreScreen> {
                   backgroundColor: const Color(0xFFF1F5F9),
                   borderColor: const Color(0xFFF1F5F9),
                   hintText: 'Search your recipes',
+                  suffixIcon: searchQuery.isNotEmpty ? Icons.close_rounded : null,
+                  onSuffixTap: searchQuery.isNotEmpty
+                      ? () => _searchCtrl.clear()
+                      : null,
                 ),
               ],
             ),
@@ -277,99 +291,90 @@ class _ExploreScreenState extends State<ExploreScreen> {
           SizedBox(height: 24.h),
 
           // ── "For You" Section ──
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16.w),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      "For You",
-                      style: TextStyle(
-                        fontFamily: 'Rubik',
-                        fontSize: 18.sp,
-                        fontWeight: FontWeight.w800,
-                        color: const Color(0xFF0F172A),
-                      ),
-                    ),
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.pushNamed(
-                          context,
-                          AppRoutes.viewAll,
-                          arguments: {
-                            'type': ViewAllType.exploreCategories,
-                            'title': 'Popular Categories',
-                          },
-                        );
-                      },
-                      child: Text(
-                        "View All",
-                        style: TextStyle(
-                          fontFamily: 'Rubik',
-                          fontSize: 14.sp,
-                          fontWeight: FontWeight.w700,
+          FutureBuilder<List<Map<String, dynamic>>>(
+            future: _categoriesFuture,
+            builder: (context, snapshot) {
+              // Background refreshes keep showing the last-known-good list
+              // instead of flashing back to a spinner; only the true first
+              // load (no cache yet) shows one.
+              final categories = _categoriesCache ?? snapshot.data ?? [];
+              if (categories.isEmpty) {
+                if (_categoriesCache == null &&
+                    snapshot.connectionState == ConnectionState.waiting) {
+                  return Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16.w),
+                    child: SizedBox(
+                      height: 200.h,
+                      child: Center(
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2.w,
                           color: const Color(0xFFC31E26),
                         ),
                       ),
                     ),
-                  ],
-                ),
-              ),
+                  );
+                }
+                return const SizedBox.shrink();
+              }
 
-              SizedBox(height: 14.h),
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16.w),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          "For You",
+                          style: TextStyle(
+                            fontFamily: 'Rubik',
+                            fontSize: 18.sp,
+                            fontWeight: FontWeight.w800,
+                            color: const Color(0xFF0F172A),
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.pushNamed(
+                              context,
+                              AppRoutes.viewAll,
+                              arguments: {
+                                'type': ViewAllType.exploreCategories,
+                                'title': 'Popular Categories',
+                              },
+                            );
+                          },
+                          child: Text(
+                            "View All",
+                            style: TextStyle(
+                              fontFamily: 'Rubik',
+                              fontSize: 14.sp,
+                              fontWeight: FontWeight.w700,
+                              color: const Color(0xFFC31E26),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
 
-              // ── For You Category Cards (Horizontal Scrollable) ──
-              FutureBuilder<List<Map<String, dynamic>>>(
-                future: _categoriesFuture,
-                builder: (context, snapshot) {
-                  final categories = snapshot.data ?? [];
+                  SizedBox(height: 14.h),
 
-                  final List<Map<String, String>> fallbackCategories = [
-                    {
-                      "name": "High Protein",
-                      "count": "15 recipes",
-                      "image": "assets/images/explore_autumn.png",
-                    },
-                    {
-                      "name": "Comfort Food",
-                      "count": "20 recipes",
-                      "image": "assets/images/explore_summer.png",
-                    },
-                    {
-                      "name": "Quick & Easy",
-                      "count": "18 recipes",
-                      "image": "assets/images/explore_autumn.png",
-                    },
-                    {
-                      "name": "Healthy & Clean",
-                      "count": "22 recipes",
-                      "image": "assets/images/explore_summer.png",
-                    },
-                    {
-                      "name": "Low Carb",
-                      "count": "14 recipes",
-                      "image": "assets/images/explore_autumn.png",
-                    },
-                  ];
-
-                  final list = categories.isNotEmpty ? categories : fallbackCategories;
-
-                  return SizedBox(
+                  // ── For You Category Cards (Horizontal Scrollable) ──
+                  SizedBox(
                     height: 200.h,
                     child: ListView.builder(
                       scrollDirection: Axis.horizontal,
                       padding: EdgeInsets.symmetric(horizontal: 16.w),
-                      itemCount: list.length,
+                      itemCount: categories.length,
                       itemBuilder: (context, i) {
-                        final item = list[i];
+                        final item = categories[i];
                         final name = (item['name'] as String?) ?? "Category";
-                        final count = item['count'] != null
-                            ? item['count'].toString()
-                            : (item['recipeCount'] != null ? "${item['recipeCount']} recipes" : "0 recipes");
-                        final img = (item['image'] as String?) ?? "assets/images/explore_autumn.png";
+                        final count = item['recipeCount'] != null
+                            ? "${item['recipeCount']} recipes"
+                            : "0 recipes";
+                        final img = (item['image'] as String?) ?? "";
 
                         return Padding(
                           padding: EdgeInsets.only(right: 14.w),
@@ -395,10 +400,10 @@ class _ExploreScreenState extends State<ExploreScreen> {
                         );
                       },
                     ),
-                  );
-                },
-              ),
-            ],
+                  ),
+                ],
+              );
+            },
           ),
           ],
         ],
@@ -616,25 +621,35 @@ class _ExploreScreenState extends State<ExploreScreen> {
 
   // ── Section 2: Cuisines Card (Full Width) ───────────────────────────────────
   Widget _buildCuisinesSectionCard() {
-    final List<Map<String, String>> fallbackCuisines = [
-      {"name": "French", "count": "24 recipes", "image": "assets/cuisine/french.png"},
-      {"name": "Italian", "count": "21 recipes", "image": "assets/cuisine/italian.png"},
-      {"name": "Mexican", "count": "28 recipes", "image": "assets/cuisine/mexican.png"},
-      {"name": "Greek", "count": "19 recipes", "image": "assets/cuisine/greek.png"},
-      {"name": "Japanese", "count": "25 recipes", "image": "assets/cuisine/japanese.png"},
-      {"name": "Korean", "count": "22 recipes", "image": "assets/cuisine/korean.png"},
-      {"name": "Mediterranean", "count": "30 recipes", "image": "assets/cuisine/mediterranean.png"},
-      {"name": "Caribbean", "count": "15 recipes", "image": "assets/cuisine/caribbean.png"},
-      {"name": "Asian", "count": "17 recipes", "image": "assets/cuisine/chinese.png"},
-      {"name": "Indian", "count": "32 recipes", "image": "assets/cuisine/indian.png"},
-      {"name": "West African", "count": "26 recipes", "image": "assets/cuisine/west-african.png"},
-      {"name": "East African", "count": "18 recipes", "image": "assets/cuisine/east-african.png"},
-      {"name": "Middle Eastern", "count": "20 recipes", "image": "assets/cuisine/middle-east.png"},
-      {"name": "Thai", "count": "23 recipes", "image": "assets/cuisine/thai.png"},
-      {"name": "Spanish", "count": "16 recipes", "image": "assets/cuisine/spanish.png"},
-    ];
+    return FutureBuilder<List<Map<String, dynamic>>>(
+      future: _cuisinesFuture,
+      builder: (context, snapshot) {
+        final list = _cuisinesCache ?? snapshot.data ?? [];
+        if (list.isEmpty) {
+          if (_cuisinesCache == null &&
+              snapshot.connectionState == ConnectionState.waiting) {
+            return Container(
+              width: double.infinity,
+              padding: EdgeInsets.symmetric(vertical: 20.h),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(24.r),
+              ),
+              child: SizedBox(
+                height: 125.h,
+                child: Center(
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.w,
+                    color: const Color(0xFFC31E26),
+                  ),
+                ),
+              ),
+            );
+          }
+          return const SizedBox.shrink();
+        }
 
-    return Container(
+        return Container(
       width: double.infinity,
       padding: EdgeInsets.symmetric(vertical: 20.h),
       decoration: BoxDecoration(
@@ -685,14 +700,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
 
           SizedBox(height: 16.h),
 
-          FutureBuilder<List<Map<String, dynamic>>>(
-            future: _cuisinesFuture,
-            builder: (context, snapshot) {
-              final list = (snapshot.hasData && snapshot.data!.isNotEmpty)
-                  ? snapshot.data!
-                  : fallbackCuisines;
-
-              return SizedBox(
+          SizedBox(
                 height: 125.h,
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
@@ -781,11 +789,11 @@ class _ExploreScreenState extends State<ExploreScreen> {
                     );
                   },
                 ),
-              );
-            },
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
