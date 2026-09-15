@@ -10,6 +10,20 @@ import '../../widgets/red_header_background.dart';
 class SavingsDetailsScreen extends StatelessWidget {
   const SavingsDetailsScreen({super.key});
 
+  // Same formula as the recipe detail page's "Estimated savings" card, so
+  // both screens agree on the number for the same recipe.
+  static double _estimatedSavings(Recipe r) {
+    final servings = (r.servings != null && r.servings! > 0) ? r.servings! : 2;
+    final pricePerServing = (r.totalPrice != null && r.totalPrice! > 0)
+        ? r.totalPrice! / servings
+        : 3.50;
+    double restaurantPerServing = pricePerServing * 2.5 + 5.0;
+    if (restaurantPerServing < 14.75) restaurantPerServing = 14.75;
+    final makeAtHome = pricePerServing * servings;
+    final orderNearby = restaurantPerServing * servings;
+    return orderNearby - makeAtHome;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -75,13 +89,7 @@ class SavingsDetailsScreen extends StatelessWidget {
 
                         double totalSaved = 0.0;
                         for (var r in displayRecipes) {
-                          if (r.totalPrice != null && r.totalPrice! > 0) {
-                            double makeAtHome = r.totalPrice!;
-                            double orderNearby = makeAtHome * 2.5 + 5.0;
-                            totalSaved += (orderNearby - makeAtHome);
-                          } else {
-                            totalSaved += 14.0;
-                          }
+                          totalSaved += _estimatedSavings(r);
                         }
 
                         if (displayRecipes.isEmpty) {
@@ -163,12 +171,7 @@ class SavingsDetailsScreen extends StatelessWidget {
                                 separatorBuilder: (context, index) => SizedBox(height: 14.h),
                                 itemBuilder: (context, index) {
                                   final recipe = displayRecipes[index];
-                                  double itemSavings = 14.0;
-                                  if (recipe.totalPrice != null && recipe.totalPrice! > 0) {
-                                    double makeAtHome = recipe.totalPrice!;
-                                    double orderNearby = makeAtHome * 2.5 + 5.0;
-                                    itemSavings = orderNearby - makeAtHome;
-                                  }
+                                  final itemSavings = _estimatedSavings(recipe);
 
                                   return SavedRecipeCard(
                                     recipe: recipe,

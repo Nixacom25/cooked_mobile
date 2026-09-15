@@ -3135,15 +3135,16 @@ class _SavingsCardState extends State<_SavingsCard>
 
         if (scanRecipes.isEmpty) return const SizedBox.shrink();
 
+        // Same formula as the recipe detail page's "Estimated savings" card.
         double totalSaved = 0.0;
         for (var r in scanRecipes) {
-          if (r.totalPrice != null && r.totalPrice! > 0) {
-            double makeAtHome = r.totalPrice!;
-            double orderNearby = makeAtHome * 2.5 + 5.0;
-            totalSaved += (orderNearby - makeAtHome);
-          } else {
-            totalSaved += 14.0;
-          }
+          final servings = (r.servings != null && r.servings! > 0) ? r.servings! : 2;
+          final pricePerServing = (r.totalPrice != null && r.totalPrice! > 0)
+              ? r.totalPrice! / servings
+              : 3.50;
+          double restaurantPerServing = pricePerServing * 2.5 + 5.0;
+          if (restaurantPerServing < 14.75) restaurantPerServing = 14.75;
+          totalSaved += (restaurantPerServing * servings) - (pricePerServing * servings);
         }
         if (totalSaved <= 0) return const SizedBox.shrink();
         final double displayAmount = totalSaved;

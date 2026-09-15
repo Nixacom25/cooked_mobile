@@ -583,20 +583,24 @@ class _CookbookFormModalState extends State<CookbookFormModal> {
 
     setState(() => _isSaving = true);
     try {
-      final List<String> validRecipeIds = [];
-      for (int i = 0; i < _selectedRecipes.length; i++) {
-        Recipe r = _selectedRecipes[i];
-        if (r.id.isEmpty) {
-          r = await RecipeService.instance.createRecipe(r);
-          _selectedRecipes[i] = r;
-          validRecipeIds.add(r.id);
-        } else {
-          validRecipeIds.add(r.id);
-          // Trigger validation in background asynchronously so saving isn't blocked by network latency
-          RecipeService.instance.validateRecipe(r.id).catchError((_) => r);
-        }
-        RecipeService.instance.markRecipeAsSaved(r);
-      }
+      // Create any not-yet-saved recipes in parallel instead of one await
+      // per recipe in sequence - with several new recipes selected, that
+      // sequential chain was the main reason this felt slow.
+      final validRecipeIds = List<String>.filled(_selectedRecipes.length, '');
+      await Future.wait(
+        List.generate(_selectedRecipes.length, (i) async {
+          Recipe r = _selectedRecipes[i];
+          if (r.id.isEmpty) {
+            r = await RecipeService.instance.createRecipe(r);
+            _selectedRecipes[i] = r;
+          } else {
+            // Trigger validation in background asynchronously so saving isn't blocked by network latency
+            RecipeService.instance.validateRecipe(r.id).catchError((_) => r);
+          }
+          validRecipeIds[i] = r.id;
+          RecipeService.instance.markRecipeAsSaved(r);
+        }),
+      );
 
       Cookbook cb;
       if (_isEdit) {

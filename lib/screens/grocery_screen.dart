@@ -653,6 +653,7 @@ class GroceryScreenState extends State<GroceryScreen> with SingleTickerProviderS
                       .toList(),
                   date: date,
                   recipeId: fullRecipe.id,
+                  recipeName: fullRecipe.name,
                   source: 'recipe',
                 );
               }
@@ -707,20 +708,11 @@ class _ItemRow extends StatelessWidget {
       ),
       child: InkWell(
         onTap: isPlaceholder ? null : onToggle,
-        child: Opacity(
-          opacity: isPlaceholder ? 0.6 : 1.0,
-          child: Padding(
+        child: Padding(
             padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 14.h),
             child: Row(
               children: [
-                if (isPlaceholder)
-                  SizedBox(
-                    width: 22.r,
-                    height: 22.r,
-                    child: const AppLoadingIndicator(),
-                  )
-                else
-                  _AnimatedCheckbox(isBought: item.isBought),
+                _AnimatedCheckbox(isBought: item.isBought),
                 SizedBox(width: 14.w),
                 if (item.ingredientIcon != null && item.ingredientIcon!.isNotEmpty) ...[
                   Text(
@@ -759,7 +751,6 @@ class _ItemRow extends StatelessWidget {
               ],
             ),
           ),
-        ),
       ),
     );
   }
@@ -1426,25 +1417,31 @@ class _InlineAddRowState extends State<_InlineAddRow> {
       return;
     }
 
-    final parts = rawText.split('-');
-    if (parts.length < 2) {
+    String? name;
+    String? qty;
+
+    if (rawText.contains('-')) {
+      // "Ingredient - Qty" (e.g. "Tomato - 2")
+      final parts = rawText.split('-');
+      if (parts.length >= 2) {
+        name = parts[0].trim();
+        qty = parts.sublist(1).join('-').trim();
+      }
+    } else {
+      // "Qty Ingredient" (e.g. "2 green beans")
+      final match = RegExp(r'^(\d+(?:\.\d+)?(?:/\d+)?)\s+(.+)$').firstMatch(rawText);
+      if (match != null) {
+        qty = match.group(1)!.trim();
+        name = match.group(2)!.trim();
+      }
+    }
+
+    if (name == null || qty == null || name.isEmpty || qty.isEmpty) {
       IosToast.show(
         context,
-        message: 'Use format: Ingredient - Qty (e.g. Tomato - 2)',
+        message: 'Please add the quantity following the format, e.g: garlic - 2 or 2 garlic.',
         type: ToastType.error,
       );
-      return;
-    }
-
-    final name = parts[0].trim();
-    final qty = parts.sublist(1).join('-').trim();
-
-    if (name.isEmpty) {
-      IosToast.show(context, message: 'Please enter an ingredient name', type: ToastType.error);
-      return;
-    }
-    if (qty.isEmpty) {
-      IosToast.show(context, message: 'Please enter a quantity', type: ToastType.error);
       return;
     }
 
@@ -1589,7 +1586,7 @@ class _InlineAddRowState extends State<_InlineAddRow> {
                       color: const Color(0xFF0F172A),
                     ),
                     decoration: InputDecoration(
-                      hintText: 'e.g. Garlic - 2 cloves',
+                      hintText: 'e.g. Garlic - 2 or 2 Garlic',
                       hintStyle: TextStyle(
                         fontFamily: 'Rubik',
                         fontSize: 15.sp,

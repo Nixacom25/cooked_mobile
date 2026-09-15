@@ -75,17 +75,22 @@ class GroceryService {
     required String quantity,
     String? icon,
     String? recipeId,
+    String? recipeName,
     DateTime? date,
     String? source,
   }) async {
     final url = Uri.parse('${ApiConfig.baseUrl}/grocery-items');
 
-    // 1. Insert partial skeleton (placeholder)
+    // 1. Insert partial skeleton (placeholder) - carries recipeName up front
+    // so it renders under the right recipe group immediately instead of
+    // flashing ungrouped until the background refresh lands.
     if (myGroceriesNotifier.value != null) {
       final placeholder = GroceryItem(
         id: 'pending_${DateTime.now().millisecondsSinceEpoch}',
         ingredientName: name,
         ingredientIcon: icon,
+        recipeId: recipeId,
+        recipeName: recipeName,
         quantity: quantity,
         isBought: false,
         plannedDate: date,
@@ -113,8 +118,9 @@ class GroceryService {
         // Log Analytics event
         AnalyticsService.instance.logGroceryItemAdded(name: name, source: source);
 
-        // Refresh list to replace placeholder with real data
-        await getMyGroceries(forceRefresh: true);
+        // Sync the real record in the background - the placeholder already
+        // shows correctly placed, so the caller isn't blocked on this.
+        unawaited(getMyGroceries(forceRefresh: true));
         return GroceryItem.fromJson(jsonDecode(response.body));
       } else {
         throw Exception('Failed to add item');
@@ -133,6 +139,7 @@ class GroceryService {
   Future<List<GroceryItem>> addMultipleGroceryItems({
     required List<({String name, String quantity, String? icon})> items,
     String? recipeId,
+    String? recipeName,
     DateTime? date,
     String? source,
   }) async {
@@ -141,12 +148,16 @@ class GroceryService {
     final url = Uri.parse('${ApiConfig.baseUrl}/grocery-items');
     final headers = await _getHeaders();
 
-    // 1. Insert placeholders optimistic update
+    // 1. Insert placeholders optimistic update - carrying recipeName so
+    // they render already grouped under their recipe, in place, with no
+    // visible re-sort once the background sync completes.
     if (myGroceriesNotifier.value != null) {
       final placeholders = items.map((ing) => GroceryItem(
         id: 'pending_${DateTime.now().microsecondsSinceEpoch}_${ing.name}',
         ingredientName: ing.name,
         ingredientIcon: ing.icon,
+        recipeId: recipeId,
+        recipeName: recipeName,
         quantity: ing.quantity,
         isBought: false,
         plannedDate: date,
@@ -176,8 +187,10 @@ class GroceryService {
         }
       }));
 
-      // 3. Single refresh at the end
-      return await getMyGroceries(forceRefresh: true);
+      // 3. Sync in the background - placeholders already show correctly
+      // placed, so the caller returns immediately instead of waiting.
+      unawaited(getMyGroceries(forceRefresh: true));
+      return myGroceriesNotifier.value ?? [];
     } catch (e) {
       // Remove placeholders on error
       if (myGroceriesNotifier.value != null) {

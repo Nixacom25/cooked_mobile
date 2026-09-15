@@ -406,8 +406,26 @@ class RecipeService {
     } catch (_) {}
 
     // Merge with temporary local scan suggestions
-    final merged = await _mergeTemporarySuggestions(backendResults);
-    
+    final merged = List<Recipe>.from(await _mergeTemporarySuggestions(backendResults));
+
+    // Personalized suggestions can be very sparse for a newer account - top
+    // up with popular recipes so the row never reads as near-empty.
+    if (merged.length < 6) {
+      try {
+        final popular = await getPopularRecipes(size: 20, forceRefresh: forceRefresh);
+        final existingIds = merged.map((r) => r.id).toSet();
+        final existingNames = merged.map((r) => r.name.toLowerCase()).toSet();
+        for (final r in popular) {
+          if (merged.length >= 6) break;
+          if (existingIds.contains(r.id)) continue;
+          if (existingNames.contains(r.name.toLowerCase())) continue;
+          merged.add(r);
+          existingIds.add(r.id);
+          existingNames.add(r.name.toLowerCase());
+        }
+      } catch (_) {}
+    }
+
     _cache[cacheKey] = merged;
     homeSuggestionsNotifier.value = merged;
     return merged;
@@ -623,62 +641,51 @@ class RecipeService {
     return list;
   }
 
-  /// Best-effort admin taxonomy lookup: {name -> (active, image)}. Never
-  /// throws - callers degrade to "keep everything, use recipe photos" when
-  /// this comes back empty (auth edge case, network hiccup, etc).
-  Future<Map<String, Map<String, dynamic>>> _fetchAdminCategoryTaxonomy() async {
+  // Same shape as getExploreCuisines(): the dedicated backend endpoint now
+  // does the active-filtering and returns each category's own admin image
+  // directly (backend query fixed to use the same LEFT JOIN + GROUP BY
+  // pattern the working cuisines query already used). Falls back to
+  // deriving from real recipes only if that call itself fails outright.
+  // The admin taxonomy list is the source of truth here (own real name,
+  // image, active flag, and a recipeCount it already computes correctly -
+  // confirmed non-zero in the admin panel). Recipe categories are tagged
+  // with a completely different, unrelated set of raw names ("Side
+  // Dishes", "Miscellaneous"...) than the curated admin list ("Protein
+  // Plates", "Comfort Food"...), so matching one against the other was
+  // never going to work - use the admin list directly instead.
+  Future<List<Map<String, dynamic>>> getActiveExploreCategories({bool forceRefresh = false}) async {
     try {
       final url = Uri.parse('${ApiConfig.baseUrl}/api/admin/categories?type=CATEGORY');
       final response = await http.get(url, headers: await _getHeaders());
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
-        return {
-          for (final raw in data.map((e) => Map<String, dynamic>.from(e)))
-            (raw['name'] as String).trim(): raw,
-        };
+        final list = data
+            .map((e) => Map<String, dynamic>.from(e))
+            .where((item) =>
+                item['active'] == true && ((item['recipeCount'] as num?) ?? 0) > 0)
+            .map((item) => {
+                  'name': item['name'],
+                  'recipeCount': item['recipeCount'],
+                  'image': item['image'] ?? '',
+                })
+            .toList();
+        list.sort((a, b) => (b['recipeCount'] as num).compareTo(a['recipeCount'] as num));
+        if (list.isNotEmpty) return list;
       }
     } catch (_) {}
-    return {};
-  }
 
-  /// Merges recipe-derived categories with the admin taxonomy: drops a name
-  /// only when the admin list positively marks it inactive (an unmanaged tag
-  /// with no admin entry still shows), and swaps in the admin's own image
-  /// when one is set for that category, keeping the recipe photo otherwise.
-  Future<List<Map<String, dynamic>>> _applyAdminTaxonomy(
-    List<Map<String, dynamic>> derived,
-  ) async {
-    if (derived.isEmpty) return derived;
-    final taxonomy = await _fetchAdminCategoryTaxonomy();
-    if (taxonomy.isEmpty) return derived;
+    // Admin endpoint unreachable (auth edge case, network) - fall back to
+    // deriving from real recipes so the section isn't left completely
+    // blank, even though this path can't honor the active flag.
+    try {
+      final result = await getExploreCategories(forceRefresh: forceRefresh);
+      if (result.isNotEmpty) return result;
+    } catch (_) {}
 
-    final list = derived
-        .where((item) {
-          final entry = taxonomy[item['name']];
-          return entry == null || entry['active'] == true;
-        })
-        .map((item) {
-          final entry = taxonomy[item['name']];
-          final adminImage = entry?['image'] as String?;
-          if (adminImage != null && adminImage.isNotEmpty) {
-            return {...item, 'image': adminImage};
-          }
-          return item;
-        })
-        .toList();
-    list.sort((a, b) => (b['recipeCount'] as int).compareTo(a['recipeCount'] as int));
-    return list;
-  }
-
-  Future<List<Map<String, dynamic>>> getActiveExploreCategories({bool forceRefresh = false}) async {
     List<Recipe> recipes = [];
     try {
       recipes = await getExploreRecipes(size: 100, forceRefresh: forceRefresh);
     } catch (_) {}
-    // Any hiccup on the primary call (timeout, transient error) - fall back
-    // to the popular-recipes endpoint, which this screen already relies on
-    // successfully elsewhere, instead of letting the whole future fail and
-    // silently hiding the section.
     if (recipes.isEmpty) {
       try {
         recipes = await getPopularRecipes(size: 50, forceRefresh: forceRefresh);
@@ -686,7 +693,9 @@ class RecipeService {
     }
     if (recipes.isEmpty) return [];
 
-    return _applyAdminTaxonomy(categoriesFromRecipeList(recipes));
+    final derived = categoriesFromRecipeList(recipes);
+
+    return derived;
   }
 
   Future<List<Creator>> getTopCreators({int page = 0, int size = 10}) async {
@@ -1018,7 +1027,6 @@ class RecipeService {
         if (_favoriteKey(item) != key) return item;
         changed = true;
         item.isFavorite = isFavorite;
-        item.isInCookbook = isFavorite;
         return item;
       }).toList();
       if (changed) notifier.value = updated;
@@ -1028,13 +1036,13 @@ class RecipeService {
     updateList(recentImportsNotifier);
     updateList(homeSuggestionsNotifier);
     recipe.isFavorite = isFavorite;
-    recipe.isInCookbook = isFavorite;
   }
 
   Future<void> markRecipeAsSaved(Recipe recipe) async {
     _publishFavoriteState(recipe, true);
+    // isInCookbook reflects real cookbook membership only (server-computed
+    // from the recipe's cookbooks relation) - favoriting must never flip it.
     final updated = recipe.copyWith(
-      isInCookbook: true,
       isValidated: true,
       isSuggested: false,
     );
@@ -1084,7 +1092,7 @@ class RecipeService {
     final idx = current.indexWhere((r) => r.id == id);
     if (idx != -1) {
       final newList = List<Recipe>.from(current);
-      newList[idx] = newList[idx].copyWith(isValidated: true, isInCookbook: true);
+      newList[idx] = newList[idx].copyWith(isValidated: true);
       myRecipesNotifier.value = newList;
     }
 

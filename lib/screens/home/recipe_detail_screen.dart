@@ -286,9 +286,13 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
     if (r == null) return false;
     if (r.isInCookbook) return true;
 
+    // Match by id only - matching by name as well (a previous version did)
+    // produced false positives whenever an unrelated cookbook happened to
+    // contain a different recipe that shared the same name, same issue
+    // already fixed for the favorite heart above.
     if (cookbooks != null) {
       for (final cb in cookbooks) {
-        if (cb.recipes.any((item) => item.id == r.id || (item.name.isNotEmpty && item.name.toLowerCase() == r.name.toLowerCase()))) {
+        if (cb.recipes.any((item) => item.id.isNotEmpty && item.id == r.id)) {
           return true;
         }
       }
@@ -1583,7 +1587,7 @@ class _SavingsBreakdownCard extends StatelessWidget {
                 style: TextStyle(
                   fontFamily: 'Rubik',
                   fontSize: 20.sp,
-                  color: const Color(0xFF10B981),
+                  color: const Color(0xFF15803D),
                   fontWeight: FontWeight.w800,
                 ),
               ),

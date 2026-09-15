@@ -243,13 +243,13 @@ class CookbookCardTile extends StatelessWidget {
         width: 32.r,
         height: 32.r,
         decoration: const BoxDecoration(
-          color: Color(0xFFE2E8F0),
+          color: Colors.white,
           shape: BoxShape.circle,
         ),
         child: Icon(
           Icons.menu_book_rounded,
           size: 16.sp,
-          color: const Color(0xFF475569),
+          color: const Color(0xFFC31E26),
         ),
       );
     }

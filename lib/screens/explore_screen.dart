@@ -242,14 +242,9 @@ class _ExploreScreenState extends State<ExploreScreen> {
                   padding: EdgeInsets.only(right: 8.w),
                   child: GestureDetector(
                     onTap: () {
-                      Navigator.pushNamed(
-                        context,
-                        AppRoutes.viewAll,
-                        arguments: {
-                          'type': ViewAllType.exploreRecipesByCategory,
-                          'title': tag["name"]!,
-                          'category': tag["name"]!,
-                        },
+                      _searchCtrl.value = TextEditingValue(
+                        text: tag["name"]!,
+                        selection: TextSelection.collapsed(offset: tag["name"]!.length),
                       );
                     },
                     child: Container(
@@ -425,7 +420,10 @@ class _ExploreScreenState extends State<ExploreScreen> {
 
         final lowerQuery = query.toLowerCase();
         final matches = (snapshot.data ?? [])
-            .where((r) => r.name.toLowerCase().contains(lowerQuery))
+            .where((r) =>
+                r.name.toLowerCase().contains(lowerQuery) ||
+                (r.cuisine?.toLowerCase().contains(lowerQuery) ?? false) ||
+                (r.categories?.any((c) => c.toLowerCase().contains(lowerQuery)) ?? false))
             .toList();
 
         if (matches.isEmpty) {

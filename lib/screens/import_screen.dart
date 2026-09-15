@@ -273,8 +273,21 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
 
     try {
       final recipe = await RecipeService.instance.importRecipeFromUrl(url);
+
+      // A 200 response with nothing usable extracted (no ingredients/steps,
+      // or a generic placeholder title) isn't a real result - treat it the
+      // same as a failed import instead of opening an empty recipe page.
+      final hasContent = recipe.ingredients.isNotEmpty || recipe.steps.isNotEmpty;
+      final hasRealName = recipe.name.trim().isNotEmpty &&
+          !recipe.name.trim().toLowerCase().contains('title of recipe');
+      if (!hasContent || !hasRealName) {
+        throw Exception(
+          "We couldn't extract this recipe from that link. Try a different link or paste it manually.",
+        );
+      }
+
       SharingService.instance.consumeSharedText();
-      
+
       if (!mounted) return;
 
       Navigator.pushNamed(
@@ -282,7 +295,7 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
         AppRoutes.recipeDetail,
         arguments: {'recipe': recipe, 'isPreview': true},
       );
-      
+
       IosToast.show(
         context,
         message: 'Recipe imported successfully!',
