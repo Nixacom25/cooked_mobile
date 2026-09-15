@@ -609,50 +609,16 @@ class RecipeService {
     }
   }
 
-  // The public /recipes/explore/categories endpoint's count query is broken
-  // (always 0). This derives real categories + counts + images directly
-  // from actual EXPLORE recipes (always reachable, no auth edge cases),
-  // then narrows to active-only using the admin taxonomy list when that
-  // call succeeds - same active/inactive rule as cuisines, without ever
-  // blocking the section from showing if that second call fails.
-  /// Pure, network-free: counts categories + picks a representative image
-  /// straight from an already-fetched recipe list. No await, cannot fail.
-  List<Map<String, dynamic>> categoriesFromRecipeList(List<Recipe> recipes) {
-    final Map<String, int> counts = {};
-    final Map<String, String> images = {};
-    for (final r in recipes) {
-      for (final cat in (r.categories ?? [])) {
-        final name = cat.trim();
-        if (name.isEmpty) continue;
-        counts[name] = (counts[name] ?? 0) + 1;
-        if ((images[name] ?? '').isEmpty && (r.image ?? '').isNotEmpty) {
-          images[name] = r.image!;
-        }
-      }
-    }
-    final list = counts.keys
-        .map((name) => {
-              'name': name,
-              'recipeCount': counts[name],
-              'image': images[name] ?? '',
-            })
-        .toList();
-    list.sort((a, b) => (b['recipeCount'] as int).compareTo(a['recipeCount'] as int));
-    return list;
-  }
-
-  // Same shape as getExploreCuisines(): the dedicated backend endpoint now
-  // does the active-filtering and returns each category's own admin image
-  // directly (backend query fixed to use the same LEFT JOIN + GROUP BY
-  // pattern the working cuisines query already used). Falls back to
-  // deriving from real recipes only if that call itself fails outright.
-  // The admin taxonomy list is the source of truth here (own real name,
-  // image, active flag, and a recipeCount it already computes correctly -
-  // confirmed non-zero in the admin panel). Recipe categories are tagged
-  // with a completely different, unrelated set of raw names ("Side
-  // Dishes", "Miscellaneous"...) than the curated admin list ("Protein
-  // Plates", "Comfort Food"...), so matching one against the other was
-  // never going to work - use the admin list directly instead.
+  // Only ever returns categories with active=true - never falls back to an
+  // unfiltered/derived list, since showing an inactive category is worse
+  // than showing none. The admin taxonomy list is the primary source of
+  // truth (own real name, image, active flag, and a correctly computed
+  // recipeCount - confirmed non-zero in the admin panel); recipe-tagged
+  // category names ("Side Dishes", "Miscellaneous"...) are a different,
+  // unrelated set from the curated admin list ("Protein Plates", "Comfort
+  // Food"...), so deriving from recipes can't honor the active flag at all.
+  // Falls back to the dedicated public endpoint (same active=true filter,
+  // applied server-side) only if the admin call fails outright.
   Future<List<Map<String, dynamic>>> getActiveExploreCategories({bool forceRefresh = false}) async {
     try {
       final url = Uri.parse('${ApiConfig.baseUrl}/api/admin/categories?type=CATEGORY');
@@ -674,28 +640,17 @@ class RecipeService {
       }
     } catch (_) {}
 
-    // Admin endpoint unreachable (auth edge case, network) - fall back to
-    // deriving from real recipes so the section isn't left completely
-    // blank, even though this path can't honor the active flag.
+    // Admin endpoint unreachable - fall back to the dedicated public
+    // endpoint, which applies the exact same active=true filter server-side.
+    // Deliberately no further fallback to raw recipe-derived categories:
+    // that path can't honor the active flag at all, and showing an
+    // inactive category is worse than showing none.
     try {
       final result = await getExploreCategories(forceRefresh: forceRefresh);
-      if (result.isNotEmpty) return result;
+      return result;
     } catch (_) {}
 
-    List<Recipe> recipes = [];
-    try {
-      recipes = await getExploreRecipes(size: 100, forceRefresh: forceRefresh);
-    } catch (_) {}
-    if (recipes.isEmpty) {
-      try {
-        recipes = await getPopularRecipes(size: 50, forceRefresh: forceRefresh);
-      } catch (_) {}
-    }
-    if (recipes.isEmpty) return [];
-
-    final derived = categoriesFromRecipeList(recipes);
-
-    return derived;
+    return [];
   }
 
   Future<List<Creator>> getTopCreators({int page = 0, int size = 10}) async {
