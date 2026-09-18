@@ -12,6 +12,7 @@ import '../core/widgets/ios_toast.dart';
 import '../core/utils/error_helper.dart';
 import 'app_loading_indicator.dart';
 import 'cookbook_form_modal.dart';
+import '../core/theme/app_theme.dart';
 
 enum _SheetMode { list, create }
 
@@ -98,7 +99,7 @@ class _AddToCookbookSheetState extends State<AddToCookbookSheet> {
                   width: 36.w,
                   height: 4.h,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFE5E7EB),
+                    color: context.colors.divider,
                     borderRadius: BorderRadius.circular(2.r),
                   ),
                 ),
@@ -140,19 +141,19 @@ class _AddToCookbookSheetState extends State<AddToCookbookSheet> {
                       width: 50.w,
                       height: 50.w,
                       fit: BoxFit.cover,
-                      placeholder: (_, __) => Container(color: const Color(0xFFF3F4F6)),
+                      placeholder: (_, __) => Container(color: context.colors.surface),
                       errorWidget: (_, __, ___) => Container(
                         width: 50.w,
                         height: 50.w,
-                        color: const Color(0xFFF3F4F6),
-                        child: Icon(Icons.fastfood_rounded, color: const Color(0xFFD1D5DB), size: 20.sp),
+                        color: context.colors.surface,
+                        child: Icon(Icons.fastfood_rounded, color: context.colors.border, size: 20.sp),
                       ),
                     )
                   : Container(
                       width: 50.w,
                       height: 50.w,
-                      color: const Color(0xFFF3F4F6),
-                      child: Icon(Icons.fastfood_rounded, color: const Color(0xFFD1D5DB), size: 20.sp),
+                      color: context.colors.surface,
+                      child: Icon(Icons.fastfood_rounded, color: context.colors.border, size: 20.sp),
                     ),
               ),
               SizedBox(width: 12.w),
@@ -165,7 +166,7 @@ class _AddToCookbookSheetState extends State<AddToCookbookSheet> {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        color: const Color(0xFF1A1A1A),
+                        color: context.colors.textPrimary,
                         fontSize: 15.sp,
                         fontWeight: FontWeight.w600,
                         fontFamily: 'SF Pro',
@@ -174,7 +175,7 @@ class _AddToCookbookSheetState extends State<AddToCookbookSheet> {
                     Text(
                       '${widget.recipe.kcal} kcal • ${widget.recipe.cookTime} min',
                       style: TextStyle(
-                        color: const Color(0xFF6B7280),
+                        color: context.colors.textMuted,
                         fontSize: 13.sp,
                         fontFamily: 'SF Pro',
                       ),
@@ -186,7 +187,7 @@ class _AddToCookbookSheetState extends State<AddToCookbookSheet> {
           ),
         ),
         
-        Divider(color: const Color(0xFFE5E7EB), height: 32.h),
+        Divider(color: context.colors.divider, height: 32.h),
 
         // Cookbooks Header
         Padding(
@@ -197,7 +198,7 @@ class _AddToCookbookSheetState extends State<AddToCookbookSheet> {
               Text(
                 'Cookbooks',
                 style: TextStyle(
-                  color: const Color(0xFF111827),
+                  color: context.colors.textPrimary,
                   fontSize: 16.sp,
                   fontWeight: FontWeight.bold,
                   fontFamily: 'SF Pro',
@@ -208,7 +209,7 @@ class _AddToCookbookSheetState extends State<AddToCookbookSheet> {
                 child: Text(
                   'New Cookbook',
                   style: TextStyle(
-                    color: const Color(0xFFC83A2D), // Red as requested
+                    color: context.colors.accent, // Red as requested
                     fontSize: 14.sp,
                     fontWeight: FontWeight.w600,
                     fontFamily: 'SF Pro',
@@ -267,19 +268,19 @@ class _AddToCookbookSheetState extends State<AddToCookbookSheet> {
                       width: 54.w,
                       height: 54.w,
                       fit: BoxFit.cover,
-                      placeholder: (_, __) => Container(color: const Color(0xFFF3F4F6)),
+                      placeholder: (_, __) => Container(color: context.colors.surface),
                       errorWidget: (_, __, ___) => Container(
                         width: 54.w,
                         height: 54.w,
-                        color: const Color(0xFFF3F4F6),
-                        child: Icon(Icons.menu_book_rounded, color: const Color(0xFFD1D5DB), size: 24.sp),
+                        color: context.colors.surface,
+                        child: Icon(Icons.menu_book_rounded, color: context.colors.border, size: 24.sp),
                       ),
                     )
                   : Container(
                       width: 54.w,
                       height: 54.w,
-                      color: const Color(0xFFF3F4F6),
-                      child: Icon(Icons.menu_book_rounded, color: const Color(0xFFD1D5DB), size: 24.sp),
+                      color: context.colors.surface,
+                      child: Icon(Icons.menu_book_rounded, color: context.colors.border, size: 24.sp),
                     ),
             ),
             SizedBox(width: 14.w),
@@ -290,7 +291,7 @@ class _AddToCookbookSheetState extends State<AddToCookbookSheet> {
                   Text(
                     cb.name.toTitleCase(),
                     style: TextStyle(
-                      color: const Color(0xFF1F2937),
+                      color: context.colors.textPrimary,
                       fontSize: 15.sp,
                       fontWeight: FontWeight.w500,
                       fontFamily: 'SF Pro',
@@ -299,7 +300,7 @@ class _AddToCookbookSheetState extends State<AddToCookbookSheet> {
                   Text(
                     '${cb.recipes.length} recipes',
                     style: TextStyle(
-                      color: const Color(0xFF6B7280),
+                      color: context.colors.textMuted,
                       fontSize: 13.sp,
                       fontFamily: 'SF Pro',
                     ),
@@ -310,7 +311,7 @@ class _AddToCookbookSheetState extends State<AddToCookbookSheet> {
             if (shouldShowAction)
               Icon(
                 isSelected ? Icons.remove_circle_outline_rounded : Icons.add_circle_outline_rounded,
-                color: isSelected ? const Color(0xFFC83A2D) : const Color(0xFFD1D5DB),
+                color: isSelected ? context.colors.accent : context.colors.border,
                 size: 26.sp,
               ),
           ],

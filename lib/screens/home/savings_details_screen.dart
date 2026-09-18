@@ -6,6 +6,7 @@ import '../../routes/app_routes.dart';
 import '../../widgets/glass_icon_button.dart';
 import '../../widgets/saved_recipe_card.dart';
 import '../../widgets/red_header_background.dart';
+import '../../core/theme/app_theme.dart';
 
 class SavingsDetailsScreen extends StatelessWidget {
   const SavingsDetailsScreen({super.key});
@@ -40,7 +41,7 @@ class SavingsDetailsScreen extends StatelessWidget {
             child: Container(
               margin: EdgeInsets.only(top: 25.h),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: context.colors.surface,
                 borderRadius: BorderRadius.vertical(top: Radius.circular(32.r)),
               ),
               child: Column(
@@ -57,7 +58,7 @@ class SavingsDetailsScreen extends StatelessWidget {
                           child: Icon(
                             Icons.arrow_back_rounded,
                             size: 20.sp,
-                            color: const Color(0xFF0F172A),
+                            color: context.colors.textPrimary,
                           ),
                         ),
                         Expanded(
@@ -68,7 +69,7 @@ class SavingsDetailsScreen extends StatelessWidget {
                               fontFamily: 'Rubik',
                               fontSize: 22.sp,
                               fontWeight: FontWeight.w800,
-                              color: const Color(0xFF0F172A),
+                              color: context.colors.textPrimary,
                             ),
                           ),
                         ),
@@ -128,7 +129,7 @@ class SavingsDetailsScreen extends StatelessWidget {
                                         fontFamily: 'Rubik',
                                         fontSize: 14.sp,
                                         fontWeight: FontWeight.w600,
-                                        color: const Color(0xFF475569),
+                                        color: context.colors.textSecondary,
                                       ),
                                     ),
                                     SizedBox(height: 4.h),
@@ -150,7 +151,7 @@ class SavingsDetailsScreen extends StatelessWidget {
                                         fontFamily: 'Rubik',
                                         fontSize: 14.sp,
                                         fontWeight: FontWeight.w500,
-                                        color: const Color(0xFF64748B),
+                                        color: context.colors.textSecondary,
                                       ),
                                     ),
                                   ],

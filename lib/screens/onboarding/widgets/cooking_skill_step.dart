@@ -2,6 +2,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'selection_onboarding_step.dart';
+import '../../../core/theme/app_theme.dart';
 
 class CookingSkillStep extends StatefulWidget {
   final VoidCallback? onContinue;
@@ -43,14 +44,19 @@ class _CookingSkillStepState extends State<CookingSkillStep> {
       width: double.infinity,
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 15.h),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFF7ED),
+        color: Theme.of(context).brightness == Brightness.dark
+            ? const Color(0xFFD97706).withValues(alpha: 0.16)
+            : const Color(0xFFFFF7ED),
         borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: const Color(0xFFFBE8D0))),
+        border: Border.all(
+            color: Theme.of(context).brightness == Brightness.dark
+                ? const Color(0xFFD97706).withValues(alpha: 0.4)
+                : const Color(0xFFFBE8D0))),
       child: RichText(
         textAlign: TextAlign.center,
         text: TextSpan(
           style: GoogleFonts.poppins(
-            color: const Color(0xFF1B1C1C),
+            color: context.colors.textPrimary,
             fontSize: 16.sp),
           children: [
             const TextSpan(text: 'Great, we\'ll avoid '),

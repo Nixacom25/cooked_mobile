@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../../widgets/red_button.dart';
+import '../../../core/theme/app_theme.dart';
 
 class SelectionOption {
   final String id;
@@ -206,7 +207,7 @@ class _SelectionOnboardingStepState extends State<SelectionOnboardingStep> with 
                           style: GoogleFonts.rubik(
                             fontSize: 30.sp,
                             fontWeight: FontWeight.w500,
-                            color: const Color(0xFF111827),
+                            color: context.colors.textPrimary,
                             height: 1.2,
                             letterSpacing: -0.3)))),
                     if (widget.subtitle != null) ...[
@@ -219,7 +220,7 @@ class _SelectionOnboardingStepState extends State<SelectionOnboardingStep> with 
                             widget.subtitle!,
                             style: GoogleFonts.poppins(
                               fontSize: 16.sp,
-                              color: const Color(0xFF111827),
+                              color: context.colors.textPrimary,
                               fontWeight: FontWeight.w400,
                               height: 1.35)))),
                     ],
@@ -256,10 +257,10 @@ class _SelectionOnboardingStepState extends State<SelectionOnboardingStep> with 
                                     horizontal: 14.w, 
                                     vertical: 14.h),
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFFF1F5F9),
+                                    color: context.colors.pageBackground,
                                     borderRadius: BorderRadius.circular(16.r),
                                     border: Border.all(
-                                      color: isSelected ? const Color(0xFFC31E26) : Colors.transparent,
+                                      color: isSelected ? context.colors.accent : Colors.transparent,
                                       width: 1.5)),
                                   child: widget.gridItemDirection == Axis.vertical
                                       ? Stack(
@@ -272,9 +273,9 @@ class _SelectionOnboardingStepState extends State<SelectionOnboardingStep> with 
                                                   ? Container(
                                                       width: 20.r,
                                                       height: 20.r,
-                                                      decoration: const BoxDecoration(
+                                                      decoration: BoxDecoration(
                                                         shape: BoxShape.circle,
-                                                        color: Color(0xFFC31E26)),
+                                                        color: context.colors.accent),
                                                       child: Icon(
                                                         Icons.check,
                                                         color: Colors.white,
@@ -285,7 +286,7 @@ class _SelectionOnboardingStepState extends State<SelectionOnboardingStep> with 
                                                       decoration: BoxDecoration(
                                                         shape: BoxShape.circle,
                                                         border: Border.all(
-                                                          color: const Color(0xFFCBD5E1),
+                                                          color: context.colors.border,
                                                           width: 1.5)))),
                                             // Centered Icon & Label
                                             Padding(
@@ -300,12 +301,12 @@ class _SelectionOnboardingStepState extends State<SelectionOnboardingStep> with 
                                                       height: 26.h, 
                                                       width: 26.w,
                                                       colorFilter: widget.preserveSvgColor ? null : ColorFilter.mode(
-                                                        isSelected ? const Color(0xFFC31E26) : const Color(0xFF0F172A),
+                                                        isSelected ? context.colors.accent : context.colors.textPrimary,
                                                         BlendMode.srcIn))
                                                   else if (option.icon != null)
                                                     Icon(
                                                       option.icon,
-                                                      color: isSelected ? const Color(0xFFC31E26) : const Color(0xFF0F172A),
+                                                      color: isSelected ? context.colors.accent : context.colors.textPrimary,
                                                       size: 24.sp),
                                                   SizedBox(height: 8.h),
                                                   Text(
@@ -314,7 +315,7 @@ class _SelectionOnboardingStepState extends State<SelectionOnboardingStep> with 
                                                     style: GoogleFonts.rubik(
                                                       fontSize: 14.sp,
                                                       fontWeight: FontWeight.w500,
-                                                      color: isSelected ? const Color(0xFFC31E26) : const Color(0xFF0F172A))),
+                                                      color: isSelected ? context.colors.accent : context.colors.textPrimary)),
                                                 ])),
                                           ])
                                       : Row(
@@ -327,13 +328,13 @@ class _SelectionOnboardingStepState extends State<SelectionOnboardingStep> with 
                                                 height: 22.h, 
                                                 width: 22.w,
                                                 colorFilter: widget.preserveSvgColor ? null : ColorFilter.mode(
-                                                  isSelected ? const Color(0xFFC31E26) : const Color(0xFF0F172A),
+                                                  isSelected ? context.colors.accent : context.colors.textPrimary,
                                                   BlendMode.srcIn)),
                                               SizedBox(width: 10.w),
                                             ] else if (option.icon != null) ...[
                                               Icon(
                                                 option.icon,
-                                                color: isSelected ? const Color(0xFFC31E26) : const Color(0xFF0F172A),
+                                                color: isSelected ? context.colors.accent : context.colors.textPrimary,
                                                 size: 22.sp),
                                               SizedBox(width: 10.w),
                                             ],
@@ -344,14 +345,14 @@ class _SelectionOnboardingStepState extends State<SelectionOnboardingStep> with 
                                                 style: GoogleFonts.rubik(
                                                   fontSize: 15.sp,
                                                   fontWeight: FontWeight.w500,
-                                                  color: isSelected ? const Color(0xFFC31E26) : const Color(0xFF0F172A)))),
+                                                  color: isSelected ? context.colors.accent : context.colors.textPrimary))),
                                             if (isSelected)
                                               Container(
                                                 width: 20.r,
                                                 height: 20.r,
-                                                decoration: const BoxDecoration(
+                                                decoration: BoxDecoration(
                                                   shape: BoxShape.circle,
-                                                  color: Color(0xFFC31E26)),
+                                                  color: context.colors.accent),
                                                 child: Icon(
                                                   Icons.check,
                                                   color: Colors.white,
@@ -373,10 +374,10 @@ class _SelectionOnboardingStepState extends State<SelectionOnboardingStep> with 
                                 child: Container(
                                   padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFFF1F5F9),
+                                    color: context.colors.pageBackground,
                                     borderRadius: BorderRadius.circular(16.r),
                                     border: Border.all(
-                                      color: isSelected ? const Color(0xFFC31E26) : Colors.transparent,
+                                      color: isSelected ? context.colors.accent : Colors.transparent,
                                       width: 1.5)),
                                   child: Row(
                                     children: [
@@ -389,13 +390,13 @@ class _SelectionOnboardingStepState extends State<SelectionOnboardingStep> with 
                                           height: 22.h, 
                                           width: 22.w,
                                           colorFilter: widget.preserveSvgColor ? null : ColorFilter.mode(
-                                            isSelected ? const Color(0xFFC31E26) : const Color(0xFF0F172A),
+                                            isSelected ? context.colors.accent : context.colors.textPrimary,
                                             BlendMode.srcIn)),
                                         SizedBox(width: 14.w),
                                       ] else if (option.icon != null) ...[
                                         Icon(
                                           option.icon,
-                                          color: isSelected ? const Color(0xFFC31E26) : const Color(0xFF0F172A),
+                                          color: isSelected ? context.colors.accent : context.colors.textPrimary,
                                           size: 22.sp),
                                         SizedBox(width: 14.w),
                                       ],
@@ -405,16 +406,16 @@ class _SelectionOnboardingStepState extends State<SelectionOnboardingStep> with 
                                           style: GoogleFonts.rubik(
                                             fontSize: 15.sp,
                                             fontWeight: FontWeight.w500,
-                                            color: isSelected ? const Color(0xFFC31E26) : const Color(0xFF0F172A)))),
+                                            color: isSelected ? context.colors.accent : context.colors.textPrimary))),
                                       if (isSelected)
                                         (option.id == 'No Allergies'
                                             ? SizedBox(width: 22.r, height: 22.r)
                                             : Container(
                                                 width: 22.r,
                                                 height: 22.r,
-                                                decoration: const BoxDecoration(
+                                                decoration: BoxDecoration(
                                                   shape: BoxShape.circle,
-                                                  color: Color(0xFFC31E26)),
+                                                  color: context.colors.accent),
                                                 child: Icon(
                                                   Icons.check,
                                                   color: Colors.white,
@@ -426,7 +427,7 @@ class _SelectionOnboardingStepState extends State<SelectionOnboardingStep> with 
                                           decoration: BoxDecoration(
                                             shape: BoxShape.circle,
                                             border: Border.all(
-                                              color: const Color(0xFFCBD5E1),
+                                              color: context.colors.border,
                                               width: 1.5))),
                                     ]))))));
                       }),
@@ -453,7 +454,7 @@ class _SelectionOnboardingStepState extends State<SelectionOnboardingStep> with 
                       padding: EdgeInsets.fromLTRB(24.w, 8.h, 24.w, 20.h),
                       child: RedButton(
                         label: 'Continue',
-                        color: const Color(0xFFC31E26),
+                        color: context.colors.accent,
                         onTap: widget.onContinue!,
                         isDisabled: _selectedIds.isEmpty,
                         height: 52.h,

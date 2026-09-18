@@ -7,6 +7,7 @@ import 'package:rive/rive.dart';
 import 'package:video_player/video_player.dart';
 import '../models/recipe.dart';
 import '../core/widgets/ios_toast.dart';
+import '../core/theme/app_theme.dart';
 
 enum _AnimationPlatform { ios, android }
 
@@ -211,7 +212,7 @@ class _ScanAnimationOverlayState extends State<ScanAnimationOverlay> {
     return Container(
       width: double.infinity,
       height: double.infinity,
-      color: Colors.white,
+      color: context.colors.surface,
       child: Stack(
         children: [
           if (!widget.skipImageAnalysis && !_showRive)
@@ -573,9 +574,9 @@ class _NativeSpinnerFallbackState extends State<_NativeSpinnerFallback>
                     shape: BoxShape.circle,
                     gradient: SweepGradient(
                       colors: [
-                        const Color(0xFFC83A2D).withValues(alpha: 0.0),
-                        const Color(0xFFC83A2D).withValues(alpha: 0.8),
-                        const Color(0xFFC83A2D),
+                        context.colors.accent.withValues(alpha: 0.0),
+                        context.colors.accent.withValues(alpha: 0.8),
+                        context.colors.accent,
                       ],
                     ),
                   ),
@@ -590,7 +591,7 @@ class _NativeSpinnerFallbackState extends State<_NativeSpinnerFallback>
                         child: Icon(
                           Icons.restaurant_menu_rounded,
                           size: 40.sp,
-                          color: const Color(0xFFC83A2D),
+                          color: context.colors.accent,
                         ),
                       ),
                     ),
@@ -608,7 +609,7 @@ class _NativeSpinnerFallbackState extends State<_NativeSpinnerFallback>
               fontFamily: 'Rubik',
               fontWeight: FontWeight.w700,
               fontSize: 16.sp,
-              color: const Color(0xFF0F172A),
+              color: context.colors.textPrimary,
             ),
           ),
         ],

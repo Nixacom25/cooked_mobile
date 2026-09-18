@@ -8,6 +8,7 @@ import '../core/widgets/ios_toast.dart';
 import 'cookbook_cover.dart';
 import 'cookbook_form_modal.dart';
 import 'haptic_context_menu.dart';
+import '../core/theme/app_theme.dart';
 
 /// Cookbook tile shared by Home's "Your Cookbooks" row and the Cookbooks
 /// "View All" grid so both look exactly the same. [isMain] renders the
@@ -106,7 +107,11 @@ class CookbookCardTile extends StatelessWidget {
           Container(
             padding: EdgeInsets.all(12.w),
             decoration: BoxDecoration(
-              color: const Color(0xFFFAF3E6),
+              // pageBackground (not surface): this tile sits directly on a
+              // surface-colored sheet in both Home's "Your Cookbooks" row
+              // and the "View All" grid, so surface made the card invisible
+              // against its own backdrop.
+              color: context.colors.pageBackground,
               borderRadius: BorderRadius.circular(20.r),
             ),
             child: isMain
@@ -131,7 +136,7 @@ class CookbookCardTile extends StatelessWidget {
                           fontFamily: 'Rubik',
                           fontWeight: FontWeight.w700,
                           fontSize: 16.sp,
-                          color: const Color(0xFF0F172A),
+                          color: context.colors.textPrimary,
                         ),
                       ),
                       SizedBox(height: 4.h),
@@ -140,7 +145,7 @@ class CookbookCardTile extends StatelessWidget {
                           Icon(
                             Icons.restaurant_menu_rounded,
                             size: 14.sp,
-                            color: const Color(0xFF475569),
+                            color: context.colors.textSecondary,
                           ),
                           SizedBox(width: 4.w),
                           Text(
@@ -148,7 +153,7 @@ class CookbookCardTile extends StatelessWidget {
                             style: TextStyle(
                               fontFamily: 'Rubik',
                               fontSize: 13.sp,
-                              color: const Color(0xFF475569),
+                              color: context.colors.textSecondary,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -156,7 +161,7 @@ class CookbookCardTile extends StatelessWidget {
                           Icon(
                             Icons.chevron_right_rounded,
                             size: 18.sp,
-                            color: const Color(0xFF475569),
+                            color: context.colors.textSecondary,
                           ),
                         ],
                       ),
@@ -166,7 +171,7 @@ class CookbookCardTile extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      _buildOverlappingThumbnails(cookbook),
+                      _buildOverlappingThumbnails(context, cookbook),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -181,7 +186,7 @@ class CookbookCardTile extends StatelessWidget {
                               fontFamily: 'Rubik',
                               fontWeight: FontWeight.w700,
                               fontSize: 14.sp,
-                              color: const Color(0xFF0F172A),
+                              color: context.colors.textPrimary,
                             ),
                           ),
                           SizedBox(height: 2.h),
@@ -190,7 +195,7 @@ class CookbookCardTile extends StatelessWidget {
                               Icon(
                                 Icons.restaurant_menu_rounded,
                                 size: 13.sp,
-                                color: const Color(0xFF475569),
+                                color: context.colors.textSecondary,
                               ),
                               SizedBox(width: 4.w),
                               Text(
@@ -198,7 +203,7 @@ class CookbookCardTile extends StatelessWidget {
                                 style: TextStyle(
                                   fontFamily: 'Rubik',
                                   fontSize: 12.sp,
-                                  color: const Color(0xFF475569),
+                                  color: context.colors.textSecondary,
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),
@@ -206,7 +211,7 @@ class CookbookCardTile extends StatelessWidget {
                               Icon(
                                 Icons.chevron_right_rounded,
                                 size: 16.sp,
-                                color: const Color(0xFF475569),
+                                color: context.colors.textSecondary,
                               ),
                             ],
                           ),
@@ -222,7 +227,7 @@ class CookbookCardTile extends StatelessWidget {
               child: Icon(
                 Icons.push_pin_rounded,
                 size: 20.sp,
-                color: const Color(0xFFC83A2D),
+                color: context.colors.accent,
                 shadows: const [Shadow(color: Colors.black26, blurRadius: 4)],
               ),
             ),
@@ -231,7 +236,7 @@ class CookbookCardTile extends StatelessWidget {
     );
   }
 
-  Widget _buildOverlappingThumbnails(Cookbook cb) {
+  Widget _buildOverlappingThumbnails(BuildContext context, Cookbook cb) {
     final List<String> images = cb.recipes
         .map((r) => r.image)
         .where((img) => img != null && img.isNotEmpty)
@@ -249,7 +254,7 @@ class CookbookCardTile extends StatelessWidget {
         child: Icon(
           Icons.menu_book_rounded,
           size: 16.sp,
-          color: const Color(0xFFC31E26),
+          color: context.colors.accent,
         ),
       );
     }
@@ -265,7 +270,7 @@ class CookbookCardTile extends StatelessWidget {
               height: 34.r,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                border: Border.all(color: const Color(0xFFFAF3E6), width: 2),
+                border: Border.all(color: context.colors.surface, width: 2),
               ),
               child: ClipOval(
                 child: images[idx].startsWith('http')

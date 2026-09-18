@@ -9,6 +9,7 @@ import '../../widgets/red_button.dart';
 import '../../widgets/red_header_background.dart';
 import '../../core/utils/error_helper.dart';
 import '../../services/user_service.dart';
+import '../../core/theme/app_theme.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -189,7 +190,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFEAEAEA),
+      backgroundColor: context.colors.pageBackground,
       resizeToAvoidBottomInset: false,
       body: GestureDetector(
         behavior: HitTestBehavior.translucent,
@@ -237,13 +238,13 @@ class _LoginScreenState extends State<LoginScreen> {
 
             // ── Main Card (White Rounded Container) ──
             Positioned(
-              top: statusBarH + 180.h,
+              top: statusBarH + 210.h,
               left: 0,
               right: 0,
               bottom: 0,
               child: Container(
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: context.colors.surface,
                   borderRadius: BorderRadius.vertical(
                     top: Radius.circular(32.r),
                   ),
@@ -267,7 +268,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             fontSize: 24.sp,
                             fontWeight: FontWeight.w800,
                             fontFamily: 'SF Pro',
-                            color: const Color(0xFF0F172A),
+                            color: context.colors.textPrimary,
                             letterSpacing: -0.3,
                           ),
                         ),
@@ -296,7 +297,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             _obscurePass
                                 ? Icons.visibility_off_outlined
                                 : Icons.visibility_outlined,
-                            color: const Color(0xFF64748B),
+                            color: context.colors.textSecondary,
                             size: 20.sp,
                           ),
                           onPressed: () =>
@@ -318,7 +319,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           child: Text(
                             'Forgot password?',
                             style: TextStyle(
-                              color: const Color(0xFF0F172A),
+                              color: context.colors.textPrimary,
                               fontFamily: 'SF Pro',
                               fontWeight: FontWeight.w700,
                               fontSize: 14.sp,
@@ -333,7 +334,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         label: 'Login',
                         loadingLabel: 'Logging in',
                         isLoading: _isLoading,
-                        color: const Color(0xFFC31E26),
+                        color: context.colors.accent,
                         height: 52.h,
                         fontSize: 16.sp,
                         onTap: _handleLogin,
@@ -352,7 +353,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           child: RichText(
                             text: TextSpan(
                               style: TextStyle(
-                                color: const Color(0xFF64748B),
+                                color: context.colors.textSecondary,
                                 fontFamily: 'SF Pro',
                                 fontSize: 14.sp,
                               ),
@@ -363,7 +364,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 TextSpan(
                                   text: 'Sign Up',
                                   style: TextStyle(
-                                    color: const Color(0xFF0F172A),
+                                    color: context.colors.textPrimary,
                                     fontWeight: FontWeight.w700,
                                   ),
                                 ),
@@ -376,9 +377,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
                       Row(
                         children: [
-                          const Expanded(
+                          Expanded(
                             child: Divider(
-                              color: Color(0xFFE2E8F0),
+                              color: context.colors.border,
                               thickness: 1,
                             ),
                           ),
@@ -387,16 +388,16 @@ class _LoginScreenState extends State<LoginScreen> {
                             child: Text(
                               'OR',
                               style: TextStyle(
-                                color: const Color(0xFF94A3B8),
+                                color: context.colors.textMuted,
                                 fontWeight: FontWeight.w600,
                                 fontSize: 13.sp,
                                 fontFamily: 'SF Pro',
                               ),
                             ),
                           ),
-                          const Expanded(
+                          Expanded(
                             child: Divider(
-                              color: Color(0xFFE2E8F0),
+                              color: context.colors.border,
                               thickness: 1,
                             ),
                           ),
@@ -451,7 +452,7 @@ class _Label extends StatelessWidget {
   Widget build(BuildContext context) => Text(
         text,
         style: TextStyle(
-          color: const Color(0xFF64748B),
+          color: context.colors.textSecondary,
           fontFamily: 'SF Pro',
           fontSize: 14.sp,
           fontWeight: FontWeight.w500,
@@ -487,17 +488,17 @@ class _Field extends StatelessWidget {
         style: TextStyle(
           fontFamily: 'SF Pro',
           fontSize: 15.sp,
-          color: const Color(0xFF0F172A),
+          color: context.colors.textPrimary,
         ),
         decoration: InputDecoration(
           hintText: hint,
           hintStyle: TextStyle(
-            color: const Color(0xFF94A3B8),
+            color: context.colors.textMuted,
             fontFamily: 'SF Pro',
             fontSize: 15.sp,
           ),
           filled: true,
-          fillColor: const Color(0xFFF0F1F3),
+          fillColor: context.colors.pageBackground,
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(14.r),
             borderSide: BorderSide.none,
@@ -513,7 +514,7 @@ class _Field extends StatelessWidget {
           suffixIcon: suffix,
           errorText: errorText,
           errorStyle: TextStyle(
-            color: const Color(0xFFDC2626),
+            color: context.colors.destructive,
             fontSize: 12.sp,
             fontFamily: 'SF Pro',
           ),
@@ -541,7 +542,7 @@ class _SocialBtn extends StatelessWidget {
         width: double.infinity,
         height: 52.h,
         decoration: BoxDecoration(
-          color: const Color(0xFFF0F1F3),
+          color: context.colors.pageBackground,
           borderRadius: BorderRadius.circular(30.r),
         ),
         child: Row(
@@ -555,7 +556,7 @@ class _SocialBtn extends StatelessWidget {
                 fontFamily: 'SF Pro',
                 fontWeight: FontWeight.w700,
                 fontSize: 15.sp,
-                color: const Color(0xFF0F172A),
+                color: context.colors.textPrimary,
               ),
             ),
           ],

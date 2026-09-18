@@ -1,4 +1,5 @@
 import 'dart:ui' as ui;
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -8,6 +9,8 @@ import '../core/api_config.dart';
 import '../routes/app_routes.dart';
 import 'glass_icon_button.dart';
 import 'alphabet_avatar.dart';
+import 'appearance_sheet.dart';
+import '../core/theme/app_theme.dart';
 
 class AppTopHeader extends StatefulWidget {
   final double? topPadding;
@@ -77,13 +80,17 @@ class _AppTopHeaderState extends State<AppTopHeader> {
                   child: BackdropFilter(
                     filter: ui.ImageFilter.blur(sigmaX: 16, sigmaY: 16),
                     child: Container(
-                      width: 130.w,
+                      width: 150.w,
                       padding: EdgeInsets.symmetric(vertical: 6.h, horizontal: 6.w),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.28),
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.black.withValues(alpha: 0.45)
+                            : Colors.white.withValues(alpha: 0.28),
                         borderRadius: BorderRadius.circular(24.r),
                         border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.65),
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.white.withValues(alpha: 0.16)
+                              : Colors.white.withValues(alpha: 0.65),
                           width: 1.5.w,
                         ),
                         boxShadow: [
@@ -110,17 +117,19 @@ class _AppTopHeaderState extends State<AppTopHeader> {
                                   Icon(
                                     Icons.person_outline_rounded,
                                     size: 20.sp,
-                                    color: const Color(0xFF0F172A),
+                                    color: context.colors.textPrimary,
                                   ),
                                   SizedBox(width: 10.w),
                                   Expanded(
                                     child: Text(
                                       'Profile',
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
                                       style: TextStyle(
                                         fontFamily: 'Rubik',
                                         fontWeight: FontWeight.w600,
                                         fontSize: 14.sp,
-                                        color: const Color(0xFF0F172A),
+                                        color: context.colors.textPrimary,
                                       ),
                                     ),
                                   ),
@@ -128,6 +137,45 @@ class _AppTopHeaderState extends State<AppTopHeader> {
                               ),
                             ),
                           ),
+                          // Debug-only: verifying the dark theme during
+                          // development. Production always follows the
+                          // system theme, so this entry doesn't exist there.
+                          if (kDebugMode) ...[
+                            SizedBox(height: 2.h),
+                            InkWell(
+                              borderRadius: BorderRadius.circular(18.r),
+                              onTap: () {
+                                Navigator.of(ctx).pop();
+                                showAppearanceSheet(context);
+                              },
+                              child: Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.dark_mode_outlined,
+                                      size: 20.sp,
+                                      color: context.colors.textPrimary,
+                                    ),
+                                    SizedBox(width: 10.w),
+                                    Expanded(
+                                      child: Text(
+                                        'Appearance',
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                          fontFamily: 'Rubik',
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 14.sp,
+                                          color: context.colors.textPrimary,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
                           SizedBox(height: 2.h),
                           InkWell(
                             borderRadius: BorderRadius.circular(18.r),
@@ -148,17 +196,19 @@ class _AppTopHeaderState extends State<AppTopHeader> {
                                   Icon(
                                     Icons.logout_rounded,
                                     size: 20.sp,
-                                    color: const Color(0xFFC31E26),
+                                    color: context.colors.accent,
                                   ),
                                   SizedBox(width: 10.w),
                                   Expanded(
                                     child: Text(
                                       'Logout',
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
                                       style: TextStyle(
                                         fontFamily: 'Rubik',
                                         fontWeight: FontWeight.w600,
                                         fontSize: 14.sp,
-                                        color: const Color(0xFFC31E26),
+                                        color: context.colors.accent,
                                       ),
                                     ),
                                   ),

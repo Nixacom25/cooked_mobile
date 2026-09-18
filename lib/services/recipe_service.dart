@@ -609,50 +609,6 @@ class RecipeService {
     }
   }
 
-  // Only ever returns categories with active=true - never falls back to an
-  // unfiltered/derived list, since showing an inactive category is worse
-  // than showing none. The admin taxonomy list is the primary source of
-  // truth (own real name, image, active flag, and a correctly computed
-  // recipeCount - confirmed non-zero in the admin panel); recipe-tagged
-  // category names ("Side Dishes", "Miscellaneous"...) are a different,
-  // unrelated set from the curated admin list ("Protein Plates", "Comfort
-  // Food"...), so deriving from recipes can't honor the active flag at all.
-  // Falls back to the dedicated public endpoint (same active=true filter,
-  // applied server-side) only if the admin call fails outright.
-  Future<List<Map<String, dynamic>>> getActiveExploreCategories({bool forceRefresh = false}) async {
-    try {
-      final url = Uri.parse('${ApiConfig.baseUrl}/api/admin/categories?type=CATEGORY');
-      final response = await http.get(url, headers: await _getHeaders());
-      if (response.statusCode == 200) {
-        final List<dynamic> data = jsonDecode(response.body);
-        final list = data
-            .map((e) => Map<String, dynamic>.from(e))
-            .where((item) =>
-                item['active'] == true && ((item['recipeCount'] as num?) ?? 0) > 0)
-            .map((item) => {
-                  'name': item['name'],
-                  'recipeCount': item['recipeCount'],
-                  'image': item['image'] ?? '',
-                })
-            .toList();
-        list.sort((a, b) => (b['recipeCount'] as num).compareTo(a['recipeCount'] as num));
-        if (list.isNotEmpty) return list;
-      }
-    } catch (_) {}
-
-    // Admin endpoint unreachable - fall back to the dedicated public
-    // endpoint, which applies the exact same active=true filter server-side.
-    // Deliberately no further fallback to raw recipe-derived categories:
-    // that path can't honor the active flag at all, and showing an
-    // inactive category is worse than showing none.
-    try {
-      final result = await getExploreCategories(forceRefresh: forceRefresh);
-      return result;
-    } catch (_) {}
-
-    return [];
-  }
-
   Future<List<Creator>> getTopCreators({int page = 0, int size = 10}) async {
     final url = Uri.parse(
       '${ApiConfig.baseUrl}/recipes/top-creators?page=$page&size=$size',

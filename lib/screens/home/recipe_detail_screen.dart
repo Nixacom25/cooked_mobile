@@ -17,6 +17,7 @@ import '../../widgets/app_loading_indicator.dart';
 import '../../services/user_service.dart';
 import '../../services/cookbook_service.dart';
 import '../../models/cookbook.dart';
+import '../../core/theme/app_theme.dart';
 
 enum DetailTab { steps, ingredients }
 
@@ -205,7 +206,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
         child: Container(
           padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
           decoration: BoxDecoration(
-            color: const Color(0xFFF8FAFC),
+            color: context.colors.pageBackground,
             borderRadius: BorderRadius.circular(16.r),
           ),
           child: Row(
@@ -220,7 +221,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                       fontFamily: 'Rubik',
                       fontWeight: FontWeight.w700,
                       fontSize: 14.sp,
-                      color: const Color(0xFF0F172A),
+                      color: context.colors.textPrimary,
                     ),
                   ),
                   SizedBox(height: 2.h),
@@ -229,7 +230,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                     style: TextStyle(
                       fontFamily: 'Rubik',
                       fontSize: 12.sp,
-                      color: const Color(0xFF94A3B8),
+                      color: context.colors.textMuted,
                     ),
                   ),
                 ],
@@ -237,9 +238,9 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 2.h),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: context.colors.surface,
                   borderRadius: BorderRadius.circular(20.r),
-                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                  border: Border.all(color: context.colors.border),
                 ),
                 child: Row(
                   children: [
@@ -261,7 +262,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                           fontFamily: 'Rubik',
                           fontWeight: FontWeight.w700,
                           fontSize: 14.sp,
-                          color: const Color(0xFF0F172A),
+                          color: context.colors.textPrimary,
                         ),
                       ),
                     ),
@@ -337,7 +338,12 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.dark,
       child: Scaffold(
-        backgroundColor: Colors.white,
+        // The body reads as a lighter "sheet" (surface) with individual
+        // content cards a shade darker (pageBackground) on top of it -
+        // matching this pattern used elsewhere in the app. This screen used
+        // to set pageBackground here while its cards were also surface,
+        // so cards and their backdrop were nearly indistinguishable.
+        backgroundColor: context.colors.surface,
         resizeToAvoidBottomInset: false,
         body: _error != null
             ? Center(
@@ -347,7 +353,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                     Icon(
                       Icons.error_outline_rounded,
                       size: 48.sp,
-                      color: const Color(0xFFC83A2D),
+                      color: context.colors.accent,
                     ),
                     SizedBox(height: 16.h),
                     Text(
@@ -427,7 +433,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                                           fontFamily: 'Rubik',
                                           fontWeight: FontWeight.w800,
                                           fontSize: 22.sp,
-                                          color: const Color(0xFF0F172A),
+                                          color: context.colors.textPrimary,
                                         ),
                                       ),
                                     ),
@@ -459,7 +465,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                                       },
                                       child: Icon(
                                         isFav ? Icons.favorite_rounded : Icons.favorite_border_rounded,
-                                        color: isFav ? const Color(0xFFC31E26) : const Color(0xFF94A3B8),
+                                        color: isFav ? context.colors.accent : context.colors.textMuted,
                                         size: 26.sp,
                                       ),
                                     ),
@@ -518,7 +524,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                                 width: double.infinity,
                                 height: 48.h,
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFFC83A2D),
+                                  color: context.colors.accent,
                                   borderRadius: BorderRadius.circular(24.r),
                                 ),
                                 child: Center(
@@ -545,13 +551,13 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                           delegate: _SimplePinnedHeaderDelegate(
                             height: 52.h,
                             child: Container(
-                              color: Colors.white,
+                              color: context.colors.surface,
                               padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 4.h),
                               child: Center(
                                 child: Container(
                                   padding: const EdgeInsets.all(4),
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFFF1F5F9),
+                                    color: context.colors.pageBackground,
                                     borderRadius: BorderRadius.circular(24.r),
                                   ),
                                   child: Row(
@@ -623,7 +629,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                       builder: (context, cookbooks, _) {
                         final bool isAdded = _checkIsInCookbook(r, cookbooks);
                         return Container(
-                          color: Colors.white,
+                          color: context.colors.pageBackground,
                           padding: EdgeInsets.fromLTRB(20.w, 10.h, 20.w, 10.h + bottomPad),
                           child: GestureDetector(
                             onTap: () async {
@@ -634,14 +640,14 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                                   context: context,
                                   builder: (ctx) => AlertDialog(
                                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24.r)),
-                                    backgroundColor: Colors.white,
+                                    backgroundColor: context.colors.surface,
                                     title: Text(
                                       'Remove from Cookbook',
                                       style: TextStyle(
                                         fontFamily: 'Rubik',
                                         fontWeight: FontWeight.w800,
                                         fontSize: 18.sp,
-                                        color: const Color(0xFF0F172A),
+                                        color: context.colors.textPrimary,
                                       ),
                                     ),
                                     content: Text(
@@ -649,7 +655,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                                       style: TextStyle(
                                         fontFamily: 'Rubik',
                                         fontSize: 14.sp,
-                                        color: const Color(0xFF64748B),
+                                        color: context.colors.textSecondary,
                                         height: 1.4,
                                       ),
                                     ),
@@ -663,14 +669,14 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                                             fontFamily: 'Rubik',
                                             fontWeight: FontWeight.w600,
                                             fontSize: 15.sp,
-                                            color: const Color(0xFF64748B),
+                                            color: context.colors.textSecondary,
                                           ),
                                         ),
                                       ),
                                       ElevatedButton(
                                         onPressed: () => Navigator.pop(ctx, true),
                                         style: ElevatedButton.styleFrom(
-                                          backgroundColor: const Color(0xFFC31E26),
+                                          backgroundColor: context.colors.accent,
                                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
                                           elevation: 0,
                                         ),
@@ -752,10 +758,10 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                               duration: const Duration(milliseconds: 200),
                               height: 52.h,
                               decoration: BoxDecoration(
-                                color: isAdded ? const Color(0xFFF1F5F9) : const Color(0xFFC83A2D),
+                                color: isAdded ? context.colors.pageBackground : context.colors.accent,
                                 borderRadius: BorderRadius.circular(28.r),
                                 border: isAdded
-                                    ? Border.all(color: const Color(0xFFE2E8F0), width: 1.w)
+                                    ? Border.all(color: context.colors.border, width: 1.w)
                                     : null,
                               ),
                               child: Center(
@@ -765,7 +771,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                                     fontFamily: 'Rubik',
                                     fontWeight: FontWeight.w700,
                                     fontSize: 15.sp,
-                                    color: isAdded ? const Color(0xFF475569) : Colors.white,
+                                    color: isAdded ? context.colors.textSecondary : Colors.white,
                                   ),
                                 ),
                               ),
@@ -851,9 +857,14 @@ class _RecipeDetailHeaderDelegate extends SliverPersistentHeaderDelegate {
   ) {
     final double maxShrinkOffset = maxExtent - minExtent;
     final double progress = (shrinkOffset / maxShrinkOffset).clamp(0.0, 1.0);
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+    // In dark mode this collapses to the brand red (matching the profile
+    // header) instead of white - a white bar looked out of place, and its
+    // icons/title (context.colors.textPrimary, near-white in dark mode)
+    // were nearly invisible against it.
     final Color bgColor = Color.lerp(
       Colors.transparent,
-      Colors.white,
+      isDark ? context.colors.accent : Colors.white,
       progress,
     )!;
     final double curveHeight = (12 * (1 - progress)).r;
@@ -870,6 +881,7 @@ class _RecipeDetailHeaderDelegate extends SliverPersistentHeaderDelegate {
             right: 0,
             height: maxExtent - shrinkOffset,
             child: _buildImage(
+              context,
               img,
               MediaQuery.of(context).size.width,
               maxExtent - shrinkOffset,
@@ -885,13 +897,13 @@ class _RecipeDetailHeaderDelegate extends SliverPersistentHeaderDelegate {
               height: curveHeight,
               child: Container(
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: context.colors.surface,
                   borderRadius: BorderRadius.vertical(
                     top: Radius.circular(curveHeight),
                   ),
                   border: Border(
                     top: BorderSide(
-                      color: const Color(0xFFE2E8F0)
+                      color: context.colors.border
                           .withValues(alpha: (1 - progress)),
                       width: 1.w,
                     ),
@@ -922,7 +934,7 @@ class _RecipeDetailHeaderDelegate extends SliverPersistentHeaderDelegate {
                   child: Icon(
                     Icons.arrow_back_rounded,
                     size: 20.sp,
-                    color: const Color(0xFF0F172A),
+                    color: context.colors.textPrimary,
                   ),
                 ),
                 Expanded(
@@ -950,7 +962,7 @@ class _RecipeDetailHeaderDelegate extends SliverPersistentHeaderDelegate {
                               fontFamily: 'Rubik',
                               fontWeight: FontWeight.w700,
                               fontSize: 16.sp,
-                              color: const Color(0xFF0F172A),
+                              color: context.colors.textPrimary,
                             ),
                           ),
                         ),
@@ -964,7 +976,7 @@ class _RecipeDetailHeaderDelegate extends SliverPersistentHeaderDelegate {
                   child: Icon(
                     Icons.share_outlined,
                     size: 20.sp,
-                    color: const Color(0xFF0F172A),
+                    color: context.colors.textPrimary,
                   ),
                 ),
               ],
@@ -975,7 +987,7 @@ class _RecipeDetailHeaderDelegate extends SliverPersistentHeaderDelegate {
     );
   }
 
-  Widget _buildImage(String path, double width, double height) {
+  Widget _buildImage(BuildContext context, String path, double width, double height) {
     const fit = BoxFit.cover;
     if (path.isEmpty) {
       return Image.asset(
@@ -1000,7 +1012,7 @@ class _RecipeDetailHeaderDelegate extends SliverPersistentHeaderDelegate {
         placeholder: (_, __) => Container(
           width: width,
           height: height,
-          color: const Color(0xFFF1F5F9),
+          color: context.colors.pageBackground,
         ),
       );
     }
@@ -1028,13 +1040,13 @@ class _TagPill extends StatelessWidget {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
       decoration: BoxDecoration(
-        color: const Color(0xFFF1F5F9),
+        color: context.colors.pageBackground,
         borderRadius: BorderRadius.circular(20.r),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 14.sp, color: const Color(0xFF475569)),
+          Icon(icon, size: 14.sp, color: context.colors.textSecondary),
           SizedBox(width: 4.w),
           Text(
             label,
@@ -1042,7 +1054,7 @@ class _TagPill extends StatelessWidget {
               fontFamily: 'Rubik',
               fontWeight: FontWeight.w500,
               fontSize: 12.sp,
-              color: const Color(0xFF475569),
+              color: context.colors.textSecondary,
             ),
           ),
         ],
@@ -1069,7 +1081,7 @@ class _TabPill extends StatelessWidget {
           duration: const Duration(milliseconds: 200),
           padding: EdgeInsets.symmetric(vertical: 8.h),
           decoration: BoxDecoration(
-            color: active ? const Color(0xFFC83A2D) : Colors.transparent,
+            color: active ? context.colors.accent : Colors.transparent,
             borderRadius: BorderRadius.circular(20.r),
           ),
           child: Center(
@@ -1079,7 +1091,7 @@ class _TabPill extends StatelessWidget {
                 fontFamily: 'Rubik',
                 fontWeight: FontWeight.w700,
                 fontSize: 14.sp,
-                color: active ? Colors.white : const Color(0xFF64748B),
+                color: active ? Colors.white : context.colors.textSecondary,
               ),
             ),
           ),
@@ -1104,12 +1116,12 @@ class _EmptyState extends StatelessWidget {
       width: double.infinity,
       padding: EdgeInsets.symmetric(vertical: 40.h, horizontal: 20.w),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
+        color: context.colors.pageBackground,
         borderRadius: BorderRadius.circular(20.r),
       ),
       child: Column(
         children: [
-          Icon(icon, size: 48.sp, color: const Color(0xFFCBD5E1)),
+          Icon(icon, size: 48.sp, color: context.colors.border),
           SizedBox(height: 16.h),
           Text(
             title,
@@ -1118,7 +1130,7 @@ class _EmptyState extends StatelessWidget {
               fontFamily: 'Rubik',
               fontSize: 15.sp,
               fontWeight: FontWeight.w600,
-              color: const Color(0xFF64748B),
+              color: context.colors.textSecondary,
             ),
           ),
           SizedBox(height: 8.h),
@@ -1128,7 +1140,7 @@ class _EmptyState extends StatelessWidget {
             style: TextStyle(
               fontFamily: 'Rubik',
               fontSize: 13.sp,
-              color: const Color(0xFF94A3B8),
+              color: context.colors.textMuted,
             ),
           ),
         ],
@@ -1194,7 +1206,9 @@ class _IngredientsList extends StatelessWidget {
                         height: 32.w,
                         margin: EdgeInsets.only(right: 12.w),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFFFF6D6),
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? const Color(0xFFD97706).withValues(alpha: 0.18)
+                              : const Color(0xFFFFF6D6),
                           borderRadius: BorderRadius.circular(10.r),
                         ),
                         alignment: Alignment.center,
@@ -1206,7 +1220,7 @@ class _IngredientsList extends StatelessWidget {
                         height: 32.w,
                         margin: EdgeInsets.only(right: 12.w),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFFAF5E8),
+                          color: context.colors.pageBackground,
                           borderRadius: BorderRadius.circular(10.r),
                         ),
                         alignment: Alignment.center,
@@ -1223,7 +1237,7 @@ class _IngredientsList extends StatelessWidget {
                           fontFamily: 'Rubik',
                           fontSize: 15.sp,
                           fontWeight: FontWeight.w600,
-                          color: const Color(0xFF0F172A),
+                          color: context.colors.textPrimary,
                         ),
                       ),
                     ),
@@ -1239,7 +1253,7 @@ class _IngredientsList extends StatelessWidget {
                           fontFamily: 'Rubik',
                           fontSize: 14.sp,
                           fontWeight: FontWeight.w600,
-                          color: const Color(0xFF64748B),
+                          color: context.colors.textSecondary,
                         ),
                       ),
                     ),
@@ -1247,7 +1261,7 @@ class _IngredientsList extends StatelessWidget {
                 ),
               ),
               if (i < ingredients.length - 1)
-                const Divider(height: 0, color: Color(0xFFF1F5F9)),
+                Divider(height: 0, color: context.colors.pageBackground),
             ],
           );
         }),
@@ -1289,9 +1303,9 @@ class _EquipmentList extends StatelessWidget {
           margin: EdgeInsets.only(bottom: 12.h),
           padding: EdgeInsets.all(14.r),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: context.colors.pageBackground,
             borderRadius: BorderRadius.circular(16.r),
-            border: Border.all(color: const Color(0xFFF1F5F9)),
+            border: Border.all(color: context.colors.pageBackground),
           ),
           child: Row(
             children: [
@@ -1302,14 +1316,14 @@ class _EquipmentList extends StatelessWidget {
                     fontFamily: 'Rubik',
                     fontSize: 14.sp,
                     fontWeight: FontWeight.w600,
-                    color: const Color(0xFF0F172A),
+                    color: context.colors.textPrimary,
                   ),
                 ),
               ),
               Icon(
                 Icons.check_circle_outline_rounded,
                 size: 18.sp,
-                color: const Color(0xFFCBD5E1),
+                color: context.colors.border,
               ),
             ],
           ),
@@ -1345,7 +1359,7 @@ class _StepsList extends StatelessWidget {
                   width: 32.w,
                   height: 32.w,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFC83A2D).withValues(alpha: 0.1),
+                    color: context.colors.accent.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   alignment: Alignment.center,
@@ -1355,7 +1369,7 @@ class _StepsList extends StatelessWidget {
                       fontFamily: 'Rubik',
                       fontWeight: FontWeight.w800,
                       fontSize: 13.sp,
-                      color: const Color(0xFFC83A2D),
+                      color: context.colors.accent,
                     ),
                   ),
                 ),
@@ -1378,7 +1392,7 @@ class _StepsList extends StatelessWidget {
                               fontFamily: 'Rubik',
                               fontSize: 14.sp,
                               height: 1.6,
-                              color: const Color(0xFF0F172A),
+                              color: context.colors.textPrimary,
                               fontWeight: FontWeight.w500,
                             ),
                           );
@@ -1399,7 +1413,7 @@ class _StepsList extends StatelessWidget {
               fontFamily: 'Rubik',
               fontSize: 16.sp,
               fontWeight: FontWeight.w700,
-              color: const Color(0xFF0F172A),
+              color: context.colors.textPrimary,
             ),
           ),
           SizedBox(height: 12.h),
@@ -1410,7 +1424,7 @@ class _StepsList extends StatelessWidget {
           Container(
             padding: EdgeInsets.all(16.r),
             decoration: BoxDecoration(
-              color: const Color(0xFFF8FAFC),
+              color: context.colors.pageBackground,
               borderRadius: BorderRadius.circular(16.r),
             ),
             child: Column(
@@ -1430,7 +1444,7 @@ class _StepsList extends StatelessWidget {
                         fontFamily: 'Rubik',
                         fontWeight: FontWeight.w700,
                         fontSize: 14.sp,
-                        color: const Color(0xFF0F172A),
+                        color: context.colors.textPrimary,
                       ),
                     ),
                   ],
@@ -1442,7 +1456,7 @@ class _StepsList extends StatelessWidget {
                     fontFamily: 'Rubik',
                     fontSize: 14.sp,
                     height: 1.5,
-                    color: const Color(0xFF475569),
+                    color: context.colors.textSecondary,
                   ),
                 ),
               ],
@@ -1467,7 +1481,7 @@ class _ServingsButton extends StatelessWidget {
         width: 28.w,
         height: 28.w,
         alignment: Alignment.center,
-        child: Icon(icon, size: 16.sp, color: const Color(0xFF0F172A)),
+        child: Icon(icon, size: 16.sp, color: context.colors.textPrimary),
       ),
     );
   }
@@ -1492,7 +1506,7 @@ class _SavingsBreakdownCard extends StatelessWidget {
       width: double.infinity,
       padding: EdgeInsets.all(16.r),
       decoration: BoxDecoration(
-        color: const Color(0xFFFAF5E8),
+        color: context.colors.pageBackground,
         borderRadius: BorderRadius.circular(20.r),
       ),
       child: Column(
@@ -1504,7 +1518,7 @@ class _SavingsBreakdownCard extends StatelessWidget {
               fontFamily: 'Rubik',
               fontSize: 15.sp,
               fontWeight: FontWeight.w700,
-              color: const Color(0xFF0F172A),
+              color: context.colors.textPrimary,
             ),
           ),
           SizedBox(height: 12.h),
@@ -1513,14 +1527,14 @@ class _SavingsBreakdownCard extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Icon(Icons.restaurant_rounded, color: const Color(0xFF475569), size: 18.sp),
+                  Icon(Icons.restaurant_rounded, color: context.colors.textSecondary, size: 18.sp),
                   SizedBox(width: 8.w),
                   Text(
                     "Ordering nearby",
                     style: TextStyle(
                       fontFamily: 'Rubik',
                       fontSize: 14.sp,
-                      color: const Color(0xFF475569),
+                      color: context.colors.textSecondary,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -1531,7 +1545,7 @@ class _SavingsBreakdownCard extends StatelessWidget {
                 style: TextStyle(
                   fontFamily: 'Rubik',
                   fontSize: 14.sp,
-                  color: const Color(0xFF0F172A),
+                  color: context.colors.textPrimary,
                   fontWeight: FontWeight.w700,
                 ),
               ),
@@ -1543,14 +1557,14 @@ class _SavingsBreakdownCard extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Icon(Icons.shopping_cart_outlined, color: const Color(0xFF475569), size: 18.sp),
+                  Icon(Icons.shopping_cart_outlined, color: context.colors.textSecondary, size: 18.sp),
                   SizedBox(width: 8.w),
                   Text(
                     "Making at home",
                     style: TextStyle(
                       fontFamily: 'Rubik',
                       fontSize: 14.sp,
-                      color: const Color(0xFF475569),
+                      color: context.colors.textSecondary,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -1561,14 +1575,14 @@ class _SavingsBreakdownCard extends StatelessWidget {
                 style: TextStyle(
                   fontFamily: 'Rubik',
                   fontSize: 14.sp,
-                  color: const Color(0xFF0F172A),
+                  color: context.colors.textPrimary,
                   fontWeight: FontWeight.w700,
                 ),
               ),
             ],
           ),
           SizedBox(height: 12.h),
-          const Divider(color: Color(0xFFE2E8F0), height: 1),
+          Divider(color: context.colors.border, height: 1),
           SizedBox(height: 12.h),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1578,7 +1592,7 @@ class _SavingsBreakdownCard extends StatelessWidget {
                 style: TextStyle(
                   fontFamily: 'Rubik',
                   fontSize: 15.sp,
-                  color: const Color(0xFF0F172A),
+                  color: context.colors.textPrimary,
                   fontWeight: FontWeight.w700,
                 ),
               ),

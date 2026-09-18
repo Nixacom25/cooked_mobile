@@ -2,6 +2,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../widgets/red_button.dart';
+import '../../../core/theme/app_theme.dart';
 
 class FreeTrialIntroStep extends StatefulWidget {
   final VoidCallback onContinue;
@@ -98,20 +99,20 @@ class _FreeTrialIntroStepState extends State<FreeTrialIntroStep> with SingleTick
                           style: GoogleFonts.rubik(
                             fontSize: 32.sp,
                             fontWeight: FontWeight.w500,
-                            color: const Color(0xFF111827),
+                            color: context.colors.textPrimary,
                             height: 1.15),
-                          children: const [
+                          children: [
                             TextSpan(text: 'We want you to try\nCooked for '),
                             TextSpan(
                               text: 'free',
-                              style: TextStyle(color: Color(0xFFC31E26))),
+                              style: TextStyle(color: context.colors.accent)),
                           ])),
                       SizedBox(height: 10.h),
                       Text(
                         'Create your account to keep your recipes, meal plans, grocery lists, and savings tracker.',
                         style: GoogleFonts.poppins(
                           fontSize: 15.sp,
-                          color: const Color(0xFF111827),
+                          color: context.colors.textPrimary,
                           height: 1.3)),
                     ])))),
 
@@ -129,9 +130,9 @@ class _FreeTrialIntroStepState extends State<FreeTrialIntroStep> with SingleTick
                           fit: BoxFit.cover,
                           alignment: Alignment.center,
                           errorBuilder: (context, error, stackTrace) => Container(
-                            color: const Color(0xFFF1F5F9),
+                            color: context.colors.pageBackground,
                             alignment: Alignment.center,
-                            child: const Icon(Icons.fastfood, color: Color(0xFFCBD5E1))))),
+                            child: Icon(Icons.fastfood, color: context.colors.border)))),
                       // Top White Fade
                       Positioned(
                         top: 0,
@@ -183,8 +184,8 @@ class _FreeTrialIntroStepState extends State<FreeTrialIntroStep> with SingleTick
                                 Container(
                                   width: 22.r,
                                   height: 22.r,
-                                  decoration: const BoxDecoration(
-                                    color: Color(0xFFC31E26),
+                                  decoration: BoxDecoration(
+                                    color: context.colors.accent,
                                     shape: BoxShape.circle),
                                   child: Icon(Icons.check_rounded, color: Colors.white, size: 14.sp)),
                                 SizedBox(width: 12.w),
@@ -194,7 +195,7 @@ class _FreeTrialIntroStepState extends State<FreeTrialIntroStep> with SingleTick
                                     style: GoogleFonts.rubik(
                                       fontSize: 14.sp,
                                       fontWeight: FontWeight.w500,
-                                      color: const Color(0xFF111827)))),
+                                      color: context.colors.textPrimary))),
                               ]))));
                     })),
                   SizedBox(height: 8.h),
@@ -209,7 +210,7 @@ class _FreeTrialIntroStepState extends State<FreeTrialIntroStep> with SingleTick
                           bottom: true,
                           child: RedButton(
                             label: 'Try for \$0.00',
-                            color: const Color(0xFFC31E26),
+                            color: context.colors.accent,
                             onTap: widget.onContinue,
                             height: 52.h,
                             fontSize: 16.sp))))),

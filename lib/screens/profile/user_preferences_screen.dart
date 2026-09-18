@@ -19,6 +19,7 @@ import '../onboarding/widgets/meal_planning_step.dart';
 import '../onboarding/widgets/notifications_step.dart';
 import '../onboarding/widgets/goals_step.dart';
 import '../onboarding/widgets/language_region_step.dart';
+import '../../core/theme/app_theme.dart';
 
 class UserPreferencesScreen extends StatefulWidget {
   const UserPreferencesScreen({super.key});
@@ -129,15 +130,26 @@ class _UserPreferencesScreenState extends State<UserPreferencesScreen> {
     }
   }
 
+  static const Map<String, String> _goalLabels = {
+    'save_money': 'Save money',
+    'eat_healthier': 'Eat healthier',
+    'gain_muscle': 'Gain muscle',
+    'lose_weight': 'Lose weight',
+    'waste_less': 'Waste less food',
+    'learn_cook': 'Learn to cook',
+    'discover_recipes': 'Discover recipes',
+    'meal_prep': 'Meal prep easier',
+  };
+
+  String _formatGoals(List<String> goals) {
+    return goals.map((id) => _goalLabels[id] ?? id).join(', ');
+  }
+
   void _openEditor(String title, Widget editor) {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => PopScope(
-          onPopInvokedWithResult: (didPop, result) {
-            _savePreferences();
-          },
-          child: Scaffold(
+        builder: (context) => Scaffold(
             backgroundColor: Colors.transparent,
             resizeToAvoidBottomInset: false,
             body: Stack(
@@ -152,7 +164,7 @@ class _UserPreferencesScreenState extends State<UserPreferencesScreen> {
                   child: Container(
                     margin: EdgeInsets.only(top: 25.h),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: context.colors.surface,
                       borderRadius: BorderRadius.vertical(
                         top: Radius.circular(32.r),
                       ),
@@ -170,7 +182,7 @@ class _UserPreferencesScreenState extends State<UserPreferencesScreen> {
                                 child: Icon(
                                   Icons.arrow_back_rounded,
                                   size: 20.sp,
-                                  color: const Color(0xFF0F172A),
+                                  color: context.colors.textPrimary,
                                 ),
                               ),
                               Expanded(
@@ -181,7 +193,7 @@ class _UserPreferencesScreenState extends State<UserPreferencesScreen> {
                                     fontFamily: 'Rubik',
                                     fontWeight: FontWeight.w700,
                                     fontSize: 18.sp,
-                                    color: const Color(0xFF0F172A),
+                                    color: context.colors.textPrimary,
                                   ),
                                 ),
                               ),
@@ -205,7 +217,7 @@ class _UserPreferencesScreenState extends State<UserPreferencesScreen> {
                                 width: double.infinity,
                                 height: 54.h,
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFFC83A2D),
+                                  color: context.colors.accent,
                                   borderRadius: BorderRadius.circular(27.r),
                                 ),
                                 child: Center(
@@ -231,11 +243,13 @@ class _UserPreferencesScreenState extends State<UserPreferencesScreen> {
             ),
           ),
         ),
-      ),
-    ).then((_) {
+      )
+    .then((_) {
       _savePreferences();
     });
   }
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -254,7 +268,7 @@ class _UserPreferencesScreenState extends State<UserPreferencesScreen> {
             child: Container(
               margin: EdgeInsets.only(top: 25.h),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: context.colors.surface,
                 borderRadius: BorderRadius.vertical(
                   top: Radius.circular(32.r),
                 ),
@@ -272,7 +286,7 @@ class _UserPreferencesScreenState extends State<UserPreferencesScreen> {
                           child: Icon(
                             Icons.arrow_back_rounded,
                             size: 20.sp,
-                            color: const Color(0xFF0F172A),
+                            color: context.colors.textPrimary,
                           ),
                         ),
                         Expanded(
@@ -283,7 +297,7 @@ class _UserPreferencesScreenState extends State<UserPreferencesScreen> {
                               fontFamily: 'Rubik',
                               fontWeight: FontWeight.w700,
                               fontSize: 18.sp,
-                              color: const Color(0xFF0F172A),
+                              color: context.colors.textPrimary,
                             ),
                           ),
                         ),
@@ -470,7 +484,7 @@ class _UserPreferencesScreenState extends State<UserPreferencesScreen> {
                               ),
                               _buildTile(
                                 'Onboarding Goals',
-                                _onboardingGoals.join(', '),
+                                _formatGoals(_onboardingGoals),
                                 () => _openEditor(
                                   'Onboarding Goals',
                                   GoalsStep(
@@ -502,7 +516,7 @@ class _UserPreferencesScreenState extends State<UserPreferencesScreen> {
           fontFamily: 'Rubik',
           fontSize: 12.sp,
           fontWeight: FontWeight.w700,
-          color: const Color(0xFF64748B),
+          color: context.colors.textSecondary,
           letterSpacing: 1.2,
         ),
       ),
@@ -517,7 +531,7 @@ class _UserPreferencesScreenState extends State<UserPreferencesScreen> {
         child: Container(
           padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
           decoration: BoxDecoration(
-            color: const Color(0xFFF1F5F9),
+            color: context.colors.pageBackground,
             borderRadius: BorderRadius.circular(16.r),
           ),
           child: Row(
@@ -532,7 +546,7 @@ class _UserPreferencesScreenState extends State<UserPreferencesScreen> {
                         fontFamily: 'Rubik',
                         fontSize: 15.sp,
                         fontWeight: FontWeight.w600,
-                        color: const Color(0xFF0F172A),
+                        color: context.colors.textPrimary,
                       ),
                     ),
                     SizedBox(height: 4.h),
@@ -541,7 +555,7 @@ class _UserPreferencesScreenState extends State<UserPreferencesScreen> {
                       style: TextStyle(
                         fontFamily: 'Rubik',
                         fontSize: 13.sp,
-                        color: const Color(0xFF64748B),
+                        color: context.colors.textSecondary,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -549,7 +563,7 @@ class _UserPreferencesScreenState extends State<UserPreferencesScreen> {
                   ],
                 ),
               ),
-              Icon(Icons.chevron_right_rounded, color: const Color(0xFF64748B), size: 22.sp),
+              Icon(Icons.chevron_right_rounded, color: context.colors.textSecondary, size: 22.sp),
             ],
           ),
         ),

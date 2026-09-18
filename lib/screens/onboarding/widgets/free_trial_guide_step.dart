@@ -2,6 +2,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../widgets/red_button.dart';
+import '../../../core/theme/app_theme.dart';
 
 class FreeTrialGuideStep extends StatefulWidget {
   final VoidCallback onContinue;
@@ -93,7 +94,7 @@ class _FreeTrialGuideStepState extends State<FreeTrialGuideStep> with SingleTick
                           style: GoogleFonts.rubik(
                             fontSize: 32.sp,
                             fontWeight: FontWeight.w500,
-                            color: const Color(0xFF111827),
+                            color: context.colors.textPrimary,
                             height: 1.15)))),
                     SizedBox(height: 8.h),
                     FadeTransition(
@@ -104,7 +105,7 @@ class _FreeTrialGuideStepState extends State<FreeTrialGuideStep> with SingleTick
                           'Get the most out of your Cooked trial.',
                           style: GoogleFonts.poppins(
                             fontSize: 15.sp,
-                            color: const Color(0xFF111827),
+                            color: context.colors.textPrimary,
                             height: 1.3)))),
                     SizedBox(height: 32.h),
 
@@ -123,8 +124,10 @@ class _FreeTrialGuideStepState extends State<FreeTrialGuideStep> with SingleTick
                                   label: 'Today',
                                   icon: Icons.lock_outline_rounded,
                                   borderColor: const Color(0xFFFCA5A5),
-                                  headerBgColor: const Color(0xFFFEE2E2),
-                                  iconColor: const Color(0xFFDC2626),
+                                  headerBgColor: Theme.of(context).brightness == Brightness.dark
+                                      ? context.colors.destructive.withValues(alpha: 0.18)
+                                      : const Color(0xFFFEE2E2),
+                                  iconColor: context.colors.destructive,
                                   description: 'Unlock personalized recipes, meal suggestions, and ingredient scanning.'))),
                             SizedBox(height: 16.h),
                             FadeTransition(
@@ -135,7 +138,9 @@ class _FreeTrialGuideStepState extends State<FreeTrialGuideStep> with SingleTick
                                   label: 'Day 2',
                                   icon: Icons.notifications_none_rounded,
                                   borderColor: const Color(0xFF7DD3FC),
-                                  headerBgColor: const Color(0xFFE0F2FE),
+                                  headerBgColor: Theme.of(context).brightness == Brightness.dark
+                                      ? const Color(0xFF0284C7).withValues(alpha: 0.18)
+                                      : const Color(0xFFE0F2FE),
                                   iconColor: const Color(0xFF0284C7),
                                   description: "We'll send you a reminder before your trial ends."))),
                             SizedBox(height: 16.h),
@@ -147,7 +152,9 @@ class _FreeTrialGuideStepState extends State<FreeTrialGuideStep> with SingleTick
                                   label: 'Day 3',
                                   icon: Icons.star_outline_rounded,
                                   borderColor: const Color(0xFFFCD34D),
-                                  headerBgColor: const Color(0xFFFEF3C7),
+                                  headerBgColor: Theme.of(context).brightness == Brightness.dark
+                                      ? const Color(0xFFD97706).withValues(alpha: 0.18)
+                                      : const Color(0xFFFEF3C7),
                                   iconColor: const Color(0xFFD97706),
                                   description: "We'll send you a reminder before your trial ends."))),
                           ]))),
@@ -165,14 +172,14 @@ class _FreeTrialGuideStepState extends State<FreeTrialGuideStep> with SingleTick
                                 '3 days free, then \$29.99/year',
                                 style: GoogleFonts.rubik(fontSize: 22.sp,
                                   fontWeight: FontWeight.w500,
-                                  color: const Color(0xFF111827)))),
+                                  color: context.colors.textPrimary))),
                             SizedBox(height: 8.h),
                             Center(
                               child: Text(
                                 'View other plans',
                                 style: GoogleFonts.poppins(fontSize: 14.sp,
                                   fontWeight: FontWeight.w500,
-                                  color: const Color(0xFF111827)))),
+                                  color: context.colors.textPrimary))),
                           ]))),
                     SizedBox(height: 20.h),
                   ]))),
@@ -189,7 +196,7 @@ class _FreeTrialGuideStepState extends State<FreeTrialGuideStep> with SingleTick
                     bottom: true,
                     child: RedButton(
                       label: 'Continue',
-                      color: const Color(0xFFC31E26),
+                      color: context.colors.accent,
                       onTap: widget.onContinue,
                       height: 52.h,
                       fontSize: 16.sp))))),
@@ -213,7 +220,7 @@ class _FreeTrialGuideStepState extends State<FreeTrialGuideStep> with SingleTick
           width: 80.w,
           height: 84.h,
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: context.colors.surface,
             borderRadius: BorderRadius.circular(16.r),
             border: Border.all(
               color: borderColor,
@@ -235,7 +242,7 @@ class _FreeTrialGuideStepState extends State<FreeTrialGuideStep> with SingleTick
                   label,
                   style: GoogleFonts.rubik(fontSize: 13.sp,
                     fontWeight: FontWeight.w500,
-                    color: const Color(0xFF111827)))),
+                    color: context.colors.textPrimary))),
               Expanded(
                 child: Center(
                   child: Icon(
@@ -251,7 +258,7 @@ class _FreeTrialGuideStepState extends State<FreeTrialGuideStep> with SingleTick
             description,
             style: GoogleFonts.poppins(fontSize: 14.sp,
               fontWeight: FontWeight.w500,
-              color: const Color(0xFF111827),
+              color: context.colors.textPrimary,
               height: 1.35))),
       ]);
   }

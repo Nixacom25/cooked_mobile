@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../core/theme/app_theme.dart';
 
 class RedHeaderBackground extends StatelessWidget {
   final double? height;
@@ -26,27 +28,54 @@ class RedHeaderBackground extends StatelessWidget {
     stops: [0.0, 0.4, 0.75, 1.0],
   );
 
+  static const LinearGradient _darkGradient = LinearGradient(
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+    colors: [
+      Color(0xFF4A0508),
+      Color(0xFFC31E26),
+      Color(0x00C31E26),
+    ],
+    stops: [0.0, 0.22, 1.0],
+  );
+
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return ClipRRect(
       borderRadius: borderRadius ?? BorderRadius.zero,
       child: Container(
         width: width ?? double.infinity,
         height: height,
-        decoration: const BoxDecoration(
-          gradient: gradient,
-        ),
+        color: isDark ? context.colors.pageBackground : null,
         child: Stack(
           fit: StackFit.expand,
           children: [
-            // High-resolution Figma mockup background asset fond_page2.png
-            Image.asset(
-              'assets/images/fond_page2.png',
-              fit: BoxFit.cover,
-              width: double.infinity,
-              height: double.infinity,
-              errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
-            ),
+            if (isDark)
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                // Fixed-height glow band regardless of how tall this widget
+                // is asked to be, since it's used both behind a short
+                // tab-screen header and behind a full-screen auth card.
+                height: 220.h,
+                child: const DecoratedBox(
+                  decoration: BoxDecoration(gradient: _darkGradient),
+                ),
+              )
+            else ...[
+              const DecoratedBox(decoration: BoxDecoration(gradient: gradient)),
+              // High-resolution Figma mockup background asset fond_page2.png
+              Image.asset(
+                'assets/images/fond_page2.png',
+                fit: BoxFit.cover,
+                width: double.infinity,
+                height: double.infinity,
+                errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
+              ),
+            ],
 
             if (child != null) child!,
           ],

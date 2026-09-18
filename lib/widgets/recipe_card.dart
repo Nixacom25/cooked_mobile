@@ -9,6 +9,7 @@ import 'skeleton_loader.dart';
 import 'animated_validation_button.dart';
 import 'standard_plus_button.dart';
 import 'haptic_context_menu.dart';
+import '../core/theme/app_theme.dart';
 
 class RecipeCard extends StatelessWidget {
   final Recipe? recipe;
@@ -114,7 +115,7 @@ class RecipeCard extends StatelessWidget {
                     child: Container(
                       width: double.infinity,
                       height: double.infinity,
-                      color: const Color(0xFFF2F1EF),
+                      color: context.colors.surface,
                       child: _buildImage(displayImg),
                     ),
                   ),
@@ -135,7 +136,7 @@ class RecipeCard extends StatelessWidget {
                       child: Icon(
                         Icons.push_pin_rounded,
                         size: 16.sp,
-                        color: const Color(0xFFC83A2D),
+                        color: context.colors.accent,
                       ),
                     ),
                   ),
@@ -155,7 +156,7 @@ class RecipeCard extends StatelessWidget {
                       fontFamily: 'SF Pro',
                       fontWeight: FontWeight.bold,
                       fontSize: 20.sp,
-                      color: const Color(0xFFD1D1D6),
+                      color: context.colors.textMuted,
                     ),
                   ),
                   SizedBox(width: 8.w),
@@ -172,7 +173,7 @@ class RecipeCard extends StatelessWidget {
                           fontFamily: 'SF Pro',
                           fontWeight: FontWeight.w700,
                           fontSize: 14.sp,
-                          color: const Color(0xFF1A1A1A),
+                          color: context.colors.textPrimary,
                         ),
                       ),
                       SizedBox(height: 4.h),
@@ -181,7 +182,7 @@ class RecipeCard extends StatelessWidget {
                           Icon(
                             Icons.timer_outlined,
                             size: 12.sp,
-                            color: const Color(0xFF8E8E93),
+                            color: context.colors.textMuted,
                           ),
                           SizedBox(width: 4.w),
                           Flexible(
@@ -192,7 +193,7 @@ class RecipeCard extends StatelessWidget {
                               style: TextStyle(
                                 fontFamily: 'SF Pro',
                                 fontSize: 11.sp,
-                                color: const Color(0xFF8E8E93),
+                                color: context.colors.textMuted,
                               ),
                             ),
                           ),
@@ -201,7 +202,7 @@ class RecipeCard extends StatelessWidget {
                             Icon(
                               Icons.local_fire_department_outlined,
                               size: 12.sp,
-                              color: const Color(0xFF8E8E93),
+                              color: context.colors.textMuted,
                             ),
                             SizedBox(width: 2.w),
                             Flexible(
@@ -212,7 +213,7 @@ class RecipeCard extends StatelessWidget {
                                 style: TextStyle(
                                   fontFamily: 'SF Pro',
                                   fontSize: 11.sp,
-                                  color: const Color(0xFF8E8E93),
+                                  color: context.colors.textMuted,
                                 ),
                               ),
                             ),

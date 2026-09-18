@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../widgets/red_button.dart';
 import '../../../core/widgets/ios_toast.dart';
+import '../../../core/theme/app_theme.dart';
 
 class AccountStep extends StatefulWidget {
   final String initialEmail;
@@ -91,9 +92,18 @@ class _AccountStepState extends State<AccountStep> {
 
   void _submitForm() {
     HapticFeedback.selectionClick();
+    final fullName = _nameController.text.trim();
     final email = _emailController.text.trim();
     final password = _passwordController.text;
     final confirmPassword = _confirmController.text;
+
+    if (fullName.isEmpty) {
+      IosToast.show(
+        context,
+        message: 'Please enter your name',
+        type: ToastType.warning);
+      return;
+    }
 
     if (email.isEmpty) {
       IosToast.show(
@@ -155,18 +165,18 @@ class _AccountStepState extends State<AccountStep> {
                   style: GoogleFonts.rubik(
                     fontSize: 32.sp,
                     fontWeight: FontWeight.w500,
-                    color: const Color(0xFF111827),
+                    color: context.colors.textPrimary,
                     height: 1.15)),
                 SizedBox(height: 10.h),
                 Text(
                   'Secure your recipes and preferences',
                   style: GoogleFonts.poppins(
                     fontSize: 15.sp,
-                    color: const Color(0xFF111827),
+                    color: context.colors.textPrimary,
                     height: 1.3)),
                 SizedBox(height: 24.h),
 
-                _buildLabel('Full Name', required: false),
+                _buildLabel('Full Name', required: true),
                 SizedBox(height: 8.h),
                 _buildField(
                   controller: _nameController,
@@ -197,7 +207,7 @@ class _AccountStepState extends State<AccountStep> {
                       _obscurePassword
                           ? Icons.visibility_off_outlined
                           : Icons.visibility_outlined,
-                      color: const Color(0xFF111827),
+                      color: context.colors.textPrimary,
                       size: 20.sp),
                     onPressed: () {
                       HapticFeedback.selectionClick();
@@ -218,7 +228,7 @@ class _AccountStepState extends State<AccountStep> {
                       _obscureConfirm
                           ? Icons.visibility_off_outlined
                           : Icons.visibility_outlined,
-                      color: const Color(0xFF111827),
+                      color: context.colors.textPrimary,
                       size: 20.sp),
                     onPressed: () {
                       HapticFeedback.selectionClick();
@@ -233,7 +243,7 @@ class _AccountStepState extends State<AccountStep> {
             bottom: true,
             child: RedButton(
               label: 'Create Account',
-              color: const Color(0xFFC31E26),
+              color: context.colors.accent,
               onTap: _submitForm,
               height: 52.h,
               fontSize: 16.sp))),
@@ -247,13 +257,13 @@ class _AccountStepState extends State<AccountStep> {
         style: GoogleFonts.rubik(
           fontSize: 14.sp,
           fontWeight: FontWeight.w500,
-          color: const Color(0xFF111827)),
+          color: context.colors.textPrimary),
         children: [
           if (required)
             TextSpan(
               text: ' *',
               style: TextStyle(
-                color: const Color(0xFFC31E26),
+                color: context.colors.accent,
                 fontSize: 14.sp,
                 fontWeight: FontWeight.w500)),
         ]));
@@ -274,17 +284,17 @@ class _AccountStepState extends State<AccountStep> {
       onChanged: (_) => _notifyChange(),
       style: GoogleFonts.poppins(fontSize: 15.sp,
         fontWeight: FontWeight.w600,
-        color: const Color(0xFF111827)),
+        color: context.colors.textPrimary),
       decoration: InputDecoration(
         hintText: hint,
         hintStyle: TextStyle(
-          color: const Color(0xFF94A3B8),
+          color: context.colors.textMuted,
           fontWeight: FontWeight.w400,
           fontSize: 15.sp),
-        prefixIcon: Icon(icon, color: const Color(0xFF94A3B8), size: 20.sp),
+        prefixIcon: Icon(icon, color: context.colors.textMuted, size: 20.sp),
         suffixIcon: suffix,
         filled: true,
-        fillColor: const Color(0xFFF1F5F9),
+        fillColor: context.colors.pageBackground,
         contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16.r),
@@ -294,6 +304,6 @@ class _AccountStepState extends State<AccountStep> {
           borderSide: BorderSide.none),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16.r),
-          borderSide: const BorderSide(color: Color(0xFFC31E26), width: 1.5))));
+          borderSide: BorderSide(color: context.colors.accent, width: 1.5))));
   }
 }

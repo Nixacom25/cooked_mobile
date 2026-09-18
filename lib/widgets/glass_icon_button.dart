@@ -38,8 +38,15 @@ class GlassIconButton extends StatelessWidget {
     final double buttonHeight = height ?? size ?? 44.r;
     final BorderRadius effectiveBorderRadius = borderRadius ?? BorderRadius.circular(14.r);
 
-    final Color fillColor = glassColor ?? Colors.white.withValues(alpha: 0.45);
-    final Color borderC = borderColor ?? Colors.white.withValues(alpha: 0.70);
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+    final Color fillColor = glassColor ??
+        (isDark
+            ? Colors.black.withValues(alpha: 0.35)
+            : Colors.white.withValues(alpha: 0.45));
+    final Color borderC = borderColor ??
+        (isDark
+            ? Colors.white.withValues(alpha: 0.18)
+            : Colors.white.withValues(alpha: 0.70));
 
     Widget content = Container(
       width: buttonWidth,

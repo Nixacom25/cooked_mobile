@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter/services.dart';
 import '../../../widgets/red_button.dart';
+import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/ios_toast.dart';
 
 class DislikesStep extends StatefulWidget {
   final Set<String> initialSelected;
@@ -84,6 +86,18 @@ class _DislikesStepState extends State<DislikesStep> {
     widget.onChanged(_selectedDislikes);
   }
 
+  void _handleContinue() {
+    if (_selectedDislikes.isEmpty) {
+      HapticFeedback.heavyImpact();
+      IosToast.show(
+        context,
+        message: 'Please select at least one food dislike',
+        type: ToastType.warning);
+      return;
+    }
+    widget.onContinue!();
+  }
+
   void _addCustomDislike() {
     final text = _customController.text.trim();
     if (text.isNotEmpty) {
@@ -116,7 +130,7 @@ class _DislikesStepState extends State<DislikesStep> {
                   style: GoogleFonts.rubik(
                     fontSize: 32.sp,
                     fontWeight: FontWeight.w500,
-                    color: const Color(0xFF111827),
+                    color: context.colors.textPrimary,
                     height: 1.15,
                   ),
                 ),
@@ -125,7 +139,7 @@ class _DislikesStepState extends State<DislikesStep> {
                   "We’ll keep them out of your\nrecommendations",
                   style: GoogleFonts.poppins(
                     fontSize: 15.sp,
-                    color: const Color(0xFF111827),
+                    color: context.colors.textPrimary,
                     height: 1.3,
                   ),
                 ),
@@ -137,10 +151,10 @@ class _DislikesStepState extends State<DislikesStep> {
                     height: 52.h,
                     margin: EdgeInsets.only(bottom: 20.h),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: context.colors.surface,
                       borderRadius: BorderRadius.circular(24.r),
                       border: Border.all(
-                        color: const Color(0xFFE2E8F0),
+                        color: context.colors.border,
                         width: 1.2,
                       ),
                       boxShadow: [
@@ -156,7 +170,7 @@ class _DislikesStepState extends State<DislikesStep> {
                       children: [
                         Icon(
                           Icons.block_rounded,
-                          color: const Color(0xFFC31E26),
+                          color: context.colors.accent,
                           size: 20.sp,
                         ),
                         SizedBox(width: 12.w),
@@ -167,13 +181,13 @@ class _DislikesStepState extends State<DislikesStep> {
                             style: GoogleFonts.rubik(
                               fontSize: 14.sp,
                               fontWeight: FontWeight.w500,
-                              color: const Color(0xFF0F172A),
+                              color: context.colors.textPrimary,
                             ),
                             decoration: InputDecoration(
                               hintText: 'Type a food you dislike (e.g. Pork, Mayo)...',
                               hintStyle: GoogleFonts.rubik(
                                 fontSize: 14.sp,
-                                color: const Color(0xFF94A3B8),
+                                color: context.colors.textMuted,
                               ),
                               border: InputBorder.none,
                               enabledBorder: InputBorder.none,
@@ -191,8 +205,8 @@ class _DislikesStepState extends State<DislikesStep> {
                           child: Container(
                             width: 32.r,
                             height: 32.r,
-                            decoration: const BoxDecoration(
-                              color: Color(0xFFC31E26),
+                            decoration: BoxDecoration(
+                              color: context.colors.accent,
                               shape: BoxShape.circle,
                             ),
                             child: Icon(
@@ -222,11 +236,11 @@ class _DislikesStepState extends State<DislikesStep> {
                           vertical: 10.h,
                         ),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFF1F5F9),
+                          color: context.colors.pageBackground,
                           borderRadius: BorderRadius.circular(20.r),
                           border: Border.all(
                             color: isSelected
-                                ? const Color(0xFFC31E26)
+                                ? context.colors.accent
                                 : Colors.transparent,
                             width: 1.5,
                           ),
@@ -235,8 +249,8 @@ class _DislikesStepState extends State<DislikesStep> {
                           s,
                           style: GoogleFonts.rubik(
                             color: isSelected
-                                ? const Color(0xFFC31E26)
-                                : const Color(0xFF0F172A),
+                                ? context.colors.accent
+                                : context.colors.textPrimary,
                             fontSize: 14.sp,
                             fontWeight: FontWeight.w500,
                           ),
@@ -256,14 +270,14 @@ class _DislikesStepState extends State<DislikesStep> {
                       vertical: 14.h,
                     ),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFFAF4E5),
+                      color: context.colors.surface,
                       borderRadius: BorderRadius.circular(14.r),
                     ),
                     child: Text(
                       "More preferences can be updated later in Settings.",
                       style: GoogleFonts.poppins(
                         fontSize: 14.sp,
-                        color: const Color(0xFF111827),
+                        color: context.colors.textPrimary,
                         height: 1.35,
                       ),
                     ),
@@ -282,8 +296,8 @@ class _DislikesStepState extends State<DislikesStep> {
               bottom: true,
               child: RedButton(
                 label: 'Continue',
-                color: const Color(0xFFC31E26),
-                onTap: widget.onContinue!,
+                color: context.colors.accent,
+                onTap: _handleContinue,
                 height: 52.h,
                 fontSize: 16.sp,
               ),

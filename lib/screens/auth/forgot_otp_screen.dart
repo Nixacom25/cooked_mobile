@@ -9,6 +9,7 @@ import '../../widgets/glass_icon_button.dart';
 import '../../widgets/red_button.dart';
 import '../../widgets/loading_text.dart';
 import '../../widgets/red_header_background.dart';
+import '../../core/theme/app_theme.dart';
 
 class ForgotOtpScreen extends StatefulWidget {
   const ForgotOtpScreen({super.key});
@@ -132,7 +133,7 @@ class _ForgotOtpScreenState extends State<ForgotOtpScreen> {
         ModalRoute.of(context)?.settings.arguments as String?;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: context.colors.surface,
       resizeToAvoidBottomInset: false,
       body: GestureDetector(
         behavior: HitTestBehavior.translucent,
@@ -185,7 +186,7 @@ class _ForgotOtpScreenState extends State<ForgotOtpScreen> {
               bottom: 0,
               child: Container(
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: context.colors.surface,
                   borderRadius: BorderRadius.vertical(
                     top: Radius.circular(32.r),
                   ),
@@ -209,7 +210,7 @@ class _ForgotOtpScreenState extends State<ForgotOtpScreen> {
                         style: TextStyle(
                           fontSize: 18.sp,
                           fontWeight: FontWeight.w800,
-                          color: const Color(0xFF0F172A),
+                          color: context.colors.textPrimary,
                           fontFamily: 'Rubik',
                           height: 1.25,
                         ),
@@ -233,7 +234,7 @@ class _ForgotOtpScreenState extends State<ForgotOtpScreen> {
                           Text(
                             'If you didn’t receive a code? ',
                             style: TextStyle(
-                              color: const Color(0xFF64748B),
+                              color: context.colors.textSecondary,
                               fontFamily: 'SF Pro',
                               fontSize: 14.sp,
                             ),
@@ -247,10 +248,10 @@ class _ForgotOtpScreenState extends State<ForgotOtpScreen> {
                                     }
                                   },
                             child: _isResending
-                                ? const LoadingText(
+                                ? LoadingText(
                                     text: 'Resending',
                                     style: TextStyle(
-                                      color: Color(0xFF0F172A),
+                                      color: context.colors.textPrimary,
                                       fontFamily: 'SF Pro',
                                       fontWeight: FontWeight.bold,
                                       fontSize: 14,
@@ -259,7 +260,7 @@ class _ForgotOtpScreenState extends State<ForgotOtpScreen> {
                                 : Text(
                                     'Resend Code',
                                     style: TextStyle(
-                                      color: const Color(0xFF0F172A),
+                                      color: context.colors.textPrimary,
                                       fontFamily: 'SF Pro',
                                       fontWeight: FontWeight.bold,
                                       fontSize: 14.sp,
@@ -274,7 +275,7 @@ class _ForgotOtpScreenState extends State<ForgotOtpScreen> {
                         label: 'Continue',
                         loadingLabel: 'Verifying',
                         isLoading: _isLoading,
-                        color: const Color(0xFFC31E26),
+                        color: context.colors.accent,
                         height: 52.h,
                         fontSize: 16.sp,
                         onTap: () {
@@ -309,7 +310,7 @@ class _ForgotOtpScreenState extends State<ForgotOtpScreen> {
         height: 52.h,
         margin: EdgeInsets.symmetric(horizontal: 3.w),
         decoration: BoxDecoration(
-          color: const Color(0xFFF0F1F3),
+          color: context.colors.pageBackground,
           borderRadius: BorderRadius.circular(14.r),
         ),
         child: ClipRRect(
@@ -328,12 +329,12 @@ class _ForgotOtpScreenState extends State<ForgotOtpScreen> {
               fontSize: 18.sp,
               fontWeight: FontWeight.w700,
               fontFamily: 'SF Pro',
-              color: const Color(0xFF0F172A),
+              color: context.colors.textPrimary,
             ),
             decoration: InputDecoration(
               counterText: '',
               filled: true,
-              fillColor: const Color(0xFFF0F1F3),
+              fillColor: context.colors.pageBackground,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(14.r),
                 borderSide: BorderSide.none,
@@ -344,8 +345,8 @@ class _ForgotOtpScreenState extends State<ForgotOtpScreen> {
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(14.r),
-                borderSide: const BorderSide(
-                  color: Color(0xFFC31E26),
+                borderSide: BorderSide(
+                  color: context.colors.accent,
                   width: 1.5,
                 ),
               ),

@@ -322,8 +322,14 @@ class AuthService {
         ],
         webAuthenticationOptions: WebAuthenticationOptions(
           clientId: 'com.cookedapp.app.service',
+          // Must exactly match a Return URL registered for this Service ID
+          // in the Apple Developer portal, or Apple rejects the request with
+          // "invalid_client" before the user even sees a sign-in screen.
+          // This used to point at a stale cooked-backend-latest.onrender.com
+          // URL left over from before the app moved to api.cookedapp.com,
+          // and the backend never had a route at that path either.
           redirectUri: Uri.parse(
-            'https://cooked-backend-latest.onrender.com/api/auth/apple/callback',
+            '${ApiConfig.baseUrl}/auth/apple/callback',
           ),
         ),
       );
@@ -546,7 +552,7 @@ class AuthService {
       final response = await http.delete(
         url,
         headers: ApiConfig.authHeaders(token),
-      ).timeout(const Duration(seconds: 15));
+      ).timeout(const Duration(seconds: 45));
 
       if (response.statusCode == 200 || response.statusCode == 204) {
         // Successful deletion on backend, now clear local session

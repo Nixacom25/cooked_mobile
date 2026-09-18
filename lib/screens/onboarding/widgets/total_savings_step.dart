@@ -2,6 +2,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../widgets/red_button.dart';
+import '../../../core/theme/app_theme.dart';
 
 class TotalSavingsStep extends StatefulWidget {
   final int eatingOutSavings;
@@ -110,9 +111,9 @@ class _TotalSavingsStepState extends State<TotalSavingsStep> with SingleTickerPr
                     fit: BoxFit.cover,
                     alignment: Alignment.topCenter,
                     errorBuilder: (context, error, stackTrace) => Container(
-                      color: const Color(0xFFF1F5F9),
+                      color: context.colors.pageBackground,
                       alignment: Alignment.center,
-                      child: const Icon(Icons.restaurant, size: 60, color: Color(0xFFCBD5E1))))))),
+                      child: Icon(Icons.restaurant, size: 60, color: context.colors.border)))))),
 
             // Foreground Content Column
             Column(
@@ -131,7 +132,7 @@ class _TotalSavingsStepState extends State<TotalSavingsStep> with SingleTickerPr
                         style: GoogleFonts.rubik(
                           fontSize: 32.sp,
                           fontWeight: FontWeight.w500,
-                          color: const Color(0xFF111827),
+                          color: context.colors.textPrimary,
                           height: 1.15))))),
                 
                 SizedBox(height: 24.h),
@@ -160,7 +161,7 @@ class _TotalSavingsStepState extends State<TotalSavingsStep> with SingleTickerPr
                           style: GoogleFonts.rubik(
                             fontSize: 15.sp,
                             fontWeight: FontWeight.w500,
-                            color: const Color(0xFF111827))),
+                            color: context.colors.textPrimary)),
                         SizedBox(height: 4.h),
                         Text(
                           'Just by cooking smarter',
@@ -168,7 +169,7 @@ class _TotalSavingsStepState extends State<TotalSavingsStep> with SingleTickerPr
                           style: GoogleFonts.poppins(
                             fontSize: 14.sp,
                             fontWeight: FontWeight.w400,
-                            color: const Color(0xFF64748B))),
+                            color: context.colors.textSecondary)),
                       ]))),
 
                 const Spacer(),
@@ -185,7 +186,7 @@ class _TotalSavingsStepState extends State<TotalSavingsStep> with SingleTickerPr
                         padding: EdgeInsets.fromLTRB(24.w, 8.h, 24.w, 20.h),
                         child: RedButton(
                           label: 'Continue',
-                          color: const Color(0xFFC31E26),
+                          color: context.colors.accent,
                           onTap: widget.onContinue,
                           height: 52.h,
                           fontSize: 16.sp))))),

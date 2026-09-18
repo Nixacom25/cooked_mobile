@@ -228,15 +228,40 @@ The 3-day free trial allows you to test the service. If you do not wish to be ch
 
 const String dummyCookies = """
 Cookie & Tracking Policy
+Effective Date: April 1, 2026
 
-1. Usage
-We use essential cookies and local storage to:
-● Maintain your session.
-● Remember your dietary preferences.
-● Store your recently viewed recipes.
+1. Scope
+Cooked is a mobile app, not a website, so we don't use browser cookies. This policy instead covers the local storage and tracking technologies the app itself uses on your device.
 
-2. Analytics
-We may use third-party analytics (like Google Analytics for Firebase) to understand app usage and improve performance.
+2. Essential Local Storage
+We use on-device local storage (not shared with anyone) to:
+● Keep you signed in between sessions.
+● Remember your dietary preferences, allergies, and appearance (light/dark) settings.
+● Store your recently viewed recipes and in-progress onboarding answers so you don't lose them.
+● Cache recipe images so they load faster.
+
+3. Analytics
+We use Firebase Analytics to understand how the app is used (e.g. which screens are visited, feature usage, crash reports) so we can fix bugs and improve the experience. This data is tied to an anonymous device/installation identifier, not your name.
+
+4. Subscription and Purchase Tracking
+We use RevenueCat to manage and verify Premium subscriptions purchased through the Apple App Store or Google Play Store. RevenueCat receives your purchase receipt data to confirm your subscription status; it does not receive your payment details, which are handled entirely by Apple/Google.
+
+5. Sign-In Providers
+If you sign in with Google or Apple, those providers set their own identifiers to authenticate you. We only receive the name, email, and profile photo you authorize them to share.
+
+6. Push Notifications
+If you enable notifications, we use a device push token to deliver them. You can disable this anytime in your device settings or in-app Notification Preferences.
+
+7. Your Choices
+● You can reset advertising/analytics identifiers via your device's OS settings.
+● You can clear locally stored data by logging out or deleting your account in Profile > Delete Account.
+● You can disable push notifications at any time from your device settings.
+
+8. Changes to This Policy
+We may update this policy as we add or change features. Continued use of the app after an update means you accept the revised policy.
+
+9. Contact
+Questions about this policy: support@cookedapp.com
 """;
 
 const String dummyPrivacy = """

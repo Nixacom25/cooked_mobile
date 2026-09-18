@@ -6,6 +6,7 @@ import '../../core/utils/error_helper.dart';
 import '../../widgets/glass_icon_button.dart';
 import '../../widgets/red_header_background.dart';
 import '../../widgets/app_loading_indicator.dart';
+import '../../core/theme/app_theme.dart';
 
 class ChangePasswordScreen extends StatefulWidget {
   const ChangePasswordScreen({super.key});
@@ -96,7 +97,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
             child: Container(
               margin: EdgeInsets.only(top: 25.h),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: context.colors.surface,
                 borderRadius: BorderRadius.vertical(
                   top: Radius.circular(32.r),
                 ),
@@ -114,7 +115,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                           child: Icon(
                             Icons.arrow_back_rounded,
                             size: 20.sp,
-                            color: const Color(0xFF0F172A),
+                            color: context.colors.textPrimary,
                           ),
                         ),
                         Expanded(
@@ -125,7 +126,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                               fontFamily: 'Rubik',
                               fontWeight: FontWeight.w700,
                               fontSize: 20.sp,
-                              color: const Color(0xFF0F172A),
+                              color: context.colors.textPrimary,
                             ),
                           ),
                         ),
@@ -175,7 +176,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                               width: double.infinity,
                               height: 54.h,
                               decoration: BoxDecoration(
-                                color: const Color(0xFFC31E26),
+                                color: context.colors.accent,
                                 borderRadius: BorderRadius.circular(27.r),
                               ),
                               child: Center(
@@ -220,7 +221,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
         fontFamily: 'Rubik',
         fontWeight: FontWeight.w500,
         fontSize: 14.sp,
-        color: const Color(0xFF64748B),
+        color: context.colors.textSecondary,
       ),
     );
   }
@@ -232,7 +233,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFFF1F5F9),
+        color: context.colors.pageBackground,
         borderRadius: BorderRadius.circular(16.r),
       ),
       child: TextField(
@@ -242,7 +243,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
           fontFamily: 'Rubik',
           fontSize: 15.sp,
           fontWeight: FontWeight.w500,
-          color: const Color(0xFF0F172A),
+          color: context.colors.textPrimary,
         ),
         decoration: InputDecoration(
           border: InputBorder.none,
@@ -252,7 +253,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
             child: Icon(
               obscureText ? Icons.visibility_off_outlined : Icons.visibility_outlined,
               size: 20.sp,
-              color: const Color(0xFF0F172A),
+              color: context.colors.textPrimary,
             ),
           ),
         ),

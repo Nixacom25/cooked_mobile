@@ -50,6 +50,7 @@ import 'onboarding_storage.dart';
 import '../../widgets/glass_icon_button.dart';
 import '../../widgets/red_button.dart';
 import '../../widgets/loading_text.dart';
+import '../../core/theme/app_theme.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -121,7 +122,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   void _initIap() async {
     IapService.instance.initialize();
-    IapService.instance.onPurchaseSuccess = () {
+    // The actual purchase on this screen goes through RevenueCatService
+    // (see buyPackage() below) - its own success/error callbacks are what
+    // fire, not IapService's, so they must be wired here too or the
+    // "Connecting..." loading state never clears after a successful purchase.
+    RevenueCatService.instance.onPurchaseSuccess = () {
       if (mounted && _currentPage == 28) {
         setState(() => _isLoading = false);
         _pageController.nextPage(
@@ -129,7 +134,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           curve: Curves.easeInOut);
       }
     };
-    IapService.instance.onPurchaseError = (error) {
+    RevenueCatService.instance.onPurchaseError = (error) {
       if (mounted) {
         setState(() => _isLoading = false);
         IosToast.show(
@@ -188,6 +193,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   void dispose() {
     IapService.instance.dispose();
+    RevenueCatService.instance.onPurchaseSuccess = null;
+    RevenueCatService.instance.onPurchaseError = null;
     _pageController.dispose();
     _analysisTimer?.cancel();
     super.dispose();
@@ -717,7 +724,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   child: Container(
                     margin: EdgeInsets.only(top: 20.h),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: context.colors.surface,
                       borderRadius: BorderRadius.vertical(top: Radius.circular(32.r))),
                   child: Column(
                     children: [
@@ -733,7 +740,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                 child: Icon(
                                   Icons.arrow_back_rounded,
                                   size: 20.sp,
-                                  color: const Color(0xFF0F172A),
+                                  color: context.colors.textPrimary,
                                 ),
                               ),
                               SizedBox(width: 16.w),
@@ -744,14 +751,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                     children: [
                                       Container(
                                         height: 6.h,
-                                        color: const Color(0xFFF1F5F9)),
+                                        color: context.colors.pageBackground),
                                       AnimatedFractionallySizedBox(
                                         duration: const Duration(milliseconds: 400),
                                         widthFactor: (_getEffectiveStep() / 29).clamp(0.0, 1.0),
                                         child: Container(
                                           height: 6.h,
                                           decoration: BoxDecoration(
-                                            color: const Color(0xFFC31E26),
+                                            color: context.colors.accent,
                                             borderRadius: BorderRadius.circular(10.r)))),
                                     ]))),
                               SizedBox(width: 8.w),
@@ -988,7 +995,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                 width: double.infinity,
                                 padding: EdgeInsets.symmetric(vertical: 16.h),
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFFE5E7EB),
+                                  color: context.colors.divider,
                                   borderRadius: BorderRadius.circular(50.r)),
                                 child: Center(
                                   child: Text(
@@ -997,7 +1004,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                       fontFamily: 'SF Pro',
                                       fontSize: 18.sp,
                                       fontWeight: FontWeight.w700,
-                                      color: const Color(0xFF4B5563)))))),
+                                      color: context.colors.textSecondary))))),
                             SizedBox(height: 12.h),
                           ],
                           RedButton(
@@ -1026,7 +1033,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                   : '3 days free, then \$9.99 per month',
                               style: TextStyle(
                                 fontSize: 14.sp,
-                                color: const Color(0xFF7B8190),
+                                color: context.colors.textMuted,
                                 fontFamily: 'SF Pro')),
                           ],
                           // "Sign In" link only for the first onboarding step
@@ -1039,7 +1046,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                   'Already have an account? ',
                                   style: TextStyle(
                                     fontSize: 14.sp,
-                                    color: const Color(0xFF7B8190),
+                                    color: context.colors.textMuted,
                                     fontFamily: 'SF Pro')),
                                 GestureDetector(
                                   onTap: () => Navigator.pushNamed(
@@ -1050,7 +1057,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                     style: TextStyle(
                                       fontSize: 14.sp,
                                       fontWeight: FontWeight.w700,
-                                      color: const Color(0xFFC31E26),
+                                      color: context.colors.accent,
                                       fontFamily: 'SF Pro'))),
                               ]),
                           ],

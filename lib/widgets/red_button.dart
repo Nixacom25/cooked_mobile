@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'loading_text.dart';
+import '../core/theme/app_theme.dart';
 
 // ── Shared red button with loading state ──────────────────────────────────────
 class RedButton extends StatelessWidget {
@@ -33,10 +34,10 @@ class RedButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final bool effectiveDisabled = isDisabled || isLoading || onTap == null;
     final Color buttonColor = effectiveDisabled 
-        ? (color?.withValues(alpha: 0.5) ?? const Color(0xFFE5E7EB))
-        : (color ?? const Color(0xFFC83A2D));
+        ? (color?.withValues(alpha: 0.5) ?? context.colors.divider)
+        : (color ?? context.colors.accent);
     final Color effectiveTextColor = effectiveDisabled 
-        ? (textColor?.withValues(alpha: 0.7) ?? const Color(0xFF9CA3AF))
+        ? (textColor?.withValues(alpha: 0.7) ?? context.colors.textMuted)
         : (textColor ?? Colors.white);
 
     return GestureDetector(

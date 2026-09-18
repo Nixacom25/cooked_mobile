@@ -13,6 +13,7 @@ import '../../widgets/glass_icon_button.dart';
 import '../../core/utils/error_helper.dart';
 import '../../widgets/alphabet_avatar.dart';
 import '../../widgets/app_loading_indicator.dart';
+import '../../core/theme/app_theme.dart';
 
 class MyAccountScreen extends StatefulWidget {
   const MyAccountScreen({super.key});
@@ -73,7 +74,7 @@ class _MyAccountScreenState extends State<MyAccountScreen> {
     try {
       final fullName = _nameCtrl.text.trim().toTitleCase();
       final nameParts = fullName.split(' ');
-      final lastname = nameParts.length > 1 ? nameParts.last : 'Doe';
+      final lastname = nameParts.length > 1 ? nameParts.last : '';
       final firstname = nameParts.length > 1
           ? nameParts.sublist(0, nameParts.length - 1).join(' ')
           : nameParts.first;
@@ -118,7 +119,7 @@ class _MyAccountScreenState extends State<MyAccountScreen> {
             child: Container(
               margin: EdgeInsets.only(top: 25.h),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: context.colors.surface,
                 borderRadius: BorderRadius.vertical(
                   top: Radius.circular(32.r),
                 ),
@@ -136,7 +137,7 @@ class _MyAccountScreenState extends State<MyAccountScreen> {
                           child: Icon(
                             Icons.arrow_back_rounded,
                             size: 20.sp,
-                            color: const Color(0xFF0F172A),
+                            color: context.colors.textPrimary,
                           ),
                         ),
                         Expanded(
@@ -147,7 +148,7 @@ class _MyAccountScreenState extends State<MyAccountScreen> {
                               fontFamily: 'Rubik',
                               fontWeight: FontWeight.w700,
                               fontSize: 20.sp,
-                              color: const Color(0xFF0F172A),
+                              color: context.colors.textPrimary,
                             ),
                           ),
                         ),
@@ -182,7 +183,7 @@ class _MyAccountScreenState extends State<MyAccountScreen> {
                                 fontFamily: 'Rubik',
                                 fontWeight: FontWeight.w600,
                                 fontSize: 15.sp,
-                                color: const Color(0xFFC83A2D),
+                                color: context.colors.accent,
                               ),
                             ),
                           ),
@@ -238,12 +239,12 @@ class _MyAccountScreenState extends State<MyAccountScreen> {
                                   decoration: InputDecoration(
                                     hintText: '33 321 22 33',
                                     hintStyle: TextStyle(
-                                      color: const Color(0xFF94A3B8),
+                                      color: context.colors.textMuted,
                                       fontFamily: 'Rubik',
                                       fontSize: 14.sp,
                                     ),
                                     filled: true,
-                                    fillColor: const Color(0xFFF1F5F9),
+                                    fillColor: context.colors.pageBackground,
                                     contentPadding: EdgeInsets.symmetric(
                                       horizontal: 16.w,
                                       vertical: 16.h,
@@ -258,20 +259,26 @@ class _MyAccountScreenState extends State<MyAccountScreen> {
                                     ),
                                     focusedBorder: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(16.r),
-                                      borderSide: const BorderSide(
-                                        color: Color(0xFFC83A2D),
+                                      borderSide: BorderSide(
+                                        color: context.colors.accent,
                                         width: 1.5,
                                       ),
                                     ),
                                   ),
                                   initialCountryCode: 'US',
                                   onChanged: (phone) {
-                                    _phoneNumberStr = phone.completeNumber;
+                                    // intl_phone_field fires this once on mount with
+                                    // just the default dial code and no digits typed;
+                                    // ignore that so we never save a bogus "+1"-only
+                                    // number the user never actually entered.
+                                    if (phone.number.isNotEmpty) {
+                                      _phoneNumberStr = phone.completeNumber;
+                                    }
                                   },
                                   style: _inputTextStyle(),
                                   dropdownIcon: Icon(
                                     Icons.keyboard_arrow_down_rounded,
-                                    color: const Color(0xFF0F172A),
+                                    color: context.colors.textPrimary,
                                     size: 20.sp,
                                   ),
                                   flagsButtonPadding: EdgeInsets.only(left: 8.w),
@@ -291,7 +298,7 @@ class _MyAccountScreenState extends State<MyAccountScreen> {
                                     width: double.infinity,
                                     height: 54.h,
                                     decoration: BoxDecoration(
-                                      color: const Color(0xFFC31E26),
+                                      color: context.colors.accent,
                                       borderRadius: BorderRadius.circular(27.r),
                                     ),
                                     child: Center(
@@ -338,7 +345,7 @@ class _MyAccountScreenState extends State<MyAccountScreen> {
         fontFamily: 'Rubik',
         fontWeight: FontWeight.w500,
         fontSize: 14.sp,
-        color: const Color(0xFF64748B),
+        color: context.colors.textSecondary,
       ),
     );
   }
@@ -346,7 +353,7 @@ class _MyAccountScreenState extends State<MyAccountScreen> {
   Widget _buildInputField({required Widget child}) {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFFF1F5F9),
+        color: context.colors.pageBackground,
         borderRadius: BorderRadius.circular(16.r),
       ),
       child: child,
@@ -357,7 +364,7 @@ class _MyAccountScreenState extends State<MyAccountScreen> {
     return InputDecoration(
       hintText: hint,
       hintStyle: TextStyle(
-        color: const Color(0xFF94A3B8),
+        color: context.colors.textMuted,
         fontFamily: 'Rubik',
         fontSize: 14.sp,
       ),
@@ -371,7 +378,7 @@ class _MyAccountScreenState extends State<MyAccountScreen> {
       fontFamily: 'Rubik',
       fontSize: 15.sp,
       fontWeight: FontWeight.w500,
-      color: const Color(0xFF0F172A),
+      color: context.colors.textPrimary,
     );
   }
 }

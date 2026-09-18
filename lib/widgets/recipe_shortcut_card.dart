@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../core/theme/app_theme.dart';
 
 /// Shortcut tile (icon + label) used to route the user to Scan/Import/Explore
 /// from empty or no-result states. Shared so every entry point looks the same.
@@ -23,7 +24,7 @@ class RecipeShortcutCard extends StatelessWidget {
         child: Container(
           padding: EdgeInsets.symmetric(vertical: 20.h),
           decoration: BoxDecoration(
-            color: const Color(0xFFF8FAFC),
+            color: context.colors.surface,
             borderRadius: BorderRadius.circular(20.r),
           ),
           child: Column(
@@ -38,7 +39,7 @@ class RecipeShortcutCard extends StatelessWidget {
                 ),
                 child: Icon(
                   icon,
-                  color: const Color(0xFF0F172A),
+                  color: context.colors.textPrimary,
                   size: 20.sp,
                 ),
               ),
@@ -49,7 +50,7 @@ class RecipeShortcutCard extends StatelessWidget {
                   fontFamily: 'Rubik',
                   fontWeight: FontWeight.w700,
                   fontSize: 13.sp,
-                  color: const Color(0xFF0F172A),
+                  color: context.colors.textPrimary,
                 ),
               ),
             ],

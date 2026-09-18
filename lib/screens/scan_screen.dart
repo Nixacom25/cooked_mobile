@@ -26,6 +26,7 @@ import '../utils/paywall_helper.dart';
 import '../widgets/scan_animation_overlay.dart';
 import '../widgets/confetti_animation.dart';
 import '../widgets/red_header_background.dart';
+import '../core/theme/app_theme.dart';
 
 enum ScanState { scan, type, saved, results }
 
@@ -611,7 +612,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
               child: Container(
                 margin: EdgeInsets.only(top: 25.h),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: context.colors.surface,
                   borderRadius: BorderRadius.vertical(
                     top: Radius.circular(32.r),
                   ),
@@ -754,7 +755,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                   size: 44.r,
                   child: Icon(
                     Icons.close_rounded,
-                    color: const Color(0xFF0F172A),
+                    color: context.colors.textPrimary,
                     size: 22.sp,
                   ),
                 ),
@@ -764,7 +765,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                     fontFamily: 'Rubik',
                     fontWeight: FontWeight.w800,
                     fontSize: 20.sp,
-                    color: const Color(0xFF0F172A),
+                    color: context.colors.textPrimary,
                   ),
                 ),
                 SizedBox(width: 44.r),
@@ -928,7 +929,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
             child: Icon(
               Icons.close_rounded,
               size: 22.sp,
-              color: const Color(0xFF0F172A),
+              color: context.colors.textPrimary,
             ),
           ),
           Expanded(
@@ -939,7 +940,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                 fontFamily: 'Rubik',
                 fontWeight: FontWeight.w800,
                 fontSize: 22.sp,
-                color: const Color(0xFF0F172A),
+                color: context.colors.textPrimary,
               ),
             ),
           ),
@@ -975,7 +976,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                 painter: _FramePainter(
                   corner: 36.r,
                   thick: 4.w,
-                  color: const Color(0xFFC83A2D),
+                  color: context.colors.accent,
                 ),
               ),
             ),
@@ -988,10 +989,10 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                     height: 1.5.h,
                     margin: EdgeInsets.symmetric(horizontal: 10.w),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFC83A2D).withValues(alpha: 0.95),
+                      color: context.colors.accent.withValues(alpha: 0.95),
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFFC83A2D).withValues(alpha: 0.6),
+                          color: context.colors.accent.withValues(alpha: 0.6),
                           blurRadius: 8.r,
                           spreadRadius: 1.r,
                         ),
@@ -1050,7 +1051,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
       size: 52.r,
       child: Icon(
         Icons.photo_library_outlined,
-        color: const Color(0xFF0F172A),
+        color: context.colors.textPrimary,
         size: 24.sp,
       ),
     );
@@ -1087,7 +1088,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
         width: double.infinity,
         height: 50.h,
         decoration: BoxDecoration(
-          color: const Color(0xFFC83A2D),
+          color: context.colors.accent,
           borderRadius: BorderRadius.circular(30.r),
         ),
         alignment: Alignment.center,
@@ -1104,6 +1105,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
   }
 
   Widget _buildBottomPillNav() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return ClipRRect(
       borderRadius: BorderRadius.circular(30.r),
       child: BackdropFilter(
@@ -1112,10 +1114,14 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
           height: 54.h,
           padding: EdgeInsets.all(5.r),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.45),
+            color: isDark
+                ? Colors.black.withValues(alpha: 0.55)
+                : Colors.white.withValues(alpha: 0.45),
             borderRadius: BorderRadius.circular(30.r),
             border: Border.all(
-              color: Colors.white.withValues(alpha: 0.70),
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.16)
+                  : Colors.white.withValues(alpha: 0.70),
               width: 1.2,
             ),
             boxShadow: [
@@ -1167,7 +1173,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                 "Enter ingredients one by one",
                 style: TextStyle(
                   fontFamily: 'Rubik',
-                  color: const Color(0xFF475569),
+                  color: context.colors.textSecondary,
                   fontSize: 14.sp,
                   fontWeight: FontWeight.w500,
                 ),
@@ -1175,7 +1181,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
               SizedBox(height: 12.h),
               Container(
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF1F5F9),
+                  color: context.colors.pageBackground,
                   borderRadius: BorderRadius.circular(16.r),
                 ),
                 child: TextField(
@@ -1185,18 +1191,18 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                     fontFamily: 'Rubik',
                     fontSize: 15.sp,
                     fontWeight: FontWeight.w500,
-                    color: const Color(0xFF0F172A),
+                    color: context.colors.textPrimary,
                   ),
                   decoration: InputDecoration(
                     prefixIcon: Icon(
                       Icons.search_rounded,
-                      color: const Color(0xFF64748B),
+                      color: context.colors.textSecondary,
                       size: 22.sp,
                     ),
                     hintText: 'Search your recipes',
                     hintStyle: TextStyle(
                       fontFamily: 'Rubik',
-                      color: const Color(0xFF94A3B8),
+                      color: context.colors.textMuted,
                       fontSize: 15.sp,
                     ),
                     border: InputBorder.none,
@@ -1211,8 +1217,8 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                         child: Container(
                           width: 32.r,
                           height: 32.r,
-                          decoration: const BoxDecoration(
-                            color: Color(0xFFC83A2D),
+                          decoration: BoxDecoration(
+                            color: context.colors.accent,
                             shape: BoxShape.circle,
                           ),
                           child: Icon(
@@ -1240,9 +1246,9 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                     child: Container(
                       constraints: BoxConstraints(maxHeight: 200.h),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: context.colors.surface,
                         borderRadius: BorderRadius.circular(12.r),
-                        border: Border.all(color: const Color(0xFFE2E8F0)),
+                        border: Border.all(color: context.colors.border),
                       ),
                       child: ListView.separated(
                         shrinkWrap: true,
@@ -1285,7 +1291,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                 Text(
                   "Add ingredients to find recipes you can make",
                   style: TextStyle(
-                    color: const Color(0xFF94A3B8),
+                    color: context.colors.textMuted,
                     fontSize: 12.sp,
                     fontStyle: FontStyle.italic,
                   ),
@@ -1307,7 +1313,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 14.sp,
-                        color: const Color(0xFF64748B),
+                        color: context.colors.textSecondary,
                       ),
                     ),
                     SizedBox(height: 10.h),
@@ -1331,7 +1337,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                             child: Text(
                               name,
                               style: TextStyle(
-                                color: const Color(0xFF1E293B),
+                                color: context.colors.textPrimary,
                                 fontSize: 13.sp,
                                 fontWeight: FontWeight.w500,
                               ),
@@ -1387,7 +1393,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                       scale: 0.8,
                       child: Switch(
                         value: _useAllSaved,
-                        activeTrackColor: const Color(0xFFC83A2D),
+                        activeTrackColor: context.colors.accent,
                         onChanged: (val) {
                           setState(() {
                             _useAllSaved = val;
@@ -1410,7 +1416,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                       style: TextStyle(
                         fontSize: 14.sp,
                         fontWeight: FontWeight.w600,
-                        color: const Color(0xFF475569),
+                        color: context.colors.textSecondary,
                       ),
                     ),
                   ],
@@ -1425,7 +1431,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                   child: Text(
                     "Clear selection",
                     style: TextStyle(
-                      color: const Color(0xFF64748B),
+                      color: context.colors.textSecondary,
                       fontSize: 13.sp,
                       fontWeight: FontWeight.w500,
                     ),
@@ -1459,7 +1465,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
               child: Text(
                 "No saved ingredients yet.",
                 style: TextStyle(
-                  color: const Color(0xFF6B7280),
+                  color: context.colors.textMuted,
                   fontSize: 14.sp,
                 ),
               ),
@@ -1486,9 +1492,9 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
         margin: EdgeInsets.only(bottom: 16.h),
         padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
         decoration: BoxDecoration(
-          color: const Color(0xFFF9FAFB),
+          color: context.colors.surface,
           borderRadius: BorderRadius.circular(16.r),
-          border: Border.all(color: const Color(0xFFF1F5F9)),
+          border: Border.all(color: context.colors.pageBackground),
         ),
         child: Row(
           children: [
@@ -1503,8 +1509,8 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                         ? Icons.check_box_rounded
                         : Icons.check_box_outline_blank_rounded,
                     color: (isSelected ?? false)
-                        ? const Color(0xFFC83A2D)
-                        : const Color(0xFFCBD5E1),
+                        ? context.colors.accent
+                        : context.colors.border,
                     size: 24.sp,
                   ),
                 ),
@@ -1516,7 +1522,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                 style: TextStyle(
                   fontWeight: FontWeight.w600,
                   fontSize: 16.sp,
-                  color: const Color(0xFF1E293B),
+                  color: context.colors.textPrimary,
                 ),
               ),
             ),
@@ -1530,8 +1536,8 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                   child: Icon(
                     Icons.favorite_rounded,
                     color: (isSaved ?? false)
-                        ? const Color(0xFFC83A2D)
-                        : const Color(0xFFCBD5E1),
+                        ? context.colors.accent
+                        : context.colors.border,
                     size: 24.sp,
                   ),
                 ),
@@ -1547,7 +1553,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                     _state == ScanState.saved
                         ? Icons.delete_outline_rounded
                         : Icons.close_rounded,
-                    color: const Color(0xFF94A3B8),
+                    color: context.colors.textMuted,
                     size: 24.sp,
                   ),
                 ),
@@ -1605,7 +1611,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                     fontFamily: 'Rubik',
                     fontWeight: FontWeight.w900,
                     fontSize: 22.sp,
-                    color: const Color(0xFFC83A2D),
+                    color: context.colors.accent,
                   ),
                 ),
               ),
@@ -1616,14 +1622,14 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                 child: Container(
                   width: 38.r,
                   height: 38.r,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFFF1F5F9),
+                  decoration: BoxDecoration(
+                    color: context.colors.pageBackground,
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
                     Icons.close_rounded,
                     size: 20.sp,
-                    color: const Color(0xFF0F172A),
+                    color: context.colors.textPrimary,
                   ),
                 ),
               ),
@@ -1641,7 +1647,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                     fontFamily: 'Rubik',
                     fontSize: 26.sp,
                     fontWeight: FontWeight.w800,
-                    color: const Color(0xFF0F172A),
+                    color: context.colors.textPrimary,
                     height: 1.1,
                   ),
                 ),
@@ -1651,7 +1657,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                     fontFamily: 'Rubik',
                     fontSize: 26.sp,
                     fontWeight: FontWeight.w800,
-                    color: const Color(0xFFC83A2D),
+                    color: context.colors.accent,
                     height: 1.1,
                   ),
                 ),
@@ -1664,7 +1670,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
             style: TextStyle(
               fontFamily: 'Rubik',
               fontSize: 13.sp,
-              color: const Color(0xFF64748B),
+              color: context.colors.textSecondary,
             ),
           ),
           SizedBox(height: 16.h),
@@ -1711,8 +1717,8 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
               height: _currentResultPage == i ? 10.r : 8.r,
               decoration: BoxDecoration(
                 color: _currentResultPage == i
-                    ? const Color(0xFFC83A2D)
-                    : const Color(0xFFE2E8F0),
+                    ? context.colors.accent
+                    : context.colors.border,
                 shape: BoxShape.circle,
               ),
             ),
@@ -1741,7 +1747,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
       child: Container(
         margin: EdgeInsets.symmetric(horizontal: 2.w),
         decoration: BoxDecoration(
-          color: const Color(0xFFFAF6ED),
+          color: context.colors.surface,
           borderRadius: BorderRadius.circular(24.r),
         ),
         clipBehavior: Clip.antiAlias,
@@ -1796,7 +1802,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                             fontFamily: 'Rubik',
                             fontSize: 18.sp,
                             fontWeight: FontWeight.w800,
-                            color: const Color(0xFF0F172A),
+                            color: context.colors.textPrimary,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -1821,7 +1827,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                               ),
                               child: Icon(
                                 isSaved ? Icons.favorite : Icons.favorite_outline,
-                                color: isSaved ? const Color(0xFFC83A2D) : const Color(0xFF94A3B8),
+                                color: isSaved ? context.colors.accent : context.colors.textMuted,
                                 size: 18.sp,
                               ),
                             ),
@@ -1838,13 +1844,13 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                       Container(
                         padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: context.colors.surface,
                           borderRadius: BorderRadius.circular(12.r),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.access_time_rounded, size: 13.sp, color: const Color(0xFF64748B)),
+                            Icon(Icons.access_time_rounded, size: 13.sp, color: context.colors.textSecondary),
                             SizedBox(width: 4.w),
                             Text(
                               '${recipe.cookTime} min',
@@ -1852,7 +1858,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                                 fontFamily: 'Rubik',
                                 fontSize: 12.sp,
                                 fontWeight: FontWeight.w600,
-                                color: const Color(0xFF64748B),
+                                color: context.colors.textSecondary,
                               ),
                             ),
                           ],
@@ -1862,13 +1868,13 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                       Container(
                         padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: context.colors.surface,
                           borderRadius: BorderRadius.circular(12.r),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.local_fire_department_rounded, size: 13.sp, color: const Color(0xFF64748B)),
+                            Icon(Icons.local_fire_department_rounded, size: 13.sp, color: context.colors.textSecondary),
                             SizedBox(width: 4.w),
                             Text(
                               '${recipe.kcal} kcal',
@@ -1876,7 +1882,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                                 fontFamily: 'Rubik',
                                 fontSize: 12.sp,
                                 fontWeight: FontWeight.w600,
-                                color: const Color(0xFF64748B),
+                                color: context.colors.textSecondary,
                               ),
                             ),
                           ],
@@ -1886,7 +1892,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                   ),
 
                   SizedBox(height: 12.h),
-                  const Divider(color: Color(0xFFE2E8F0), height: 1),
+                  Divider(color: context.colors.border, height: 1),
                   SizedBox(height: 12.h),
 
                   // Your Ingredients Header
@@ -1896,7 +1902,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                       fontFamily: 'Rubik',
                       fontSize: 14.sp,
                       fontWeight: FontWeight.w800,
-                      color: const Color(0xFF0F172A),
+                      color: context.colors.textPrimary,
                     ),
                   ),
                   SizedBox(height: 2.h),
@@ -1905,7 +1911,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                     style: TextStyle(
                       fontFamily: 'Rubik',
                       fontSize: 12.sp,
-                      color: const Color(0xFF94A3B8),
+                      color: context.colors.textMuted,
                     ),
                   ),
                   SizedBox(height: 8.h),
@@ -1918,7 +1924,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                       return Container(
                         padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 5.h),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: context.colors.surface,
                           borderRadius: BorderRadius.circular(16.r),
                         ),
                         child: Text(
@@ -1927,7 +1933,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                             fontFamily: 'Rubik',
                             fontSize: 12.sp,
                             fontWeight: FontWeight.w600,
-                            color: const Color(0xFF0F172A),
+                            color: context.colors.textPrimary,
                           ),
                         ),
                       );
@@ -1943,7 +1949,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                       width: double.infinity,
                       height: 46.h,
                       decoration: BoxDecoration(
-                        color: const Color(0xFFC83A2D),
+                        color: context.colors.accent,
                         borderRadius: BorderRadius.circular(24.r),
                       ),
                       alignment: Alignment.center,
@@ -2177,12 +2183,12 @@ class _PillTab extends StatelessWidget {
           margin: EdgeInsets.symmetric(horizontal: 2.w),
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: active ? const Color(0xFFC83A2D) : Colors.transparent,
+            color: active ? context.colors.accent : Colors.transparent,
             borderRadius: BorderRadius.circular(26.r),
             boxShadow: active
                 ? [
                     BoxShadow(
-                      color: const Color(0xFFC83A2D).withValues(alpha: 0.35),
+                      color: context.colors.accent.withValues(alpha: 0.35),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     )
@@ -2196,7 +2202,7 @@ class _PillTab extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
               fontFamily: 'Rubik',
-              color: active ? Colors.white : const Color(0xFF0F172A),
+              color: active ? Colors.white : context.colors.textPrimary,
               fontWeight: active ? FontWeight.w700 : FontWeight.w600,
               fontSize: 14.sp,
             ),

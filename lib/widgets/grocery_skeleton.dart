@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'skeleton_loader.dart';
+import '../core/theme/app_theme.dart';
 
 class GrocerySkeleton extends StatelessWidget {
   final int itemCount;
@@ -17,10 +18,10 @@ class GrocerySkeleton extends StatelessWidget {
     return ListView.separated(
       padding: padding,
       itemCount: itemCount,
-      separatorBuilder: (_, __) => const Divider(
+      separatorBuilder: (_, __) => Divider(
         height: 0,
         thickness: 1,
-        color: Color(0xFFF2F2F2),
+        color: context.colors.divider,
       ),
       itemBuilder: (_, __) => const GrocerySkeletonItem(),
     );

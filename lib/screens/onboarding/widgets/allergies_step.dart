@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter/services.dart';
 import 'selection_onboarding_step.dart';
+import '../../../core/theme/app_theme.dart';
 
 class AllergiesStep extends StatefulWidget {
   final VoidCallback? onContinue;
@@ -90,7 +91,7 @@ class _AllergiesStepState extends State<AllergiesStep> {
       'Common allergies',
       style: GoogleFonts.rubik(fontSize: 15.sp,
         fontWeight: FontWeight.w500,
-        color: const Color(0xFF111827)));
+        color: context.colors.textPrimary));
   }
 
   Widget _buildBottomCard() {
@@ -98,12 +99,12 @@ class _AllergiesStepState extends State<AllergiesStep> {
       width: double.infinity,
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
       decoration: BoxDecoration(
-        color: const Color(0xFFFAF4E5),
+        color: context.colors.surface,
         borderRadius: BorderRadius.circular(14.r)),
       child: Text(
         "Additional dietary preferences can be updated later in Settings.",
         style: GoogleFonts.poppins(fontSize: 14.sp,
-          color: const Color(0xFF111827),
+          color: context.colors.textPrimary,
           height: 1.35)));
   }
 

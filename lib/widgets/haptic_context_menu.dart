@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../core/theme/app_theme.dart';
 
 class HapticMenuAction {
   final String title;
@@ -182,7 +183,7 @@ class _MenuTile extends StatelessWidget {
                 action.icon,
                 color: action.isDestructive
                     ? const Color(0xFFFF453A)
-                    : const Color(0xFF1A1A1A),
+                    : context.colors.textPrimary,
                 size: 20.sp,
               ),
               SizedBox(width: 12.w),
@@ -192,7 +193,7 @@ class _MenuTile extends StatelessWidget {
                   style: TextStyle(
                     color: action.isDestructive
                         ? const Color(0xFFFF453A)
-                        : const Color(0xFF1A1A1A),
+                        : context.colors.textPrimary,
                     fontSize: 16.sp,
                     fontWeight: FontWeight.w400,
                     fontFamily: 'SF Pro',

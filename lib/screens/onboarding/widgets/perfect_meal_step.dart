@@ -1,6 +1,7 @@
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../../../core/theme/app_theme.dart';
 
 class PerfectMealStep extends StatefulWidget {
   final List<String> favoriteCuisines;
@@ -93,14 +94,14 @@ class _PerfectMealStepState extends State<PerfectMealStep> with SingleTickerProv
                                 style: GoogleFonts.rubik(
                                   fontSize: 32.sp,
                                   fontWeight: FontWeight.w500,
-                                  color: const Color(0xFF111827),
+                                  color: context.colors.textPrimary,
                                   height: 1.15)),
                               SizedBox(height: 8.h),
                               Text(
                                 'Based on your goals, taste, and cooking',
                                 style: GoogleFonts.poppins(
                                   fontSize: 15.sp,
-                                  color: const Color(0xFF111827),
+                                  color: context.colors.textPrimary,
                                   height: 1.3)),
                             ])))),
                     SizedBox(height: 8.h),
@@ -117,9 +118,9 @@ class _PerfectMealStepState extends State<PerfectMealStep> with SingleTickerProv
                             fit: BoxFit.contain,
                             errorBuilder: (context, error, stackTrace) => Container(
                               height: 300.h,
-                              color: const Color(0xFFF1F5F9),
+                              color: context.colors.pageBackground,
                               alignment: Alignment.center,
-                              child: const Icon(Icons.restaurant, color: Color(0xFFCBD5E1))))))),
+                              child: Icon(Icons.restaurant, color: context.colors.border)))))),
                     SizedBox(height: 16.h),
 
                     // Why we picked this section
@@ -137,7 +138,7 @@ class _PerfectMealStepState extends State<PerfectMealStep> with SingleTickerProv
                                 style: GoogleFonts.rubik(
                                   fontSize: 18.sp,
                                   fontWeight: FontWeight.w500,
-                                  color: const Color(0xFF111827)))),
+                                  color: context.colors.textPrimary))),
                             SizedBox(height: 12.h),
 
                             // Horizontal scroll chips
@@ -150,23 +151,35 @@ class _PerfectMealStepState extends State<PerfectMealStep> with SingleTickerProv
                                   _buildReasonChip(
                                     icon: Icons.favorite_outline_rounded,
                                     label: 'Matches your taste',
-                                    bgColor: const Color(0xFFFFF7ED),
-                                    borderColor: const Color(0xFFFFEDD5),
-                                    iconColor: const Color(0xFFC31E26)),
+                                    bgColor: Theme.of(context).brightness == Brightness.dark
+                                        ? context.colors.accent.withValues(alpha: 0.16)
+                                        : const Color(0xFFFFF7ED),
+                                    borderColor: Theme.of(context).brightness == Brightness.dark
+                                        ? context.colors.accent.withValues(alpha: 0.4)
+                                        : const Color(0xFFFFEDD5),
+                                    iconColor: context.colors.accent),
                                   SizedBox(width: 10.w),
                                   _buildReasonChip(
                                     icon: Icons.flash_on_outlined,
                                     label: 'Quick dinner',
-                                    bgColor: const Color(0xFFFFF7ED),
-                                    borderColor: const Color(0xFFFFEDD5),
-                                    iconColor: const Color(0xFFC31E26)),
+                                    bgColor: Theme.of(context).brightness == Brightness.dark
+                                        ? context.colors.accent.withValues(alpha: 0.16)
+                                        : const Color(0xFFFFF7ED),
+                                    borderColor: Theme.of(context).brightness == Brightness.dark
+                                        ? context.colors.accent.withValues(alpha: 0.4)
+                                        : const Color(0xFFFFEDD5),
+                                    iconColor: context.colors.accent),
                                   SizedBox(width: 10.w),
                                   _buildReasonChip(
                                     icon: Icons.restaurant_menu_rounded,
                                     label: 'Uses your ingredients',
-                                    bgColor: const Color(0xFFFFF7ED),
-                                    borderColor: const Color(0xFFFFEDD5),
-                                    iconColor: const Color(0xFFC31E26)),
+                                    bgColor: Theme.of(context).brightness == Brightness.dark
+                                        ? context.colors.accent.withValues(alpha: 0.16)
+                                        : const Color(0xFFFFF7ED),
+                                    borderColor: Theme.of(context).brightness == Brightness.dark
+                                        ? context.colors.accent.withValues(alpha: 0.4)
+                                        : const Color(0xFFFFEDD5),
+                                    iconColor: context.colors.accent),
                                 ])),
                           ]))),
                     SizedBox(height: 20.h),
@@ -188,7 +201,7 @@ class _PerfectMealStepState extends State<PerfectMealStep> with SingleTickerProv
                       child: ElevatedButton(
                         onPressed: widget.onStartCooking,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFC31E26),
+                          backgroundColor: context.colors.accent,
                           elevation: 0,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(32.r))),
@@ -230,7 +243,7 @@ class _PerfectMealStepState extends State<PerfectMealStep> with SingleTickerProv
             style: GoogleFonts.rubik(
               fontSize: 14.sp,
               fontWeight: FontWeight.w500,
-              color: const Color(0xFF111827))),
+              color: context.colors.textPrimary)),
         ]));
   }
 }

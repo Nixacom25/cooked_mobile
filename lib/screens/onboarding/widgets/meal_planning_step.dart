@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import '../../../core/theme/app_theme.dart';
 
 class MealPlanningStep extends StatefulWidget {
   final String initialSelected;
@@ -62,14 +63,14 @@ class _MealPlanningStepState extends State<MealPlanningStep> {
             style: GoogleFonts.poppins(
               fontSize: 24.sp,
               fontWeight: FontWeight.w900,
-              color: const Color(0xFF0D1B3E),
+              color: context.colors.textPrimary,
               height: 1.2)),
           SizedBox(height: 8.h),
           Text(
             'We\'ll customize the experience for you',
             style: GoogleFonts.poppins(
               fontSize: 14.sp,
-              color: const Color(0xFF7B8190))),
+              color: context.colors.textMuted)),
           SizedBox(height: 32.h),
           ..._options.map((opt) => _buildOption(opt)),
         ]));
@@ -89,17 +90,17 @@ class _MealPlanningStepState extends State<MealPlanningStep> {
         child: Container(
           padding: EdgeInsets.symmetric(horizontal: 14.r, vertical: 10.h),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: context.colors.surface,
             borderRadius: BorderRadius.circular(16.r),
             border: Border.all(
               color: isSelected
-                  ? const Color(0xFFC83A2D)
-                  : const Color(0xFFE5E7EB),
+                  ? context.colors.accent
+                  : context.colors.divider,
               width: isSelected ? 1.5.w : 1.w),
             boxShadow: isSelected
                 ? [
                     BoxShadow(
-                      color: const Color(0xFFC31E26).withValues(alpha: 0.05),
+                      color: context.colors.accent.withValues(alpha: 0.05),
                       blurRadius: 10.r,
                       offset: Offset(0, 4.h)),
                   ]
@@ -120,12 +121,12 @@ class _MealPlanningStepState extends State<MealPlanningStep> {
                       opt['title']!,
                       style: GoogleFonts.poppins(fontSize: 14.sp,
                         fontWeight: FontWeight.w700,
-                        color: const Color(0xFF1A1A1A))),
+                        color: context.colors.textPrimary)),
                     SizedBox(height: 2.h),
                     Text(
                       opt['subtitle']!,
                       style: GoogleFonts.poppins(fontSize: 12.sp,
-                        color: const Color(0xFF7B8190))),
+                        color: context.colors.textMuted)),
                   ])),
             ]))));
   }

@@ -31,6 +31,7 @@ import '../../core/utils/error_helper.dart';
 import '../../widgets/glass_icon_button.dart';
 import '../../widgets/recent_import_tile.dart';
 import '../../widgets/saved_recipe_card.dart';
+import '../../core/theme/app_theme.dart';
 
 // ══════════════════════════════════════════════════════════════════════════════
 // VIEW ALL SCREEN
@@ -58,7 +59,7 @@ class _ViewAllScreenState extends State<ViewAllScreen> {
       if (type == ViewAllType.exploreCuisines) {
         await RecipeService.instance.getExploreCuisines(forceRefresh: true);
       } else if (type == ViewAllType.exploreCategories) {
-        await RecipeService.instance.getActiveExploreCategories(forceRefresh: true);
+        await RecipeService.instance.getExploreCategories(forceRefresh: true);
       } else if (type == ViewAllType.savedRecipes) {
         await RecipeService.instance.getMyRecipes(forceRefresh: true);
       } else if (type == ViewAllType.imports) {
@@ -107,7 +108,7 @@ class _ViewAllScreenState extends State<ViewAllScreen> {
             child: Container(
               margin: EdgeInsets.only(top: 20.h),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: context.colors.surface,
                 borderRadius: BorderRadius.vertical(
                   top: Radius.circular(32.r),
                 ),
@@ -125,7 +126,7 @@ class _ViewAllScreenState extends State<ViewAllScreen> {
                           child: Icon(
                             Icons.arrow_back_rounded,
                             size: 20.sp,
-                            color: const Color(0xFF0F172A),
+                            color: context.colors.textPrimary,
                           ),
                         ),
                         Expanded(
@@ -139,7 +140,7 @@ class _ViewAllScreenState extends State<ViewAllScreen> {
                                   fontFamily: 'Rubik',
                                   fontWeight: FontWeight.w800,
                                   fontSize: 22.sp,
-                                  color: const Color(0xFF0F172A),
+                                  color: context.colors.textPrimary,
                                 ),
                               ),
                               _buildSubtitleBadge(type),
@@ -159,7 +160,7 @@ class _ViewAllScreenState extends State<ViewAllScreen> {
                             size: 42.r,
                             child: Icon(
                               Icons.add_rounded,
-                              color: const Color(0xFF0F172A),
+                              color: context.colors.textPrimary,
                               size: 22.sp,
                             ),
                           )
@@ -190,7 +191,7 @@ class _ViewAllScreenState extends State<ViewAllScreen> {
                                       : type == ViewAllType.recentlyViewed
                                           ? 'Search recently viewed recipes..'
                                           : 'Search recipes, cookbooks....',
-                      backgroundColor: const Color(0xFFF1F5F9),
+                      backgroundColor: context.colors.pageBackground,
                       borderColor: Colors.transparent,
                       borderRadius: 16.r,
                     ),
@@ -533,7 +534,7 @@ class _RecipesGridState extends State<_RecipesGrid> {
 
               String source = 'Web';
               IconData icon = Icons.language_rounded;
-              Color iconColor = const Color(0xFF888888);
+              Color iconColor = context.colors.textMuted;
               String? sourceAsset;
 
               if (r.sourceUrl?.contains('instagram.com') ?? false) {
@@ -589,7 +590,7 @@ class _RecipesGridState extends State<_RecipesGrid> {
                       fontFamily: 'Rubik',
                       fontWeight: FontWeight.w800,
                       fontSize: 20.sp,
-                      color: const Color(0xFF0F172A),
+                      color: context.colors.textPrimary,
                     ),
                   ),
                 ),
@@ -758,7 +759,7 @@ class _RecipesGridState extends State<_RecipesGrid> {
               useExploreButton: isExplore,
               disableSlide: true,
               inactiveColor: isCuisineOrCategory
-                  ? const Color(0xFF9CA3AF)
+                  ? context.colors.textMuted
                   : null,
               onValidateTap: isExplore
                   ? () => _handleValidation(ctx, r, isSaved)
@@ -1045,7 +1046,7 @@ class _CreatorsGridState extends State<_CreatorsGrid> {
               children: [
                 CircleAvatar(
                   radius: 40,
-                  backgroundColor: const Color(0xFFF0F0F0),
+                  backgroundColor: context.colors.surface,
                   backgroundImage: c.photo != null
                       ? NetworkImage(c.photo!)
                       : null,
@@ -1056,9 +1057,9 @@ class _CreatorsGridState extends State<_CreatorsGrid> {
                       ? Text(
                           c.firstname[0].toUpperCase() +
                               c.lastname[0].toUpperCase(),
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontWeight: FontWeight.bold,
-                            color: Color(0xFFC83A2D),
+                            color: context.colors.accent,
                           ),
                         )
                       : null,
@@ -1069,28 +1070,28 @@ class _CreatorsGridState extends State<_CreatorsGrid> {
                   textAlign: TextAlign.center,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontFamily: 'SF Pro',
                     fontWeight: FontWeight.w700,
                     fontSize: 14,
-                    color: Color(0xFF222222),
+                    color: context.colors.textPrimary,
                   ),
                 ),
                 SizedBox(height: 2.h),
                 Row(
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.restaurant_outlined,
                       size: 13,
-                      color: Color(0xFF9CA3AF),
+                      color: context.colors.textMuted,
                     ),
                     const SizedBox(width: 4),
                     Text(
                       '${c.publicRecipeCount} Recipes',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontFamily: 'SF Pro',
                         fontSize: 11,
-                        color: Color(0xFF9CA3AF),
+                        color: context.colors.textMuted,
                       ),
                     ),
                   ],
@@ -1144,7 +1145,7 @@ class _StaticCookbooksGridState extends State<_StaticCookbooksGrid> {
     super.initState();
     _refreshTimestamp = DateTime.now().millisecondsSinceEpoch;
     if (widget.type == ViewAllType.exploreCategories) {
-      _future = RecipeService.instance.getActiveExploreCategories(forceRefresh: true);
+      _future = RecipeService.instance.getExploreCategories(forceRefresh: true);
     } else {
       _future = RecipeService.instance.getExploreCuisines(forceRefresh: true);
     }
@@ -1268,7 +1269,7 @@ class _StaticCookbooksGridState extends State<_StaticCookbooksGrid> {
       },
       child: Container(
         decoration: BoxDecoration(
-          color: const Color(0xFFFAF6EE),
+          color: context.colors.surface,
           borderRadius: BorderRadius.circular(24.r),
         ),
         child: Column(
@@ -1281,7 +1282,7 @@ class _StaticCookbooksGridState extends State<_StaticCookbooksGrid> {
                   borderRadius: BorderRadius.circular(20.r),
                   child: Container(
                     width: double.infinity,
-                    color: const Color(0xFFF2F1EF),
+                    color: context.colors.surface,
                     child: isNetwork
                         ? CachedNetworkImage(
                             imageUrl: bustedImageUrl,
@@ -1320,7 +1321,7 @@ class _StaticCookbooksGridState extends State<_StaticCookbooksGrid> {
                   fontFamily: 'Rubik',
                   fontWeight: FontWeight.w700,
                   fontSize: 16.sp,
-                  color: const Color(0xFF0F172A),
+                  color: context.colors.textPrimary,
                 ),
               ),
             ),

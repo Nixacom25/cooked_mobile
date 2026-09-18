@@ -2,6 +2,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter/services.dart';
+import '../../../core/theme/app_theme.dart';
 
 class NotificationsStep extends StatefulWidget {
   final List<String> initialSelected;
@@ -43,7 +44,7 @@ class _NotificationsStepState extends State<NotificationsStep> {
             style: GoogleFonts.poppins(
               fontSize: 24.sp,
               fontWeight: FontWeight.w900,
-              color: const Color(0xFF0D1B3E),
+              color: context.colors.textPrimary,
               height: 1.2,
               letterSpacing: -0.5)),
           SizedBox(height: 8.h),
@@ -51,7 +52,7 @@ class _NotificationsStepState extends State<NotificationsStep> {
             'Choose what you\'d like to hear about',
             style: GoogleFonts.poppins(
               fontSize: 14.sp,
-              color: const Color(0xFF7B8190))),
+              color: context.colors.textMuted)),
           SizedBox(height: 32.h),
           ..._options.map((opt) => _buildToggleItem(opt)),
           SizedBox(height: 32.h),
@@ -70,25 +71,31 @@ class _NotificationsStepState extends State<NotificationsStep> {
                 widget.onChanged(_selected.toList());
               },
               style: TextButton.styleFrom(
-                backgroundColor: Colors.white,
+                backgroundColor: context.colors.surface,
                 padding: EdgeInsets.symmetric(vertical: 16.h),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(50.r),
                   side: BorderSide(
-                    color: const Color(0xFFC31E26),
+                    color: context.colors.accent,
                     width: 1.5.w))),
               child: Text(
                 _selected.isEmpty ? 'Turn on all' : 'Turn off all',
                 style: GoogleFonts.poppins(fontSize: 16.sp,
                   fontWeight: FontWeight.w600,
-                  color: const Color(0xFFC31E26))))),
+                  color: context.colors.accent)))),
           SizedBox(height: 24.h),
           Container(
             padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
             decoration: BoxDecoration(
-              color: const Color(0xFFFFF7ED), // Light yellowish-beige
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? const Color(0xFFD97706).withValues(alpha: 0.16)
+                  : const Color(0xFFFFF7ED), // Light yellowish-beige
               borderRadius: BorderRadius.circular(12.r),
-              border: Border.all(color: const Color(0xFFFDE68A), width: 0.5)),
+              border: Border.all(
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? const Color(0xFFD97706).withValues(alpha: 0.4)
+                      : const Color(0xFFFDE68A),
+                  width: 0.5)),
             child: Row(
               children: [
                 Text('💡', style: TextStyle(fontSize: 14.sp)),
@@ -98,7 +105,7 @@ class _NotificationsStepState extends State<NotificationsStep> {
                     'You can adjust these anytime in your settings',
                     style: GoogleFonts.poppins(fontSize: 13.sp,
                       fontWeight: FontWeight.w500,
-                      color: const Color(0xFF1A1A1A)))),
+                      color: context.colors.textPrimary))),
               ])),
           SizedBox(height: 10.h),
         ]));
@@ -125,10 +132,10 @@ class _NotificationsStepState extends State<NotificationsStep> {
           duration: const Duration(milliseconds: 200),
           padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: context.colors.surface,
             borderRadius: BorderRadius.circular(16.r),
             border: Border.all(
-              color: const Color(0xFFE5E7EB),
+              color: context.colors.divider,
               width: 1.w),
             boxShadow: [
               BoxShadow(
@@ -146,12 +153,12 @@ class _NotificationsStepState extends State<NotificationsStep> {
                       opt['title']!,
                       style: GoogleFonts.poppins(fontSize: 15.sp,
                         fontWeight: FontWeight.w600,
-                        color: const Color(0xFF1A1A1A))),
+                        color: context.colors.textPrimary)),
                     SizedBox(height: 4.h),
                     Text(
                       opt['subtitle']!,
                       style: GoogleFonts.poppins(fontSize: 13.sp,
-                        color: const Color(0xFF7B8190))),
+                        color: context.colors.textMuted)),
                   ])),
               SizedBox(width: 12.w),
               Container(
@@ -159,9 +166,9 @@ class _NotificationsStepState extends State<NotificationsStep> {
                 height: 24.sp,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: isSelected ? const Color(0xFFC83A2D) : Colors.transparent,
+                  color: isSelected ? context.colors.accent : Colors.transparent,
                   border: Border.all(
-                    color: isSelected ? const Color(0xFFC83A2D) : const Color(0xFFD1D5DB),
+                    color: isSelected ? context.colors.accent : context.colors.border,
                     width: 1.5.w)),
                 child: isSelected
                     ? Icon(Icons.check, size: 14.sp, color: Colors.white)

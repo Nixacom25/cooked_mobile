@@ -2,6 +2,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../widgets/red_button.dart';
+import '../../../core/theme/app_theme.dart';
 
 class HealthyEatingIntroStep extends StatelessWidget {
   final VoidCallback onContinue;
@@ -31,24 +32,24 @@ class HealthyEatingIntroStep extends StatelessWidget {
                           style: GoogleFonts.rubik(
                             fontSize: 32.sp,
                             fontWeight: FontWeight.w500,
-                            color: const Color(0xFF111827),
+                            color: context.colors.textPrimary,
                             height: 1.15),
                           children: [
                             const TextSpan(text: "Healthy eating\nshouldn’t "),
-                            const TextSpan(
+                            TextSpan(
                               text: "feel like",
-                              style: TextStyle(color: Color(0xFFC31E26))),
+                              style: TextStyle(color: context.colors.accent)),
                             const TextSpan(text: " a\n"),
-                            const TextSpan(
+                            TextSpan(
                               text: "second job",
-                              style: TextStyle(color: Color(0xFFC31E26))),
+                              style: TextStyle(color: context.colors.accent)),
                           ])),
                       SizedBox(height: 10.h),
                       Text(
                         "Recipes you’ll actually look forward\nto eating.",
                         style: GoogleFonts.poppins(
                           fontSize: 15.sp,
-                          color: const Color(0xFF111827),
+                          color: context.colors.textPrimary,
                           height: 1.3)),
                     ],
                   ),
@@ -60,7 +61,7 @@ class HealthyEatingIntroStep extends StatelessWidget {
                   fit: BoxFit.fitWidth,
                   errorBuilder: (context, error, stackTrace) => Container(
                     height: 300.h,
-                    color: const Color(0xFFF1F5F9),
+                    color: context.colors.pageBackground,
                     alignment: Alignment.center,
                     child: const Text('assets/onboarding/step17.png missing'))),
                 SizedBox(height: 20.h),
@@ -72,7 +73,7 @@ class HealthyEatingIntroStep extends StatelessWidget {
             bottom: true,
             child: RedButton(
               label: 'Continue',
-              color: const Color(0xFFC31E26),
+              color: context.colors.accent,
               onTap: onContinue,
               height: 52.h,
               fontSize: 16.sp))),

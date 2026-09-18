@@ -2,6 +2,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../widgets/red_button.dart';
+import '../../../core/theme/app_theme.dart';
 
 class SavingsStep extends StatefulWidget {
   final VoidCallback onContinue;
@@ -125,14 +126,14 @@ class _SavingsStepState extends State<SavingsStep> with SingleTickerProviderStat
                               style: GoogleFonts.rubik(
                                 fontSize: 30.sp,
                                 fontWeight: FontWeight.w500,
-                                color: const Color(0xFF111827),
+                                color: context.colors.textPrimary,
                                 height: 1.2,
                                 letterSpacing: -0.3),
-                              children: const [
+                              children: [
                                 TextSpan(text: 'You’re '),
                                 TextSpan(
                                   text: 'not alone',
-                                  style: TextStyle(color: Color(0xFFC31E26))),
+                                  style: TextStyle(color: context.colors.accent)),
                               ])))),
                       SizedBox(height: 10.h),
                       FadeTransition(
@@ -144,7 +145,7 @@ class _SavingsStepState extends State<SavingsStep> with SingleTickerProviderStat
                             textAlign: TextAlign.left,
                             style: GoogleFonts.poppins(
                               fontSize: 16.sp,
-                              color: const Color(0xFF111827),
+                              color: context.colors.textPrimary,
                               fontWeight: FontWeight.w400,
                               height: 1.35)))),
                     ])),
@@ -165,7 +166,7 @@ class _SavingsStepState extends State<SavingsStep> with SingleTickerProviderStat
                             child: Container(
                               padding: EdgeInsets.all(16.w),
                               decoration: BoxDecoration(
-                                color: const Color(0xFFF1F5F9).withValues(alpha: 0.95),
+                                color: context.colors.pageBackground.withValues(alpha: 0.95),
                                 borderRadius: BorderRadius.circular(16.r)),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -176,7 +177,7 @@ class _SavingsStepState extends State<SavingsStep> with SingleTickerProviderStat
                                     children: [
                                       Icon(
                                         Icons.access_time_rounded,
-                                        color: const Color(0xFFC31E26),
+                                        color: context.colors.accent,
                                         size: 24.sp),
                                       SizedBox(width: 8.w),
                                       Text(
@@ -184,7 +185,7 @@ class _SavingsStepState extends State<SavingsStep> with SingleTickerProviderStat
                                         style: GoogleFonts.rubik(
                                           fontSize: 28.sp,
                                           fontWeight: FontWeight.w500,
-                                          color: const Color(0xFFC31E26),
+                                          color: context.colors.accent,
                                           height: 1.1)),
                                     ],
                                   ),
@@ -194,14 +195,14 @@ class _SavingsStepState extends State<SavingsStep> with SingleTickerProviderStat
                                     style: GoogleFonts.rubik(
                                       fontSize: 15.sp,
                                       fontWeight: FontWeight.w500,
-                                      color: const Color(0xFF111827))),
+                                      color: context.colors.textPrimary)),
                                   SizedBox(height: 4.h),
                                   Text(
                                     'Spent deciding\nwhat to eat',
                                     style: GoogleFonts.poppins(
                                       fontSize: 12.sp,
                                       fontWeight: FontWeight.w400,
-                                      color: const Color(0xFF111827),
+                                      color: context.colors.textPrimary,
                                       height: 1.25)),
                                 ]))),
                           SizedBox(width: 12.w),
@@ -210,7 +211,7 @@ class _SavingsStepState extends State<SavingsStep> with SingleTickerProviderStat
                             child: Container(
                               padding: EdgeInsets.all(16.w),
                               decoration: BoxDecoration(
-                                color: const Color(0xFFF1F5F9).withValues(alpha: 0.95),
+                                color: context.colors.pageBackground.withValues(alpha: 0.95),
                                 borderRadius: BorderRadius.circular(16.r)),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -221,7 +222,7 @@ class _SavingsStepState extends State<SavingsStep> with SingleTickerProviderStat
                                     children: [
                                       Icon(
                                         Icons.calendar_today_outlined,
-                                        color: const Color(0xFFC31E26),
+                                        color: context.colors.accent,
                                         size: 22.sp),
                                       SizedBox(width: 8.w),
                                       Text(
@@ -229,7 +230,7 @@ class _SavingsStepState extends State<SavingsStep> with SingleTickerProviderStat
                                         style: GoogleFonts.rubik(
                                           fontSize: 28.sp,
                                           fontWeight: FontWeight.w500,
-                                          color: const Color(0xFFC31E26),
+                                          color: context.colors.accent,
                                           height: 1.1)),
                                     ],
                                   ),
@@ -239,14 +240,14 @@ class _SavingsStepState extends State<SavingsStep> with SingleTickerProviderStat
                                     style: GoogleFonts.rubik(
                                       fontSize: 15.sp,
                                       fontWeight: FontWeight.w500,
-                                      color: const Color(0xFF111827))),
+                                      color: context.colors.textPrimary)),
                                   SizedBox(height: 4.h),
                                   Text(
                                     'of your life\nevery year',
                                     style: GoogleFonts.poppins(
                                       fontSize: 12.sp,
                                       fontWeight: FontWeight.w400,
-                                      color: const Color(0xFF111827),
+                                      color: context.colors.textPrimary,
                                       height: 1.25)),
                                 ]))),
                         ])))),
@@ -263,7 +264,7 @@ class _SavingsStepState extends State<SavingsStep> with SingleTickerProviderStat
                         padding: EdgeInsets.fromLTRB(24.w, 16.h, 24.w, 20.h),
                         child: RedButton(
                           label: 'Continue',
-                          color: const Color(0xFFC31E26),
+                          color: context.colors.accent,
                           onTap: widget.onContinue,
                           height: 52.h,
                           fontSize: 16.sp))))),

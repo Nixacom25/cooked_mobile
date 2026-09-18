@@ -28,6 +28,7 @@ import '../widgets/red_button.dart';
 import '../widgets/skeleton_loader.dart';
 import '../widgets/add_to_cookbook_sheet.dart';
 import '../widgets/recent_import_tile.dart';
+import '../core/theme/app_theme.dart';
 
 class ImportScreen extends StatefulWidget {
   final ValueNotifier<bool>? isActiveNotifier;
@@ -228,8 +229,38 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
     });
   }
 
-  Future<void> _importFromUrl(String url) async {
-    if (url.isEmpty) return;
+  Future<void> _importFromUrl(String rawUrl) async {
+    if (rawUrl.isEmpty) return;
+
+    var trimmedUrl = rawUrl.trim();
+    // "user@host" input (e.g. a pasted email address) is never a real
+    // recipe link - reject it before it gets misread as URL userinfo.
+    final looksLikeEmail = !trimmedUrl.contains('://') && trimmedUrl.contains('@');
+
+    // Accept links pasted without a scheme (e.g. "www.site.com/recipe") by
+    // assuming https, same as a browser address bar would.
+    if (!trimmedUrl.contains('://')) {
+      trimmedUrl = 'https://$trimmedUrl';
+    }
+
+    final uri = Uri.tryParse(trimmedUrl);
+    final domainRegex = RegExp(
+      r'^([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$',
+    );
+    final isValidRecipeLink = !looksLikeEmail &&
+        uri != null &&
+        (uri.scheme == 'http' || uri.scheme == 'https') &&
+        domainRegex.hasMatch(uri.host);
+    if (!isValidRecipeLink) {
+      IosToast.show(
+        context,
+        message: 'Please enter a valid recipe link (e.g. https://example.com/recipe)',
+        type: ToastType.warning,
+      );
+      return;
+    }
+    final url = trimmedUrl;
+
     HapticFeedback.lightImpact();
     setState(() => _isImporting = true);
     widget.isImportingNotifier?.value = true;
@@ -541,9 +572,9 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
   @override
   Widget build(BuildContext context) {
     if (_isImporting) {
-      return const Scaffold(
-        backgroundColor: Colors.white,
-        body: ImportLoadingPage(),
+      return Scaffold(
+        backgroundColor: context.colors.surface,
+        body: const ImportLoadingPage(),
       );
     }
 
@@ -551,7 +582,7 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: context.colors.pageBackground,
         resizeToAvoidBottomInset: false,
         body: Stack(
           children: [
@@ -573,7 +604,7 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
                   child: Container(
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: context.colors.surface,
                   borderRadius: BorderRadius.vertical(top: Radius.circular(32.r)),
                 ),
                 child: ClipRRect(
@@ -593,7 +624,7 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
                           fontFamily: 'Rubik',
                           fontWeight: FontWeight.w800,
                           fontSize: 24.sp,
-                          color: const Color(0xFF0F172A),
+                          color: context.colors.textPrimary,
                         ),
                       ),
                       SizedBox(height: 20.h),
@@ -606,7 +637,7 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
                             fontFamily: 'Rubik',
                             fontWeight: FontWeight.w800,
                             fontSize: 16.sp,
-                            color: const Color(0xFF0F172A),
+                            color: context.colors.textPrimary,
                           ),
                         ),
                       ),
@@ -639,7 +670,7 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
                       // Input Box for Link
                       Container(
                         decoration: BoxDecoration(
-                          color: const Color(0xFFF1F5F9),
+                          color: context.colors.pageBackground,
                           borderRadius: BorderRadius.circular(16.r),
                         ),
                         child: Row(
@@ -650,14 +681,14 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
                                 style: TextStyle(
                                   fontFamily: 'Rubik',
                                   fontSize: 14.sp,
-                                  color: const Color(0xFF0F172A),
+                                  color: context.colors.textPrimary,
                                 ),
                                 decoration: InputDecoration(
                                   hintText: 'Paste a recipe link...',
                                   hintStyle: TextStyle(
                                     fontFamily: 'Rubik',
                                     fontSize: 14.sp,
-                                    color: const Color(0xFF94A3B8),
+                                    color: context.colors.textMuted,
                                   ),
                                   filled: true,
                                   fillColor: Colors.transparent,
@@ -686,7 +717,7 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
                                     child: Icon(
                                       hasText ? Icons.close_rounded : Icons.content_paste_rounded,
                                       size: 20.sp,
-                                      color: const Color(0xFF64748B),
+                                      color: context.colors.textSecondary,
                                     ),
                                   ),
                                 );
@@ -711,7 +742,7 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
                       // Divider "── OR ──"
                       Row(
                         children: [
-                          const Expanded(child: Divider(color: Color(0xFFE2E8F0))),
+                          Expanded(child: Divider(color: context.colors.border)),
                           Padding(
                             padding: EdgeInsets.symmetric(horizontal: 14.w),
                             child: Text(
@@ -720,11 +751,11 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
                                 fontFamily: 'Rubik',
                                 fontSize: 13.sp,
                                 fontWeight: FontWeight.w600,
-                                color: const Color(0xFF94A3B8),
+                                color: context.colors.textMuted,
                               ),
                             ),
                           ),
-                          const Expanded(child: Divider(color: Color(0xFFE2E8F0))),
+                          Expanded(child: Divider(color: context.colors.border)),
                         ],
                       ),
                       SizedBox(height: 24.h),
@@ -739,19 +770,19 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
                               height: 50.h,
                               padding: EdgeInsets.symmetric(horizontal: 16.w),
                               decoration: BoxDecoration(
-                                color: const Color(0xFFF1F5F9),
+                                color: context.colors.pageBackground,
                                 borderRadius: BorderRadius.circular(16.r),
                               ),
                               child: Row(
                                 children: [
-                                  Icon(Icons.search_rounded, color: const Color(0xFF64748B), size: 22.sp),
+                                  Icon(Icons.search_rounded, color: context.colors.textSecondary, size: 22.sp),
                                   SizedBox(width: 10.w),
                                   Text(
                                     'Search web',
                                     style: TextStyle(
                                       fontFamily: 'Rubik',
                                       fontSize: 14.sp,
-                                      color: const Color(0xFF94A3B8),
+                                      color: context.colors.textMuted,
                                     ),
                                   ),
                                 ],
@@ -766,10 +797,10 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
                           margin: EdgeInsets.only(top: 8.h),
                           constraints: BoxConstraints(maxHeight: 250.h),
                           child: Material(
-                            color: Colors.white,
+                            color: context.colors.surface,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(16.r),
-                              side: const BorderSide(color: Color(0xFFE2E8F0)),
+                              side: BorderSide(color: context.colors.border),
                             ),
                             elevation: 3,
                             shadowColor: Colors.black.withValues(alpha: 0.05),
@@ -820,7 +851,7 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
                             fontFamily: 'Rubik',
                             fontWeight: FontWeight.w800,
                             fontSize: 16.sp,
-                            color: const Color(0xFF0F172A),
+                            color: context.colors.textPrimary,
                           ),
                         ),
                         SizedBox(height: 12.h),
@@ -853,7 +884,7 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
                                       fontFamily: 'Rubik',
                                       fontWeight: FontWeight.w800,
                                       fontSize: 18.sp,
-                                      color: const Color(0xFF0F172A),
+                                      color: context.colors.textPrimary,
                                     ),
                                   ),
                                   if (list.length > 3)
@@ -874,7 +905,7 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
                                           fontFamily: 'Rubik',
                                           fontWeight: FontWeight.w700,
                                           fontSize: 14.sp,
-                                          color: const Color(0xFFC31E26),
+                                          color: context.colors.accent,
                                         ),
                                       ),
                                     ),
@@ -887,7 +918,7 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
                                 Center(
                                   child: Text(
                                     'No recent imports yet.',
-                                    style: TextStyle(fontFamily: 'Rubik', color: const Color(0xFF94A3B8), fontSize: 13.sp),
+                                    style: TextStyle(fontFamily: 'Rubik', color: context.colors.textMuted, fontSize: 13.sp),
                                   ),
                                 )
                               else
@@ -896,7 +927,7 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
                                   final r = entry.value;
                                   String source = 'Web';
                                   IconData icon = Icons.language_rounded;
-                                  Color iconColor = const Color(0xFF888888);
+                                  Color iconColor = context.colors.textMuted;
                                   String? sourceAsset;
 
                                   if (r.sourceUrl?.contains('instagram.com') ?? false) {
@@ -1018,7 +1049,7 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
                 child: Container(
                   height: sheetHeight,
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: context.colors.surface,
                     borderRadius: BorderRadius.vertical(top: Radius.circular((1 - val) * 30.r)),
                     boxShadow: [
                       BoxShadow(
@@ -1052,7 +1083,7 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
                                 fontFamily: 'Rubik',
                                 fontWeight: FontWeight.w800,
                                 fontSize: 16.sp,
-                                color: const Color(0xFF0F172A),
+                                color: context.colors.textPrimary,
                               ),
                             ),
                           ),
@@ -1099,7 +1130,7 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
                                   fontFamily: 'Rubik',
                                   fontWeight: FontWeight.w800,
                                   fontSize: 16.sp,
-                                  color: const Color(0xFF0F172A),
+                                  color: context.colors.textPrimary,
                                 ),
                               ),
                             ),
@@ -1133,7 +1164,7 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
                                     fontFamily: 'Rubik',
                                     fontWeight: FontWeight.w800,
                                     fontSize: 16.sp,
-                                    color: const Color(0xFF0F172A),
+                                    color: context.colors.textPrimary,
                                   ),
                                 ),
                                 SizedBox(height: 8.h),
@@ -1197,9 +1228,9 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
                       child: AppSearchField(
                         controller: _overlaySearchCtrl,
                         hintText: 'Search recipes...',
-                        backgroundColor: Colors.white,
+                        backgroundColor: context.colors.surface,
                         suffixIcon: Icons.check_circle_rounded,
-                        borderColor: val > 0.5 ? const Color(0xFFEEEEEE) : Colors.transparent,
+                        borderColor: val > 0.5 ? context.colors.surface : Colors.transparent,
                         onSuffixTap: () {
                           _submitWebSearch(_overlaySearchCtrl.text);
                         },
@@ -1238,7 +1269,7 @@ class _SocialPlatformCard extends StatelessWidget {
       width: 76.w,
       height: 76.h,
       decoration: BoxDecoration(
-        color: const Color(0xFFF1F5F9),
+        color: context.colors.pageBackground,
         borderRadius: BorderRadius.circular(16.r),
       ),
       child: Column(
@@ -1248,7 +1279,10 @@ class _SocialPlatformCard extends StatelessWidget {
             width: 34.r,
             height: 34.r,
             decoration: const BoxDecoration(
-              color: Color(0xFF0F172A),
+              // Fixed black badge (not textPrimary): these brand icons were
+              // designed for a dark circle in both themes, but textPrimary
+              // flips to near-white in dark mode, turning the badges white.
+              color: Colors.black,
               shape: BoxShape.circle,
             ),
             child: Center(
@@ -1279,7 +1313,7 @@ class _SocialPlatformCard extends StatelessWidget {
               fontFamily: 'Rubik',
               fontWeight: FontWeight.w600,
               fontSize: 11.sp,
-              color: const Color(0xFF0F172A),
+              color: context.colors.textPrimary,
             ),
           ),
         ],
@@ -1301,7 +1335,7 @@ class _TrendingChip extends StatelessWidget {
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
         decoration: BoxDecoration(
-          color: const Color(0xFFF1F5F9),
+          color: context.colors.pageBackground,
           borderRadius: BorderRadius.circular(20.r),
         ),
         child: Row(
@@ -1317,7 +1351,7 @@ class _TrendingChip extends StatelessWidget {
               Icon(
                 Icons.trending_up_rounded,
                 size: 16.sp,
-                color: const Color(0xFF475569),
+                color: context.colors.textSecondary,
               ),
               SizedBox(width: 8.w),
             ],
@@ -1327,7 +1361,7 @@ class _TrendingChip extends StatelessWidget {
                 fontFamily: 'Rubik',
                 fontWeight: FontWeight.w600,
                 fontSize: 13.sp,
-                color: const Color(0xFF334155),
+                color: context.colors.textSecondary,
               ),
             ),
           ],
@@ -1362,7 +1396,7 @@ class _WebSearchResults extends StatelessWidget {
                 fontFamily: 'Rubik',
                 fontWeight: FontWeight.w700,
                 fontSize: 16.sp,
-                color: const Color(0xFF0F172A),
+                color: context.colors.textPrimary,
               ),
             ),
             GestureDetector(
@@ -1373,7 +1407,7 @@ class _WebSearchResults extends StatelessWidget {
                   fontFamily: 'Rubik',
                   fontSize: 13.sp,
                   fontWeight: FontWeight.w600,
-                  color: const Color(0xFFC31E26),
+                  color: context.colors.accent,
                 ),
               ),
             ),
@@ -1390,7 +1424,7 @@ class _WebSearchResults extends StatelessWidget {
           ),
         )),
         SizedBox(height: 20.h),
-        const Divider(color: Color(0xFFE2E8F0)),
+        Divider(color: context.colors.border),
         SizedBox(height: 20.h),
       ],
     );
@@ -1416,7 +1450,7 @@ class _SearchResultTile extends StatelessWidget {
       margin: EdgeInsets.only(bottom: 12.h),
       padding: EdgeInsets.all(14.r),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
+        color: context.colors.surface,
         borderRadius: BorderRadius.circular(16.r),
       ),
       child: Column(
@@ -1430,7 +1464,7 @@ class _SearchResultTile extends StatelessWidget {
               fontFamily: 'Rubik',
               fontWeight: FontWeight.w700,
               fontSize: 15.sp,
-              color: const Color(0xFF0F172A),
+              color: context.colors.textPrimary,
             ),
           ),
           SizedBox(height: 4.h),
@@ -1441,7 +1475,7 @@ class _SearchResultTile extends StatelessWidget {
             style: TextStyle(
               fontFamily: 'Rubik',
               fontSize: 12.sp,
-              color: const Color(0xFF64748B),
+              color: context.colors.textSecondary,
             ),
           ),
           SizedBox(height: 10.h),
@@ -1450,7 +1484,7 @@ class _SearchResultTile extends StatelessWidget {
             child: Container(
               padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
               decoration: BoxDecoration(
-                color: const Color(0xFFC31E26),
+                color: context.colors.accent,
                 borderRadius: BorderRadius.circular(20.r),
               ),
               child: Text(
@@ -1517,7 +1551,7 @@ class _RecipeWebPreviewModalState extends State<_RecipeWebPreviewModal> {
       child: Container(
         width: double.infinity,
         height: double.infinity,
-        color: Colors.white,
+        color: context.colors.surface,
         child: SafeArea(
           bottom: false,
           child: Column(
@@ -1527,14 +1561,14 @@ class _RecipeWebPreviewModalState extends State<_RecipeWebPreviewModal> {
                 child: Row(
                   children: [
                     IconButton(
-                      icon: Icon(Icons.close_rounded, size: 24.sp, color: const Color(0xFF0F172A)),
+                      icon: Icon(Icons.close_rounded, size: 24.sp, color: context.colors.textPrimary),
                       onPressed: () => Navigator.pop(context),
                     ),
                     Expanded(
                       child: Container(
                         height: 38.h,
                         decoration: BoxDecoration(
-                          color: const Color(0xFFF1F5F9),
+                          color: context.colors.pageBackground,
                           borderRadius: BorderRadius.circular(10.r),
                         ),
                         padding: EdgeInsets.symmetric(horizontal: 12.w),
@@ -1550,14 +1584,14 @@ class _RecipeWebPreviewModalState extends State<_RecipeWebPreviewModal> {
                                 style: TextStyle(
                                   fontFamily: 'Rubik',
                                   fontSize: 14.sp,
-                                  color: const Color(0xFF4B5563),
+                                  color: context.colors.textSecondary,
                                 ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
                             const Spacer(),
-                            Icon(Icons.refresh_rounded, size: 18.sp, color: const Color(0xFF4B5563)),
+                            Icon(Icons.refresh_rounded, size: 18.sp, color: context.colors.textSecondary),
                           ],
                         ),
                       ),
@@ -1566,7 +1600,7 @@ class _RecipeWebPreviewModalState extends State<_RecipeWebPreviewModal> {
                   ],
                 ),
               ),
-              const Divider(height: 1, color: Color(0xFFE5E7EB)),
+              Divider(height: 1, color: context.colors.divider),
               Expanded(
                 child: Stack(
                   children: [
@@ -1582,9 +1616,9 @@ class _RecipeWebPreviewModalState extends State<_RecipeWebPreviewModal> {
                 ),
               ),
               Container(
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  border: Border(top: BorderSide(color: Color(0xFFE5E7EB), width: 1)),
+                decoration: BoxDecoration(
+                  color: context.colors.surface,
+                  border: Border(top: BorderSide(color: context.colors.divider, width: 1)),
                 ),
                 padding: EdgeInsets.fromLTRB(
                   16.w,

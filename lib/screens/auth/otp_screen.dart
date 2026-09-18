@@ -130,7 +130,7 @@ class _OtpScreenState extends State<OtpScreen> {
         ModalRoute.of(context)?.settings.arguments as String?;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: context.colors.surface,
       resizeToAvoidBottomInset: false,
       body: Stack(
         fit: StackFit.expand,
@@ -163,11 +163,11 @@ class _OtpScreenState extends State<OtpScreen> {
             right: 0,
             bottom: 0,
             child: Container(
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [Color(0xFFC83A2D), Color(0x63C83A2D)],
+                  colors: [context.colors.accent, Color(0x63C83A2D)],
                 ),
                 borderRadius: BorderRadius.vertical(top: Radius.circular(15)),
               ),
@@ -346,7 +346,7 @@ class _OtpScreenState extends State<OtpScreen> {
         height: 52,
         margin: const EdgeInsets.symmetric(horizontal: 4),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: context.colors.surface,
           borderRadius: BorderRadius.circular(14),
         ),
         child: ClipRRect(
@@ -381,8 +381,8 @@ class _OtpScreenState extends State<OtpScreen> {
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(14),
-                borderSide: const BorderSide(
-                  color: Color(0xFFC83A2D),
+                borderSide: BorderSide(
+                  color: context.colors.accent,
                   width: 1.5,
                 ),
               ),

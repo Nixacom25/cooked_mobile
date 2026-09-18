@@ -12,6 +12,7 @@ import '../../widgets/red_button.dart';
 import '../../widgets/skeleton_loader.dart';
 import '../../core/widgets/legal_content_modal.dart';
 import '../../core/widgets/terms_validation_modal.dart' show dummyTerms, dummyPrivacy;
+import '../../core/theme/app_theme.dart';
 
 enum PaywallFlowType { standard, offer }
 
@@ -52,7 +53,10 @@ class _PaywallScreenState extends State<PaywallScreen> {
 
   void _initIap() {
     IapService.instance.initialize();
-    IapService.instance.onPurchaseSuccess = () {
+    // The actual purchase on this screen goes through RevenueCatService
+    // (see _handlePurchase() below), not IapService, so its callbacks -
+    // not IapService's - are the ones that actually fire on success/error.
+    RevenueCatService.instance.onPurchaseSuccess = () {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -63,15 +67,15 @@ class _PaywallScreenState extends State<PaywallScreen> {
         Navigator.pop(context, true);
       }
     };
-    IapService.instance.onPurchaseError = (error) {
+    RevenueCatService.instance.onPurchaseError = (error) {
       _showErrorSnackBar(ErrorHelper.getFriendlyMessage(error));
     };
   }
 
   @override
   void dispose() {
-    IapService.instance.onPurchaseSuccess = null;
-    IapService.instance.onPurchaseError = null;
+    RevenueCatService.instance.onPurchaseSuccess = null;
+    RevenueCatService.instance.onPurchaseError = null;
     super.dispose();
   }
 
@@ -136,7 +140,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
   Widget build(BuildContext context) {
     if (isLoading) {
       return Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: context.colors.pageBackground,
         body: Padding(
           padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 40.h),
           child: SafeArea(
@@ -160,10 +164,10 @@ class _PaywallScreenState extends State<PaywallScreen> {
     }
 
     final bool isOffer = widget.flowType == PaywallFlowType.offer;
-    final primaryColor = const Color(0xFFC83A2D);
+    final primaryColor = context.colors.accent;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: context.colors.pageBackground,
       body: Stack(
         children: [
           SingleChildScrollView(
@@ -182,7 +186,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                           style: TextStyle(
                             fontSize: 24.sp,
                             fontWeight: FontWeight.w900,
-                            color: const Color(0xFF0D1B3E),
+                            color: context.colors.textPrimary,
                             fontFamily: 'SF Pro',
                             height: 1.1,
                             letterSpacing: -0.5,
@@ -192,7 +196,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                       GlassIconButton(
                         onTap: () => Navigator.pop(context, false),
                         size: 40.r,
-                        child: Icon(Icons.close_rounded, color: const Color(0xFF7B8190), size: 22.sp),
+                        child: Icon(Icons.close_rounded, color: context.colors.textMuted, size: 22.sp),
                       ),
                     ],
                   ),
@@ -302,7 +306,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                 10.h + MediaQuery.of(context).padding.bottom
               ),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: context.colors.surface,
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withValues(alpha: 0.05),
@@ -365,7 +369,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                           "\$29.99 per year (\$2.49/mo)",
                           style: TextStyle(
                             fontSize: 13.sp,
-                            color: const Color(0xFF7B8190),
+                            color: context.colors.textMuted,
                             fontFamily: 'SF Pro',
                             fontWeight: FontWeight.w500,
                           ),
@@ -379,23 +383,23 @@ class _PaywallScreenState extends State<PaywallScreen> {
                             onTap: _handleRestore,
                             child: Text(
                               'Restore Purchases',
-                              style: TextStyle(fontSize: 12.sp, color: const Color(0xFF7B8190), fontWeight: FontWeight.bold, decoration: TextDecoration.underline),
+                              style: TextStyle(fontSize: 12.sp, color: context.colors.textMuted, fontWeight: FontWeight.bold, decoration: TextDecoration.underline),
                             ),
                           ),
-                          Text('  •  ', style: TextStyle(fontSize: 12.sp, color: const Color(0xFF7B8190))),
+                          Text('  •  ', style: TextStyle(fontSize: 12.sp, color: context.colors.textMuted)),
                           GestureDetector(
                             onTap: () => LegalContentModal.show(context, title: 'Terms of Use', content: dummyTerms),
                             child: Text(
                               'Terms of Use',
-                              style: TextStyle(fontSize: 12.sp, color: const Color(0xFF7B8190), decoration: TextDecoration.underline),
+                              style: TextStyle(fontSize: 12.sp, color: context.colors.textMuted, decoration: TextDecoration.underline),
                             ),
                           ),
-                          Text('  •  ', style: TextStyle(fontSize: 12.sp, color: const Color(0xFF7B8190))),
+                          Text('  •  ', style: TextStyle(fontSize: 12.sp, color: context.colors.textMuted)),
                           GestureDetector(
                             onTap: () => LegalContentModal.show(context, title: 'Privacy Policy', content: dummyPrivacy),
                             child: Text(
                               'Privacy Policy',
-                              style: TextStyle(fontSize: 12.sp, color: const Color(0xFF7B8190), decoration: TextDecoration.underline),
+                              style: TextStyle(fontSize: 12.sp, color: context.colors.textMuted, decoration: TextDecoration.underline),
                             ),
                           ),
                         ],
@@ -472,7 +476,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                   style: TextStyle(
                     fontSize: 16.sp,
                     fontWeight: FontWeight.w900,
-                    color: const Color(0xFF0D1B3E),
+                    color: context.colors.textPrimary,
                     fontFamily: 'SF Pro',
                   ),
                 ),
@@ -481,7 +485,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                   description,
                   style: TextStyle(
                     fontSize: 14.sp,
-                    color: const Color(0xFF7B8190),
+                    color: context.colors.textMuted,
                     fontFamily: 'SF Pro',
                     height: 1.4,
                   ),
@@ -512,10 +516,10 @@ class _PaywallScreenState extends State<PaywallScreen> {
           Container(
             padding: EdgeInsets.all(16.r),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: context.colors.surface,
               borderRadius: BorderRadius.circular(16.r),
               border: Border.all(
-                color: isSelected ? color : const Color(0xFFE5E7EB),
+                color: isSelected ? color : context.colors.divider,
                 width: isSelected ? 2.w : 1.w,
               ),
             ),
@@ -530,8 +534,8 @@ class _PaywallScreenState extends State<PaywallScreen> {
                       style: TextStyle(
                         fontSize: 14.sp,
                         color: isSelected
-                            ? const Color(0xFF0D1B3E)
-                            : const Color(0xFF7B8190),
+                            ? context.colors.textPrimary
+                            : context.colors.textMuted,
                         fontFamily: 'SF Pro',
                         fontWeight: isSelected
                             ? FontWeight.w700
@@ -544,7 +548,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         border: Border.all(
-                          color: isSelected ? color : const Color(0xFFE5E7EB),
+                          color: isSelected ? color : context.colors.divider,
                           width: isSelected ? 6.sp : 1.sp,
                         ),
                         color: isSelected ? Colors.white : Colors.transparent,
@@ -558,7 +562,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                   style: TextStyle(
                     fontSize: 16.sp,
                     fontWeight: FontWeight.w900,
-                    color: const Color(0xFF0D1B3E),
+                    color: context.colors.textPrimary,
                     fontFamily: 'SF Pro',
                   ),
                 ),
@@ -567,7 +571,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                     subPrice,
                     style: TextStyle(
                       fontSize: 10.sp,
-                      color: const Color(0xFF7B8190),
+                      color: context.colors.textMuted,
                       fontFamily: 'SF Pro',
                     ),
                   ),

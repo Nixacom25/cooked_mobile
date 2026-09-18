@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../core/theme/app_theme.dart';
 
 class FloatingHeart extends StatefulWidget {
   final VoidCallback onAnimationComplete;
@@ -106,7 +107,7 @@ class _FloatingHeartState extends State<FloatingHeart> with SingleTickerProvider
                 scale: _scale.value * widget.scaleMultiplier,
                 child: Icon(
                   Icons.favorite_rounded,
-                  color: const Color(0xFFC83A2D),
+                  color: context.colors.accent,
                   size: 24.sp,
                 ),
               ),

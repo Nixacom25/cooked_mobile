@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter/services.dart';
+import '../../../core/theme/app_theme.dart';
 
 class FlavorSpiceStep extends StatefulWidget {
   final Map<String, int> initialDna;
@@ -155,7 +156,7 @@ class _FlavorSpiceStepState extends State<FlavorSpiceStep> with SingleTickerProv
                     style: GoogleFonts.poppins(
                       fontSize: 24.sp,
                       fontWeight: FontWeight.w900,
-                      color: const Color(0xFF0D1B3E),
+                      color: context.colors.textPrimary,
                       height: 1.2)))),
               SizedBox(height: 8.h),
               FadeTransition(
@@ -166,7 +167,7 @@ class _FlavorSpiceStepState extends State<FlavorSpiceStep> with SingleTickerProv
                     'Move the sliders to match your taste',
                     style: GoogleFonts.poppins(
                       fontSize: 14.sp,
-                      color: const Color(0xFF9CA3AF))))),
+                      color: context.colors.textMuted)))),
               SizedBox(height: 20.h),
 
               // Spice Tolerance Section
@@ -182,14 +183,14 @@ class _FlavorSpiceStepState extends State<FlavorSpiceStep> with SingleTickerProv
                         style: GoogleFonts.poppins(
                           fontSize: 18.sp,
                           fontWeight: FontWeight.w700,
-                          color: const Color(0xFF0D1B3E))),
+                          color: context.colors.textPrimary)),
                       SizedBox(height: 15.h),
                       Container(
                         padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: context.colors.surface,
                           borderRadius: BorderRadius.circular(16.r),
-                          border: Border.all(color: const Color(0xFFE5E7EB))),
+                          border: Border.all(color: context.colors.divider)),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
@@ -223,14 +224,14 @@ class _FlavorSpiceStepState extends State<FlavorSpiceStep> with SingleTickerProv
                                     style: GoogleFonts.poppins(
                                       fontSize: 14.sp,
                                       fontWeight: FontWeight.w700,
-                                      color: const Color(0xFF0D1B3E))),
+                                      color: context.colors.textPrimary)),
                                   FittedBox(
                                     fit: BoxFit.scaleDown,
                                     child: Text(
                                       currentLevel['desc']!,
                                       style: GoogleFonts.poppins(
                                         fontSize: 11.sp,
-                                        color: const Color(0xFF9CA3AF)))),
+                                        color: context.colors.textMuted))),
                                 ])),
                           ])),
                     ]))),
@@ -249,9 +250,9 @@ class _FlavorSpiceStepState extends State<FlavorSpiceStep> with SingleTickerProv
                       margin: EdgeInsets.only(bottom: 16.h),
                       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: context.colors.surface,
                         borderRadius: BorderRadius.circular(16.r),
-                        border: Border.all(color: const Color(0xFFE5E7EB))),
+                        border: Border.all(color: context.colors.divider)),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
@@ -269,7 +270,7 @@ class _FlavorSpiceStepState extends State<FlavorSpiceStep> with SingleTickerProv
                                     style: GoogleFonts.poppins(
                                       fontSize: 12.sp,
                                       fontWeight: FontWeight.w600,
-                                      color: const Color(0xFF0D1B3E))),
+                                      color: context.colors.textPrimary)),
                                 ]),
                               Row(
                                 children: [
@@ -278,7 +279,7 @@ class _FlavorSpiceStepState extends State<FlavorSpiceStep> with SingleTickerProv
                                     style: GoogleFonts.poppins(
                                       fontSize: 12.sp,
                                       fontWeight: FontWeight.w600,
-                                      color: const Color(0xFF0D1B3E))),
+                                      color: context.colors.textPrimary)),
                                   SizedBox(width: 4.w),
                                   Text(
                                     scale['rightEmoji']!,
@@ -288,11 +289,11 @@ class _FlavorSpiceStepState extends State<FlavorSpiceStep> with SingleTickerProv
                           SizedBox(height: 8.h),
                           SliderTheme(
                             data: SliderTheme.of(context).copyWith(
-                              activeTrackColor: const Color(0xFFC83A2D),
-                              inactiveTrackColor: const Color(0xFFE5E7EB),
+                              activeTrackColor: context.colors.accent,
+                              inactiveTrackColor: context.colors.divider,
                               trackHeight: 4.0.h,
-                              thumbColor: const Color(0xFFC83A2D),
-                              overlayColor: const Color(0xFFC83A2D).withAlpha(32),
+                              thumbColor: context.colors.accent,
+                              overlayColor: context.colors.accent.withAlpha(32),
                               trackShape: RoundedRectSliderTrackShape(),
                               overlayShape: SliderComponentShape.noOverlay),
                             child: Slider(
@@ -327,7 +328,7 @@ class _FlavorSpiceStepState extends State<FlavorSpiceStep> with SingleTickerProv
                             fontSize: 12.sp,
                             fontWeight: FontWeight.w700,
                             letterSpacing: 1.2,
-                            color: const Color(0xFF7B8190))),
+                            color: context.colors.textMuted)),
                         SizedBox(height: 14.h),
                         Wrap(
                           spacing: 8.w,
@@ -335,17 +336,21 @@ class _FlavorSpiceStepState extends State<FlavorSpiceStep> with SingleTickerProv
                           children: [
                             _buildSummaryCapsule(
                               label: _spice,
-                              bgColor: const Color(0xFFFEE2E2), // Light Red
+                              bgColor: Theme.of(context).brightness == Brightness.dark
+                                  ? const Color(0xFFEF4444).withValues(alpha: 0.18)
+                                  : const Color(0xFFFEE2E2), // Light Red
                               textColor: const Color(0xFFEF4444), // Red
                             ),
                             _buildSummaryCapsule(
                               label: '${_getSummaryLabel(_dna['sweetness']!)} leaning',
-                              bgColor: const Color(0xFFE5E7EB), // Light Grey
-                              textColor: const Color(0xFF4B5563), // Grey
+                              bgColor: context.colors.divider, // Light Grey
+                              textColor: context.colors.textSecondary, // Grey
                             ),
                             _buildSummaryCapsule(
                               label: '${_getTextureLabel(_dna['texture']!)} texture',
-                              bgColor: const Color(0xFFDBEAFE), // Light Blue
+                              bgColor: Theme.of(context).brightness == Brightness.dark
+                                  ? const Color(0xFF3B82F6).withValues(alpha: 0.18)
+                                  : const Color(0xFFDBEAFE), // Light Blue
                               textColor: const Color(0xFF3B82F6), // Blue
                             ),
                           ]),

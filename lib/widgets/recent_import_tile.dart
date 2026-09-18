@@ -5,6 +5,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../core/extensions/string_extensions.dart';
 import 'skeleton_loader.dart';
+import '../core/theme/app_theme.dart';
 
 class RecentImportTile extends StatelessWidget {
   final String img;
@@ -42,7 +43,7 @@ class RecentImportTile extends StatelessWidget {
     }
   }
 
-  Widget _buildImage(String path) {
+  Widget _buildImage(BuildContext context, String path) {
     if (path.isEmpty) {
       return Image.asset('assets/images/recipes.png', fit: BoxFit.cover);
     }
@@ -51,7 +52,7 @@ class RecentImportTile extends StatelessWidget {
         imageUrl: path,
         fit: BoxFit.cover,
         placeholder: (_, __) => Container(
-          color: const Color(0xFFF2F1EF),
+          color: context.colors.surface,
           child: const Center(
             child: SkeletonLoader(width: 30, height: 30, borderRadius: 15),
           ),
@@ -69,14 +70,14 @@ class RecentImportTile extends StatelessWidget {
       margin: EdgeInsets.only(bottom: 12.h),
       padding: EdgeInsets.all(12.r),
       decoration: BoxDecoration(
-        color: const Color(0xFFFAF5E8), // Cream yellow matching mockup
+        color: context.colors.surface, // Cream yellow matching mockup
         borderRadius: BorderRadius.circular(20.r),
       ),
       child: Row(
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(16.r),
-            child: SizedBox(width: 80.w, height: 80.h, child: _buildImage(img)),
+            child: SizedBox(width: 80.w, height: 80.h, child: _buildImage(context, img)),
           ),
           SizedBox(width: 14.w),
           Expanded(
@@ -91,7 +92,7 @@ class RecentImportTile extends StatelessWidget {
                     fontFamily: 'Rubik',
                     fontWeight: FontWeight.w800,
                     fontSize: 16.sp,
-                    color: const Color(0xFF0F172A),
+                    color: context.colors.textPrimary,
                   ),
                 ),
                 SizedBox(height: 6.h),
@@ -110,7 +111,7 @@ class RecentImportTile extends StatelessWidget {
                           fontFamily: 'Rubik',
                           fontWeight: FontWeight.w500,
                           fontSize: 13.sp,
-                          color: const Color(0xFF64748B),
+                          color: context.colors.textSecondary,
                         ),
                       ),
                     ],
@@ -145,8 +146,8 @@ class RecentImportTile extends StatelessWidget {
                     height: 18.r,
                     colorFilter: ColorFilter.mode(
                       isValidated
-                          ? const Color(0xFFC83A2D)
-                          : const Color(0xFF94A3B8),
+                          ? context.colors.accent
+                          : context.colors.textMuted,
                       BlendMode.srcIn,
                     ),
                   ),

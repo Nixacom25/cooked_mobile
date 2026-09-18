@@ -4,6 +4,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../models/recipe.dart';
 import '../services/recipe_service.dart';
+import '../core/theme/app_theme.dart';
 
 class SavedRecipeCard extends StatefulWidget {
   final Recipe? recipe;
@@ -106,6 +107,8 @@ class _SavedRecipeCardState extends State<SavedRecipeCard> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final String displayName = widget.title ?? widget.recipe?.name ?? 'Recipe';
     final String? imgPath = widget.image ?? widget.recipe?.image;
 
@@ -117,7 +120,7 @@ class _SavedRecipeCardState extends State<SavedRecipeCard> {
         child: Container(
           height: 135.h,
           decoration: BoxDecoration(
-            color: const Color(0xFFFAF3E6),
+            color: colors.surface,
             borderRadius: BorderRadius.circular(24.r),
           ),
           child: Row(
@@ -141,7 +144,7 @@ class _SavedRecipeCardState extends State<SavedRecipeCard> {
                               fontFamily: 'Rubik',
                               fontWeight: FontWeight.w700,
                               fontSize: 16.sp,
-                              color: const Color(0xFF0F172A),
+                              color: colors.textPrimary,
                               height: 1.2,
                             ),
                           ),
@@ -152,7 +155,7 @@ class _SavedRecipeCardState extends State<SavedRecipeCard> {
                               fontFamily: 'Rubik',
                               fontWeight: FontWeight.w400,
                               fontSize: 13.sp,
-                              color: const Color(0xFF64748B),
+                              color: colors.textSecondary,
                             ),
                           ),
                         ],
@@ -160,7 +163,7 @@ class _SavedRecipeCardState extends State<SavedRecipeCard> {
                       Container(
                         padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFDCFCE7),
+                          color: isDark ? const Color(0xFF15803D).withValues(alpha: 0.18) : const Color(0xFFDCFCE7),
                           borderRadius: BorderRadius.circular(20.r),
                         ),
                         child: Text(
@@ -209,7 +212,7 @@ class _SavedRecipeCardState extends State<SavedRecipeCard> {
       child: Container(
         height: 135.h,
         decoration: BoxDecoration(
-          color: const Color(0xFFFAF3E6),
+          color: colors.surface,
           borderRadius: BorderRadius.circular(24.r),
         ),
         child: Row(
@@ -241,8 +244,8 @@ class _SavedRecipeCardState extends State<SavedRecipeCard> {
                             height: 16.r,
                             colorFilter: ColorFilter.mode(
                               _isFavorite
-                                  ? const Color(0xFFC83A2D)
-                                  : const Color(0xFF94A3B8),
+                                  ? context.colors.accent
+                                  : context.colors.textMuted,
                               BlendMode.srcIn,
                             ),
                           ),
@@ -257,7 +260,7 @@ class _SavedRecipeCardState extends State<SavedRecipeCard> {
                         fontFamily: 'Rubik',
                         fontWeight: FontWeight.w700,
                         fontSize: 16.sp,
-                        color: const Color(0xFF0F172A),
+                        color: colors.textPrimary,
                         height: 1.2,
                       ),
                     ),
@@ -318,23 +321,25 @@ class _SavedRecipeCardState extends State<SavedRecipeCard> {
   }
 
   Widget _buildBadge(IconData icon, String label) {
+    final colors = context.colors;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
       decoration: BoxDecoration(
-        color: const Color(0xFFF1EAD9),
+        color: isDark ? Colors.white.withValues(alpha: 0.08) : const Color(0xFFF1EAD9),
         borderRadius: BorderRadius.circular(20.r),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 12.sp, color: const Color(0xFF64748B)),
+          Icon(icon, size: 12.sp, color: colors.textSecondary),
           SizedBox(width: 4.w),
           Text(
             label,
             style: TextStyle(
               fontFamily: 'Rubik',
               fontSize: 11.sp,
-              color: const Color(0xFF475569),
+              color: colors.textSecondary,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -352,7 +357,7 @@ class _SavedRecipeCardState extends State<SavedRecipeCard> {
       return CachedNetworkImage(
         imageUrl: image,
         fit: BoxFit.cover,
-        placeholder: (_, __) => Container(color: const Color(0xFFEEEEEE)),
+        placeholder: (_, __) => Container(color: context.colors.surface),
         errorWidget: (_, __, ___) => Image.asset(fallback, fit: BoxFit.cover),
       );
     }

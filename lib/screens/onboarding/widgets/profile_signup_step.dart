@@ -2,6 +2,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import '../../../core/theme/app_theme.dart';
 
 class ProfileSignupStep extends StatefulWidget {
   final VoidCallback onSignupEmail;
@@ -108,9 +109,9 @@ class _ProfileSignupStepState extends State<ProfileSignupStep>
                           fit: BoxFit.cover,
                           alignment: Alignment.topCenter,
                           errorBuilder: (context, error, stackTrace) => Container(
-                            color: const Color(0xFFF1F5F9),
+                            color: context.colors.pageBackground,
                             alignment: Alignment.center,
-                            child: const Icon(Icons.fastfood, color: Color(0xFFCBD5E1))))))),
+                            child: Icon(Icons.fastfood, color: context.colors.border)))))),
 
                   // White Gradient Overlay (White at top covering text down into image)
                   Positioned.fill(
@@ -155,14 +156,14 @@ class _ProfileSignupStepState extends State<ProfileSignupStep>
                                 style: GoogleFonts.rubik(
                                   fontSize: 32.sp,
                                   fontWeight: FontWeight.w500,
-                                  color: const Color(0xFF111827),
+                                  color: context.colors.textPrimary,
                                   height: 1.15)),
                               SizedBox(height: 10.h),
                               Text(
                                 'Create your account to keep your recipes, meal plans, grocery lists, and savings tracker',
                                 style: GoogleFonts.poppins(
                                   fontSize: 15.sp,
-                                  color: const Color(0xFF111827),
+                                  color: context.colors.textPrimary,
                                   height: 1.3)),
                             ]))))),
                 ],
@@ -207,7 +208,7 @@ class _ProfileSignupStepState extends State<ProfileSignupStep>
                           onPressed: widget.onSignupEmail,
                           icon: 'email.svg',
                           label: 'Sign in with Email',
-                          iconColor: const Color(0xFF111827)))),
+                          iconColor: context.colors.textPrimary))),
                   ]))),
           ]);
       });
@@ -228,7 +229,7 @@ class _ProfileSignupStepState extends State<ProfileSignupStep>
         child: ElevatedButton(
           onPressed: isEnabled ? onPressed : null,
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFFF0F1F3),
+            backgroundColor: context.colors.pageBackground,
             elevation: 0,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(32.r))),
@@ -244,14 +245,14 @@ class _ProfileSignupStepState extends State<ProfileSignupStep>
                     : null,
                 placeholderBuilder: (context) => Icon(
                   Icons.login,
-                  color: const Color(0xFF111827),
+                  color: context.colors.textPrimary,
                   size: 22.sp)),
               SizedBox(width: 12.w),
               Text(
                 isEnabled ? label : '$label (Soon)',
                 style: GoogleFonts.rubik(fontSize: 15.sp,
                   fontWeight: FontWeight.w500,
-                  color: isEnabled ? const Color(0xFF0F172A) : Colors.grey)),
+                  color: isEnabled ? context.colors.textPrimary : Colors.grey)),
             ]))));
   }
 }

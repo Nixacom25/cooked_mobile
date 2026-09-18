@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../core/theme/app_theme.dart';
 
 class ImportLoadingPage extends StatefulWidget {
   const ImportLoadingPage({super.key});
@@ -39,7 +40,7 @@ class _ImportLoadingPageState extends State<ImportLoadingPage> with SingleTicker
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: context.colors.surface,
       body: SafeArea(
         child: Center(
           child: Column(
@@ -70,7 +71,7 @@ class _ImportLoadingPageState extends State<ImportLoadingPage> with SingleTicker
                   fontFamily: 'Rubik',
                   fontSize: 22.sp,
                   fontWeight: FontWeight.w700,
-                  color: const Color(0xFF0F172A),
+                  color: context.colors.textPrimary,
                 ),
               ),
               SizedBox(height: 8.h),
@@ -82,7 +83,7 @@ class _ImportLoadingPageState extends State<ImportLoadingPage> with SingleTicker
                   fontFamily: 'Rubik',
                   fontSize: 15.sp,
                   fontWeight: FontWeight.w400,
-                  color: const Color(0xFF64748B),
+                  color: context.colors.textSecondary,
                 ),
               ),
             ],

@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../../widgets/red_button.dart';
+import '../../../core/theme/app_theme.dart';
 
 class FeaturesExcitedStep extends StatefulWidget {
   final List<String> initialSelected;
@@ -84,14 +85,14 @@ class _FeaturesExcitedStepState extends State<FeaturesExcitedStep> {
                   style: GoogleFonts.rubik(
                     fontSize: 32.sp,
                     fontWeight: FontWeight.w500,
-                    color: const Color(0xFF111827),
+                    color: context.colors.textPrimary,
                     height: 1.15)),
                 SizedBox(height: 10.h),
                 Text(
                   "Pick the features you’ll use most",
                   style: GoogleFonts.poppins(
                     fontSize: 15.sp,
-                    color: const Color(0xFF111827),
+                    color: context.colors.textPrimary,
                     height: 1.3)),
                 SizedBox(height: 24.h),
                 ..._options.map((opt) {
@@ -104,11 +105,11 @@ class _FeaturesExcitedStepState extends State<FeaturesExcitedStep> {
                         duration: const Duration(milliseconds: 150),
                         padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFF1F5F9),
+                          color: context.colors.pageBackground,
                           borderRadius: BorderRadius.circular(16.r),
                           border: Border.all(
                             color: isSelected
-                                ? const Color(0xFFC31E26)
+                                ? context.colors.accent
                                 : Colors.transparent,
                             width: 1.5)),
                         child: Row(
@@ -122,14 +123,14 @@ class _FeaturesExcitedStepState extends State<FeaturesExcitedStep> {
                                 width: 24.sp,
                                 colorFilter: ColorFilter.mode(
                                   isSelected
-                                      ? const Color(0xFFC31E26)
-                                      : const Color(0xFF0F172A),
+                                      ? context.colors.accent
+                                      : context.colors.textPrimary,
                                   BlendMode.srcIn),
                                 placeholderBuilder: (context) => Icon(
                                   Icons.star,
                                   color: isSelected
-                                      ? const Color(0xFFC31E26)
-                                      : const Color(0xFF0F172A),
+                                      ? context.colors.accent
+                                      : context.colors.textPrimary,
                                   size: 24.sp))),
                             SizedBox(width: 14.w),
                             Expanded(
@@ -141,13 +142,13 @@ class _FeaturesExcitedStepState extends State<FeaturesExcitedStep> {
                                     style: GoogleFonts.rubik(fontSize: 15.sp,
                                       fontWeight: FontWeight.w500,
                                       color: isSelected
-                                          ? const Color(0xFFC31E26)
-                                          : const Color(0xFF0F172A))),
+                                          ? context.colors.accent
+                                          : context.colors.textPrimary)),
                                   SizedBox(height: 3.h),
                                   Text(
                                     opt['desc']!,
                                     style: GoogleFonts.poppins(fontSize: 13.sp,
-                                      color: const Color(0xFF111827),
+                                      color: context.colors.textPrimary,
                                       height: 1.3)),
                                 ])),
                             SizedBox(width: 10.w),
@@ -157,9 +158,9 @@ class _FeaturesExcitedStepState extends State<FeaturesExcitedStep> {
                                   ? Container(
                                       width: 20.r,
                                       height: 20.r,
-                                      decoration: const BoxDecoration(
+                                      decoration: BoxDecoration(
                                         shape: BoxShape.circle,
-                                        color: Color(0xFFC31E26)),
+                                        color: context.colors.accent),
                                       child: Icon(
                                         Icons.check,
                                         color: Colors.white,
@@ -170,7 +171,7 @@ class _FeaturesExcitedStepState extends State<FeaturesExcitedStep> {
                                       decoration: BoxDecoration(
                                         shape: BoxShape.circle,
                                         border: Border.all(
-                                          color: const Color(0xFFCBD5E1),
+                                          color: context.colors.border,
                                           width: 1.5)))),
                           ]))));
                 }),
@@ -183,7 +184,7 @@ class _FeaturesExcitedStepState extends State<FeaturesExcitedStep> {
             bottom: true,
             child: RedButton(
               label: 'Continue',
-              color: const Color(0xFFC31E26),
+              color: context.colors.accent,
               onTap: widget.onContinue,
               height: 52.h,
               fontSize: 16.sp,

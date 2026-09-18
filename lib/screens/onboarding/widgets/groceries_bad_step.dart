@@ -2,6 +2,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'selection_onboarding_step.dart';
+import '../../../core/theme/app_theme.dart';
 
 class GroceriesBadStep extends StatefulWidget {
   final ValueChanged<int> onContinue;
@@ -50,7 +51,7 @@ class _GroceriesBadStepState extends State<GroceriesBadStep> {
       width: double.infinity,
       padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 16.h),
       decoration: BoxDecoration(
-        color: const Color(0xFFFAF4E5),
+        color: context.colors.surface,
         borderRadius: BorderRadius.circular(16.r)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -58,7 +59,7 @@ class _GroceriesBadStepState extends State<GroceriesBadStep> {
           Text(
             'The average household wastes', 
             style: GoogleFonts.rubik(
-              color: const Color(0xFF334155), 
+              color: context.colors.textSecondary, 
               fontSize: 14.sp,
               fontWeight: FontWeight.w500)),
           SizedBox(height: 8.h),
@@ -69,7 +70,7 @@ class _GroceriesBadStepState extends State<GroceriesBadStep> {
               Text(
                 'over ',
                 style: GoogleFonts.poppins(
-                  color: const Color(0xFF111827),
+                  color: context.colors.textPrimary,
                   fontSize: 14.sp,
                   fontWeight: FontWeight.w400)),
               Text(
@@ -83,7 +84,7 @@ class _GroceriesBadStepState extends State<GroceriesBadStep> {
                 child: Text(
                   '/year in food',
                   style: GoogleFonts.poppins(
-                    color: const Color(0xFF111827),
+                    color: context.colors.textPrimary,
                     fontSize: 14.sp,
                     fontWeight: FontWeight.w400),
                   overflow: TextOverflow.ellipsis)),

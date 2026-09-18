@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter/services.dart';
 import '../../../widgets/red_button.dart';
+import '../../../core/theme/app_theme.dart';
 
 class TimePreferenceStep extends StatefulWidget {
   final String? initialSelected;
@@ -82,21 +83,21 @@ class _TimePreferenceStepState extends State<TimePreferenceStep> {
                   style: GoogleFonts.rubik(
                     fontSize: 32.sp,
                     fontWeight: FontWeight.w500,
-                    color: const Color(0xFF111827),
+                    color: context.colors.textPrimary,
                     height: 1.15)),
                 SizedBox(height: 10.h),
                 Text(
                   'We’ll prioritize recipes that fit your schedule',
                   style: GoogleFonts.poppins(
                     fontSize: 15.sp,
-                    color: const Color(0xFF111827),
+                    color: context.colors.textPrimary,
                     height: 1.3)),
                 SizedBox(height: 24.h),
                 Text(
                   'Cooking time',
                   style: GoogleFonts.rubik(fontSize: 15.sp,
                     fontWeight: FontWeight.w500,
-                    color: const Color(0xFF111827))),
+                    color: context.colors.textPrimary)),
                 SizedBox(height: 12.h),
                 Column(
                   children: [
@@ -121,12 +122,12 @@ class _TimePreferenceStepState extends State<TimePreferenceStep> {
                   width: double.infinity,
                   padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFAF4E5),
+                    color: context.colors.surface,
                     borderRadius: BorderRadius.circular(14.r)),
                   child: Text(
                     selectedOption['summary']!,
                     style: GoogleFonts.poppins(fontSize: 14.sp,
-                      color: const Color(0xFF111827),
+                      color: context.colors.textPrimary,
                       height: 1.35))),
                 SizedBox(height: 20.h),
               ]))),
@@ -138,7 +139,7 @@ class _TimePreferenceStepState extends State<TimePreferenceStep> {
               bottom: true,
               child: RedButton(
                 label: 'Continue',
-                color: const Color(0xFFC31E26),
+                color: context.colors.accent,
                 onTap: widget.onContinue!,
                 isDisabled: _selectedTime == null,
                 height: 52.h,
@@ -159,10 +160,10 @@ class _TimePreferenceStepState extends State<TimePreferenceStep> {
         width: isFullWidth ? double.infinity : null,
         padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 16.h),
         decoration: BoxDecoration(
-          color: const Color(0xFFF1F5F9),
+          color: context.colors.pageBackground,
           borderRadius: BorderRadius.circular(16.r),
           border: Border.all(
-            color: isSelected ? const Color(0xFFC31E26) : Colors.transparent,
+            color: isSelected ? context.colors.accent : Colors.transparent,
             width: 1.5)),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -173,7 +174,7 @@ class _TimePreferenceStepState extends State<TimePreferenceStep> {
               height: 24.sp,
               width: 24.sp,
               colorFilter: ColorFilter.mode(
-                isSelected ? const Color(0xFFC31E26) : const Color(0xFF0F172A),
+                isSelected ? context.colors.accent : context.colors.textPrimary,
                 BlendMode.srcIn),
               placeholderBuilder: (context) => const SizedBox.shrink()),
             SizedBox(height: 8.h),
@@ -183,7 +184,7 @@ class _TimePreferenceStepState extends State<TimePreferenceStep> {
               style: GoogleFonts.rubik(
                 fontSize: 14.sp,
                 fontWeight: FontWeight.w500,
-                color: isSelected ? const Color(0xFFC31E26) : const Color(0xFF0F172A))),
+                color: isSelected ? context.colors.accent : context.colors.textPrimary)),
             SizedBox(height: 2.h),
             Text(
               option['desc']!,
@@ -191,7 +192,7 @@ class _TimePreferenceStepState extends State<TimePreferenceStep> {
               style: GoogleFonts.poppins(
                 fontSize: 12.sp,
                 fontWeight: FontWeight.w400,
-                color: const Color(0xFF111827))),
+                color: context.colors.textPrimary)),
           ])));
   }
 }

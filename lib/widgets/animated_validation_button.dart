@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../core/theme/app_theme.dart';
 
 class AnimatedValidationButton extends StatefulWidget {
   final bool isValidated;
@@ -157,7 +158,7 @@ class _AnimatedValidationButtonState extends State<AnimatedValidationButton> wit
                     decoration: BoxDecoration(
                       color: widget.useWhiteBackground 
                           ? Colors.white.withValues(alpha: 0.9)
-                          : const Color(0xFFC83A2D).withValues(alpha: 0.1),
+                          : context.colors.accent.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                       boxShadow: widget.useWhiteBackground ? [
                         BoxShadow(
@@ -192,7 +193,7 @@ class _AnimatedValidationButtonState extends State<AnimatedValidationButton> wit
                             widget.isValidated ? Icons.check_circle_rounded : Icons.add_circle_rounded,
                             color: widget.isValidated 
                                 ? (widget.activeColor ?? (widget.useWhiteBackground ? Colors.green : Colors.white))
-                                : (widget.inactiveColor ?? (widget.useWhiteBackground ? const Color(0xFFC83A2D) : Colors.white)),
+                                : (widget.inactiveColor ?? (widget.useWhiteBackground ? context.colors.accent : Colors.white)),
                             size: widget.useWhiteBackground ? 20.sp : 18.sp,
                           ),
                         ),

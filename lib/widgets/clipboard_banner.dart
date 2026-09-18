@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'dart:math' as math;
+import '../core/theme/app_theme.dart';
 
 class ClipboardBanner extends StatefulWidget {
   final String url;
@@ -120,7 +121,7 @@ class _ClipboardBannerState extends State<ClipboardBanner> with SingleTickerProv
                   Container(
                     padding: EdgeInsets.all(16.r),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: context.colors.surface,
                       borderRadius: BorderRadius.circular(24.r),
                       boxShadow: [
                         BoxShadow(
@@ -129,7 +130,7 @@ class _ClipboardBannerState extends State<ClipboardBanner> with SingleTickerProv
                           offset: const Offset(0, 10),
                         ),
                       ],
-                      border: Border.all(color: const Color(0xFFF0F0F0), width: 1),
+                      border: Border.all(color: context.colors.surface, width: 1),
                     ),
                     child: Row(
                       children: [
@@ -138,7 +139,7 @@ class _ClipboardBannerState extends State<ClipboardBanner> with SingleTickerProv
                           width: 44.w,
                           height: 44.h,
                           decoration: BoxDecoration(
-                            color: const Color(0xFFC83A2D).withValues(alpha: 0.1),
+                            color: context.colors.accent.withValues(alpha: 0.1),
                             shape: BoxShape.circle,
                           ),
                           child: AnimatedBuilder(
@@ -154,7 +155,7 @@ class _ClipboardBannerState extends State<ClipboardBanner> with SingleTickerProv
                             },
                             child: Icon(
                               Icons.link_rounded,
-                              color: const Color(0xFFC83A2D),
+                              color: context.colors.accent,
                               size: 22.sp,
                             ),
                           ),
@@ -172,7 +173,7 @@ class _ClipboardBannerState extends State<ClipboardBanner> with SingleTickerProv
                                   fontFamily: 'SF Pro',
                                   fontWeight: FontWeight.w800,
                                   fontSize: 15.sp,
-                                  color: const Color(0xFF1A1A1A),
+                                  color: context.colors.textPrimary,
                                 ),
                               ),
                               Text(
@@ -180,7 +181,7 @@ class _ClipboardBannerState extends State<ClipboardBanner> with SingleTickerProv
                                 style: TextStyle(
                                   fontFamily: 'SF Pro',
                                   fontSize: 12.sp,
-                                  color: const Color(0xFF888888),
+                                  color: context.colors.textMuted,
                                 ),
                               ),
                             ],
@@ -195,7 +196,7 @@ class _ClipboardBannerState extends State<ClipboardBanner> with SingleTickerProv
                           child: Container(
                             padding: EdgeInsets.symmetric(horizontal: 18.w, vertical: 10.h),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFC83A2D),
+                              color: context.colors.accent,
                               borderRadius: BorderRadius.circular(30.r),
                             ),
                             child: Text(
@@ -230,11 +231,11 @@ class _ClipboardBannerState extends State<ClipboardBanner> with SingleTickerProv
                               offset: const Offset(0, 2),
                             ),
                           ],
-                          border: Border.all(color: const Color(0xFFF0F0F0), width: 1),
+                          border: Border.all(color: context.colors.surface, width: 1),
                         ),
                         child: Icon(
                           Icons.close_rounded,
-                          color: const Color(0xFF999999),
+                          color: context.colors.textMuted,
                           size: 16.sp,
                         ),
                       ),

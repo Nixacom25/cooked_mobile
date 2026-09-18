@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../routes/app_routes.dart';
 import '../../widgets/red_button.dart';
+import '../../core/theme/app_theme.dart';
 
 class ForgotSuccessScreen extends StatelessWidget {
   const ForgotSuccessScreen({super.key});
@@ -12,7 +13,7 @@ class ForgotSuccessScreen extends StatelessWidget {
     final bottomH = MediaQuery.of(context).padding.bottom;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: context.colors.pageBackground,
       body: SafeArea(
         top: false,
         bottom: false,
@@ -28,7 +29,7 @@ class ForgotSuccessScreen extends StatelessWidget {
                   fontSize: 28.sp,
                   fontWeight: FontWeight.w800,
                   fontFamily: 'Rubik',
-                  color: const Color(0xFF0F172A),
+                  color: context.colors.textPrimary,
                 ),
               ),
 
@@ -51,7 +52,7 @@ class ForgotSuccessScreen extends StatelessWidget {
                   fontSize: 24.sp,
                   fontWeight: FontWeight.bold,
                   fontFamily: 'Rubik',
-                  color: const Color(0xFF0F172A),
+                  color: context.colors.textPrimary,
                 ),
               ),
               SizedBox(height: 12.h),
@@ -61,7 +62,7 @@ class ForgotSuccessScreen extends StatelessWidget {
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 14.sp,
-                  color: const Color(0xFF64748B),
+                  color: context.colors.textSecondary,
                   fontFamily: 'SF Pro',
                   height: 1.35,
                 ),
@@ -70,7 +71,7 @@ class ForgotSuccessScreen extends StatelessWidget {
 
               RedButton(
                 label: 'Get Started',
-                color: const Color(0xFFC31E26),
+                color: context.colors.accent,
                 height: 52.h,
                 fontSize: 16.sp,
                 onTap: () {

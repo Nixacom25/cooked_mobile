@@ -9,6 +9,7 @@ import '../../core/utils/error_helper.dart';
 import '../../widgets/glass_icon_button.dart';
 import '../../widgets/red_button.dart';
 import '../../widgets/red_header_background.dart';
+import '../../core/theme/app_theme.dart';
 
 enum _ContactMethod { email, phone }
 
@@ -81,7 +82,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     final statusBarH = MediaQuery.of(context).padding.top;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: context.colors.surface,
       resizeToAvoidBottomInset: false,
       body: GestureDetector(
         behavior: HitTestBehavior.translucent,
@@ -138,7 +139,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               bottom: 0,
               child: Container(
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: context.colors.surface,
                   borderRadius: BorderRadius.vertical(
                     top: Radius.circular(32.r),
                   ),
@@ -181,7 +182,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           style: TextStyle(
             fontSize: 18.sp,
             fontWeight: FontWeight.w800,
-            color: const Color(0xFF0F172A),
+            color: context.colors.textPrimary,
             fontFamily: 'Rubik',
             height: 1.25,
           ),
@@ -214,7 +215,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
         RedButton(
           label: 'Continue',
-          color: const Color(0xFFC31E26),
+          color: context.colors.accent,
           height: 52.h,
           fontSize: 16.sp,
           onTap: _onContinue,
@@ -240,7 +241,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             style: TextStyle(
               fontSize: 18.sp,
               fontWeight: FontWeight.w800,
-              color: const Color(0xFF0F172A),
+              color: context.colors.textPrimary,
               fontFamily: 'Rubik',
               height: 1.25,
             ),
@@ -251,7 +252,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         Text(
           isEmail ? 'Email' : 'Phone Number',
           style: TextStyle(
-            color: const Color(0xFF64748B),
+            color: context.colors.textSecondary,
             fontFamily: 'SF Pro',
             fontWeight: FontWeight.w500,
             fontSize: 14.sp,
@@ -274,7 +275,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           label: 'Send',
           loadingLabel: 'Sending',
           isLoading: _isLoading,
-          color: const Color(0xFFC31E26),
+          color: context.colors.accent,
           height: 52.h,
           fontSize: 16.sp,
           onTap: _onContinue,
@@ -309,10 +310,10 @@ class _ContactCard extends StatelessWidget {
         width: double.infinity,
         padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 14.h),
         decoration: BoxDecoration(
-          color: const Color(0xFFF0F1F3),
+          color: context.colors.pageBackground,
           borderRadius: BorderRadius.circular(16.r),
           border: Border.all(
-            color: selected ? const Color(0xFFC31E26) : Colors.transparent,
+            color: selected ? context.colors.accent : Colors.transparent,
             width: 1.5,
           ),
         ),
@@ -320,7 +321,7 @@ class _ContactCard extends StatelessWidget {
           children: [
             Icon(
               icon,
-              color: const Color(0xFFC31E26),
+              color: context.colors.accent,
               size: 40.sp,
             ),
             SizedBox(width: 14.w),
@@ -334,7 +335,7 @@ class _ContactCard extends StatelessWidget {
                       fontFamily: 'SF Pro',
                       fontWeight: FontWeight.w700,
                       fontSize: 14.sp,
-                      color: const Color(0xFF0F172A),
+                      color: context.colors.textPrimary,
                     ),
                   ),
                   SizedBox(height: 2.h),
@@ -343,7 +344,7 @@ class _ContactCard extends StatelessWidget {
                     style: TextStyle(
                       fontFamily: 'SF Pro',
                       fontSize: 12.sp,
-                      color: const Color(0xFF64748B),
+                      color: context.colors.textSecondary,
                     ),
                   ),
                 ],
@@ -354,11 +355,11 @@ class _ContactCard extends StatelessWidget {
               height: 20.w,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: selected ? const Color(0xFFC31E26) : Colors.transparent,
+                color: selected ? context.colors.accent : Colors.transparent,
                 border: Border.all(
                   color: selected
-                      ? const Color(0xFFC31E26)
-                      : const Color(0xFFCBD5E1),
+                      ? context.colors.accent
+                      : context.colors.border,
                   width: 2,
                 ),
               ),
@@ -399,17 +400,17 @@ class _EmailField extends StatelessWidget {
         style: TextStyle(
           fontFamily: 'SF Pro',
           fontSize: 15.sp,
-          color: const Color(0xFF0F172A),
+          color: context.colors.textPrimary,
         ),
         decoration: InputDecoration(
           hintText: 'Email',
           hintStyle: TextStyle(
-            color: const Color(0xFF94A3B8),
+            color: context.colors.textMuted,
             fontFamily: 'SF Pro',
             fontSize: 15.sp,
           ),
           filled: true,
-          fillColor: const Color(0xFFF0F1F3),
+          fillColor: context.colors.pageBackground,
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(14.r),
             borderSide: BorderSide.none,
@@ -424,7 +425,7 @@ class _EmailField extends StatelessWidget {
           ),
           errorText: errorText,
           errorStyle: TextStyle(
-            color: const Color(0xFFDC2626),
+            color: context.colors.destructive,
             fontSize: 12.sp,
             fontFamily: 'SF Pro',
           ),
@@ -457,12 +458,12 @@ class _PhoneField extends StatelessWidget {
       decoration: InputDecoration(
         hintText: 'XX XXX XX XX',
         hintStyle: TextStyle(
-          color: const Color(0xFF94A3B8),
+          color: context.colors.textMuted,
           fontFamily: 'SF Pro',
           fontSize: 15.sp,
         ),
         filled: true,
-        fillColor: const Color(0xFFF0F1F3),
+        fillColor: context.colors.pageBackground,
         contentPadding: EdgeInsets.symmetric(
           horizontal: 16.w,
           vertical: 16.h,
@@ -477,11 +478,11 @@ class _PhoneField extends StatelessWidget {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14.r),
-          borderSide: const BorderSide(color: Color(0xFFC31E26), width: 1.5),
+          borderSide: BorderSide(color: context.colors.accent, width: 1.5),
         ),
         errorText: errorText,
         errorStyle: TextStyle(
-          color: const Color(0xFFDC2626),
+          color: context.colors.destructive,
           fontSize: 12.sp,
           fontFamily: 'SF Pro',
         ),
@@ -493,11 +494,11 @@ class _PhoneField extends StatelessWidget {
       style: TextStyle(
         fontFamily: 'SF Pro',
         fontSize: 15.sp,
-        color: const Color(0xFF0F172A),
+        color: context.colors.textPrimary,
       ),
       dropdownIcon: Icon(
         Icons.keyboard_arrow_down_rounded,
-        color: const Color(0xFF64748B),
+        color: context.colors.textSecondary,
         size: 20.sp,
       ),
       flagsButtonPadding: EdgeInsets.only(left: 8.w),
@@ -508,7 +509,7 @@ class _PhoneField extends StatelessWidget {
       disableLengthCheck: true,
       textAlignVertical: TextAlignVertical.center,
       dropdownDecoration: BoxDecoration(
-        color: const Color(0xFFF0F1F3),
+        color: context.colors.pageBackground,
         borderRadius: BorderRadius.circular(14.r),
       ),
     );

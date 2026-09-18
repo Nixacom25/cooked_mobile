@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../core/theme/app_theme.dart';
 
 class SkeletonLoader extends StatefulWidget {
   final double width;
@@ -54,10 +55,10 @@ class _SkeletonLoaderState extends State<SkeletonLoader>
             gradient: LinearGradient(
               begin: Alignment(_animation.value - 1, 0),
               end: Alignment(_animation.value + 1, 0),
-              colors: const [
-                Color(0xFFF3F4F6),
-                Color(0xFFE5E7EB),
-                Color(0xFFF3F4F6),
+              colors: [
+                context.colors.surface,
+                context.colors.divider,
+                context.colors.surface,
               ],
             ),
           ),

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -5,12 +6,16 @@ import 'package:flutter_svg/flutter_svg.dart';
 import '../../routes/app_routes.dart';
 import '../../services/auth_service.dart';
 import '../../services/user_service.dart';
+import '../../widgets/appearance_sheet.dart';
 import '../../core/api_config.dart';
 import '../../models/view_all_type.dart';
 import '../../widgets/skeleton_loader.dart';
 import '../../widgets/red_header_background.dart';
 import '../../widgets/alphabet_avatar.dart';
 import '../../widgets/app_loading_indicator.dart';
+import '../../core/theme/app_theme.dart';
+import '../../core/widgets/ios_toast.dart';
+import '../../core/utils/error_helper.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -83,6 +88,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  void _showAppearanceSheet() {
+    showAppearanceSheet(context);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -100,7 +109,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             child: Container(
               margin: EdgeInsets.only(top: 25.h),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: context.colors.surface,
                 borderRadius: BorderRadius.vertical(
                   top: Radius.circular(32.r),
                 ),
@@ -117,14 +126,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           child: Container(
                             width: 42.r,
                             height: 42.r,
-                            decoration: const BoxDecoration(
-                              color: Color(0xFFF1F5F9),
+                            decoration: BoxDecoration(
+                              color: context.colors.pageBackground,
                               shape: BoxShape.circle,
                             ),
                             child: Icon(
                               Icons.arrow_back_rounded,
                               size: 20.sp,
-                              color: const Color(0xFF0F172A),
+                              color: context.colors.textPrimary,
                             ),
                           ),
                         ),
@@ -136,7 +145,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               fontFamily: 'Rubik',
                               fontWeight: FontWeight.w700,
                               fontSize: 20.sp,
-                              color: const Color(0xFF0F172A),
+                              color: context.colors.textPrimary,
                             ),
                           ),
                         ),
@@ -172,23 +181,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       : Column(
                           children: [
                             Text(
-                              _name.isNotEmpty ? _name : 'Adeel',
+                              _name.isNotEmpty ? _name : 'Chef',
                               style: TextStyle(
                                 fontFamily: 'Rubik',
                                 fontWeight: FontWeight.w700,
                                 fontSize: 22.sp,
-                                color: const Color(0xFF0F172A),
+                                color: context.colors.textPrimary,
                               ),
                             ),
                             SizedBox(height: 4.h),
-                            Text(
-                              _phone.isNotEmpty ? _phone : '(+1) 234 567 890',
-                              style: TextStyle(
-                                fontFamily: 'Rubik',
-                                fontSize: 14.sp,
-                                color: const Color(0xFF64748B),
+                            if (_phone.isNotEmpty)
+                              Text(
+                                _phone,
+                                style: TextStyle(
+                                  fontFamily: 'Rubik',
+                                  fontSize: 14.sp,
+                                  color: context.colors.textSecondary,
+                                ),
                               ),
-                            ),
                           ],
                         ),
 
@@ -205,21 +215,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           onTap: () =>
                               Navigator.pushNamed(context, AppRoutes.myAccount),
                         ),
-                        const Divider(height: 1, thickness: 1, color: Color(0xFFF1F5F9)),
+                        Divider(height: 1, thickness: 1, color: context.colors.pageBackground),
                         _MenuItem(
                           svgPath: 'assets/icones/password.svg',
                           label: 'Change Password',
                           onTap: () =>
                               Navigator.pushNamed(context, AppRoutes.changePassword),
                         ),
-                        const Divider(height: 1, thickness: 1, color: Color(0xFFF1F5F9)),
+                        Divider(height: 1, thickness: 1, color: context.colors.pageBackground),
                         _MenuItem(
                           svgPath: 'assets/icones/eating.svg',
                           label: 'Dietary Preferences',
                           onTap: () =>
                               Navigator.pushNamed(context, AppRoutes.editPreferences),
                         ),
-                        const Divider(height: 1, thickness: 1, color: Color(0xFFF1F5F9)),
+                        Divider(height: 1, thickness: 1, color: context.colors.pageBackground),
                         _MenuItem(
                           svgPath: 'assets/icones/billing.svg',
                           label: 'Subscription',
@@ -228,7 +238,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             AppRoutes.subscriptionManagement,
                           ),
                         ),
-                        const Divider(height: 1, thickness: 1, color: Color(0xFFF1F5F9)),
+                        Divider(height: 1, thickness: 1, color: context.colors.pageBackground),
                         _MenuItem(
                           svgPath: 'assets/icones/coeur1.svg',
                           label: 'Favorites',
@@ -241,27 +251,38 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             },
                           ),
                         ),
-                        const Divider(height: 1, thickness: 1, color: Color(0xFFF1F5F9)),
+                        Divider(height: 1, thickness: 1, color: context.colors.pageBackground),
                         _MenuItem(
                           svgPath: 'assets/icones/order.svg',
                           label: 'Order History',
                           onTap: () =>
                               Navigator.pushNamed(context, AppRoutes.activityHistory),
                         ),
-                        const Divider(height: 1, thickness: 1, color: Color(0xFFF1F5F9)),
+                        Divider(height: 1, thickness: 1, color: context.colors.pageBackground),
                         _MenuItem(
                           svgPath: 'assets/icones/help.svg',
                           label: 'Help Center',
                           onTap: () =>
                               Navigator.pushNamed(context, AppRoutes.helpCenter),
                         ),
-                        const Divider(height: 1, thickness: 1, color: Color(0xFFF1F5F9)),
+                        // Debug-only: verifying the dark theme during development.
+                        // Production always follows the system theme, with no
+                        // in-app override, so this entry point doesn't exist there.
+                        if (kDebugMode) ...[
+                          Divider(height: 1, thickness: 1, color: context.colors.pageBackground),
+                          _MenuItem(
+                            svgPath: 'assets/icones/sun.svg',
+                            label: 'Appearance',
+                            onTap: _showAppearanceSheet,
+                          ),
+                        ],
+                        Divider(height: 1, thickness: 1, color: context.colors.pageBackground),
                         _MenuItem(
                           svgPath: 'assets/icones/delete.svg',
                           label: 'Delete Account',
-                          textColor: const Color(0xFFDC2626),
-                          iconColor: const Color(0xFFDC2626),
-                          chevronColor: const Color(0xFFDC2626),
+                          textColor: context.colors.destructive,
+                          iconColor: context.colors.destructive,
+                          chevronColor: context.colors.destructive,
                           onTap: () {
                             showModalBottomSheet(
                               context: context,
@@ -270,13 +291,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             );
                           },
                         ),
-                        const Divider(height: 1, thickness: 1, color: Color(0xFFF1F5F9)),
+                        Divider(height: 1, thickness: 1, color: context.colors.pageBackground),
                         _MenuItem(
                           svgPath: 'assets/icones/logout.svg',
                           label: 'Logout',
-                          textColor: const Color(0xFFDC2626),
-                          iconColor: const Color(0xFFDC2626),
-                          chevronColor: const Color(0xFFDC2626),
+                          textColor: context.colors.destructive,
+                          iconColor: context.colors.destructive,
+                          chevronColor: context.colors.destructive,
                           onTap: _showLogout,
                         ),
                         SizedBox(height: 40.h),
@@ -297,21 +318,25 @@ class _MenuItem extends StatelessWidget {
   final String svgPath;
   final String label;
   final VoidCallback onTap;
-  final Color textColor;
-  final Color iconColor;
-  final Color chevronColor;
+  final Color? textColor;
+  final Color? iconColor;
+  final Color? chevronColor;
 
   const _MenuItem({
     required this.svgPath,
     required this.label,
     required this.onTap,
-    this.textColor = const Color(0xFF0F172A),
-    this.iconColor = const Color(0xFF0F172A),
-    this.chevronColor = const Color(0xFF64748B),
+    this.textColor,
+    this.iconColor,
+    this.chevronColor,
   });
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
+    final effectiveTextColor = textColor ?? colors.textPrimary;
+    final effectiveIconColor = iconColor ?? colors.textPrimary;
+    final effectiveChevronColor = chevronColor ?? colors.textSecondary;
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
@@ -327,11 +352,11 @@ class _MenuItem extends StatelessWidget {
                   svgPath,
                   width: 22.r,
                   height: 22.r,
-                  colorFilter: ColorFilter.mode(iconColor, BlendMode.srcIn),
+                  colorFilter: ColorFilter.mode(effectiveIconColor, BlendMode.srcIn),
                   errorBuilder: (_, __, ___) => Icon(
                     Icons.circle_outlined,
                     size: 20.r,
-                    color: iconColor,
+                    color: effectiveIconColor,
                   ),
                 ),
               ),
@@ -344,13 +369,13 @@ class _MenuItem extends StatelessWidget {
                   fontFamily: 'Rubik',
                   fontWeight: FontWeight.w500,
                   fontSize: 16.sp,
-                  color: textColor,
+                  color: effectiveTextColor,
                 ),
               ),
             ),
             Icon(
               Icons.chevron_right_rounded,
-              color: chevronColor,
+              color: effectiveChevronColor,
               size: 20.sp,
             ),
           ],
@@ -369,7 +394,7 @@ class _LogoutSheet extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.colors.surface,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
       ),
       child: Column(
@@ -381,7 +406,7 @@ class _LogoutSheet extends StatelessWidget {
             height: 4.h,
             margin: EdgeInsets.symmetric(vertical: 12.h),
             decoration: BoxDecoration(
-              color: const Color(0xFFE5E7EB),
+              color: context.colors.divider,
               borderRadius: BorderRadius.circular(2.r),
             ),
           ),
@@ -398,12 +423,12 @@ class _LogoutSheet extends StatelessWidget {
                     fontFamily: 'Rubik',
                     fontWeight: FontWeight.w800,
                     fontSize: 20.sp,
-                    color: const Color(0xFF1A1A1A),
+                    color: context.colors.textPrimary,
                   ),
                 ),
                 IconButton(
                   onPressed: () => Navigator.pop(context),
-                  icon: Icon(Icons.close_rounded, size: 24.sp, color: const Color(0xFF64748B)),
+                  icon: Icon(Icons.close_rounded, size: 24.sp, color: context.colors.textSecondary),
                 ),
               ],
             ),
@@ -421,7 +446,7 @@ class _LogoutSheet extends StatelessWidget {
                   style: TextStyle(
                     fontFamily: 'Rubik',
                     fontSize: 14.sp,
-                    color: const Color(0xFF64748B),
+                    color: context.colors.textSecondary,
                     height: 1.6,
                   ),
                 ),
@@ -443,7 +468,7 @@ class _LogoutSheet extends StatelessWidget {
                     width: double.infinity,
                     height: 54.h,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFDC2626),
+                      color: context.colors.destructive,
                       borderRadius: BorderRadius.circular(16.r),
                     ),
                     child: Center(
@@ -486,7 +511,7 @@ class _DeleteAccountSheetState extends State<_DeleteAccountSheet> {
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.colors.surface,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
       ),
       child: Column(
@@ -498,7 +523,7 @@ class _DeleteAccountSheetState extends State<_DeleteAccountSheet> {
             height: 4.h,
             margin: EdgeInsets.symmetric(vertical: 12.h),
             decoration: BoxDecoration(
-              color: const Color(0xFFE5E7EB),
+              color: context.colors.divider,
               borderRadius: BorderRadius.circular(2.r),
             ),
           ),
@@ -515,12 +540,12 @@ class _DeleteAccountSheetState extends State<_DeleteAccountSheet> {
                     fontFamily: 'Rubik',
                     fontWeight: FontWeight.w800,
                     fontSize: 20.sp,
-                    color: const Color(0xFF1A1A1A),
+                    color: context.colors.textPrimary,
                   ),
                 ),
                 IconButton(
                   onPressed: () => Navigator.pop(context),
-                  icon: Icon(Icons.close_rounded, size: 24.sp, color: const Color(0xFF64748B)),
+                  icon: Icon(Icons.close_rounded, size: 24.sp, color: context.colors.textSecondary),
                 ),
               ],
             ),
@@ -538,7 +563,7 @@ class _DeleteAccountSheetState extends State<_DeleteAccountSheet> {
                   style: TextStyle(
                     fontFamily: 'Rubik',
                     fontSize: 14.sp,
-                    color: const Color(0xFF64748B),
+                    color: context.colors.textSecondary,
                     height: 1.6,
                   ),
                 ),
@@ -559,8 +584,10 @@ class _DeleteAccountSheetState extends State<_DeleteAccountSheet> {
                     } catch (e) {
                       setState(() => _isDeleting = false);
                       if (!context.mounted) return;
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Error: ${e.toString()}')),
+                      IosToast.show(
+                        context,
+                        message: ErrorHelper.getFriendlyMessage(e),
+                        type: ToastType.error,
                       );
                     }
                   },
@@ -568,7 +595,7 @@ class _DeleteAccountSheetState extends State<_DeleteAccountSheet> {
                     width: double.infinity,
                     height: 54.h,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFDC2626),
+                      color: context.colors.destructive,
                       borderRadius: BorderRadius.circular(16.r),
                     ),
                     child: Center(
@@ -599,3 +626,4 @@ class _DeleteAccountSheetState extends State<_DeleteAccountSheet> {
     );
   }
 }
+

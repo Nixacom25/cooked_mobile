@@ -6,6 +6,7 @@ import '../core/widgets/ios_toast.dart';
 import '../core/utils/error_helper.dart';
 import 'glass_icon_button.dart';
 import 'red_button.dart';
+import '../core/theme/app_theme.dart';
 
 class AddToGroceryModal extends StatefulWidget {
   final Recipe recipe;
@@ -109,7 +110,7 @@ class _AddToGroceryModalState extends State<AddToGroceryModal> {
       constraints: BoxConstraints(maxHeight: 0.85.sh),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
-        color: Colors.white,
+        color: context.colors.surface,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -120,7 +121,7 @@ class _AddToGroceryModalState extends State<AddToGroceryModal> {
             height: 4.h,
             margin: EdgeInsets.symmetric(vertical: 12.h),
             decoration: BoxDecoration(
-              color: const Color(0xFFE5E7EB),
+              color: context.colors.divider,
               borderRadius: BorderRadius.circular(2.r),
             ),
           ),
@@ -137,7 +138,7 @@ class _AddToGroceryModalState extends State<AddToGroceryModal> {
                     fontFamily: 'Rubik',
                     fontWeight: FontWeight.w700,
                     fontSize: 18.sp,
-                    color: const Color(0xFF0F172A),
+                    color: context.colors.textPrimary,
                   ),
                 ),
                 GlassIconButton(
@@ -146,14 +147,14 @@ class _AddToGroceryModalState extends State<AddToGroceryModal> {
                   child: Icon(
                     Icons.close_rounded,
                     size: 20.sp,
-                    color: const Color(0xFF64748B),
+                    color: context.colors.textSecondary,
                   ),
                 ),
               ],
             ),
           ),
           
-          const Divider(height: 1, color: Color(0xFFE5E7EB)),
+          Divider(height: 1, color: context.colors.divider),
 
           Flexible(
             child: ListView(
@@ -166,7 +167,7 @@ class _AddToGroceryModalState extends State<AddToGroceryModal> {
                     fontFamily: 'Rubik',
                     fontWeight: FontWeight.w700,
                     fontSize: 14.sp,
-                    color: const Color(0xFF0F172A),
+                    color: context.colors.textPrimary,
                   ),
                 ),
                 SizedBox(height: 12.h),
@@ -174,15 +175,15 @@ class _AddToGroceryModalState extends State<AddToGroceryModal> {
                 // Ingredients List
                 Container(
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF8FAFC),
+                    color: context.colors.surface,
                     borderRadius: BorderRadius.circular(16.r),
-                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                    border: Border.all(color: context.colors.border),
                   ),
                   child: ListView.separated(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     itemCount: widget.recipe.ingredients.length,
-                    separatorBuilder: (_, __) => const Divider(height: 1, color: Color(0xFFE2E8F0)),
+                    separatorBuilder: (_, __) => Divider(height: 1, color: context.colors.border),
                     itemBuilder: (context, index) {
                       final ing = widget.recipe.ingredients[index];
                       return CheckboxListTile(
@@ -190,10 +191,10 @@ class _AddToGroceryModalState extends State<AddToGroceryModal> {
                         onChanged: (val) {
                           setState(() => _selectedIngredients[index] = val ?? false);
                         },
-                        activeColor: const Color(0xFFC83A2D),
+                        activeColor: context.colors.accent,
                         checkColor: Colors.white,
                         checkboxShape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4.r)),
-                        side: const BorderSide(color: Color(0xFFCBD5E1)),
+                        side: BorderSide(color: context.colors.border),
                         contentPadding: EdgeInsets.symmetric(horizontal: 16.w),
                         title: Text(
                           ing.name,
@@ -201,7 +202,7 @@ class _AddToGroceryModalState extends State<AddToGroceryModal> {
                             fontFamily: 'Rubik',
                             fontWeight: FontWeight.w600,
                             fontSize: 15.sp,
-                            color: const Color(0xFF0F172A),
+                            color: context.colors.textPrimary,
                           ),
                         ),
                         subtitle: Text(
@@ -209,7 +210,7 @@ class _AddToGroceryModalState extends State<AddToGroceryModal> {
                           style: TextStyle(
                             fontFamily: 'Rubik',
                             fontSize: 13.sp,
-                            color: const Color(0xFF64748B),
+                            color: context.colors.textSecondary,
                           ),
                         ),
                         secondary: ing.icon != null && ing.icon!.isNotEmpty
@@ -231,7 +232,7 @@ class _AddToGroceryModalState extends State<AddToGroceryModal> {
                         fontFamily: 'Rubik',
                         fontWeight: FontWeight.w700,
                         fontSize: 14.sp,
-                        color: const Color(0xFF0F172A),
+                        color: context.colors.textPrimary,
                       ),
                     ),
                     if (_isSpecificDate && _selectedDate != null)
@@ -241,7 +242,7 @@ class _AddToGroceryModalState extends State<AddToGroceryModal> {
                           fontFamily: 'Rubik',
                           fontWeight: FontWeight.w700,
                           fontSize: 14.sp,
-                          color: const Color(0xFFC83A2D),
+                          color: context.colors.accent,
                         ),
                       ),
                   ],
@@ -296,7 +297,7 @@ class _AddToGroceryModalState extends State<AddToGroceryModal> {
               isLoading: _isSaving,
               isDisabled: !_canSubmit,
               onTap: _handleSave,
-              color: const Color(0xFFC83A2D),
+              color: context.colors.accent,
               textColor: Colors.white,
               height: 54.h,
               fontSize: 16.sp,
@@ -333,10 +334,12 @@ class _LocationOption extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         padding: EdgeInsets.symmetric(vertical: 14.h),
         decoration: BoxDecoration(
-          color: selected ? const Color(0xFFFFF1F0) : const Color(0xFFF8FAFC),
+          color: selected
+              ? context.colors.accent.withValues(alpha: 0.12)
+              : context.colors.surface,
           borderRadius: BorderRadius.circular(16.r),
           border: Border.all(
-            color: selected ? const Color(0xFFC83A2D) : const Color(0xFFE2E8F0),
+            color: selected ? context.colors.accent : context.colors.border,
             width: 1.5,
           ),
         ),
@@ -344,7 +347,7 @@ class _LocationOption extends StatelessWidget {
           children: [
             Icon(
               icon,
-              color: selected ? const Color(0xFFC83A2D) : const Color(0xFF64748B),
+              color: selected ? context.colors.accent : context.colors.textSecondary,
               size: 24.sp,
             ),
             SizedBox(height: 8.h),
@@ -354,7 +357,7 @@ class _LocationOption extends StatelessWidget {
                 fontFamily: 'Rubik',
                 fontWeight: FontWeight.w700,
                 fontSize: 14.sp,
-                color: selected ? const Color(0xFFC83A2D) : const Color(0xFF64748B),
+                color: selected ? context.colors.accent : context.colors.textSecondary,
               ),
             ),
           ],

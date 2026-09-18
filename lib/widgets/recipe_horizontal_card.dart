@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../models/recipe.dart';
+import '../core/theme/app_theme.dart';
 
 class RecipeHorizontalCard extends StatelessWidget {
   final Recipe? recipe;
@@ -33,6 +34,7 @@ class RecipeHorizontalCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final displayTitle = title ?? recipe?.name ?? 'Recipe';
     final displaySubtitle = subtitle ??
         (recipe?.origin?.toUpperCase() == 'SCAN'
@@ -57,7 +59,7 @@ class RecipeHorizontalCard extends StatelessWidget {
         height: 140.h,
         clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
-          color: const Color(0xFFFAF6EE),
+          color: context.colors.surface,
           borderRadius: BorderRadius.circular(24.r),
         ),
         child: Row(
@@ -87,8 +89,8 @@ class RecipeHorizontalCard extends StatelessWidget {
                                 : Icons.favorite_border_rounded,
                             size: 18.sp,
                             color: isFavorite
-                                ? const Color(0xFFC31E26)
-                                : const Color(0xFF94A3B8),
+                                ? context.colors.accent
+                                : context.colors.textMuted,
                           ),
                         ),
                       )
@@ -101,7 +103,7 @@ class RecipeHorizontalCard extends StatelessWidget {
                           fontFamily: 'Rubik',
                           fontSize: 12.sp,
                           fontWeight: FontWeight.w500,
-                          color: const Color(0xFF64748B),
+                          color: context.colors.textSecondary,
                         ),
                       ),
 
@@ -114,7 +116,7 @@ class RecipeHorizontalCard extends StatelessWidget {
                         fontFamily: 'Rubik',
                         fontSize: 16.sp,
                         fontWeight: FontWeight.w700,
-                        color: const Color(0xFF0F172A),
+                        color: context.colors.textPrimary,
                         height: 1.2,
                       ),
                     ),
@@ -125,7 +127,7 @@ class RecipeHorizontalCard extends StatelessWidget {
                         padding: EdgeInsets.symmetric(
                             horizontal: 12.w, vertical: 5.h),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFDCFCE7),
+                          color: isDark ? const Color(0xFF16A34A).withValues(alpha: 0.18) : const Color(0xFFDCFCE7),
                           borderRadius: BorderRadius.circular(20.r),
                         ),
                         child: Text(
@@ -143,6 +145,7 @@ class RecipeHorizontalCard extends StatelessWidget {
                         children: [
                           if (displayTime != null)
                             _buildPillBadge(
+                              context: context,
                               icon: Icons.access_time_rounded,
                               text: displayTime,
                             ),
@@ -150,6 +153,7 @@ class RecipeHorizontalCard extends StatelessWidget {
                             SizedBox(width: 8.w),
                           if (displayKcal != null)
                             _buildPillBadge(
+                              context: context,
                               icon: Icons.local_fire_department_rounded,
                               text: displayKcal,
                             ),
@@ -187,7 +191,7 @@ class RecipeHorizontalCard extends StatelessWidget {
                                 displayImage,
                                 fit: BoxFit.cover,
                                 errorBuilder: (_, __, ___) => Container(
-                                  color: const Color(0xFFF1F5F9),
+                                  color: context.colors.pageBackground,
                                   child: Icon(Icons.restaurant,
                                       color: Colors.grey[400]),
                                 ),
@@ -212,7 +216,7 @@ class RecipeHorizontalCard extends StatelessWidget {
                       child: Icon(
                         Icons.chevron_right_rounded,
                         size: 20.sp,
-                        color: const Color(0xFF0F172A),
+                        color: context.colors.textPrimary,
                       ),
                     ),
                   ),
@@ -224,17 +228,17 @@ class RecipeHorizontalCard extends StatelessWidget {
     );
   }
 
-  Widget _buildPillBadge({required IconData icon, required String text}) {
+  Widget _buildPillBadge({required BuildContext context, required IconData icon, required String text}) {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.colors.pageBackground,
         borderRadius: BorderRadius.circular(16.r),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 13.sp, color: const Color(0xFF64748B)),
+          Icon(icon, size: 13.sp, color: context.colors.textSecondary),
           SizedBox(width: 4.w),
           Text(
             text,
@@ -242,7 +246,7 @@ class RecipeHorizontalCard extends StatelessWidget {
               fontFamily: 'Rubik',
               fontSize: 11.sp,
               fontWeight: FontWeight.w600,
-              color: const Color(0xFF475569),
+              color: context.colors.textSecondary,
             ),
           ),
         ],

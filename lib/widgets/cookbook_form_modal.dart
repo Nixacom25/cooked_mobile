@@ -15,6 +15,7 @@ import '../widgets/app_loading_indicator.dart';
 import '../widgets/skeleton_list.dart';
 import '../widgets/recipe_shortcut_card.dart';
 import '../screens/home/home_screen.dart';
+import '../core/theme/app_theme.dart';
 
 class CookbookFormModal extends StatefulWidget {
   final Cookbook? cookbook;
@@ -112,7 +113,7 @@ class _CookbookFormModalState extends State<CookbookFormModal> {
               padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
               child: Row(
                 children: [
-                  Icon(icon, size: 20.sp, color: const Color(0xFF0F172A)),
+                  Icon(icon, size: 20.sp, color: context.colors.textPrimary),
                   SizedBox(width: 10.w),
                   Expanded(
                     child: Text(
@@ -121,7 +122,7 @@ class _CookbookFormModalState extends State<CookbookFormModal> {
                         fontFamily: 'Rubik',
                         fontWeight: FontWeight.w600,
                         fontSize: 14.sp,
-                        color: const Color(0xFF0F172A),
+                        color: context.colors.textPrimary,
                       ),
                     ),
                   ),
@@ -153,10 +154,14 @@ class _CookbookFormModalState extends State<CookbookFormModal> {
                       width: 150.w,
                       padding: EdgeInsets.symmetric(vertical: 6.h, horizontal: 6.w),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.28),
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.black.withValues(alpha: 0.45)
+                            : Colors.white.withValues(alpha: 0.28),
                         borderRadius: BorderRadius.circular(24.r),
                         border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.65),
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.white.withValues(alpha: 0.16)
+                              : Colors.white.withValues(alpha: 0.65),
                           width: 1.5.w,
                         ),
                         boxShadow: [
@@ -289,7 +294,7 @@ class _CookbookFormModalState extends State<CookbookFormModal> {
                   size: 42.r,
                   child: Icon(
                     Icons.arrow_back_rounded,
-                    color: const Color(0xFF0F172A),
+                    color: context.colors.textPrimary,
                     size: 20.sp,
                   ),
                 ),
@@ -302,7 +307,7 @@ class _CookbookFormModalState extends State<CookbookFormModal> {
                           : 'Select Recipes')
                       : (_isEdit ? 'Edit Cookbook' : 'New Cookbook'),
                   style: TextStyle(
-                    color: const Color(0xFF0F172A),
+                    color: context.colors.textPrimary,
                     fontSize: 20.sp,
                     fontWeight: FontWeight.w800,
                     fontFamily: 'Rubik',
@@ -325,7 +330,7 @@ class _CookbookFormModalState extends State<CookbookFormModal> {
                       size: 42.r,
                       child: Icon(
                         _isPickingRecipes ? Icons.add_rounded : Icons.close_rounded,
-                        color: const Color(0xFF0F172A),
+                        color: context.colors.textPrimary,
                         size: 22.sp,
                       ),
                     );
@@ -349,7 +354,7 @@ class _CookbookFormModalState extends State<CookbookFormModal> {
                     padding: EdgeInsets.symmetric(horizontal: 16.w),
                     child: Container(
                       decoration: BoxDecoration(
-                        color: const Color(0xFFF1F5F9),
+                        color: context.colors.pageBackground,
                         borderRadius: BorderRadius.circular(16.r),
                       ),
                       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
@@ -360,7 +365,7 @@ class _CookbookFormModalState extends State<CookbookFormModal> {
                               controller: _nameCtrl,
                               autofocus: !widget.isEmbedded && !_isEdit,
                               style: TextStyle(
-                                color: const Color(0xFF0F172A),
+                                color: context.colors.textPrimary,
                                 fontFamily: 'Rubik',
                                 fontSize: 15.sp,
                                 fontWeight: FontWeight.w600,
@@ -369,7 +374,7 @@ class _CookbookFormModalState extends State<CookbookFormModal> {
                               decoration: InputDecoration(
                                 hintText: 'Cookbook name',
                                 hintStyle: TextStyle(
-                                  color: const Color(0xFF94A3B8),
+                                  color: context.colors.textMuted,
                                   fontFamily: 'Rubik',
                                   fontSize: 15.sp,
                                   fontWeight: FontWeight.w400,
@@ -386,7 +391,7 @@ class _CookbookFormModalState extends State<CookbookFormModal> {
                               },
                               child: Icon(
                                 Icons.close_rounded,
-                                color: const Color(0xFF94A3B8),
+                                color: context.colors.textMuted,
                                 size: 18.sp,
                               ),
                             ),
@@ -405,7 +410,7 @@ class _CookbookFormModalState extends State<CookbookFormModal> {
                       child: Container(
                         padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFF8FAFC),
+                          color: context.colors.surface,
                           borderRadius: BorderRadius.circular(20.r),
                         ),
                         child: Row(
@@ -413,13 +418,13 @@ class _CookbookFormModalState extends State<CookbookFormModal> {
                             Container(
                               width: 40.r,
                               height: 40.r,
-                              decoration: const BoxDecoration(
-                                color: Color(0xFFF1F5F9),
+                              decoration: BoxDecoration(
+                                color: context.colors.pageBackground,
                                 shape: BoxShape.circle,
                               ),
                               child: Icon(
                                 Icons.add_rounded,
-                                color: const Color(0xFF0F172A),
+                                color: context.colors.textPrimary,
                                 size: 22.sp,
                               ),
                             ),
@@ -431,7 +436,7 @@ class _CookbookFormModalState extends State<CookbookFormModal> {
                                   Text(
                                     'Add recipes',
                                     style: TextStyle(
-                                      color: const Color(0xFF0F172A),
+                                      color: context.colors.textPrimary,
                                       fontSize: 15.sp,
                                       fontWeight: FontWeight.w700,
                                       fontFamily: 'Rubik',
@@ -441,7 +446,7 @@ class _CookbookFormModalState extends State<CookbookFormModal> {
                                   Text(
                                     'Select recipes for this cookbook',
                                     style: TextStyle(
-                                      color: const Color(0xFF64748B),
+                                      color: context.colors.textSecondary,
                                       fontSize: 13.sp,
                                       fontFamily: 'Rubik',
                                     ),
@@ -451,7 +456,7 @@ class _CookbookFormModalState extends State<CookbookFormModal> {
                             ),
                             Icon(
                               Icons.chevron_right_rounded,
-                              color: const Color(0xFF0F172A),
+                              color: context.colors.textPrimary,
                               size: 22.sp,
                             ),
                           ],
@@ -470,7 +475,7 @@ class _CookbookFormModalState extends State<CookbookFormModal> {
                           fontFamily: 'Rubik',
                           fontWeight: FontWeight.w700,
                           fontSize: 16.sp,
-                          color: const Color(0xFF0F172A),
+                          color: context.colors.textPrimary,
                         ),
                       ),
                     ),
@@ -533,8 +538,8 @@ class _CookbookFormModalState extends State<CookbookFormModal> {
                       ? () => setState(() => _isPickingRecipes = false)
                       : (canSave ? _save : null),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFC31E26),
-                    disabledBackgroundColor: const Color(0xFFE2E8F0),
+                    backgroundColor: context.colors.accent,
+                    disabledBackgroundColor: context.colors.border,
                     elevation: 0,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(26.r),
@@ -653,10 +658,10 @@ class _SelectedRecipePill extends StatelessWidget {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
       decoration: BoxDecoration(
-        color: const Color(0xFFFAF6EE),
+        color: context.colors.surface,
         borderRadius: BorderRadius.circular(24.r),
         border: Border.all(
-          color: const Color(0xFFF3E8D3),
+          color: context.colors.border,
           width: 1.w,
         ),
       ),
@@ -673,7 +678,7 @@ class _SelectedRecipePill extends StatelessWidget {
                     errorWidget: (_, __, ___) => Container(
                       width: 28.r,
                       height: 28.r,
-                      color: const Color(0xFFCBD5E1),
+                      color: context.colors.border,
                       child: Icon(Icons.fastfood_rounded,
                           size: 14.sp, color: Colors.white),
                     ),
@@ -681,7 +686,7 @@ class _SelectedRecipePill extends StatelessWidget {
                 : Container(
                     width: 28.r,
                     height: 28.r,
-                    color: const Color(0xFFCBD5E1),
+                    color: context.colors.border,
                     child: Icon(Icons.fastfood_rounded,
                         size: 14.sp, color: Colors.white),
                   ),
@@ -694,7 +699,7 @@ class _SelectedRecipePill extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 fontSize: 14.sp,
-                color: const Color(0xFF0F172A),
+                color: context.colors.textPrimary,
                 fontFamily: 'Rubik',
                 fontWeight: FontWeight.w600,
               ),
@@ -707,7 +712,9 @@ class _SelectedRecipePill extends StatelessWidget {
               width: 20.r,
               height: 20.r,
               decoration: const BoxDecoration(
-                color: Color(0xFF0F172A),
+                // Fixed black (not textPrimary, which flips to near-white in
+                // dark mode and would hide the white X on top of it).
+                color: Colors.black,
                 shape: BoxShape.circle,
               ),
               child: Icon(
@@ -800,7 +807,7 @@ class _InlineRecipePickerState extends State<_InlineRecipePicker> {
           padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 16.h),
           child: Container(
             decoration: BoxDecoration(
-              color: const Color(0xFFF1F5F9),
+              color: context.colors.pageBackground,
               borderRadius: BorderRadius.circular(16.r),
             ),
             padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 2.h),
@@ -808,7 +815,7 @@ class _InlineRecipePickerState extends State<_InlineRecipePicker> {
               children: [
                 Icon(
                   Icons.search_rounded,
-                  color: const Color(0xFF94A3B8),
+                  color: context.colors.textMuted,
                   size: 20.sp,
                 ),
                 SizedBox(width: 8.w),
@@ -819,7 +826,7 @@ class _InlineRecipePickerState extends State<_InlineRecipePicker> {
                       fontFamily: 'Rubik',
                       fontSize: 14.sp,
                       fontWeight: FontWeight.w500,
-                      color: const Color(0xFF0F172A),
+                      color: context.colors.textPrimary,
                     ),
                     onChanged: (val) {
                       setState(() => _searchQuery = val);
@@ -828,7 +835,7 @@ class _InlineRecipePickerState extends State<_InlineRecipePicker> {
                       hintText: 'Search your recipes',
                       hintStyle: TextStyle(
                         fontFamily: 'Rubik',
-                        color: const Color(0xFF94A3B8),
+                        color: context.colors.textMuted,
                         fontSize: 14.sp,
                       ),
                       border: InputBorder.none,
@@ -843,7 +850,7 @@ class _InlineRecipePickerState extends State<_InlineRecipePicker> {
                     },
                     child: Icon(
                       Icons.close_rounded,
-                      color: const Color(0xFF94A3B8),
+                      color: context.colors.textMuted,
                       size: 18.sp,
                     ),
                   ),
@@ -895,7 +902,7 @@ class _InlineRecipePickerState extends State<_InlineRecipePicker> {
                       fontFamily: 'Rubik',
                       fontWeight: FontWeight.w800,
                       fontSize: 20.sp,
-                      color: const Color(0xFF0F172A),
+                      color: context.colors.textPrimary,
                     ),
                   ),
                   SizedBox(height: 8.h),
@@ -907,7 +914,7 @@ class _InlineRecipePickerState extends State<_InlineRecipePicker> {
                       fontWeight: FontWeight.w400,
                       fontSize: 14.sp,
                       height: 1.4,
-                      color: const Color(0xFF64748B),
+                      color: context.colors.textSecondary,
                     ),
                   ),
                 ],
@@ -924,7 +931,7 @@ class _InlineRecipePickerState extends State<_InlineRecipePicker> {
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontFamily: 'Rubik',
-                  color: const Color(0xFF64748B),
+                  color: context.colors.textSecondary,
                   fontSize: 14.sp,
                 ),
               ),
@@ -939,7 +946,7 @@ class _InlineRecipePickerState extends State<_InlineRecipePicker> {
                 fontFamily: 'Rubik',
                 fontWeight: FontWeight.w800,
                 fontSize: 16.sp,
-                color: const Color(0xFF0F172A),
+                color: context.colors.textPrimary,
               ),
             ),
           ),
@@ -966,10 +973,10 @@ class _InlineRecipePickerState extends State<_InlineRecipePicker> {
                 },
                 child: Container(
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFAF6EE),
+                    color: context.colors.surface,
                     borderRadius: BorderRadius.circular(24.r),
                     border: Border.all(
-                      color: isSelected ? const Color(0xFFC31E26) : Colors.transparent,
+                      color: isSelected ? context.colors.accent : Colors.transparent,
                       width: 1.5.w,
                     ),
                   ),
@@ -983,7 +990,7 @@ class _InlineRecipePickerState extends State<_InlineRecipePicker> {
                             borderRadius: BorderRadius.circular(20.r),
                             child: Container(
                               width: double.infinity,
-                              color: const Color(0xFFF2F1EF),
+                              color: context.colors.surface,
                               child: (r.image != null && r.image!.isNotEmpty)
                                   ? (r.image!.startsWith('http')
                                       ? CachedNetworkImage(
@@ -1023,7 +1030,7 @@ class _InlineRecipePickerState extends State<_InlineRecipePicker> {
                                   fontFamily: 'Rubik',
                                   fontWeight: FontWeight.w700,
                                   fontSize: 14.sp,
-                                  color: const Color(0xFF0F172A),
+                                  color: context.colors.textPrimary,
                                 ),
                               ),
                             ),
@@ -1033,11 +1040,11 @@ class _InlineRecipePickerState extends State<_InlineRecipePicker> {
                               height: 20.r,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: isSelected ? const Color(0xFFC31E26) : Colors.transparent,
+                                color: isSelected ? context.colors.accent : Colors.transparent,
                                 border: isSelected
                                     ? null
                                     : Border.all(
-                                        color: const Color(0xFFCBD5E1),
+                                        color: context.colors.border,
                                         width: 1.5.w,
                                       ),
                               ),

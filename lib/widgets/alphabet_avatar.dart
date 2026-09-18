@@ -9,6 +9,7 @@ import 'package:flutter_image_compress/flutter_image_compress.dart';
 import '../services/user_service.dart';
 import '../core/widgets/ios_toast.dart';
 import '../core/utils/error_helper.dart';
+import '../core/theme/app_theme.dart';
 
 class AlphabetAvatar extends StatelessWidget {
   final String name;
@@ -140,7 +141,12 @@ class AlphabetAvatar extends StatelessWidget {
                                   colors: [
                                     Colors.white.withValues(alpha: 0.25),
                                     Colors.white.withValues(alpha: 0.10),
-                                    const Color(0xFF0F172A).withValues(alpha: 0.70),
+                                    // Fixed dark tint (not textPrimary): this glass
+                                    // panel sits over the photo viewer's dark scrim
+                                    // in both themes, and textPrimary flips to
+                                    // near-white in dark mode, which inverted the
+                                    // whole gradient instead of darkening it.
+                                    Colors.black.withValues(alpha: 0.70),
                                   ],
                                   stops: const [0.0, 0.35, 1.0],
                                 ),
@@ -172,7 +178,7 @@ class AlphabetAvatar extends StatelessWidget {
                                     _buildPickerItem(
                                       icon: Icons.photo_library_outlined,
                                       title: 'Choose from library',
-                                      color: Colors.white,
+                                      color: context.colors.surface,
                                       onTap: () => Navigator.pop(ctx, 'gallery'),
                                     ),
                                     Padding(
@@ -204,7 +210,7 @@ class AlphabetAvatar extends StatelessWidget {
                                     _buildPickerItem(
                                       icon: Icons.delete_outline_rounded,
                                       title: 'Delete',
-                                      color: const Color(0xFFFF6B6B),
+                                      color: context.colors.destructive,
                                       onTap: () => Navigator.pop(ctx, 'delete'),
                                     ),
                                   ],
@@ -289,10 +295,14 @@ class AlphabetAvatar extends StatelessWidget {
                       width: 210.w,
                       padding: EdgeInsets.symmetric(vertical: 6.h, horizontal: 6.w),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.28),
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.black.withValues(alpha: 0.45)
+                            : Colors.white.withValues(alpha: 0.28),
                         borderRadius: BorderRadius.circular(24.r),
                         border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.65),
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.white.withValues(alpha: 0.16)
+                              : Colors.white.withValues(alpha: 0.65),
                           width: 1.5.w,
                         ),
                         boxShadow: [
@@ -309,19 +319,19 @@ class AlphabetAvatar extends StatelessWidget {
                           _buildCompactMenuItem(
                             icon: Icons.photo_library_outlined,
                             label: 'Choose from library',
-                            color: const Color(0xFF0F172A),
+                            color: context.colors.textPrimary,
                             onTap: () => Navigator.pop(ctx, 'gallery'),
                           ),
                           _buildCompactMenuItem(
                             icon: Icons.camera_alt_outlined,
                             label: 'Take photo',
-                            color: const Color(0xFF0F172A),
+                            color: context.colors.textPrimary,
                             onTap: () => Navigator.pop(ctx, 'camera'),
                           ),
                           _buildCompactMenuItem(
                             icon: Icons.delete_outline_rounded,
                             label: 'Delete',
-                            color: const Color(0xFFC31E26),
+                            color: context.colors.accent,
                             onTap: () => Navigator.pop(ctx, 'delete'),
                           ),
                         ],
@@ -506,10 +516,10 @@ class AlphabetAvatar extends StatelessWidget {
       avatarContent = CachedNetworkImage(
         imageUrl: photoUrl!,
         fit: BoxFit.cover,
-        errorWidget: (_, __, ___) => _buildLetterAvatar(effectiveLetter, fontSize, strokeWidth),
+        errorWidget: (_, __, ___) => _buildLetterAvatar(context, effectiveLetter, fontSize, strokeWidth),
       );
     } else {
-      avatarContent = _buildLetterAvatar(effectiveLetter, fontSize, strokeWidth);
+      avatarContent = _buildLetterAvatar(context, effectiveLetter, fontSize, strokeWidth);
     }
 
     final double effectiveBorderWidth = borderWidth ?? (size * 0.04).clamp(1.5, 3.5);
@@ -519,7 +529,7 @@ class AlphabetAvatar extends StatelessWidget {
       height: size,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: const Color(0xFFF8FAFC),
+        color: context.colors.surface,
         border: effectiveBorderWidth > 0
             ? Border.all(
                 color: Colors.white,
@@ -549,7 +559,7 @@ class AlphabetAvatar extends StatelessWidget {
               width: (size * 0.32).clamp(24.0, 36.0),
               height: (size * 0.32).clamp(24.0, 36.0),
               decoration: BoxDecoration(
-                color: const Color(0xFFC31E26),
+                color: context.colors.accent,
                 shape: BoxShape.circle,
                 border: Border.all(color: Colors.white, width: 2.w),
                 boxShadow: [
@@ -582,10 +592,10 @@ class AlphabetAvatar extends StatelessWidget {
     return mainAvatar;
   }
 
-  Widget _buildLetterAvatar(String letter, double fontSize, double strokeWidth) {
+  Widget _buildLetterAvatar(BuildContext context, String letter, double fontSize, double strokeWidth) {
     final char = letter.toLowerCase();
     return Container(
-      color: const Color(0xFFF8FAFC),
+      color: context.colors.surface,
       child: Stack(
         alignment: Alignment.center,
         children: [
@@ -630,7 +640,7 @@ class AlphabetAvatar extends StatelessWidget {
             style: GoogleFonts.rubik(
               fontSize: fontSize * 1.15,
               fontWeight: FontWeight.w900,
-              color: const Color(0xFFC31E26),
+              color: context.colors.accent,
             ),
           ),
 

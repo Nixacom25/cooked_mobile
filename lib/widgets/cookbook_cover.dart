@@ -4,6 +4,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../models/cookbook.dart';
 import '../models/recipe.dart';
 import 'skeleton_loader.dart';
+import '../core/theme/app_theme.dart';
 
 class CookbookCover extends StatelessWidget {
   final Cookbook cookbook;
@@ -62,12 +63,12 @@ class CookbookCover extends StatelessWidget {
           width: width ?? double.infinity,
           height: height ?? double.infinity,
           decoration: BoxDecoration(
-            color: const Color(0xFFF3F4F6),
+            color: context.colors.surface,
             borderRadius: BorderRadius.circular(16.r),
           ),
           clipBehavior: Clip.antiAlias,
           child: displayRecipes.isEmpty 
-              ? _buildEmptyState() 
+              ? _buildEmptyState(context)
               : _buildCollage(displayRecipes),
         ),
         if (isPinned)
@@ -83,7 +84,7 @@ class CookbookCover extends StatelessWidget {
               child: Icon(
                 Icons.push_pin_rounded,
                 size: 12.sp,
-                color: const Color(0xFFC83A2D),
+                color: context.colors.accent,
               ),
             ),
           ),
@@ -91,25 +92,25 @@ class CookbookCover extends StatelessWidget {
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(BuildContext context) {
     String assetPath = 'assets/images/cookbook.png';
 
     return Image.asset(
       assetPath,
       fit: BoxFit.cover,
-      errorBuilder: (_, __, ___) => _buildPlaceholder(),
+      errorBuilder: (_, __, ___) => _buildPlaceholder(context),
     );
   }
 
-  Widget _buildPlaceholder() {
+  Widget _buildPlaceholder(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            const Color(0xFFF9FAFB),
-            const Color(0xFFF3F4F6),
+            context.colors.surface,
+            context.colors.surface,
           ],
         ),
       ),
@@ -117,7 +118,7 @@ class CookbookCover extends StatelessWidget {
         child: Container(
           padding: EdgeInsets.all(12.w),
           decoration: BoxDecoration(
-            color: const Color(0xFFC83A2D).withValues(alpha: 0.05),
+            color: context.colors.accent.withValues(alpha: 0.05),
             shape: BoxShape.circle,
           ),
           child: Image.asset(
@@ -125,7 +126,7 @@ class CookbookCover extends StatelessWidget {
             width: 45.w,
             height: 45.h,
             fit: BoxFit.cover,
-            color: const Color(0xFFC83A2D).withValues(alpha: 0.3),
+            color: context.colors.accent.withValues(alpha: 0.3),
             colorBlendMode: BlendMode.srcIn,
           ),
         ),

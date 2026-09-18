@@ -14,6 +14,7 @@ import '../../core/api_config.dart';
 import '../../services/user_service.dart';
 import '../../widgets/glass_icon_button.dart';
 import '../../widgets/red_header_background.dart';
+import '../../core/theme/app_theme.dart';
 
 class SubscriptionManagementScreen extends StatefulWidget {
   const SubscriptionManagementScreen({super.key});
@@ -135,7 +136,7 @@ class _SubscriptionManagementScreenState
             child: Container(
               margin: EdgeInsets.only(top: 25.h),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: context.colors.surface,
                 borderRadius: BorderRadius.vertical(
                   top: Radius.circular(32.r),
                 ),
@@ -154,7 +155,7 @@ class _SubscriptionManagementScreenState
                           child: Icon(
                             Icons.arrow_back_rounded,
                             size: 20.sp,
-                            color: const Color(0xFF0F172A),
+                            color: context.colors.textPrimary,
                           ),
                         ),
                         Expanded(
@@ -165,7 +166,7 @@ class _SubscriptionManagementScreenState
                               fontFamily: 'Rubik',
                               fontWeight: FontWeight.w700,
                               fontSize: 20.sp,
-                              color: const Color(0xFF0F172A),
+                              color: context.colors.textPrimary,
                             ),
                           ),
                         ),
@@ -204,7 +205,7 @@ class _SubscriptionManagementScreenState
                                     fontFamily: 'Rubik',
                                     fontSize: 18.sp,
                                     fontWeight: FontWeight.w700,
-                                    color: const Color(0xFF0F172A),
+                                    color: context.colors.textPrimary,
                                   ),
                                 ),
                                 SizedBox(height: 14.h),
@@ -272,8 +273,8 @@ class _SubscriptionManagementScreenState
                                             height: 54.h,
                                             decoration: BoxDecoration(
                                               color: isPremium
-                                                  ? const Color(0xFFE2E8F0)
-                                                  : const Color(0xFFC83A2D),
+                                                  ? context.colors.border
+                                                  : context.colors.accent,
                                               borderRadius: BorderRadius.circular(27.r),
                                             ),
                                             child: Center(
@@ -284,7 +285,7 @@ class _SubscriptionManagementScreenState
                                                   fontWeight: FontWeight.w700,
                                                   fontSize: 16.sp,
                                                   color: isPremium
-                                                      ? const Color(0xFF94A3B8)
+                                                      ? context.colors.textMuted
                                                       : Colors.white,
                                                 ),
                                               ),
@@ -303,7 +304,7 @@ class _SubscriptionManagementScreenState
                                     fontFamily: 'Rubik',
                                     fontSize: 18.sp,
                                     fontWeight: FontWeight.w700,
-                                    color: const Color(0xFF0F172A),
+                                    color: context.colors.textPrimary,
                                   ),
                                 ),
                                 SizedBox(height: 14.h),
@@ -314,7 +315,7 @@ class _SubscriptionManagementScreenState
                                       'No payment history found',
                                       style: TextStyle(
                                         fontFamily: 'Rubik',
-                                        color: const Color(0xFF64748B),
+                                        color: context.colors.textSecondary,
                                         fontSize: 14.sp,
                                       ),
                                     ),
@@ -338,11 +339,12 @@ class _SubscriptionManagementScreenState
     final status = _subscription?['status'] ?? 'NONE';
     final isTrial = status == 'TRIAL';
     final isExpired = status == 'EXPIRED';
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
       padding: EdgeInsets.all(20.r),
       decoration: BoxDecoration(
-        color: const Color(0xFFF1F5F9),
+        color: context.colors.pageBackground,
         borderRadius: BorderRadius.circular(20.r),
       ),
       child: Column(
@@ -357,7 +359,7 @@ class _SubscriptionManagementScreenState
                   fontFamily: 'Rubik',
                   fontSize: 18.sp,
                   fontWeight: FontWeight.w700,
-                  color: const Color(0xFF0F172A),
+                  color: context.colors.textPrimary,
                 ),
               ),
               Container(
@@ -367,15 +369,15 @@ class _SubscriptionManagementScreenState
                 ),
                 decoration: BoxDecoration(
                   color: isExpired
-                      ? const Color(0xFFFEE2E2)
-                      : const Color(0xFFD1FAE5),
+                      ? (isDark ? context.colors.destructive.withValues(alpha: 0.18) : const Color(0xFFFEE2E2))
+                      : (isDark ? const Color(0xFF059669).withValues(alpha: 0.18) : const Color(0xFFD1FAE5)),
                   borderRadius: BorderRadius.circular(12.r),
                 ),
                 child: Text(
                   status,
                   style: TextStyle(
                     fontFamily: 'Rubik',
-                    color: isExpired ? const Color(0xFFDC2626) : const Color(0xFF059669),
+                    color: isExpired ? context.colors.destructive : const Color(0xFF059669),
                     fontWeight: FontWeight.w700,
                     fontSize: 12.sp,
                   ),
@@ -392,7 +394,7 @@ class _SubscriptionManagementScreenState
                 style: TextStyle(
                   fontFamily: 'Rubik',
                   fontWeight: FontWeight.w600,
-                  color: const Color(0xFF64748B),
+                  color: context.colors.textSecondary,
                   fontSize: 14.sp,
                 ),
               ),
@@ -401,7 +403,7 @@ class _SubscriptionManagementScreenState
                 style: TextStyle(
                   fontFamily: 'Rubik',
                   fontWeight: FontWeight.w600,
-                  color: const Color(0xFF64748B),
+                  color: context.colors.textSecondary,
                   fontSize: 14.sp,
                 ),
               ),
@@ -412,8 +414,8 @@ class _SubscriptionManagementScreenState
             borderRadius: BorderRadius.circular(10.r),
             child: LinearProgressIndicator(
               value: _getProgress(),
-              backgroundColor: const Color(0xFFE2E8F0),
-              color: const Color(0xFFC83A2D),
+              backgroundColor: context.colors.border,
+              color: context.colors.accent,
               minHeight: 8.h,
             ),
           ),
@@ -432,7 +434,7 @@ class _SubscriptionManagementScreenState
             label,
             style: TextStyle(
               fontFamily: 'Rubik',
-              color: const Color(0xFF64748B),
+              color: context.colors.textSecondary,
               fontSize: 15.sp,
             ),
           ),
@@ -441,7 +443,7 @@ class _SubscriptionManagementScreenState
             style: TextStyle(
               fontFamily: 'Rubik',
               fontWeight: FontWeight.w600,
-              color: const Color(0xFF0F172A),
+              color: context.colors.textPrimary,
               fontSize: 15.sp,
             ),
           ),
@@ -462,12 +464,13 @@ class _SubscriptionManagementScreenState
 
   Widget _buildHistoryCard(SubscriptionPayment payment) {
     final isSuccess = payment.status == 'SUCCESS';
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
       margin: EdgeInsets.only(bottom: 12.h),
       padding: EdgeInsets.all(16.r),
       decoration: BoxDecoration(
-        color: const Color(0xFFF1F5F9),
+        color: context.colors.pageBackground,
         borderRadius: BorderRadius.circular(16.r),
       ),
       child: Column(
@@ -485,7 +488,7 @@ class _SubscriptionManagementScreenState
                     ),
                     child: Icon(
                       Icons.account_balance_wallet_rounded,
-                      color: const Color(0xFFC83A2D),
+                      color: context.colors.accent,
                       size: 18.sp,
                     ),
                   ),
@@ -497,7 +500,7 @@ class _SubscriptionManagementScreenState
                         payment.planType,
                         style: TextStyle(
                           fontFamily: 'Rubik',
-                          color: const Color(0xFF0F172A),
+                          color: context.colors.textPrimary,
                           fontWeight: FontWeight.w700,
                           fontSize: 15.sp,
                         ),
@@ -506,7 +509,7 @@ class _SubscriptionManagementScreenState
                         _formatDate(payment.createdAt.toIso8601String()),
                         style: TextStyle(
                           fontFamily: 'Rubik',
-                          color: const Color(0xFF64748B),
+                          color: context.colors.textSecondary,
                           fontSize: 12.sp,
                         ),
                       ),
@@ -517,14 +520,16 @@ class _SubscriptionManagementScreenState
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
                 decoration: BoxDecoration(
-                  color: isSuccess ? const Color(0xFFD1FAE5) : const Color(0xFFFEE2E2),
+                  color: isSuccess
+                      ? (isDark ? const Color(0xFF059669).withValues(alpha: 0.18) : const Color(0xFFD1FAE5))
+                      : (isDark ? context.colors.destructive.withValues(alpha: 0.18) : const Color(0xFFFEE2E2)),
                   borderRadius: BorderRadius.circular(8.r),
                 ),
                 child: Text(
                   isSuccess ? 'RENEWAL' : 'FAILED',
                   style: TextStyle(
                     fontFamily: 'Rubik',
-                    color: isSuccess ? const Color(0xFF059669) : const Color(0xFFDC2626),
+                    color: isSuccess ? const Color(0xFF059669) : context.colors.destructive,
                     fontSize: 10.sp,
                     fontWeight: FontWeight.w700,
                   ),
@@ -533,7 +538,7 @@ class _SubscriptionManagementScreenState
             ],
           ),
           SizedBox(height: 12.h),
-          const Divider(color: Color(0xFFE2E8F0), height: 1),
+          Divider(color: context.colors.border, height: 1),
           SizedBox(height: 12.h),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -542,7 +547,7 @@ class _SubscriptionManagementScreenState
                 'Amount',
                 style: TextStyle(
                   fontFamily: 'Rubik',
-                  color: const Color(0xFF64748B),
+                  color: context.colors.textSecondary,
                   fontSize: 13.sp,
                 ),
               ),
@@ -550,7 +555,7 @@ class _SubscriptionManagementScreenState
                 '\$${payment.amount.toStringAsFixed(2)}',
                 style: TextStyle(
                   fontFamily: 'Rubik',
-                  color: const Color(0xFF0F172A),
+                  color: context.colors.textPrimary,
                   fontWeight: FontWeight.w700,
                   fontSize: 15.sp,
                 ),

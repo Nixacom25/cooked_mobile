@@ -33,6 +33,7 @@ import 'screens/scan_screen.dart';
 import 'package:cooked/core/services/tutorial_service.dart';
 import 'package:cooked/services/notification_service.dart';
 import 'package:cooked/services/history_service.dart';
+import 'package:cooked/services/theme_service.dart';
 import 'package:cooked/services/sharing_service.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 // import 'package:cooked/widgets/clipboard_banner.dart';
@@ -64,6 +65,7 @@ void main() async {
   };
   
   await DatabaseService.instance.init();
+  await ThemeService.instance.init();
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
@@ -328,11 +330,15 @@ class _CookedAppState extends State<CookedApp> with WidgetsBindingObserver {
       builder: (context, child) {
         return ScrollConfiguration(
           behavior: _NoScrollbarBehavior(),
-          child: MaterialApp(
+          child: ValueListenableBuilder<ThemeMode>(
+            valueListenable: ThemeService.instance.themeModeNotifier,
+            builder: (context, themeMode, _) => MaterialApp(
             navigatorKey: _navigatorKey,
             title: 'Cooked',
             debugShowCheckedModeBanner: false,
             theme: AppTheme.light,
+            darkTheme: AppTheme.dark,
+            themeMode: themeMode,
             builder: (context, child) {
               return FloatingHeartManager(
                 child: GestureDetector(
@@ -460,6 +466,7 @@ class _CookedAppState extends State<CookedApp> with WidgetsBindingObserver {
                 settings: settings,
               );
             },
+          ),
           ),
         );
       },

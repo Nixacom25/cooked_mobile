@@ -5,6 +5,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../widgets/red_button.dart';
+import '../../../core/theme/app_theme.dart';
 
 class ProfileSummaryStep extends StatefulWidget {
   final List<String> favoriteCuisines;
@@ -147,7 +148,7 @@ class _ProfileSummaryStepState extends State<ProfileSummaryStep>
                                 style: GoogleFonts.rubik(
                                   fontSize: 32.sp,
                                   fontWeight: FontWeight.w500,
-                                  color: const Color(0xFF111827),
+                                  color: context.colors.textPrimary,
                                   height: 1.15)))),
                           SizedBox(height: 10.h),
 
@@ -160,7 +161,7 @@ class _ProfileSummaryStepState extends State<ProfileSummaryStep>
                                 'Built around your goals, taste,\nschedule, and savings',
                                 style: GoogleFonts.poppins(
                                   fontSize: 15.sp,
-                                  color: const Color(0xFF111827),
+                                  color: context.colors.textPrimary,
                                   height: 1.3)))),
                           SizedBox(height: 24.h),
 
@@ -182,7 +183,7 @@ class _ProfileSummaryStepState extends State<ProfileSummaryStep>
                                     'recipes curated for your taste',
                                     style: GoogleFonts.poppins(
                                       fontSize: 14.sp,
-                                      color: const Color(0xFF111827),
+                                      color: context.colors.textPrimary,
                                       fontWeight: FontWeight.w400)),
                                 ]))),
                         ],
@@ -278,7 +279,7 @@ class _ProfileSummaryStepState extends State<ProfileSummaryStep>
                     bottom: true,
                     child: RedButton(
                       label: 'Unlock',
-                      color: const Color(0xFFC31E26),
+                      color: context.colors.accent,
                       onTap: widget.onContinue,
                       height: 52.h,
                       fontSize: 16.sp))))),
@@ -300,8 +301,8 @@ class _ProfileSummaryStepState extends State<ProfileSummaryStep>
               path,
               fit: BoxFit.cover,
               errorBuilder: (context, error, stackTrace) => Container(
-                color: const Color(0xFFF1F5F9),
-                child: const Icon(Icons.fastfood, color: Color(0xFFCBD5E1)))),
+                color: context.colors.pageBackground,
+                child: Icon(Icons.fastfood, color: context.colors.border))),
             if (blurSigma > 0)
               Positioned.fill(
                 child: BackdropFilter(
@@ -318,7 +319,7 @@ class _ProfileSummaryStepState extends State<ProfileSummaryStep>
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
       decoration: BoxDecoration(
-        color: const Color(0xFFF1F5F9),
+        color: context.colors.pageBackground,
         borderRadius: BorderRadius.circular(16.r)),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -327,7 +328,7 @@ class _ProfileSummaryStepState extends State<ProfileSummaryStep>
             'assets/icones/$svgAsset',
             width: 22.r,
             height: 22.r,
-            colorFilter: const ColorFilter.mode(Color(0xFFC31E26), BlendMode.srcIn),
+            colorFilter: ColorFilter.mode(context.colors.accent, BlendMode.srcIn),
           ),
           SizedBox(width: 10.w),
           Expanded(
@@ -335,7 +336,7 @@ class _ProfileSummaryStepState extends State<ProfileSummaryStep>
               title,
               style: GoogleFonts.rubik(fontSize: 13.sp,
                 fontWeight: FontWeight.w500,
-                color: const Color(0xFF111827),
+                color: context.colors.textPrimary,
                 height: 1.2))),
         ]));
   }

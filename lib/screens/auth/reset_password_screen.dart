@@ -8,6 +8,7 @@ import '../../core/utils/error_helper.dart';
 import '../../widgets/glass_icon_button.dart';
 import '../../widgets/red_button.dart';
 import '../../widgets/red_header_background.dart';
+import '../../core/theme/app_theme.dart';
 
 class ResetPasswordScreen extends StatefulWidget {
   const ResetPasswordScreen({super.key});
@@ -91,7 +92,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
         ModalRoute.of(context)?.settings.arguments as String?;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: context.colors.surface,
       resizeToAvoidBottomInset: false,
       body: GestureDetector(
         behavior: HitTestBehavior.translucent,
@@ -144,7 +145,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
               bottom: 0,
               child: Container(
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: context.colors.surface,
                   borderRadius: BorderRadius.vertical(
                     top: Radius.circular(32.r),
                   ),
@@ -170,7 +171,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                             fontSize: 24.sp,
                             fontWeight: FontWeight.w800,
                             fontFamily: 'Rubik',
-                            color: const Color(0xFF0F172A),
+                            color: context.colors.textPrimary,
                           ),
                         ),
                       ),
@@ -205,7 +206,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                         label: 'Continue',
                         loadingLabel: 'Updating',
                         isLoading: _isLoading,
-                        color: const Color(0xFFC31E26),
+                        color: context.colors.accent,
                         height: 52.h,
                         fontSize: 16.sp,
                         onTap: () {
@@ -240,7 +241,7 @@ class _Label extends StatelessWidget {
   Widget build(BuildContext context) => Text(
         text,
         style: TextStyle(
-          color: const Color(0xFF64748B),
+          color: context.colors.textSecondary,
           fontFamily: 'SF Pro',
           fontSize: 14.sp,
           fontWeight: FontWeight.w500,
@@ -271,18 +272,18 @@ class _PasswordField extends StatelessWidget {
         style: TextStyle(
           fontFamily: 'SF Pro',
           fontSize: 15.sp,
-          color: const Color(0xFF0F172A),
+          color: context.colors.textPrimary,
         ),
         decoration: InputDecoration(
           hintText: '••••••••',
           hintStyle: TextStyle(
-            color: const Color(0xFF94A3B8),
+            color: context.colors.textMuted,
             fontFamily: 'SF Pro',
             fontSize: 15.sp,
           ),
           prefixIcon: Icon(
             Icons.lock_outline_rounded,
-            color: const Color(0xFF64748B),
+            color: context.colors.textSecondary,
             size: 20.sp,
           ),
           suffixIcon: IconButton(
@@ -290,13 +291,13 @@ class _PasswordField extends StatelessWidget {
               obscure
                   ? Icons.visibility_off_outlined
                   : Icons.visibility_outlined,
-              color: const Color(0xFF64748B),
+              color: context.colors.textSecondary,
               size: 20.sp,
             ),
             onPressed: onToggle,
           ),
           filled: true,
-          fillColor: const Color(0xFFF0F1F3),
+          fillColor: context.colors.pageBackground,
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(14.r),
             borderSide: BorderSide.none,
@@ -311,7 +312,7 @@ class _PasswordField extends StatelessWidget {
           ),
           errorText: errorText,
           errorStyle: TextStyle(
-            color: const Color(0xFFDC2626),
+            color: context.colors.destructive,
             fontSize: 12.sp,
             fontFamily: 'SF Pro',
           ),

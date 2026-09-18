@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../core/theme/app_theme.dart';
 
 // ── iOS Flower Spoke Loading Indicator in Signature Red (0xFFC31E26) ────────
 class AppLoadingIndicator extends StatelessWidget {
@@ -16,7 +17,7 @@ class AppLoadingIndicator extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CupertinoActivityIndicator(
-      color: color ?? const Color(0xFFC31E26),
+      color: color ?? context.colors.accent,
       radius: radius ?? 12.r,
     );
   }
@@ -121,7 +122,7 @@ class _AppRefreshIndicatorState extends State<AppRefreshIndicator> {
                   ),
                   child: Center(
                     child: CupertinoActivityIndicator(
-                      color: widget.color ?? const Color(0xFFC31E26),
+                      color: widget.color ?? context.colors.accent,
                       radius: 12.r,
                     ),
                   ),

@@ -2,6 +2,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter/services.dart';
+import '../../../core/theme/app_theme.dart';
 
 class LanguageRegionStep extends StatefulWidget {
   final String initialLanguage;
@@ -82,14 +83,14 @@ class _LanguageRegionStepState extends State<LanguageRegionStep> {
             style: GoogleFonts.poppins(
               fontSize: 24.sp,
               fontWeight: FontWeight.w900,
-              color: const Color(0xFF0D1B36),
+              color: context.colors.textPrimary,
               height: 1.2)),
           SizedBox(height: 8.h),
           Text(
             "We'll use this to suggest local recipes and ingredients available near you",
             style: GoogleFonts.poppins(
               fontSize: 14.sp,
-              color: const Color(0xFF7B8190),
+              color: context.colors.textMuted,
               height: 1.5)),
           SizedBox(height: 40.h),
 
@@ -121,7 +122,7 @@ class _LanguageRegionStepState extends State<LanguageRegionStep> {
           Container(
             padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
             decoration: BoxDecoration(
-              color: const Color(0xFFF8F5EF),
+              color: context.colors.pageBackground,
               borderRadius: BorderRadius.circular(12.r)),
             child: Row(
               children: [
@@ -132,7 +133,7 @@ class _LanguageRegionStepState extends State<LanguageRegionStep> {
               : 'Metric (grams, ml, °C)'} ',
                     style: GoogleFonts.poppins(
                       fontSize: 12.sp,
-                      color: const Color(0xFF111827)))),
+                      color: context.colors.textPrimary))),
               ])),
           SizedBox(height: 8.h),
           _buildMeasurementSelector(),
@@ -146,9 +147,9 @@ class _LanguageRegionStepState extends State<LanguageRegionStep> {
       height: 56.h,
       padding: EdgeInsets.all(7.r),
       decoration: BoxDecoration(
-        color: const Color(0xFFF9F7F2),
+        color: context.colors.pageBackground,
         borderRadius: BorderRadius.circular(50.r),
-        border: Border.all(color: const Color(0xFFEEEEEE))),
+        border: Border.all(color: context.colors.surface)),
       child: Row(
         children: [
           Expanded(
@@ -172,7 +173,7 @@ class _LanguageRegionStepState extends State<LanguageRegionStep> {
       child: Container(
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFFC83A2D) : Colors.transparent,
+          color: isSelected ? context.colors.accent : Colors.transparent,
           borderRadius: BorderRadius.circular(50.r)),
         child: Text(
           label == 'Imperial'
@@ -181,7 +182,7 @@ class _LanguageRegionStepState extends State<LanguageRegionStep> {
           textAlign: TextAlign.center,
           style: GoogleFonts.poppins(fontSize: 12.sp,
             fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-            color: isSelected ? Colors.white : const Color(0xFF4B5563)))));
+            color: isSelected ? Colors.white : context.colors.textSecondary))));
   }
 
   Widget _buildLabel(String text) {
@@ -190,7 +191,7 @@ class _LanguageRegionStepState extends State<LanguageRegionStep> {
       style: GoogleFonts.poppins(
         fontSize: 14.sp,
         fontWeight: FontWeight.w600,
-        color: const Color(0xFF111827)));
+        color: context.colors.textPrimary));
   }
 
   Widget _buildDropdown({
@@ -208,7 +209,7 @@ class _LanguageRegionStepState extends State<LanguageRegionStep> {
             maxHeight: 280.h, // Allow scrolling if items exceed this height
           ),
           onSelected: onChanged,
-          color: Colors.white,
+          color: context.colors.surface,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
           elevation: 4,
           padding: EdgeInsets.zero,
@@ -225,23 +226,23 @@ class _LanguageRegionStepState extends State<LanguageRegionStep> {
                   padding: EdgeInsets.symmetric(horizontal: 16.w),
                   alignment: Alignment.centerLeft,
                   decoration: BoxDecoration(
-                    color: isSelected ? const Color(0xFFF4C459) : Colors.white),
+                    color: isSelected ? const Color(0xFFF4C459) : context.colors.surface),
                   child: Text(
                     item,
                     style: GoogleFonts.poppins(fontSize: 14.sp,
                       fontWeight: isSelected
                           ? FontWeight.w700
                           : FontWeight.w500,
-                      color: const Color(0xFF1A1A1A)))));
+                      color: context.colors.textPrimary))));
             }).toList();
           },
           child: Container(
             height: 56.h,
             padding: EdgeInsets.symmetric(horizontal: 16.w),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: context.colors.surface,
               borderRadius: BorderRadius.circular(12.r),
-              border: Border.all(color: const Color(0xFFE5E7EB))),
+              border: Border.all(color: context.colors.divider)),
             child: Row(
               children: [
                 Expanded(
@@ -249,10 +250,10 @@ class _LanguageRegionStepState extends State<LanguageRegionStep> {
                     value,
                     style: GoogleFonts.poppins(fontSize: 16.sp,
                       fontWeight: FontWeight.w600,
-                      color: const Color(0xFF1A1A1A)))),
+                      color: context.colors.textPrimary))),
                 Icon(
                   Icons.keyboard_arrow_down_rounded,
-                  color: const Color(0xFF1A1A1A),
+                  color: context.colors.textPrimary,
                   size: 24.sp),
               ])));
       });

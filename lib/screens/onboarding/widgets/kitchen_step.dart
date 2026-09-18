@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../core/extensions/string_extensions.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter/services.dart';
+import '../../../core/theme/app_theme.dart';
 
 class KitchenStep extends StatefulWidget {
   final List<String> initialSelected;
@@ -101,14 +102,14 @@ class _KitchenStepState extends State<KitchenStep> {
             style: GoogleFonts.poppins(
               fontSize: 24.sp,
               fontWeight: FontWeight.w900,
-              color: const Color(0xFF0D1B3E),
+              color: context.colors.textPrimary,
               height: 1.2)),
           SizedBox(height: 8.h),
           Text(
             'Select your equipment',
             style: GoogleFonts.poppins(
               fontSize: 14.sp,
-              color: const Color(0xFF7B8190))),
+              color: context.colors.textMuted)),
           SizedBox(height: 32.h),
           GridView.builder(
             shrinkWrap: true,
@@ -130,15 +131,15 @@ class _KitchenStepState extends State<KitchenStep> {
               'Specify other equipment',
               style: GoogleFonts.poppins(fontSize: 14.sp,
                 fontWeight: FontWeight.w600,
-                color: const Color(0xFF7B8190))),
+                color: context.colors.textMuted)),
             SizedBox(height: 8.h),
             Container(
               height: 52.h,
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: context.colors.surface,
                 borderRadius: BorderRadius.circular(24.r),
                 border: Border.all(
-                  color: const Color(0xFFE2E8F0),
+                  color: context.colors.border,
                   width: 1.2,
                 ),
                 boxShadow: [
@@ -161,13 +162,13 @@ class _KitchenStepState extends State<KitchenStep> {
                       style: GoogleFonts.poppins(
                         fontSize: 14.sp,
                         fontWeight: FontWeight.w500,
-                        color: const Color(0xFF1A1A1A),
+                        color: context.colors.textPrimary,
                       ),
                       decoration: InputDecoration(
                         hintText: 'Enter equipment and press Enter',
                         hintStyle: GoogleFonts.poppins(
                           fontSize: 14.sp,
-                          color: const Color(0xFF94A3B8),
+                          color: context.colors.textMuted,
                         ),
                         border: InputBorder.none,
                         enabledBorder: InputBorder.none,
@@ -184,8 +185,8 @@ class _KitchenStepState extends State<KitchenStep> {
                     child: Container(
                       width: 32.r,
                       height: 32.r,
-                      decoration: const BoxDecoration(
-                        color: Color(0xFFC31E26),
+                      decoration: BoxDecoration(
+                        color: context.colors.accent,
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
@@ -205,7 +206,7 @@ class _KitchenStepState extends State<KitchenStep> {
                 runSpacing: 8.h,
                 children: customEquipment.map((e) => Chip(
                   label: Text(e, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                  backgroundColor: const Color(0xFFC83A2D),
+                  backgroundColor: context.colors.accent,
                   deleteIcon: const Icon(Icons.close, size: 14, color: Colors.white),
                   onDeleted: () => _removeEquipment(e),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.r)))).toList()),
@@ -243,17 +244,21 @@ class _KitchenStepState extends State<KitchenStep> {
         duration: const Duration(milliseconds: 200),
         padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFFFFF4F2) : Colors.white,
+          color: isSelected
+              ? (Theme.of(context).brightness == Brightness.dark
+                  ? context.colors.accent.withValues(alpha: 0.16)
+                  : const Color(0xFFFFF4F2))
+              : context.colors.surface,
           borderRadius: BorderRadius.circular(16.r),
           border: Border.all(
             color: isSelected
-                ? const Color(0xFFC83A2D)
-                : const Color(0xFFE5E7EB),
+                ? context.colors.accent
+                : context.colors.divider,
             width: isSelected ? 1.5.w : 1.w),
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: const Color(0xFFC31E26).withValues(alpha: 0.05),
+                    color: context.colors.accent.withValues(alpha: 0.05),
                     blurRadius: 10.r,
                     offset: Offset(0, 4.h)),
                 ]
@@ -268,14 +273,14 @@ class _KitchenStepState extends State<KitchenStep> {
                 width: 28.sp,
                 placeholderBuilder: (context) => const SizedBox.shrink())
             else
-              Icon(Icons.add_circle_outline, size: 28.sp, color: isSelected ? const Color(0xFFC83A2D) : const Color(0xFF9CA3AF)),
+              Icon(Icons.add_circle_outline, size: 28.sp, color: isSelected ? context.colors.accent : context.colors.textMuted),
             SizedBox(height: 8.h),
             Text(
               app['title']!,
               textAlign: TextAlign.center,
               style: GoogleFonts.poppins(fontSize: 14.sp,
                 fontWeight: FontWeight.w700,
-                color: const Color(0xFF1A1A1A),
+                color: context.colors.textPrimary,
                 height: 1.1)),
           ])));
   }

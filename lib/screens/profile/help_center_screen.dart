@@ -6,6 +6,7 @@ import '../../core/widgets/legal_content_modal.dart';
 import '../../core/widgets/terms_validation_modal.dart';
 import '../../widgets/glass_icon_button.dart';
 import '../../widgets/red_header_background.dart';
+import '../../core/theme/app_theme.dart';
 
 class HelpCenterScreen extends StatefulWidget {
   const HelpCenterScreen({super.key});
@@ -68,7 +69,7 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
             child: Container(
               margin: EdgeInsets.only(top: 25.h),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: context.colors.surface,
                 borderRadius: BorderRadius.vertical(
                   top: Radius.circular(32.r),
                 ),
@@ -87,7 +88,7 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
                           child: Icon(
                             Icons.arrow_back_rounded,
                             size: 20.sp,
-                            color: const Color(0xFF0F172A),
+                            color: context.colors.textPrimary,
                           ),
                         ),
                         Expanded(
@@ -98,7 +99,7 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
                               fontFamily: 'Rubik',
                               fontWeight: FontWeight.w700,
                               fontSize: 20.sp,
-                              color: const Color(0xFF0F172A),
+                              color: context.colors.textPrimary,
                             ),
                           ),
                         ),
@@ -120,7 +121,7 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
                               fontFamily: 'Rubik',
                               fontWeight: FontWeight.w400,
                               fontSize: 15.sp,
-                              color: const Color(0xFF0F172A),
+                              color: context.colors.textPrimary,
                               height: 1.5,
                             ),
                           ),
@@ -151,7 +152,7 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
                               fontFamily: 'Rubik',
                               fontWeight: FontWeight.w700,
                               fontSize: 18.sp,
-                              color: const Color(0xFF0F172A),
+                              color: context.colors.textPrimary,
                             ),
                           ),
                           SizedBox(height: 14.h),
@@ -194,7 +195,7 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
                               fontFamily: 'Rubik',
                               fontWeight: FontWeight.w700,
                               fontSize: 18.sp,
-                              color: const Color(0xFF0F172A),
+                              color: context.colors.textPrimary,
                             ),
                           ),
                           SizedBox(height: 14.h),
@@ -224,7 +225,7 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 18.h),
         decoration: BoxDecoration(
-          color: const Color(0xFFF1F5F9),
+          color: context.colors.pageBackground,
           borderRadius: BorderRadius.circular(16.r),
         ),
         child: Row(
@@ -240,7 +241,7 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
                 child: Icon(
                   icon,
                   size: 22.sp,
-                  color: const Color(0xFFC83A2D),
+                  color: context.colors.accent,
                 ),
               ),
             ),
@@ -254,7 +255,7 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
                     fontFamily: 'Rubik',
                     fontWeight: FontWeight.w700,
                     fontSize: 16.sp,
-                    color: const Color(0xFF0F172A),
+                    color: context.colors.textPrimary,
                   ),
                 ),
                 SizedBox(height: 2.h),
@@ -263,7 +264,7 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
                   style: TextStyle(
                     fontFamily: 'Rubik',
                     fontSize: 13.sp,
-                    color: const Color(0xFF64748B),
+                    color: context.colors.textSecondary,
                   ),
                 ),
               ],
@@ -292,12 +293,12 @@ class _PolicyButton extends StatelessWidget {
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
         decoration: BoxDecoration(
-          color: const Color(0xFFF1F5F9),
+          color: context.colors.pageBackground,
           borderRadius: BorderRadius.circular(14.r),
         ),
         child: Row(
           children: [
-            Icon(icon, size: 20.sp, color: const Color(0xFFC83A2D)),
+            Icon(icon, size: 20.sp, color: context.colors.accent),
             SizedBox(width: 8.w),
             Expanded(
               child: Text(
@@ -306,7 +307,7 @@ class _PolicyButton extends StatelessWidget {
                   fontFamily: 'Rubik',
                   fontWeight: FontWeight.w500,
                   fontSize: 12.sp,
-                  color: const Color(0xFF0F172A),
+                  color: context.colors.textPrimary,
                 ),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
@@ -341,7 +342,7 @@ class _FaqItemState extends State<_FaqItem> {
         margin: EdgeInsets.only(bottom: 12.h),
         padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
         decoration: BoxDecoration(
-          color: const Color(0xFFF1F5F9),
+          color: context.colors.pageBackground,
           borderRadius: BorderRadius.circular(16.r),
         ),
         child: Column(
@@ -356,7 +357,7 @@ class _FaqItemState extends State<_FaqItem> {
                       fontFamily: 'Rubik',
                       fontWeight: FontWeight.w600,
                       fontSize: 14.sp,
-                      color: const Color(0xFF0F172A),
+                      color: context.colors.textPrimary,
                     ),
                   ),
                 ),
@@ -365,7 +366,7 @@ class _FaqItemState extends State<_FaqItem> {
                       ? Icons.keyboard_arrow_up_rounded
                       : Icons.keyboard_arrow_down_rounded,
                   size: 20.sp,
-                  color: const Color(0xFF64748B),
+                  color: context.colors.textSecondary,
                 ),
               ],
             ),
@@ -376,7 +377,7 @@ class _FaqItemState extends State<_FaqItem> {
                 style: TextStyle(
                   fontFamily: 'Rubik',
                   fontSize: 13.sp,
-                  color: const Color(0xFF64748B),
+                  color: context.colors.textSecondary,
                   height: 1.5,
                 ),
               ),

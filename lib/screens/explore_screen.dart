@@ -18,6 +18,8 @@ import '../models/recipe.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import '../models/view_all_type.dart';
 import '../core/api_config.dart';
+import '../core/utils/recipe_filters.dart';
+import '../core/theme/app_theme.dart';
 
 // ══════════════════════════════════════════════════════════════════════════════
 // EXPLORE SCREEN (Full Width Cards Parity with Home & Reusable Components)
@@ -36,6 +38,10 @@ class _ExploreScreenState extends State<ExploreScreen> {
   late Future<List<Map<String, dynamic>>> _cuisinesFuture;
   late Future<List<Map<String, dynamic>>> _categoriesFuture;
   late Future<List<Recipe>> _popularFuture;
+  // Wider recipe pool the quick-filter chips (High Protein, Under 30 Min,
+  // Chicken, ...) run their predicate against - the 10-recipe "Popular Now"
+  // pool used for plain text search is too small for these to find much.
+  late Future<List<Recipe>> _filterPoolFuture;
   Timer? _refreshTimer;
 
   // Background refreshes (the periodic timer, pull-to-refresh) keep showing
@@ -44,6 +50,8 @@ class _ExploreScreenState extends State<ExploreScreen> {
   List<Map<String, dynamic>>? _cuisinesCache;
   List<Map<String, dynamic>>? _categoriesCache;
   List<Recipe>? _popularCache;
+
+  String? _activeFilterId;
 
   int _refreshTimestamp = DateTime.now().millisecondsSinceEpoch;
 
@@ -66,7 +74,8 @@ class _ExploreScreenState extends State<ExploreScreen> {
     setState(() {
       _cuisinesFuture = RecipeService.instance.getExploreCuisines(forceRefresh: force);
       _popularFuture = RecipeService.instance.getPopularRecipes(size: 10, forceRefresh: force);
-      _categoriesFuture = RecipeService.instance.getActiveExploreCategories(forceRefresh: force);
+      _categoriesFuture = RecipeService.instance.getExploreCategories(forceRefresh: force);
+      _filterPoolFuture = RecipeService.instance.getExploreRecipes(size: 150, forceRefresh: force);
     });
     _cuisinesFuture.then((v) { if (mounted) setState(() => _cuisinesCache = v); }).catchError((_) {});
     _popularFuture.then((v) { if (mounted) setState(() => _popularCache = v); }).catchError((_) {});
@@ -76,12 +85,18 @@ class _ExploreScreenState extends State<ExploreScreen> {
   @override
   void initState() {
     super.initState();
-    _refreshData(force: true);
+    // First load only: fetch fresh data but don't touch the image cache -
+    // there's nothing to bust yet.
+    _refreshData(force: false);
 
     HomeScreen.activeTabNotifier.addListener(_onTabChanged);
 
+    // Periodically re-fetch data so new content shows up, but never with
+    // force: true here - that clears the entire image cache and cache-busts
+    // every image URL, which was making recipe photos re-download from
+    // scratch every couple of minutes and on every tab switch.
     _refreshTimer = Timer.periodic(const Duration(minutes: 2), (_) {
-      _refreshData(force: true);
+      _refreshData(force: false);
     });
 
     _searchCtrl.addListener(() {
@@ -91,7 +106,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
 
   void _onTabChanged() {
     if (HomeScreen.activeTabNotifier.value == 1) {
-      _refreshData(force: true);
+      _refreshData(force: false);
     }
   }
 
@@ -113,24 +128,17 @@ class _ExploreScreenState extends State<ExploreScreen> {
     ]).catchError((_) => <dynamic>[]);
   }
 
-  static const List<Map<String, String>> _filterTags = [
-    {"icon": "🍝", "name": "Italian"},
-    {"icon": "🥗", "name": "Healthy"},
-    {"icon": "🌱", "name": "Vegetarian"},
-    {"icon": "🥐", "name": "Bakery"},
-    {"icon": "🍗", "name": "Poultry"},
-  ];
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: const Color(0xFFF1F5F9),
+      color: context.colors.pageBackground,
       child: AppRefreshIndicator(
         onRefresh: _handleRefresh,
         child: ScrollBlurHeaderOverlay(
           isDarkBackground: false,
-          primaryGradientColor: const Color(0xFFE2E8F0),
-          secondaryGradientColor: const Color(0xFFE2E8F0),
+          primaryGradientColor: context.colors.border,
+          secondaryGradientColor: context.colors.border,
           child: SingleChildScrollView(
             physics: const ClampingScrollPhysics(),
             child: Stack(
@@ -183,7 +191,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
       width: double.infinity,
       padding: EdgeInsets.symmetric(vertical: 16.h),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.colors.surface,
         borderRadius: BorderRadius.circular(24.r),
       ),
       child: Column(
@@ -201,7 +209,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                     fontFamily: 'Rubik',
                     fontSize: 22.sp,
                     fontWeight: FontWeight.w800,
-                    color: const Color(0xFF0F172A),
+                    color: context.colors.textPrimary,
                   ),
                 ),
                 SizedBox(height: 12.h),
@@ -212,8 +220,8 @@ class _ExploreScreenState extends State<ExploreScreen> {
                   key: const ValueKey('explore_search_field'),
                   controller: _searchCtrl,
                   focusNode: _searchFocusNode,
-                  backgroundColor: const Color(0xFFF1F5F9),
-                  borderColor: const Color(0xFFF1F5F9),
+                  backgroundColor: context.colors.pageBackground,
+                  borderColor: context.colors.pageBackground,
                   hintText: 'Search your recipes',
                   suffixIcon: searchQuery.isNotEmpty ? Icons.close_rounded : null,
                   onSuffixTap: searchQuery.isNotEmpty
@@ -226,34 +234,32 @@ class _ExploreScreenState extends State<ExploreScreen> {
 
           SizedBox(height: 14.h),
 
-          if (searchQuery.isNotEmpty)
-            _buildInlineSearchResults(searchQuery)
-          else ...[
-          // ── Filter Tags Row (Full Width Across Card) ──
+          // ── Filter Tags Row (Full Width Across Card) - always visible so
+          // the active filter (if any) stays selectable/deselectable ──
           SizedBox(
             height: 38.h,
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
               padding: EdgeInsets.symmetric(horizontal: 16.w),
-              itemCount: _filterTags.length,
+              itemCount: kRecipeFilters.length,
               itemBuilder: (context, i) {
-                final tag = _filterTags[i];
+                final filter = kRecipeFilters[i];
+                final isActive = _activeFilterId == filter.id;
                 return Padding(
                   padding: EdgeInsets.only(right: 8.w),
                   child: GestureDetector(
                     onTap: () {
-                      _searchCtrl.value = TextEditingValue(
-                        text: tag["name"]!,
-                        selection: TextSelection.collapsed(offset: tag["name"]!.length),
-                      );
+                      setState(() {
+                        _activeFilterId = isActive ? null : filter.id;
+                      });
                     },
                     child: Container(
                       padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 8.h),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFFAF6EE),
+                        color: isActive ? context.colors.accent : context.colors.surface,
                         borderRadius: BorderRadius.circular(20.r),
                         border: Border.all(
-                          color: const Color(0xFFF3E8D3),
+                          color: isActive ? context.colors.accent : context.colors.border,
                           width: 1.w,
                         ),
                       ),
@@ -261,17 +267,17 @@ class _ExploreScreenState extends State<ExploreScreen> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                            tag["icon"]!,
+                            filter.emoji,
                             style: TextStyle(fontSize: 14.sp),
                           ),
                           SizedBox(width: 6.w),
                           Text(
-                            tag["name"]!,
+                            filter.label,
                             style: TextStyle(
                               fontFamily: 'Rubik',
                               fontSize: 13.sp,
                               fontWeight: FontWeight.w700,
-                              color: const Color(0xFF0F172A),
+                              color: isActive ? Colors.white : context.colors.textPrimary,
                             ),
                           ),
                         ],
@@ -283,7 +289,12 @@ class _ExploreScreenState extends State<ExploreScreen> {
             ),
           ),
 
-          SizedBox(height: 24.h),
+          SizedBox(height: 14.h),
+
+          if (searchQuery.isNotEmpty || _activeFilterId != null)
+            _buildInlineSearchResults(searchQuery)
+          else ...[
+          SizedBox(height: 10.h),
 
           // ── "For You" Section ──
           FutureBuilder<List<Map<String, dynamic>>>(
@@ -303,7 +314,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                       child: Center(
                         child: CircularProgressIndicator(
                           strokeWidth: 2.w,
-                          color: const Color(0xFFC31E26),
+                          color: context.colors.accent,
                         ),
                       ),
                     ),
@@ -326,7 +337,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                             fontFamily: 'Rubik',
                             fontSize: 18.sp,
                             fontWeight: FontWeight.w800,
-                            color: const Color(0xFF0F172A),
+                            color: context.colors.textPrimary,
                           ),
                         ),
                         GestureDetector(
@@ -346,7 +357,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                               fontFamily: 'Rubik',
                               fontSize: 14.sp,
                               fontWeight: FontWeight.w700,
-                              color: const Color(0xFFC31E26),
+                              color: context.colors.accent,
                             ),
                           ),
                         ),
@@ -407,9 +418,14 @@ class _ExploreScreenState extends State<ExploreScreen> {
   }
 
   // ── Inline Search Results (replaces the old full-screen overlay) ──────────
+  // Also serves quick-filter chip results: when a filter is active, this
+  // draws from the wider `_filterPoolFuture` pool and applies its predicate,
+  // combined with any typed text (AND) rather than the small popular-recipes
+  // pool plain text search alone would use.
   Widget _buildInlineSearchResults(String query) {
+    final activeFilter = _activeFilterId != null ? findRecipeFilter(_activeFilterId!) : null;
     return FutureBuilder<List<Recipe>>(
-      future: _popularFuture,
+      future: activeFilter != null ? _filterPoolFuture : _popularFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Padding(
@@ -420,10 +436,13 @@ class _ExploreScreenState extends State<ExploreScreen> {
 
         final lowerQuery = query.toLowerCase();
         final matches = (snapshot.data ?? [])
-            .where((r) =>
-                r.name.toLowerCase().contains(lowerQuery) ||
-                (r.cuisine?.toLowerCase().contains(lowerQuery) ?? false) ||
-                (r.categories?.any((c) => c.toLowerCase().contains(lowerQuery)) ?? false))
+            .where((r) {
+              if (activeFilter != null && !activeFilter.matches(r)) return false;
+              if (lowerQuery.isEmpty) return true;
+              return r.name.toLowerCase().contains(lowerQuery) ||
+                  (r.cuisine?.toLowerCase().contains(lowerQuery) ?? false) ||
+                  (r.categories?.any((c) => c.toLowerCase().contains(lowerQuery)) ?? false);
+            })
             .toList();
 
         if (matches.isEmpty) {
@@ -431,7 +450,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
             padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 32.h),
             child: Column(
               children: [
-                Icon(Icons.search_off_rounded, size: 40.sp, color: const Color(0xFFCBD5E1)),
+                Icon(Icons.search_off_rounded, size: 40.sp, color: context.colors.border),
                 SizedBox(height: 12.h),
                 Text(
                   'No recipes found',
@@ -439,17 +458,19 @@ class _ExploreScreenState extends State<ExploreScreen> {
                     fontFamily: 'Rubik',
                     fontSize: 15.sp,
                     fontWeight: FontWeight.w700,
-                    color: const Color(0xFF0F172A),
+                    color: context.colors.textPrimary,
                   ),
                 ),
                 SizedBox(height: 4.h),
                 Text(
-                  'Try a different search term.',
+                  activeFilter != null && lowerQuery.isEmpty
+                      ? 'No recipes match "${activeFilter.label}" yet.'
+                      : 'Try a different search term.',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontFamily: 'Rubik',
                     fontSize: 13.sp,
-                    color: const Color(0xFF94A3B8),
+                    color: context.colors.textMuted,
                   ),
                 ),
                 SizedBox(height: 24.h),
@@ -515,7 +536,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
-          color: const Color(0xFFFAF6EE),
+          color: context.colors.surface,
           borderRadius: BorderRadius.circular(24.r),
         ),
         child: Column(
@@ -530,6 +551,8 @@ class _ExploreScreenState extends State<ExploreScreen> {
                     ? CachedNetworkImage(
                         imageUrl: _bustedUrl(resolvedUrl),
                         fit: BoxFit.cover,
+                        memCacheWidth: 500,
+                        fadeInDuration: const Duration(milliseconds: 150),
                         placeholder: (_, __) => Container(color: Colors.grey[200]),
                         errorWidget: (_, __, ___) => Image.asset(
                           'assets/images/explore_autumn.png',
@@ -559,7 +582,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                       fontFamily: 'Rubik',
                       fontSize: 14.sp,
                       fontWeight: FontWeight.w700,
-                      color: const Color(0xFF0F172A),
+                      color: context.colors.textPrimary,
                     ),
                   ),
                   SizedBox(height: 4.h),
@@ -571,7 +594,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                       fontFamily: 'Rubik',
                       fontSize: 11.sp,
                       fontWeight: FontWeight.w400,
-                      color: const Color(0xFF64748B),
+                      color: context.colors.textSecondary,
                     ),
                   ),
                 ],
@@ -630,7 +653,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
               width: double.infinity,
               padding: EdgeInsets.symmetric(vertical: 20.h),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: context.colors.surface,
                 borderRadius: BorderRadius.circular(24.r),
               ),
               child: SizedBox(
@@ -638,7 +661,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                 child: Center(
                   child: CircularProgressIndicator(
                     strokeWidth: 2.w,
-                    color: const Color(0xFFC31E26),
+                    color: context.colors.accent,
                   ),
                 ),
               ),
@@ -651,7 +674,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
       width: double.infinity,
       padding: EdgeInsets.symmetric(vertical: 20.h),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.colors.surface,
         borderRadius: BorderRadius.circular(24.r),
       ),
       child: Column(
@@ -668,7 +691,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                     fontFamily: 'Rubik',
                     fontSize: 18.sp,
                     fontWeight: FontWeight.w800,
-                    color: const Color(0xFF0F172A),
+                    color: context.colors.textPrimary,
                   ),
                 ),
                 GestureDetector(
@@ -688,7 +711,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                       fontFamily: 'Rubik',
                       fontSize: 14.sp,
                       fontWeight: FontWeight.w700,
-                      color: const Color(0xFFC31E26),
+                      color: context.colors.accent,
                     ),
                   ),
                 ),
@@ -736,7 +759,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 border: Border.all(
-                                  color: const Color(0xFFC31E26),
+                                  color: context.colors.accent,
                                   width: 2.5.w,
                                 ),
                               ),
@@ -745,6 +768,8 @@ class _ExploreScreenState extends State<ExploreScreen> {
                                     ? CachedNetworkImage(
                                         imageUrl: _bustedUrl(imgPath),
                                         fit: BoxFit.cover,
+                                        memCacheWidth: 160,
+                                        fadeInDuration: const Duration(milliseconds: 150),
                                         placeholder: (_, __) => Container(color: Colors.grey[200]),
                                         errorWidget: (_, __, ___) => Image.asset(
                                           _getCuisineImagePath(name, null),
@@ -768,7 +793,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                                 fontFamily: 'Rubik',
                                 fontSize: 13.sp,
                                 fontWeight: FontWeight.w700,
-                                color: const Color(0xFF0F172A),
+                                color: context.colors.textPrimary,
                               ),
                             ),
                             SizedBox(height: 2.h),
@@ -778,7 +803,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                                 fontFamily: 'Rubik',
                                 fontSize: 11.sp,
                                 fontWeight: FontWeight.w400,
-                                color: const Color(0xFF64748B),
+                                color: context.colors.textSecondary,
                               ),
                             ),
                           ],
@@ -801,7 +826,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
       width: double.infinity,
       padding: EdgeInsets.fromLTRB(16.w, 20.h, 16.w, 20.h),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.colors.surface,
         borderRadius: BorderRadius.circular(24.r),
       ),
       child: Column(
@@ -816,7 +841,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                   fontFamily: 'Rubik',
                   fontSize: 18.sp,
                   fontWeight: FontWeight.w800,
-                  color: const Color(0xFF0F172A),
+                  color: context.colors.textPrimary,
                 ),
               ),
               GestureDetector(
@@ -836,7 +861,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                     fontFamily: 'Rubik',
                     fontSize: 14.sp,
                     fontWeight: FontWeight.w700,
-                    color: const Color(0xFFC31E26),
+                    color: context.colors.accent,
                   ),
                 ),
               ),

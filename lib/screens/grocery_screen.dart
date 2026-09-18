@@ -15,6 +15,7 @@ import '../core/utils/error_helper.dart';
 import '../core/extensions/string_extensions.dart';
 import '../widgets/grocery_skeleton.dart';
 import '../widgets/app_loading_indicator.dart';
+import '../core/theme/app_theme.dart';
 
 // ══════════════════════════════════════════════════════════════════════════════
 // GROCERY SCREEN
@@ -155,7 +156,7 @@ class GroceryScreenState extends State<GroceryScreen> with SingleTickerProviderS
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
-        backgroundColor: const Color(0xFFC31E26),
+        backgroundColor: context.colors.accent,
         resizeToAvoidBottomInset: false,
         body: Stack(
           children: [
@@ -177,7 +178,7 @@ class GroceryScreenState extends State<GroceryScreen> with SingleTickerProviderS
                   child: Container(
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: context.colors.surface,
                   borderRadius: BorderRadius.vertical(top: Radius.circular(32.r)),
                 ),
                 child: ClipRRect(
@@ -197,7 +198,7 @@ class GroceryScreenState extends State<GroceryScreen> with SingleTickerProviderS
                                 fontFamily: 'Rubik',
                                 fontWeight: FontWeight.w800,
                                 fontSize: 24.sp,
-                                color: const Color(0xFF0F172A),
+                                color: context.colors.textPrimary,
                               ),
                             ),
                           ),
@@ -285,7 +286,7 @@ class GroceryScreenState extends State<GroceryScreen> with SingleTickerProviderS
                                                         fontFamily: 'Rubik',
                                                         fontWeight: FontWeight.w800,
                                                         fontSize: 18.sp,
-                                                        color: const Color(0xFF0F172A),
+                                                        color: context.colors.textPrimary,
                                                       ),
                                                     ),
                                                   ),
@@ -295,7 +296,7 @@ class GroceryScreenState extends State<GroceryScreen> with SingleTickerProviderS
                                                     curve: Curves.easeInOut,
                                                     child: Icon(
                                                       Icons.keyboard_arrow_right_rounded,
-                                                      color: const Color(0xFF0F172A),
+                                                      color: context.colors.textPrimary,
                                                       size: 22.sp,
                                                     ),
                                                   ),
@@ -342,10 +343,10 @@ class GroceryScreenState extends State<GroceryScreen> with SingleTickerProviderS
                                                             return false;
                                                           },
                                                         ),
-                                                  const Divider(
+                                                  Divider(
                                                     height: 0,
                                                     thickness: 1,
-                                                    color: Color(0xFFF1F5F9),
+                                                    color: context.colors.pageBackground,
                                                     indent: 20,
                                                     endIndent: 20,
                                                   ),
@@ -393,11 +394,11 @@ class GroceryScreenState extends State<GroceryScreen> with SingleTickerProviderS
                                     constraints: BoxConstraints(minWidth: 96.w),
                                     padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 14.h),
                                     decoration: BoxDecoration(
-                                      color: const Color(0xFFC31E26),
+                                      color: context.colors.accent,
                                       borderRadius: BorderRadius.circular(28.r),
                                       boxShadow: [
                                         BoxShadow(
-                                          color: const Color(0xFFC31E26).withValues(alpha: 0.35),
+                                          color: context.colors.accent.withValues(alpha: 0.35),
                                           blurRadius: 12.r,
                                           offset: Offset(0, 4.h),
                                         ),
@@ -457,7 +458,7 @@ class GroceryScreenState extends State<GroceryScreen> with SingleTickerProviderS
               fontFamily: 'Rubik',
               fontWeight: FontWeight.bold,
               fontSize: 16.sp,
-              color: const Color(0xFF0F172A),
+              color: context.colors.textPrimary,
             ),
           ),
           SizedBox(height: 8.h),
@@ -482,7 +483,7 @@ class GroceryScreenState extends State<GroceryScreen> with SingleTickerProviderS
             icon: const Icon(Icons.add_rounded, color: Colors.white),
             label: const Text('Add ingredients', style: TextStyle(fontFamily: 'Rubik', fontWeight: FontWeight.bold)),
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFC83A2D),
+              backgroundColor: context.colors.accent,
               padding: EdgeInsets.symmetric(horizontal: 32.w, vertical: 16.h),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(30.r),
@@ -515,10 +516,14 @@ class GroceryScreenState extends State<GroceryScreen> with SingleTickerProviderS
                 child: Container(
                   padding: EdgeInsets.fromLTRB(20.w, 22.h, 20.w, 16.h),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.28),
+                    color: Theme.of(ctx).brightness == Brightness.dark
+                        ? Colors.black.withValues(alpha: 0.45)
+                        : Colors.white.withValues(alpha: 0.28),
                     borderRadius: BorderRadius.circular(24.r),
                     border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.65),
+                      color: Theme.of(ctx).brightness == Brightness.dark
+                          ? Colors.white.withValues(alpha: 0.16)
+                          : Colors.white.withValues(alpha: 0.65),
                       width: 1.5.w,
                     ),
                     boxShadow: [
@@ -538,7 +543,7 @@ class GroceryScreenState extends State<GroceryScreen> with SingleTickerProviderS
                           fontFamily: 'Rubik',
                           fontWeight: FontWeight.w800,
                           fontSize: 18.sp,
-                          color: const Color(0xFF0F172A),
+                          color: context.colors.textPrimary,
                         ),
                       ),
                       SizedBox(height: 8.h),
@@ -548,7 +553,7 @@ class GroceryScreenState extends State<GroceryScreen> with SingleTickerProviderS
                         style: TextStyle(
                           fontFamily: 'Rubik',
                           fontSize: 14.sp,
-                          color: const Color(0xFF475569),
+                          color: context.colors.textSecondary,
                           height: 1.4,
                         ),
                       ),
@@ -571,7 +576,7 @@ class GroceryScreenState extends State<GroceryScreen> with SingleTickerProviderS
                                   fontFamily: 'Rubik',
                                   fontWeight: FontWeight.w600,
                                   fontSize: 15.sp,
-                                  color: const Color(0xFF475569),
+                                  color: context.colors.textSecondary,
                                 ),
                               ),
                             ),
@@ -582,7 +587,7 @@ class GroceryScreenState extends State<GroceryScreen> with SingleTickerProviderS
                               onPressed: () => Navigator.pop(ctx, true),
                               style: TextButton.styleFrom(
                                 padding: EdgeInsets.symmetric(vertical: 12.h),
-                                backgroundColor: const Color(0xFFC31E26),
+                                backgroundColor: context.colors.accent,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(16.r),
                                 ),
@@ -730,8 +735,8 @@ class _ItemRow extends StatelessWidget {
                       fontWeight: FontWeight.w600,
                       fontSize: 15.sp,
                       color: item.isBought
-                          ? const Color(0xFF94A3B8)
-                          : const Color(0xFF0F172A),
+                          ? context.colors.textMuted
+                          : context.colors.textPrimary,
                       decoration: item.isBought
                           ? TextDecoration.lineThrough
                           : TextDecoration.none,
@@ -745,7 +750,7 @@ class _ItemRow extends StatelessWidget {
                     fontFamily: 'Rubik',
                     fontWeight: FontWeight.w500,
                     fontSize: 14.sp,
-                    color: const Color(0xFF64748B),
+                    color: context.colors.textSecondary,
                   ),
                 ),
               ],
@@ -822,13 +827,13 @@ class _AnimatedCheckboxState extends State<_AnimatedCheckbox> with SingleTickerP
             shape: BoxShape.circle,
             border: Border.all(
               color: Color.lerp(
-                const Color(0xFFCBD5E1),
-                const Color(0xFFC83A2D),
+                context.colors.border,
+                context.colors.accent,
                 _fillAnimation.value,
               )!,
               width: 2.w,
             ),
-            color: const Color(0xFFC83A2D).withValues(alpha: _fillAnimation.value),
+            color: context.colors.accent.withValues(alpha: _fillAnimation.value),
           ),
           child: CustomPaint(
             painter: _CheckmarkPainter(
@@ -990,7 +995,7 @@ class _AddGrocerySheetState extends State<_AddGrocerySheet> {
     return Container(
       padding: EdgeInsets.fromLTRB(20.w, 12.h, 20.w, 20.h + bottom + bottomPad),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.colors.surface,
         borderRadius: BorderRadius.vertical(top: Radius.circular(32.r)),
       ),
       child: Column(
@@ -1004,7 +1009,7 @@ class _AddGrocerySheetState extends State<_AddGrocerySheet> {
               height: 4.h,
               margin: EdgeInsets.only(bottom: 16.h),
               decoration: BoxDecoration(
-                color: const Color(0xFFCBD5E1),
+                color: context.colors.border,
                 borderRadius: BorderRadius.circular(2.r),
               ),
             ),
@@ -1017,7 +1022,7 @@ class _AddGrocerySheetState extends State<_AddGrocerySheet> {
               fontFamily: 'Rubik',
               fontWeight: FontWeight.w800,
               fontSize: 22.sp,
-              color: const Color(0xFF0F172A),
+              color: context.colors.textPrimary,
             ),
           ),
 
@@ -1035,7 +1040,7 @@ class _AddGrocerySheetState extends State<_AddGrocerySheet> {
                       fontFamily: 'Rubik',
                       fontWeight: FontWeight.w600,
                       fontSize: 14.sp,
-                      color: const Color(0xFF64748B),
+                      color: context.colors.textSecondary,
                     ),
                   ),
                   SizedBox(height: 8.h),
@@ -1047,7 +1052,7 @@ class _AddGrocerySheetState extends State<_AddGrocerySheet> {
                       return Container(
                         padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFF1F5F9),
+                          color: context.colors.pageBackground,
                           borderRadius: BorderRadius.circular(16.r),
                         ),
                         child: DropdownButtonHideUnderline(
@@ -1060,12 +1065,12 @@ class _AddGrocerySheetState extends State<_AddGrocerySheet> {
                               style: TextStyle(
                                 fontFamily: 'Rubik',
                                 fontSize: 14.sp,
-                                color: const Color(0xFF94A3B8),
+                                color: context.colors.textMuted,
                               ),
                             ),
                             icon: Icon(
                               Icons.keyboard_arrow_down_rounded,
-                              color: const Color(0xFF64748B),
+                              color: context.colors.textSecondary,
                               size: 22.sp,
                             ),
                             items: !hasRecipes ? null : recipes.map((r) {
@@ -1077,7 +1082,7 @@ class _AddGrocerySheetState extends State<_AddGrocerySheet> {
                                     fontFamily: 'Rubik',
                                     fontWeight: FontWeight.w500,
                                     fontSize: 14.sp,
-                                    color: const Color(0xFF0F172A),
+                                    color: context.colors.textPrimary,
                                   ),
                                 ),
                               );
@@ -1100,7 +1105,7 @@ class _AddGrocerySheetState extends State<_AddGrocerySheet> {
                       fontFamily: 'Rubik',
                       fontWeight: FontWeight.w600,
                       fontSize: 14.sp,
-                      color: const Color(0xFF64748B),
+                      color: context.colors.textSecondary,
                     ),
                   ),
                   SizedBox(height: 8.h),
@@ -1110,7 +1115,7 @@ class _AddGrocerySheetState extends State<_AddGrocerySheet> {
                       Expanded(
                         child: Container(
                           decoration: BoxDecoration(
-                            color: const Color(0xFFF1F5F9),
+                            color: context.colors.pageBackground,
                             borderRadius: BorderRadius.circular(16.r),
                           ),
                           child: TextField(
@@ -1120,13 +1125,13 @@ class _AddGrocerySheetState extends State<_AddGrocerySheet> {
                               fontFamily: 'Rubik',
                               fontSize: 14.sp,
                               fontWeight: FontWeight.w500,
-                              color: const Color(0xFF0F172A),
+                              color: context.colors.textPrimary,
                             ),
                             decoration: InputDecoration(
                               hintText: 'Cheese',
                               hintStyle: TextStyle(
                                 fontFamily: 'Rubik',
-                                color: const Color(0xFF94A3B8),
+                                color: context.colors.textMuted,
                                 fontSize: 14.sp,
                               ),
                               contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
@@ -1142,7 +1147,7 @@ class _AddGrocerySheetState extends State<_AddGrocerySheet> {
                         width: 95.w,
                         child: Container(
                           decoration: BoxDecoration(
-                            color: const Color(0xFFF1F5F9),
+                            color: context.colors.pageBackground,
                             borderRadius: BorderRadius.circular(16.r),
                           ),
                           child: TextField(
@@ -1152,13 +1157,13 @@ class _AddGrocerySheetState extends State<_AddGrocerySheet> {
                               fontFamily: 'Rubik',
                               fontSize: 14.sp,
                               fontWeight: FontWeight.w500,
-                              color: const Color(0xFF0F172A),
+                              color: context.colors.textPrimary,
                             ),
                             decoration: InputDecoration(
                               hintText: '250 kg',
                               hintStyle: TextStyle(
                                 fontFamily: 'Rubik',
-                                color: const Color(0xFF94A3B8),
+                                color: context.colors.textMuted,
                                 fontSize: 14.sp,
                               ),
                               contentPadding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 14.h),
@@ -1175,13 +1180,13 @@ class _AddGrocerySheetState extends State<_AddGrocerySheet> {
                         child: Container(
                           width: 48.r,
                           height: 48.r,
-                          decoration: const BoxDecoration(
-                            color: Color(0xFFF1F5F9),
+                          decoration: BoxDecoration(
+                            color: context.colors.pageBackground,
                             shape: BoxShape.circle,
                           ),
                           child: Icon(
                             Icons.add_rounded,
-                            color: const Color(0xFF0F172A),
+                            color: context.colors.textPrimary,
                             size: 24.sp,
                           ),
                         ),
@@ -1195,9 +1200,9 @@ class _AddGrocerySheetState extends State<_AddGrocerySheet> {
                     Container(
                       constraints: BoxConstraints(maxHeight: 160.h),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: context.colors.surface,
                         borderRadius: BorderRadius.circular(16.r),
-                        border: Border.all(color: const Color(0xFFE2E8F0)),
+                        border: Border.all(color: context.colors.border),
                         boxShadow: [
                           BoxShadow(
                             color: Colors.black.withValues(alpha: 0.05),
@@ -1209,7 +1214,7 @@ class _AddGrocerySheetState extends State<_AddGrocerySheet> {
                       child: ListView.separated(
                         shrinkWrap: true,
                         itemCount: _suggestedIngredients.length,
-                        separatorBuilder: (_, __) => const Divider(height: 1, color: Color(0xFFF1F5F9)),
+                        separatorBuilder: (_, __) => Divider(height: 1, color: context.colors.pageBackground),
                         itemBuilder: (context, i) {
                           final ing = _suggestedIngredients[i];
                           final name = (ing['name'] ?? '').toString().toTitleCase();
@@ -1220,7 +1225,7 @@ class _AddGrocerySheetState extends State<_AddGrocerySheet> {
                               style: TextStyle(
                                 fontFamily: 'Rubik',
                                 fontSize: 14.sp,
-                                color: const Color(0xFF0F172A),
+                                color: context.colors.textPrimary,
                               ),
                             ),
                             onTap: () {
@@ -1246,9 +1251,15 @@ class _AddGrocerySheetState extends State<_AddGrocerySheet> {
                         return Container(
                           padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 8.h),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFFFF7ED),
+                            color: Theme.of(context).brightness == Brightness.dark
+                                ? const Color(0xFFD97706).withValues(alpha: 0.16)
+                                : const Color(0xFFFFF7ED),
                             borderRadius: BorderRadius.circular(20.r),
-                            border: Border.all(color: const Color(0xFFFDE68A)),
+                            border: Border.all(
+                              color: Theme.of(context).brightness == Brightness.dark
+                                  ? const Color(0xFFD97706).withValues(alpha: 0.4)
+                                  : const Color(0xFFFDE68A),
+                            ),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
@@ -1259,7 +1270,7 @@ class _AddGrocerySheetState extends State<_AddGrocerySheet> {
                                   fontFamily: 'Rubik',
                                   fontWeight: FontWeight.w600,
                                   fontSize: 14.sp,
-                                  color: const Color(0xFF1E293B),
+                                  color: context.colors.textPrimary,
                                 ),
                               ),
                               SizedBox(width: 6.w),
@@ -1269,7 +1280,10 @@ class _AddGrocerySheetState extends State<_AddGrocerySheet> {
                                   width: 18.r,
                                   height: 18.r,
                                   decoration: const BoxDecoration(
-                                    color: Color(0xFF0F172A),
+                                    // Fixed black (not textPrimary, which
+                                    // flips to near-white in dark mode and
+                                    // would hide the white X on top of it).
+                                    color: Colors.black,
                                     shape: BoxShape.circle,
                                   ),
                                   child: Icon(
@@ -1294,7 +1308,7 @@ class _AddGrocerySheetState extends State<_AddGrocerySheet> {
                     height: 52.h,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFC83A2D),
+                        backgroundColor: context.colors.accent,
                         elevation: 0,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(30.r),
@@ -1427,19 +1441,31 @@ class _InlineAddRowState extends State<_InlineAddRow> {
         name = parts[0].trim();
         qty = parts.sublist(1).join('-').trim();
       }
+    } else if (rawText.contains(',')) {
+      // "Ingredient, Qty" (e.g. "Cheese, 250 kg")
+      final parts = rawText.split(',');
+      if (parts.length >= 2) {
+        name = parts[0].trim();
+        qty = parts.sublist(1).join(',').trim();
+      }
     } else {
       // "Qty Ingredient" (e.g. "2 green beans")
-      final match = RegExp(r'^(\d+(?:\.\d+)?(?:/\d+)?)\s+(.+)$').firstMatch(rawText);
-      if (match != null) {
-        qty = match.group(1)!.trim();
-        name = match.group(2)!.trim();
+      final leadingQty = RegExp(r'^(\d+(?:\.\d+)?(?:/\d+)?)\s+(.+)$').firstMatch(rawText);
+      // "Ingredient Qty" (e.g. "Cheese 250 kg")
+      final trailingQty = RegExp(r'^(.+?)\s+(\d+(?:\.\d+)?(?:/\d+)?\s*\S*)$').firstMatch(rawText);
+      if (leadingQty != null) {
+        qty = leadingQty.group(1)!.trim();
+        name = leadingQty.group(2)!.trim();
+      } else if (trailingQty != null) {
+        name = trailingQty.group(1)!.trim();
+        qty = trailingQty.group(2)!.trim();
       }
     }
 
     if (name == null || qty == null || name.isEmpty || qty.isEmpty) {
       IosToast.show(
         context,
-        message: 'Please add the quantity following the format, e.g: garlic - 2 or 2 garlic.',
+        message: 'Please add the quantity following the format, e.g: garlic - 2, 2 garlic, or garlic 2.',
         type: ToastType.error,
       );
       return;
@@ -1500,7 +1526,7 @@ class _InlineAddRowState extends State<_InlineAddRow> {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       border: Border.all(
-                        color: const Color(0xFFCBD5E1),
+                        color: context.colors.border,
                         width: 2.w,
                       ),
                     ),
@@ -1508,7 +1534,7 @@ class _InlineAddRowState extends State<_InlineAddRow> {
                       child: Icon(
                         Icons.add,
                         size: 12.sp,
-                        color: const Color(0xFFCBD5E1),
+                        color: context.colors.border,
                       ),
                     ),
                   ),
@@ -1524,17 +1550,17 @@ class _InlineAddRowState extends State<_InlineAddRow> {
                       fontFamily: 'Rubik',
                       fontWeight: FontWeight.w500,
                       fontSize: 15.sp,
-                      color: const Color(0xFF94A3B8),
+                      color: context.colors.textMuted,
                     ),
                   ),
                 ],
               ),
             ),
           ),
-          const Divider(
+          Divider(
             height: 0,
             thickness: 1,
-            color: Color(0xFFF1F5F9),
+            color: context.colors.pageBackground,
             indent: 20,
             endIndent: 20,
           ),
@@ -1554,7 +1580,7 @@ class _InlineAddRowState extends State<_InlineAddRow> {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: const Color(0xFFC31E26),
+                    color: context.colors.accent,
                     width: 2.w,
                   ),
                 ),
@@ -1562,9 +1588,9 @@ class _InlineAddRowState extends State<_InlineAddRow> {
                   child: Container(
                     width: 10.r,
                     height: 10.r,
-                    decoration: const BoxDecoration(
+                    decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: Color(0xFFC31E26),
+                      color: context.colors.accent,
                     ),
                   ),
                 ),
@@ -1574,7 +1600,7 @@ class _InlineAddRowState extends State<_InlineAddRow> {
                 child: Container(
                   padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFAFCFE),
+                    color: context.colors.surface,
                     borderRadius: BorderRadius.circular(16.r),
                   ),
                   child: TextField(
@@ -1583,14 +1609,14 @@ class _InlineAddRowState extends State<_InlineAddRow> {
                     style: TextStyle(
                       fontFamily: 'Rubik',
                       fontSize: 15.sp,
-                      color: const Color(0xFF0F172A),
+                      color: context.colors.textPrimary,
                     ),
                     decoration: InputDecoration(
-                      hintText: 'e.g. Garlic - 2 or 2 Garlic',
+                      hintText: 'e.g. Garlic - 2, 2 Garlic, or Garlic 2',
                       hintStyle: TextStyle(
                         fontFamily: 'Rubik',
                         fontSize: 15.sp,
-                        color: const Color(0xFF94A3B8),
+                        color: context.colors.textMuted,
                       ),
                       border: InputBorder.none,
                       enabledBorder: InputBorder.none,
@@ -1616,10 +1642,10 @@ class _InlineAddRowState extends State<_InlineAddRow> {
             ],
           ),
         ),
-        const Divider(
+        Divider(
           height: 0,
           thickness: 1,
-          color: Color(0xFFF1F5F9),
+          color: context.colors.pageBackground,
           indent: 20,
           endIndent: 20,
         ),

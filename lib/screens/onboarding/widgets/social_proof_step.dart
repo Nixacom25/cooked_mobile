@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:in_app_review/in_app_review.dart';
 import '../../../widgets/red_button.dart';
+import '../../../core/theme/app_theme.dart';
 
 class SocialProofStep extends StatefulWidget {
   final List<String> favoriteCuisines;
@@ -155,7 +156,7 @@ class _SocialProofStepState extends State<SocialProofStep>
                           style: GoogleFonts.rubik(
                             fontSize: 28.sp,
                             fontWeight: FontWeight.w500,
-                            color: const Color(0xFF111827),
+                            color: context.colors.textPrimary,
                             height: 1.15)))),
                     SizedBox(height: 32.h),
 
@@ -202,7 +203,7 @@ class _SocialProofStepState extends State<SocialProofStep>
                     bottom: true,
                     child: RedButton(
                       label: 'Continue',
-                      color: const Color(0xFFC31E26),
+                      color: context.colors.accent,
                       onTap: widget.onContinue,
                       height: 52.h,
                       fontSize: 16.sp))))),
@@ -218,7 +219,7 @@ class _SocialProofStepState extends State<SocialProofStep>
       margin: EdgeInsets.only(bottom: 12.h),
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
       decoration: BoxDecoration(
-        color: const Color(0xFFF1F5F9),
+        color: context.colors.pageBackground,
         borderRadius: BorderRadius.circular(20.r)),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -226,13 +227,13 @@ class _SocialProofStepState extends State<SocialProofStep>
           Container(
             width: 52.r,
             height: 52.r,
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: Color(0xFFE2E8F0)),
+              color: context.colors.border),
             child: ClipOval(
               child: Icon(
                 Icons.person,
-                color: const Color(0xFF111827),
+                color: context.colors.textPrimary,
                 size: 28.sp))),
           SizedBox(width: 14.w),
           Expanded(
@@ -244,7 +245,7 @@ class _SocialProofStepState extends State<SocialProofStep>
                   quote,
                   style: GoogleFonts.poppins(fontSize: 14.sp,
                     fontWeight: FontWeight.w400,
-                    color: const Color(0xFF111827),
+                    color: context.colors.textPrimary,
                     height: 1.3)),
                 SizedBox(height: 4.h),
                 Text(
@@ -252,7 +253,7 @@ class _SocialProofStepState extends State<SocialProofStep>
                   style: GoogleFonts.rubik(
                     fontSize: 14.sp,
                     fontWeight: FontWeight.w500,
-                    color: const Color(0xFF111827))),
+                    color: context.colors.textPrimary)),
               ])),
         ]));
   }

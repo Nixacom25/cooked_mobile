@@ -5,11 +5,18 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 enum ToastType { success, error, warning }
 
 class IosToast {
+  static OverlayEntry? _currentEntry;
+
   static void show(
     BuildContext context, {
     required String message,
     required ToastType type,
   }) {
+    // Dismiss any toast still on screen so back-to-back calls (e.g. "Updating..."
+    // immediately followed by "Updated!") never stack/overlap at the same spot.
+    _currentEntry?.remove();
+    _currentEntry = null;
+
     late OverlayEntry entry;
     entry = OverlayEntry(
       builder: (context) => _IosToastWidget(
@@ -17,9 +24,13 @@ class IosToast {
         type: type,
         onDismiss: () {
           entry.remove();
+          if (identical(_currentEntry, entry)) {
+            _currentEntry = null;
+          }
         },
       ),
     );
+    _currentEntry = entry;
     Overlay.of(context, rootOverlay: true).insert(entry);
   }
 }

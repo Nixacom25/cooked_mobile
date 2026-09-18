@@ -2,11 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 
-import '../../services/user_service.dart';
-import '../../models/activity_log.dart';
+import '../../models/recipe.dart';
+import '../../routes/app_routes.dart';
+import '../../services/recipe_service.dart';
 import '../../widgets/skeleton_list.dart';
 import '../../widgets/glass_icon_button.dart';
 import '../../widgets/red_header_background.dart';
+import '../../widgets/recipe_horizontal_card.dart';
+import '../../core/theme/app_theme.dart';
 
 class ActivityHistoryScreen extends StatefulWidget {
   const ActivityHistoryScreen({super.key});
@@ -16,6 +19,14 @@ class ActivityHistoryScreen extends StatefulWidget {
 }
 
 class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
+  late Future<List<Recipe>> _recentRecipesFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _recentRecipesFuture = RecipeService.instance.getRecentImports(forceRefresh: true);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -33,7 +44,7 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
             child: Container(
               margin: EdgeInsets.only(top: 25.h),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: context.colors.surface,
                 borderRadius: BorderRadius.vertical(
                   top: Radius.circular(32.r),
                 ),
@@ -52,7 +63,7 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
                           child: Icon(
                             Icons.arrow_back_rounded,
                             size: 20.sp,
-                            color: const Color(0xFF0F172A),
+                            color: context.colors.textPrimary,
                           ),
                         ),
                         Expanded(
@@ -63,7 +74,7 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
                               fontFamily: 'Rubik',
                               fontWeight: FontWeight.w700,
                               fontSize: 20.sp,
-                              color: const Color(0xFF0F172A),
+                              color: context.colors.textPrimary,
                             ),
                           ),
                         ),
@@ -81,58 +92,53 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
                         fontFamily: 'Rubik',
                         fontWeight: FontWeight.w700,
                         fontSize: 18.sp,
-                        color: const Color(0xFF0F172A),
+                        color: context.colors.textPrimary,
                       ),
                     ),
                   ),
 
-                  // ── Activity Content ──
+                  // ── Recent Recipes Content ──
                   Expanded(
-                    child: FutureBuilder<List<ActivityLog>>(
-                      future: UserService.instance.getActivities(),
+                    child: FutureBuilder<List<Recipe>>(
+                      future: _recentRecipesFuture,
                       builder: (context, snapshot) {
                         if (snapshot.connectionState == ConnectionState.waiting) {
                           return Padding(
                             padding: EdgeInsets.all(20.r),
-                            child: const SkeletonList(height: 110, itemCount: 4),
+                            child: const SkeletonList(height: 140, itemCount: 4),
                           );
                         }
 
-                        final activities = snapshot.data ?? [];
-                        if (activities.isEmpty) {
-                          // Fallback sample cards matching mockup if no server activities
-                          return ListView(
-                            padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 8.h),
-                            children: const [
-                              _ActivityCard(
-                                title: 'Chicken Stir-Fry',
-                                itemCountStr: '1 item',
-                                isSuccess: true,
-                                imageAsset: 'assets/images/plat1.png',
+                        final recipes = snapshot.data ?? [];
+                        if (recipes.isEmpty) {
+                          return Center(
+                            child: Padding(
+                              padding: EdgeInsets.all(24.w),
+                              child: Text(
+                                "You haven't imported or scanned any recipes yet.",
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontFamily: 'Rubik',
+                                  fontSize: 14.sp,
+                                  color: context.colors.textSecondary,
+                                ),
                               ),
-                              SizedBox(height: 14),
-                              _ActivityCard(
-                                title: 'Tacos',
-                                itemCountStr: '2 items',
-                                isSuccess: false,
-                                imageAsset: 'assets/images/plat2.png',
-                              ),
-                            ],
+                            ),
                           );
                         }
 
-                        return ListView.separated(
+                        return ListView.builder(
                           padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 8.h),
-                          itemCount: activities.length,
-                          separatorBuilder: (_, __) => SizedBox(height: 14.h),
+                          itemCount: recipes.length,
                           itemBuilder: (context, i) {
-                            final log = activities[i];
-                            final isSuccess = !log.title.toLowerCase().contains('failed');
-                            return _ActivityCard(
-                              title: log.title,
-                              itemCountStr: '1 item',
-                              isSuccess: isSuccess,
-                              imageAsset: 'assets/images/plat${(i % 3) + 1}.png',
+                            final recipe = recipes[i];
+                            return RecipeHorizontalCard(
+                              recipe: recipe,
+                              onTap: () => Navigator.pushNamed(
+                                context,
+                                AppRoutes.recipeDetail,
+                                arguments: {'recipe': recipe, 'isPreview': recipe.isSuggested},
+                              ),
                             );
                           },
                         );
@@ -141,147 +147,6 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
                   ),
                 ],
               ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ActivityCard extends StatelessWidget {
-  final String title;
-  final String itemCountStr;
-  final bool isSuccess;
-  final String imageAsset;
-
-  const _ActivityCard({
-    required this.title,
-    required this.itemCountStr,
-    required this.isSuccess,
-    required this.imageAsset,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 125.h,
-      decoration: BoxDecoration(
-        color: const Color(0xFFFAF5E8),
-        borderRadius: BorderRadius.circular(20.r),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            flex: 5,
-            child: Padding(
-              padding: EdgeInsets.all(14.r),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontFamily: 'Rubik',
-                      fontWeight: FontWeight.w700,
-                      fontSize: 16.sp,
-                      color: const Color(0xFF0F172A),
-                    ),
-                  ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Item count badge
-                      Container(
-                        padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF1F5F9),
-                          borderRadius: BorderRadius.circular(12.r),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.layers_outlined,
-                              size: 13.sp,
-                              color: const Color(0xFF64748B),
-                            ),
-                            SizedBox(width: 4.w),
-                            Text(
-                              itemCountStr,
-                              style: TextStyle(
-                                fontFamily: 'Rubik',
-                                fontSize: 12.sp,
-                                fontWeight: FontWeight.w500,
-                                color: const Color(0xFF475569),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      SizedBox(height: 6.h),
-                      // Status badge
-                      Container(
-                        padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 3.h),
-                        decoration: BoxDecoration(
-                          color: isSuccess ? const Color(0xFFD1FAE5) : const Color(0xFFFEE2E2),
-                          borderRadius: BorderRadius.circular(12.r),
-                          border: Border.all(
-                            color: isSuccess ? const Color(0xFF10B981) : const Color(0xFFEF4444),
-                            width: 0.8,
-                          ),
-                        ),
-                        child: Text(
-                          isSuccess ? 'Success' : 'Failed',
-                          style: TextStyle(
-                            fontFamily: 'Rubik',
-                            fontSize: 11.sp,
-                            fontWeight: FontWeight.w600,
-                            color: isSuccess ? const Color(0xFF059669) : const Color(0xFFDC2626),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-          Expanded(
-            flex: 5,
-            child: Stack(
-              children: [
-                Positioned.fill(
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(20.r),
-                    child: Image.asset(
-                      imageAsset,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => Container(color: const Color(0xFFE2E8F0)),
-                    ),
-                  ),
-                ),
-                Positioned(
-                  top: 10.h,
-                  right: 10.w,
-                  child: Container(
-                    width: 32.r,
-                    height: 32.r,
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      Icons.chevron_right_rounded,
-                      size: 20.sp,
-                      color: const Color(0xFF0F172A),
-                    ),
-                  ),
-                ),
-              ],
             ),
           ),
         ],

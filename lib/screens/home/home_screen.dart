@@ -39,6 +39,7 @@ import '../../models/view_all_type.dart';
 import '../../core/utils/error_helper.dart';
 import '../../services/sharing_service.dart';
 import '../../widgets/skeleton_loader.dart';
+import '../../core/theme/app_theme.dart';
 
 class HomeScreen extends StatefulWidget {
   final int initialTab;
@@ -316,7 +317,7 @@ class _HomeScreenState extends State<HomeScreen>
         // so this is only ever visible in the gap below short content (e.g.
         // few/no search results with the keyboard open). It used to be red,
         // which then showed through as an unexplained red patch there.
-        backgroundColor: const Color(0xFFF1F5F9),
+        backgroundColor: context.colors.pageBackground,
         resizeToAvoidBottomInset: false,
         extendBody: true,
         body: Stack(
@@ -557,39 +558,52 @@ class NotchedPillClipper extends CustomClipper<Path> {
 
 // ── Notched Pill Custom Painter (Ultra-Translucent Mirror Glass Theme) ────────
 class NotchedPillPainter extends CustomPainter {
+  final bool isDark;
+  NotchedPillPainter({this.isDark = false});
+
   @override
   void paint(Canvas canvas, Size size) {
     final Path path = _buildNotchedPillPath(size);
 
     // Subtle ambient shadow under glass pill
     final Paint shadowPaint = Paint()
-      ..color = Colors.black.withValues(alpha: 0.06)
+      ..color = Colors.black.withValues(alpha: isDark ? 0.35 : 0.06)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 14);
     canvas.drawPath(path.shift(const Offset(0, 4)), shadowPaint);
 
-    // High-Translucency Frosted Glass fill (scrolling content visible like a mirror)
+    // High-Translucency Frosted Glass fill (scrolling content visible like a
+    // mirror) - dark frosted glass in dark mode instead of white, so the
+    // pill reads as glass over a black backdrop rather than a light smear.
     final Paint fillPaint = Paint()
       ..shader = LinearGradient(
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
-        colors: [
-          Colors.white.withValues(alpha: 0.48),
-          Colors.white.withValues(alpha: 0.28),
-        ],
+        colors: isDark
+            ? [
+                Colors.black.withValues(alpha: 0.55),
+                Colors.black.withValues(alpha: 0.75),
+              ]
+            : [
+                Colors.white.withValues(alpha: 0.48),
+                Colors.white.withValues(alpha: 0.28),
+              ],
       ).createShader(Rect.fromLTWH(0, 0, size.width, size.height))
       ..style = PaintingStyle.fill;
     canvas.drawPath(path, fillPaint);
 
-    // Crisp white glass edge stroke
+    // Crisp glass edge stroke
     final Paint borderPaint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.65)
+      ..color = isDark
+          ? Colors.white.withValues(alpha: 0.14)
+          : Colors.white.withValues(alpha: 0.65)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.2;
     canvas.drawPath(path, borderPaint);
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant NotchedPillPainter oldDelegate) =>
+      oldDelegate.isDark != isDark;
 }
 
 // ── Floating pill bottom nav ───────────────────────────────────────────────────
@@ -632,7 +646,9 @@ class _FloatingBottomNav extends StatelessWidget {
                 filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
                 child: CustomPaint(
                   size: Size(double.infinity, 64.h),
-                  painter: NotchedPillPainter(),
+                  painter: NotchedPillPainter(
+                    isDark: Theme.of(context).brightness == Brightness.dark,
+                  ),
                   child: SizedBox(
                     height: 64.h,
                     child: Row(
@@ -670,8 +686,8 @@ class _FloatingBottomNav extends StatelessWidget {
                                             ? FontWeight.w700
                                             : FontWeight.w600,
                                         color: currentIndex == 2
-                                            ? const Color(0xFFC83A2D)
-                                            : const Color(0xFF475569),
+                                            ? context.colors.accent
+                                            : context.colors.textSecondary,
                                       );
                                       final labelMeasure = TextPainter(
                                         text: TextSpan(
@@ -802,11 +818,11 @@ class _AnimatedScanButtonState extends State<_AnimatedScanButton>
               width: 56.r,
               height: 56.r,
               decoration: BoxDecoration(
-                color: const Color(0xFFC31E26),
+                color: context.colors.accent,
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFFC31E26).withValues(alpha: glowAlpha),
+                    color: context.colors.accent.withValues(alpha: glowAlpha),
                     blurRadius: (12 * scale).r,
                     spreadRadius: (1.5 * (scale - 1.0)).r,
                     offset: Offset(0, 5.h),
@@ -909,7 +925,7 @@ class _NavItemState extends State<_NavItem>
                   width: 22.w,
                   height: 22.h,
                   colorFilter: ColorFilter.mode(
-                    active ? const Color(0xFFC31E26) : const Color(0xFF64748B),
+                    active ? context.colors.accent : context.colors.textSecondary,
                     BlendMode.srcIn,
                   ),
                 ),
@@ -922,8 +938,8 @@ class _NavItemState extends State<_NavItem>
                   fontSize: 11.sp,
                   fontWeight: active ? FontWeight.w700 : FontWeight.w600,
                   color: active
-                      ? const Color(0xFFC31E26)
-                      : const Color(0xFF64748B),
+                      ? context.colors.accent
+                      : context.colors.textSecondary,
                 ),
               ),
             ],
@@ -1019,14 +1035,14 @@ class _HomeTabState extends State<_HomeTab> {
       // leave a gap below it exposing the Scaffold's red backgroundColor.
       width: double.infinity,
       height: double.infinity,
-      color: const Color(0xFFF1F5F9),
+      color: context.colors.pageBackground,
       child: ValueListenableBuilder<String>(
         valueListenable: _searchQueryNotifier,
         builder: (context, searchQuery, _) {
           return ScrollBlurHeaderOverlay(
             isDarkBackground: false,
-            primaryGradientColor: const Color(0xFFE2E8F0),
-            secondaryGradientColor: const Color(0xFFE2E8F0),
+            primaryGradientColor: context.colors.border,
+            secondaryGradientColor: context.colors.border,
             child: SingleChildScrollView(
               physics: const ClampingScrollPhysics(),
               child: Stack(
@@ -1056,7 +1072,7 @@ class _HomeTabState extends State<_HomeTab> {
                       Container(
                         width: double.infinity,
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: context.colors.surface,
                           borderRadius: BorderRadius.circular(24.r),
                         ),
                         padding: EdgeInsets.all(16.w),
@@ -1082,7 +1098,7 @@ class _HomeTabState extends State<_HomeTab> {
                                       fontFamily: 'Rubik',
                                       fontWeight: FontWeight.w700,
                                       fontSize: 18.sp,
-                                      color: const Color(0xFF0F172A),
+                                      color: context.colors.textPrimary,
                                     ),
                                   ),
                                   SizedBox(height: 12.h),
@@ -1093,8 +1109,8 @@ class _HomeTabState extends State<_HomeTab> {
                               key: const ValueKey('home_search_field'),
                               controller: _searchController,
                               focusNode: _searchFocusNode,
-                              backgroundColor: const Color(0xFFF1F3F5),
-                              borderColor: const Color(0xFFF1F3F5),
+                              backgroundColor: context.colors.surface,
+                              borderColor: context.colors.border,
                               onChanged: (val) {
                                 _searchQueryNotifier.value = val;
                               },
@@ -1187,7 +1203,7 @@ class _HomeTabState extends State<_HomeTab> {
                                 Container(
                                   width: double.infinity,
                                   decoration: BoxDecoration(
-                                    color: Colors.white,
+                                    color: context.colors.surface,
                                     borderRadius: BorderRadius.circular(24.r),
                                   ),
                                   padding: EdgeInsets.symmetric(vertical: 16.h),
@@ -1234,7 +1250,7 @@ class _HomeTabState extends State<_HomeTab> {
                                 Container(
                                   width: double.infinity,
                                   decoration: BoxDecoration(
-                                    color: Colors.white,
+                                    color: context.colors.surface,
                                     borderRadius: BorderRadius.circular(24.r),
                                   ),
                                   padding: EdgeInsets.symmetric(vertical: 16.h),
@@ -1280,7 +1296,7 @@ class _HomeTabState extends State<_HomeTab> {
                             return Container(
                               width: double.infinity,
                               decoration: BoxDecoration(
-                                color: Colors.white,
+                                color: context.colors.surface,
                                 borderRadius: BorderRadius.circular(24.r),
                               ),
                               clipBehavior: Clip.antiAlias,
@@ -1362,7 +1378,7 @@ class _SectionRow extends StatelessWidget {
               fontFamily: 'Rubik',
               fontWeight: FontWeight.w800,
               fontSize: 18.sp,
-              color: const Color(0xFF0F172A),
+              color: context.colors.textPrimary,
             ),
           ),
           if (onViewAll != null)
@@ -1374,7 +1390,7 @@ class _SectionRow extends StatelessWidget {
                   fontFamily: 'Rubik',
                   fontWeight: FontWeight.w600,
                   fontSize: 13.sp,
-                  color: const Color(0xFFC31E26),
+                  color: context.colors.accent,
                 ),
               ),
             ),
@@ -1409,7 +1425,7 @@ class _EmptyCookbookCard extends StatelessWidget {
       },
       child: CustomPaint(
         painter: DashedBorderPainter(
-          color: const Color(0xFFC31E26),
+          color: context.colors.accent,
           borderRadius: 20.r,
           dash: 5,
           gap: 4,
@@ -1419,7 +1435,7 @@ class _EmptyCookbookCard extends StatelessWidget {
           width: double.infinity,
           padding: EdgeInsets.symmetric(vertical: 28.h, horizontal: 20.w),
           decoration: BoxDecoration(
-            color: const Color(0xFFFAF3E6),
+            color: context.colors.surface,
             borderRadius: BorderRadius.circular(20.r),
           ),
           child: Column(
@@ -1428,8 +1444,8 @@ class _EmptyCookbookCard extends StatelessWidget {
               Container(
                 width: 52.r,
                 height: 52.r,
-                decoration: const BoxDecoration(
-                  color: Color(0xFFC31E26),
+                decoration: BoxDecoration(
+                  color: context.colors.accent,
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
@@ -1445,7 +1461,7 @@ class _EmptyCookbookCard extends StatelessWidget {
                   fontFamily: 'Rubik',
                   fontWeight: FontWeight.w700,
                   fontSize: 17.sp,
-                  color: const Color(0xFF0F172A),
+                  color: context.colors.textPrimary,
                 ),
               ),
               SizedBox(height: 6.h),
@@ -1455,7 +1471,7 @@ class _EmptyCookbookCard extends StatelessWidget {
                 style: TextStyle(
                   fontFamily: 'Rubik',
                   fontSize: 14.sp,
-                  color: const Color(0xFF64748B),
+                  color: context.colors.textSecondary,
                   height: 1.3,
                 ),
               ),
@@ -1549,7 +1565,7 @@ class _AddCookbookCardTile extends StatelessWidget {
       },
       child: CustomPaint(
         painter: DashedBorderPainter(
-          color: const Color(0xFFC31E26),
+          color: context.colors.accent,
           borderRadius: 20.r,
           dash: 4,
           gap: 3,
@@ -1559,7 +1575,7 @@ class _AddCookbookCardTile extends StatelessWidget {
           width: double.infinity,
           padding: EdgeInsets.all(10.w),
           decoration: BoxDecoration(
-            color: const Color(0xFFFAF3E6),
+            color: context.colors.surface,
             borderRadius: BorderRadius.circular(20.r),
           ),
           child: Column(
@@ -1568,8 +1584,8 @@ class _AddCookbookCardTile extends StatelessWidget {
               Container(
                 width: 32.r,
                 height: 32.r,
-                decoration: const BoxDecoration(
-                  color: Color(0xFFC31E26),
+                decoration: BoxDecoration(
+                  color: context.colors.accent,
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
@@ -1585,7 +1601,7 @@ class _AddCookbookCardTile extends StatelessWidget {
                   fontFamily: 'Rubik',
                   fontWeight: FontWeight.w700,
                   fontSize: 13.sp,
-                  color: const Color(0xFF0F172A),
+                  color: context.colors.textPrimary,
                 ),
               ),
             ],
@@ -1636,11 +1652,11 @@ class _CircularRecipeAvatarRow extends StatelessWidget {
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         border: Border.all(
-                          color: const Color(0xFFC31E26),
+                          color: context.colors.accent,
                           width: 2.5.w,
                         ),
                       ),
-                      child: ClipOval(child: _buildThumbnail(recipes[i].image)),
+                      child: ClipOval(child: _buildThumbnail(context, recipes[i].image)),
                     ),
                     SizedBox(height: 6.h),
                     Text(
@@ -1650,7 +1666,7 @@ class _CircularRecipeAvatarRow extends StatelessWidget {
                         fontFamily: 'Rubik',
                         fontWeight: FontWeight.w700,
                         fontSize: 12.sp,
-                        color: const Color(0xFF0F172A),
+                        color: context.colors.textPrimary,
                         height: 1.15,
                       ),
                     ),
@@ -1664,7 +1680,7 @@ class _CircularRecipeAvatarRow extends StatelessWidget {
     );
   }
 
-  Widget _buildThumbnail(String? image) {
+  Widget _buildThumbnail(BuildContext context, String? image) {
     const fallback = 'assets/images/recipes.png';
     if (image == null || image.isEmpty || image == 'null') {
       return Image.asset(fallback, fit: BoxFit.cover);
@@ -1673,7 +1689,7 @@ class _CircularRecipeAvatarRow extends StatelessWidget {
       return CachedNetworkImage(
         imageUrl: image,
         fit: BoxFit.cover,
-        placeholder: (_, __) => Container(color: const Color(0xFFEEEEEE)),
+        placeholder: (_, __) => Container(color: context.colors.surface),
         errorWidget: (_, __, ___) => Image.asset(fallback, fit: BoxFit.cover),
       );
     }
@@ -1768,7 +1784,7 @@ class _EmptySavedRecipesCardState extends State<_EmptySavedRecipesCard> {
                 style: GoogleFonts.rubik(
                   fontWeight: FontWeight.w700,
                   fontSize: 20.sp,
-                  color: const Color(0xFF111827),
+                  color: context.colors.textPrimary,
                 ),
               ),
               SizedBox(height: 8.h),
@@ -1777,7 +1793,7 @@ class _EmptySavedRecipesCardState extends State<_EmptySavedRecipesCard> {
                 textAlign: TextAlign.center,
                 style: GoogleFonts.poppins(
                   fontSize: 14.sp,
-                  color: const Color(0xFF64748B),
+                  color: context.colors.textSecondary,
                   height: 1.35,
                 ),
               ),
@@ -1792,13 +1808,13 @@ class _EmptySavedRecipesCardState extends State<_EmptySavedRecipesCard> {
                       style: GoogleFonts.rubik(
                         fontWeight: FontWeight.w700,
                         fontSize: 15.sp,
-                        color: const Color(0xFFC31E26),
+                        color: context.colors.accent,
                       ),
                     ),
                     SizedBox(width: 4.w),
                     Icon(
                       Icons.chevron_right_rounded,
-                      color: const Color(0xFFC31E26),
+                      color: context.colors.accent,
                       size: 20.sp,
                     ),
                   ],
@@ -1825,10 +1841,10 @@ class _EmptySavedRecipesCardState extends State<_EmptySavedRecipesCard> {
           asset,
           fit: BoxFit.cover,
           errorBuilder: (_, __, ___) => Container(
-            color: const Color(0xFFF1F5F9),
+            color: context.colors.pageBackground,
             child: Icon(
               Icons.restaurant,
-              color: const Color(0xFF94A3B8),
+              color: context.colors.textMuted,
               size: 30.sp,
             ),
           ),
@@ -1866,7 +1882,7 @@ class _PopulatedSavedRecipesList extends StatelessWidget {
         padding: EdgeInsets.symmetric(vertical: 32.h),
         child: Column(
           children: [
-            Icon(Icons.search_off_rounded, size: 40.sp, color: const Color(0xFFCBD5E1)),
+            Icon(Icons.search_off_rounded, size: 40.sp, color: context.colors.border),
             SizedBox(height: 12.h),
             Text(
               'No recipes found',
@@ -1874,7 +1890,7 @@ class _PopulatedSavedRecipesList extends StatelessWidget {
                 fontFamily: 'Rubik',
                 fontSize: 15.sp,
                 fontWeight: FontWeight.w700,
-                color: const Color(0xFF0F172A),
+                color: context.colors.textPrimary,
               ),
             ),
             SizedBox(height: 4.h),
@@ -1884,7 +1900,7 @@ class _PopulatedSavedRecipesList extends StatelessWidget {
               style: TextStyle(
                 fontFamily: 'Rubik',
                 fontSize: 13.sp,
-                color: const Color(0xFF94A3B8),
+                color: context.colors.textMuted,
               ),
             ),
             SizedBox(height: 24.h),
@@ -2047,7 +2063,7 @@ class _FeedbackCard extends StatelessWidget {
       width: double.infinity,
       padding: EdgeInsets.all(20.w),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.colors.surface,
         borderRadius: BorderRadius.circular(20.r),
         boxShadow: [
           BoxShadow(
@@ -2066,7 +2082,7 @@ class _FeedbackCard extends StatelessWidget {
               fontFamily: 'Rubik',
               fontWeight: FontWeight.w800,
               fontSize: 17.sp,
-              color: const Color(0xFF0F172A),
+              color: context.colors.textPrimary,
             ),
           ),
           SizedBox(height: 6.h),
@@ -2075,7 +2091,7 @@ class _FeedbackCard extends StatelessWidget {
             style: TextStyle(
               fontFamily: 'Rubik',
               fontSize: 13.sp,
-              color: const Color(0xFF64748B),
+              color: context.colors.textSecondary,
             ),
           ),
           SizedBox(height: 16.h),
@@ -2085,7 +2101,7 @@ class _FeedbackCard extends StatelessWidget {
             child: ElevatedButton(
               onPressed: onTap,
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFC31E26),
+                backgroundColor: context.colors.accent,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(24.r),
                 ),
@@ -2169,7 +2185,7 @@ void _showFeedbackModal(BuildContext context) {
       ),
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: context.colors.surface,
           borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
         ),
         padding: EdgeInsets.fromLTRB(20.w, 20.h, 20.w, 30.h),
@@ -2182,7 +2198,7 @@ void _showFeedbackModal(BuildContext context) {
                 width: 40.w,
                 height: 4.h,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFE2E8F0),
+                  color: context.colors.border,
                   borderRadius: BorderRadius.circular(2.r),
                 ),
               ),
@@ -2194,7 +2210,7 @@ void _showFeedbackModal(BuildContext context) {
                 fontFamily: 'Rubik',
                 fontWeight: FontWeight.w800,
                 fontSize: 18.sp,
-                color: const Color(0xFF0F172A),
+                color: context.colors.textPrimary,
               ),
             ),
             SizedBox(height: 6.h),
@@ -2203,7 +2219,7 @@ void _showFeedbackModal(BuildContext context) {
               style: TextStyle(
                 fontFamily: 'Rubik',
                 fontSize: 13.sp,
-                color: const Color(0xFF64748B),
+                color: context.colors.textSecondary,
               ),
             ),
             SizedBox(height: 16.h),
@@ -2215,21 +2231,21 @@ void _showFeedbackModal(BuildContext context) {
                 hintStyle: TextStyle(
                   fontFamily: 'Rubik',
                   fontSize: 14.sp,
-                  color: const Color(0xFF94A3B8),
+                  color: context.colors.textMuted,
                 ),
                 filled: true,
-                fillColor: const Color(0xFFF8FAFC),
+                fillColor: context.colors.surface,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16.r),
-                  borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                  borderSide: BorderSide(color: context.colors.border),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16.r),
-                  borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                  borderSide: BorderSide(color: context.colors.border),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16.r),
-                  borderSide: const BorderSide(color: Color(0xFFC31E26)),
+                  borderSide: BorderSide(color: context.colors.accent),
                 ),
               ),
             ),
@@ -2249,7 +2265,7 @@ void _showFeedbackModal(BuildContext context) {
                   }
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFC31E26),
+                  backgroundColor: context.colors.accent,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(24.r),
                   ),
@@ -2421,7 +2437,7 @@ class _CookbooksRowState extends State<_CookbooksRow> {
                             Expanded(
                               child: Container(
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFFF9FAFB),
+                                  color: context.colors.surface,
                                   borderRadius: BorderRadius.circular(16.r),
                                   border: Border.all(
                                     color: const Color(
@@ -2434,7 +2450,7 @@ class _CookbooksRowState extends State<_CookbooksRow> {
                                   child: Icon(
                                     Icons.add_rounded,
                                     size: 40.sp,
-                                    color: const Color(0xFFC83A2D),
+                                    color: context.colors.accent,
                                   ),
                                 ),
                               ),
@@ -2448,7 +2464,7 @@ class _CookbooksRowState extends State<_CookbooksRow> {
                                 fontFamily: 'SF Pro',
                                 fontWeight: FontWeight.w700,
                                 fontSize: 16.sp,
-                                color: const Color(0xFF1A1A1A),
+                                color: context.colors.textPrimary,
                               ),
                             ),
                             // Placeholder for alignment with recipes count
@@ -2609,7 +2625,7 @@ class _CookbooksRowState extends State<_CookbooksRow> {
                               fontFamily: 'SF Pro',
                               fontWeight: FontWeight.w700,
                               fontSize: 14.sp,
-                              color: const Color(0xFF1A1A1A),
+                              color: context.colors.textPrimary,
                             ),
                           ),
                           SizedBox(height: 2.h),
@@ -2618,7 +2634,7 @@ class _CookbooksRowState extends State<_CookbooksRow> {
                               Icon(
                                 Icons.restaurant_outlined,
                                 size: 13.sp,
-                                color: const Color(0xFF999999),
+                                color: context.colors.textMuted,
                               ),
                               SizedBox(width: 4.w),
                               Text(
@@ -2626,7 +2642,7 @@ class _CookbooksRowState extends State<_CookbooksRow> {
                                 style: TextStyle(
                                   fontFamily: 'SF Pro',
                                   fontSize: 11.sp,
-                                  color: const Color(0xFF999999),
+                                  color: context.colors.textMuted,
                                 ),
                               ),
                             ],
@@ -3168,7 +3184,7 @@ class _SavingsCardState extends State<_SavingsCard>
               child: Container(
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFAF3E6),
+                  color: context.colors.surface,
                   borderRadius: BorderRadius.circular(20.r),
                 ),
                 padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
@@ -3189,7 +3205,7 @@ class _SavingsCardState extends State<_SavingsCard>
                               fontFamily: 'Rubik',
                               fontSize: 16.sp,
                               fontWeight: FontWeight.w700,
-                              color: const Color(0xFF0F172A),
+                              color: context.colors.textPrimary,
                             ),
                           ),
                           GestureDetector(
@@ -3197,8 +3213,8 @@ class _SavingsCardState extends State<_SavingsCard>
                             child: Container(
                               width: 24.r,
                               height: 24.r,
-                              decoration: const BoxDecoration(
-                                color: Color(0xFFC31E26),
+                              decoration: BoxDecoration(
+                                color: context.colors.accent,
                                 shape: BoxShape.circle,
                               ),
                               child: Icon(
@@ -3231,7 +3247,7 @@ class _SavingsCardState extends State<_SavingsCard>
                               fontFamily: 'Rubik',
                               fontSize: 16.sp,
                               fontWeight: FontWeight.w500,
-                              color: const Color(0xFF334155),
+                              color: context.colors.textSecondary,
                             ),
                           ),
                         ],
@@ -3243,7 +3259,7 @@ class _SavingsCardState extends State<_SavingsCard>
                           fontFamily: 'Rubik',
                           fontSize: 14.sp,
                           fontWeight: FontWeight.w400,
-                          color: const Color(0xFF475569),
+                          color: context.colors.textSecondary,
                         ),
                       ),
                     ],

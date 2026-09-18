@@ -2,6 +2,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../widgets/red_button.dart';
+import '../../../core/theme/app_theme.dart';
 
 class DinnerFiguredOutStep extends StatefulWidget {
   final VoidCallback onContinue;
@@ -115,14 +116,14 @@ class _DinnerFiguredOutStepState extends State<DinnerFiguredOutStep> with Single
                               style: GoogleFonts.rubik(
                                 fontSize: 30.sp,
                                 fontWeight: FontWeight.w500,
-                                color: const Color(0xFF111827),
+                                color: context.colors.textPrimary,
                                 height: 1.2,
                                 letterSpacing: -0.3),
-                              children: const [
+                              children: [
                                 TextSpan(text: 'Imagine dinner\nalready '),
                                 TextSpan(
                                   text: 'figured out',
-                                  style: TextStyle(color: Color(0xFFC31E26))),
+                                  style: TextStyle(color: context.colors.accent)),
                               ])))),
                       SizedBox(height: 10.h),
                       FadeTransition(
@@ -134,7 +135,7 @@ class _DinnerFiguredOutStepState extends State<DinnerFiguredOutStep> with Single
                             textAlign: TextAlign.left,
                             style: GoogleFonts.poppins(
                               fontSize: 16.sp,
-                              color: const Color(0xFF111827),
+                              color: context.colors.textPrimary,
                               fontWeight: FontWeight.w400,
                               height: 1.35)))),
                     ])),
@@ -150,7 +151,7 @@ class _DinnerFiguredOutStepState extends State<DinnerFiguredOutStep> with Single
                         padding: EdgeInsets.fromLTRB(24.w, 12.h, 24.w, 20.h),
                         child: RedButton(
                           label: 'Continue',
-                          color: const Color(0xFFC31E26),
+                          color: context.colors.accent,
                           onTap: widget.onContinue,
                           height: 52.h,
                           fontSize: 16.sp))))),

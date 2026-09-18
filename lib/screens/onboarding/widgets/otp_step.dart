@@ -7,6 +7,7 @@ import '../../../core/widgets/ios_toast.dart';
 import '../../../core/utils/error_helper.dart';
 import '../../../widgets/red_button.dart';
 import '../../../widgets/loading_text.dart';
+import '../../../core/theme/app_theme.dart';
 
 class OtpStep extends StatefulWidget {
   final String email;
@@ -131,14 +132,14 @@ class _OtpStepState extends State<OtpStep> {
                   style: GoogleFonts.rubik(
                     fontSize: 32.sp,
                     fontWeight: FontWeight.w500,
-                    color: const Color(0xFF111827),
+                    color: context.colors.textPrimary,
                     height: 1.15)),
                 SizedBox(height: 10.h),
                 Text(
                   'Please enter the 6-digit code we sent to\n${widget.email}',
                   style: GoogleFonts.poppins(
                     fontSize: 15.sp,
-                    color: const Color(0xFF111827),
+                    color: context.colors.textPrimary,
                     height: 1.3)),
                 SizedBox(height: 36.h),
 
@@ -150,11 +151,11 @@ class _OtpStepState extends State<OtpStep> {
                         height: 56.h,
                         margin: EdgeInsets.symmetric(horizontal: 3.w),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFF1F5F9),
+                          color: context.colors.pageBackground,
                           borderRadius: BorderRadius.circular(16.r),
                           border: Border.all(
                             color: _nodes[idx].hasFocus || _ctrls[idx].text.isNotEmpty
-                                ? const Color(0xFFC31E26)
+                                ? context.colors.accent
                                 : Colors.transparent,
                             width: 1.5)),
                         child: TextField(
@@ -168,7 +169,7 @@ class _OtpStepState extends State<OtpStep> {
                           ],
                           style: GoogleFonts.rubik(fontSize: 22.sp,
                             fontWeight: FontWeight.w500,
-                            color: const Color(0xFF111827)),
+                            color: context.colors.textPrimary),
                           decoration: const InputDecoration(
                             counterText: '',
                             border: InputBorder.none,
@@ -184,7 +185,7 @@ class _OtpStepState extends State<OtpStep> {
                         "Didn't receive a code?",
                         style: GoogleFonts.poppins(
                           fontSize: 14.sp,
-                          color: const Color(0xFF111827))),
+                          color: context.colors.textPrimary)),
                       SizedBox(height: 6.h),
                       TextButton(
                         onPressed: _isResending ? null : _resendCode,
@@ -194,13 +195,13 @@ class _OtpStepState extends State<OtpStep> {
                                 style: GoogleFonts.rubik(
                                   fontSize: 15.sp,
                                   fontWeight: FontWeight.w500,
-                                  color: const Color(0xFFC31E26)))
+                                  color: context.colors.accent))
                             : Text(
                                 'Resend Code',
                                 style: GoogleFonts.rubik(
                                   fontSize: 15.sp,
                                   fontWeight: FontWeight.w500,
-                                  color: const Color(0xFFC31E26)))),
+                                  color: context.colors.accent))),
                     ])),
                 SizedBox(height: MediaQuery.of(context).viewInsets.bottom + 20.h),
               ]))),
@@ -213,7 +214,7 @@ class _OtpStepState extends State<OtpStep> {
               label: 'Verify & Continue',
               loadingLabel: 'Verifying',
               isLoading: _isLoading,
-              color: const Color(0xFFC31E26),
+              color: context.colors.accent,
               onTap: _verifyCode,
               height: 52.h,
               fontSize: 16.sp))),

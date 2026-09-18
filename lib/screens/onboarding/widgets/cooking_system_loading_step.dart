@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../widgets/red_button.dart';
 import '../../../widgets/app_loading_indicator.dart';
+import '../../../core/theme/app_theme.dart';
 
 class CookingSystemLoadingStep extends StatefulWidget {
   final VoidCallback onContinue;
@@ -61,8 +62,8 @@ class _CookingSystemLoadingStepState extends State<CookingSystemLoadingStep> wit
       leadingIcon = Container(
         width: 22.r,
         height: 22.r,
-        decoration: const BoxDecoration(
-          color: Color(0xFFC31E26),
+        decoration: BoxDecoration(
+          color: context.colors.accent,
           shape: BoxShape.circle),
         child: Icon(Icons.check, color: Colors.white, size: 13.sp));
     } else if (state == 1) {
@@ -76,7 +77,7 @@ class _CookingSystemLoadingStepState extends State<CookingSystemLoadingStep> wit
         height: 22.r,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          border: Border.all(color: const Color(0xFFCBD5E1), width: 1.8)));
+          border: Border.all(color: context.colors.border, width: 1.8)));
     }
 
     return Padding(
@@ -91,7 +92,7 @@ class _CookingSystemLoadingStepState extends State<CookingSystemLoadingStep> wit
               text,
               style: GoogleFonts.rubik(
                 fontSize: 15.sp,
-                color: state == 0 ? const Color(0xFF94A3B8) : const Color(0xFF0F172A),
+                color: state == 0 ? context.colors.textMuted : context.colors.textPrimary,
                 fontWeight: state == 0 ? FontWeight.w500 : FontWeight.w700,
                 height: 1.2))),
         ]));
@@ -113,9 +114,9 @@ class _CookingSystemLoadingStepState extends State<CookingSystemLoadingStep> wit
                 fit: BoxFit.cover,
                 alignment: Alignment.topCenter,
                 errorBuilder: (context, error, stackTrace) => Container(
-                  color: const Color(0xFFF1F5F9),
+                  color: context.colors.pageBackground,
                   alignment: Alignment.center,
-                  child: const Icon(Icons.restaurant_menu, size: 60, color: Color(0xFFCBD5E1)))),
+                  child: Icon(Icons.restaurant_menu, size: 60, color: context.colors.border))),
               // White gradient overlay covering top area behind auto-checks
               Container(
                 decoration: BoxDecoration(
@@ -146,20 +147,20 @@ class _CookingSystemLoadingStepState extends State<CookingSystemLoadingStep> wit
                       style: GoogleFonts.rubik(
                         fontSize: 32.sp,
                         fontWeight: FontWeight.w500,
-                        color: const Color(0xFF111827),
+                        color: context.colors.textPrimary,
                         height: 1.15),
-                      children: const [
+                      children: [
                         TextSpan(text: 'Let’s build your\ncooking '),
                         TextSpan(
                           text: 'profile',
-                          style: TextStyle(color: Color(0xFFC31E26))),
+                          style: TextStyle(color: context.colors.accent)),
                       ])),
                   SizedBox(height: 10.h),
                   Text(
                     'The more we learn, the better your recommendations',
                     style: GoogleFonts.poppins(
                       fontSize: 15.sp,
-                      color: const Color(0xFF111827),
+                      color: context.colors.textPrimary,
                       height: 1.3)),
                 ])),
 
@@ -189,7 +190,7 @@ class _CookingSystemLoadingStepState extends State<CookingSystemLoadingStep> wit
                 padding: EdgeInsets.fromLTRB(24.w, 8.h, 24.w, 20.h),
                 child: RedButton(
                   label: 'Start \u2192',
-                  color: const Color(0xFFC31E26),
+                  color: context.colors.accent,
                   onTap: widget.onContinue,
                   height: 52.h,
                   fontSize: 16.sp))))),

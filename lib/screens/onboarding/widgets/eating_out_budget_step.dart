@@ -2,6 +2,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'selection_onboarding_step.dart';
+import '../../../core/theme/app_theme.dart';
 
 class EatingOutBudgetStep extends StatefulWidget {
   final ValueChanged<int> onContinue;
@@ -52,7 +53,7 @@ class _EatingOutBudgetStepState extends State<EatingOutBudgetStep> {
       width: double.infinity,
       padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 16.h),
       decoration: BoxDecoration(
-        color: const Color(0xFFFAF4E5),
+        color: context.colors.surface,
         borderRadius: BorderRadius.circular(16.r)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -60,7 +61,7 @@ class _EatingOutBudgetStepState extends State<EatingOutBudgetStep> {
           Text(
             'Potential Yearly Savings', 
             style: GoogleFonts.rubik(
-              color: const Color(0xFF334155), 
+              color: context.colors.textSecondary, 
               fontSize: 14.sp,
               fontWeight: FontWeight.w500)),
           SizedBox(height: 8.h),
@@ -78,7 +79,7 @@ class _EatingOutBudgetStepState extends State<EatingOutBudgetStep> {
               Text(
                 '/year',
                 style: GoogleFonts.poppins(
-                  color: const Color(0xFF111827),
+                  color: context.colors.textPrimary,
                   fontSize: 14.sp,
                   fontWeight: FontWeight.w400)),
             ]),
@@ -86,7 +87,7 @@ class _EatingOutBudgetStepState extends State<EatingOutBudgetStep> {
           Text(
             'That could be over',
             style: GoogleFonts.poppins(
-              color: const Color(0xFF111827),
+              color: context.colors.textPrimary,
               fontSize: 13.sp,
               fontWeight: FontWeight.w400)),
         ]));

@@ -5,6 +5,7 @@ import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import '../services/tutorial_service.dart';
 import '../../widgets/red_header_background.dart';
 import '../../models/cookbook.dart';
+import '../theme/app_theme.dart';
 
 class TutorialHelper {
   static TutorialCoachMark? _activeCoachMark;
@@ -375,7 +376,7 @@ class _ScanOnboardingModalState extends State<ScanOnboardingModal> {
     final String? imageAsset = step['image'] as String?;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF1F4F8),
+      backgroundColor: context.colors.pageBackground,
       body: Stack(
         children: [
           // Background with cross-fade (for slides 1 & 3 with food photo)
@@ -427,7 +428,7 @@ class _ScanOnboardingModalState extends State<ScanOnboardingModal> {
               child: Container(
                 padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: context.colors.surface,
                   borderRadius: BorderRadius.circular(20.r),
                   boxShadow: [
                     BoxShadow(
@@ -443,7 +444,7 @@ class _ScanOnboardingModalState extends State<ScanOnboardingModal> {
                     fontFamily: 'Rubik',
                     fontSize: 14.sp,
                     fontWeight: FontWeight.w600,
-                    color: const Color(0xFF0F172A),
+                    color: context.colors.textPrimary,
                   ),
                 ),
               ),
@@ -473,7 +474,7 @@ class _ScanOnboardingModalState extends State<ScanOnboardingModal> {
                     : 34.h),
               ),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: context.colors.surface,
                 borderRadius: BorderRadius.vertical(top: Radius.circular(32.r)),
                 boxShadow: [
                   BoxShadow(
@@ -494,7 +495,7 @@ class _ScanOnboardingModalState extends State<ScanOnboardingModal> {
                         fontFamily: 'Rubik',
                         fontSize: 22.sp,
                         fontWeight: FontWeight.w800,
-                        color: const Color(0xFF0F172A),
+                        color: context.colors.textPrimary,
                       ),
                     ),
                     SizedBox(height: 18.h),
@@ -515,8 +516,8 @@ class _ScanOnboardingModalState extends State<ScanOnboardingModal> {
                                   svgPath,
                                   width: 22.sp,
                                   height: 22.sp,
-                                  colorFilter: const ColorFilter.mode(
-                                    Color(0xFF475569),
+                                  colorFilter: ColorFilter.mode(
+                                    context.colors.textSecondary,
                                     BlendMode.srcIn,
                                   ),
                                 )
@@ -524,7 +525,7 @@ class _ScanOnboardingModalState extends State<ScanOnboardingModal> {
                                 Icon(
                                   iconData,
                                   size: 22.sp,
-                                  color: const Color(0xFF475569),
+                                  color: context.colors.textSecondary,
                                 ),
                               SizedBox(width: 14.w),
                               Expanded(
@@ -534,7 +535,7 @@ class _ScanOnboardingModalState extends State<ScanOnboardingModal> {
                                     fontFamily: 'Rubik',
                                     fontSize: 15.sp,
                                     fontWeight: FontWeight.w500,
-                                    color: const Color(0xFF334155),
+                                    color: context.colors.textSecondary,
                                   ),
                                 ),
                               ),
@@ -558,8 +559,8 @@ class _ScanOnboardingModalState extends State<ScanOnboardingModal> {
                           height: 6.h,
                           decoration: BoxDecoration(
                             color: _currentPage == i
-                                ? const Color(0xFFC31E26)
-                                : const Color(0xFFE2E8F0),
+                                ? context.colors.accent
+                                : context.colors.border,
                             borderRadius: BorderRadius.circular(3.r),
                           ),
                         ),
@@ -575,7 +576,7 @@ class _ScanOnboardingModalState extends State<ScanOnboardingModal> {
                       child: ElevatedButton(
                         onPressed: _onNext,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFC31E26),
+                          backgroundColor: context.colors.accent,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(26.r),
                           ),
@@ -698,7 +699,7 @@ class _ImportOnboardingModalState extends State<ImportOnboardingModal> {
               child: Container(
                 padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: context.colors.surface,
                   borderRadius: BorderRadius.circular(20.r),
                   boxShadow: [
                     BoxShadow(
@@ -714,7 +715,7 @@ class _ImportOnboardingModalState extends State<ImportOnboardingModal> {
                     fontFamily: 'Rubik',
                     fontSize: 14.sp,
                     fontWeight: FontWeight.w600,
-                    color: const Color(0xFF0F172A),
+                    color: context.colors.textPrimary,
                   ),
                 ),
               ),
@@ -735,7 +736,7 @@ class _ImportOnboardingModalState extends State<ImportOnboardingModal> {
                     : 30.h),
               ),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: context.colors.surface,
                 borderRadius: BorderRadius.vertical(top: Radius.circular(32.r)),
                 boxShadow: [
                   BoxShadow(
@@ -758,14 +759,14 @@ class _ImportOnboardingModalState extends State<ImportOnboardingModal> {
                         child: Container(
                           width: 32.r,
                           height: 32.r,
-                          decoration: const BoxDecoration(
-                            color: Color(0xFFF1F5F9),
+                          decoration: BoxDecoration(
+                            color: context.colors.pageBackground,
                             shape: BoxShape.circle,
                           ),
                           child: Icon(
                             Icons.close_rounded,
                             size: 18.sp,
-                            color: const Color(0xFF0F172A),
+                            color: context.colors.textPrimary,
                           ),
                         ),
                       ),
@@ -777,7 +778,7 @@ class _ImportOnboardingModalState extends State<ImportOnboardingModal> {
                       width: double.infinity,
                       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFF1F5F9),
+                        color: context.colors.pageBackground,
                         borderRadius: BorderRadius.circular(16.r),
                       ),
                       child: Text(
@@ -785,7 +786,7 @@ class _ImportOnboardingModalState extends State<ImportOnboardingModal> {
                         style: TextStyle(
                           fontFamily: 'Rubik',
                           fontSize: 14.sp,
-                          color: const Color(0xFF94A3B8),
+                          color: context.colors.textMuted,
                         ),
                       ),
                     ),
@@ -796,7 +797,7 @@ class _ImportOnboardingModalState extends State<ImportOnboardingModal> {
                       width: double.infinity,
                       height: 48.h,
                       decoration: BoxDecoration(
-                        color: const Color(0xFFC31E26),
+                        color: context.colors.accent,
                         borderRadius: BorderRadius.circular(24.r),
                       ),
                       child: Center(
@@ -821,7 +822,7 @@ class _ImportOnboardingModalState extends State<ImportOnboardingModal> {
                         fontFamily: 'Rubik',
                         fontSize: 22.sp,
                         fontWeight: FontWeight.w800,
-                        color: const Color(0xFF0F172A),
+                        color: context.colors.textPrimary,
                       ),
                     ),
                     SizedBox(height: 16.h),
@@ -887,8 +888,8 @@ class _ImportOnboardingModalState extends State<ImportOnboardingModal> {
                             height: 6.h,
                             decoration: BoxDecoration(
                               color: _currentPage == i
-                                  ? const Color(0xFFC31E26)
-                                  : const Color(0xFFE2E8F0),
+                                  ? context.colors.accent
+                                  : context.colors.border,
                               borderRadius: BorderRadius.circular(3.r),
                             ),
                           ),
@@ -923,8 +924,8 @@ class _ImportBulletItem extends StatelessWidget {
               svg!,
               width: 22.sp,
               height: 22.sp,
-              colorFilter: const ColorFilter.mode(
-                Color(0xFF475569),
+              colorFilter: ColorFilter.mode(
+                context.colors.textSecondary,
                 BlendMode.srcIn,
               ),
             )
@@ -932,7 +933,7 @@ class _ImportBulletItem extends StatelessWidget {
             Icon(
               icon,
               size: 22.sp,
-              color: const Color(0xFF475569),
+              color: context.colors.textSecondary,
             ),
           SizedBox(width: 14.w),
           Expanded(
@@ -942,7 +943,7 @@ class _ImportBulletItem extends StatelessWidget {
                 fontFamily: 'Rubik',
                 fontSize: 15.sp,
                 fontWeight: FontWeight.w500,
-                color: const Color(0xFF334155),
+                color: context.colors.textSecondary,
               ),
             ),
           ),
@@ -985,7 +986,7 @@ class _ImportFlowDiagram extends StatelessWidget {
             ),
           ),
         ),
-        Icon(Icons.arrow_forward_rounded, size: 12.sp, color: const Color(0xFFC31E26)),
+        Icon(Icons.arrow_forward_rounded, size: 12.sp, color: context.colors.accent),
 
         // Card 2: Share
         _FlowCard(
@@ -997,14 +998,14 @@ class _ImportFlowDiagram extends StatelessWidget {
             colorFilter: const ColorFilter.mode(Color(0xFFC31E26), BlendMode.srcIn),
           ),
         ),
-        Icon(Icons.arrow_forward_rounded, size: 12.sp, color: const Color(0xFFC31E26)),
+        Icon(Icons.arrow_forward_rounded, size: 12.sp, color: context.colors.accent),
 
         // Card 3: Cooked
         _FlowCard(
           label: 'Cooked',
           child: Image.asset('assets/images/logoo.png', width: 34.w, height: 34.w),
         ),
-        Icon(Icons.arrow_forward_rounded, size: 12.sp, color: const Color(0xFFC31E26)),
+        Icon(Icons.arrow_forward_rounded, size: 12.sp, color: context.colors.accent),
 
         // Card 4: Import
         _FlowCard(
@@ -1032,7 +1033,7 @@ class _FlowCard extends StatelessWidget {
       width: 64.w,
       height: 68.h,
       decoration: BoxDecoration(
-        color: const Color(0xFFF1F5F9),
+        color: context.colors.pageBackground,
         borderRadius: BorderRadius.circular(16.r),
       ),
       child: Column(
@@ -1050,7 +1051,7 @@ class _FlowCard extends StatelessWidget {
                   fontFamily: 'Rubik',
                   fontSize: 11.sp,
                   fontWeight: FontWeight.w600,
-                  color: const Color(0xFF0F172A),
+                  color: context.colors.textPrimary,
                 ),
               ),
             ),
@@ -1099,7 +1100,7 @@ class _TutorialContent extends StatelessWidget {
           margin: EdgeInsets.symmetric(horizontal: 12.w),
           padding: EdgeInsets.fromLTRB(20.w, 18.h, 20.w, 18.h),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: context.colors.surface,
             borderRadius: BorderRadius.circular(24.r),
             boxShadow: [
               BoxShadow(
@@ -1123,7 +1124,7 @@ class _TutorialContent extends StatelessWidget {
                       fontFamily: 'Rubik',
                       fontSize: 18.sp,
                       fontWeight: FontWeight.w700,
-                      color: const Color(0xFF0F172A),
+                      color: context.colors.textPrimary,
                     ),
                   ),
                   Text(
@@ -1132,7 +1133,7 @@ class _TutorialContent extends StatelessWidget {
                       fontFamily: 'Rubik',
                       fontSize: 14.sp,
                       fontWeight: FontWeight.w500,
-                      color: const Color(0xFF94A3B8),
+                      color: context.colors.textMuted,
                     ),
                   ),
                 ],
@@ -1146,7 +1147,7 @@ class _TutorialContent extends StatelessWidget {
                   fontFamily: 'Rubik',
                   fontSize: 14.sp,
                   fontWeight: FontWeight.w400,
-                  color: const Color(0xFF64748B),
+                  color: context.colors.textSecondary,
                   height: 1.3,
                 ),
               ),
@@ -1162,7 +1163,7 @@ class _TutorialContent extends StatelessWidget {
                     child: Container(
                       padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 10.h),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFF1F5F9),
+                        color: context.colors.pageBackground,
                         borderRadius: BorderRadius.circular(20.r),
                       ),
                       child: Text(
@@ -1171,7 +1172,7 @@ class _TutorialContent extends StatelessWidget {
                           fontFamily: 'Rubik',
                           fontSize: 14.sp,
                           fontWeight: FontWeight.w700,
-                          color: const Color(0xFF0F172A),
+                          color: context.colors.textPrimary,
                         ),
                       ),
                     ),
@@ -1183,7 +1184,7 @@ class _TutorialContent extends StatelessWidget {
                     child: Container(
                       padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 10.h),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFC31E26),
+                        color: context.colors.accent,
                         borderRadius: BorderRadius.circular(20.r),
                       ),
                       child: Text(
@@ -1229,7 +1230,10 @@ class _TrianglePointer extends StatelessWidget {
         padding: EdgeInsets.symmetric(horizontal: 40.w),
         child: CustomPaint(
           size: Size(18.w, 12.h),
-          painter: _TrianglePainterCanvas(isPointingDown: isPointingDown),
+          painter: _TrianglePainterCanvas(
+            isPointingDown: isPointingDown,
+            color: context.colors.surface,
+          ),
         ),
       ),
     );
@@ -1238,12 +1242,13 @@ class _TrianglePointer extends StatelessWidget {
 
 class _TrianglePainterCanvas extends CustomPainter {
   final bool isPointingDown;
-  _TrianglePainterCanvas({required this.isPointingDown});
+  final Color color;
+  _TrianglePainterCanvas({required this.isPointingDown, required this.color});
 
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.white
+      ..color = color
       ..style = PaintingStyle.fill;
 
     final path = Path();
@@ -1361,7 +1366,7 @@ class _CookbookOnboardingModalState extends State<CookbookOnboardingModal> {
               constraints: BoxConstraints(maxHeight: 0.5.sh),
               padding: EdgeInsets.fromLTRB(24.w, 32.h, 24.w, 40.h),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: context.colors.surface,
                 borderRadius: BorderRadius.vertical(top: Radius.circular(32.r)),
               ),
               child: SingleChildScrollView(
@@ -1384,7 +1389,7 @@ class _CookbookOnboardingModalState extends State<CookbookOnboardingModal> {
                         fontFamily: 'SF Pro',
                         fontSize: 26.sp,
                         fontWeight: FontWeight.w800,
-                        color: const Color(0xFF1A1A1A),
+                        color: context.colors.textPrimary,
                       ),
                     ),
                     SizedBox(height: 16.h),
@@ -1399,7 +1404,7 @@ class _CookbookOnboardingModalState extends State<CookbookOnboardingModal> {
                             Icon(
                               Icons.check_circle_rounded,
                               size: 18.sp,
-                              color: const Color(0xFFC31E26),
+                              color: context.colors.accent,
                             ),
                             SizedBox(width: 12.w),
                             Expanded(
@@ -1409,7 +1414,7 @@ class _CookbookOnboardingModalState extends State<CookbookOnboardingModal> {
                                   fontFamily: 'SF Pro',
                                   fontSize: 14.sp,
                                   fontWeight: FontWeight.w500,
-                                  color: const Color(0xFF555555),
+                                  color: context.colors.textSecondary,
                                 ),
                               ),
                             ),
@@ -1434,8 +1439,8 @@ class _CookbookOnboardingModalState extends State<CookbookOnboardingModal> {
                               height: 6.h,
                               decoration: BoxDecoration(
                                 color: _currentPage == i
-                                    ? const Color(0xFFC31E26)
-                                    : const Color(0xFFFFD1D1),
+                                    ? context.colors.accent
+                                    : context.colors.accent.withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(3.r),
                               ),
                             ),
@@ -1444,7 +1449,7 @@ class _CookbookOnboardingModalState extends State<CookbookOnboardingModal> {
                         ElevatedButton(
                           onPressed: _onNext,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFFC31E26),
+                            backgroundColor: context.colors.accent,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(26.r),
                             ),
@@ -1483,7 +1488,7 @@ class _IngredientsDetectedCard extends StatelessWidget {
       width: double.infinity,
       padding: EdgeInsets.all(18.r),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.colors.surface,
         borderRadius: BorderRadius.circular(28.r),
         boxShadow: [
           BoxShadow(
@@ -1506,7 +1511,7 @@ class _IngredientsDetectedCard extends StatelessWidget {
                   fontFamily: 'Rubik',
                   fontSize: 16.sp,
                   fontWeight: FontWeight.w800,
-                  color: const Color(0xFF0F172A),
+                  color: context.colors.textPrimary,
                 ),
               ),
               Text(
@@ -1515,7 +1520,7 @@ class _IngredientsDetectedCard extends StatelessWidget {
                   fontFamily: 'Rubik',
                   fontSize: 14.sp,
                   fontWeight: FontWeight.w700,
-                  color: const Color(0xFFC31E26),
+                  color: context.colors.accent,
                 ),
               ),
             ],
@@ -1524,16 +1529,16 @@ class _IngredientsDetectedCard extends StatelessWidget {
           Container(
             padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
             decoration: BoxDecoration(
-              color: const Color(0xFFFAF5E8),
+              color: context.colors.pageBackground,
               borderRadius: BorderRadius.circular(20.r),
             ),
             child: Column(
-              children: const [
-                _IngredientDetectedRow(emoji: '🍅', name: 'Tomatoes'),
-                Divider(color: Color(0xFFE2E8F0), height: 20),
-                _IngredientDetectedRow(emoji: '🍗', name: 'Chicken breast'),
-                Divider(color: Color(0xFFE2E8F0), height: 20),
-                _IngredientDetectedRow(emoji: '🧄', name: 'Garlic'),
+              children: [
+                const _IngredientDetectedRow(emoji: '🍅', name: 'Tomatoes'),
+                Divider(color: context.colors.border, height: 20),
+                const _IngredientDetectedRow(emoji: '🍗', name: 'Chicken breast'),
+                Divider(color: context.colors.border, height: 20),
+                const _IngredientDetectedRow(emoji: '🧄', name: 'Garlic'),
               ],
             ),
           ),
@@ -1560,7 +1565,7 @@ class _IngredientDetectedRow extends StatelessWidget {
             fontFamily: 'Rubik',
             fontSize: 15.sp,
             fontWeight: FontWeight.w600,
-            color: const Color(0xFF0F172A),
+            color: context.colors.textPrimary,
           ),
         ),
       ],

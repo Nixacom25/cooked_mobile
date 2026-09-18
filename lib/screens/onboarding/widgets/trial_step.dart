@@ -5,6 +5,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter/services.dart';
 import '../../../services/revenuecat_service.dart';
 import '../../../widgets/red_button.dart';
+import '../../../core/theme/app_theme.dart';
 
 class TrialStep extends StatefulWidget {
   final Function(String plan) onPlanSelected;
@@ -105,9 +106,9 @@ class _TrialStepState extends State<TrialStep> with SingleTickerProviderStateMix
                         fit: BoxFit.cover,
                         alignment: Alignment.center,
                         errorBuilder: (context, error, stackTrace) => Container(
-                          color: const Color(0xFFF1F5F9),
+                          color: context.colors.pageBackground,
                           alignment: Alignment.center,
-                          child: const Icon(Icons.fastfood, color: Color(0xFFCBD5E1))))),
+                          child: Icon(Icons.fastfood, color: context.colors.border)))),
                     // Top White Fade
                     Positioned(
                       top: 0,
@@ -158,7 +159,7 @@ class _TrialStepState extends State<TrialStep> with SingleTickerProviderStateMix
                             style: GoogleFonts.rubik(
                               fontSize: 30.sp,
                               fontWeight: FontWeight.w500,
-                              color: const Color(0xFF111827),
+                              color: context.colors.textPrimary,
                               height: 1.15)),
                           SizedBox(height: 6.h),
                           Text(
@@ -166,7 +167,7 @@ class _TrialStepState extends State<TrialStep> with SingleTickerProviderStateMix
                             textAlign: TextAlign.center,
                             style: GoogleFonts.poppins(
                               fontSize: 14.sp,
-                              color: const Color(0xFF111827),
+                              color: context.colors.textPrimary,
                               height: 1.3)),
                         ]))),
                   SizedBox(height: 16.h),
@@ -212,7 +213,7 @@ class _TrialStepState extends State<TrialStep> with SingleTickerProviderStateMix
                       style: GoogleFonts.rubik(
                         fontSize: 14.sp,
                         fontWeight: FontWeight.w500,
-                        color: const Color(0xFFC31E26)))),
+                        color: context.colors.accent))),
                   SizedBox(height: 10.h),
 
                   // Red Button & Subscription Terms
@@ -223,7 +224,7 @@ class _TrialStepState extends State<TrialStep> with SingleTickerProviderStateMix
                       children: [
                         RedButton(
                           label: _selectedPlan == 'yearly' ? 'Try for Free' : 'Subscribe Now',
-                          color: const Color(0xFFC31E26),
+                          color: context.colors.accent,
                           onTap: () => widget.onPlanSelected(_selectedPlan),
                           height: 52.h,
                           fontSize: 16.sp),
@@ -235,7 +236,7 @@ class _TrialStepState extends State<TrialStep> with SingleTickerProviderStateMix
                           textAlign: TextAlign.center,
                           style: GoogleFonts.poppins(
                             fontSize: 12.sp,
-                            color: const Color(0xFF111827))),
+                            color: context.colors.textPrimary)),
                         SizedBox(height: 14.h),
                       ])),
                 ])),
@@ -261,11 +262,11 @@ class _TrialStepState extends State<TrialStep> with SingleTickerProviderStateMix
           Container(
             padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 16.h),
             decoration: BoxDecoration(
-              color: const Color(0xFFF1F5F9),
+              color: context.colors.pageBackground,
               borderRadius: BorderRadius.circular(16.r),
               border: Border.all(
                 color: isSelected
-                    ? const Color(0xFFC31E26)
+                    ? context.colors.accent
                     : Colors.transparent,
                 width: 1.5)),
             child: Row(
@@ -279,7 +280,7 @@ class _TrialStepState extends State<TrialStep> with SingleTickerProviderStateMix
                         title,
                         style: GoogleFonts.poppins(
                           fontSize: 13.sp,
-                          color: const Color(0xFF111827))),
+                          color: context.colors.textPrimary)),
                       SizedBox(height: 4.h),
                       FittedBox(
                         alignment: Alignment.centerLeft,
@@ -289,16 +290,16 @@ class _TrialStepState extends State<TrialStep> with SingleTickerProviderStateMix
                           style: GoogleFonts.rubik(
                             fontSize: 17.sp,
                             fontWeight: FontWeight.w500,
-                            color: const Color(0xFF111827)))),
+                            color: context.colors.textPrimary))),
                     ])),
                 SizedBox(width: 6.w),
                 isSelected
                     ? Container(
                         width: 20.r,
                         height: 20.r,
-                        decoration: const BoxDecoration(
+                        decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: Color(0xFFC31E26)),
+                          color: context.colors.accent),
                         child: Icon(
                           Icons.check,
                           color: Colors.white,
@@ -309,7 +310,7 @@ class _TrialStepState extends State<TrialStep> with SingleTickerProviderStateMix
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           border: Border.all(
-                            color: const Color(0xFFCBD5E1),
+                            color: context.colors.border,
                             width: 1.5))),
               ])),
           if (badge != null)
@@ -319,7 +320,7 @@ class _TrialStepState extends State<TrialStep> with SingleTickerProviderStateMix
               child: Container(
                 padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 3.h),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFC31E26),
+                  color: context.colors.accent,
                   borderRadius: BorderRadius.circular(50.r)),
                 child: Text(
                   badge,

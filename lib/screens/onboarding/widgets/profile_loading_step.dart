@@ -4,6 +4,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../widgets/app_loading_indicator.dart';
+import '../../../core/theme/app_theme.dart';
 
 class ProfileLoadingStep extends StatefulWidget {
   final VoidCallback onComplete;
@@ -110,8 +111,8 @@ class _ProfileLoadingStepState extends State<ProfileLoadingStep> with TickerProv
       leading = Container(
         width: 22.r,
         height: 22.r,
-        decoration: const BoxDecoration(
-          color: Color(0xFFC31E26),
+        decoration: BoxDecoration(
+          color: context.colors.accent,
           shape: BoxShape.circle),
         child: Icon(Icons.check, color: Colors.white, size: 13.sp));
     } else if (state == 1) {
@@ -125,7 +126,7 @@ class _ProfileLoadingStepState extends State<ProfileLoadingStep> with TickerProv
         height: 22.r,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          border: Border.all(color: const Color(0xFFCBD5E1), width: 1.5)));
+          border: Border.all(color: context.colors.border, width: 1.5)));
     }
 
     return Padding(
@@ -140,7 +141,7 @@ class _ProfileLoadingStepState extends State<ProfileLoadingStep> with TickerProv
             text,
             style: GoogleFonts.rubik(
               fontSize: 15.sp,
-              color: state == 0 ? const Color(0xFF94A3B8) : const Color(0xFF0F172A),
+              color: state == 0 ? context.colors.textMuted : context.colors.textPrimary,
               fontWeight: state > 0 ? FontWeight.w700 : FontWeight.w500)),
         ]));
   }
@@ -159,7 +160,7 @@ class _ProfileLoadingStepState extends State<ProfileLoadingStep> with TickerProv
             style: GoogleFonts.rubik(
               fontSize: 30.sp,
               fontWeight: FontWeight.w500,
-              color: const Color(0xFF111827),
+              color: context.colors.textPrimary,
               height: 1.15))),
         SizedBox(height: 20.h),
         SizedBox(

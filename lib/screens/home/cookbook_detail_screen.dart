@@ -20,6 +20,7 @@ import '../../widgets/haptic_context_menu.dart';
 import '../../widgets/glass_icon_button.dart';
 import '../../widgets/red_header_background.dart';
 import '../../widgets/saved_recipe_card.dart';
+import '../../core/theme/app_theme.dart';
 
 class CookbookDetailScreen extends StatefulWidget {
   const CookbookDetailScreen({super.key});
@@ -138,7 +139,7 @@ class _CookbookDetailScreenState extends State<CookbookDetailScreen> {
                 child: Container(
                   margin: EdgeInsets.only(top: 25.h),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: context.colors.surface,
                     borderRadius: BorderRadius.vertical(
                       top: Radius.circular(32.r),
                     ),
@@ -156,7 +157,7 @@ class _CookbookDetailScreenState extends State<CookbookDetailScreen> {
                               child: Icon(
                                 Icons.arrow_back_rounded,
                                 size: 20.sp,
-                                color: const Color(0xFF0F172A),
+                                color: context.colors.textPrimary,
                               ),
                             ),
                             Expanded(
@@ -167,7 +168,7 @@ class _CookbookDetailScreenState extends State<CookbookDetailScreen> {
                                   fontFamily: 'Rubik',
                                   fontWeight: FontWeight.w800,
                                   fontSize: 22.sp,
-                                  color: const Color(0xFF0F172A),
+                                  color: context.colors.textPrimary,
                                 ),
                               ),
                             ),
@@ -192,7 +193,7 @@ class _CookbookDetailScreenState extends State<CookbookDetailScreen> {
                                 size: 42.r,
                                 child: Icon(
                                   Icons.add_rounded,
-                                  color: const Color(0xFF0F172A),
+                                  color: context.colors.textPrimary,
                                   size: 22.sp,
                                 ),
                               )
@@ -213,7 +214,7 @@ class _CookbookDetailScreenState extends State<CookbookDetailScreen> {
                             setState(() {});
                           },
                           hintText: 'Search your recipes',
-                          backgroundColor: const Color(0xFFF1F5F9),
+                          backgroundColor: context.colors.pageBackground,
                           borderColor: Colors.transparent,
                           borderRadius: 16.r,
                         ),
@@ -482,7 +483,7 @@ class _CookbookDetailScreenState extends State<CookbookDetailScreen> {
             style: TextStyle(
               fontFamily: 'Rubik',
               fontWeight: FontWeight.w800,
-              color: const Color(0xFF0F172A),
+              color: context.colors.textPrimary,
               fontSize: 22.sp,
             ),
           ),
@@ -494,7 +495,7 @@ class _CookbookDetailScreenState extends State<CookbookDetailScreen> {
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontFamily: 'Rubik',
-                color: const Color(0xFF64748B),
+                color: context.colors.textSecondary,
                 fontSize: 14.sp,
                 height: 1.35,
               ),
@@ -513,7 +514,7 @@ class _CookbookDetailScreenState extends State<CookbookDetailScreen> {
               width: double.infinity,
               height: 54.h,
               decoration: BoxDecoration(
-                color: const Color(0xFFC83A2D),
+                color: context.colors.accent,
                 borderRadius: BorderRadius.circular(28.r),
               ),
               child: Center(
@@ -554,7 +555,7 @@ class _CookbookDetailScreenState extends State<CookbookDetailScreen> {
         width: 104.w,
         height: 114.h,
         decoration: BoxDecoration(
-          color: const Color(0xFFF8FAFC),
+          color: context.colors.surface,
           borderRadius: BorderRadius.circular(20.r),
         ),
         child: Column(
@@ -570,7 +571,7 @@ class _CookbookDetailScreenState extends State<CookbookDetailScreen> {
               child: Center(
                 child: Icon(
                   icon,
-                  color: const Color(0xFF0F172A),
+                  color: context.colors.textPrimary,
                   size: 22.sp,
                 ),
               ),
@@ -582,7 +583,7 @@ class _CookbookDetailScreenState extends State<CookbookDetailScreen> {
                 fontFamily: 'Rubik',
                 fontWeight: FontWeight.w700,
                 fontSize: 13.sp,
-                color: const Color(0xFF0F172A),
+                color: context.colors.textPrimary,
               ),
             ),
           ],
