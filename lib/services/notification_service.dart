@@ -71,4 +71,36 @@ class NotificationService {
   Future<void> cancelReminder(DateTime date) async {
     await _notificationsPlugin.cancel(date.hashCode);
   }
+
+  /// Displays a push notification immediately. FCM only auto-displays
+  /// notification-type messages while the app is backgrounded/terminated -
+  /// foreground messages must be shown manually on both Android and iOS.
+  Future<void> showRemoteNotification({
+    required String title,
+    required String body,
+    String? payload,
+  }) async {
+    const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
+      'push_notifications',
+      'Push Notifications',
+      channelDescription: 'Notifications from the Cooked team',
+      importance: Importance.max,
+      priority: Priority.high,
+    );
+
+    const DarwinNotificationDetails iosDetails = DarwinNotificationDetails();
+
+    const NotificationDetails platformDetails = NotificationDetails(
+      android: androidDetails,
+      iOS: iosDetails,
+    );
+
+    await _notificationsPlugin.show(
+      DateTime.now().millisecondsSinceEpoch ~/ 1000,
+      title,
+      body,
+      platformDetails,
+      payload: payload,
+    );
+  }
 }

@@ -580,8 +580,8 @@ class NotchedPillPainter extends CustomPainter {
         end: Alignment.bottomCenter,
         colors: isDark
             ? [
-                Colors.black.withValues(alpha: 0.55),
-                Colors.black.withValues(alpha: 0.75),
+                AppColorTokens.dark.elevatedSurface.withValues(alpha: 0.75),
+                AppColorTokens.dark.elevatedSurface.withValues(alpha: 0.92),
               ]
             : [
                 Colors.white.withValues(alpha: 0.48),
@@ -1435,7 +1435,13 @@ class _EmptyCookbookCard extends StatelessWidget {
           width: double.infinity,
           padding: EdgeInsets.symmetric(vertical: 28.h, horizontal: 20.w),
           decoration: BoxDecoration(
-            color: context.colors.surface,
+            // Light mode keeps the original cream (0xFFFAF3E6) exactly as
+            // designed. Dark mode uses elevatedSurface, not surface: this
+            // tile is nested inside CARD 1's surface-colored container, and
+            // matching that same tone made it invisible.
+            color: Theme.of(context).brightness == Brightness.dark
+                ? context.colors.elevatedSurface
+                : const Color(0xFFFAF3E6),
             borderRadius: BorderRadius.circular(20.r),
           ),
           child: Column(
@@ -1575,7 +1581,11 @@ class _AddCookbookCardTile extends StatelessWidget {
           width: double.infinity,
           padding: EdgeInsets.all(10.w),
           decoration: BoxDecoration(
-            color: context.colors.surface,
+            // Light mode keeps the original cream (0xFFFAF3E6) exactly as
+            // designed; only dark mode gets the theme's surface color.
+            color: Theme.of(context).brightness == Brightness.dark
+                ? context.colors.surface
+                : const Color(0xFFFAF3E6),
             borderRadius: BorderRadius.circular(20.r),
           ),
           child: Column(
@@ -3184,7 +3194,13 @@ class _SavingsCardState extends State<_SavingsCard>
               child: Container(
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: context.colors.surface,
+                  // Light mode keeps the original cream (0xFFFAF3E6) exactly
+                  // as designed. Dark mode uses elevatedSurface, not surface:
+                  // this card is nested inside CARD 1's surface-colored
+                  // container, and matching that same tone made it invisible.
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? context.colors.elevatedSurface
+                      : const Color(0xFFFAF3E6),
                   borderRadius: BorderRadius.circular(20.r),
                 ),
                 padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),

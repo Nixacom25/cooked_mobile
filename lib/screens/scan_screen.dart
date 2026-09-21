@@ -1058,17 +1058,22 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
   }
 
   Widget _buildShutterBtn() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return GlassIconButton(
       key: _shutterKey,
       onTap: () => _pickAndScan(ImageSource.camera),
       size: 76.r,
-      glassColor: Colors.white.withValues(alpha: 0.35),
-      borderColor: Colors.white.withValues(alpha: 0.85),
+      glassColor: isDark
+          ? context.colors.elevatedSurface.withValues(alpha: 0.55)
+          : Colors.white.withValues(alpha: 0.35),
+      borderColor: isDark
+          ? context.colors.accent.withValues(alpha: 0.85)
+          : Colors.white.withValues(alpha: 0.85),
       child: Container(
         width: 54.r,
         height: 54.r,
-        decoration: const BoxDecoration(
-          color: Colors.white,
+        decoration: BoxDecoration(
+          color: isDark ? context.colors.accent : Colors.white,
           shape: BoxShape.circle,
         ),
       ),
@@ -1115,7 +1120,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
           padding: EdgeInsets.all(5.r),
           decoration: BoxDecoration(
             color: isDark
-                ? Colors.black.withValues(alpha: 0.55)
+                ? context.colors.elevatedSurface.withValues(alpha: 0.75)
                 : Colors.white.withValues(alpha: 0.45),
             borderRadius: BorderRadius.circular(30.r),
             border: Border.all(
@@ -1747,7 +1752,11 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
       child: Container(
         margin: EdgeInsets.symmetric(horizontal: 2.w),
         decoration: BoxDecoration(
-          color: context.colors.surface,
+          // Light mode keeps the original (0xFFFAF6ED) exactly as designed;
+          // only dark mode gets the theme's surface color.
+          color: Theme.of(context).brightness == Brightness.dark
+              ? context.colors.surface
+              : const Color(0xFFFAF6ED),
           borderRadius: BorderRadius.circular(24.r),
         ),
         clipBehavior: Clip.antiAlias,

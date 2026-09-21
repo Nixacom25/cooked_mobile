@@ -105,7 +105,12 @@ class _ProfileSignupStepState extends State<ProfileSignupStep>
                       child: SlideTransition(
                         position: _infoSlide,
                         child: Image.asset(
-                          'assets/onboarding/step24.png',
+                          // The jpeg is a dedicated dark-mode version of this
+                          // illustration (dark backdrop, light text) - the png
+                          // alone would show its own light background in dark mode.
+                          Theme.of(context).brightness == Brightness.dark
+                              ? 'assets/onboarding/step24.jpeg'
+                              : 'assets/onboarding/step24.png',
                           fit: BoxFit.cover,
                           alignment: Alignment.topCenter,
                           errorBuilder: (context, error, stackTrace) => Container(
@@ -113,25 +118,40 @@ class _ProfileSignupStepState extends State<ProfileSignupStep>
                             alignment: Alignment.center,
                             child: Icon(Icons.fastfood, color: context.colors.border)))))),
 
-                  // White Gradient Overlay (White at top covering text down into image)
+                  // Gradient Overlay (opaque at top/bottom fading to
+                  // transparent in the middle) - white in light mode, black
+                  // in dark mode so it blends into the dark jpeg instead of
+                  // leaving a bright white band across it.
                   Positioned.fill(
                     child: Container(
-                      decoration: const BoxDecoration(
+                      decoration: BoxDecoration(
                         gradient: LinearGradient(
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
-                          colors: [
-                            Colors.white,
-                            Colors.white,
-                            Color(0xFAFFFFFF),
-                            Color(0xD0FFFFFF),
-                            Color(0x50FFFFFF),
-                            Color(0x00FFFFFF),
-                            Color(0x00FFFFFF),
-                            Color(0x90FFFFFF),
-                            Colors.white,
-                          ],
-                          stops: [0.0, 0.15, 0.25, 0.35, 0.45, 0.60, 0.80, 0.92, 1.0],
+                          colors: Theme.of(context).brightness == Brightness.dark
+                              ? const [
+                                  Colors.black,
+                                  Colors.black,
+                                  Color(0xFA000000),
+                                  Color(0xD0000000),
+                                  Color(0x50000000),
+                                  Color(0x00000000),
+                                  Color(0x00000000),
+                                  Color(0x90000000),
+                                  Colors.black,
+                                ]
+                              : const [
+                                  Colors.white,
+                                  Colors.white,
+                                  Color(0xFAFFFFFF),
+                                  Color(0xD0FFFFFF),
+                                  Color(0x50FFFFFF),
+                                  Color(0x00FFFFFF),
+                                  Color(0x00FFFFFF),
+                                  Color(0x90FFFFFF),
+                                  Colors.white,
+                                ],
+                          stops: const [0.0, 0.15, 0.25, 0.35, 0.45, 0.60, 0.80, 0.92, 1.0],
                         ),
                       ),
                     ),

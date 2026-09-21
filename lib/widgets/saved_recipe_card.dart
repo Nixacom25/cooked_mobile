@@ -120,7 +120,12 @@ class _SavedRecipeCardState extends State<SavedRecipeCard> {
         child: Container(
           height: 135.h,
           decoration: BoxDecoration(
-            color: colors.surface,
+            // Light mode keeps the original cream (0xFFFAF3E6) exactly as
+            // designed. Dark mode uses elevatedSurface, not surface: this
+            // card is frequently nested inside a surface-colored panel (e.g.
+            // the Home screen's Saved Recipes section), and using the same
+            // surface tone for both flattens the nested card to invisible.
+            color: isDark ? colors.elevatedSurface : const Color(0xFFFAF3E6),
             borderRadius: BorderRadius.circular(24.r),
           ),
           child: Row(
@@ -212,7 +217,12 @@ class _SavedRecipeCardState extends State<SavedRecipeCard> {
       child: Container(
         height: 135.h,
         decoration: BoxDecoration(
-          color: colors.surface,
+          // Light mode keeps the original cream (0xFFFAF3E6) exactly as
+          // designed. Dark mode uses elevatedSurface, not surface: this card
+          // is frequently nested inside a surface-colored panel (e.g. the
+          // Home screen's Saved Recipes section), and using the same surface
+          // tone for both flattens the nested card to invisible.
+          color: isDark ? colors.elevatedSurface : const Color(0xFFFAF3E6),
           borderRadius: BorderRadius.circular(24.r),
         ),
         child: Row(

@@ -69,6 +69,7 @@ class _HapticMenuOverlay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     // Adjust position to stay within screen bounds
     double top = targetPosition.dy;
@@ -113,10 +114,17 @@ class _HapticMenuOverlay extends StatelessWidget {
                 child: Container(
                   width: menuWidth.w,
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.65), // Translucent frosted glass
+                    // Same frosted-glass effect in both themes: light glass
+                    // over a blurred backdrop in light mode, dark glass in
+                    // dark mode.
+                    color: isDark
+                        ? context.colors.elevatedSurface.withValues(alpha: 0.75)
+                        : Colors.white.withValues(alpha: 0.65), // Translucent frosted glass
                     borderRadius: BorderRadius.circular(20.r),
                     border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.8),
+                      color: isDark
+                          ? Colors.white.withValues(alpha: 0.16)
+                          : Colors.white.withValues(alpha: 0.8),
                       width: 1.2.w,
                     ),
                     boxShadow: [

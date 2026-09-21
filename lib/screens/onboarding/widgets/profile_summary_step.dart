@@ -176,7 +176,7 @@ class _ProfileSummaryStepState extends State<ProfileSummaryStep>
                                     style: GoogleFonts.rubik(
                                       fontSize: 52.sp,
                                       fontWeight: FontWeight.w500,
-                                      color: const Color(0xFF10B981),
+                                      color: const Color(0xFF15803D),
                                       height: 1.0)),
                                   SizedBox(height: 8.h),
                                   Text(

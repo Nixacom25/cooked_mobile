@@ -108,7 +108,12 @@ class _CookingSystemLoadingStepState extends State<CookingSystemLoadingStep> wit
           child: Stack(
             children: [
               Image.asset(
-                'assets/onboarding/step9.png',
+                // The jpeg is a dedicated dark-mode version of this
+                // illustration (dark backdrop, light text) - the png alone
+                // would show its own light background in dark mode.
+                Theme.of(context).brightness == Brightness.dark
+                    ? 'assets/onboarding/step9.jpeg'
+                    : 'assets/onboarding/step9.png',
                 width: double.infinity,
                 height: double.infinity,
                 fit: BoxFit.cover,
@@ -117,19 +122,25 @@ class _CookingSystemLoadingStepState extends State<CookingSystemLoadingStep> wit
                   color: context.colors.pageBackground,
                   alignment: Alignment.center,
                   child: Icon(Icons.restaurant_menu, size: 60, color: context.colors.border))),
-              // White gradient overlay covering top area behind auto-checks
-              Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      Colors.white,
-                      Colors.white.withValues(alpha: 0.96),
-                      Colors.white.withValues(alpha: 0.75),
-                      Colors.white.withValues(alpha: 0.0),
-                    ],
-                    stops: const [0.0, 0.22, 0.42, 0.62]))),
+              // Gradient overlay covering top area behind auto-checks - white
+              // in light mode, black in dark mode so it blends into the dark
+              // jpeg instead of leaving a bright white band across it.
+              Builder(builder: (context) {
+                final isDark = Theme.of(context).brightness == Brightness.dark;
+                final base = isDark ? Colors.black : Colors.white;
+                return Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        base,
+                        base.withValues(alpha: 0.96),
+                        base.withValues(alpha: 0.75),
+                        base.withValues(alpha: 0.0),
+                      ],
+                      stops: const [0.0, 0.22, 0.42, 0.62])));
+              }),
             ])),
 
         // Foreground Content (Title, Subtitle, Tasks Checklist)

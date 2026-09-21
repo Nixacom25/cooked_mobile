@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../theme/app_theme.dart';
 
 class LegalContentModal extends StatelessWidget {
   final String title;
@@ -22,10 +23,13 @@ class LegalContentModal extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return Container(
       height: MediaQuery.of(context).size.height * 0.85,
       decoration: BoxDecoration(
-        color: Colors.white,
+        // Modals/sheets sit a step lighter than cards (elevatedSurface), so
+        // this visibly separates from the page behind it in both themes.
+        color: colors.elevatedSurface,
         borderRadius: BorderRadius.vertical(top: Radius.circular(25.r)),
       ),
       child: Column(
@@ -37,12 +41,12 @@ class LegalContentModal extends StatelessWidget {
               width: 40.w,
               height: 4.h,
               decoration: BoxDecoration(
-                color: const Color(0xFFE5E7EB),
+                color: colors.border,
                 borderRadius: BorderRadius.circular(2.r),
               ),
             ),
           ),
-          
+
           // Header
           Padding(
             padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 8.h),
@@ -54,20 +58,20 @@ class LegalContentModal extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 20.sp,
                     fontWeight: FontWeight.w800,
-                    color: const Color(0xFF0D1B3E),
+                    color: colors.textPrimary,
                     fontFamily: 'SF Pro',
                   ),
                 ),
                 IconButton(
                   onPressed: () => Navigator.pop(context),
-                  icon: Icon(Icons.close_rounded, color: const Color(0xFF7B8190), size: 24.sp),
+                  icon: Icon(Icons.close_rounded, color: colors.textMuted, size: 24.sp),
                 ),
               ],
             ),
           ),
-          
-          const Divider(height: 1, color: Color(0xFFEEEEEE)),
-          
+
+          Divider(height: 1, color: colors.divider),
+
           // Content
           Expanded(
             child: SingleChildScrollView(
@@ -77,14 +81,14 @@ class LegalContentModal extends StatelessWidget {
                 content,
                 style: TextStyle(
                   fontSize: 14.sp,
-                  color: const Color(0xFF4B5563),
+                  color: colors.textSecondary,
                   fontFamily: 'SF Pro',
                   height: 1.6,
                 ),
               ),
             ),
           ),
-          
+
           // Bottom Spacer for Safe Area
           SizedBox(height: MediaQuery.of(context).padding.bottom + 20.h),
         ],

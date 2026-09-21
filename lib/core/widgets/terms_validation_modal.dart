@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'legal_content_modal.dart';
 import '../../widgets/red_button.dart';
+import '../theme/app_theme.dart';
 
 class TermsValidationModal extends StatefulWidget {
   final VoidCallback onAccepted;
@@ -29,10 +30,13 @@ class _TermsValidationModalState extends State<TermsValidationModal> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 24.w),
       decoration: BoxDecoration(
-        color: Colors.white,
+        // Modals/sheets sit a step lighter than cards (elevatedSurface), so
+        // this visibly separates from the page behind it in both themes.
+        color: colors.elevatedSurface,
         borderRadius: BorderRadius.vertical(top: Radius.circular(25.r)),
       ),
       child: Column(
@@ -45,46 +49,46 @@ class _TermsValidationModalState extends State<TermsValidationModal> {
               width: 40.w,
               height: 4.h,
               decoration: BoxDecoration(
-                color: const Color(0xFFE5E7EB),
+                color: colors.border,
                 borderRadius: BorderRadius.circular(2.r),
               ),
             ),
           ),
-          
+
           SizedBox(height: 16.h),
-          
+
           Text(
             'Terms & Conditions',
             style: TextStyle(
               fontSize: 22.sp,
               fontWeight: FontWeight.w900,
-              color: const Color(0xFF0D1B3E),
+              color: colors.textPrimary,
               fontFamily: 'SF Pro',
             ),
           ),
-          
+
           SizedBox(height: 12.h),
-          
+
           Text(
             'Before continuing with social login, please review and accept our legal terms to protect your data.',
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 14.sp,
-              color: const Color(0xFF7B8190),
+              color: colors.textSecondary,
               fontFamily: 'SF Pro',
               height: 1.5,
             ),
           ),
-          
+
           SizedBox(height: 32.h),
-          
+
           // Checkbox Section
           Container(
             padding: EdgeInsets.all(16.r),
             decoration: BoxDecoration(
-              color: const Color(0xFFF9FAFB),
+              color: colors.pageBackground,
               borderRadius: BorderRadius.circular(16.r),
-              border: Border.all(color: const Color(0xFFF3F4F6)),
+              border: Border.all(color: colors.border),
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -94,7 +98,7 @@ class _TermsValidationModalState extends State<TermsValidationModal> {
                   width: 24.r,
                   child: Checkbox(
                     value: _accepted,
-                    activeColor: const Color(0xFFC83A2D),
+                    activeColor: colors.accent,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6.r)),
                     onChanged: (val) => setState(() => _accepted = val ?? false),
                   ),
@@ -107,13 +111,13 @@ class _TermsValidationModalState extends State<TermsValidationModal> {
                         'I have read and agree to the ',
                         style: TextStyle(
                           fontSize: 13.sp,
-                          color: const Color(0xFF4B5563),
+                          color: colors.textSecondary,
                           fontFamily: 'SF Pro',
                         ),
                       ),
-                      _linkText('Terms of Use', () {
-                        LegalContentModal.show(context, 
-                          title: 'Terms of Use', 
+                      _linkText(context, 'Terms of Use', () {
+                        LegalContentModal.show(context,
+                          title: 'Terms of Use',
                           content: dummyTerms
                         );
                       }),
@@ -121,13 +125,13 @@ class _TermsValidationModalState extends State<TermsValidationModal> {
                         ' and ',
                         style: TextStyle(
                           fontSize: 13.sp,
-                          color: const Color(0xFF4B5563),
+                          color: colors.textSecondary,
                           fontFamily: 'SF Pro',
                         ),
                       ),
-                      _linkText('Privacy Policy', () {
-                        LegalContentModal.show(context, 
-                          title: 'Privacy Policy', 
+                      _linkText(context, 'Privacy Policy', () {
+                        LegalContentModal.show(context,
+                          title: 'Privacy Policy',
                           content: dummyPrivacy
                         );
                       }),
@@ -135,7 +139,7 @@ class _TermsValidationModalState extends State<TermsValidationModal> {
                         '.',
                         style: TextStyle(
                           fontSize: 13.sp,
-                          color: const Color(0xFF4B5563),
+                          color: colors.textSecondary,
                           fontFamily: 'SF Pro',
                         ),
                       ),
@@ -145,9 +149,9 @@ class _TermsValidationModalState extends State<TermsValidationModal> {
               ],
             ),
           ),
-          
+
           SizedBox(height: 40.h),
-          
+
           // Action Button
           RedButton(
             label: 'Confirm and Continue',
@@ -159,21 +163,21 @@ class _TermsValidationModalState extends State<TermsValidationModal> {
             height: 56.h,
             fontSize: 16.sp,
           ),
-          
+
           SizedBox(height: MediaQuery.of(context).padding.bottom + 20.h),
         ],
       ),
     );
   }
 
-  Widget _linkText(String text, VoidCallback onTap) {
+  Widget _linkText(BuildContext context, String text, VoidCallback onTap) {
     return GestureDetector(
       onTap: onTap,
       child: Text(
         text,
         style: TextStyle(
           fontSize: 13.sp,
-          color: const Color(0xFFC83A2D),
+          color: context.colors.accent,
           fontWeight: FontWeight.w700,
           decoration: TextDecoration.underline,
           fontFamily: 'SF Pro',

@@ -259,7 +259,14 @@ class _ExploreScreenState extends State<ExploreScreen> {
                         color: isActive ? context.colors.accent : context.colors.surface,
                         borderRadius: BorderRadius.circular(20.r),
                         border: Border.all(
-                          color: isActive ? context.colors.accent : context.colors.border,
+                          // Light mode keeps the original (0xFFF3E8D3)
+                          // exactly as designed; only dark mode gets
+                          // the theme's border color.
+                          color: isActive
+                              ? context.colors.accent
+                              : (Theme.of(context).brightness == Brightness.dark
+                                  ? context.colors.border
+                                  : const Color(0xFFF3E8D3)),
                           width: 1.w,
                         ),
                       ),

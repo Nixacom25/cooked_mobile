@@ -43,12 +43,18 @@ class _ScanAnimationOverlayState extends State<ScanAnimationOverlay> {
   _AnimationPlatform? _testPlatform;
   VideoPlayerController? _videoController;
   Future<void>? _videoInitialization;
+  bool _isDark = false;
+  bool _dependenciesResolved = false;
 
   static const _defaultScanImage = 'assets/images/scan.png';
 
   @override
-  void initState() {
-    super.initState();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_dependenciesResolved) return;
+    _dependenciesResolved = true;
+
+    _isDark = Theme.of(context).brightness == Brightness.dark;
 
     final isTestEnvironment = WidgetsBinding.instance.runtimeType
         .toString()
@@ -59,6 +65,11 @@ class _ScanAnimationOverlayState extends State<ScanAnimationOverlay> {
             defaultTargetPlatform == TargetPlatform.iOS)) {
       _prepareVideo();
     }
+  }
+
+  @override
+  void initState() {
+    super.initState();
 
     _showRive = widget.skipImageAnalysis;
     if (widget.skipImageAnalysis) {
@@ -144,9 +155,10 @@ class _ScanAnimationOverlayState extends State<ScanAnimationOverlay> {
       _AnimationPlatform.ios;
 
   void _prepareVideo() {
-    _videoController ??= VideoPlayerController.asset(
-      'assets/animations/cooked.mp4',
-    );
+    final assetPath = _isDark
+        ? 'assets/animations/cooked_dark.mp4'
+        : 'assets/animations/cooked.mp4';
+    _videoController ??= VideoPlayerController.asset(assetPath);
     _videoInitialization ??= _videoController!.initialize();
   }
 
@@ -227,6 +239,7 @@ class _ScanAnimationOverlayState extends State<ScanAnimationOverlay> {
                   ? _VideoAnimation(controller: _videoController!)
                   : _FallbackScanAnimation(
                       skipImageAnalysis: widget.skipImageAnalysis,
+                      isDark: _isDark,
                     ),
             ),
           if (widget.showTestControls)
@@ -286,7 +299,11 @@ class _ScanAnimationOverlayState extends State<ScanAnimationOverlay> {
 /// séparément par [_ImageScanAnimation] afin de pouvoir le superposer au Rive.
 class _FallbackScanAnimation extends StatefulWidget {
   final bool skipImageAnalysis;
-  const _FallbackScanAnimation({this.skipImageAnalysis = false});
+  final bool isDark;
+  const _FallbackScanAnimation({
+    this.skipImageAnalysis = false,
+    this.isDark = false,
+  });
 
   @override
   State<_FallbackScanAnimation> createState() => _FallbackScanAnimationState();
@@ -310,7 +327,9 @@ class _FallbackScanAnimationState extends State<_FallbackScanAnimation> {
       // 2. Suppression de l'appel manuel ..file() qui provoquait une race condition
       // 3. Le même Rive sans scan est utilisé pour Scan, Type Ingredients et Saved.
       _fileLoader = FileLoader.fromAsset(
-        'assets/animations/cooked_no_scan.riv',
+        widget.isDark
+            ? 'assets/animations/cooked_rkdarkm.riv'
+            : 'assets/animations/cooked_no_scan.riv',
         riveFactory: Factory.flutter,
       );
 

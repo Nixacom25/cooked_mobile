@@ -206,7 +206,11 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
         child: Container(
           padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
           decoration: BoxDecoration(
-            color: context.colors.pageBackground,
+            // Light mode keeps the original (0xFFF8FAFC) exactly as
+            // designed; only dark mode gets pageBackground.
+            color: Theme.of(context).brightness == Brightness.dark
+                ? context.colors.pageBackground
+                : const Color(0xFFF8FAFC),
             borderRadius: BorderRadius.circular(16.r),
           ),
           child: Row(
@@ -629,7 +633,12 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                       builder: (context, cookbooks, _) {
                         final bool isAdded = _checkIsInCookbook(r, cookbooks);
                         return Container(
-                          color: context.colors.pageBackground,
+                          // Light mode keeps the original Colors.white
+                          // exactly as designed; only dark mode gets
+                          // pageBackground.
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? context.colors.pageBackground
+                              : Colors.white,
                           padding: EdgeInsets.fromLTRB(20.w, 10.h, 20.w, 10.h + bottomPad),
                           child: GestureDetector(
                             onTap: () async {
@@ -1116,7 +1125,11 @@ class _EmptyState extends StatelessWidget {
       width: double.infinity,
       padding: EdgeInsets.symmetric(vertical: 40.h, horizontal: 20.w),
       decoration: BoxDecoration(
-        color: context.colors.pageBackground,
+        // Light mode keeps the original (0xFFF8FAFC) exactly as designed;
+        // only dark mode gets pageBackground.
+        color: Theme.of(context).brightness == Brightness.dark
+            ? context.colors.pageBackground
+            : const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(20.r),
       ),
       child: Column(
@@ -1220,7 +1233,11 @@ class _IngredientsList extends StatelessWidget {
                         height: 32.w,
                         margin: EdgeInsets.only(right: 12.w),
                         decoration: BoxDecoration(
-                          color: context.colors.pageBackground,
+                          // Light mode keeps the original cream (0xFFFAF5E8)
+                          // exactly as designed; only dark mode gets pageBackground.
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? context.colors.pageBackground
+                              : const Color(0xFFFAF5E8),
                           borderRadius: BorderRadius.circular(10.r),
                         ),
                         alignment: Alignment.center,
@@ -1303,7 +1320,12 @@ class _EquipmentList extends StatelessWidget {
           margin: EdgeInsets.only(bottom: 12.h),
           padding: EdgeInsets.all(14.r),
           decoration: BoxDecoration(
-            color: context.colors.pageBackground,
+            // Light mode keeps the original Colors.white exactly as
+            // designed; only dark mode gets pageBackground. The border
+            // (already pageBackground) was already an exact match, unchanged.
+            color: Theme.of(context).brightness == Brightness.dark
+                ? context.colors.pageBackground
+                : Colors.white,
             borderRadius: BorderRadius.circular(16.r),
             border: Border.all(color: context.colors.pageBackground),
           ),
@@ -1424,7 +1446,11 @@ class _StepsList extends StatelessWidget {
           Container(
             padding: EdgeInsets.all(16.r),
             decoration: BoxDecoration(
-              color: context.colors.pageBackground,
+              // Light mode keeps the original (0xFFF8FAFC) exactly as
+              // designed; only dark mode gets pageBackground.
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? context.colors.pageBackground
+                  : const Color(0xFFF8FAFC),
               borderRadius: BorderRadius.circular(16.r),
             ),
             child: Column(
@@ -1506,7 +1532,11 @@ class _SavingsBreakdownCard extends StatelessWidget {
       width: double.infinity,
       padding: EdgeInsets.all(16.r),
       decoration: BoxDecoration(
-        color: context.colors.pageBackground,
+        // Light mode keeps the original cream (0xFFFAF5E8) exactly as
+        // designed; only dark mode gets pageBackground.
+        color: Theme.of(context).brightness == Brightness.dark
+            ? context.colors.pageBackground
+            : const Color(0xFFFAF5E8),
         borderRadius: BorderRadius.circular(20.r),
       ),
       child: Column(

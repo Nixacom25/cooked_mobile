@@ -88,13 +88,18 @@ class _DinnerFiguredOutStepState extends State<DinnerFiguredOutStep> with Single
                     },
                     blendMode: BlendMode.dstIn,
                     child: Image.asset(
-                      'assets/onboarding/step2.png',
+                      // The jpeg is a dedicated dark-mode version of this
+                      // illustration (dark backdrop, light text) - the png
+                      // alone would show its own light background in dark mode.
+                      Theme.of(context).brightness == Brightness.dark
+                          ? 'assets/onboarding/step2.jpeg'
+                          : 'assets/onboarding/step2.png',
                       width: double.infinity,
                       height: double.infinity,
                       fit: BoxFit.cover,
                       alignment: Alignment.bottomCenter,
                       errorBuilder: (context, error, stackTrace) => Container(
-                        color: Colors.grey[200],
+                        color: context.colors.pageBackground,
                         alignment: Alignment.center,
                         child: const Text('assets/onboarding/step2.png missing'))))))),
             // Overlay Content (Title, Subtitle & Button)

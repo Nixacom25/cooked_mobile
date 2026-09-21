@@ -128,7 +128,7 @@ class _SocialProofStepState extends State<SocialProofStep>
                               style: GoogleFonts.rubik(
                                 fontSize: 64.sp,
                                 fontWeight: FontWeight.w900,
-                                color: const Color(0xFF10B981),
+                                color: const Color(0xFF15803D),
                                 height: 1.0)),
                             SizedBox(height: 10.h),
                             Row(
@@ -168,7 +168,7 @@ class _SocialProofStepState extends State<SocialProofStep>
                           child: SlideTransition(
                             position: _reviewSlides[0],
                             child: _buildReviewCard(
-                              name: 'Sarah M.',
+                              name: 'Cheikh G.',
                               quote:
                                   '"Cooked helped me stop\nordering dinner every night."'))),
                         FadeTransition(
@@ -176,7 +176,7 @@ class _SocialProofStepState extends State<SocialProofStep>
                           child: SlideTransition(
                             position: _reviewSlides[1],
                             child: _buildReviewCard(
-                              name: 'David K.',
+                              name: 'DImmanuel O.',
                               quote:
                                   '"I finally use the groceries I\nalready have."'))),
                         FadeTransition(
@@ -184,7 +184,7 @@ class _SocialProofStepState extends State<SocialProofStep>
                           child: SlideTransition(
                             position: _reviewSlides[2],
                             child: _buildReviewCard(
-                              name: 'Elena R.',
+                              name: 'Miles M.',
                               quote:
                                   '"Meal ideas feel personalized\ninstead of random."'))),
                       ]),

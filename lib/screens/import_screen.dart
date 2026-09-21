@@ -60,6 +60,7 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
   final _linkCtrl = TextEditingController();
   final _searchCtrl = TextEditingController();
   bool _isImporting = false;
+  String? _importingUrl;
   bool _isSearching = false;
   List<Map<String, dynamic>> _searchResults = [];
   int _webSearchRequestId = 0;
@@ -189,7 +190,7 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
         context: context,
         isScrollControlled: true,
         useSafeArea: true,
-        backgroundColor: Colors.white,
+        backgroundColor: context.colors.surface,
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.zero),
         ),
@@ -262,7 +263,10 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
     final url = trimmedUrl;
 
     HapticFeedback.lightImpact();
-    setState(() => _isImporting = true);
+    setState(() {
+      _isImporting = true;
+      _importingUrl = url;
+    });
     widget.isImportingNotifier?.value = true;
 
     final savedRecipes = RecipeService.instance.myRecipesNotifier.value ?? [];
@@ -572,10 +576,7 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
   @override
   Widget build(BuildContext context) {
     if (_isImporting) {
-      return Scaffold(
-        backgroundColor: context.colors.surface,
-        body: const ImportLoadingPage(),
-      );
+      return ImportLoadingPage(url: _importingUrl);
     }
 
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
@@ -618,14 +619,49 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
                     ),
                     children: [
                       // Header Title: "Import"
-                      Text(
-                        'Import',
-                        style: TextStyle(
-                          fontFamily: 'Rubik',
-                          fontWeight: FontWeight.w800,
-                          fontSize: 24.sp,
-                          color: context.colors.textPrimary,
-                        ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Import',
+                            style: TextStyle(
+                              fontFamily: 'Rubik',
+                              fontWeight: FontWeight.w800,
+                              fontSize: 24.sp,
+                              color: context.colors.textPrimary,
+                            ),
+                          ),
+                          // Debug-only: preview the import-loading animation
+                          // without a real import. Gated on kDebugMode so it
+                          // never ships in release builds.
+                          if (kDebugMode)
+                            GestureDetector(
+                              onTap: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const ImportLoadingPage(
+                                    url: 'https://www.tiktok.com/@chef/video/123456789',
+                                  ),
+                                ),
+                              ),
+                              child: Container(
+                                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+                                decoration: BoxDecoration(
+                                  color: context.colors.pageBackground,
+                                  borderRadius: BorderRadius.circular(20.r),
+                                ),
+                                child: Text(
+                                  'Test loading',
+                                  style: TextStyle(
+                                    fontFamily: 'Rubik',
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 11.sp,
+                                    color: context.colors.textSecondary,
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ],
                       ),
                       SizedBox(height: 20.h),
 

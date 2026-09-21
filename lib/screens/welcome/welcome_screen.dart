@@ -1,9 +1,12 @@
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../routes/app_routes.dart';
 import '../../services/auth_service.dart';
+import '../../services/notification_service.dart';
 import '../../widgets/red_button.dart';
+import '../splash/splash_screen.dart';
 
 /// The Welcome screen using welcome2.png background.
 class WelcomeScreen extends StatefulWidget {
@@ -150,7 +153,69 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
               ),
             ),
           ),
+
+          // Debug-only test buttons: preview the splash screen and fire a
+          // local test push notification, without a fresh app launch or a
+          // real server-sent push. Gated on kDebugMode so none of this ships
+          // in release builds.
+          if (kDebugMode)
+            SafeArea(
+              child: Align(
+                alignment: Alignment.topRight,
+                child: Padding(
+                  padding: EdgeInsets.only(right: 12.w, top: 4.h),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      _DebugButton(
+                        label: 'Test splash',
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const SplashScreen()),
+                        ),
+                      ),
+                      SizedBox(height: 8.h),
+                      _DebugButton(
+                        label: 'Test push',
+                        onTap: () => NotificationService.instance.showRemoteNotification(
+                          title: 'Test notification',
+                          body: 'This is what a push notification looks like on this device.',
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
         ],
+      ),
+    );
+  }
+}
+
+class _DebugButton extends StatelessWidget {
+  final String label;
+  final VoidCallback onTap;
+  const _DebugButton({required this.label, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+        decoration: BoxDecoration(
+          color: Colors.black.withValues(alpha: 0.35),
+          borderRadius: BorderRadius.circular(20.r),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 11.sp,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
       ),
     );
   }

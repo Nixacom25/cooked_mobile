@@ -7,6 +7,7 @@ import '../../core/widgets/terms_validation_modal.dart';
 import '../../widgets/glass_icon_button.dart';
 import '../../widgets/red_header_background.dart';
 import '../../core/theme/app_theme.dart';
+import 'send_feedback_screen.dart';
 
 class HelpCenterScreen extends StatefulWidget {
   const HelpCenterScreen({super.key});
@@ -142,6 +143,18 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
                             title: 'Phone Number',
                             subtitle: 'Send to your phone',
                             onTap: () => _openUrl('tel:+1234567890'),
+                          ),
+                          SizedBox(height: 14.h),
+
+                          // Feedback Card
+                          _buildContactCard(
+                            icon: Icons.chat_bubble_outline_rounded,
+                            title: 'Send Feedback',
+                            subtitle: 'Bugs, ideas, or anything else',
+                            onTap: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (_) => const SendFeedbackScreen()),
+                            ),
                           ),
                           SizedBox(height: 28.h),
 

@@ -13,9 +13,17 @@ class AppColors {
 
 /// Semantic color roles screens should read via `context.colors` instead of
 /// hardcoding hex values, so they automatically follow light/dark mode.
+///
+/// Elevation ladder (both themes): [pageBackground] < [surface] <
+/// [elevatedSurface]. A card sits on the page background one step lighter;
+/// a modal/bottom sheet/dialog sits on a card one step lighter still - this
+/// is what makes dark mode read as layered dark grays instead of one flat
+/// black, matching iOS's own systemBackground / secondarySystemBackground /
+/// tertiarySystemBackground ladder.
 class AppColorTokens extends ThemeExtension<AppColorTokens> {
   final Color pageBackground;
   final Color surface;
+  final Color elevatedSurface;
   final Color textPrimary;
   final Color textSecondary;
   final Color textMuted;
@@ -27,6 +35,7 @@ class AppColorTokens extends ThemeExtension<AppColorTokens> {
   const AppColorTokens({
     required this.pageBackground,
     required this.surface,
+    required this.elevatedSurface,
     required this.textPrimary,
     required this.textSecondary,
     required this.textMuted,
@@ -39,6 +48,7 @@ class AppColorTokens extends ThemeExtension<AppColorTokens> {
   static const light = AppColorTokens(
     pageBackground: Color(0xFFF1F5F9),
     surface: Colors.white,
+    elevatedSurface: Colors.white,
     textPrimary: Color(0xFF0F172A),
     textSecondary: Color(0xFF64748B),
     textMuted: Color(0xFF94A3B8),
@@ -49,13 +59,21 @@ class AppColorTokens extends ThemeExtension<AppColorTokens> {
   );
 
   static const dark = AppColorTokens(
-    pageBackground: Color(0xFF0A0A0A),
-    surface: Color(0xFF161616),
-    textPrimary: Color(0xFFF5F5F5),
+    // Very dark charcoal, not pure black.
+    pageBackground: Color(0xFF0D0D0F),
+    // Cards/sections: one step lighter than the page (iOS
+    // secondarySystemBackground).
+    surface: Color(0xFF1C1C1E),
+    // Modals/sheets/dialogs: one step lighter again (iOS
+    // tertiarySystemBackground), so a sheet visibly separates from the
+    // cards behind it instead of matching them.
+    elevatedSurface: Color(0xFF2C2C2E),
+    // Off-white, not harsh pure white.
+    textPrimary: Color(0xFFF2F2F2),
     textSecondary: Color(0xFF9CA3AF),
     textMuted: Color(0xFF6B7280),
-    border: Color(0xFF27272A),
-    divider: Color(0xFF222222),
+    border: Color(0xFF3A3A3C),
+    divider: Color(0xFF2C2C2E),
     // Slightly brighter/warmer than the light-mode red so buttons still pop
     // with enough contrast against near-black backgrounds.
     accent: Color(0xFFE5323D),
@@ -66,6 +84,7 @@ class AppColorTokens extends ThemeExtension<AppColorTokens> {
   AppColorTokens copyWith({
     Color? pageBackground,
     Color? surface,
+    Color? elevatedSurface,
     Color? textPrimary,
     Color? textSecondary,
     Color? textMuted,
@@ -77,6 +96,7 @@ class AppColorTokens extends ThemeExtension<AppColorTokens> {
     return AppColorTokens(
       pageBackground: pageBackground ?? this.pageBackground,
       surface: surface ?? this.surface,
+      elevatedSurface: elevatedSurface ?? this.elevatedSurface,
       textPrimary: textPrimary ?? this.textPrimary,
       textSecondary: textSecondary ?? this.textSecondary,
       textMuted: textMuted ?? this.textMuted,
@@ -93,6 +113,7 @@ class AppColorTokens extends ThemeExtension<AppColorTokens> {
     return AppColorTokens(
       pageBackground: Color.lerp(pageBackground, other.pageBackground, t)!,
       surface: Color.lerp(surface, other.surface, t)!,
+      elevatedSurface: Color.lerp(elevatedSurface, other.elevatedSurface, t)!,
       textPrimary: Color.lerp(textPrimary, other.textPrimary, t)!,
       textSecondary: Color.lerp(textSecondary, other.textSecondary, t)!,
       textMuted: Color.lerp(textMuted, other.textMuted, t)!,
@@ -235,16 +256,28 @@ class AppTheme {
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
     ),
     popupMenuTheme: PopupMenuThemeData(
-      color: const Color(0xEE1A1A1A),
+      color: AppColorTokens.dark.elevatedSurface,
       surfaceTintColor: Colors.transparent,
       elevation: 12,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
-        side: const BorderSide(
-          color: Color(0x33FFFFFF),
+        side: BorderSide(
+          color: AppColorTokens.dark.border,
           width: 1.2,
         ),
       ),
+    ),
+    // Default AlertDialog/bottom-sheet fill for the (few) call sites that
+    // don't set their own backgroundColor - keeps them one step lighter
+    // than cards instead of falling back to Material's flat colorScheme.surface.
+    dialogTheme: DialogThemeData(
+      backgroundColor: AppColorTokens.dark.elevatedSurface,
+      surfaceTintColor: Colors.transparent,
+    ),
+    bottomSheetTheme: BottomSheetThemeData(
+      backgroundColor: AppColorTokens.dark.elevatedSurface,
+      surfaceTintColor: Colors.transparent,
+      modalBackgroundColor: AppColorTokens.dark.elevatedSurface,
     ),
     extensions: const [AppColorTokens.dark],
   );

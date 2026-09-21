@@ -1529,7 +1529,11 @@ class _IngredientsDetectedCard extends StatelessWidget {
           Container(
             padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
             decoration: BoxDecoration(
-              color: context.colors.pageBackground,
+              // Light mode keeps the original (0xFFFAF5E8) exactly as
+              // designed; only dark mode gets pageBackground.
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? context.colors.pageBackground
+                  : const Color(0xFFFAF5E8),
               borderRadius: BorderRadius.circular(20.r),
             ),
             child: Column(

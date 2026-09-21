@@ -11,6 +11,7 @@ import 'cookbook_service.dart';
 import 'user_service.dart';
 import 'history_service.dart';
 import 'grocery_service.dart';
+import 'push_notification_service.dart';
 import '../core/services/tutorial_service.dart';
 
 class AuthService {
@@ -50,6 +51,9 @@ class AuthService {
     _token = token;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_tokenKey, token);
+    // Fire-and-forget: the FCM token may have been fetched before login (when
+    // registration was a no-op), so re-send it now that we're authenticated.
+    PushNotificationService.instance.registerCurrentToken();
   }
 
   Future<Map<String, dynamic>> register({

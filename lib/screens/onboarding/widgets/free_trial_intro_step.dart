@@ -126,43 +126,47 @@ class _FreeTrialIntroStepState extends State<FreeTrialIntroStep> with SingleTick
                     children: [
                       Positioned.fill(
                         child: Image.asset(
-                          'assets/onboarding/step25.png',
+                          // The jpeg is a dedicated dark-mode version of this
+                          // illustration (dark backdrop, light text) - the png
+                          // alone would show its own light background in dark mode.
+                          Theme.of(context).brightness == Brightness.dark
+                              ? 'assets/onboarding/step25.jpeg'
+                              : 'assets/onboarding/step25.png',
                           fit: BoxFit.cover,
                           alignment: Alignment.center,
                           errorBuilder: (context, error, stackTrace) => Container(
                             color: context.colors.pageBackground,
                             alignment: Alignment.center,
                             child: Icon(Icons.fastfood, color: context.colors.border)))),
-                      // Top White Fade
+                      // Top/Bottom Fades - white in light mode, black in dark
+                      // mode so they blend into the dark jpeg instead of
+                      // leaving a bright white band across it.
                       Positioned(
                         top: 0,
                         left: 0,
                         right: 0,
                         height: 40.h,
                         child: Container(
-                          decoration: const BoxDecoration(
+                          decoration: BoxDecoration(
                             gradient: LinearGradient(
                               begin: Alignment.topCenter,
                               end: Alignment.bottomCenter,
-                              colors: [
-                                Colors.white,
-                                Color(0x00FFFFFF),
-                              ])))),
-                      // Bottom White Fade
+                              colors: Theme.of(context).brightness == Brightness.dark
+                                  ? const [Colors.black, Color(0x00000000)]
+                                  : const [Colors.white, Color(0x00FFFFFF)])))),
                       Positioned(
                         bottom: 0,
                         left: 0,
                         right: 0,
                         height: 50.h,
                         child: Container(
-                          decoration: const BoxDecoration(
+                          decoration: BoxDecoration(
                             gradient: LinearGradient(
                               begin: Alignment.bottomCenter,
                               end: Alignment.topCenter,
-                              colors: [
-                                Colors.white,
-                                Color(0x00FFFFFF),
-                              ])))),
+                              colors: Theme.of(context).brightness == Brightness.dark
+                                  ? const [Colors.black, Color(0x00000000)]
+                                  : const [Colors.white, Color(0x00FFFFFF)])))),
                     ])))),
 
             // 3. Bottom Checklist & Action Button

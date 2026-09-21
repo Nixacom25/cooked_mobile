@@ -32,6 +32,7 @@ import 'screens/profile/subscription_management_screen.dart';
 import 'screens/scan_screen.dart';
 import 'package:cooked/core/services/tutorial_service.dart';
 import 'package:cooked/services/notification_service.dart';
+import 'package:cooked/services/push_notification_service.dart';
 import 'package:cooked/services/history_service.dart';
 import 'package:cooked/services/theme_service.dart';
 import 'package:cooked/services/sharing_service.dart';
@@ -203,18 +204,41 @@ class _CookedAppState extends State<CookedApp> with WidgetsBindingObserver {
     try {
       SharingService.instance.init();
       SharingService.instance.sharedTextNotifier.addListener(_onSharedTextReceived);
-      
+      PushNotificationService.instance.tappedNotificationDataNotifier
+          .addListener(_onPushNotificationTapped);
+
       await Future.wait([
         AuthService.instance.getToken(),
         TutorialService.instance.init(),
         NotificationService.instance.init(),
+        PushNotificationService.instance.init(),
         HistoryService.instance.init(),
         RevenueCatService.instance.initialize(),
       ]);
-      
+
       _initDeepLinks();
     } catch (e) {
       debugPrint('Initialization error: $e');
+    }
+  }
+
+  void _onPushNotificationTapped() {
+    final data = PushNotificationService.instance.tappedNotificationDataNotifier.value;
+    if (data == null) return;
+
+    if (!AuthService.instance.isLoggedIn) return;
+
+    final state = _navigatorKey.currentState;
+    if (state == null) return;
+
+    switch (data['type']) {
+      case 'trial_ends_tomorrow':
+      case 'billing_issue':
+        state.pushNamed(AppRoutes.subscriptionManagement);
+        break;
+      case 'new_device_signin':
+        state.pushNamed(AppRoutes.myAccount);
+        break;
     }
   }
 

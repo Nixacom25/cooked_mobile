@@ -89,12 +89,15 @@ class _TrialStepState extends State<TrialStep> with SingleTickerProviderStateMix
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, child) {
         return Column(
           children: [
-            // 1. Top Flexible Image Area with Top & Bottom White Fades
+            // 1. Top Flexible Image Area with Top & Bottom Fades (white in
+            // light mode, black in dark mode so they blend into the dark
+            // jpeg instead of leaving a bright white band across it)
             Expanded(
               child: FadeTransition(
                 opacity: _titleOpacity,
@@ -102,43 +105,46 @@ class _TrialStepState extends State<TrialStep> with SingleTickerProviderStateMix
                   children: [
                     Positioned.fill(
                       child: Image.asset(
-                        'assets/onboarding/step27.png',
+                        // The jpeg is a dedicated dark-mode version of this
+                        // illustration (dark backdrop, light text) - the png
+                        // alone would show its own light background in dark mode.
+                        isDark
+                            ? 'assets/onboarding/step27.jpeg'
+                            : 'assets/onboarding/step27.png',
                         fit: BoxFit.cover,
                         alignment: Alignment.center,
                         errorBuilder: (context, error, stackTrace) => Container(
                           color: context.colors.pageBackground,
                           alignment: Alignment.center,
                           child: Icon(Icons.fastfood, color: context.colors.border)))),
-                    // Top White Fade
+                    // Top Fade
                     Positioned(
                       top: 0,
                       left: 0,
                       right: 0,
                       height: 40.h,
                       child: Container(
-                        decoration: const BoxDecoration(
+                        decoration: BoxDecoration(
                           gradient: LinearGradient(
                             begin: Alignment.topCenter,
                             end: Alignment.bottomCenter,
-                            colors: [
-                              Colors.white,
-                              Color(0x00FFFFFF),
-                            ])))),
-                    // Bottom White Fade
+                            colors: isDark
+                                ? const [Colors.black, Color(0x00000000)]
+                                : const [Colors.white, Color(0x00FFFFFF)])))),
+                    // Bottom Fade
                     Positioned(
                       bottom: 0,
                       left: 0,
                       right: 0,
                       height: 50.h,
                       child: Container(
-                        decoration: const BoxDecoration(
+                        decoration: BoxDecoration(
                           gradient: LinearGradient(
                             begin: Alignment.bottomCenter,
                             end: Alignment.topCenter,
-                            colors: [
-                              Colors.white,
-                              Color(0x00FFFFFF),
-                            ])))),
+                            colors: isDark
+                                ? const [Colors.black, Color(0x00000000)]
+                                : const [Colors.white, Color(0x00FFFFFF)])))),
                   ]))),
 
             // 2. Lower Content Area (Title, Subtitle, Plan Cards, No Payment Text, Button)

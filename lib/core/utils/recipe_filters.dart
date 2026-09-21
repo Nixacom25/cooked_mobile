@@ -103,14 +103,6 @@ final List<RecipeFilterDef> kRecipeFilters = [
         r.equipment.any((e) => _textHasAny(e, ['sheet pan', 'skillet', 'dutch oven', 'one pot', 'one-pot'])),
   ),
   RecipeFilterDef(
-    id: 'air_fryer',
-    label: 'Air Fryer',
-    emoji: '🌬️',
-    matches: (r) => _textHasAny(r.name, ['air fryer', 'air-fryer']) ||
-        r.equipment.any((e) => _textHasAny(e, ['air fryer', 'air-fryer'])) ||
-        r.steps.any((s) => _textHasAny(s, ['air fryer', 'air-fryer'])),
-  ),
-  RecipeFilterDef(
     id: 'budget_friendly',
     label: 'Budget Friendly',
     emoji: '💰',
@@ -132,12 +124,6 @@ final List<RecipeFilterDef> kRecipeFilters = [
     label: 'Vegan',
     emoji: '🌱',
     matches: (r) => !_ingredientsHaveAny(r, _animalProductKeywords),
-  ),
-  RecipeFilterDef(
-    id: 'kid_friendly',
-    label: 'Kid Friendly',
-    emoji: '🧒',
-    matches: (r) => _categoriesOrNameHasAny(r, ['kid', 'kids', 'family friendly']),
   ),
   RecipeFilterDef(
     id: 'no_cook',

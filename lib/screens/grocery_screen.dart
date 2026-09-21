@@ -517,7 +517,7 @@ class GroceryScreenState extends State<GroceryScreen> with SingleTickerProviderS
                   padding: EdgeInsets.fromLTRB(20.w, 22.h, 20.w, 16.h),
                   decoration: BoxDecoration(
                     color: Theme.of(ctx).brightness == Brightness.dark
-                        ? Colors.black.withValues(alpha: 0.45)
+                        ? context.colors.elevatedSurface.withValues(alpha: 0.75)
                         : Colors.white.withValues(alpha: 0.28),
                     borderRadius: BorderRadius.circular(24.r),
                     border: Border.all(
@@ -565,7 +565,9 @@ class GroceryScreenState extends State<GroceryScreen> with SingleTickerProviderS
                               onPressed: () => Navigator.pop(ctx, false),
                               style: TextButton.styleFrom(
                                 padding: EdgeInsets.symmetric(vertical: 12.h),
-                                backgroundColor: Colors.white.withValues(alpha: 0.5),
+                                backgroundColor: Theme.of(ctx).brightness == Brightness.dark
+                                    ? Colors.white.withValues(alpha: 0.12)
+                                    : Colors.white.withValues(alpha: 0.5),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(16.r),
                                 ),

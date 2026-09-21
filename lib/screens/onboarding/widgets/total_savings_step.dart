@@ -105,7 +105,12 @@ class _TotalSavingsStepState extends State<TotalSavingsStep> with SingleTickerPr
                   },
                   blendMode: BlendMode.dstIn,
                   child: Image.asset(
-                    'assets/onboarding/step8.png',
+                    // The jpeg is a dedicated dark-mode version of this
+                    // illustration (dark backdrop, light text) - the png
+                    // alone would show its own light background in dark mode.
+                    Theme.of(context).brightness == Brightness.dark
+                        ? 'assets/onboarding/step8.jpeg'
+                        : 'assets/onboarding/step8.png',
                     width: double.infinity,
                     height: double.infinity,
                     fit: BoxFit.cover,

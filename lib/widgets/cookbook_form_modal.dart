@@ -155,7 +155,7 @@ class _CookbookFormModalState extends State<CookbookFormModal> {
                       padding: EdgeInsets.symmetric(vertical: 6.h, horizontal: 6.w),
                       decoration: BoxDecoration(
                         color: Theme.of(context).brightness == Brightness.dark
-                            ? Colors.black.withValues(alpha: 0.45)
+                            ? context.colors.elevatedSurface.withValues(alpha: 0.75)
                             : Colors.white.withValues(alpha: 0.28),
                         borderRadius: BorderRadius.circular(24.r),
                         border: Border.all(
@@ -249,6 +249,7 @@ class _CookbookFormModalState extends State<CookbookFormModal> {
 
   Widget _buildContent(BuildContext context, ScrollController? scrollController) {
     final bool canSave = _nameCtrl.text.trim().isNotEmpty && !_isSaving;
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
 
     return ClipRRect(
       borderRadius: widget.isEmbedded
@@ -258,12 +259,18 @@ class _CookbookFormModalState extends State<CookbookFormModal> {
         filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
         child: Container(
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.88),
+            // Same frosted-glass effect in both themes: light glass over a
+            // blurred backdrop in light mode, dark glass in dark mode.
+            color: isDark
+                ? context.colors.elevatedSurface.withValues(alpha: 0.85)
+                : Colors.white.withValues(alpha: 0.88),
             borderRadius: widget.isEmbedded
                 ? BorderRadius.zero
                 : BorderRadius.vertical(top: Radius.circular(32.r)),
             border: Border.all(
-              color: Colors.white.withValues(alpha: 0.5),
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.16)
+                  : Colors.white.withValues(alpha: 0.5),
               width: 1.w,
             ),
           ),
@@ -655,13 +662,16 @@ class _SelectedRecipePill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
       decoration: BoxDecoration(
-        color: context.colors.surface,
+        // Light mode keeps the original colors (0xFFFAF6EE bg, 0xFFF3E8D3
+        // border) exactly as designed; only dark mode gets theme tokens.
+        color: isDark ? context.colors.surface : const Color(0xFFFAF6EE),
         borderRadius: BorderRadius.circular(24.r),
         border: Border.all(
-          color: context.colors.border,
+          color: isDark ? context.colors.border : const Color(0xFFF3E8D3),
           width: 1.w,
         ),
       ),

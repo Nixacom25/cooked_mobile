@@ -107,11 +107,13 @@ class CookbookCardTile extends StatelessWidget {
           Container(
             padding: EdgeInsets.all(12.w),
             decoration: BoxDecoration(
-              // pageBackground (not surface): this tile sits directly on a
-              // surface-colored sheet in both Home's "Your Cookbooks" row
-              // and the "View All" grid, so surface made the card invisible
-              // against its own backdrop.
-              color: context.colors.pageBackground,
+              // Light mode keeps the original cream (0xFFFAF3E6) exactly as
+              // designed. Dark mode alone gets pageBackground (black) since
+              // this tile otherwise sat directly on a surface-colored sheet
+              // and was invisible against its own backdrop there.
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? context.colors.pageBackground
+                  : const Color(0xFFFAF3E6),
               borderRadius: BorderRadius.circular(20.r),
             ),
             child: isMain
@@ -270,7 +272,14 @@ class CookbookCardTile extends StatelessWidget {
               height: 34.r,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                border: Border.all(color: context.colors.surface, width: 2),
+                // Matches the card's own background (see above) so the ring
+                // around overlapping thumbnails blends in both themes.
+                border: Border.all(
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? context.colors.pageBackground
+                      : const Color(0xFFFAF3E6),
+                  width: 2,
+                ),
               ),
               child: ClipOval(
                 child: images[idx].startsWith('http')

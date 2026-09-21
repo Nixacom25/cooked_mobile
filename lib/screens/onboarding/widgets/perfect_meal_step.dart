@@ -113,7 +113,13 @@ class _PerfectMealStepState extends State<PerfectMealStep> with SingleTickerProv
                         scale: _imageScale.value,
                         child: Center(
                           child: Image.asset(
-                            'assets/onboarding/step28.png',
+                            // The jpeg is a dedicated dark-mode version of
+                            // this illustration (dark backdrop, light text) -
+                            // the png alone would show its own light
+                            // background in dark mode.
+                            Theme.of(context).brightness == Brightness.dark
+                                ? 'assets/onboarding/step28.jpeg'
+                                : 'assets/onboarding/step28.png',
                             width: MediaQuery.of(context).size.width,
                             fit: BoxFit.contain,
                             errorBuilder: (context, error, stackTrace) => Container(

@@ -52,7 +52,11 @@ class RecentImportTile extends StatelessWidget {
         imageUrl: path,
         fit: BoxFit.cover,
         placeholder: (_, __) => Container(
-          color: context.colors.surface,
+          // Light mode keeps the original (0xFFF2F1EF) exactly as designed;
+          // only dark mode gets the theme's surface color.
+          color: Theme.of(context).brightness == Brightness.dark
+              ? context.colors.surface
+              : const Color(0xFFF2F1EF),
           child: const Center(
             child: SkeletonLoader(width: 30, height: 30, borderRadius: 15),
           ),
@@ -70,7 +74,11 @@ class RecentImportTile extends StatelessWidget {
       margin: EdgeInsets.only(bottom: 12.h),
       padding: EdgeInsets.all(12.r),
       decoration: BoxDecoration(
-        color: context.colors.surface, // Cream yellow matching mockup
+        // Light mode keeps the original cream (0xFFFAF5E8) exactly as
+        // designed; only dark mode gets the theme's surface color.
+        color: Theme.of(context).brightness == Brightness.dark
+            ? context.colors.surface
+            : const Color(0xFFFAF5E8), // Cream yellow matching mockup
         borderRadius: BorderRadius.circular(20.r),
       ),
       child: Row(

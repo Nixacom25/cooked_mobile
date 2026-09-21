@@ -78,16 +78,24 @@ class _AddToCookbookSheetState extends State<AddToCookbookSheet> {
         maxChildSize: 0.88,
         expand: false,
         builder: (context, scrollController) {
+          final isDark = Theme.of(context).brightness == Brightness.dark;
           return ClipRRect(
             borderRadius: BorderRadius.vertical(top: Radius.circular(28.r)),
             child: BackdropFilter(
               filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
               child: Container(
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.88),
+                  // Same frosted-glass effect in both themes: light glass
+                  // over a blurred backdrop in light mode, dark glass in
+                  // dark mode.
+                  color: isDark
+                      ? context.colors.elevatedSurface.withValues(alpha: 0.85)
+                      : Colors.white.withValues(alpha: 0.88),
                   borderRadius: BorderRadius.vertical(top: Radius.circular(28.r)),
                   border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.5),
+                    color: isDark
+                        ? Colors.white.withValues(alpha: 0.16)
+                        : Colors.white.withValues(alpha: 0.5),
                     width: 1.w,
                   ),
                 ),

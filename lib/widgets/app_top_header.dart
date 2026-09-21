@@ -84,7 +84,7 @@ class _AppTopHeaderState extends State<AppTopHeader> {
                       padding: EdgeInsets.symmetric(vertical: 6.h, horizontal: 6.w),
                       decoration: BoxDecoration(
                         color: Theme.of(context).brightness == Brightness.dark
-                            ? Colors.black.withValues(alpha: 0.45)
+                            ? context.colors.elevatedSurface.withValues(alpha: 0.75)
                             : Colors.white.withValues(alpha: 0.28),
                         borderRadius: BorderRadius.circular(24.r),
                         border: Border.all(

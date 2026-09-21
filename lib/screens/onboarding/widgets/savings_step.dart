@@ -96,13 +96,18 @@ class _SavingsStepState extends State<SavingsStep> with SingleTickerProviderStat
                     },
                     blendMode: BlendMode.dstIn,
                     child: Image.asset(
-                      'assets/onboarding/step4.png',
+                      // The jpeg is a dedicated dark-mode version of this
+                      // illustration (dark backdrop, light text) - the png
+                      // alone would show its own light background in dark mode.
+                      Theme.of(context).brightness == Brightness.dark
+                          ? 'assets/onboarding/step4.jpeg'
+                          : 'assets/onboarding/step4.png',
                       width: double.infinity,
                       height: double.infinity,
                       fit: BoxFit.cover,
                       alignment: Alignment.bottomCenter,
                       errorBuilder: (context, error, stackTrace) => Container(
-                        color: Colors.grey[200],
+                        color: context.colors.pageBackground,
                         alignment: Alignment.center,
                         child: const Text('assets/onboarding/step4.png missing'))))))),
 

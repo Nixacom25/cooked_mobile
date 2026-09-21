@@ -46,7 +46,12 @@ class MealRepetitionIntroStep extends StatelessWidget {
                 ),
                 SizedBox(height: 24.h),
                 Image.asset(
-                  'assets/onboarding/step18.png',
+                  // The jpeg is a dedicated dark-mode version of this
+                  // illustration (dark backdrop, light text) - the png
+                  // alone would show its own light background in dark mode.
+                  Theme.of(context).brightness == Brightness.dark
+                      ? 'assets/onboarding/step18.jpeg'
+                      : 'assets/onboarding/step18.png',
                   width: double.infinity,
                   fit: BoxFit.fitWidth,
                   errorBuilder: (context, error, stackTrace) => Container(

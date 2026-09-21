@@ -1,6 +1,7 @@
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../core/theme/app_theme.dart';
 
 class GlassIconButton extends StatelessWidget {
   final Widget child;
@@ -41,7 +42,7 @@ class GlassIconButton extends StatelessWidget {
     final bool isDark = Theme.of(context).brightness == Brightness.dark;
     final Color fillColor = glassColor ??
         (isDark
-            ? Colors.black.withValues(alpha: 0.35)
+            ? context.colors.elevatedSurface.withValues(alpha: 0.55)
             : Colors.white.withValues(alpha: 0.45));
     final Color borderC = borderColor ??
         (isDark
