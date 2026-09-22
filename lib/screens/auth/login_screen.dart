@@ -10,8 +10,8 @@ import '../../widgets/red_button.dart';
 import '../../widgets/red_header_background.dart';
 import '../../core/utils/error_helper.dart';
 import '../../services/user_service.dart';
-import '../../services/revenuecat_service.dart';
 import '../../core/theme/app_theme.dart';
+import '../../utils/paywall_helper.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -156,14 +156,40 @@ class _LoginScreenState extends State<LoginScreen> {
       // User has active subscription - proceed to home
       nav.pushNamedAndRemoveUntil(AppRoutes.home, (route) => false);
     } catch (e) {
-      if (mounted) {
-        IosToast.show(
-          context,
-          message: "Failed to verify subscription status. Please try again.",
-          type: ToastType.error,
-        );
+      // Instead of showing error and logging out, check if user account exists
+      // and redirect accordingly
+      try {
+        // Try to get user data to determine if account is active
+        await UserService.instance.getCurrentUser();
+        final user = UserService.instance.currentUserNotifier.value;
+        
+        if (user != null) {
+          // Account exists - show paywall modal
+          if (mounted) {
+            PaywallHelper.show(context);
+          }
+        } else {
+          // Account doesn't exist or incomplete - redirect to onboarding
+          if (mounted) {
+            IosToast.show(
+              context,
+              message: "Please complete your profile to continue.",
+              type: ToastType.warning,
+            );
+            nav.pushNamedAndRemoveUntil(AppRoutes.welcome, (route) => false);
+          }
+        }
+      } catch (secondError) {
+        // If we still can't get user data, redirect to onboarding as fallback
+        if (mounted) {
+          IosToast.show(
+            context,
+            message: "Please complete your profile to continue.",
+            type: ToastType.warning,
+          );
+          nav.pushNamedAndRemoveUntil(AppRoutes.welcome, (route) => false);
+        }
       }
-      await AuthService.instance.logout();
     }
   }
 
