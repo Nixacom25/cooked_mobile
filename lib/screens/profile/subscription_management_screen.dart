@@ -232,7 +232,11 @@ class _SubscriptionManagementScreenState
                                   builder: (context, user, _) {
                                     final bool isPremium =
                                         _subscription?['status'] == 'ACTIVE' ||
-                                            _subscription?['status'] == 'TRIAL';
+                                            _subscription?['status'] == 'TRIAL' ||
+                                            _subscription?['status'] == 'INFINITE' ||
+                                            user?['role'] == 'CREATOR' ||
+                                            user?['role'] == 'ADMIN' ||
+                                            user?['role'] == 'EDITOR';
 
                                     return Column(
                                       children: [

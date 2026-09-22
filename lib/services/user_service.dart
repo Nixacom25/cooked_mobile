@@ -19,9 +19,21 @@ class UserService {
     final user = currentUserNotifier.value;
     if (user == null) return false;
 
+    final role = user['role'];
     final status = user['subscriptionStatus'];
     final expiresAtStr = user['subscriptionExpiresAt'];
 
+    // Creators, Admins, and Editors always have infinite subscription
+    if (role == 'CREATOR' || role == 'ADMIN' || role == 'EDITOR') {
+      return true;
+    }
+
+    // Allow if INFINITE
+    if (status == 'INFINITE') {
+      return true;
+    }
+
+    // Allow if status is ACTIVE or TRIAL
     if (status == 'ACTIVE' || status == 'TRIAL') {
       if (expiresAtStr == null || expiresAtStr.isEmpty) return true;
       try {

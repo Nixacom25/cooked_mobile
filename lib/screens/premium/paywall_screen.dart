@@ -45,6 +45,18 @@ class _PaywallScreenState extends State<PaywallScreen> {
     super.initState();
     FocusManager.instance.primaryFocus?.unfocus();
     _selectedPlanId = 'yearly_sub';
+    
+    // Check if user is creator, admin, editor or has INFINITE subscription - they should not see paywall
+    final user = UserService.instance.currentUserNotifier.value;
+    if (user != null && (user['role'] == 'CREATOR' || user['role'] == 'ADMIN' || user['role'] == 'EDITOR' || user['subscriptionStatus'] == 'INFINITE')) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          Navigator.pop(context);
+        }
+      });
+      return;
+    }
+    
     _initIap();
     _loadConfigAndProducts();
     // Refresh user data in background to ensure latest premium status
