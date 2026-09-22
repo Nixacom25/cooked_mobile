@@ -147,6 +147,7 @@ class _ScanAnimationOverlayState extends State<ScanAnimationOverlay> {
     _maxTimeoutTimer?.cancel();
     _imageScanTimer?.cancel();
     _videoController?.dispose();
+    debugPrint('🎬 ScanAnimationOverlay disposed');
     super.dispose();
   }
 
@@ -162,24 +163,41 @@ class _ScanAnimationOverlayState extends State<ScanAnimationOverlay> {
         ? 'assets/animations/cooked_dark.mp4'
         : 'assets/animations/cooked.mp4';
 
+    debugPrint('🎬 Preparing video: $assetPath (isDark: $_isDark)');
+
     // Si le contrôleur n'existe pas ou pointe sur le mauvais asset, on le réinitialise
     if (_videoController == null ||
         _videoController!.dataSource != assetPath) {
       _videoController?.dispose();
       _videoController = VideoPlayerController.asset(assetPath);
-      _videoInitialization = _videoController!.initialize();
+      _videoInitialization = _videoController!.initialize().then((_) {
+        debugPrint('✅ Video initialized successfully: ${_videoController!.value.size}');
+        // Configurer la vidéo en boucle pour iOS
+        _videoController!.setLooping(true);
+      }).catchError((error) {
+        debugPrint('❌ Video initialization failed: $error');
+        throw error;
+      });
     }
   }
 
   Future<void> _showAnimation() async {
     if (_usesVideo) {
       try {
+        debugPrint('🎬 Starting video animation (iOS mode)');
         _prepareVideo();
         await _videoInitialization;
-        await _videoController!.seekTo(Duration.zero);
-        await _videoController!.play();
+        
+        if (_videoController != null && _videoController!.value.isInitialized) {
+          await _videoController!.seekTo(Duration.zero);
+          await _videoController!.play();
+          debugPrint('✅ Video playing successfully');
+        } else {
+          debugPrint('⚠️ Video controller not initialized properly');
+          throw Exception('Video controller not initialized');
+        }
       } catch (error) {
-        debugPrint('Video animation failed, falling back to Rive: $error');
+        debugPrint('❌ Video animation failed, falling back to Rive: $error');
         if (mounted) {
           setState(() {
             _testPlatform = _AnimationPlatform.android;
@@ -447,25 +465,52 @@ class _FallbackScanAnimationState extends State<_FallbackScanAnimation> {
   }
 }
 
-class _VideoAnimation extends StatelessWidget {
+class _VideoAnimation extends StatefulWidget {
   final VideoPlayerController controller;
 
   const _VideoAnimation({required this.controller});
 
   @override
+  State<_VideoAnimation> createState() => _VideoAnimationState();
+}
+
+class _VideoAnimationState extends State<_VideoAnimation> {
+  @override
+  void initState() {
+    super.initState();
+    debugPrint('🎬 _VideoAnimation mounted');
+    // Ensure video continues playing when widget rebuilds
+    if (widget.controller.value.isInitialized && !widget.controller.value.isPlaying) {
+      widget.controller.play();
+    }
+  }
+
+  @override
+  void dispose() {
+    debugPrint('🎬 _VideoAnimation disposing');
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return ColoredBox(
-      color: Theme.of(context).colorScheme.surface, // S'adapte au dark mode au lieu de Colors.white
+      color: Theme.of(context).colorScheme.surface,
       child: ValueListenableBuilder<VideoPlayerValue>(
-        valueListenable: controller,
+        valueListenable: widget.controller,
         builder: (context, value, child) {
-          if (!value.isInitialized) return const SizedBox.expand();
+          if (!value.isInitialized) {
+            debugPrint('⏳ Video not initialized yet, showing placeholder');
+            return const SizedBox.expand();
+          }
+          
+          debugPrint('🎬 Video playing: ${value.isPlaying}, size: ${value.size}');
+          
           return FittedBox(
             fit: BoxFit.cover,
             child: SizedBox(
               width: value.size.width,
               height: value.size.height,
-              child: VideoPlayer(controller),
+              child: VideoPlayer(widget.controller),
             ),
           );
         },
