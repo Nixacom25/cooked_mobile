@@ -173,7 +173,7 @@ class _ScanAnimationOverlayState extends State<ScanAnimationOverlay> {
       _videoInitialization = _videoController!.initialize().then((_) {
         debugPrint('✅ Video initialized successfully: ${_videoController!.value.size}');
         // Configure video to loop for iOS
-        _videoController!.setLooping(true);
+        _videoController!.setLooping(false);
       }).catchError((error) {
         debugPrint('❌ Video initialization failed: $error');
         throw error;
@@ -483,11 +483,22 @@ class _VideoAnimationState extends State<_VideoAnimation> {
     if (widget.controller.value.isInitialized && !widget.controller.value.isPlaying) {
       widget.controller.play();
     }
+    // Listen for video completion to stay on last frame
+    widget.controller.addListener(_onVideoPositionChanged);
+  }
+
+  void _onVideoPositionChanged() {
+    final value = widget.controller.value;
+    if (value.position >= value.duration) {
+      debugPrint('🎬 Video completed, staying on last frame');
+      widget.controller.pause();
+    }
   }
 
   @override
   void dispose() {
     debugPrint('🎬 _VideoAnimation disposing');
+    widget.controller.removeListener(_onVideoPositionChanged);
     super.dispose();
   }
 
@@ -502,9 +513,9 @@ class _VideoAnimationState extends State<_VideoAnimation> {
             debugPrint('⏳ Video not initialized yet, showing placeholder');
             return const SizedBox.expand();
           }
-          
+
           debugPrint('🎬 Video playing: ${value.isPlaying}, size: ${value.size}');
-          
+
           return FittedBox(
             fit: BoxFit.cover,
             child: SizedBox(
