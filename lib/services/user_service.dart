@@ -40,9 +40,16 @@ class UserService {
         final expiresAt = DateTime.parse(expiresAtStr);
         return expiresAt.isAfter(DateTime.now());
       } catch (_) {
+        // If we can't parse the expiration date, allow access as a fallback
         return true;
       }
     }
+    
+    // If subscription status is null or unknown, allow access to prevent blocking legitimate users
+    if (status == null || status.isEmpty) {
+      return true;
+    }
+    
     return false;
   }
 
@@ -271,6 +278,17 @@ class UserService {
       return content.map((e) => ActivityLog.fromJson(e)).toList();
     } else {
       throw Exception('Unable to load activity history.');
+    }
+  }
+
+  Future<void> sendWelcomeEmail() async {
+    final url = Uri.parse('${ApiConfig.baseUrl}/user/send-welcome-email');
+    final response = await http.post(url, headers: await _getHeaders());
+
+    if (response.statusCode != 200) {
+      throw Exception(
+        _extractErrorMessage(response.body, 'Unable to send welcome email.'),
+      );
     }
   }
 

@@ -1260,7 +1260,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                         padding: EdgeInsets.zero,
                         itemCount: _suggestedIngredients.length,
                         separatorBuilder: (_, __) =>
-                            Divider(height: 1, color: Colors.grey[100]),
+                            Divider(height: 1, color: context.colors.border),
                         itemBuilder: (context, i) {
                           final item = _suggestedIngredients[i];
                           return ListTile(
@@ -1322,34 +1322,37 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                       ),
                     ),
                     SizedBox(height: 10.h),
-                    Wrap(
-                      spacing: 8.w,
-                      runSpacing: 8.h,
-                      children: filteredRecent.take(8).map((ing) {
-                        final name = ing['name'] ?? '';
-                        return GestureDetector(
-                          onTap: () {
-                            _ingCtrl.text = name;
-                            _addTypedIngredient();
-                          },
-                          child: Container(
-                            padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
-                            decoration: BoxDecoration(
-                              color: Colors.grey[100],
-                              borderRadius: BorderRadius.circular(20.r),
-                              border: Border.all(color: Colors.grey[200]!),
-                            ),
-                            child: Text(
-                              name,
-                              style: TextStyle(
-                                color: context.colors.textPrimary,
-                                fontSize: 13.sp,
-                                fontWeight: FontWeight.w500,
+                    Container(
+                      width: double.infinity,
+                      child: Wrap(
+                        spacing: 8.w,
+                        runSpacing: 8.h,
+                        children: filteredRecent.take(8).map((ing) {
+                          final name = ing['name'] ?? '';
+                          return GestureDetector(
+                            onTap: () {
+                              _ingCtrl.text = name;
+                              _addTypedIngredient();
+                            },
+                            child: Container(
+                              padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+                              decoration: BoxDecoration(
+                                color: context.colors.surface,
+                                borderRadius: BorderRadius.circular(20.r),
+                                border: Border.all(color: context.colors.border),
+                              ),
+                              child: Text(
+                                name,
+                                style: TextStyle(
+                                  color: context.colors.textPrimary,
+                                  fontSize: 13.sp,
+                                  fontWeight: FontWeight.w500,
+                                ),
                               ),
                             ),
-                          ),
-                        );
-                      }).toList(),
+                          );
+                        }).toList(),
+                      ),
                     ),
                   ];
                 })(),

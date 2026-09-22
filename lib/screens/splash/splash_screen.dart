@@ -35,9 +35,16 @@ class _SplashScreenState extends State<SplashScreen> {
 
         final bool isUserPremium = UserService.instance.isPremium;
         if (!isUserPremium) {
-          await AuthService.instance.logout();
-          if (!mounted) return;
-          Navigator.pushNamedAndRemoveUntil(context, AppRoutes.welcome, (route) => false);
+          // Only logout if we're sure the user exists but isn't premium
+          // If user data is null, let them proceed to home and handle there
+          if (UserService.instance.currentUserNotifier.value != null) {
+            await AuthService.instance.logout();
+            if (!mounted) return;
+            Navigator.pushNamedAndRemoveUntil(context, AppRoutes.welcome, (route) => false);
+          } else {
+            // User data not loaded, proceed to home to handle there
+            Navigator.pushNamedAndRemoveUntil(context, AppRoutes.home, (route) => false);
+          }
         } else {
           Navigator.pushNamedAndRemoveUntil(context, AppRoutes.home, (route) => false);
         }

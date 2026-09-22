@@ -123,7 +123,10 @@ class RecipeService {
         if (errorData['message'] != null) {
           errorMessage = errorData['message'];
         }
-      } catch (_) {}
+        debugPrint('Scan failed: Status ${response.statusCode}, Error: $errorMessage, Body: ${response.body}');
+      } catch (e) {
+        debugPrint('Scan failed: Status ${response.statusCode}, Response: ${response.body}');
+      }
       
       if (response.statusCode == 402) {
         throw Exception('402: $errorMessage');
@@ -979,6 +982,8 @@ class RecipeService {
         final saved = await validateRecipe(recipe.id);
         _publishFavoriteState(saved, true);
       } catch (_) {
+        // Revert the favorite state if validation failed
+        _publishFavoriteState(recipe, false);
         await getMyRecipes(forceRefresh: true);
       }
     } else {

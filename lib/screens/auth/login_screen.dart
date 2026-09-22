@@ -134,17 +134,23 @@ class _LoginScreenState extends State<LoginScreen> {
       final bool isUserPremium = UserService.instance.isPremium;
 
       if (!isUserPremium) {
-        // User is not subscribed - show paywall modal
-        if (mounted) {
-          IosToast.show(
-            context,
-            message: "Please complete your subscription to continue.",
-            type: ToastType.warning,
-          );
-          // Navigate to welcome screen to restart onboarding
-          nav.pushNamedAndRemoveUntil(AppRoutes.welcome, (route) => false);
+        // Only redirect to welcome if user data exists and they're definitely not premium
+        if (UserService.instance.currentUserNotifier.value != null) {
+          // User is not subscribed - show paywall modal
+          if (mounted) {
+            IosToast.show(
+              context,
+              message: "Please complete your subscription to continue.",
+              type: ToastType.warning,
+            );
+            // Navigate to welcome screen to restart onboarding
+            nav.pushNamedAndRemoveUntil(AppRoutes.welcome, (route) => false);
+          }
+          return;
+        } else {
+          // User data not loaded, proceed to home to handle there
+          nav.pushNamedAndRemoveUntil(AppRoutes.home, (route) => false);
         }
-        return;
       }
 
       // User has active subscription - proceed to home

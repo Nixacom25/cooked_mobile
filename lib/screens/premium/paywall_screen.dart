@@ -377,15 +377,26 @@ class _PaywallScreenState extends State<PaywallScreen> {
                       ),
                       if (!isOffer) ...[
                         SizedBox(height: 12.h),
-                        Text(
-                          "\$29.99 per year (\$2.49/mo)",
-                          style: TextStyle(
-                            fontSize: 13.sp,
-                            color: context.colors.textMuted,
-                            fontFamily: 'SF Pro',
-                            fontWeight: FontWeight.w500,
+                        if (_selectedPlanId == 'yearly_sub')
+                          Text(
+                            "no payment due today",
+                            style: TextStyle(
+                              fontSize: 13.sp,
+                              color: context.colors.textMuted,
+                              fontFamily: 'SF Pro',
+                              fontWeight: FontWeight.w500,
+                            ),
+                          )
+                        else
+                          Text(
+                            "\$29.99 per year (\$2.49/mo)",
+                            style: TextStyle(
+                              fontSize: 13.sp,
+                              color: context.colors.textMuted,
+                              fontFamily: 'SF Pro',
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
-                        ),
                       ],
                       SizedBox(height: 12.h),
                       Row(
