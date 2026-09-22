@@ -90,15 +90,6 @@ class _DislikesStepState extends State<DislikesStep> {
   void _handleContinue() {
     // Remove "Other" from selection if it's still there (placeholder)
     _selectedDislikes.remove('Other');
-    
-    if (_selectedDislikes.isEmpty) {
-      HapticFeedback.heavyImpact();
-      IosToast.show(
-        context,
-        message: 'Please select at least one food dislike',
-        type: ToastType.warning);
-      return;
-    }
     widget.onContinue!();
   }
 
