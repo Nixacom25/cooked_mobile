@@ -159,20 +159,20 @@ class _ScanAnimationOverlayState extends State<ScanAnimationOverlay> {
       _AnimationPlatform.ios;
 
   void _prepareVideo() {
-    final assetPath = _isDark
-        ? 'assets/animations/cooked_dark.mp4'
-        : 'assets/animations/cooked.mp4';
+    // Always use light mode video since dark mode video doesn't work properly
+    final assetPath = 'assets/animations/cooked.mp4';
 
     debugPrint('🎬 Preparing video: $assetPath (isDark: $_isDark)');
 
-    // Si le contrôleur n'existe pas ou pointe sur le mauvais asset, on le réinitialise
+    // Always use light mode video since dark mode video doesn't work properly
+    // If the controller doesn't exist or points to the wrong asset, reinitialize it
     if (_videoController == null ||
         _videoController!.dataSource != assetPath) {
       _videoController?.dispose();
       _videoController = VideoPlayerController.asset(assetPath);
       _videoInitialization = _videoController!.initialize().then((_) {
         debugPrint('✅ Video initialized successfully: ${_videoController!.value.size}');
-        // Configurer la vidéo en boucle pour iOS
+        // Configure video to loop for iOS
         _videoController!.setLooping(true);
       }).catchError((error) {
         debugPrint('❌ Video initialization failed: $error');

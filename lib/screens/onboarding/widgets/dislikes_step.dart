@@ -88,6 +88,9 @@ class _DislikesStepState extends State<DislikesStep> {
   }
 
   void _handleContinue() {
+    // Remove "Other" from selection if it's still there (placeholder)
+    _selectedDislikes.remove('Other');
+    
     if (_selectedDislikes.isEmpty) {
       HapticFeedback.heavyImpact();
       IosToast.show(
@@ -104,6 +107,8 @@ class _DislikesStepState extends State<DislikesStep> {
     if (text.isNotEmpty) {
       HapticFeedback.lightImpact();
       setState(() {
+        // Remove "Other" and replace with the specific food
+        _selectedDislikes.remove('Other');
         if (!_suggestions.contains(text)) {
           _suggestions.insert(0, text);
         }
@@ -112,6 +117,13 @@ class _DislikesStepState extends State<DislikesStep> {
       });
       _customController.clear();
       widget.onChanged(_selectedDislikes);
+    } else {
+      // If text is empty, just close the input field and remove "Other" (placeholder)
+      setState(() {
+        _showCustomInput = false;
+        _selectedDislikes.remove('Other');
+      });
+      widget.onChanged(_selectedDislikes);
     }
   }
 
@@ -119,7 +131,18 @@ class _DislikesStepState extends State<DislikesStep> {
     HapticFeedback.selectionClick();
     setState(() {
       _showCustomInput = !_showCustomInput;
+      // When "Other" is selected, automatically add it to selected dislikes
+      if (_showCustomInput) {
+        _selectedDislikes.add('Other');
+        // Add "Other" to suggestions if not already there
+        if (!_suggestions.contains('Other')) {
+          _suggestions.insert(0, 'Other');
+        }
+      } else {
+        _selectedDislikes.remove('Other');
+      }
     });
+    widget.onChanged(_selectedDislikes);
   }
 
   @override
