@@ -935,6 +935,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         cookingTime: _cookingTime,
                         onStartCooking: () {
                           if (mounted) {
+                            // Send welcome email after onboarding completion
+                            UserService.instance.sendWelcomeEmail().catchError((e) {
+                              developer.log('Failed to send welcome email: $e', name: 'OnboardingScreen');
+                            });
                             Navigator.pushNamedAndRemoveUntil(
                               context,
                               AppRoutes.home,
@@ -944,6 +948,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         },
                         onViewMore: () {
                           if (mounted) {
+                            // Send welcome email after onboarding completion
+                            UserService.instance.sendWelcomeEmail().catchError((e) {
+                              developer.log('Failed to send welcome email: $e', name: 'OnboardingScreen');
+                            });
                             Navigator.pushNamedAndRemoveUntil(
                               context,
                               AppRoutes.home,

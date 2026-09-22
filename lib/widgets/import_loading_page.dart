@@ -147,7 +147,7 @@ class _ImportLoadingPageState extends State<ImportLoadingPage>
                     ),
                   ),
 
-                  SizedBox(height: 48.h),
+                  SizedBox(height: 24.h),
 
                   // Titre avec les 3 points qui s'animent
                   SizedBox(
@@ -164,7 +164,7 @@ class _ImportLoadingPageState extends State<ImportLoadingPage>
                     ),
                   ),
 
-                  SizedBox(height: 6.h),
+                  SizedBox(height: 4.h),
 
                   // Sous-titre
                   Text(
