@@ -88,11 +88,18 @@ class _SavingsStepState extends State<SavingsStep> with SingleTickerProviderStat
                   scale: _imageScale.value,
                   child: ShaderMask(
                     shaderCallback: (rect) {
-                      return const LinearGradient(
+                      final isDark = Theme.of(context).brightness == Brightness.dark;
+                      final base = isDark ? Colors.black : Colors.white;
+                      return LinearGradient(
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
-                        colors: [Colors.transparent, Colors.white],
-                        stops: [0.0, 0.25]).createShader(rect);
+                        colors: [
+                          Colors.transparent,
+                          base.withValues(alpha: 0.3),
+                          base.withValues(alpha: 0.6),
+                          base,
+                        ],
+                        stops: const [0.0, 0.15, 0.25, 0.35]).createShader(rect);
                     },
                     blendMode: BlendMode.dstIn,
                     child: Image.asset(

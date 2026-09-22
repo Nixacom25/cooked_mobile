@@ -93,15 +93,18 @@ class _TotalSavingsStepState extends State<TotalSavingsStep> with SingleTickerPr
                 opacity: _imageOpacity,
                 child: ShaderMask(
                   shaderCallback: (rect) {
-                    return const LinearGradient(
+                    final isDark = Theme.of(context).brightness == Brightness.dark;
+                    final base = isDark ? Colors.black : Colors.white;
+                    return LinearGradient(
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
                       colors: [
                         Colors.transparent,
-                        Colors.black,
-                        Colors.black,
+                        base.withValues(alpha: 0.5),
+                        base.withValues(alpha: 0.8),
+                        base,
                       ],
-                      stops: [0.0, 0.38, 0.65]).createShader(rect);
+                      stops: const [0.0, 0.25, 0.45, 0.65]).createShader(rect);
                   },
                   blendMode: BlendMode.dstIn,
                   child: Image.asset(

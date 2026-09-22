@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../../routes/app_routes.dart';
 import '../../services/auth_service.dart';
 import '../../core/widgets/ios_toast.dart';
@@ -9,6 +10,7 @@ import '../../widgets/red_button.dart';
 import '../../widgets/red_header_background.dart';
 import '../../core/utils/error_helper.dart';
 import '../../services/user_service.dart';
+import '../../services/revenuecat_service.dart';
 import '../../core/theme/app_theme.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -127,61 +129,36 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _verifyPremiumAndNavigate(NavigatorState nav) async {
-    // try {
-    //   await UserService.instance.getCurrentUser();
-    //   final bool isUserPremium = UserService.instance.isPremium;
-
-    //   if (!isUserPremium) {
-    //     final token = await AuthService.instance.getToken();
-    //     if (token != null) {
-    //       final paywallService = PaywallService(
-    //         baseUrl: ApiConfig.baseUrl,
-    //         authToken: token,
-    //       );
-    //       if (!mounted) return;
-    //       final purchased = await Navigator.push<bool>(
-    //         context,
-    //         MaterialPageRoute(
-    //           builder: (context) => PaywallScreen(
-    //             paywallService: paywallService,
-    //             flowType: PaywallFlowType.standard,
-    //           ),
-    //           fullscreenDialog: true,
-    //         ),
-    //       );
-    //       if (purchased == true) {
-    //         nav.pushReplacementNamed(AppRoutes.home);
-    //       } else {
-    //         await AuthService.instance.logout();
-    //         if (mounted) {
-    //           IosToast.show(
-    //             context,
-    //             message: "An active subscription is required to log in.",
-    //             type: ToastType.warning,
-    //           );
-    //         }
-    //       }
-    //     } else {
-    //       await AuthService.instance.logout();
-    //       nav.pushReplacementNamed(AppRoutes.welcome);
-    //     }
-    //   } else {
-    //     nav.pushReplacementNamed(AppRoutes.home);
-    //   }
-    // } catch (e) {
-    //   if (mounted) {
-    //     IosToast.show(
-    //       context,
-    //       message: "Failed to verify subscription status.",
-    //       type: ToastType.error,
-    //     );
-    //   }
-    // }
-    
     try {
       await UserService.instance.getCurrentUser();
-    } catch (_) {}
-    nav.pushNamedAndRemoveUntil(AppRoutes.home, (route) => false);
+      final bool isUserPremium = UserService.instance.isPremium;
+
+      if (!isUserPremium) {
+        // User is not subscribed - show paywall modal
+        if (mounted) {
+          IosToast.show(
+            context,
+            message: "Please complete your subscription to continue.",
+            type: ToastType.warning,
+          );
+          // Navigate to welcome screen to restart onboarding
+          nav.pushNamedAndRemoveUntil(AppRoutes.welcome, (route) => false);
+        }
+        return;
+      }
+
+      // User has active subscription - proceed to home
+      nav.pushNamedAndRemoveUntil(AppRoutes.home, (route) => false);
+    } catch (e) {
+      if (mounted) {
+        IosToast.show(
+          context,
+          message: "Failed to verify subscription status. Please try again.",
+          type: ToastType.error,
+        );
+      }
+      await AuthService.instance.logout();
+    }
   }
 
   @override
@@ -419,10 +396,14 @@ class _LoginScreenState extends State<LoginScreen> {
                       SizedBox(height: 12.h),
                       _SocialBtn(
                         label: 'Sign in with Apple',
-                        icon: Image.asset(
-                          'assets/images/apple.png',
+                        icon: SvgPicture.asset(
+                          'assets/icones/apple.svg',
                           width: 20.w,
-                          fit: BoxFit.contain,
+                          height: 20.w,
+                          colorFilter: ColorFilter.mode(
+                            context.colors.textPrimary,
+                            BlendMode.srcIn,
+                          ),
                         ),
                         onTap: _isLoading
                             ? null

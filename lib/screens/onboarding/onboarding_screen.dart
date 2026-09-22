@@ -407,7 +407,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       packageToBuy ??= _packages.first;
 
       try {
-        await RevenueCatService.instance.buyPackage(packageToBuy);
+        final success = await RevenueCatService.instance.buyPackage(packageToBuy);
+        if (!success) {
+          // Purchase was cancelled or failed - reset loading
+          setState(() => _isLoading = false);
+        }
       } catch (e) {
         setState(() => _isLoading = false);
         if (mounted) {

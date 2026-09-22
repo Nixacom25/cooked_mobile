@@ -2,6 +2,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'dart:ui';
 import '../../../widgets/red_button.dart';
 import '../../../widgets/app_loading_indicator.dart';
 import '../../../core/theme/app_theme.dart';
@@ -102,46 +103,38 @@ class _CookingSystemLoadingStepState extends State<CookingSystemLoadingStep> wit
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        // Food Background Image (starts under description with white gradient overlay behind checklist)
+        // Food Background Image (starts under description with gradient mask overlay behind checklist)
         Positioned.fill(
           top: 135.h,
-          child: Stack(
-            children: [
-              Image.asset(
-                // The jpeg is a dedicated dark-mode version of this
-                // illustration (dark backdrop, light text) - the png alone
-                // would show its own light background in dark mode.
-                Theme.of(context).brightness == Brightness.dark
-                    ? 'assets/onboarding/step9.jpeg'
-                    : 'assets/onboarding/step9.png',
-                width: double.infinity,
-                height: double.infinity,
-                fit: BoxFit.cover,
-                alignment: Alignment.topCenter,
-                errorBuilder: (context, error, stackTrace) => Container(
-                  color: context.colors.pageBackground,
-                  alignment: Alignment.center,
-                  child: Icon(Icons.restaurant_menu, size: 60, color: context.colors.border))),
-              // Gradient overlay covering top area behind auto-checks - white
-              // in light mode, black in dark mode so it blends into the dark
-              // jpeg instead of leaving a bright white band across it.
-              Builder(builder: (context) {
-                final isDark = Theme.of(context).brightness == Brightness.dark;
-                final base = isDark ? Colors.black : Colors.white;
-                return Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        base,
-                        base.withValues(alpha: 0.96),
-                        base.withValues(alpha: 0.75),
-                        base.withValues(alpha: 0.0),
-                      ],
-                      stops: const [0.0, 0.22, 0.42, 0.62])));
-              }),
-            ])),
+          child: ShaderMask(
+            shaderCallback: (rect) {
+              return LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.transparent,
+                  context.colors.pageBackground.withValues(alpha: 0.3),
+                  context.colors.pageBackground.withValues(alpha: 0.6),
+                  context.colors.pageBackground,
+                ],
+                stops: const [0.0, 0.15, 0.25, 0.35]).createShader(rect);
+            },
+            blendMode: BlendMode.dstIn,
+            child: Image.asset(
+              // The jpeg is a dedicated dark-mode version of this
+              // illustration (dark backdrop, light text) - the png alone
+              // would show its own light background in dark mode.
+              Theme.of(context).brightness == Brightness.dark
+                  ? 'assets/onboarding/step9.jpeg'
+                  : 'assets/onboarding/step9.png',
+              width: double.infinity,
+              height: double.infinity,
+              fit: BoxFit.cover,
+              alignment: Alignment.topCenter,
+              errorBuilder: (context, error, stackTrace) => Container(
+                color: context.colors.pageBackground,
+                alignment: Alignment.center,
+                child: Icon(Icons.restaurant_menu, size: 60, color: context.colors.border))))),
 
         // Foreground Content (Title, Subtitle, Tasks Checklist)
         Column(

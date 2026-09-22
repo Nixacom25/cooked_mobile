@@ -1,6 +1,7 @@
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'dart:ui';
 import '../../../core/theme/app_theme.dart';
 
 class PerfectMealStep extends StatefulWidget {
@@ -111,22 +112,37 @@ class _PerfectMealStepState extends State<PerfectMealStep> with SingleTickerProv
                       opacity: _imageOpacity,
                       child: Transform.scale(
                         scale: _imageScale.value,
-                        child: Center(
-                          child: Image.asset(
-                            // The jpeg is a dedicated dark-mode version of
-                            // this illustration (dark backdrop, light text) -
-                            // the png alone would show its own light
-                            // background in dark mode.
-                            Theme.of(context).brightness == Brightness.dark
-                                ? 'assets/onboarding/step28.jpeg'
-                                : 'assets/onboarding/step28.png',
-                            width: MediaQuery.of(context).size.width,
-                            fit: BoxFit.contain,
-                            errorBuilder: (context, error, stackTrace) => Container(
-                              height: 300.h,
-                              color: context.colors.pageBackground,
-                              alignment: Alignment.center,
-                              child: Icon(Icons.restaurant, color: context.colors.border)))))),
+                        child: ShaderMask(
+                          shaderCallback: (rect) {
+                            return LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                Colors.transparent,
+                                context.colors.pageBackground.withValues(alpha: 0.3),
+                                context.colors.pageBackground.withValues(alpha: 0.6),
+                                context.colors.pageBackground,
+                              ],
+                              stops: const [0.0, 0.15, 0.25, 0.35]).createShader(rect);
+                          },
+                          blendMode: BlendMode.dstIn,
+                          child: Center(
+                            child: Image.asset(
+                              // The jpeg is a dedicated dark-mode version of
+                              // this illustration (dark backdrop, light text) -
+                              // the png alone would show its own light
+                              // background in dark mode.
+                              Theme.of(context).brightness == Brightness.dark
+                                  ? 'assets/onboarding/step28.jpeg'
+                                  : 'assets/onboarding/step28.png',
+                              width: MediaQuery.of(context).size.width,
+                              fit: BoxFit.contain,
+                              alignment: Alignment.topCenter,
+                              errorBuilder: (context, error, stackTrace) => Container(
+                                height: 300.h,
+                                color: context.colors.pageBackground,
+                                alignment: Alignment.center,
+                                child: Icon(Icons.restaurant, color: context.colors.border))))))),
                     SizedBox(height: 16.h),
 
                     // Why we picked this section

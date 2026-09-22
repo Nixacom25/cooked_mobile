@@ -28,6 +28,7 @@ class _DislikesStepState extends State<DislikesStep> {
   late Set<String> _selectedDislikes;
   late List<String> _suggestions;
   final TextEditingController _customController = TextEditingController();
+  bool _showCustomInput = false;
 
   final List<String> _defaultSuggestions = [
     'Liver', 'Anchovies', 'Black licorice',
@@ -107,10 +108,18 @@ class _DislikesStepState extends State<DislikesStep> {
           _suggestions.insert(0, text);
         }
         _selectedDislikes.add(text);
+        _showCustomInput = false;
       });
       _customController.clear();
       widget.onChanged(_selectedDislikes);
     }
+  }
+
+  void _toggleCustomInput() {
+    HapticFeedback.selectionClick();
+    setState(() {
+      _showCustomInput = !_showCustomInput;
+    });
   }
 
   @override
@@ -259,6 +268,132 @@ class _DislikesStepState extends State<DislikesStep> {
                     );
                   }).toList(),
                 ),
+
+                // Other button for onboarding (not profile)
+                if (!widget.isFromProfile && widget.onContinue != null) ...[
+                  SizedBox(height: 12.h),
+                  GestureDetector(
+                    onTap: _toggleCustomInput,
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 150),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 16.w,
+                        vertical: 10.h,
+                      ),
+                      decoration: BoxDecoration(
+                        color: _showCustomInput 
+                            ? context.colors.accent 
+                            : context.colors.pageBackground,
+                        borderRadius: BorderRadius.circular(20.r),
+                        border: Border.all(
+                          color: _showCustomInput
+                              ? context.colors.accent
+                              : Colors.transparent,
+                          width: 1.5,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'Other',
+                            style: GoogleFonts.rubik(
+                              color: _showCustomInput
+                                  ? Colors.white
+                                  : context.colors.textPrimary,
+                              fontSize: 14.sp,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          SizedBox(width: 6.w),
+                          Icon(
+                            _showCustomInput ? Icons.close : Icons.add,
+                            size: 16.sp,
+                            color: _showCustomInput
+                                ? Colors.white
+                                : context.colors.textPrimary,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+
+                // Custom input field (shown when Other is clicked in onboarding)
+                if (_showCustomInput && !widget.isFromProfile && widget.onContinue != null) ...[
+                  SizedBox(height: 12.h),
+                  Container(
+                    height: 52.h,
+                    decoration: BoxDecoration(
+                      color: context.colors.surface,
+                      borderRadius: BorderRadius.circular(24.r),
+                      border: Border.all(
+                        color: context.colors.border,
+                        width: 1.2,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.04),
+                          blurRadius: 10,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
+                    ),
+                    padding: EdgeInsets.symmetric(horizontal: 16.w),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.block_rounded,
+                          color: context.colors.accent,
+                          size: 20.sp,
+                        ),
+                        SizedBox(width: 12.w),
+                        Expanded(
+                          child: TextField(
+                            controller: _customController,
+                            textCapitalization: TextCapitalization.sentences,
+                            style: GoogleFonts.rubik(
+                              fontSize: 14.sp,
+                              fontWeight: FontWeight.w500,
+                              color: context.colors.textPrimary,
+                            ),
+                            decoration: InputDecoration(
+                              hintText: 'Type a food you dislike (e.g. Pork, Mayo)...',
+                              hintStyle: GoogleFonts.rubik(
+                                fontSize: 14.sp,
+                                color: context.colors.textMuted,
+                              ),
+                              border: InputBorder.none,
+                              enabledBorder: InputBorder.none,
+                              focusedBorder: InputBorder.none,
+                              isDense: true,
+                              contentPadding: EdgeInsets.zero,
+                            ),
+                            onSubmitted: (_) => _addCustomDislike(),
+                          ),
+                        ),
+                        SizedBox(width: 8.w),
+                        GestureDetector(
+                          onTap: _addCustomDislike,
+                          behavior: HitTestBehavior.opaque,
+                          child: Container(
+                            width: 32.r,
+                            height: 32.r,
+                            decoration: BoxDecoration(
+                              color: context.colors.accent,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              Icons.add_rounded,
+                              color: Colors.white,
+                              size: 20.sp,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
 
                 // Cream Banner Token (#FAF4E5) - Displayed ONLY in Onboarding
                 if (!widget.isFromProfile && widget.onContinue != null) ...[

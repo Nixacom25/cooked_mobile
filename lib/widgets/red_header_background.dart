@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'dart:ui';
 import '../core/theme/app_theme.dart';
 
 class RedHeaderBackground extends StatelessWidget {
@@ -68,12 +69,27 @@ class RedHeaderBackground extends StatelessWidget {
             else ...[
               const DecoratedBox(decoration: BoxDecoration(gradient: gradient)),
               // High-resolution Figma mockup background asset fond_page2.png
-              Image.asset(
-                'assets/images/fond_page2.png',
-                fit: BoxFit.cover,
-                width: double.infinity,
-                height: double.infinity,
-                errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
+              ShaderMask(
+                shaderCallback: (rect) {
+                  return LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.transparent,
+                      context.colors.pageBackground.withValues(alpha: 0.3),
+                      context.colors.pageBackground.withValues(alpha: 0.6),
+                      context.colors.pageBackground,
+                    ],
+                    stops: const [0.0, 0.15, 0.25, 0.35]).createShader(rect);
+                },
+                blendMode: BlendMode.dstIn,
+                child: Image.asset(
+                  'assets/images/fond_page2.png',
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                  height: double.infinity,
+                  errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
+                ),
               ),
             ],
 

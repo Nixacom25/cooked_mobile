@@ -80,11 +80,16 @@ class _MealsStepState extends State<MealsStep> with SingleTickerProviderStateMix
                   scale: _imageScale.value,
                   child: ShaderMask(
                     shaderCallback: (rect) {
-                      return const LinearGradient(
+                      return LinearGradient(
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
-                        colors: [Colors.transparent, Colors.white],
-                        stops: [0.0, 0.25]).createShader(rect);
+                        colors: [
+                          Colors.transparent,
+                          context.colors.pageBackground.withValues(alpha: 0.3),
+                          context.colors.pageBackground.withValues(alpha: 0.6),
+                          context.colors.pageBackground,
+                        ],
+                        stops: const [0.0, 0.15, 0.25, 0.35]).createShader(rect);
                     },
                     blendMode: BlendMode.dstIn,
                     child: Image.asset(

@@ -2,6 +2,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'dart:ui';
 import '../../../core/theme/app_theme.dart';
 
 class ProfileSignupStep extends StatefulWidget {
@@ -98,64 +99,42 @@ class _ProfileSignupStepState extends State<ProfileSignupStep>
             Expanded(
               child: Stack(
                 children: [
-                  // Image
+                  // Image with gradient mask (same approach as step 1)
                   Positioned.fill(
                     child: FadeTransition(
                       opacity: _infoOpacity,
                       child: SlideTransition(
                         position: _infoSlide,
-                        child: Image.asset(
-                          // The jpeg is a dedicated dark-mode version of this
-                          // illustration (dark backdrop, light text) - the png
-                          // alone would show its own light background in dark mode.
-                          Theme.of(context).brightness == Brightness.dark
-                              ? 'assets/onboarding/step24.jpeg'
-                              : 'assets/onboarding/step24.png',
-                          fit: BoxFit.cover,
-                          alignment: Alignment.topCenter,
-                          errorBuilder: (context, error, stackTrace) => Container(
-                            color: context.colors.pageBackground,
-                            alignment: Alignment.center,
-                            child: Icon(Icons.fastfood, color: context.colors.border)))))),
-
-                  // Gradient Overlay (opaque at top/bottom fading to
-                  // transparent in the middle) - white in light mode, black
-                  // in dark mode so it blends into the dark jpeg instead of
-                  // leaving a bright white band across it.
-                  Positioned.fill(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: Theme.of(context).brightness == Brightness.dark
-                              ? const [
-                                  Colors.black,
-                                  Colors.black,
-                                  Color(0xFA000000),
-                                  Color(0xD0000000),
-                                  Color(0x50000000),
-                                  Color(0x00000000),
-                                  Color(0x00000000),
-                                  Color(0x90000000),
-                                  Colors.black,
-                                ]
-                              : const [
-                                  Colors.white,
-                                  Colors.white,
-                                  Color(0xFAFFFFFF),
-                                  Color(0xD0FFFFFF),
-                                  Color(0x50FFFFFF),
-                                  Color(0x00FFFFFF),
-                                  Color(0x00FFFFFF),
-                                  Color(0x90FFFFFF),
-                                  Colors.white,
-                                ],
-                          stops: const [0.0, 0.15, 0.25, 0.35, 0.45, 0.60, 0.80, 0.92, 1.0],
-                        ),
-                      ),
-                    ),
-                  ),
+                        child: ShaderMask(
+                          shaderCallback: (rect) {
+                            return LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                Colors.transparent,
+                                context.colors.pageBackground.withValues(alpha: 0.3),
+                                context.colors.pageBackground.withValues(alpha: 0.6),
+                                context.colors.pageBackground,
+                                context.colors.pageBackground.withValues(alpha: 0.6),
+                                context.colors.pageBackground.withValues(alpha: 0.3),
+                                Colors.transparent,
+                              ],
+                              stops: const [0.0, 0.10, 0.15, 0.25, 0.75, 0.85, 1.0]).createShader(rect);
+                          },
+                          blendMode: BlendMode.dstIn,
+                          child: Image.asset(
+                            // The jpeg is a dedicated dark-mode version of this
+                            // illustration (dark backdrop, light text) - the png
+                            // alone would show its own light background in dark mode.
+                            Theme.of(context).brightness == Brightness.dark
+                                ? 'assets/onboarding/step24.jpeg'
+                                : 'assets/onboarding/step24.png',
+                            fit: BoxFit.cover,
+                            alignment: Alignment.topCenter,
+                            errorBuilder: (context, error, stackTrace) => Container(
+                              color: context.colors.pageBackground,
+                              alignment: Alignment.center,
+                              child: Icon(Icons.fastfood, color: context.colors.border))))))),
 
                   // Header Text Section on top of gradient mask
                   Positioned(
@@ -217,7 +196,10 @@ class _ProfileSignupStepState extends State<ProfileSignupStep>
                           onPressed: widget.onSignupApple,
                           icon: 'apple.svg',
                           label: 'Sign in with Apple',
-                          isEnabled: widget.isAppleEnabled))),
+                          isEnabled: widget.isAppleEnabled,
+                          iconColor: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.white
+                              : context.colors.textPrimary))),
                     SizedBox(height: 12.h),
 
                     FadeTransition(

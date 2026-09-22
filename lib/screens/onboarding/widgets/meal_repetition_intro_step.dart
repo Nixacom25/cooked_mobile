@@ -54,6 +54,7 @@ class MealRepetitionIntroStep extends StatelessWidget {
                       : 'assets/onboarding/step18.png',
                   width: double.infinity,
                   fit: BoxFit.fitWidth,
+                  alignment: Alignment.topCenter,
                   errorBuilder: (context, error, stackTrace) => Container(
                     height: 300.h,
                     color: context.colors.pageBackground,

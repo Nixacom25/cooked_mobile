@@ -151,7 +151,7 @@ class _SocialProofStepState extends State<SocialProofStep>
                       child: SlideTransition(
                         position: _subtitleSlide,
                         child: Text(
-                          'stars from thousands\nof food lovers',
+                          'Stars from thousands\nof food lovers',
                           textAlign: TextAlign.center,
                           style: GoogleFonts.rubik(
                             fontSize: 28.sp,
@@ -176,7 +176,7 @@ class _SocialProofStepState extends State<SocialProofStep>
                           child: SlideTransition(
                             position: _reviewSlides[1],
                             child: _buildReviewCard(
-                              name: 'DImmanuel O.',
+                              name: 'Immanuel O.',
                               quote:
                                   '"I finally use the groceries I\nalready have."'))),
                         FadeTransition(

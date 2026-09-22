@@ -89,17 +89,22 @@ class RevenueCatService {
     try {
       CustomerInfo customerInfo = await Purchases.purchasePackage(package);
       bool isSubscribed = customerInfo.entitlements.all[premiumEntitlementId]?.isActive ?? false;
-      
+
       _updateUserPremiumStatus(customerInfo);
 
       if (isSubscribed) {
         onPurchaseSuccess?.call();
         return true;
       }
+      // Purchase succeeded but subscription not active
+      onPurchaseError?.call('Purchase completed but subscription not active');
       return false;
     } on PlatformException catch (e) {
       var errorCode = PurchasesErrorHelper.getErrorCode(e);
-      if (errorCode != PurchasesErrorCode.purchaseCancelledError) {
+      if (errorCode == PurchasesErrorCode.purchaseCancelledError) {
+        // User cancelled - notify UI to reset loading
+        onPurchaseError?.call('cancelled');
+      } else {
         onPurchaseError?.call(e.message ?? 'Purchase error occurred');
       }
       return false;

@@ -63,20 +63,10 @@ class _SplashScreenState extends State<SplashScreen> {
             children: [
               Image.asset(
                 isDark
-                    ? 'assets/images/logo_icon_only_dark.png'
-                    : 'assets/images/logo_icon_only.png',
-                width: 110.w,
+                    ? 'assets/images/logo4.png'
+                    : 'assets/images/logo5.png',
+                width: 220.w,
                 fit: BoxFit.contain,
-              ),
-              SizedBox(height: 14.h),
-              Text(
-                'Cooked',
-                style: TextStyle(
-                  fontFamily: 'Rubik',
-                  fontWeight: FontWeight.w800,
-                  fontSize: 34.sp,
-                  color: isDark ? Colors.white : const Color(0xFF141414),
-                ),
               ),
             ],
           ),

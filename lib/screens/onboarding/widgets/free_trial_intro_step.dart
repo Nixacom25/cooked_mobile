@@ -1,6 +1,7 @@
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'dart:ui';
 import '../../../widgets/red_button.dart';
 import '../../../core/theme/app_theme.dart';
 
@@ -125,48 +126,36 @@ class _FreeTrialIntroStepState extends State<FreeTrialIntroStep> with SingleTick
                   child: Stack(
                     children: [
                       Positioned.fill(
-                        child: Image.asset(
-                          // The jpeg is a dedicated dark-mode version of this
-                          // illustration (dark backdrop, light text) - the png
-                          // alone would show its own light background in dark mode.
-                          Theme.of(context).brightness == Brightness.dark
-                              ? 'assets/onboarding/step25.jpeg'
-                              : 'assets/onboarding/step25.png',
-                          fit: BoxFit.cover,
-                          alignment: Alignment.center,
-                          errorBuilder: (context, error, stackTrace) => Container(
-                            color: context.colors.pageBackground,
-                            alignment: Alignment.center,
-                            child: Icon(Icons.fastfood, color: context.colors.border)))),
-                      // Top/Bottom Fades - white in light mode, black in dark
-                      // mode so they blend into the dark jpeg instead of
-                      // leaving a bright white band across it.
-                      Positioned(
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        height: 40.h,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
+                        child: ShaderMask(
+                          shaderCallback: (rect) {
+                            return LinearGradient(
                               begin: Alignment.topCenter,
                               end: Alignment.bottomCenter,
-                              colors: Theme.of(context).brightness == Brightness.dark
-                                  ? const [Colors.black, Color(0x00000000)]
-                                  : const [Colors.white, Color(0x00FFFFFF)])))),
-                      Positioned(
-                        bottom: 0,
-                        left: 0,
-                        right: 0,
-                        height: 50.h,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.bottomCenter,
-                              end: Alignment.topCenter,
-                              colors: Theme.of(context).brightness == Brightness.dark
-                                  ? const [Colors.black, Color(0x00000000)]
-                                  : const [Colors.white, Color(0x00FFFFFF)])))),
+                              colors: [
+                                Colors.transparent,
+                                context.colors.pageBackground.withValues(alpha: 0.3),
+                                context.colors.pageBackground.withValues(alpha: 0.6),
+                                context.colors.pageBackground,
+                                context.colors.pageBackground.withValues(alpha: 0.6),
+                                context.colors.pageBackground.withValues(alpha: 0.3),
+                                Colors.transparent,
+                              ],
+                              stops: const [0.0, 0.10, 0.15, 0.25, 0.75, 0.85, 1.0]).createShader(rect);
+                          },
+                          blendMode: BlendMode.dstIn,
+                          child: Image.asset(
+                            // The jpeg is a dedicated dark-mode version of this
+                            // illustration (dark backdrop, light text) - the png
+                            // alone would show its own light background in dark mode.
+                            Theme.of(context).brightness == Brightness.dark
+                                ? 'assets/onboarding/step25.jpeg'
+                                : 'assets/onboarding/step25.png',
+                            fit: BoxFit.cover,
+                            alignment: Alignment.center,
+                            errorBuilder: (context, error, stackTrace) => Container(
+                              color: context.colors.pageBackground,
+                              alignment: Alignment.center,
+                              child: Icon(Icons.fastfood, color: context.colors.border))))),
                     ])))),
 
             // 3. Bottom Checklist & Action Button

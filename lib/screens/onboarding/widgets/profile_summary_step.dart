@@ -51,8 +51,6 @@ class _ProfileSummaryStepState extends State<ProfileSummaryStep>
   Timer? _carouselTimer;
 
   final List<String> _recipeImages = [
-    'assets/images/plat1.png',
-    'assets/images/plat2.png',
     'assets/images/plat3.png',
     'assets/images/plat4.png',
     'assets/images/plat5.png',

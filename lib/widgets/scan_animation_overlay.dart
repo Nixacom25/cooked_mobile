@@ -51,19 +51,22 @@ class _ScanAnimationOverlayState extends State<ScanAnimationOverlay> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (_dependenciesResolved) return;
-    _dependenciesResolved = true;
+    
+    final newIsDark = Theme.of(context).brightness == Brightness.dark;
+    if (!_dependenciesResolved || _isDark != newIsDark) {
+      _isDark = newIsDark;
+      _dependenciesResolved = true;
 
-    _isDark = Theme.of(context).brightness == Brightness.dark;
-
-    final isTestEnvironment = WidgetsBinding.instance.runtimeType
-        .toString()
-        .toLowerCase()
-        .contains('test');
-    if (!isTestEnvironment &&
-        (widget.showTestControls ||
-            defaultTargetPlatform == TargetPlatform.iOS)) {
-      _prepareVideo();
+      final isTestEnvironment = WidgetsBinding.instance.runtimeType
+          .toString()
+          .toLowerCase()
+          .contains('test');
+          
+      if (!isTestEnvironment &&
+          (widget.showTestControls ||
+              defaultTargetPlatform == TargetPlatform.iOS)) {
+        _prepareVideo();
+      }
     }
   }
 
@@ -158,8 +161,14 @@ class _ScanAnimationOverlayState extends State<ScanAnimationOverlay> {
     final assetPath = _isDark
         ? 'assets/animations/cooked_dark.mp4'
         : 'assets/animations/cooked.mp4';
-    _videoController ??= VideoPlayerController.asset(assetPath);
-    _videoInitialization ??= _videoController!.initialize();
+
+    // Si le contrôleur n'existe pas ou pointe sur le mauvais asset, on le réinitialise
+    if (_videoController == null ||
+        _videoController!.dataSource != assetPath) {
+      _videoController?.dispose();
+      _videoController = VideoPlayerController.asset(assetPath);
+      _videoInitialization = _videoController!.initialize();
+    }
   }
 
   Future<void> _showAnimation() async {
@@ -446,7 +455,7 @@ class _VideoAnimation extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ColoredBox(
-      color: Colors.white,
+      color: Theme.of(context).colorScheme.surface, // S'adapte au dark mode au lieu de Colors.white
       child: ValueListenableBuilder<VideoPlayerValue>(
         valueListenable: controller,
         builder: (context, value, child) {
@@ -495,6 +504,7 @@ class _ImageScanAnimationState extends State<_ImageScanAnimation>
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final image = widget.imagePath.startsWith('assets/')
         ? Image.asset(widget.imagePath, fit: BoxFit.cover)
         : Image.file(io.File(widget.imagePath), fit: BoxFit.cover);
@@ -508,7 +518,7 @@ class _ImageScanAnimationState extends State<_ImageScanAnimation>
             animation: _controller,
             builder: (context, child) {
               return CustomPaint(
-                painter: _ScanSweepPainter(progress: _controller.value),
+                painter: _ScanSweepPainter(progress: _controller.value, isDark: isDark),
               );
             },
           ),
@@ -520,18 +530,26 @@ class _ImageScanAnimationState extends State<_ImageScanAnimation>
 
 class _ScanSweepPainter extends CustomPainter {
   final double progress;
+  final bool isDark;
 
-  const _ScanSweepPainter({required this.progress});
+  const _ScanSweepPainter({required this.progress, required this.isDark});
 
   @override
   void paint(Canvas canvas, Size size) {
     final scanY = size.height * progress;
+    // Adapt scan color to theme - lighter for dark mode
+    final scanColor = isDark 
+        ? const Color(0xFF4CAF50).withValues(alpha: 0.3)  // Green for dark mode
+        : const Color(0xFF42D77D).withValues(alpha: 0.18); // Original green for light mode
+    
     final tintPaint = Paint()
-      ..color = const Color(0xFF42D77D).withValues(alpha: 0.18);
+      ..color = scanColor;
     canvas.drawRect(Rect.fromLTWH(0, 0, size.width, scanY), tintPaint);
 
     final glowPaint = Paint()
-      ..color = const Color(0xFF42D77D).withValues(alpha: 0.35)
+      ..color = isDark
+          ? const Color(0xFF4CAF50).withValues(alpha: 0.5)
+          : const Color(0xFF42D77D).withValues(alpha: 0.35)
       ..strokeWidth = 14;
     canvas.drawLine(Offset(0, scanY), Offset(size.width, scanY), glowPaint);
 

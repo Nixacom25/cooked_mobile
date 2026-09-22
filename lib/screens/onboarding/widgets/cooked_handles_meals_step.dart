@@ -35,7 +35,7 @@ class CookedHandlesMealsStep extends StatelessWidget {
                             color: context.colors.textPrimary,
                             height: 1.15),
                           children: [
-                            const TextSpan(text: "Cooked handles\nyour "),
+                            const TextSpan(text: "Cooked handles\nall your "),
                             TextSpan(
                               text: "meals",
                               style: TextStyle(color: context.colors.accent)),
@@ -60,6 +60,7 @@ class CookedHandlesMealsStep extends StatelessWidget {
                       : 'assets/onboarding/step19.png',
                   width: double.infinity,
                   fit: BoxFit.fitWidth,
+                  alignment: Alignment.topCenter,
                   errorBuilder: (context, error, stackTrace) => Container(
                     height: 300.h,
                     color: context.colors.pageBackground,
