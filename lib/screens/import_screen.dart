@@ -12,6 +12,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import '../widgets/haptic_context_menu.dart';
 import '../models/view_all_type.dart';
 import '../widgets/import_loading_page.dart';
+import '../widgets/import_fallback_page.dart';
 import '../core/widgets/ios_toast.dart';
 import '../core/utils/error_helper.dart';
 import '../core/utils/tutorial_helper.dart';
@@ -171,7 +172,7 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
     final normalizedUrl = url.trim();
     final uri = Uri.tryParse(normalizedUrl);
     if (uri == null || !uri.hasScheme || (uri.scheme != 'http' && uri.scheme != 'https')) {
-      IosToast.show(context, message: 'This recipe link is unavailable.', type: ToastType.error);
+      IosToast.show(context, message: 'Ce lien de recette n\'est pas disponible.', type: ToastType.error);
       return;
     }
 
@@ -254,10 +255,9 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
         (uri.scheme == 'http' || uri.scheme == 'https') &&
         domainRegex.hasMatch(uri.host);
     if (!isValidRecipeLink) {
-      IosToast.show(
-        context,
-        message: 'Please enter a valid recipe link (e.g. https://example.com/recipe)',
-        type: ToastType.warning,
+      _showImportFallback(
+        failedUrl: trimmedUrl,
+        errorMessage: 'Veuillez entrer un lien de recette valide (ex: https://exemple.com/recette)',
       );
       return;
     }
@@ -299,7 +299,7 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
         arguments: {
           'recipe': existing,
           'isPreview': existing.isSuggested,
-          'infoMessage': 'This recipe already exists in your collection',
+          'infoMessage': 'Cette recette existe déjà dans votre collection',
         },
       );
       setState(() => _isImporting = false);
@@ -317,9 +317,11 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
       final hasRealName = recipe.name.trim().isNotEmpty &&
           !recipe.name.trim().toLowerCase().contains('title of recipe');
       if (!hasContent || !hasRealName) {
-        throw Exception(
-          "We couldn't extract this recipe from that link. Try a different link or paste it manually.",
+        _showImportFallback(
+          failedUrl: url,
+          errorMessage: "Nous n'avons pas pu extraire cette recette de ce lien. La page ne contenait pas suffisamment d'informations sur la recette.",
         );
+        return;
       }
 
       SharingService.instance.consumeSharedText();
@@ -334,23 +336,24 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
 
       IosToast.show(
         context,
-        message: 'Recipe imported successfully!',
+        message: 'Recette importée avec succès!',
         type: ToastType.success,
       );
     } catch (e) {
-      if (!mounted) return;
-      
       // Record import failure
       await ErrorMonitoringService.instance.recordImportFailure(
         url: url,
         reason: e.toString(),
       );
       
+      if (!mounted) return;
+      
       if (PaywallHelper.handleError(context, e)) return;
-      IosToast.show(
-        context,
-        message: ErrorHelper.getFriendlyMessage(e),
-        type: ToastType.error,
+      
+      // Show fallback page for import failures
+      _showImportFallback(
+        failedUrl: url,
+        errorMessage: ErrorHelper.getFriendlyMessage(e),
       );
     } finally {
       if (mounted) {
@@ -448,7 +451,7 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
     if (r.isInCookbook) {
       IosToast.show(
         context,
-        message: "Already in your recipes",
+        message: "Déjà dans vos recettes",
         type: ToastType.success,
       );
       return;
@@ -507,7 +510,7 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
       await RecipeService.instance.getRecentImports(forceRefresh: true);
       if (!mounted) return;
       setState(() {});
-      IosToast.show(context, message: 'Recipe deleted', type: ToastType.success);
+      IosToast.show(context, message: 'Recette supprimée', type: ToastType.success);
     }
   }
 
@@ -579,6 +582,48 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
   void _removeImportSearchOverlay() {
     _importSearchOverlayEntry?.remove();
     _importSearchOverlayEntry = null;
+  }
+
+  void _showImportFallback({
+    required String failedUrl,
+    required String errorMessage,
+  }) {
+    setState(() => _isImporting = false);
+    widget.isImportingNotifier?.value = false;
+
+    if (!mounted) return;
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ImportFallbackPage(
+          failedUrl: failedUrl,
+          errorMessage: errorMessage,
+          onTryAnotherLink: () {
+            Navigator.pop(context);
+            _linkCtrl.clear();
+          },
+          onEnterManually: () {
+            Navigator.pop(context);
+            // Navigate to manual recipe entry (if exists)
+            // For now, just clear the link and show a toast
+            IosToast.show(
+              context,
+              message: 'Saisie manuelle de recette bientôt disponible',
+              type: ToastType.warning,
+            );
+          },
+          onSearchWeb: () {
+            Navigator.pop(context);
+            _toggleSearchModal(true);
+          },
+          onRetry: () {
+            Navigator.pop(context);
+            _importFromUrl(failedUrl);
+          },
+        ),
+      ),
+    );
   }
 
   @override

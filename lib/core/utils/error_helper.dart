@@ -73,8 +73,11 @@ class ErrorHelper {
     if (lower.contains('429') || lower.contains('too many requests') || lower.contains('quota')) {
       return 'Our servers are currently busy. Please try again in a moment.';
     }
-    if (lower.contains('extraction failed')) {
+    if (lower.contains('extraction failed') || lower.contains('extract recipe') || lower.contains('couldn\'t find the complete recipe')) {
       return 'Failed to extract recipe from this link. Please check the URL or try another one.';
+    }
+    if (lower.contains('scraping') || lower.contains('blocking us') || lower.contains('http error')) {
+      return 'Website is blocking access. Please try another source.';
     }
 
     // Fallback logic
