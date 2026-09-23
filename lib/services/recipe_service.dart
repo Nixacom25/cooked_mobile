@@ -10,6 +10,7 @@ import '../models/creator.dart';
 import 'package:cooked/services/auth_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:cooked/services/database_service.dart';
+import 'package:cooked/services/error_monitoring_service.dart';
 
 // Top-level parsing functions for compute()
 List<Recipe> _parseRecipesList(String responseBody) {
@@ -90,6 +91,11 @@ class RecipeService {
         }
       } catch (_) {}
       
+      // Record ingredient detection failure
+      await ErrorMonitoringService.instance.recordIngredientDetectionFailure(
+        reason: errorMessage,
+      );
+      
       if (response.statusCode == 402) {
         throw Exception('402: $errorMessage');
       }
@@ -127,6 +133,12 @@ class RecipeService {
       } catch (e) {
         debugPrint('Scan failed: Status ${response.statusCode}, Response: ${response.body}');
       }
+
+      // Record scan failure
+      await ErrorMonitoringService.instance.recordScanFailure(
+        reason: errorMessage,
+        scanType: 'image',
+      );
       
       if (response.statusCode == 402) {
         throw Exception('402: $errorMessage');
@@ -181,6 +193,12 @@ class RecipeService {
         }
       } catch (_) {}
 
+      // Record scan failure
+      await ErrorMonitoringService.instance.recordScanFailure(
+        reason: errorMessage,
+        scanType: 'typed',
+      );
+
       if (response.statusCode == 402) {
         throw Exception('402: $errorMessage');
       }
@@ -208,6 +226,11 @@ class RecipeService {
           errorMessage = errorData['message'];
         }
       } catch (_) {}
+
+      // Record recipe generation failure
+      await ErrorMonitoringService.instance.recordRecipeGenerationFailure(
+        reason: errorMessage,
+      );
 
       if (response.statusCode == 402) {
         throw Exception('402: $errorMessage');

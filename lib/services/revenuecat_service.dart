@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 import 'user_service.dart';
+import 'error_monitoring_service.dart';
 
 class RevenueCatService {
   RevenueCatService._privateConstructor();
@@ -105,10 +106,18 @@ class RevenueCatService {
         // User cancelled - notify UI to reset loading
         onPurchaseError?.call('cancelled');
       } else {
+        await ErrorMonitoringService.instance.recordPaymentFailure(
+          productId: package.identifier,
+          reason: e.message ?? 'Purchase error occurred',
+        );
         onPurchaseError?.call(e.message ?? 'Purchase error occurred');
       }
       return false;
     } catch (e) {
+      await ErrorMonitoringService.instance.recordPaymentFailure(
+        productId: package.identifier,
+        reason: e.toString(),
+      );
       onPurchaseError?.call(e.toString());
       return false;
     }

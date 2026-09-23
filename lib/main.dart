@@ -1,5 +1,6 @@
 import 'package:cooked/services/auth_service.dart';
 import 'package:cooked/services/revenuecat_service.dart';
+import 'package:cooked/services/error_monitoring_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:app_links/app_links.dart';
@@ -67,6 +68,7 @@ void main() async {
   
   await DatabaseService.instance.init();
   await ThemeService.instance.init();
+  await ErrorMonitoringService.instance.initialize();
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(

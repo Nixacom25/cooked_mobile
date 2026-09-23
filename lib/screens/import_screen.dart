@@ -19,6 +19,7 @@ import '../core/services/tutorial_service.dart';
 import '../core/extensions/string_extensions.dart';
 import '../services/ingredient_service.dart';
 import '../services/sharing_service.dart';
+import '../services/error_monitoring_service.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
@@ -338,6 +339,13 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
       );
     } catch (e) {
       if (!mounted) return;
+      
+      // Record import failure
+      await ErrorMonitoringService.instance.recordImportFailure(
+        url: url,
+        reason: e.toString(),
+      );
+      
       if (PaywallHelper.handleError(context, e)) return;
       IosToast.show(
         context,

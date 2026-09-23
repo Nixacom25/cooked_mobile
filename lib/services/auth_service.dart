@@ -13,6 +13,7 @@ import 'history_service.dart';
 import 'grocery_service.dart';
 import 'push_notification_service.dart';
 import '../core/services/tutorial_service.dart';
+import 'error_monitoring_service.dart';
 
 class AuthService {
   // Singleton pattern
@@ -154,6 +155,12 @@ class AuthService {
         'Registration failed. Please check your information.',
       );
 
+      // Record authentication failure
+      await ErrorMonitoringService.instance.recordAuthFailure(
+        reason: errorMessage,
+        authMethod: provider ?? 'LOCAL',
+      );
+
       bool accountExists = response.statusCode == 409 ||
           errorMessage.toLowerCase().contains('already exists') ||
           errorMessage.toLowerCase().contains('email in use') ||
@@ -213,6 +220,13 @@ class AuthService {
         'Login error [${response.statusCode}]: ${response.body}',
         name: 'AuthService',
       );
+      
+      // Record authentication failure
+      await ErrorMonitoringService.instance.recordAuthFailure(
+        reason: _extractErrorMessage(response.body, 'Invalid credentials'),
+        authMethod: provider,
+      );
+      
       throw Exception(
         _extractErrorMessage(
           response.body,
@@ -300,10 +314,18 @@ class AuthService {
         }
         return data;
       } else {
+        await ErrorMonitoringService.instance.recordAuthFailure(
+          reason: _extractErrorMessage(response.body, 'Incorrect credentials'),
+          authMethod: 'GOOGLE',
+        );
         throw Exception(_extractErrorMessage(response.body, 'Incorrect credentials, please try again'));
       }
     } catch (e) {
       developer.log('DEBUG: Google Sign-In ERROR: $e', name: 'AuthService');
+      await ErrorMonitoringService.instance.recordAuthFailure(
+        reason: e.toString(),
+        authMethod: 'GOOGLE',
+      );
       throw Exception(_extractErrorMessage(e.toString(), 'Incorrect credentials, please try again'));
     }
   }
@@ -394,6 +416,10 @@ class AuthService {
         }
         return data;
       } else {
+        await ErrorMonitoringService.instance.recordAuthFailure(
+          reason: _extractErrorMessage(response.body, 'Incorrect credentials'),
+          authMethod: 'APPLE',
+        );
         throw Exception(
           _extractErrorMessage(
             response.body,
@@ -403,6 +429,10 @@ class AuthService {
       }
     } catch (e) {
       developer.log('Apple Sign-In Error: $e', name: 'AuthService');
+      await ErrorMonitoringService.instance.recordAuthFailure(
+        reason: e.toString(),
+        authMethod: 'APPLE',
+      );
       throw Exception(
         _extractErrorMessage(
           e.toString(),
