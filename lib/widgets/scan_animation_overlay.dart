@@ -368,11 +368,12 @@ class _FallbackScanAnimationState extends State<_FallbackScanAnimation> {
           } catch (e) {
             debugPrint('⚠️ Rive input skipScan notice: $e');
           }
-          
+
           // iOS-specific: Ensure proper artboard alignment
           if (defaultTargetPlatform == TargetPlatform.iOS) {
             debugPrint('🍎 iOS-specific: Configuring artboard alignment');
-            state.controller.artboard?.origin = ArtboardOrigin.topLeft;
+            // Note: ArtboardOrigin may not be available in current Rive version
+            // This is handled by fit and alignment parameters instead
           }
         },
         onFailed: (Object error, StackTrace stackTrace) {

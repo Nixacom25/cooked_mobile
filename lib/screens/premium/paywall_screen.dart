@@ -466,22 +466,28 @@ class _PaywallScreenState extends State<PaywallScreen> {
     if (_offerings == null || _offerings!.current == null) return '';
     try {
       final current = _offerings!.current!;
-      
+
       // Try to find the package by product identifier
       for (var package in current.availablePackages) {
         if (package.storeProduct.identifier == id) {
           final introPrice = package.storeProduct.introductoryPrice;
-          if (introPrice != null && introPrice.period > 0) {
-            return '${introPrice.period} days free';
+          if (introPrice != null && introPrice.period != null && introPrice.period.isNotEmpty) {
+            final periodValue = int.tryParse(introPrice.period);
+            if (periodValue != null && periodValue > 0) {
+              return '${introPrice.period} days free';
+            }
           }
         }
       }
-      
+
       // Fallback to annual/monthly if direct match fails
       if (id == 'yearly_sub' && current.annual != null) {
         final introPrice = current.annual!.storeProduct.introductoryPrice;
-        if (introPrice != null && introPrice.period > 0) {
-          return '${introPrice.period} days free';
+        if (introPrice != null && introPrice.period != null && introPrice.period.isNotEmpty) {
+          final periodValue = int.tryParse(introPrice.period);
+          if (periodValue != null && periodValue > 0) {
+            return '${introPrice.period} days free';
+          }
         }
       }
     } catch (_) {}

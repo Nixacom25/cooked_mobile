@@ -4,7 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:purchases_flutter/purchases_flutter.dart';
-import 'core/api_config.dart';
+import '../core/api_config.dart';
 import 'auth_service.dart';
 import 'user_service.dart';
 import 'error_monitoring_service.dart';
@@ -182,9 +182,9 @@ class RevenueCatService {
 
       final Map<String, dynamic> subscriptionData = {
         'isActive': entitlementInfo?.isActive ?? false,
-        'expirationDate': entitlementInfo?.expirationDate?.toIso8601String(),
+        'expirationDate': entitlementInfo?.expirationDate ?? '',
         'productId': entitlementInfo?.productIdentifier,
-        'latestPurchaseDate': entitlementInfo?.latestPurchaseDate?.toIso8601String(),
+        'latestPurchaseDate': entitlementInfo?.latestPurchaseDate ?? '',
         'willRenew': entitlementInfo?.willRenew,
         'periodType': entitlementInfo?.periodType?.toString(),
         'revenueCatCustomerId': customerInfo.originalAppUserId,
