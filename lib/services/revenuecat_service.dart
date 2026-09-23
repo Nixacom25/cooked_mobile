@@ -1,7 +1,11 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:http/http.dart' as http;
 import 'package:purchases_flutter/purchases_flutter.dart';
+import 'core/api_config.dart';
+import 'auth_service.dart';
 import 'user_service.dart';
 import 'error_monitoring_service.dart';
 
@@ -154,8 +158,53 @@ class RevenueCatService {
 
   void _updateUserPremiumStatus(CustomerInfo customerInfo) {
     final bool isSubscribed = customerInfo.entitlements.all[premiumEntitlementId]?.isActive ?? false;
+    final entitlementInfo = customerInfo.entitlements.all[premiumEntitlementId];
+    
     if (isSubscribed) {
       UserService.instance.updateLocalUserPremiumStatus(true);
+      
+      // Sync subscription details with backend
+      _syncSubscriptionWithBackend(customerInfo, entitlementInfo);
+    } else {
+      UserService.instance.updateLocalUserPremiumStatus(false);
+      
+      // Check if subscription expired and sync with backend
+      if (entitlementInfo != null && entitlementInfo.expirationDate != null) {
+        _syncSubscriptionWithBackend(customerInfo, entitlementInfo);
+      }
+    }
+  }
+
+  Future<void> _syncSubscriptionWithBackend(CustomerInfo customerInfo, EntitlementInfo? entitlementInfo) async {
+    try {
+      final user = UserService.instance.currentUserNotifier.value;
+      if (user == null || user['id'] == null) return;
+
+      final Map<String, dynamic> subscriptionData = {
+        'isActive': entitlementInfo?.isActive ?? false,
+        'expirationDate': entitlementInfo?.expirationDate?.toIso8601String(),
+        'productId': entitlementInfo?.productIdentifier,
+        'latestPurchaseDate': entitlementInfo?.latestPurchaseDate?.toIso8601String(),
+        'willRenew': entitlementInfo?.willRenew,
+        'periodType': entitlementInfo?.periodType?.toString(),
+        'revenueCatCustomerId': customerInfo.originalAppUserId,
+      };
+
+      // Send subscription data to backend
+      final authToken = await AuthService.instance.getToken();
+      if (authToken == null || authToken.isEmpty) return;
+
+      final response = await http.post(
+        Uri.parse('${ApiConfig.baseUrl}/user/sync-subscription'),
+        headers: ApiConfig.authHeaders(authToken),
+        body: jsonEncode(subscriptionData),
+      );
+
+      if (response.statusCode == 200) {
+        debugPrint('Subscription synced with backend successfully');
+      }
+    } catch (e) {
+      debugPrint('Failed to sync subscription with backend: $e');
     }
   }
 }

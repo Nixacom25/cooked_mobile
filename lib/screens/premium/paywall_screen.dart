@@ -112,6 +112,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
           config = data;
           _offerings = offerings;
           if (offerings != null && offerings.current != null) {
+            // Prefer annual package, fallback to first available
             _selectedPackage = offerings.current?.annual ?? offerings.current?.availablePackages.firstOrNull;
           }
           isLoading = false;
@@ -293,7 +294,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                           ),
                           subPrice: !isOffer ? '(\$29.99 / year)' : null,
                           isSelected: _selectedPlanId == 'yearly_sub',
-                          badge: isOffer ? '33% OFF' : 'BEST VALUE',
+                          badge: isOffer ? '33% OFF' : (_getTrialPeriod('yearly_sub').isNotEmpty ? _getTrialPeriod('yearly_sub') : 'BEST VALUE'),
                           color: primaryColor,
                         ),
                       ),
@@ -442,6 +443,15 @@ class _PaywallScreenState extends State<PaywallScreen> {
     if (_offerings == null || _offerings!.current == null) return defaultPrice;
     try {
       final current = _offerings!.current!;
+      
+      // Try to find the package by product identifier
+      for (var package in current.availablePackages) {
+        if (package.storeProduct.identifier == id) {
+          return package.storeProduct.priceString;
+        }
+      }
+      
+      // Fallback to annual/monthly if direct match fails
       if (id == 'yearly_sub' && current.annual != null) {
         return current.annual!.storeProduct.priceString;
       }
@@ -450,6 +460,55 @@ class _PaywallScreenState extends State<PaywallScreen> {
       }
     } catch (_) {}
     return defaultPrice;
+  }
+
+  String _getTrialPeriod(String id) {
+    if (_offerings == null || _offerings!.current == null) return '';
+    try {
+      final current = _offerings!.current!;
+      
+      // Try to find the package by product identifier
+      for (var package in current.availablePackages) {
+        if (package.storeProduct.identifier == id) {
+          final introPrice = package.storeProduct.introductoryPrice;
+          if (introPrice != null && introPrice.period > 0) {
+            return '${introPrice.period} days free';
+          }
+        }
+      }
+      
+      // Fallback to annual/monthly if direct match fails
+      if (id == 'yearly_sub' && current.annual != null) {
+        final introPrice = current.annual!.storeProduct.introductoryPrice;
+        if (introPrice != null && introPrice.period > 0) {
+          return '${introPrice.period} days free';
+        }
+      }
+    } catch (_) {}
+    return '';
+  }
+
+  String _getProductPeriod(String id) {
+    if (_offerings == null || _offerings!.current == null) return '';
+    try {
+      final current = _offerings!.current!;
+      
+      // Try to find the package by product identifier
+      for (var package in current.availablePackages) {
+        if (package.storeProduct.identifier == id) {
+          return package.packageType.toString().split('.').last.toUpperCase();
+        }
+      }
+      
+      // Fallback to annual/monthly if direct match fails
+      if (id == 'yearly_sub' && current.annual != null) {
+        return current.annual!.packageType.toString().split('.').last.toUpperCase();
+      }
+      if (id == 'monthly_sub' && current.monthly != null) {
+        return current.monthly!.packageType.toString().split('.').last.toUpperCase();
+      }
+    } catch (_) {}
+    return '';
   }
 
   Widget _buildTimelineItem({
@@ -640,10 +699,22 @@ class _PaywallScreenState extends State<PaywallScreen> {
       
       if (packageToBuy == null && _offerings?.current != null) {
         final current = _offerings!.current!;
-        if (_selectedPlanId == 'yearly_sub') {
-          packageToBuy = current.annual ?? current.availablePackages.firstOrNull;
-        } else {
-          packageToBuy = current.monthly ?? current.availablePackages.lastOrNull;
+        
+        // Find package by product identifier
+        for (var package in current.availablePackages) {
+          if (package.storeProduct.identifier == _selectedPlanId) {
+            packageToBuy = package;
+            break;
+          }
+        }
+        
+        // Fallback to annual/monthly if direct match fails
+        if (packageToBuy == null) {
+          if (_selectedPlanId == 'yearly_sub') {
+            packageToBuy = current.annual ?? current.availablePackages.firstOrNull;
+          } else {
+            packageToBuy = current.monthly ?? current.availablePackages.lastOrNull;
+          }
         }
       }
 
