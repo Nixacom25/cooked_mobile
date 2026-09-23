@@ -15,15 +15,18 @@ class SendFeedbackScreen extends StatefulWidget {
 }
 
 class _SendFeedbackScreenState extends State<SendFeedbackScreen> {
-  static const _topics = [
-    'General Feedback',
-    'Bug Report',
-    'Feature Request',
-    'Billing Question',
+  static const _categories = [
+    'Account',
+    'Payment',
+    'Scan',
+    'Import',
+    'Recipe',
+    'Shopping',
+    'Other',
   ];
 
   final _messageCtrl = TextEditingController();
-  String _topic = _topics.first;
+  String _category = _categories.first;
   bool _sending = false;
 
   @override
@@ -45,6 +48,7 @@ class _SendFeedbackScreenState extends State<SendFeedbackScreen> {
             .join(' ')
         .trim();
     final email = user?['email'] as String?;
+    final userId = user?['id'] as String?;
 
     if (email == null || email.isEmpty) {
       IosToast.show(context, message: 'Could not find your account email.', type: ToastType.error);
@@ -56,8 +60,10 @@ class _SendFeedbackScreenState extends State<SendFeedbackScreen> {
       await SupportService.instance.submitFeedback(
         name: name.isEmpty ? 'Cooked user' : name,
         email: email,
-        subject: _topic,
+        subject: _category,
         message: message,
+        userId: userId,
+        category: _category,
       );
       if (!mounted) return;
       IosToast.show(context, message: 'Thanks! Your feedback has been sent.', type: ToastType.success);
@@ -101,7 +107,7 @@ class _SendFeedbackScreenState extends State<SendFeedbackScreen> {
                         ),
                         Expanded(
                           child: Text(
-                            'Send Feedback',
+                            'Contact Support',
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontFamily: 'Rubik',
@@ -122,7 +128,7 @@ class _SendFeedbackScreenState extends State<SendFeedbackScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            "We'd love to hear from you 💬\nBugs, ideas, or just how you're liking Cooked.",
+                            "We'd love to hear from you 💬\nDescribe your problem and we'll help you as soon as possible.",
                             style: TextStyle(
                               fontFamily: 'Rubik',
                               fontSize: 15.sp,
@@ -133,7 +139,7 @@ class _SendFeedbackScreenState extends State<SendFeedbackScreen> {
                           SizedBox(height: 24.h),
 
                           Text(
-                            'Topic',
+                            'Category',
                             style: TextStyle(
                               fontFamily: 'Rubik',
                               fontWeight: FontWeight.w700,
@@ -145,10 +151,10 @@ class _SendFeedbackScreenState extends State<SendFeedbackScreen> {
                           Wrap(
                             spacing: 8.w,
                             runSpacing: 8.h,
-                            children: _topics.map((topic) {
-                              final selected = topic == _topic;
+                            children: _categories.map((category) {
+                              final selected = category == _category;
                               return GestureDetector(
-                                onTap: () => setState(() => _topic = topic),
+                                onTap: () => setState(() => _category = category),
                                 child: Container(
                                   padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 9.h),
                                   decoration: BoxDecoration(
@@ -156,7 +162,7 @@ class _SendFeedbackScreenState extends State<SendFeedbackScreen> {
                                     borderRadius: BorderRadius.circular(20.r),
                                   ),
                                   child: Text(
-                                    topic,
+                                    category,
                                     style: TextStyle(
                                       fontFamily: 'Rubik',
                                       fontWeight: FontWeight.w600,
@@ -190,7 +196,7 @@ class _SendFeedbackScreenState extends State<SendFeedbackScreen> {
                               maxLines: 6,
                               style: TextStyle(fontFamily: 'Rubik', fontSize: 14.sp, color: context.colors.textPrimary),
                               decoration: InputDecoration(
-                                hintText: "Tell us what's on your mind...",
+                                hintText: "Describe your problem...",
                                 hintStyle: TextStyle(fontFamily: 'Rubik', fontSize: 14.sp, color: context.colors.textMuted),
                                 border: InputBorder.none,
                                 contentPadding: EdgeInsets.all(16.w),
@@ -216,7 +222,7 @@ class _SendFeedbackScreenState extends State<SendFeedbackScreen> {
                                       child: const CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white),
                                     )
                                   : Text(
-                                      'Send Feedback',
+                                      'Contact Support',
                                       style: TextStyle(fontFamily: 'Rubik', fontWeight: FontWeight.w700, fontSize: 15.sp),
                                     ),
                             ),
