@@ -292,6 +292,19 @@ class UserService {
     }
   }
 
+  Future<void> updateLastActive() async {
+    try {
+      final url = Uri.parse('${ApiConfig.baseUrl}/user/last-active');
+      final response = await http.post(url, headers: await _getHeaders());
+
+      if (response.statusCode != 200) {
+        debugPrint('Failed to update last active: ${response.statusCode}');
+      }
+    } catch (e) {
+      debugPrint('Error updating last active: $e');
+    }
+  }
+
   String _extractErrorMessage(String responseBody, String defaultMessage) {
     try {
       final decoded = jsonDecode(responseBody);

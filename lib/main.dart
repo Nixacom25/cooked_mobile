@@ -233,6 +233,15 @@ class _CookedAppState extends State<CookedApp> with WidgetsBindingObserver {
     final state = _navigatorKey.currentState;
     if (state == null) return;
 
+    // Handle deep link from notification campaigns
+    if (data.containsKey('deepLink') && data['deepLink'] != null) {
+      final deepLink = data['deepLink'] as String;
+      debugPrint("CookedApp: Handling deep link from push notification: $deepLink");
+      _handleDeepLink(deepLink);
+      return;
+    }
+
+    // Handle legacy notification types
     switch (data['type']) {
       case 'trial_ends_tomorrow':
       case 'billing_issue':
