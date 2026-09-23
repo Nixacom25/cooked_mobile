@@ -4,10 +4,10 @@ import 'package:flutter/foundation.dart' show defaultTargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:rive/rive.dart';
-import 'package:video_player/video_player.dart';
 import '../models/recipe.dart';
 import '../core/widgets/ios_toast.dart';
 import '../core/theme/app_theme.dart';
+import '../services/error_monitoring_service.dart';
 
 enum _AnimationPlatform { ios, android }
 
@@ -41,8 +41,6 @@ class _ScanAnimationOverlayState extends State<ScanAnimationOverlay> {
   bool _completionRequested = false;
   bool _showRive = false;
   _AnimationPlatform? _testPlatform;
-  VideoPlayerController? _videoController;
-  Future<void>? _videoInitialization;
   bool _isDark = false;
   bool _dependenciesResolved = false;
 
@@ -56,17 +54,6 @@ class _ScanAnimationOverlayState extends State<ScanAnimationOverlay> {
     if (!_dependenciesResolved || _isDark != newIsDark) {
       _isDark = newIsDark;
       _dependenciesResolved = true;
-
-      final isTestEnvironment = WidgetsBinding.instance.runtimeType
-          .toString()
-          .toLowerCase()
-          .contains('test');
-          
-      if (!isTestEnvironment &&
-          (widget.showTestControls ||
-              defaultTargetPlatform == TargetPlatform.iOS)) {
-        _prepareVideo();
-      }
     }
   }
 
@@ -76,11 +63,9 @@ class _ScanAnimationOverlayState extends State<ScanAnimationOverlay> {
 
     _showRive = widget.skipImageAnalysis;
     if (widget.skipImageAnalysis) {
-      if (defaultTargetPlatform == TargetPlatform.iOS) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) _showAnimation();
-        });
-      }
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _showAnimation();
+      });
     } else {
       _imageScanTimer = Timer(const Duration(seconds: 3), () {
         _showAnimation();
@@ -146,65 +131,13 @@ class _ScanAnimationOverlayState extends State<ScanAnimationOverlay> {
     _minAnimationTimer?.cancel();
     _maxTimeoutTimer?.cancel();
     _imageScanTimer?.cancel();
-    _videoController?.dispose();
     debugPrint('🎬 ScanAnimationOverlay disposed');
     super.dispose();
   }
 
-  bool get _usesVideo =>
-      (_testPlatform ??
-          (defaultTargetPlatform == TargetPlatform.iOS
-              ? _AnimationPlatform.ios
-              : _AnimationPlatform.android)) ==
-      _AnimationPlatform.ios;
-
-  void _prepareVideo() {
-    // Always use light mode video since dark mode video doesn't work properly
-    final assetPath = 'assets/animations/cooked.mp4';
-
-    debugPrint('🎬 Preparing video: $assetPath (isDark: $_isDark)');
-
-    // Always use light mode video since dark mode video doesn't work properly
-    // If the controller doesn't exist or points to the wrong asset, reinitialize it
-    if (_videoController == null ||
-        _videoController!.dataSource != assetPath) {
-      _videoController?.dispose();
-      _videoController = VideoPlayerController.asset(assetPath);
-      _videoInitialization = _videoController!.initialize().then((_) {
-        debugPrint('✅ Video initialized successfully: ${_videoController!.value.size}');
-        // Configure video to loop for iOS
-        _videoController!.setLooping(false);
-      }).catchError((error) {
-        debugPrint('❌ Video initialization failed: $error');
-        throw error;
-      });
-    }
-  }
+  bool get _usesVideo => false; // Use Rive animations on both iOS and Android
 
   Future<void> _showAnimation() async {
-    if (_usesVideo) {
-      try {
-        debugPrint('🎬 Starting video animation (iOS mode)');
-        _prepareVideo();
-        await _videoInitialization;
-        
-        if (_videoController != null && _videoController!.value.isInitialized) {
-          await _videoController!.seekTo(Duration.zero);
-          await _videoController!.play();
-          debugPrint('✅ Video playing successfully');
-        } else {
-          debugPrint('⚠️ Video controller not initialized properly');
-          throw Exception('Video controller not initialized');
-        }
-      } catch (error) {
-        debugPrint('❌ Video animation failed, falling back to Rive: $error');
-        if (mounted) {
-          setState(() {
-            _testPlatform = _AnimationPlatform.android;
-          });
-        }
-      }
-    }
     if (mounted) {
       setState(() {
         _showRive = true;
@@ -241,7 +174,7 @@ class _ScanAnimationOverlayState extends State<ScanAnimationOverlay> {
     if (!widget.skipImageAnalysis) {
       await Future<void>.delayed(const Duration(seconds: 3));
       if (mounted) await _showAnimation();
-    } else if (selectedPlatform == _AnimationPlatform.ios) {
+    } else {
       await _showAnimation();
     }
   }
@@ -262,12 +195,10 @@ class _ScanAnimationOverlayState extends State<ScanAnimationOverlay> {
             ),
           if (_showRive)
             Positioned.fill(
-              child: _usesVideo
-                  ? _VideoAnimation(controller: _videoController!)
-                  : _FallbackScanAnimation(
-                      skipImageAnalysis: widget.skipImageAnalysis,
-                      isDark: _isDark,
-                    ),
+              child: _FallbackScanAnimation(
+                skipImageAnalysis: widget.skipImageAnalysis,
+                isDark: _isDark,
+              ),
             ),
           if (widget.showTestControls)
             Positioned(
@@ -353,6 +284,7 @@ class _FallbackScanAnimationState extends State<_FallbackScanAnimation> {
       // 1. Utilisation de Factory.flutter pour être compatible avec Impeller (iOS)
       // 2. Suppression de l'appel manuel ..file() qui provoquait une race condition
       // 3. Le même Rive sans scan est utilisé pour Scan, Type Ingredients et Saved.
+      // 4. iOS-specific: Use same Rive files but with proper configuration
       _fileLoader = FileLoader.fromAsset(
         widget.isDark
             ? 'assets/animations/cooked_rkdarkm.riv'
@@ -364,7 +296,7 @@ class _FallbackScanAnimationState extends State<_FallbackScanAnimation> {
       // a few seconds - e.g. a native-side failure that never surfaces as a
       // catchable Dart error and leaves RiveWidgetBuilder stuck in its
       // "loading" state - force the native spinner instead of a blank screen.
-      _riveLoadTimeoutTimer = Timer(const Duration(seconds: 5), () {
+      _riveLoadTimeoutTimer = Timer(const Duration(seconds: 8), () {
         if (mounted && !_riveLoaded) {
           debugPrint('⏱️ Rive load timed out, falling back to native spinner');
           if (context.mounted) {
@@ -406,6 +338,10 @@ class _FallbackScanAnimationState extends State<_FallbackScanAnimation> {
           debugPrint(
             '✅ Rive animation cooked_no_scan.riv loaded using Factory.flutter!',
           );
+          debugPrint('📱 Platform: ${defaultTargetPlatform.name}');
+          debugPrint('🎨 Artboard size: ${state.controller.artboard?.bounds}');
+          debugPrint('🔧 State machine inputs: ${state.controller.stateMachine?.inputs}');
+          
           _riveLoaded = true;
           _riveLoadTimeoutTimer?.cancel();
           final sm = state.controller.stateMachine;
@@ -414,8 +350,9 @@ class _FallbackScanAnimationState extends State<_FallbackScanAnimation> {
             // ignore: deprecated_member_use
             final burst = sm.boolean('burstActive');
             burst?.value = true;
+            debugPrint('✅ Set burstActive to true');
           } catch (e) {
-            debugPrint('Rive input burstActive notice: $e');
+            debugPrint('⚠️ Rive input burstActive notice: $e');
           }
 
           try {
@@ -427,11 +364,31 @@ class _FallbackScanAnimationState extends State<_FallbackScanAnimation> {
                 // ignore: deprecated_member_use
                 sm.boolean('cookingPhase');
             skipScan?.value = true;
-          } catch (_) {}
+            debugPrint('✅ Set skipScan/directRecipes/cookingPhase to true');
+          } catch (e) {
+            debugPrint('⚠️ Rive input skipScan notice: $e');
+          }
+          
+          // iOS-specific: Ensure proper artboard alignment
+          if (defaultTargetPlatform == TargetPlatform.iOS) {
+            debugPrint('🍎 iOS-specific: Configuring artboard alignment');
+            state.controller.artboard?.origin = ArtboardOrigin.topLeft;
+          }
         },
         onFailed: (Object error, StackTrace stackTrace) {
-          debugPrint('❌ RIVE LOAD ERROR: $error\n$stackTrace');
+          debugPrint('❌ RIVE LOAD ERROR on ${defaultTargetPlatform.name}: $error');
+          debugPrint('❌ Stack trace: $stackTrace');
           _riveLoadTimeoutTimer?.cancel();
+          
+          // Record Rive animation failure for monitoring
+          if (defaultTargetPlatform == TargetPlatform.iOS) {
+            debugPrint('🍎 iOS Rive failure detected - recording error');
+            ErrorMonitoringService.instance.recordRiveAnimationFailure(
+              animationName: widget.isDark ? 'cooked_rkdarkm.riv' : 'cooked_no_scan.riv',
+              reason: error.toString(),
+            );
+          }
+          
           if (context.mounted) {
             IosToast.show(
               context,
@@ -444,10 +401,12 @@ class _FallbackScanAnimationState extends State<_FallbackScanAnimation> {
         builder: (context, state) {
           switch (state) {
             case RiveLoaded loadedState:
+              debugPrint('🎨 Rendering Rive widget with fit: Fit.cover');
               return RepaintBoundary(
                 child: RiveWidget(
                   controller: loadedState.controller,
                   fit: Fit.cover,
+                  alignment: Alignment.center,
                 ),
               );
             case RiveFailed():
@@ -456,74 +415,10 @@ class _FallbackScanAnimationState extends State<_FallbackScanAnimation> {
                 skipImageAnalysis: widget.skipImageAnalysis,
               );
             case RiveLoading():
+              debugPrint('⏳ Rive loading on ${defaultTargetPlatform.name}');
               // Do not display spinner before Rive launches - keep background clean
               return const SizedBox.expand();
           }
-        },
-      ),
-    );
-  }
-}
-
-class _VideoAnimation extends StatefulWidget {
-  final VideoPlayerController controller;
-
-  const _VideoAnimation({required this.controller});
-
-  @override
-  State<_VideoAnimation> createState() => _VideoAnimationState();
-}
-
-class _VideoAnimationState extends State<_VideoAnimation> {
-  @override
-  void initState() {
-    super.initState();
-    debugPrint('🎬 _VideoAnimation mounted');
-    // Ensure video continues playing when widget rebuilds
-    if (widget.controller.value.isInitialized && !widget.controller.value.isPlaying) {
-      widget.controller.play();
-    }
-    // Listen for video completion to stay on last frame
-    widget.controller.addListener(_onVideoPositionChanged);
-  }
-
-  void _onVideoPositionChanged() {
-    final value = widget.controller.value;
-    if (value.position >= value.duration) {
-      debugPrint('🎬 Video completed, staying on last frame');
-      widget.controller.pause();
-    }
-  }
-
-  @override
-  void dispose() {
-    debugPrint('🎬 _VideoAnimation disposing');
-    widget.controller.removeListener(_onVideoPositionChanged);
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return ColoredBox(
-      color: Theme.of(context).colorScheme.surface,
-      child: ValueListenableBuilder<VideoPlayerValue>(
-        valueListenable: widget.controller,
-        builder: (context, value, child) {
-          if (!value.isInitialized) {
-            debugPrint('⏳ Video not initialized yet, showing placeholder');
-            return const SizedBox.expand();
-          }
-
-          debugPrint('🎬 Video playing: ${value.isPlaying}, size: ${value.size}');
-
-          return FittedBox(
-            fit: BoxFit.cover,
-            child: SizedBox(
-              width: value.size.width,
-              height: value.size.height,
-              child: VideoPlayer(widget.controller),
-            ),
-          );
         },
       ),
     );
