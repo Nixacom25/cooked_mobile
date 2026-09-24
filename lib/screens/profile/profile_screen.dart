@@ -265,6 +265,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           onTap: () =>
                               Navigator.pushNamed(context, AppRoutes.helpCenter),
                         ),
+                        Divider(height: 1, thickness: 1, color: context.colors.pageBackground),
+                        _MenuItem(
+                          svgPath: 'assets/icones/email1.svg',
+                          label: 'Contact Support',
+                          onTap: () =>
+                              Navigator.pushNamed(context, AppRoutes.sendFeedback),
+                        ),
                         // Debug-only: verifying the dark theme during development.
                         // Production always follows the system theme, with no
                         // in-app override, so this entry point doesn't exist there.
