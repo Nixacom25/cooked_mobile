@@ -13,6 +13,7 @@ import '../../services/user_service.dart';
 import '../../core/theme/app_theme.dart';
 import '../../utils/paywall_helper.dart';
 import '../../core/widgets/legal_content_modal.dart';
+import '../../core/widgets/terms_validation_modal.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -55,104 +56,11 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   String _getPrivacyPolicy() {
-    return '''
-PRIVACY POLICY
-Effective Date: September 23, 2026
-
-Cooked Technologies, Inc ("Cooked", "we", "our", or "us") operates the Cooked mobile application (the "App").
-
-This Privacy Policy explains how we collect, use, and protect your information.
-
-1. Information We Collect
-We may collect:
-- Account Information: Name, email address, phone number
-- User Content: Photos you upload (e.g., fridge/pantry images), saved recipes and preferences
-- Usage Data: App interactions, analytics data (for performance and improvement)
-
-2. How We Use Your Information
-We use your data to:
-- Provide and improve the App
-- Generate recipes and recommendations
-- Personalize your experience
-- Process subscriptions
-- Monitor performance and usage
-
-3. AI Processing
-Cooked uses artificial intelligence to power core features. This includes:
-- Processing images you upload to detect ingredients
-- Generating recipes and recommendations
-
-Your data may be securely processed by third-party AI providers solely to provide these features. We do not sell your personal data.
-
-4. Payments & Storage
-Payments: All payments are processed through Apple App Store or Google Play Store. We do not store or process your payment information directly.
-
-Data Storage: We store Account information, Saved recipes, and Preferences.
-We do not sell your personal data.
-
-5. Data Sharing & Security
-We may share data only with service providers (e.g., AI processing, analytics) or when required by law.
-We do not sell or rent user data.
-We take reasonable measures to protect your data, but no system is completely secure.
-
-6. Children's Privacy
-Cooked is intended for users 13 years and older. We do not knowingly collect data from children under 13.
-
-7. Your Rights & Changes
-You may request deletion of your data or contact us for any privacy concerns. We may update this policy, and continued use means acceptance of updates.
-
-Contact Us
-For any questions or concerns about your privacy: contact@cookedapp.com
-''';
+    return dummyPrivacy;
   }
 
   String _getTermsOfUse() {
-    return '''
-TERMS OF USE
-Effective Date: September 23, 2026
-
-1. Acceptance of Terms
-By downloading and using the Cooked mobile application, you agree to be bound by these Terms of Use.
-
-2. Description of Service
-Cooked is a mobile application that provides recipe recommendations, meal planning, and grocery list features using artificial intelligence.
-
-3. User Accounts
-You are responsible for maintaining the confidentiality of your account credentials and for all activities that occur under your account.
-
-4. Intellectual Property
-All content, features, and functionality of the App are owned by Cooked Technologies, Inc and are protected by international copyright, trademark, and other intellectual property laws.
-
-5. User Conduct
-You agree not to:
-- Use the App for any illegal purpose
-- Attempt to gain unauthorized access to the App or its related systems
-- Interfere with or disrupt the App or servers
-
-6. AI-Generated Content
-The App uses artificial intelligence to generate recipes and recommendations. While we strive for accuracy, AI-generated content may not always be perfect.
-
-7. Subscription and Payments
-The App offers subscription-based features. All payments are processed through Apple App Store or Google Play Store according to their respective terms and conditions.
-
-8. Privacy
-Your use of the App is also governed by our Privacy Policy, which is incorporated into these Terms by reference.
-
-9. Termination
-We reserve the right to terminate or suspend your account at any time for violation of these Terms.
-
-10. Disclaimer of Warranties
-The App is provided "as is" without warranties of any kind, either express or implied.
-
-11. Limitation of Liability
-Cooked Technologies, Inc shall not be liable for any indirect, incidental, special, or consequential damages.
-
-12. Changes to Terms
-We reserve the right to modify these Terms at any time. Continued use of the App constitutes acceptance of the updated Terms.
-
-Contact Us
-For questions about these Terms: contact@cookedapp.com
-''';
+    return dummyTerms;
   }
 
   Future<void> _handleLogin() async {
