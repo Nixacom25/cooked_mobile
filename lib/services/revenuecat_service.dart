@@ -90,9 +90,31 @@ class RevenueCatService {
     }
   }
 
+  /// Whether this Apple/Google account is actually eligible for the
+  /// product's configured free trial / intro price - not just whether the
+  /// product *has* one configured. Apple only grants a subscription-group
+  /// trial once per account, so a returning subscriber can have an
+  /// introductoryPrice on the product while being ineligible to receive it
+  /// again. Defaults to false (don't promise a trial) if this can't be
+  /// determined, since promising one Apple won't honor is worse than not
+  /// showing the badge.
+  Future<bool> isEligibleForTrial(String productIdentifier) async {
+    try {
+      final result = await Purchases.checkTrialOrIntroductoryPriceEligibility(
+        [productIdentifier],
+      );
+      return result[productIdentifier]?.status ==
+          IntroEligibilityStatus.introEligibilityStatusEligible;
+    } catch (e) {
+      debugPrint("RevenueCat checkTrialOrIntroductoryPriceEligibility error: $e");
+      return false;
+    }
+  }
+
   Future<bool> buyPackage(Package package) async {
     try {
-      CustomerInfo customerInfo = await Purchases.purchasePackage(package);
+      final purchaseResult = await Purchases.purchase(PurchaseParams.package(package));
+      CustomerInfo customerInfo = purchaseResult.customerInfo;
       bool isSubscribed = customerInfo.entitlements.all[premiumEntitlementId]?.isActive ?? false;
 
       _updateUserPremiumStatus(customerInfo);
@@ -186,7 +208,7 @@ class RevenueCatService {
         'productId': entitlementInfo?.productIdentifier,
         'latestPurchaseDate': entitlementInfo?.latestPurchaseDate ?? '',
         'willRenew': entitlementInfo?.willRenew,
-        'periodType': entitlementInfo?.periodType?.toString(),
+        'periodType': entitlementInfo?.periodType.toString(),
         'revenueCatCustomerId': customerInfo.originalAppUserId,
       };
 

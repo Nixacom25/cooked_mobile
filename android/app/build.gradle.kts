@@ -26,7 +26,10 @@ android {
 
     defaultConfig {
         applicationId = "com.cookedapp.app"
-        minSdk = flutter.minSdkVersion
+        // Google Play Billing Library 8.3.0+ (pulled in by purchases_flutter
+        // 10.x) requires Android 6 / API 23 - flutter.minSdkVersion isn't
+        // guaranteed to already be that high, so pin it explicitly.
+        minSdk = maxOf(flutter.minSdkVersion, 23)
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName

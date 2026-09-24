@@ -37,6 +37,11 @@ class _PaywallScreenState extends State<PaywallScreen> {
   Offerings? _offerings;
   Package? _selectedPackage;
   String _selectedPlanId = 'yearly_sub';
+  // Whether *this* customer is actually eligible for the yearly plan's free
+  // trial (per StoreKit/Play Billing), not just whether the product has one
+  // configured - starts false so the paywall never promises a trial before
+  // eligibility is confirmed.
+  bool _yearlyTrialEligible = false;
 
   bool get isOffer => widget.flowType == PaywallFlowType.offer;
 
@@ -107,10 +112,16 @@ class _PaywallScreenState extends State<PaywallScreen> {
 
       final offerings = await RevenueCatService.instance.getOfferings();
 
+      final yearlyProductId =
+          offerings?.current?.annual?.storeProduct.identifier ?? 'yearly_sub';
+      final trialEligible =
+          await RevenueCatService.instance.isEligibleForTrial(yearlyProductId);
+
       if (mounted) {
         setState(() {
           config = data;
           _offerings = offerings;
+          _yearlyTrialEligible = trialEligible;
           if (offerings != null && offerings.current != null) {
             // Prefer annual package, fallback to first available
             _selectedPackage = offerings.current?.annual ?? offerings.current?.availablePackages.firstOrNull;
@@ -292,7 +303,9 @@ class _PaywallScreenState extends State<PaywallScreen> {
                             'yearly_sub',
                             config!['yearlyPriceLabel'],
                           ),
-                          subPrice: !isOffer ? '(\$29.99 / year)' : null,
+                          subPrice: !isOffer
+                              ? '(${_getProductPrice('yearly_sub', config!['yearlyPriceLabel'])} / year)'
+                              : null,
                           isSelected: _selectedPlanId == 'yearly_sub',
                           badge: isOffer ? '33% OFF' : (_getTrialPeriod('yearly_sub').isNotEmpty ? _getTrialPeriod('yearly_sub') : 'BEST VALUE'),
                           color: primaryColor,
@@ -378,26 +391,15 @@ class _PaywallScreenState extends State<PaywallScreen> {
                       ),
                       if (!isOffer) ...[
                         SizedBox(height: 12.h),
-                        if (_selectedPlanId == 'yearly_sub')
-                          Text(
-                            "no payment due today",
-                            style: TextStyle(
-                              fontSize: 13.sp,
-                              color: context.colors.textMuted,
-                              fontFamily: 'SF Pro',
-                              fontWeight: FontWeight.w500,
-                            ),
-                          )
-                        else
-                          Text(
-                            "\$29.99 per year (\$2.49/mo)",
-                            style: TextStyle(
-                              fontSize: 13.sp,
-                              color: context.colors.textMuted,
-                              fontFamily: 'SF Pro',
-                              fontWeight: FontWeight.w500,
-                            ),
+                        Text(
+                          _getBottomPriceLine(),
+                          style: TextStyle(
+                            fontSize: 13.sp,
+                            color: context.colors.textMuted,
+                            fontFamily: 'SF Pro',
+                            fontWeight: FontWeight.w500,
                           ),
+                        ),
                       ],
                       SizedBox(height: 12.h),
                       Row(
@@ -463,6 +465,10 @@ class _PaywallScreenState extends State<PaywallScreen> {
   }
 
   String _getTrialPeriod(String id) {
+    // Never claim a free trial for an account that isn't actually eligible
+    // for it - Apple/Google grant the intro offer once per account, not
+    // once per product, so a returning subscriber can hit this.
+    if (!_yearlyTrialEligible) return '';
     if (_offerings == null || _offerings!.current == null) return '';
     try {
       final current = _offerings!.current!;
@@ -471,7 +477,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
       for (var package in current.availablePackages) {
         if (package.storeProduct.identifier == id) {
           final introPrice = package.storeProduct.introductoryPrice;
-          if (introPrice != null && introPrice.period != null && introPrice.period.isNotEmpty) {
+          if (introPrice != null && introPrice.period.isNotEmpty) {
             final periodValue = int.tryParse(introPrice.period);
             if (periodValue != null && periodValue > 0) {
               return '${introPrice.period} days free';
@@ -483,7 +489,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
       // Fallback to annual/monthly if direct match fails
       if (id == 'yearly_sub' && current.annual != null) {
         final introPrice = current.annual!.storeProduct.introductoryPrice;
-        if (introPrice != null && introPrice.period != null && introPrice.period.isNotEmpty) {
+        if (introPrice != null && introPrice.period.isNotEmpty) {
           final periodValue = int.tryParse(introPrice.period);
           if (periodValue != null && periodValue > 0) {
             return '${introPrice.period} days free';
@@ -492,6 +498,18 @@ class _PaywallScreenState extends State<PaywallScreen> {
       }
     } catch (_) {}
     return '';
+  }
+
+  /// Text shown right above "Restore Purchases" - must never promise a free
+  /// trial the account isn't actually eligible for (see _yearlyTrialEligible).
+  String _getBottomPriceLine() {
+    if (_selectedPlanId == 'yearly_sub') {
+      if (_yearlyTrialEligible) return "no payment due today";
+      final price = _getProductPrice('yearly_sub', config!['yearlyPriceLabel']);
+      return "$price per year";
+    }
+    final price = _getProductPrice('monthly_sub', config!['monthlyPriceLabel']);
+    return "$price per month";
   }
 
   String _getProductPeriod(String id) {

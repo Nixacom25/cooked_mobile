@@ -182,6 +182,11 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                           body: 'This is what a push notification looks like on this device.',
                         ),
                       ),
+                      SizedBox(height: 8.h),
+                      _DebugButton(
+                        label: 'Test settings',
+                        onTap: () => Navigator.pushNamed(context, AppRoutes.settings),
+                      ),
                     ],
                   ),
                 ),

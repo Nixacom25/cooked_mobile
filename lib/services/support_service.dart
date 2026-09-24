@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
+import 'package:package_info_plus/package_info_plus.dart';
 import '../core/api_config.dart';
 
 class SupportService {
@@ -25,8 +26,12 @@ class SupportService {
       } else if (Platform.isIOS) {
         platform = 'iOS';
       }
-      // We'll use a constant version for now since package_info_plus is not installed
-      appVersion = '1.0.2';
+      try {
+        final info = await PackageInfo.fromPlatform();
+        appVersion = '${info.version}+${info.buildNumber}';
+      } catch (_) {
+        // Leave appVersion as 'Unknown' if the platform channel fails.
+      }
     }
 
     final response = await http.post(

@@ -1,5 +1,4 @@
 import 'dart:ui' as ui;
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -137,45 +136,40 @@ class _AppTopHeaderState extends State<AppTopHeader> {
                               ),
                             ),
                           ),
-                          // Debug-only: verifying the dark theme during
-                          // development. Production always follows the
-                          // system theme, so this entry doesn't exist there.
-                          if (kDebugMode) ...[
-                            SizedBox(height: 2.h),
-                            InkWell(
-                              borderRadius: BorderRadius.circular(18.r),
-                              onTap: () {
-                                Navigator.of(ctx).pop();
-                                showAppearanceSheet(context);
-                              },
-                              child: Padding(
-                                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
-                                child: Row(
-                                  children: [
-                                    Icon(
-                                      Icons.dark_mode_outlined,
-                                      size: 20.sp,
-                                      color: context.colors.textPrimary,
-                                    ),
-                                    SizedBox(width: 10.w),
-                                    Expanded(
-                                      child: Text(
-                                        'Appearance',
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: TextStyle(
-                                          fontFamily: 'Rubik',
-                                          fontWeight: FontWeight.w600,
-                                          fontSize: 14.sp,
-                                          color: context.colors.textPrimary,
-                                        ),
+                          SizedBox(height: 2.h),
+                          InkWell(
+                            borderRadius: BorderRadius.circular(18.r),
+                            onTap: () {
+                              Navigator.of(ctx).pop();
+                              showAppearanceSheet(context);
+                            },
+                            child: Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.dark_mode_outlined,
+                                    size: 20.sp,
+                                    color: context.colors.textPrimary,
+                                  ),
+                                  SizedBox(width: 10.w),
+                                  Expanded(
+                                    child: Text(
+                                      'Appearance',
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(
+                                        fontFamily: 'Rubik',
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 14.sp,
+                                        color: context.colors.textPrimary,
                                       ),
                                     ),
-                                  ],
-                                ),
+                                  ),
+                                ],
                               ),
                             ),
-                          ],
+                          ),
                           SizedBox(height: 2.h),
                           InkWell(
                             borderRadius: BorderRadius.circular(18.r),

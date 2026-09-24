@@ -219,6 +219,34 @@ class UserService {
     }
   }
 
+  /// Only the toggles that actually changed need to be passed - the backend
+  /// leaves any omitted field untouched.
+  Future<void> updateNotificationPreferences({
+    bool? pushEnabled,
+    bool? pushRemindersEnabled,
+    bool? pushNewsOffersEnabled,
+  }) async {
+    final url = Uri.parse('${ApiConfig.baseUrl}/user/notification-preferences');
+    final response = await http.put(
+      url,
+      headers: await _getHeaders(),
+      body: jsonEncode({
+        if (pushEnabled != null) 'pushEnabled': pushEnabled,
+        if (pushRemindersEnabled != null) 'pushRemindersEnabled': pushRemindersEnabled,
+        if (pushNewsOffersEnabled != null) 'pushNewsOffersEnabled': pushNewsOffersEnabled,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      currentUserNotifier.value = data;
+    } else {
+      throw Exception(
+        _extractErrorMessage(response.body, 'Unable to update notification settings.'),
+      );
+    }
+  }
+
   Future<void> uploadProfilePhoto(List<int> imageBytes, String filename) async {
     final url = Uri.parse('${ApiConfig.baseUrl}/user/profile-photo');
     final request = http.MultipartRequest('POST', url);

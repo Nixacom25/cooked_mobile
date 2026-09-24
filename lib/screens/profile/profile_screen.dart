@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -6,7 +5,6 @@ import 'package:flutter_svg/flutter_svg.dart';
 import '../../routes/app_routes.dart';
 import '../../services/auth_service.dart';
 import '../../services/user_service.dart';
-import '../../widgets/appearance_sheet.dart';
 import '../../core/api_config.dart';
 import '../../models/view_all_type.dart';
 import '../../widgets/skeleton_loader.dart';
@@ -86,10 +84,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       backgroundColor: Colors.transparent,
       builder: (_) => const _LogoutSheet(),
     );
-  }
-
-  void _showAppearanceSheet() {
-    showAppearanceSheet(context);
   }
 
   @override
@@ -272,17 +266,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           onTap: () =>
                               Navigator.pushNamed(context, AppRoutes.sendFeedback),
                         ),
-                        // Debug-only: verifying the dark theme during development.
-                        // Production always follows the system theme, with no
-                        // in-app override, so this entry point doesn't exist there.
-                        if (kDebugMode) ...[
-                          Divider(height: 1, thickness: 1, color: context.colors.pageBackground),
-                          _MenuItem(
-                            svgPath: 'assets/icones/sun.svg',
-                            label: 'Appearance',
-                            onTap: _showAppearanceSheet,
-                          ),
-                        ],
+                        Divider(height: 1, thickness: 1, color: context.colors.pageBackground),
+                        _MenuItem(
+                          svgPath: 'assets/icones/sun.svg',
+                          label: 'Settings',
+                          onTap: () => Navigator.pushNamed(context, AppRoutes.settings),
+                        ),
                         Divider(height: 1, thickness: 1, color: context.colors.pageBackground),
                         _MenuItem(
                           svgPath: 'assets/icones/delete.svg',

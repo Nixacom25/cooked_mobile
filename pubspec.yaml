@@ -22,7 +22,7 @@ dependencies:
   intl_phone_field: ^3.2.0
   intl: ^0.20.2
   webview_flutter: ^4.10.0
-  purchases_flutter: ^8.6.0
+  purchases_flutter: ^10.13.2
   cached_network_image: ^3.4.1
   flutter_cache_manager: ^3.4.1
   flutter_image_compress: ^2.4.0

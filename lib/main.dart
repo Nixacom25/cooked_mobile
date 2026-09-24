@@ -28,8 +28,12 @@ import 'screens/profile/my_account_screen.dart';
 import 'screens/profile/change_password_screen.dart';
 import 'screens/profile/activity_history_screen.dart';
 import 'screens/profile/help_center_screen.dart';
+import 'screens/profile/send_feedback_screen.dart';
 import 'screens/profile/user_preferences_screen.dart';
 import 'screens/profile/subscription_management_screen.dart';
+import 'screens/profile/settings_screen.dart';
+import 'screens/profile/dark_mode_screen.dart';
+import 'screens/profile/notification_settings_screen.dart';
 import 'screens/scan_screen.dart';
 import 'package:cooked/core/services/tutorial_service.dart';
 import 'package:cooked/services/notification_service.dart';
@@ -479,6 +483,18 @@ class _CookedAppState extends State<CookedApp> with WidgetsBindingObserver {
                   break;
                 case AppRoutes.helpCenter:
                   builder = const HelpCenterScreen();
+                  break;
+                case AppRoutes.sendFeedback:
+                  builder = const SendFeedbackScreen();
+                  break;
+                case AppRoutes.settings:
+                  builder = const SettingsScreen();
+                  break;
+                case AppRoutes.darkMode:
+                  builder = const DarkModeScreen();
+                  break;
+                case AppRoutes.notificationSettings:
+                  builder = const NotificationSettingsScreen();
                   break;
                 case AppRoutes.editPreferences:
                   builder = const UserPreferencesScreen();

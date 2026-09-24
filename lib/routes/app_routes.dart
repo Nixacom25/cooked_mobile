@@ -21,6 +21,10 @@ class AppRoutes {
   static const String changePassword = '/change-password';
   static const String activityHistory = '/activity-history';
   static const String helpCenter = '/help-center';
+  static const String sendFeedback = '/send-feedback';
+  static const String settings = '/settings';
+  static const String darkMode = '/settings/dark-mode';
+  static const String notificationSettings = '/settings/notifications';
   static const String viewAll = '/view-all';
   static const String editPreferences = '/edit-preferences';
   static const String cookbookDetail = '/cookbook-detail';

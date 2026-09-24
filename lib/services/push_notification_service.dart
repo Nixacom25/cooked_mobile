@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io' show Platform;
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
@@ -68,11 +69,45 @@ class PushNotificationService {
   /// authenticated (registration is a no-op while logged out).
   Future<void> registerCurrentToken() async {
     try {
+      // On iOS, FirebaseMessaging.getToken() bridges through APNs: it needs
+      // the APNs device token first, which only exists once iOS finishes its
+      // own async remote-notification registration. Calling getToken() right
+      // after requestPermission() (before that round-trip completes) throws
+      // or returns null on iOS - Android has no equivalent step, which is
+      // why this silently "worked on Android but not iOS". Poll briefly for
+      // the APNs token before asking Firebase for the FCM token.
+      if (!kIsWeb && Platform.isIOS) {
+        final apnsToken = await _waitForApnsToken();
+        if (apnsToken == null) {
+          debugPrint(
+            'Could not register FCM token: no APNs token after waiting - '
+            'check that Push Notifications is enabled for this App ID AND '
+            'that the provisioning profile used to sign this build was '
+            'regenerated/reinstalled after enabling it (an old profile '
+            'won\'t carry the aps-environment entitlement even if the '
+            'capability is now on in App Store Connect).',
+          );
+          return;
+        }
+      }
+
       final token = await _messaging.getToken();
       await _registerToken(token);
     } catch (e) {
       debugPrint('Could not fetch FCM token: $e');
     }
+  }
+
+  Future<String?> _waitForApnsToken({
+    Duration timeout = const Duration(seconds: 8),
+  }) async {
+    final deadline = DateTime.now().add(timeout);
+    while (DateTime.now().isBefore(deadline)) {
+      final apnsToken = await _messaging.getAPNSToken();
+      if (apnsToken != null) return apnsToken;
+      await Future.delayed(const Duration(milliseconds: 300));
+    }
+    return null;
   }
 
   Future<void> _registerToken(String? token) async {

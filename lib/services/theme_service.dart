@@ -1,11 +1,9 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// The manual light/dark toggle is a debug-only tool for verifying the dark
-/// theme during development. Production builds always follow the system
-/// theme - there's no in-app override, so this never reads or writes the
-/// persisted preference outside kDebugMode.
+/// User-facing light/dark/system theme override, reachable from
+/// Profile > Settings > Dark Mode. Persisted locally per device (not synced
+/// to the backend - it's a device display preference, not account data).
 class ThemeService {
   ThemeService._privateConstructor();
   static final ThemeService instance = ThemeService._privateConstructor();
@@ -15,7 +13,6 @@ class ThemeService {
   final ValueNotifier<ThemeMode> themeModeNotifier = ValueNotifier(ThemeMode.system);
 
   Future<void> init() async {
-    if (!kDebugMode) return;
     try {
       final prefs = await SharedPreferences.getInstance();
       final stored = prefs.getString(_prefsKey);
@@ -26,7 +23,6 @@ class ThemeService {
   }
 
   Future<void> setThemeMode(ThemeMode mode) async {
-    if (!kDebugMode) return;
     themeModeNotifier.value = mode;
     try {
       final prefs = await SharedPreferences.getInstance();

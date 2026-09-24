@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:cooked/services/user_service.dart';
 import 'package:cooked/core/api_config.dart';
 import 'package:http/http.dart' as http;
@@ -11,12 +12,20 @@ class ErrorMonitoringService {
   static final ErrorMonitoringService instance = ErrorMonitoringService._privateConstructor();
 
   final FirebaseCrashlytics _crashlytics = FirebaseCrashlytics.instance;
+  String _appVersion = 'Unknown';
 
   Future<void> initialize() async {
     // Set user identifier for better error tracking
     final user = UserService.instance.currentUserNotifier.value;
     if (user != null && user['id'] != null) {
       await _crashlytics.setUserIdentifier(user['id'].toString());
+    }
+
+    try {
+      final info = await PackageInfo.fromPlatform();
+      _appVersion = '${info.version}+${info.buildNumber}';
+    } catch (_) {
+      // Leave _appVersion as 'Unknown' if the platform channel fails.
     }
   }
 
@@ -101,7 +110,7 @@ class ErrorMonitoringService {
           'userEmail': userEmail,
           'platform': deviceInfo['platform'],
           'osVersion': deviceInfo['os_version'],
-          'appVersion': '1.0.2', // Should be synchronized with support_service.dart
+          'appVersion': _appVersion,
           'context': context,
           'timestamp': DateTime.now().toIso8601String(),
         }),
