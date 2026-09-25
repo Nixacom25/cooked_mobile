@@ -141,7 +141,21 @@ jobs:
         mkdir -p ~/private_keys
         echo "$API_PRIVATE_KEY" | sed 's/\\n/\n/g' > ~/private_keys/AuthKey_$CLEAN_KEY_ID.p8
         chmod 600 ~/private_keys/AuthKey_$CLEAN_KEY_ID.p8
-        xcrun altool --upload-app --type ios --file "$IPA_PATH" --apiKey "$CLEAN_KEY_ID" --apiIssuer "$CLEAN_ISSUER_ID"
+        # altool prints "UPLOAD FAILED" and Apple's validation errors on
+        # rejection (e.g. a closed pre-release train, a version number
+        # that isn't higher than the last approved one) but still exits 0,
+        # so a rejected upload otherwise looks like a green, successful
+        # step. Capture its real exit code via PIPESTATUS and additionally
+        # scan the output for the failure banner, so this build actually
+        # fails loudly instead of silently never reaching TestFlight.
+        set +e
+        xcrun altool --upload-app --type ios --file "$IPA_PATH" --apiKey "$CLEAN_KEY_ID" --apiIssuer "$CLEAN_ISSUER_ID" 2>&1 | tee /tmp/altool_output.log
+        ALTOOL_EXIT=${PIPESTATUS[0]}
+        set -e
+        if [ $ALTOOL_EXIT -ne 0 ] || grep -q "UPLOAD FAILED" /tmp/altool_output.log; then
+          echo "::error::altool upload to TestFlight was rejected by Apple - see the validation error above."
+          exit 1
+        fi
 
     - name: Upload IPA Artifact
       uses: actions/upload-artifact@v4
