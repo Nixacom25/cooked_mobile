@@ -159,14 +159,12 @@ class _ScanAnimationOverlayState extends State<ScanAnimationOverlay> {
               : _AnimationPlatform.android)) ==
       _AnimationPlatform.ios;
 
+  // cooked_dark.mp4 can fail to decode (a corrupt export did); on iOS the
+  // Rive fallback doesn't render either, so fall back to the light video.
+  bool _darkVideoFailed = false;
+
   void _prepareVideo() {
-    // Each theme has its own export - previously this always loaded the
-    // light-mode file regardless of theme because the dark-mode export was
-    // corrupted (its moov atom was missing, so no player on any platform
-    // could decode it - confirmed with ffprobe). If a future export is
-    // still bad, _showAnimation's try/catch below falls back to Rive
-    // instead of silently showing the wrong-theme video again.
-    final assetPath = _isDark
+    final assetPath = _isDark && !_darkVideoFailed
         ? 'assets/animations/cooked_dark.mp4'
         : 'assets/animations/cooked.mp4';
 
@@ -186,23 +184,36 @@ class _ScanAnimationOverlayState extends State<ScanAnimationOverlay> {
     }
   }
 
+  Future<void> _playVideo() async {
+    _prepareVideo();
+    await _videoInitialization;
+    if (_videoController == null || !_videoController!.value.isInitialized) {
+      throw Exception('Video controller not initialized');
+    }
+    await _videoController!.seekTo(Duration.zero);
+    await _videoController!.play();
+    debugPrint('✅ Video playing successfully (isDark: $_isDark)');
+  }
+
   Future<void> _showAnimation() async {
     if (_usesVideo) {
       try {
-        _prepareVideo();
-        await _videoInitialization;
-
-        if (_videoController != null && _videoController!.value.isInitialized) {
-          await _videoController!.seekTo(Duration.zero);
-          await _videoController!.play();
-          debugPrint('✅ Video playing successfully (isDark: $_isDark)');
-        } else {
-          throw Exception('Video controller not initialized');
+        try {
+          await _playVideo();
+        } catch (error) {
+          if (!_isDark || _darkVideoFailed) rethrow;
+          debugPrint('❌ Dark video failed, using light video: $error');
+          ErrorMonitoringService.instance.recordRiveAnimationFailure(
+            animationName: 'cooked_dark.mp4',
+            reason: error.toString(),
+          );
+          _darkVideoFailed = true;
+          await _playVideo();
         }
       } catch (error) {
         debugPrint('❌ Video animation failed, falling back to Rive: $error');
         ErrorMonitoringService.instance.recordRiveAnimationFailure(
-          animationName: _isDark ? 'cooked_dark.mp4' : 'cooked.mp4',
+          animationName: 'cooked.mp4',
           reason: error.toString(),
         );
         if (mounted) {
