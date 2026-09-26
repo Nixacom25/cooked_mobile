@@ -54,10 +54,10 @@ import UserNotifications
 
 // MARK: - UNUserNotificationCenterDelegate
 @available(iOS 10.0, *)
-extension AppDelegate: UNUserNotificationCenterDelegate {
+extension AppDelegate {
   
   // Called when a notification is delivered while the app is in the foreground
-  func userNotificationCenter(_ center: UNUserNotificationCenter, 
+  override func userNotificationCenter(_ center: UNUserNotificationCenter, 
                                 willPresent notification: UNNotification, 
                                 withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
     // Show notification even when app is in foreground
@@ -65,7 +65,7 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
   }
   
   // Called when user taps on a notification
-  func userNotificationCenter(_ center: UNUserNotificationCenter, 
+  override func userNotificationCenter(_ center: UNUserNotificationCenter, 
                                 didReceive response: UNNotificationResponse, 
                                 withCompletionHandler completionHandler: @escaping () -> Void) {
     let userInfo = response.notification.request.content.userInfo
