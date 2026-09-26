@@ -138,6 +138,7 @@ class RecipeService {
       await ErrorMonitoringService.instance.recordScanFailure(
         reason: errorMessage,
         scanType: 'image',
+        statusCode: response.statusCode,
       );
       
       if (response.statusCode == 402) {
@@ -197,6 +198,7 @@ class RecipeService {
       await ErrorMonitoringService.instance.recordScanFailure(
         reason: errorMessage,
         scanType: 'typed',
+        statusCode: response.statusCode,
       );
 
       if (response.statusCode == 402) {

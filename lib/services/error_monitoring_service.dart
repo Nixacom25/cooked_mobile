@@ -149,14 +149,18 @@ class ErrorMonitoringService {
   Future<void> recordScanFailure({
     required String reason,
     String? scanType,
+    int? statusCode,
   }) async {
+    // 4xx (e.g. no ingredients detected, quota reached) are expected user
+    // outcomes shown in the UI, not crashes - only server failures are critical.
     await recordError(
       errorType: 'SCAN_FAILURE',
       errorMessage: reason,
       context: {
         'scan_type': scanType ?? 'unknown',
+        'status_code': statusCode?.toString() ?? 'unknown',
       },
-      isCritical: true,
+      isCritical: statusCode == null || statusCode >= 500,
     );
   }
 
