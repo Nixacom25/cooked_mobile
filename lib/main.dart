@@ -31,9 +31,11 @@ import 'screens/profile/help_center_screen.dart';
 import 'screens/profile/send_feedback_screen.dart';
 import 'screens/profile/user_preferences_screen.dart';
 import 'screens/profile/subscription_management_screen.dart';
-import 'screens/profile/settings_screen.dart';
 import 'screens/profile/dark_mode_screen.dart';
 import 'screens/profile/notification_settings_screen.dart';
+import 'screens/profile/allergies_screen.dart';
+import 'screens/profile/cuisine_flavor_screen.dart';
+import 'screens/profile/kitchen_equipment_screen.dart';
 import 'screens/scan_screen.dart';
 import 'package:cooked/core/services/tutorial_service.dart';
 import 'package:cooked/services/notification_service.dart';
@@ -89,6 +91,12 @@ void main() async {
 
 final RouteObserver<ModalRoute<void>> routeObserver = RouteObserver<ModalRoute<void>>();
 
+/// App-wide navigator key, exposed so services/background work (e.g. a
+/// cookbook save that finishes after its own modal has already closed) can
+/// still show a toast via the root overlay without needing a live local
+/// BuildContext.
+final GlobalKey<NavigatorState> appNavigatorKey = GlobalKey<NavigatorState>();
+
 class CookedApp extends StatefulWidget {
   const CookedApp({super.key});
 
@@ -97,7 +105,6 @@ class CookedApp extends StatefulWidget {
 }
 
 class _CookedAppState extends State<CookedApp> with WidgetsBindingObserver {
-  final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
   // OverlayEntry? _clipboardOverlay;
   late AppLinks _appLinks;
   StreamSubscription<Uri>? _linkSubscription;
@@ -146,7 +153,7 @@ class _CookedAppState extends State<CookedApp> with WidgetsBindingObserver {
   //       onPaste: () => _handlePaste(url),
   //     ),
   //   );
-  //   _navigatorKey.currentState?.overlay?.insert(_clipboardOverlay!);
+  //   appNavigatorKey.currentState?.overlay?.insert(_clipboardOverlay!);
   // }
   // 
   // void _removeClipboardOverlay() {
@@ -168,7 +175,7 @@ class _CookedAppState extends State<CookedApp> with WidgetsBindingObserver {
   //   final isLoggedIn = AuthService.instance.isLoggedIn;
   // 
   //   if (!isLoggedIn) {
-  //     final state = _navigatorKey.currentState;
+  //     final state = appNavigatorKey.currentState;
   //     if (state != null) {
   //       state.pushNamedAndRemoveUntil(AppRoutes.welcome, (route) => false);
   //       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -178,7 +185,7 @@ class _CookedAppState extends State<CookedApp> with WidgetsBindingObserver {
   //     return;
   //   }
   // 
-  //   final state = _navigatorKey.currentState;
+  //   final state = appNavigatorKey.currentState;
   //   if (state != null) {
   //     // Check if it's an internal recipe link
   //     final recipeRegex = RegExp(r'(?:cooked\.nixacom\.com|cookedapp\.com)/(?:share/)?recipes/([a-zA-Z0-9-]+)');
@@ -234,7 +241,7 @@ class _CookedAppState extends State<CookedApp> with WidgetsBindingObserver {
 
     if (!AuthService.instance.isLoggedIn) return;
 
-    final state = _navigatorKey.currentState;
+    final state = appNavigatorKey.currentState;
     if (state == null) return;
 
     // Handle deep link from notification campaigns
@@ -303,7 +310,7 @@ class _CookedAppState extends State<CookedApp> with WidgetsBindingObserver {
           // We don't clear it from SharingService, so it stays available
           // If the user is on Welcome/Login, they will eventually log in
           // We can optionally force redirect to Welcome if they are elsewhere
-          final state = _navigatorKey.currentState;
+          final state = appNavigatorKey.currentState;
           if (state != null) {
              String? currentRoute;
              state.popUntil((route) {
@@ -323,15 +330,40 @@ class _CookedAppState extends State<CookedApp> with WidgetsBindingObserver {
 
         // Short delay to ensure navigator is ready
         Future.delayed(const Duration(milliseconds: 500), () {
-          final state = _navigatorKey.currentState;
+          final state = appNavigatorKey.currentState;
           if (state != null) {
             debugPrint("CookedApp: Processing shared URL: $url");
-            
+
+            // Utility app links used by transactional emails (Welcome,
+            // billing issue, new sign-in) - matched first so they land on
+            // the right screen instead of falling through to the "external
+            // link, try to import it as a recipe" branch below.
+            final utilityLinkRegex = RegExp(
+              r'(?:cooked://|link\.cookedapp\.com/)(open|manage-subscription|security)\b',
+            );
+            final utilityMatch = utilityLinkRegex.firstMatch(url);
+
             // Check if it's an internal recipe link
             final recipeRegex = RegExp(r'(?:cooked\.nixacom\.com|cookedapp\.com)/(?:share/)?recipes/([a-zA-Z0-9-]+)');
             final match = recipeRegex.firstMatch(url);
-            
-            if (match != null) {
+
+            if (utilityMatch != null) {
+              final target = utilityMatch.group(1);
+              debugPrint("CookedApp: Utility app link detected: $target");
+              switch (target) {
+                case 'manage-subscription':
+                  state.pushNamedAndRemoveUntil(AppRoutes.home, (route) => false);
+                  state.pushNamed(AppRoutes.subscriptionManagement);
+                  break;
+                case 'security':
+                  state.pushNamedAndRemoveUntil(AppRoutes.home, (route) => false);
+                  state.pushNamed(AppRoutes.myAccount);
+                  break;
+                case 'open':
+                default:
+                  state.pushNamedAndRemoveUntil(AppRoutes.home, (route) => false);
+              }
+            } else if (match != null) {
               final recipeId = match.group(1);
               debugPrint("CookedApp: Internal recipe link detected. ID: $recipeId");
               
@@ -372,7 +404,7 @@ class _CookedAppState extends State<CookedApp> with WidgetsBindingObserver {
           child: ValueListenableBuilder<ThemeMode>(
             valueListenable: ThemeService.instance.themeModeNotifier,
             builder: (context, themeMode, _) => MaterialApp(
-            navigatorKey: _navigatorKey,
+            navigatorKey: appNavigatorKey,
             title: 'Cooked',
             debugShowCheckedModeBanner: false,
             theme: AppTheme.light,
@@ -487,9 +519,6 @@ class _CookedAppState extends State<CookedApp> with WidgetsBindingObserver {
                 case AppRoutes.sendFeedback:
                   builder = const SendFeedbackScreen();
                   break;
-                case AppRoutes.settings:
-                  builder = const SettingsScreen();
-                  break;
                 case AppRoutes.darkMode:
                   builder = const DarkModeScreen();
                   break;
@@ -498,6 +527,15 @@ class _CookedAppState extends State<CookedApp> with WidgetsBindingObserver {
                   break;
                 case AppRoutes.editPreferences:
                   builder = const UserPreferencesScreen();
+                  break;
+                case AppRoutes.allergies:
+                  builder = const AllergiesScreen();
+                  break;
+                case AppRoutes.cuisineFlavor:
+                  builder = const CuisineFlavorScreen();
+                  break;
+                case AppRoutes.kitchenEquipment:
+                  builder = const KitchenEquipmentScreen();
                   break;
                 case AppRoutes.subscriptionManagement:
                   builder = const SubscriptionManagementScreen();

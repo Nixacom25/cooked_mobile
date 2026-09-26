@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../routes/app_routes.dart';
 import '../../services/auth_service.dart';
 import '../../services/user_service.dart';
 import '../../core/api_config.dart';
-import '../../models/view_all_type.dart';
 import '../../widgets/skeleton_loader.dart';
 import '../../widgets/red_header_background.dart';
 import '../../widgets/alphabet_avatar.dart';
@@ -14,6 +12,7 @@ import '../../widgets/app_loading_indicator.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/ios_toast.dart';
 import '../../core/utils/error_helper.dart';
+import 'settings_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -86,6 +85,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  Widget _menuDivider(BuildContext context) =>
+      Divider(height: 1, thickness: 1, color: context.colors.pageBackground);
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -133,7 +135,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                         Expanded(
                           child: Text(
-                            'Profile',
+                            'Settings',
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontFamily: 'Rubik',
@@ -203,77 +205,98 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     child: ListView(
                       padding: EdgeInsets.symmetric(horizontal: 24.w),
                       children: [
-                        _MenuItem(
+                        // 1. Profile / account / change password
+                        SettingsMenuItem(
                           svgPath: 'assets/icones/people1.svg',
                           label: 'My Account',
                           onTap: () =>
                               Navigator.pushNamed(context, AppRoutes.myAccount),
                         ),
-                        Divider(height: 1, thickness: 1, color: context.colors.pageBackground),
-                        _MenuItem(
+                        _menuDivider(context),
+                        SettingsMenuItem(
                           svgPath: 'assets/icones/password.svg',
                           label: 'Change Password',
                           onTap: () =>
                               Navigator.pushNamed(context, AppRoutes.changePassword),
                         ),
-                        Divider(height: 1, thickness: 1, color: context.colors.pageBackground),
-                        _MenuItem(
+                        _menuDivider(context),
+
+                        // 2. Dietary preferences
+                        SettingsMenuItem(
                           svgPath: 'assets/icones/eating.svg',
                           label: 'Dietary Preferences',
                           onTap: () =>
                               Navigator.pushNamed(context, AppRoutes.editPreferences),
                         ),
-                        Divider(height: 1, thickness: 1, color: context.colors.pageBackground),
-                        _MenuItem(
+                        _menuDivider(context),
+
+                        // 3. Allergies
+                        SettingsMenuItem(
+                          svgPath: 'assets/icones/alert.svg',
+                          label: 'Allergies',
+                          onTap: () =>
+                              Navigator.pushNamed(context, AppRoutes.allergies),
+                        ),
+                        _menuDivider(context),
+
+                        // 4. Cuisine + Flavor DNA
+                        SettingsMenuItem(
+                          icon: Icons.ramen_dining_rounded,
+                          label: 'Cuisine + Flavor DNA',
+                          onTap: () =>
+                              Navigator.pushNamed(context, AppRoutes.cuisineFlavor),
+                        ),
+                        _menuDivider(context),
+
+                        // 5. Kitchen equipment
+                        SettingsMenuItem(
+                          icon: Icons.kitchen_rounded,
+                          label: 'Kitchen Equipment',
+                          onTap: () =>
+                              Navigator.pushNamed(context, AppRoutes.kitchenEquipment),
+                        ),
+                        _menuDivider(context),
+
+                        // 6. Notifications
+                        SettingsMenuItem(
+                          svgPath: 'assets/icones/notif.svg',
+                          label: 'Notifications',
+                          onTap: () => Navigator.pushNamed(
+                              context, AppRoutes.notificationSettings),
+                        ),
+                        _menuDivider(context),
+
+                        // 7. Dark mode
+                        SettingsMenuItem(
+                          icon: Icons.dark_mode_outlined,
+                          label: 'Dark Mode',
+                          onTap: () =>
+                              Navigator.pushNamed(context, AppRoutes.darkMode),
+                        ),
+                        _menuDivider(context),
+
+                        // 8. Manage subscription & restore purchases
+                        SettingsMenuItem(
                           svgPath: 'assets/icones/billing.svg',
-                          label: 'Subscription',
+                          label: 'Manage Subscription & Restore Purchases',
                           onTap: () => Navigator.pushNamed(
                             context,
                             AppRoutes.subscriptionManagement,
                           ),
                         ),
-                        Divider(height: 1, thickness: 1, color: context.colors.pageBackground),
-                        _MenuItem(
-                          svgPath: 'assets/icones/coeur1.svg',
-                          label: 'Favorites',
-                          onTap: () => Navigator.pushNamed(
-                            context,
-                            AppRoutes.viewAll,
-                            arguments: {
-                              'type': ViewAllType.savedRecipes,
-                              'title': 'Your Favorites',
-                            },
-                          ),
-                        ),
-                        Divider(height: 1, thickness: 1, color: context.colors.pageBackground),
-                        _MenuItem(
-                          svgPath: 'assets/icones/order.svg',
-                          label: 'Order History',
-                          onTap: () =>
-                              Navigator.pushNamed(context, AppRoutes.activityHistory),
-                        ),
-                        Divider(height: 1, thickness: 1, color: context.colors.pageBackground),
-                        _MenuItem(
-                          svgPath: 'assets/icones/help.svg',
-                          label: 'Help Center',
-                          onTap: () =>
-                              Navigator.pushNamed(context, AppRoutes.helpCenter),
-                        ),
-                        Divider(height: 1, thickness: 1, color: context.colors.pageBackground),
-                        _MenuItem(
+                        _menuDivider(context),
+
+                        // 9. Contact Support / Report Problem / Privacy / Terms
+                        SettingsMenuItem(
                           svgPath: 'assets/icones/email1.svg',
                           label: 'Contact Support',
                           onTap: () =>
-                              Navigator.pushNamed(context, AppRoutes.sendFeedback),
+                              Navigator.pushNamed(context, AppRoutes.helpCenter),
                         ),
-                        Divider(height: 1, thickness: 1, color: context.colors.pageBackground),
-                        _MenuItem(
-                          svgPath: 'assets/icones/sun.svg',
-                          label: 'Settings',
-                          onTap: () => Navigator.pushNamed(context, AppRoutes.settings),
-                        ),
-                        Divider(height: 1, thickness: 1, color: context.colors.pageBackground),
-                        _MenuItem(
+                        _menuDivider(context),
+
+                        // 10. Delete Account
+                        SettingsMenuItem(
                           svgPath: 'assets/icones/delete.svg',
                           label: 'Delete Account',
                           textColor: context.colors.destructive,
@@ -287,8 +310,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             );
                           },
                         ),
-                        Divider(height: 1, thickness: 1, color: context.colors.pageBackground),
-                        _MenuItem(
+                        _menuDivider(context),
+                        SettingsMenuItem(
                           svgPath: 'assets/icones/logout.svg',
                           label: 'Logout',
                           textColor: context.colors.destructive,
@@ -310,76 +333,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 }
 
-class _MenuItem extends StatelessWidget {
-  final String svgPath;
-  final String label;
-  final VoidCallback onTap;
-  final Color? textColor;
-  final Color? iconColor;
-  final Color? chevronColor;
-
-  const _MenuItem({
-    required this.svgPath,
-    required this.label,
-    required this.onTap,
-    this.textColor,
-    this.iconColor,
-    this.chevronColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    final effectiveTextColor = textColor ?? colors.textPrimary;
-    final effectiveIconColor = iconColor ?? colors.textPrimary;
-    final effectiveChevronColor = chevronColor ?? colors.textSecondary;
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: Padding(
-        padding: EdgeInsets.symmetric(vertical: 16.h),
-        child: Row(
-          children: [
-            SizedBox(
-              width: 24.r,
-              height: 24.r,
-              child: Center(
-                child: SvgPicture.asset(
-                  svgPath,
-                  width: 22.r,
-                  height: 22.r,
-                  colorFilter: ColorFilter.mode(effectiveIconColor, BlendMode.srcIn),
-                  errorBuilder: (_, __, ___) => Icon(
-                    Icons.circle_outlined,
-                    size: 20.r,
-                    color: effectiveIconColor,
-                  ),
-                ),
-              ),
-            ),
-            SizedBox(width: 16.w),
-            Expanded(
-              child: Text(
-                label,
-                style: TextStyle(
-                  fontFamily: 'Rubik',
-                  fontWeight: FontWeight.w500,
-                  fontSize: 16.sp,
-                  color: effectiveTextColor,
-                ),
-              ),
-            ),
-            Icon(
-              Icons.chevron_right_rounded,
-              color: effectiveChevronColor,
-              size: 20.sp,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
 // ── Logout confirmation sheet ───────────────────────────────────────────────
 class _LogoutSheet extends StatelessWidget {
   const _LogoutSheet();

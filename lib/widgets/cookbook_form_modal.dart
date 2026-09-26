@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -16,6 +17,7 @@ import '../widgets/skeleton_list.dart';
 import '../widgets/recipe_shortcut_card.dart';
 import '../screens/home/home_screen.dart';
 import '../core/theme/app_theme.dart';
+import '../main.dart' show appNavigatorKey;
 
 class CookbookFormModal extends StatefulWidget {
   final Cookbook? cookbook;
@@ -594,17 +596,63 @@ class _CookbookFormModalState extends State<CookbookFormModal> {
     if (name.isEmpty || _isSaving) return;
 
     setState(() => _isSaving = true);
+
+    // Close and confirm immediately - the actual work (creating any new
+    // recipes, then creating/updating the cookbook itself, which is the
+    // slow part once several recipes are attached) continues in the
+    // background instead of holding the user on a spinner. Captured as
+    // plain locals so the background chain below never touches `this`
+    // after the modal - and its State - is gone.
+    final recipesSnapshot = List<Recipe>.from(_selectedRecipes);
+    final isEdit = _isEdit;
+    final cookbookId = widget.cookbook?.id;
+    final onComplete = widget.onComplete;
+
+    if (mounted) {
+      IosToast.show(
+        context,
+        message: isEdit ? 'Cookbook updated!' : 'Cookbook created!',
+        type: ToastType.success,
+      );
+    }
+
+    if (!_isPopping) {
+      _isPopping = true;
+      if (!widget.isEmbedded && mounted) {
+        try {
+          Navigator.of(context).pop();
+        } catch (e) {
+          debugPrint('Silent error during modal pop: $e');
+        }
+      }
+    }
+
+    unawaited(_saveInBackground(
+      name: name,
+      recipes: recipesSnapshot,
+      isEdit: isEdit,
+      cookbookId: cookbookId,
+      onComplete: onComplete,
+    ));
+  }
+
+  static Future<void> _saveInBackground({
+    required String name,
+    required List<Recipe> recipes,
+    required bool isEdit,
+    required String? cookbookId,
+    required void Function(Cookbook)? onComplete,
+  }) async {
     try {
       // Create any not-yet-saved recipes in parallel instead of one await
       // per recipe in sequence - with several new recipes selected, that
       // sequential chain was the main reason this felt slow.
-      final validRecipeIds = List<String>.filled(_selectedRecipes.length, '');
+      final validRecipeIds = List<String>.filled(recipes.length, '');
       await Future.wait(
-        List.generate(_selectedRecipes.length, (i) async {
-          Recipe r = _selectedRecipes[i];
+        List.generate(recipes.length, (i) async {
+          Recipe r = recipes[i];
           if (r.id.isEmpty) {
             r = await RecipeService.instance.createRecipe(r);
-            _selectedRecipes[i] = r;
           } else {
             // Trigger validation in background asynchronously so saving isn't blocked by network latency
             RecipeService.instance.validateRecipe(r.id).catchError((_) => r);
@@ -615,40 +663,24 @@ class _CookbookFormModalState extends State<CookbookFormModal> {
       );
 
       Cookbook cb;
-      if (_isEdit) {
+      if (isEdit) {
         cb = await CookbookService.instance
-            .updateCookbook(widget.cookbook!.id, name, validRecipeIds);
+            .updateCookbook(cookbookId!, name, validRecipeIds);
       } else {
         cb = await CookbookService.instance.createCookbook(name, validRecipeIds);
       }
-
-      if (!mounted) return;
-      if (mounted) {
-        IosToast.show(context,
-            message: _isEdit ? 'Cookbook updated!' : 'Cookbook created!',
-            type: ToastType.success);
-      }
-
-      if (!mounted || _isPopping) return;
-      _isPopping = true;
-
-      await Future.delayed(const Duration(milliseconds: 100));
-      if (!mounted) return;
-
-      if (!widget.isEmbedded) {
-        try {
-          Navigator.of(context).pop(cb);
-        } catch (e) {
-          debugPrint('Silent error during modal pop: $e');
-        }
-      }
-      widget.onComplete?.call(cb);
+      onComplete?.call(cb);
     } catch (e) {
-      if (mounted) {
-        setState(() => _isSaving = false);
-        IosToast.show(context,
-            message: ErrorHelper.getFriendlyMessage(e),
-            type: ToastType.error);
+      // The modal that would normally show this error is already closed by
+      // now, so report it via the app's root overlay instead of a local
+      // BuildContext that may no longer be mounted.
+      final ctx = appNavigatorKey.currentContext;
+      if (ctx != null) {
+        IosToast.show(
+          ctx,
+          message: 'Couldn\'t save "$name": ${ErrorHelper.getFriendlyMessage(e)}',
+          type: ToastType.error,
+        );
       }
     }
   }

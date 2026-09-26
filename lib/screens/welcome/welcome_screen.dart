@@ -6,6 +6,7 @@ import '../../routes/app_routes.dart';
 import '../../services/auth_service.dart';
 import '../../services/notification_service.dart';
 import '../../widgets/red_button.dart';
+import '../../widgets/scan_animation_overlay.dart';
 import '../splash/splash_screen.dart';
 
 /// The Welcome screen using welcome2.png background.
@@ -154,19 +155,18 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
             ),
           ),
 
-          // Debug-only test buttons: preview the splash screen and fire a
-          // local test push notification, without a fresh app launch or a
-          // real server-sent push. Gated on kDebugMode so none of this ships
-          // in release builds.
-          if (kDebugMode)
-            SafeArea(
-              child: Align(
-                alignment: Alignment.topRight,
-                child: Padding(
-                  padding: EdgeInsets.only(right: 12.w, top: 4.h),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
+          // "Test push" stays available in release builds so push delivery
+          // can be verified on a real device (e.g. via TestFlight) after
+          // deployment. The other debug buttons remain kDebugMode-gated.
+          SafeArea(
+            child: Align(
+              alignment: Alignment.topRight,
+              child: Padding(
+                padding: EdgeInsets.only(right: 12.w, top: 4.h),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    if (kDebugMode)
                       _DebugButton(
                         label: 'Test splash',
                         onTap: () => Navigator.push(
@@ -174,24 +174,42 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                           MaterialPageRoute(builder: (_) => const SplashScreen()),
                         ),
                       ),
-                      SizedBox(height: 8.h),
-                      _DebugButton(
-                        label: 'Test push',
-                        onTap: () => NotificationService.instance.showRemoteNotification(
-                          title: 'Test notification',
-                          body: 'This is what a push notification looks like on this device.',
-                        ),
+                    if (kDebugMode) SizedBox(height: 8.h),
+                    _DebugButton(
+                      label: 'Test push',
+                      onTap: () => NotificationService.instance.showRemoteNotification(
+                        title: 'Test notification',
+                        body: 'This is what a push notification looks like on this device.',
                       ),
+                    ),
+                    if (kDebugMode) ...[
                       SizedBox(height: 8.h),
                       _DebugButton(
                         label: 'Test settings',
-                        onTap: () => Navigator.pushNamed(context, AppRoutes.settings),
+                        onTap: () => Navigator.pushNamed(context, AppRoutes.profile),
+                      ),
+                      SizedBox(height: 8.h),
+                      _DebugButton(
+                        label: 'Test scan',
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => Scaffold(
+                              body: ScanAnimationOverlay(
+                                skipImageAnalysis: false,
+                                showTestControls: true,
+                                onAnimationComplete: () => Navigator.pop(context),
+                              ),
+                            ),
+                          ),
+                        ),
                       ),
                     ],
-                  ),
+                  ],
                 ),
               ),
             ),
+          ),
         ],
       ),
     );

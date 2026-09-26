@@ -3,16 +3,19 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 
 import '../../services/subscription_service.dart';
+import '../../services/revenuecat_service.dart';
 import '../../widgets/skeleton_loader.dart';
 import '../../widgets/skeleton_list.dart';
 import '../../models/subscription_payment.dart';
 import '../../core/widgets/ios_toast.dart';
+import '../../core/utils/error_helper.dart';
 import '../../services/auth_service.dart';
 import '../../services/paywall_service.dart';
 import '../premium/paywall_screen.dart';
 import '../../core/api_config.dart';
 import '../../services/user_service.dart';
 import '../../widgets/glass_icon_button.dart';
+import '../../widgets/app_loading_indicator.dart';
 import '../../widgets/red_header_background.dart';
 import '../../core/theme/app_theme.dart';
 
@@ -27,6 +30,7 @@ class SubscriptionManagementScreen extends StatefulWidget {
 class _SubscriptionManagementScreenState
     extends State<SubscriptionManagementScreen> {
   bool _isLoading = true;
+  bool _isRestoring = false;
   Map<String, dynamic>? _subscription;
   List<SubscriptionPayment> _history = [];
 
@@ -116,6 +120,32 @@ class _SubscriptionManagementScreenState
 
     if (result == true) {
       _loadSubscription();
+    }
+  }
+
+  Future<void> _handleRestorePurchases() async {
+    if (_isRestoring) return;
+    setState(() => _isRestoring = true);
+    try {
+      final restored = await RevenueCatService.instance.restorePurchases();
+      if (!mounted) return;
+      IosToast.show(
+        context,
+        message: restored
+            ? 'Purchases restored!'
+            : 'No active subscriptions found to restore.',
+        type: restored ? ToastType.success : ToastType.warning,
+      );
+      if (restored) _loadSubscription();
+    } catch (e) {
+      if (!mounted) return;
+      IosToast.show(
+        context,
+        message: ErrorHelper.getFriendlyMessage(e),
+        type: ToastType.error,
+      );
+    } finally {
+      if (mounted) setState(() => _isRestoring = false);
     }
   }
 
@@ -294,6 +324,28 @@ class _SubscriptionManagementScreenState
                                                 ),
                                               ),
                                             ),
+                                          ),
+                                        ),
+                                        SizedBox(height: 16.h),
+                                        GestureDetector(
+                                          onTap: _isRestoring ? null : _handleRestorePurchases,
+                                          child: Center(
+                                            child: _isRestoring
+                                                ? SizedBox(
+                                                    width: 18.r,
+                                                    height: 18.r,
+                                                    child: const AppLoadingIndicator(),
+                                                  )
+                                                : Text(
+                                                    'Restore Purchases',
+                                                    style: TextStyle(
+                                                      fontFamily: 'Rubik',
+                                                      fontWeight: FontWeight.w600,
+                                                      fontSize: 14.sp,
+                                                      color: context.colors.accent,
+                                                      decoration: TextDecoration.underline,
+                                                    ),
+                                                  ),
                                           ),
                                         ),
                                       ],

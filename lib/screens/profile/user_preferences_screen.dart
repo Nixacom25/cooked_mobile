@@ -5,21 +5,24 @@ import '../../services/user_service.dart';
 import '../../widgets/glass_icon_button.dart';
 import '../../widgets/skeleton_list.dart';
 import '../../widgets/red_header_background.dart';
+import '../../widgets/preference_step_scaffold.dart';
 import '../../core/widgets/ios_toast.dart';
 import '../onboarding/widgets/dietary_preferences_step.dart';
-import '../onboarding/widgets/allergies_step.dart';
 import '../onboarding/widgets/dislikes_step.dart';
-import '../onboarding/widgets/flavor_spice_step.dart';
 import '../onboarding/widgets/cooking_skill_step.dart';
 import '../onboarding/widgets/time_preference_step.dart';
 import '../onboarding/widgets/cooking_target_step.dart';
-import '../onboarding/widgets/cuisines_step.dart';
-import '../onboarding/widgets/kitchen_step.dart';
 import '../onboarding/widgets/meal_planning_step.dart';
-import '../onboarding/widgets/notifications_step.dart';
 import '../onboarding/widgets/goals_step.dart';
 import '../onboarding/widgets/language_region_step.dart';
 import '../../core/theme/app_theme.dart';
+
+// Allergies, Favorite Cuisines, Flavor & Spice and Kitchen Appliances used
+// to live in this screen too, but are now their own top-level Profile
+// entries (see AllergiesScreen, CuisineFlavorScreen, KitchenEquipmentScreen)
+// - this hub only keeps the steps that don't have a dedicated home
+// elsewhere. The fields themselves are still loaded/saved here unchanged,
+// since PUT /user/me/preferences replaces the whole bundle on every call.
 
 class UserPreferencesScreen extends StatefulWidget {
   const UserPreferencesScreen({super.key});
@@ -145,111 +148,10 @@ class _UserPreferencesScreenState extends State<UserPreferencesScreen> {
     return goals.map((id) => _goalLabels[id] ?? id).join(', ');
   }
 
-  void _openEditor(String title, Widget editor) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => Scaffold(
-            backgroundColor: Colors.transparent,
-            resizeToAvoidBottomInset: false,
-            body: Stack(
-              fit: StackFit.expand,
-              children: [
-                // ── Red background ──
-                const Positioned.fill(
-                  child: RedHeaderBackground(),
-                ),
-                SafeArea(
-                  bottom: false,
-                  child: Container(
-                    margin: EdgeInsets.only(top: 25.h),
-                    decoration: BoxDecoration(
-                      color: context.colors.surface,
-                      borderRadius: BorderRadius.vertical(
-                        top: Radius.circular(32.r),
-                      ),
-                    ),
-                    child: Column(
-                      children: [
-                        // Header
-                        Padding(
-                          padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 12.h),
-                          child: Row(
-                            children: [
-                              GlassIconButton(
-                                onTap: () => Navigator.pop(context),
-                                size: 42.r,
-                                child: Icon(
-                                  Icons.arrow_back_rounded,
-                                  size: 20.sp,
-                                  color: context.colors.textPrimary,
-                                ),
-                              ),
-                              Expanded(
-                                child: Text(
-                                  title,
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    fontFamily: 'Rubik',
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 18.sp,
-                                    color: context.colors.textPrimary,
-                                  ),
-                                ),
-                              ),
-                              SizedBox(width: 42.r),
-                            ],
-                          ),
-                        ),
-
-                        // Onboarding Step Component
-                        Expanded(
-                          child: editor,
-                        ),
-
-                        // Confirm & Save Action Button
-                        SafeArea(
-                          child: Padding(
-                            padding: EdgeInsets.fromLTRB(20.w, 8.h, 20.w, 16.h),
-                            child: GestureDetector(
-                              onTap: () => Navigator.pop(context),
-                              child: Container(
-                                width: double.infinity,
-                                height: 54.h,
-                                decoration: BoxDecoration(
-                                  color: context.colors.accent,
-                                  borderRadius: BorderRadius.circular(27.r),
-                                ),
-                                child: Center(
-                                  child: Text(
-                                    'Confirm',
-                                    style: TextStyle(
-                                      fontFamily: 'Rubik',
-                                      fontWeight: FontWeight.w700,
-                                      fontSize: 16.sp,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      )
-    .then((_) {
-      _savePreferences();
-    });
+  Future<void> _openEditor(String title, Widget editor) async {
+    await pushPreferenceStep(context, title: title, step: editor);
+    _savePreferences();
   }
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -341,7 +243,7 @@ class _UserPreferencesScreenState extends State<UserPreferencesScreen> {
                                 ),
                               ),
                               SizedBox(height: 24.h),
-                              _buildSectionHeader('Diet & Allergies'),
+                              _buildSectionHeader('Diet'),
                               _buildTile(
                                 'Dietary Profile',
                                 _selectedDiet.join(', '),
@@ -350,18 +252,6 @@ class _UserPreferencesScreenState extends State<UserPreferencesScreen> {
                                   DietaryPreferencesStep(
                                     initialSelected: _selectedDiet,
                                     onChanged: (val) => setState(() => _selectedDiet = val),
-                                  ),
-                                ),
-                              ),
-                              _buildTile(
-                                'Allergies',
-                                _selectedAllergy.join(', '),
-                                () => _openEditor(
-                                  'Allergies',
-                                  AllergiesStep(
-                                    initialSelected: _selectedAllergy,
-                                    onChanged: (val) =>
-                                        setState(() => _selectedAllergy = val),
                                   ),
                                 ),
                               ),
@@ -392,23 +282,6 @@ class _UserPreferencesScreenState extends State<UserPreferencesScreen> {
                                 ),
                               ),
                               _buildTile(
-                                'Flavor & Spice',
-                                '$_spiceLevel, ${_flavorDna.length} preferences',
-                                () => _openEditor(
-                                  'Flavor & Spice',
-                                  FlavorSpiceStep(
-                                    initialDna: _flavorDna,
-                                    initialSpice: _spiceLevel,
-                                    onChanged: ({required dna, required spice}) {
-                                      setState(() {
-                                        _flavorDna = dna;
-                                        _spiceLevel = spice;
-                                      });
-                                    },
-                                  ),
-                                ),
-                              ),
-                              _buildTile(
                                 'Time Preference',
                                 _cookingTime,
                                 () => _openEditor(
@@ -420,31 +293,7 @@ class _UserPreferencesScreenState extends State<UserPreferencesScreen> {
                                 ),
                               ),
                               SizedBox(height: 24.h),
-                              _buildSectionHeader('Kitchen & Habits'),
-                              _buildTile(
-                                'Favorite Cuisines',
-                                _favoriteCuisines.join(', '),
-                                () => _openEditor(
-                                  'Favorite Cuisines',
-                                  CuisinesStep(
-                                    initialSelected: _favoriteCuisines,
-                                    onChanged: (val) =>
-                                        setState(() => _favoriteCuisines = val),
-                                  ),
-                                ),
-                              ),
-                              _buildTile(
-                                'Kitchen Appliances',
-                                _kitchenAppliances.join(', '),
-                                () => _openEditor(
-                                  'Kitchen Appliances',
-                                  KitchenStep(
-                                    initialSelected: _kitchenAppliances,
-                                    onChanged: (val) =>
-                                        setState(() => _kitchenAppliances = val),
-                                  ),
-                                ),
-                              ),
+                              _buildSectionHeader('Meal Planning & Habits'),
                               _buildTile(
                                 'Meal Planning Style',
                                 _mealPlanningStyle,
@@ -470,18 +319,6 @@ class _UserPreferencesScreenState extends State<UserPreferencesScreen> {
                               ),
                               SizedBox(height: 24.h),
                               _buildSectionHeader('Other'),
-                              _buildTile(
-                                'Notification Preferences',
-                                _notificationPreferences.join(', '),
-                                () => _openEditor(
-                                  'Notification Preferences',
-                                  NotificationsStep(
-                                    initialSelected: _notificationPreferences,
-                                    onChanged: (val) =>
-                                        setState(() => _notificationPreferences = val),
-                                  ),
-                                ),
-                              ),
                               _buildTile(
                                 'Onboarding Goals',
                                 _formatGoals(_onboardingGoals),

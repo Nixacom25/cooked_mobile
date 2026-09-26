@@ -155,13 +155,19 @@ class SharingService {
   String? extractUrl(String text) {
     if (text.isEmpty) return null;
     final trimmed = text.trim();
-    
-    // If the text itself is a URL
-    if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+
+    // If the text itself is a URL. `cooked://` is this app's own custom
+    // scheme (recipe shares, and the Welcome/security/subscription email
+    // links) - used as a fallback when a Universal/App Link doesn't
+    // intercept the tap, so it has to be recognized here too or the deep
+    // link is silently dropped further down in main.dart.
+    if (trimmed.startsWith('http://') ||
+        trimmed.startsWith('https://') ||
+        trimmed.startsWith('cooked://')) {
       return trimmed.split(RegExp(r'\s')).first;
     }
 
-    final urlRegExp = RegExp(r'(https?://[^\s]+)');
+    final urlRegExp = RegExp(r'((?:https?|cooked)://[^\s]+)');
     final match = urlRegExp.firstMatch(text);
     return match?.group(0);
   }

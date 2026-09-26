@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'dart:io' as io;
+import 'dart:math' as math;
 import 'package:flutter/foundation.dart' show defaultTargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:rive/rive.dart';
+import 'package:video_player/video_player.dart';
 import '../models/recipe.dart';
 import '../core/widgets/ios_toast.dart';
 import '../core/theme/app_theme.dart';
@@ -41,6 +43,8 @@ class _ScanAnimationOverlayState extends State<ScanAnimationOverlay> {
   bool _completionRequested = false;
   bool _showRive = false;
   _AnimationPlatform? _testPlatform;
+  VideoPlayerController? _videoController;
+  Future<void>? _videoInitialization;
   bool _isDark = false;
   bool _dependenciesResolved = false;
 
@@ -49,11 +53,21 @@ class _ScanAnimationOverlayState extends State<ScanAnimationOverlay> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    
+
     final newIsDark = Theme.of(context).brightness == Brightness.dark;
     if (!_dependenciesResolved || _isDark != newIsDark) {
       _isDark = newIsDark;
       _dependenciesResolved = true;
+
+      final isTestEnvironment = WidgetsBinding.instance.runtimeType
+          .toString()
+          .toLowerCase()
+          .contains('test');
+      if (!isTestEnvironment &&
+          (widget.showTestControls ||
+              defaultTargetPlatform == TargetPlatform.iOS)) {
+        _prepareVideo();
+      }
     }
   }
 
@@ -63,9 +77,11 @@ class _ScanAnimationOverlayState extends State<ScanAnimationOverlay> {
 
     _showRive = widget.skipImageAnalysis;
     if (widget.skipImageAnalysis) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) _showAnimation();
-      });
+      if (defaultTargetPlatform == TargetPlatform.iOS) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) _showAnimation();
+        });
+      }
     } else {
       _imageScanTimer = Timer(const Duration(seconds: 3), () {
         _showAnimation();
@@ -131,13 +147,71 @@ class _ScanAnimationOverlayState extends State<ScanAnimationOverlay> {
     _minAnimationTimer?.cancel();
     _maxTimeoutTimer?.cancel();
     _imageScanTimer?.cancel();
+    _videoController?.dispose();
     debugPrint('🎬 ScanAnimationOverlay disposed');
     super.dispose();
   }
 
-  bool get _usesVideo => false; // Use Rive animations on both iOS and Android
+  bool get _usesVideo =>
+      (_testPlatform ??
+          (defaultTargetPlatform == TargetPlatform.iOS
+              ? _AnimationPlatform.ios
+              : _AnimationPlatform.android)) ==
+      _AnimationPlatform.ios;
+
+  void _prepareVideo() {
+    // Each theme has its own export - previously this always loaded the
+    // light-mode file regardless of theme because the dark-mode export was
+    // corrupted (its moov atom was missing, so no player on any platform
+    // could decode it - confirmed with ffprobe). If a future export is
+    // still bad, _showAnimation's try/catch below falls back to Rive
+    // instead of silently showing the wrong-theme video again.
+    final assetPath = _isDark
+        ? 'assets/animations/cooked_dark.mp4'
+        : 'assets/animations/cooked.mp4';
+
+    debugPrint('🎬 Preparing video: $assetPath (isDark: $_isDark)');
+
+    if (_videoController == null ||
+        _videoController!.dataSource != assetPath) {
+      _videoController?.dispose();
+      _videoController = VideoPlayerController.asset(assetPath);
+      _videoInitialization = _videoController!.initialize().then((_) {
+        debugPrint('✅ Video initialized successfully: ${_videoController!.value.size}');
+        _videoController!.setLooping(false);
+      }).catchError((error) {
+        debugPrint('❌ Video initialization failed for $assetPath: $error');
+        throw error;
+      });
+    }
+  }
 
   Future<void> _showAnimation() async {
+    if (_usesVideo) {
+      try {
+        _prepareVideo();
+        await _videoInitialization;
+
+        if (_videoController != null && _videoController!.value.isInitialized) {
+          await _videoController!.seekTo(Duration.zero);
+          await _videoController!.play();
+          debugPrint('✅ Video playing successfully (isDark: $_isDark)');
+        } else {
+          throw Exception('Video controller not initialized');
+        }
+      } catch (error) {
+        debugPrint('❌ Video animation failed, falling back to Rive: $error');
+        ErrorMonitoringService.instance.recordRiveAnimationFailure(
+          animationName: _isDark ? 'cooked_dark.mp4' : 'cooked.mp4',
+          reason: error.toString(),
+        );
+        if (mounted) {
+          setState(() {
+            _testPlatform = _AnimationPlatform.android;
+          });
+        }
+      }
+    }
     if (mounted) {
       setState(() {
         _showRive = true;
@@ -195,10 +269,12 @@ class _ScanAnimationOverlayState extends State<ScanAnimationOverlay> {
             ),
           if (_showRive)
             Positioned.fill(
-              child: _FallbackScanAnimation(
-                skipImageAnalysis: widget.skipImageAnalysis,
-                isDark: _isDark,
-              ),
+              child: _usesVideo && _videoController != null
+                  ? _VideoAnimation(controller: _videoController!)
+                  : _FallbackScanAnimation(
+                      skipImageAnalysis: widget.skipImageAnalysis,
+                      isDark: _isDark,
+                    ),
             ),
           if (widget.showTestControls)
             Positioned(
@@ -426,6 +502,61 @@ class _FallbackScanAnimationState extends State<_FallbackScanAnimation> {
   }
 }
 
+class _VideoAnimation extends StatefulWidget {
+  final VideoPlayerController controller;
+
+  const _VideoAnimation({required this.controller});
+
+  @override
+  State<_VideoAnimation> createState() => _VideoAnimationState();
+}
+
+class _VideoAnimationState extends State<_VideoAnimation> {
+  @override
+  void initState() {
+    super.initState();
+    if (widget.controller.value.isInitialized && !widget.controller.value.isPlaying) {
+      widget.controller.play();
+    }
+    // Stay on the last frame instead of looping or going blank once done.
+    widget.controller.addListener(_onVideoPositionChanged);
+  }
+
+  void _onVideoPositionChanged() {
+    final value = widget.controller.value;
+    if (value.position >= value.duration) {
+      widget.controller.pause();
+    }
+  }
+
+  @override
+  void dispose() {
+    widget.controller.removeListener(_onVideoPositionChanged);
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ColoredBox(
+      color: context.colors.surface,
+      child: ValueListenableBuilder<VideoPlayerValue>(
+        valueListenable: widget.controller,
+        builder: (context, value, child) {
+          if (!value.isInitialized) return const SizedBox.expand();
+          return FittedBox(
+            fit: BoxFit.cover,
+            child: SizedBox(
+              width: value.size.width,
+              height: value.size.height,
+              child: VideoPlayer(widget.controller),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
 class _ImageScanAnimation extends StatefulWidget {
   final String imagePath;
 
@@ -456,7 +587,6 @@ class _ImageScanAnimationState extends State<_ImageScanAnimation>
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final image = widget.imagePath.startsWith('assets/')
         ? Image.asset(widget.imagePath, fit: BoxFit.cover)
         : Image.file(io.File(widget.imagePath), fit: BoxFit.cover);
@@ -466,13 +596,19 @@ class _ImageScanAnimationState extends State<_ImageScanAnimation>
         fit: StackFit.expand,
         children: [
           image,
-          AnimatedBuilder(
-            animation: _controller,
-            builder: (context, child) {
-              return CustomPaint(
-                painter: _ScanSweepPainter(progress: _controller.value, isDark: isDark),
-              );
-            },
+          // Dims the photo toward the dark-grid backdrop the dot animation
+          // is designed against, while keeping it clearly visible underneath
+          // rather than hiding it.
+          Container(color: Colors.black.withValues(alpha: 0.38)),
+          RepaintBoundary(
+            child: AnimatedBuilder(
+              animation: _controller,
+              builder: (context, child) {
+                return CustomPaint(
+                  painter: _DotGridScanPainter(progress: _controller.value),
+                );
+              },
+            ),
           ),
         ],
       ),
@@ -480,39 +616,82 @@ class _ImageScanAnimationState extends State<_ImageScanAnimation>
   }
 }
 
-class _ScanSweepPainter extends CustomPainter {
+/// A regular grid of dots, dim and tiny by default, with a soft glowing
+/// horizontal band that descends then ascends slowly over the scan phase -
+/// the whole width lights up together at a given row (not a localized
+/// spot), with no hard edge (Gaussian falloff by vertical distance only),
+/// fading smoothly back down as the band moves past. Rows near the
+/// top/bottom edge fade toward black so the grid dissolves into the dark
+/// rather than cutting off.
+class _DotGridScanPainter extends CustomPainter {
   final double progress;
-  final bool isDark;
 
-  const _ScanSweepPainter({required this.progress, required this.isDark});
+  const _DotGridScanPainter({required this.progress});
+
+  static const double _spacing = 11;
+  static const double _baseRadius = 0.7;
+  static const double _maxRadius = 3.0;
+  static const double _glowSigma = 150; // px - wide band = slow, gradual feel
+  static const double _edgeFadeDistance = 30; // px from top/bottom to fully dim
+  static const Color _dimColor = Color(0xFF10281C);
+  static const Color _midColor = Color(0xFF3ED67F);
+  static const Color _brightColor = Color(0xFFB8FFDD);
 
   @override
   void paint(Canvas canvas, Size size) {
-    final scanY = size.height * progress;
-    // Adapt scan color to theme - lighter for dark mode
-    final scanColor = isDark 
-        ? const Color(0xFF4CAF50).withValues(alpha: 0.3)  // Green for dark mode
-        : const Color(0xFF42D77D).withValues(alpha: 0.18); // Original green for light mode
-    
-    final tintPaint = Paint()
-      ..color = scanColor;
-    canvas.drawRect(Rect.fromLTWH(0, 0, size.width, scanY), tintPaint);
+    // One full down-then-up cycle over the scan phase: sin(0)=sin(pi)=0, so
+    // the wave starts near the top, reaches the bottom at the midpoint, and
+    // returns to the top by the end - a single smooth bounce rather than a
+    // one-way pass that just gets cut off.
+    final wave = math.sin(progress * math.pi);
+    final waveY = size.height * (0.05 + 0.85 * wave);
 
-    final glowPaint = Paint()
-      ..color = isDark
-          ? const Color(0xFF4CAF50).withValues(alpha: 0.5)
-          : const Color(0xFF42D77D).withValues(alpha: 0.35)
-      ..strokeWidth = 14;
-    canvas.drawLine(Offset(0, scanY), Offset(size.width, scanY), glowPaint);
+    final cols = (size.width / _spacing).ceil() + 1;
+    final rows = (size.height / _spacing).ceil() + 1;
 
-    final linePaint = Paint()
-      ..color = const Color(0xFF8CFFB1)
-      ..strokeWidth = 3;
-    canvas.drawLine(Offset(0, scanY), Offset(size.width, scanY), linePaint);
+    for (int gy = 0; gy <= rows; gy++) {
+      final py = gy * _spacing;
+      final dy = py - waveY;
+      final intensity = math.exp(-(dy * dy) / (2 * _glowSigma * _glowSigma));
+
+      final edgeDist = math.min(py, size.height - py);
+      final edgeFactor = (edgeDist / _edgeFadeDistance).clamp(0.0, 1.0);
+
+      final baseOpacity = 0.12 * edgeFactor;
+      final glowOpacity = intensity * edgeFactor;
+      final opacity = math.max(baseOpacity, glowOpacity).clamp(0.0, 1.0);
+      if (opacity <= 0.01) continue;
+
+      final radius = _baseRadius + (_maxRadius - _baseRadius) * intensity;
+      final color = intensity < 0.5
+          ? Color.lerp(_dimColor, _midColor, intensity / 0.5)!
+          : Color.lerp(_midColor, _brightColor, (intensity - 0.5) / 0.5)!;
+
+      // Same value for every dot on this row - one Paint reused across the
+      // whole row instead of allocating one per dot.
+      final rowPaint = Paint()..color = color.withValues(alpha: opacity);
+      final haloPaint = intensity > 0.55
+          ? (Paint()
+            ..color = _brightColor.withValues(alpha: (intensity - 0.55) * 0.32)
+            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3.5))
+          : null;
+
+      for (int gx = 0; gx <= cols; gx++) {
+        final px = gx * _spacing;
+        canvas.drawCircle(Offset(px, py), radius, rowPaint);
+
+        // Subtle halo only on the brightest rows near the wave's centre -
+        // deliberately small/low-opacity so it stays a thin glow rather
+        // than a blurry blob.
+        if (haloPaint != null) {
+          canvas.drawCircle(Offset(px, py), radius * 2.1, haloPaint);
+        }
+      }
+    }
   }
 
   @override
-  bool shouldRepaint(_ScanSweepPainter oldDelegate) =>
+  bool shouldRepaint(_DotGridScanPainter oldDelegate) =>
       oldDelegate.progress != progress;
 }
 

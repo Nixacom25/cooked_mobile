@@ -22,11 +22,13 @@ class AppRoutes {
   static const String activityHistory = '/activity-history';
   static const String helpCenter = '/help-center';
   static const String sendFeedback = '/send-feedback';
-  static const String settings = '/settings';
   static const String darkMode = '/settings/dark-mode';
   static const String notificationSettings = '/settings/notifications';
   static const String viewAll = '/view-all';
   static const String editPreferences = '/edit-preferences';
+  static const String allergies = '/allergies';
+  static const String cuisineFlavor = '/cuisine-flavor';
+  static const String kitchenEquipment = '/kitchen-equipment';
   static const String cookbookDetail = '/cookbook-detail';
   static const String cookbookForm = '/cookbook-form';
   static const String recipeDetail = '/recipe-detail';

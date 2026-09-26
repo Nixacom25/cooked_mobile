@@ -8,7 +8,6 @@ import '../core/api_config.dart';
 import '../routes/app_routes.dart';
 import 'glass_icon_button.dart';
 import 'alphabet_avatar.dart';
-import 'appearance_sheet.dart';
 import '../core/theme/app_theme.dart';
 
 class AppTopHeader extends StatefulWidget {
@@ -114,48 +113,14 @@ class _AppTopHeaderState extends State<AppTopHeader> {
                               child: Row(
                                 children: [
                                   Icon(
-                                    Icons.person_outline_rounded,
+                                    Icons.settings_outlined,
                                     size: 20.sp,
                                     color: context.colors.textPrimary,
                                   ),
                                   SizedBox(width: 10.w),
                                   Expanded(
                                     child: Text(
-                                      'Profile',
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: TextStyle(
-                                        fontFamily: 'Rubik',
-                                        fontWeight: FontWeight.w600,
-                                        fontSize: 14.sp,
-                                        color: context.colors.textPrimary,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                          SizedBox(height: 2.h),
-                          InkWell(
-                            borderRadius: BorderRadius.circular(18.r),
-                            onTap: () {
-                              Navigator.of(ctx).pop();
-                              showAppearanceSheet(context);
-                            },
-                            child: Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
-                              child: Row(
-                                children: [
-                                  Icon(
-                                    Icons.dark_mode_outlined,
-                                    size: 20.sp,
-                                    color: context.colors.textPrimary,
-                                  ),
-                                  SizedBox(width: 10.w),
-                                  Expanded(
-                                    child: Text(
-                                      'Appearance',
+                                      'Settings',
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                       style: TextStyle(
