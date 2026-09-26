@@ -1,4 +1,5 @@
 import 'dart:async';
+import '../../core/utils/recipe_count.dart';
 import 'dart:ui';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -2648,7 +2649,7 @@ class _CookbooksRowState extends State<_CookbooksRow> {
                               ),
                               SizedBox(width: 4.w),
                               Text(
-                                '${cb.recipes.length} Recipes',
+                                recipeCountLabel(cb.recipes.length, capitalize: true),
                                 style: TextStyle(
                                   fontFamily: 'SF Pro',
                                   fontSize: 11.sp,

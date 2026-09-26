@@ -1,4 +1,5 @@
 import 'dart:ui';
+import '../core/utils/recipe_count.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -306,7 +307,7 @@ class _AddToCookbookSheetState extends State<AddToCookbookSheet> {
                     ),
                   ),
                   Text(
-                    '${cb.recipes.length} recipes',
+                    recipeCountLabel(cb.recipes.length),
                     style: TextStyle(
                       color: context.colors.textMuted,
                       fontSize: 13.sp,

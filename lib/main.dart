@@ -36,6 +36,7 @@ import 'screens/profile/notification_settings_screen.dart';
 import 'screens/profile/allergies_screen.dart';
 import 'screens/profile/cuisine_flavor_screen.dart';
 import 'screens/profile/kitchen_equipment_screen.dart';
+import 'screens/profile/language_region_screen.dart';
 import 'screens/scan_screen.dart';
 import 'package:cooked/core/services/tutorial_service.dart';
 import 'package:cooked/services/notification_service.dart';
@@ -536,6 +537,9 @@ class _CookedAppState extends State<CookedApp> with WidgetsBindingObserver {
                   break;
                 case AppRoutes.kitchenEquipment:
                   builder = const KitchenEquipmentScreen();
+                  break;
+                case AppRoutes.languageRegion:
+                  builder = const LanguageRegionScreen();
                   break;
                 case AppRoutes.subscriptionManagement:
                   builder = const SubscriptionManagementScreen();

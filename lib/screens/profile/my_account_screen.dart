@@ -14,6 +14,7 @@ import '../../core/utils/error_helper.dart';
 import '../../widgets/alphabet_avatar.dart';
 import '../../widgets/app_loading_indicator.dart';
 import '../../core/theme/app_theme.dart';
+import '../../routes/app_routes.dart';
 
 class MyAccountScreen extends StatefulWidget {
   const MyAccountScreen({super.key});
@@ -288,6 +289,41 @@ class _MyAccountScreenState extends State<MyAccountScreen> {
                                   dropdownIconPosition: IconPosition.trailing,
                                   disableLengthCheck: true,
                                   textAlignVertical: TextAlignVertical.center,
+                                ),
+                                SizedBox(height: 20.h),
+
+                                _buildLabel('Language & Region'),
+                                SizedBox(height: 8.h),
+                                ValueListenableBuilder<Map<String, dynamic>?>(
+                                  valueListenable: UserService.instance.currentUserNotifier,
+                                  builder: (context, user, _) {
+                                    final language = user?['language'] ?? 'GB English';
+                                    final country = user?['country'] ?? 'US United States';
+                                    return GestureDetector(
+                                      onTap: () => Navigator.pushNamed(context, AppRoutes.languageRegion),
+                                      child: _buildInputField(
+                                        child: Padding(
+                                          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
+                                          child: Row(
+                                            children: [
+                                              Expanded(
+                                                child: Text(
+                                                  '$language, $country',
+                                                  style: _inputTextStyle(),
+                                                  overflow: TextOverflow.ellipsis,
+                                                ),
+                                              ),
+                                              Icon(
+                                                Icons.chevron_right_rounded,
+                                                color: context.colors.textSecondary,
+                                                size: 22.sp,
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  },
                                 ),
                                 SizedBox(height: 36.h),
 

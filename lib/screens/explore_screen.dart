@@ -1,4 +1,5 @@
 import 'home/home_screen.dart';
+import '../core/utils/recipe_count.dart';
 import 'dart:async';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
@@ -384,9 +385,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                       itemBuilder: (context, i) {
                         final item = categories[i];
                         final name = (item['name'] as String?) ?? "Category";
-                        final count = item['recipeCount'] != null
-                            ? "${item['recipeCount']} recipes"
-                            : "0 recipes";
+                        final count = recipeCountLabel(item['recipeCount']);
                         final img = (item['image'] as String?) ?? "";
 
                         return Padding(
@@ -739,7 +738,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                     final name = (item['name'] as String?) ?? 'Cuisine';
                     final count = item['count'] != null
                         ? item['count'].toString()
-                        : (item['recipeCount'] != null ? "${item['recipeCount']} recipes" : "0 recipes");
+                        : recipeCountLabel(item['recipeCount']);
                     final rawImgPath = item['image'] as String?;
                     final imgPath = _getCuisineImagePath(name, rawImgPath);
                     final isNetwork = imgPath.startsWith('http');

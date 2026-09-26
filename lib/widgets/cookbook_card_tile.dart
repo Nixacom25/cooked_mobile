@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../core/utils/recipe_count.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../models/cookbook.dart';
@@ -151,7 +152,7 @@ class CookbookCardTile extends StatelessWidget {
                           ),
                           SizedBox(width: 4.w),
                           Text(
-                            '${cookbook.recipes.length} Recipes',
+                            recipeCountLabel(cookbook.recipes.length, capitalize: true),
                             style: TextStyle(
                               fontFamily: 'Rubik',
                               fontSize: 13.sp,
@@ -201,7 +202,7 @@ class CookbookCardTile extends StatelessWidget {
                               ),
                               SizedBox(width: 4.w),
                               Text(
-                                '${cookbook.recipes.length} Recipes',
+                                recipeCountLabel(cookbook.recipes.length, capitalize: true),
                                 style: TextStyle(
                                   fontFamily: 'Rubik',
                                   fontSize: 12.sp,

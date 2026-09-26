@@ -14,7 +14,6 @@ import '../onboarding/widgets/time_preference_step.dart';
 import '../onboarding/widgets/cooking_target_step.dart';
 import '../onboarding/widgets/meal_planning_step.dart';
 import '../onboarding/widgets/goals_step.dart';
-import '../onboarding/widgets/language_region_step.dart';
 import '../../core/theme/app_theme.dart';
 
 // Allergies, Favorite Cuisines, Flavor & Spice and Kitchen Appliances used
@@ -218,31 +217,6 @@ class _UserPreferencesScreenState extends State<UserPreferencesScreen> {
                         : ListView(
                             padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
                             children: [
-                              _buildSectionHeader('Language & Region'),
-                              _buildTile(
-                                'Language & Region',
-                                '$_language, $_country',
-                                () => _openEditor(
-                                  'Language & Region',
-                                  LanguageRegionStep(
-                                    initialLanguage: _language,
-                                    initialCountry: _country,
-                                    initialMeasurementSystem: _measurementSystem,
-                                    onChanged: ({
-                                      required String language,
-                                      required String country,
-                                      required String measurementSystem,
-                                    }) {
-                                      setState(() {
-                                        _language = language;
-                                        _country = country;
-                                        _measurementSystem = measurementSystem;
-                                      });
-                                    },
-                                  ),
-                                ),
-                              ),
-                              SizedBox(height: 24.h),
                               _buildSectionHeader('Diet'),
                               _buildTile(
                                 'Dietary Profile',

@@ -146,7 +146,7 @@ class SavingsDetailsScreen extends StatelessWidget {
                                     Text(
                                       displayRecipes.length == 1
                                           ? "From 1 saved recipe"
-                                          : "From ${displayRecipes.length} saved recipes",
+                                          : "From ${displayRecipes.length} saved ${displayRecipes.length >= 2 ? 'recipes' : 'recipe'}",
                                       style: TextStyle(
                                         fontFamily: 'Rubik',
                                         fontSize: 14.sp,

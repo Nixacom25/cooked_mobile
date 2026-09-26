@@ -1,4 +1,5 @@
 import 'package:cooked/widgets/recipe_grid_skeleton.dart';
+import '../../core/utils/recipe_count.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -255,7 +256,7 @@ class _ViewAllScreenState extends State<ViewAllScreen> {
       builder: (context, recipes, _) {
         final count = recipes?.length ?? 0;
         return Text(
-          '$count Recipes',
+          recipeCountLabel(count, capitalize: true),
           style: TextStyle(
             fontFamily: 'SF Pro',
             fontSize: 12,
@@ -1087,7 +1088,7 @@ class _CreatorsGridState extends State<_CreatorsGrid> {
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      '${c.publicRecipeCount} Recipes',
+                      recipeCountLabel(c.publicRecipeCount, capitalize: true),
                       style: TextStyle(
                         fontFamily: 'SF Pro',
                         fontSize: 11,

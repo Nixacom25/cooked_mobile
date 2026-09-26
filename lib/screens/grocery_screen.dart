@@ -1060,7 +1060,8 @@ class _AddGrocerySheetState extends State<_AddGrocerySheet> {
                         child: DropdownButtonHideUnderline(
                           child: DropdownButton<Recipe>(
                             isExpanded: true,
-                            dropdownColor: Colors.white,
+                            dropdownColor: context.colors.elevatedSurface,
+                            borderRadius: BorderRadius.circular(16.r),
                             value: _selectedRecipe,
                             hint: Text(
                               hasRecipes ? 'Choose a recipe' : 'No recipes found',

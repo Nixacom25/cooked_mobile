@@ -642,7 +642,9 @@ class _DotGridScanPainter extends CustomPainter {
   static const double _spacing = 11;
   static const double _baseRadius = 0.7;
   static const double _maxRadius = 3.0;
-  static const double _glowSigma = 150; // px - wide band = slow, gradual feel
+  static const double _glowSigma = 70; // px - bright head of the wave
+  static const double _trailLength = 160; // px - decay of the fading tail
+  static const double _trailStrength = 0.55;
   static const double _edgeFadeDistance = 30; // px from top/bottom to fully dim
   static const Color _dimColor = Color(0xFF10281C);
   static const Color _midColor = Color(0xFF3ED67F);
@@ -656,6 +658,7 @@ class _DotGridScanPainter extends CustomPainter {
     // one-way pass that just gets cut off.
     final wave = math.sin(progress * math.pi);
     final waveY = size.height * (0.05 + 0.85 * wave);
+    final movingDown = math.cos(progress * math.pi) >= 0;
 
     final cols = (size.width / _spacing).ceil() + 1;
     final rows = (size.height / _spacing).ceil() + 1;
@@ -663,7 +666,12 @@ class _DotGridScanPainter extends CustomPainter {
     for (int gy = 0; gy <= rows; gy++) {
       final py = gy * _spacing;
       final dy = py - waveY;
-      final intensity = math.exp(-(dy * dy) / (2 * _glowSigma * _glowSigma));
+      final head = math.exp(-(dy * dy) / (2 * _glowSigma * _glowSigma));
+      final behind = movingDown ? -dy : dy;
+      final trail = behind > 0
+          ? _trailStrength * math.exp(-behind / _trailLength)
+          : 0.0;
+      final intensity = math.max(head, trail);
 
       final edgeDist = math.min(py, size.height - py);
       final edgeFactor = (edgeDist / _edgeFadeDistance).clamp(0.0, 1.0);

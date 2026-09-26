@@ -372,6 +372,7 @@ class _CookbookFormModalState extends State<CookbookFormModal> {
                           Expanded(
                             child: TextField(
                               controller: _nameCtrl,
+                              textCapitalization: TextCapitalization.sentences,
                               autofocus: !widget.isEmbedded && !_isEdit,
                               style: TextStyle(
                                 color: context.colors.textPrimary,
