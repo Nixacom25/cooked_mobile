@@ -1,5 +1,6 @@
 import Flutter
 import UIKit
+import UserNotifications
 
 @main
 @objc class AppDelegate: FlutterAppDelegate {
@@ -8,6 +9,11 @@ import UIKit
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
     GeneratedPluginRegistrant.register(with: self)
+    
+    // Configure notification center delegate for iOS
+    if #available(iOS 10.0, *) {
+      UNUserNotificationCenter.current().delegate = self
+    }
     
     let controller : FlutterViewController = window?.rootViewController as! FlutterViewController
     let clipboardChannel = FlutterMethodChannel(name: "com.cooked.app/clipboard",
@@ -43,5 +49,30 @@ import UIKit
 
   override func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey : Any] = [:]) -> Bool {
     return super.application(app, open: url, options: options)
+  }
+}
+
+// MARK: - UNUserNotificationCenterDelegate
+@available(iOS 10.0, *)
+extension AppDelegate: UNUserNotificationCenterDelegate {
+  
+  // Called when a notification is delivered while the app is in the foreground
+  func userNotificationCenter(_ center: UNUserNotificationCenter, 
+                                willPresent notification: UNNotification, 
+                                withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
+    // Show notification even when app is in foreground
+    completionHandler([.banner, .sound, .badge])
+  }
+  
+  // Called when user taps on a notification
+  func userNotificationCenter(_ center: UNUserNotificationCenter, 
+                                didReceive response: UNNotificationResponse, 
+                                withCompletionHandler completionHandler: @escaping () -> Void) {
+    let userInfo = response.notification.request.content.userInfo
+    // Pass notification data to Flutter
+    NotificationCenter.default.post(name: NSNotification.Name("DidReceiveRemoteNotification"), 
+                                    object: nil, 
+                                    userInfo: userInfo)
+    completionHandler()
   }
 }

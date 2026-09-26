@@ -19,6 +19,9 @@ class NotificationService {
       requestAlertPermission: true,
       requestBadgePermission: true,
       requestSoundPermission: true,
+      defaultPresentAlert: true,
+      defaultPresentBadge: true,
+      defaultPresentSound: true,
     );
 
     const InitializationSettings initializationSettings = InitializationSettings(
@@ -26,7 +29,12 @@ class NotificationService {
       iOS: initializationSettingsIOS,
     );
 
-    await _notificationsPlugin.initialize(initializationSettings);
+    await _notificationsPlugin.initialize(
+      initializationSettings,
+      onDidReceiveNotificationResponse: (NotificationResponse response) {
+        debugPrint('Notification response received: ${response.payload}');
+      },
+    );
   }
 
   Future<void> scheduleShoppingReminder(DateTime date) async {
@@ -49,7 +57,11 @@ class NotificationService {
       priority: Priority.high,
     );
 
-    const DarwinNotificationDetails iosDetails = DarwinNotificationDetails();
+    const DarwinNotificationDetails iosDetails = DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+    );
 
     const NotificationDetails platformDetails = NotificationDetails(
       android: androidDetails,
@@ -88,7 +100,11 @@ class NotificationService {
       priority: Priority.high,
     );
 
-    const DarwinNotificationDetails iosDetails = DarwinNotificationDetails();
+    const DarwinNotificationDetails iosDetails = DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+    );
 
     const NotificationDetails platformDetails = NotificationDetails(
       android: androidDetails,

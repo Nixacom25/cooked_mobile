@@ -132,16 +132,22 @@ class PushNotificationService {
     final notification = message.notification;
     if (notification == null) return;
     
+    debugPrint('Foreground message received: ${notification.title} - ${notification.body}');
+    
     // Track notification open for foreground messages
     if (message.data.containsKey('campaignId')) {
       _trackNotificationOpen(message.data['campaignId']);
     }
     
-    NotificationService.instance.showRemoteNotification(
-      title: notification.title ?? 'Cooked',
-      body: notification.body ?? '',
-      payload: jsonEncode(message.data),
-    );
+    // On iOS, show local notification for foreground messages
+    // On Android, FCM shows the notification automatically
+    if (Platform.isIOS) {
+      NotificationService.instance.showRemoteNotification(
+        title: notification.title ?? 'Cooked',
+        body: notification.body ?? '',
+        payload: jsonEncode(message.data),
+      );
+    }
   }
 
   void _onNotificationTapped(RemoteMessage message) {
