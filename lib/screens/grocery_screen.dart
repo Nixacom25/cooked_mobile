@@ -994,11 +994,24 @@ class _AddGrocerySheetState extends State<_AddGrocerySheet> {
     final bottom = MediaQuery.of(context).viewInsets.bottom;
     final bottomPad = MediaQuery.of(context).padding.bottom;
 
-    return Container(
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return ClipRRect(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(28.r)),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+        child: Container(
       padding: EdgeInsets.fromLTRB(20.w, 12.h, 20.w, 20.h + bottom + bottomPad),
       decoration: BoxDecoration(
-        color: context.colors.surface,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(32.r)),
+        color: isDark
+            ? context.colors.elevatedSurface.withValues(alpha: 0.85)
+            : Colors.white.withValues(alpha: 0.88),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28.r)),
+        border: Border.all(
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.16)
+              : Colors.white.withValues(alpha: 0.5),
+          width: 1.w,
+        ),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -1373,6 +1386,8 @@ class _AddGrocerySheetState extends State<_AddGrocerySheet> {
             ),
           ),
         ],
+      ),
+        ),
       ),
     );
   }

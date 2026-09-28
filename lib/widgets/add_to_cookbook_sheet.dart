@@ -262,9 +262,8 @@ class _AddToCookbookSheetState extends State<AddToCookbookSheet> {
 
   Widget _buildCookbookTile(Cookbook cb, bool isSelected, bool shouldShowAction) {
     return GestureDetector(
-      onTap: () {
-        if (shouldShowAction) _toggleSelection(cb.id);
-      },
+      behavior: HitTestBehavior.opaque,
+      onTap: () => _toggleSelection(cb.id),
       child: Padding(
         padding: EdgeInsets.symmetric(vertical: 8.h),
         child: Row(
