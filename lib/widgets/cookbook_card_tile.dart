@@ -10,6 +10,7 @@ import 'cookbook_cover.dart';
 import 'cookbook_form_modal.dart';
 import 'haptic_context_menu.dart';
 import '../core/theme/app_theme.dart';
+import '../core/motion/motion_widgets.dart';
 
 /// Cookbook tile shared by Home's "Your Cookbooks" row and the Cookbooks
 /// "View All" grid so both look exactly the same. [isMain] renders the
@@ -29,7 +30,16 @@ class CookbookCardTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    // Fades in the first time this cookbook is shown this session (so a
+    // just-created cookbook appears softly); lifts to 0.97 on press.
+    return AnimatedCardEntrance(
+      onceId: 'cookbook-${cookbook.id}',
+      child: _buildTile(context),
+    );
+  }
+
+  Widget _buildTile(BuildContext context) {
+    return PressScale(
       onTap: () async {
         final result = await Navigator.pushNamed(
           context,
@@ -291,6 +301,10 @@ class CookbookCardTile extends StatelessWidget {
                           'assets/images/recipes.png',
                           fit: BoxFit.cover,
                         ),
+                        placeholder: (_, __) => const SkeletonBox(borderRadius: BorderRadius.zero),
+                        fadeInDuration: Motion.imageFade,
+                        fadeOutDuration: Duration.zero,
+                        fadeInCurve: Motion.enter,
                       )
                     : Image.asset(images[idx], fit: BoxFit.cover),
               ),

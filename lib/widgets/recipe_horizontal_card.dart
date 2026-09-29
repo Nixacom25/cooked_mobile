@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../models/recipe.dart';
 import '../core/theme/app_theme.dart';
+import '../core/motion/motion_widgets.dart';
 
 class RecipeHorizontalCard extends StatelessWidget {
   final Recipe? recipe;
@@ -52,7 +53,8 @@ class RecipeHorizontalCard extends StatelessWidget {
         (displayImage.startsWith('http://') || displayImage.startsWith('https://'));
     final isAsset = displayImage != null && displayImage.startsWith('assets/');
 
-    return GestureDetector(
+    return RecipeHeroArea(
+      child: PressScale(
       onTap: onTap,
       child: Container(
         margin: EdgeInsets.only(bottom: 16.h),
@@ -83,14 +85,19 @@ class RecipeHorizontalCard extends StatelessWidget {
                             color: Colors.white,
                             shape: BoxShape.circle,
                           ),
-                          child: Icon(
-                            isFavorite
-                                ? Icons.favorite_rounded
-                                : Icons.favorite_border_rounded,
-                            size: 18.sp,
-                            color: isFavorite
-                                ? context.colors.accent
-                                : context.colors.textMuted,
+                          child: HeartBump(
+                            active: isFavorite,
+                            ringColor: context.colors.accent,
+                            ringSize: 34.r,
+                            child: Icon(
+                              isFavorite
+                                  ? Icons.favorite_rounded
+                                  : Icons.favorite_border_rounded,
+                              size: 18.sp,
+                              color: isFavorite
+                                  ? context.colors.accent
+                                  : context.colors.textMuted,
+                            ),
                           ),
                         ),
                       )
@@ -175,16 +182,19 @@ class RecipeHorizontalCard extends StatelessWidget {
                   child: SizedBox(
                     width: 155.w,
                     height: double.infinity,
-                    child: isNetwork
+                    child: RecipeHeroImage(
+                      child: isNetwork
                         ? CachedNetworkImage(
                             imageUrl: displayImage,
                             fit: BoxFit.cover,
-                            placeholder: (_, __) =>
-                                Container(color: Colors.grey[200]),
                             errorWidget: (_, __, ___) => Image.asset(
                               'assets/images/plat4.png',
                               fit: BoxFit.cover,
                             ),
+                            placeholder: (_, __) => const SkeletonBox(borderRadius: BorderRadius.zero),
+                            fadeInDuration: Motion.imageFade,
+                            fadeOutDuration: Duration.zero,
+                            fadeInCurve: Motion.enter,
                           )
                         : isAsset
                             ? Image.asset(
@@ -200,6 +210,7 @@ class RecipeHorizontalCard extends StatelessWidget {
                                 'assets/images/plat4.png',
                                 fit: BoxFit.cover,
                               ),
+                    ),
                   ),
                 ),
                 if (showChevron)
@@ -225,7 +236,8 @@ class RecipeHorizontalCard extends StatelessWidget {
           ],
         ),
       ),
-    );
+    ),
+      );
   }
 
   Widget _buildPillBadge({required BuildContext context, required IconData icon, required String text}) {

@@ -18,6 +18,7 @@ import '../widgets/recipe_shortcut_card.dart';
 import '../screens/home/home_screen.dart';
 import '../core/theme/app_theme.dart';
 import '../main.dart' show appNavigatorKey;
+import '../core/motion/motion_widgets.dart';
 
 class CookbookFormModal extends StatefulWidget {
   final Cookbook? cookbook;
@@ -47,6 +48,7 @@ class _CookbookFormModalState extends State<CookbookFormModal> {
   bool _isSaving = false;
   bool _isPickingRecipes = false;
   bool _isPopping = false;
+  String? _createdPreviewName;
   final DraggableScrollableController _dragCtrl = DraggableScrollableController();
 
   @override
@@ -276,7 +278,9 @@ class _CookbookFormModalState extends State<CookbookFormModal> {
               width: 1.w,
             ),
           ),
-          child: Column(
+          child: Stack(
+            children: [
+          Column(
         children: [
           // ── Header Row ──
           Padding(
@@ -578,6 +582,17 @@ class _CookbookFormModalState extends State<CookbookFormModal> {
           ),
         ],
       ),
+          // "Create" confirmation: the new cookbook materializes (cover,
+          // title, first thumbnails, check) before the modal closes.
+          if (_createdPreviewName != null)
+            Positioned.fill(
+              child: _CookbookCreatedPreview(
+                name: _createdPreviewName!,
+                recipes: _selectedRecipes.take(3).toList(),
+              ),
+            ),
+          ],
+          ),
     ),
   ),
 );
@@ -608,6 +623,14 @@ class _CookbookFormModalState extends State<CookbookFormModal> {
     final isEdit = _isEdit;
     final cookbookId = widget.cookbook?.id;
     final onComplete = widget.onComplete;
+
+    // New cookbook: short "materialize" confirmation (~450 ms) in the modal,
+    // then close - the new tile fades into the list on its own.
+    if (!isEdit && !widget.isEmbedded && !Motion.reduced(context)) {
+      setState(() => _createdPreviewName = name);
+      Motion.lightHaptic();
+      await Future<void>.delayed(const Duration(milliseconds: 450));
+    }
 
     if (mounted) {
       IosToast.show(
@@ -725,6 +748,10 @@ class _SelectedRecipePill extends StatelessWidget {
                       child: Icon(Icons.fastfood_rounded,
                           size: 14.sp, color: Colors.white),
                     ),
+                    placeholder: (_, __) => const SkeletonBox(borderRadius: BorderRadius.zero),
+                    fadeInDuration: Motion.imageFade,
+                    fadeOutDuration: Duration.zero,
+                    fadeInCurve: Motion.enter,
                   )
                 : Container(
                     width: 28.r,
@@ -1043,6 +1070,10 @@ class _InlineRecipePickerState extends State<_InlineRecipePicker> {
                                             'assets/images/recipes.png',
                                             fit: BoxFit.cover,
                                           ),
+                                          placeholder: (_, __) => const SkeletonBox(borderRadius: BorderRadius.zero),
+                                          fadeInDuration: Motion.imageFade,
+                                          fadeOutDuration: Duration.zero,
+                                          fadeInCurve: Motion.enter,
                                         )
                                       : Image.asset(
                                           r.image!,
@@ -1113,4 +1144,104 @@ class _InlineRecipePickerState extends State<_InlineRecipePicker> {
     );
   }
 
+}
+
+class _CookbookCreatedPreview extends StatelessWidget {
+  final String name;
+  final List<Recipe> recipes;
+
+  const _CookbookCreatedPreview({required this.name, required this.recipes});
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cover = recipes.isNotEmpty ? recipes.first.image : null;
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0, end: 1),
+      duration: Motion.medium,
+      curve: Motion.enter,
+      builder: (context, t, child) => Opacity(opacity: t, child: child),
+      child: ColoredBox(
+        color: isDark ? context.colors.elevatedSurface : Colors.white,
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Cover fades/scales in, check draws on it.
+              PopIn(
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(22.r),
+                      child: SizedBox(
+                        width: 120.r,
+                        height: 120.r,
+                        child: cover != null && cover.startsWith('http')
+                            ? ImageCrossfade(url: cover)
+                            : ColoredBox(
+                                color: context.colors.accent.withValues(alpha: 0.12),
+                                child: Icon(Icons.menu_book_rounded, color: context.colors.accent, size: 48.sp),
+                              ),
+                      ),
+                    ),
+                    Positioned(
+                      right: -10.r,
+                      top: -10.r,
+                      child: Container(
+                        width: 34.r,
+                        height: 34.r,
+                        padding: EdgeInsets.all(6.r),
+                        decoration: const BoxDecoration(color: Color(0xFF16A34A), shape: BoxShape.circle),
+                        child: AnimatedCheck(size: 22.r, color: Colors.white, strokeWidth: 2.4, showCircle: false),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(height: 14.h),
+              AnimatedCardEntrance(
+                index: 1,
+                child: Text(
+                  name,
+                  style: TextStyle(
+                    fontFamily: 'Rubik',
+                    fontWeight: FontWeight.w800,
+                    fontSize: 20.sp,
+                    color: context.colors.textPrimary,
+                  ),
+                ),
+              ),
+              if (recipes.isNotEmpty) ...[
+                SizedBox(height: 12.h),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    for (int i = 0; i < recipes.length; i++)
+                      AnimatedCardEntrance(
+                        index: i + 2,
+                        offset: 4,
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 3.w),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(10.r),
+                            child: SizedBox(
+                              width: 40.r,
+                              height: 40.r,
+                              child: (recipes[i].image ?? '').startsWith('http')
+                                  ? ImageCrossfade(url: recipes[i].image!)
+                                  : ColoredBox(color: context.colors.pageBackground),
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }

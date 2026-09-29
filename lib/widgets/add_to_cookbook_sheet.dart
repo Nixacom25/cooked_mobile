@@ -14,6 +14,7 @@ import '../core/utils/error_helper.dart';
 import 'app_loading_indicator.dart';
 import 'cookbook_form_modal.dart';
 import '../core/theme/app_theme.dart';
+import '../core/motion/motion_widgets.dart';
 
 enum _SheetMode { list, create }
 
@@ -38,6 +39,8 @@ class _AddToCookbookSheetState extends State<AddToCookbookSheet> {
   final Set<String> _selectedIds = {};
   final _newCookbookCtrl = TextEditingController();
   final FocusNode _focusNode = FocusNode();
+  // Cookbook that just received the recipe: shows the success state.
+  String? _justAddedId;
   bool _isProcessing = false;
 
   @override
@@ -150,13 +153,16 @@ class _AddToCookbookSheetState extends State<AddToCookbookSheet> {
                       width: 50.w,
                       height: 50.w,
                       fit: BoxFit.cover,
-                      placeholder: (_, __) => Container(color: context.colors.surface),
                       errorWidget: (_, __, ___) => Container(
                         width: 50.w,
                         height: 50.w,
                         color: context.colors.surface,
                         child: Icon(Icons.fastfood_rounded, color: context.colors.border, size: 20.sp),
                       ),
+                      placeholder: (_, __) => const SkeletonBox(borderRadius: BorderRadius.zero),
+                      fadeInDuration: Motion.imageFade,
+                      fadeOutDuration: Duration.zero,
+                      fadeInCurve: Motion.enter,
                     )
                   : Container(
                       width: 50.w,
@@ -268,7 +274,16 @@ class _AddToCookbookSheetState extends State<AddToCookbookSheet> {
         padding: EdgeInsets.symmetric(vertical: 8.h),
         child: Row(
           children: [
-            ClipRRect(
+            // Cookbook cover gets a subtle pulse when the recipe lands in it.
+            TweenAnimationBuilder<double>(
+              key: ValueKey('cover-${cb.id}-${_justAddedId == cb.id}'),
+              tween: Tween(begin: _justAddedId == cb.id ? 0 : 1, end: 1),
+              duration: Motion.of(context, Motion.long),
+              builder: (context, t, child) => Transform.scale(
+                scale: 1 + 0.06 * (t < 0.5 ? t * 2 : (1 - t) * 2) * (_justAddedId == cb.id ? 1 : 0),
+                child: child,
+              ),
+              child: ClipRRect(
               borderRadius: BorderRadius.circular(12.r),
               child: cb.recipes.isNotEmpty && cb.recipes.first.image != null && cb.recipes.first.image!.isNotEmpty
                   ? CachedNetworkImage(
@@ -276,13 +291,16 @@ class _AddToCookbookSheetState extends State<AddToCookbookSheet> {
                       width: 54.w,
                       height: 54.w,
                       fit: BoxFit.cover,
-                      placeholder: (_, __) => Container(color: context.colors.surface),
                       errorWidget: (_, __, ___) => Container(
                         width: 54.w,
                         height: 54.w,
                         color: context.colors.surface,
                         child: Icon(Icons.menu_book_rounded, color: context.colors.border, size: 24.sp),
                       ),
+                      placeholder: (_, __) => const SkeletonBox(borderRadius: BorderRadius.zero),
+                      fadeInDuration: Motion.imageFade,
+                      fadeOutDuration: Duration.zero,
+                      fadeInCurve: Motion.enter,
                     )
                   : Container(
                       width: 54.w,
@@ -290,6 +308,7 @@ class _AddToCookbookSheetState extends State<AddToCookbookSheet> {
                       color: context.colors.surface,
                       child: Icon(Icons.menu_book_rounded, color: context.colors.border, size: 24.sp),
                     ),
+            ),
             ),
             SizedBox(width: 14.w),
             Expanded(
@@ -316,7 +335,14 @@ class _AddToCookbookSheetState extends State<AddToCookbookSheet> {
                 ],
               ),
             ),
-            if (shouldShowAction)
+            if (_justAddedId == cb.id)
+              Container(
+                width: 26.sp,
+                height: 26.sp,
+                decoration: const BoxDecoration(color: Color(0xFF16A34A), shape: BoxShape.circle),
+                child: AnimatedCheck(size: 26.sp, color: Colors.white, strokeWidth: 2.2, showCircle: false),
+              )
+            else if (shouldShowAction)
               Icon(
                 isSelected ? Icons.remove_circle_outline_rounded : Icons.add_circle_outline_rounded,
                 color: isSelected ? context.colors.accent : context.colors.border,
@@ -360,6 +386,13 @@ class _AddToCookbookSheetState extends State<AddToCookbookSheet> {
     );
   }
 
+  String? _cookbookName(String id) {
+    for (final cb in CookbookService.instance.myCookbooksNotifier.value ?? const <Cookbook>[]) {
+      if (cb.id == id) return cb.name;
+    }
+    return null;
+  }
+
   Future<void> _toggleSelection(String cookbookId) async {
     if (_isProcessing) return;
     _isProcessing = true;
@@ -374,6 +407,7 @@ class _AddToCookbookSheetState extends State<AddToCookbookSheet> {
         // Enforce single selection as requested: "enleve l'icone plus des autres"
         _selectedIds.clear();
         _selectedIds.add(cookbookId);
+        _justAddedId = cookbookId;
       }
     });
 
@@ -390,7 +424,19 @@ class _AddToCookbookSheetState extends State<AddToCookbookSheet> {
         // 2. Mark local state as saved
         RecipeService.instance.markRecipeAsSaved(targetRecipe);
         widget.onSuccess?.call();
-        if (mounted) Navigator.of(context).pop();
+        // Let the check draw + cookbook pulse play before closing, then
+        // confirm with a toast (no modal for a simple success).
+        await Future<void>.delayed(const Duration(milliseconds: 450));
+        if (mounted) {
+          final name = _cookbookName(cookbookId);
+          final nav = Navigator.of(context);
+          IosToast.show(
+            context,
+            message: name != null ? 'Added to ${name.toTitleCase()}' : 'Added to Cookbook',
+            type: ToastType.success,
+          );
+          nav.pop();
+        }
 
         // 3. Add to cookbook in backend DB & update state
         await CookbookService.instance.addRecipeToCookbook(cookbookId, targetRecipe.id).catchError((e) {
@@ -409,6 +455,7 @@ class _AddToCookbookSheetState extends State<AddToCookbookSheet> {
     } catch (e) {
        if (mounted) {
          setState(() {
+          _justAddedId = null;
           if (!isSelected) {
             _selectedIds.remove(cookbookId);
           } else {

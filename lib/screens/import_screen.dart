@@ -31,6 +31,7 @@ import '../widgets/skeleton_loader.dart';
 import '../widgets/add_to_cookbook_sheet.dart';
 import '../widgets/recent_import_tile.dart';
 import '../core/theme/app_theme.dart';
+import '../core/motion/motion_widgets.dart';
 
 class ImportScreen extends StatefulWidget {
   final ValueNotifier<bool>? isActiveNotifier;
@@ -63,6 +64,9 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
   final _searchCtrl = TextEditingController();
   bool _isImporting = false;
   String? _importingUrl;
+  // Drives the import animation from the real request state.
+  final ValueNotifier<ImportStage> _importStage = ValueNotifier(ImportStage.receiving);
+  Timer? _pullingStageTimer;
   bool _isSearching = false;
   List<Map<String, dynamic>> _searchResults = [];
   int _webSearchRequestId = 0;
@@ -264,6 +268,7 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
     final url = trimmedUrl;
 
     HapticFeedback.lightImpact();
+    _importStage.value = ImportStage.receiving;
     setState(() {
       _isImporting = true;
       _importingUrl = url;
@@ -308,7 +313,17 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
     }
 
     try {
+      // Request is going out: "Finding the recipe…". If the backend is
+      // still working after a moment, it's extracting ingredients/steps.
+      _importStage.value = ImportStage.finding;
+      _pullingStageTimer?.cancel();
+      _pullingStageTimer = Timer(const Duration(seconds: 2), () {
+        if (_importStage.value == ImportStage.finding) {
+          _importStage.value = ImportStage.pulling;
+        }
+      });
       final recipe = await RecipeService.instance.importRecipeFromUrl(url);
+      _pullingStageTimer?.cancel();
 
       // A 200 response with nothing usable extracted (no ingredients/steps,
       // or a generic placeholder title) isn't a real result - treat it the
@@ -325,6 +340,11 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
       }
 
       SharingService.instance.consumeSharedText();
+
+      // Real result is in: show "Recipe ready" (check pops, card bumps),
+      // then move on to the recipe without an extra tap.
+      _importStage.value = ImportStage.ready;
+      await Future<void>.delayed(const Duration(milliseconds: 650));
 
       if (!mounted) return;
 
@@ -356,6 +376,7 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
         errorMessage: ErrorHelper.getFriendlyMessage(e),
       );
     } finally {
+      _pullingStageTimer?.cancel();
       if (mounted) {
         setState(() => _isImporting = false);
         widget.isImportingNotifier?.value = false;
@@ -523,6 +544,8 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
     _overlaySearchCtrl.dispose();
     _importSearchController.dispose();
     _searchDebounce?.cancel();
+    _pullingStageTimer?.cancel();
+    _importStage.dispose();
     super.dispose();
   }
 
@@ -629,7 +652,7 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
   @override
   Widget build(BuildContext context) {
     if (_isImporting) {
-      return ImportLoadingPage(url: _importingUrl);
+      return ImportLoadingPage(url: _importingUrl, stage: _importStage);
     }
 
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
@@ -1005,9 +1028,21 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
                                 const SkeletonList(height: 80, itemCount: 3)
                               else if (list.isEmpty)
                                 Center(
-                                  child: Text(
-                                    'No recent imports yet.',
-                                    style: TextStyle(fontFamily: 'Rubik', color: context.colors.textMuted, fontSize: 13.sp),
+                                  child: Column(
+                                    children: [
+                                      // Link travels to a recipe card, card appears briefly.
+                                      EmptyStateAnimation(
+                                        kind: EmptyStateKind.link,
+                                        size: 40.sp,
+                                        color: context.colors.textMuted,
+                                        accent: context.colors.accent,
+                                      ),
+                                      SizedBox(height: 6.h),
+                                      Text(
+                                        'No recent imports yet.',
+                                        style: TextStyle(fontFamily: 'Rubik', color: context.colors.textMuted, fontSize: 13.sp),
+                                      ),
+                                    ],
                                   ),
                                 )
                               else

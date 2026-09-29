@@ -18,6 +18,7 @@ import '../../services/user_service.dart';
 import '../../services/cookbook_service.dart';
 import '../../models/cookbook.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/motion/motion_widgets.dart';
 
 enum DetailTab { steps, ingredients }
 
@@ -122,9 +123,16 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
   final ScrollController _scrollController = ScrollController();
   final ValueNotifier<double> _scrollOffset = ValueNotifier(0.0);
 
+  // Shared-element tag: matches the card image the user just tapped, so
+  // that image grows into this header (and shrinks back on pop). Null-safe
+  // fallback when the page wasn't opened from a card.
+  late final String _heroTag =
+      RecipeHero.claimTag() ?? 'recipe-detail-${identityHashCode(this)}';
+
   @override
   void initState() {
     super.initState();
+    _heroTag; // claim at push time, while the tap is fresh
     _scrollController.addListener(() {
       _scrollOffset.value = _scrollController.offset;
     });
@@ -260,7 +268,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                     Container(
                       width: 24.w,
                       alignment: Alignment.center,
-                      child: Text(
+                      child: OdometerText(
                         '$_currentServings',
                         style: TextStyle(
                           fontFamily: 'Rubik',
@@ -414,6 +422,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                             recipe: r,
                             topPadding: MediaQuery.of(context).padding.top,
                             scrollOffset: _scrollOffset,
+                            heroTag: _heroTag,
                           ),
                         ),
 
@@ -444,7 +453,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                                     SizedBox(width: 12.w),
                                     GestureDetector(
                                       onTap: () async {
-                                        HapticFeedback.lightImpact();
+                                        // Haptic comes from HeartBump.
                                         if (r != null) {
                                           final newFavState = !isFav;
                                           setState(() {
@@ -467,10 +476,15 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                                           }
                                         }
                                       },
-                                      child: Icon(
-                                        isFav ? Icons.favorite_rounded : Icons.favorite_border_rounded,
-                                        color: isFav ? context.colors.accent : context.colors.textMuted,
-                                        size: 26.sp,
+                                      child: HeartBump(
+                                        active: isFav,
+                                        ringColor: context.colors.accent,
+                                        ringSize: 44.sp,
+                                        child: Icon(
+                                          isFav ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+                                          color: isFav ? context.colors.accent : context.colors.textMuted,
+                                          size: 26.sp,
+                                        ),
                                       ),
                                     ),
                                   ],
@@ -831,6 +845,7 @@ class _RecipeDetailHeaderDelegate extends SliverPersistentHeaderDelegate {
   final Recipe? recipe;
   final double topPadding;
   final ValueNotifier<double>? scrollOffset;
+  final String heroTag;
 
   const _RecipeDetailHeaderDelegate({
     required this.img,
@@ -843,6 +858,7 @@ class _RecipeDetailHeaderDelegate extends SliverPersistentHeaderDelegate {
     this.recipe,
     required this.topPadding,
     this.scrollOffset,
+    required this.heroTag,
   });
 
   @override
@@ -889,11 +905,15 @@ class _RecipeDetailHeaderDelegate extends SliverPersistentHeaderDelegate {
             left: 0,
             right: 0,
             height: maxExtent - shrinkOffset,
-            child: _buildImage(
-              context,
-              img,
-              MediaQuery.of(context).size.width,
-              maxExtent - shrinkOffset,
+            child: Hero(
+              tag: heroTag,
+              transitionOnUserGestures: true,
+              child: _buildImage(
+                context,
+                img,
+                MediaQuery.of(context).size.width,
+                maxExtent - shrinkOffset,
+              ),
             ),
           ),
 
@@ -1018,11 +1038,10 @@ class _RecipeDetailHeaderDelegate extends SliverPersistentHeaderDelegate {
           height: height,
           fit: fit,
         ),
-        placeholder: (_, __) => Container(
-          width: width,
-          height: height,
-          color: context.colors.pageBackground,
-        ),
+        placeholder: (_, __) => const SkeletonBox(borderRadius: BorderRadius.zero),
+        fadeInDuration: Motion.imageFade,
+        fadeOutDuration: Duration.zero,
+        fadeInCurve: Motion.enter,
       );
     }
     return Image.asset(
@@ -1261,8 +1280,10 @@ class _IngredientsList extends StatelessWidget {
                     SizedBox(width: 10.w),
                     Expanded(
                       flex: 2,
-                      child: Text(
+                      // Only the number animates (odometer), all rows at once.
+                      child: OdometerText(
                         _formatQuantity(ing),
+                        alignment: AlignmentDirectional.centerEnd,
                         textAlign: TextAlign.right,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -1570,8 +1591,9 @@ class _SavingsBreakdownCard extends StatelessWidget {
                   ),
                 ],
               ),
-              Text(
-                "~\$${orderNearby.toStringAsFixed(2)}",
+              AnimatedNumber(
+                value: orderNearby,
+                format: (v) => "~\$${v.toStringAsFixed(2)}",
                 style: TextStyle(
                   fontFamily: 'Rubik',
                   fontSize: 14.sp,
@@ -1600,8 +1622,9 @@ class _SavingsBreakdownCard extends StatelessWidget {
                   ),
                 ],
               ),
-              Text(
-                "~\$${makeAtHome.toStringAsFixed(2)}",
+              AnimatedNumber(
+                value: makeAtHome,
+                format: (v) => "~\$${v.toStringAsFixed(2)}",
                 style: TextStyle(
                   fontFamily: 'Rubik',
                   fontSize: 14.sp,
@@ -1626,8 +1649,11 @@ class _SavingsBreakdownCard extends StatelessWidget {
                   fontWeight: FontWeight.w700,
                 ),
               ),
-              Text(
-                "~\$${savings.toStringAsFixed(2)}",
+              AnimatedNumber(
+                value: savings,
+                format: (v) => "~\$${v.toStringAsFixed(2)}",
+                pulse: true,
+                hapticThreshold: 1.0,
                 style: TextStyle(
                   fontFamily: 'Rubik',
                   fontSize: 20.sp,

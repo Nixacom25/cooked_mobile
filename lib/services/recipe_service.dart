@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:async';
+import 'dart:math' as math;
 import 'package:cooked/services/cookbook_service.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
@@ -7,6 +8,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../core/api_config.dart';
 import '../models/recipe.dart';
 import '../models/creator.dart';
+import '../models/savings.dart';
 import 'package:cooked/services/auth_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:cooked/services/database_service.dart';
@@ -28,8 +30,17 @@ List<Recipe> _parseExploreRecipesData(String responseBody) {
 }
 
 class RecipeService {
-  RecipeService._privateConstructor();
+  RecipeService._privateConstructor() {
+    // Any change to the user's recipes (save, delete, scan...) can change
+    // the savings, so re-fetch them from the backend.
+    myRecipesNotifier.addListener(_scheduleSavingsRefresh);
+  }
   static final RecipeService instance = RecipeService._privateConstructor();
+
+  /// Savings computed server-side from scanned recipes only.
+  final ValueNotifier<SavingsSummary?> savingsNotifier = ValueNotifier(null);
+  static const String _savingsCacheKey = 'my_savings_cache_v1';
+  Timer? _savingsRefreshDebounce;
 
   final ValueNotifier<List<Recipe>?> myRecipesNotifier = ValueNotifier(null);
   final ValueNotifier<List<Recipe>?> recentImportsNotifier = ValueNotifier(null);
@@ -52,6 +63,7 @@ class RecipeService {
 
   Future<void> clearCache() async {
     _cache.clear();
+    savingsNotifier.value = null;
     await DatabaseService.instance.clearCache(preserveKeys: [_tempSuggestionsKey]);
   }
 
@@ -279,6 +291,72 @@ class RecipeService {
       if (myRecipesNotifier.value != null) return myRecipesNotifier.value!;
       throw Exception('Unable to load your recipes.');
     }
+  }
+
+  void _scheduleSavingsRefresh() {
+    if (myRecipesNotifier.value == null) return;
+    _savingsRefreshDebounce?.cancel();
+    _savingsRefreshDebounce = Timer(const Duration(milliseconds: 600), () {
+      refreshSavings().catchError((_) => savingsNotifier.value);
+    });
+  }
+
+  Future<SavingsSummary?> refreshSavings() async {
+    if (savingsNotifier.value == null) {
+      try {
+        final cachedStr = DatabaseService.instance.readCacheRaw(_savingsCacheKey);
+        if (cachedStr != null) {
+          savingsNotifier.value = SavingsSummary.fromJson(jsonDecode(cachedStr));
+        }
+      } catch (_) {}
+    }
+
+    try {
+      final url = Uri.parse('${ApiConfig.baseUrl}/recipes/savings');
+      final response = await http.get(url, headers: await _getHeaders());
+      if (response.statusCode == 200) {
+        final summary = SavingsSummary.fromJson(jsonDecode(response.body));
+        savingsNotifier.value = summary;
+        try {
+          await DatabaseService.instance.writeCacheRaw(_savingsCacheKey, response.body);
+        } catch (_) {}
+        return summary;
+      }
+    } catch (_) {}
+
+    // Backend unreachable or not deployed yet (no /recipes/savings): never
+    // leave the savings card blank - fall back to the local SCAN recipes.
+    if (savingsNotifier.value == null) {
+      savingsNotifier.value = _localSavingsFallback();
+    }
+    return savingsNotifier.value;
+  }
+
+  /// Same rules as the backend (SCAN recipes only, same formula, "(Copy)"
+  /// for repeated names) computed from the locally known recipes.
+  SavingsSummary? _localSavingsFallback() {
+    final recipes = myRecipesNotifier.value;
+    if (recipes == null) return null;
+    final seen = <String>{};
+    final items = <SavingsItem>[];
+    double total = 0;
+    for (final r in recipes.where((r) => r.origin?.toUpperCase() == 'SCAN')) {
+      final servings = (r.servings != null && r.servings! > 0) ? r.servings! : 2;
+      final pricePerServing = (r.totalPrice != null && r.totalPrice! > 0)
+          ? r.totalPrice! / servings
+          : 3.50;
+      final restaurantPerServing = math.max(pricePerServing * 2.5 + 5.0, 14.75);
+      final savings = (restaurantPerServing - pricePerServing) * servings;
+      total += savings;
+      final name = r.name.trim();
+      final isCopy = !seen.add(name.toLowerCase());
+      items.add(SavingsItem(
+        recipe: r,
+        savings: savings,
+        displayName: isCopy ? '(Copy) $name' : name,
+      ));
+    }
+    return SavingsSummary(totalSaved: total, recipeCount: items.length, recipes: items);
   }
 
   Future<Recipe> getRecipe(String id) async {

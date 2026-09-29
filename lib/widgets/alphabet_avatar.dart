@@ -10,6 +10,7 @@ import '../services/user_service.dart';
 import '../core/widgets/ios_toast.dart';
 import '../core/utils/error_helper.dart';
 import '../core/theme/app_theme.dart';
+import '../core/motion/motion_widgets.dart';
 
 class AlphabetAvatar extends StatelessWidget {
   final String name;
@@ -77,10 +78,15 @@ class AlphabetAvatar extends StatelessWidget {
       barrierDismissible: true,
       barrierLabel: 'Dismiss',
       barrierColor: Colors.black.withValues(alpha: 0.62),
-      transitionDuration: const Duration(milliseconds: 350),
+      transitionDuration: Motion.short,
       pageBuilder: (ctx, anim1, anim2) {
-        return BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+        // Blur ramps in with the route instead of snapping on.
+        return AnimatedBuilder(
+          animation: anim1,
+          builder: (context, child) => BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 20 * anim1.value, sigmaY: 20 * anim1.value),
+            child: child,
+          ),
           child: SafeArea(
             child: Stack(
               children: [
@@ -228,21 +234,8 @@ class AlphabetAvatar extends StatelessWidget {
           ),
         );
       },
-      transitionBuilder: (ctx, anim1, anim2, child) {
-        final double scaleProgress = CurvedAnimation(
-          parent: anim1,
-          curve: Curves.easeOutBack,
-          reverseCurve: Curves.easeInCubic,
-        ).value;
-
-        return FadeTransition(
-          opacity: anim1,
-          child: Transform.scale(
-            scale: Tween<double>(begin: 0.25, end: 1.0).transform(scaleProgress),
-            child: child,
-          ),
-        );
-      },
+      transitionBuilder: (ctx, anim1, anim2, child) =>
+          GlassPopIn(animation: anim1, alignment: Alignment.center, child: child),
     );
 
     if (!context.mounted) return;
@@ -270,8 +263,8 @@ class AlphabetAvatar extends StatelessWidget {
       context: context,
       barrierDismissible: true,
       barrierLabel: 'Dismiss',
-      barrierColor: Colors.transparent,
-      transitionDuration: const Duration(milliseconds: 200),
+      barrierColor: Colors.black.withValues(alpha: 0.12),
+      transitionDuration: Motion.short,
       pageBuilder: (ctx, anim1, anim2) {
         return Stack(
           children: [
@@ -344,18 +337,8 @@ class AlphabetAvatar extends StatelessWidget {
           ],
         );
       },
-      transitionBuilder: (ctx, anim1, anim2, child) {
-        return FadeTransition(
-          opacity: anim1,
-          child: ScaleTransition(
-            alignment: Alignment.topLeft,
-            scale: Tween<double>(begin: 0.85, end: 1.0).animate(
-              CurvedAnimation(parent: anim1, curve: Curves.easeOutCubic),
-            ),
-            child: child,
-          ),
-        );
-      },
+      transitionBuilder: (ctx, anim1, anim2, child) =>
+          GlassPopIn(animation: anim1, alignment: Alignment.topLeft, child: child),
     );
 
     if (!context.mounted) return;

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../routes/app_routes.dart';
 import '../../services/auth_service.dart';
@@ -13,6 +14,7 @@ import '../../core/theme/app_theme.dart';
 import '../../core/widgets/ios_toast.dart';
 import '../../core/utils/error_helper.dart';
 import 'settings_screen.dart';
+import '../../core/motion/motion_widgets.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -78,11 +80,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   void _showLogout() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
+    // Glass sheet: page dims + blurs, sheet rises 30 px while fading in.
+    showGlassSheet(
+      context,
       builder: (_) => const _LogoutSheet(),
     );
+  }
+
+  static const String _appLink = 'https://link.cookedapp.com';
+
+  // Same approach as ReciMe: a plain share of the app link (rich preview
+  // comes from the site's Open Graph tags), no referral code.
+  void _inviteFriends() {
+    SharePlus.instance.share(ShareParams(
+      text: 'You should try Cooked. It turns what\'s in your fridge into '
+          'recipes in seconds and saves you money on takeout. '
+          'Click here to join! $_appLink',
+    ));
   }
 
   Widget _menuDivider(BuildContext context) =>
@@ -275,6 +289,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                         _menuDivider(context),
 
+                        // Language
+                        SettingsMenuItem(
+                          icon: Icons.translate_rounded,
+                          label: 'Language',
+                          onTap: () =>
+                              Navigator.pushNamed(context, AppRoutes.language),
+                        ),
+                        _menuDivider(context),
+
                         // 8. Manage subscription & restore purchases
                         SettingsMenuItem(
                           svgPath: 'assets/icones/billing.svg',
@@ -283,6 +306,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             context,
                             AppRoutes.subscriptionManagement,
                           ),
+                        ),
+                        _menuDivider(context),
+
+                        // Invite friends / Gift Cooked
+                        SettingsMenuItem(
+                          icon: Icons.person_add_alt_1_outlined,
+                          label: 'Invite friends',
+                          onTap: _inviteFriends,
+                        ),
+                        _menuDivider(context),
+                        SettingsMenuItem(
+                          icon: Icons.card_giftcard_outlined,
+                          label: 'Gift Cooked to a friend',
+                          onTap: () =>
+                              Navigator.pushNamed(context, AppRoutes.giftCooked),
+                        ),
+                        _menuDivider(context),
+                        SettingsMenuItem(
+                          icon: Icons.redeem_rounded,
+                          label: 'Redeem a gift',
+                          onTap: () =>
+                              Navigator.pushNamed(context, AppRoutes.redeemGift),
                         ),
                         _menuDivider(context),
 
@@ -303,9 +348,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           iconColor: context.colors.destructive,
                           chevronColor: context.colors.destructive,
                           onTap: () {
-                            showModalBottomSheet(
-                              context: context,
-                              backgroundColor: Colors.transparent,
+                            showGlassSheet(
+                              context,
                               builder: (_) => const _DeleteAccountSheet(),
                             );
                           },

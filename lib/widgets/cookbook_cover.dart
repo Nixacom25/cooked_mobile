@@ -3,8 +3,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../models/cookbook.dart';
 import '../models/recipe.dart';
-import 'skeleton_loader.dart';
 import '../core/theme/app_theme.dart';
+import '../core/motion/motion_widgets.dart';
 
 class CookbookCover extends StatelessWidget {
   final Cookbook cookbook;
@@ -204,10 +204,10 @@ class CookbookCover extends StatelessWidget {
         height: double.infinity,
         fit: BoxFit.cover,
       ),
-      placeholder: (_, __) => const SkeletonLoader(
-        width: double.infinity,
-        height: double.infinity,
-      ),
+      placeholder: (_, __) => const SkeletonBox(borderRadius: BorderRadius.zero),
+      fadeInDuration: Motion.imageFade,
+      fadeOutDuration: Duration.zero,
+      fadeInCurve: Motion.enter,
     );
   }
 

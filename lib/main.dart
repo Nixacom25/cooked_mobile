@@ -24,6 +24,9 @@ import 'screens/home/cookbook_form_screen.dart';
 import 'screens/home/recipe_detail_screen.dart';
 import 'screens/home/savings_details_screen.dart';
 import 'screens/profile/profile_screen.dart';
+import 'screens/profile/language_screen.dart';
+import 'screens/profile/gift_screen.dart';
+import 'screens/profile/redeem_gift_screen.dart';
 import 'screens/profile/my_account_screen.dart';
 import 'screens/profile/change_password_screen.dart';
 import 'screens/profile/activity_history_screen.dart';
@@ -36,7 +39,6 @@ import 'screens/profile/notification_settings_screen.dart';
 import 'screens/profile/allergies_screen.dart';
 import 'screens/profile/cuisine_flavor_screen.dart';
 import 'screens/profile/kitchen_equipment_screen.dart';
-import 'screens/profile/language_region_screen.dart';
 import 'screens/scan_screen.dart';
 import 'package:cooked/core/services/tutorial_service.dart';
 import 'package:cooked/services/notification_service.dart';
@@ -288,6 +290,23 @@ class _CookedAppState extends State<CookedApp> with WidgetsBindingObserver {
   }
 
   void _handleDeepLink(String url) {
+    // Gift links (link.cookedapp.com/redeem?code=..., /gift) open their
+    // screen instead of being treated as a recipe URL to import.
+    final uri = Uri.tryParse(url);
+    if (uri != null && uri.host.endsWith('cookedapp.com') &&
+        (uri.path == '/redeem' || uri.path == '/gift')) {
+      final state = appNavigatorKey.currentState;
+      if (state != null && AuthService.instance.isLoggedIn) {
+        if (uri.path == '/redeem') {
+          state.pushNamed(AppRoutes.redeemGift,
+              arguments: {'code': uri.queryParameters['code']});
+        } else {
+          state.pushNamed(AppRoutes.giftCooked);
+        }
+      }
+      return;
+    }
+
     // Treat the deep link exactly like a shared text
     SharingService.instance.sharedTextNotifier.value = url;
   }
@@ -538,8 +557,15 @@ class _CookedAppState extends State<CookedApp> with WidgetsBindingObserver {
                 case AppRoutes.kitchenEquipment:
                   builder = const KitchenEquipmentScreen();
                   break;
-                case AppRoutes.languageRegion:
-                  builder = const LanguageRegionScreen();
+                case AppRoutes.language:
+                  builder = const LanguageScreen();
+                  break;
+                case AppRoutes.giftCooked:
+                  builder = const GiftScreen();
+                  break;
+                case AppRoutes.redeemGift:
+                  final args = settings.arguments as Map<String, dynamic>?;
+                  builder = RedeemGiftScreen(initialCode: args?['code'] as String?);
                   break;
                 case AppRoutes.subscriptionManagement:
                   builder = const SubscriptionManagementScreen();

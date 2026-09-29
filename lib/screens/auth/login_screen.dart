@@ -145,65 +145,37 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _verifyPremiumAndNavigate(NavigatorState nav) async {
     try {
       await UserService.instance.getCurrentUser();
-      final bool isUserPremium = UserService.instance.isPremium;
-
-      if (!isUserPremium) {
-        // Only redirect to welcome if user data exists and they're definitely not premium
-        if (UserService.instance.currentUserNotifier.value != null) {
-          // User is not subscribed - show paywall modal
-          if (mounted) {
-            IosToast.show(
-              context,
-              message: "Please complete your subscription to continue.",
-              type: ToastType.warning,
-            );
-            // Navigate to welcome screen to restart onboarding
-            nav.pushNamedAndRemoveUntil(AppRoutes.welcome, (route) => false);
-          }
-          return;
-        } else {
-          // User data not loaded, proceed to home to handle there
-          nav.pushNamedAndRemoveUntil(AppRoutes.home, (route) => false);
-        }
-      }
-
-      // User has active subscription - proceed to home
-      nav.pushNamedAndRemoveUntil(AppRoutes.home, (route) => false);
     } catch (e) {
-      // Instead of showing error and logging out, check if user account exists
-      // and redirect accordingly
-      try {
-        // Try to get user data to determine if account is active
-        await UserService.instance.getCurrentUser();
-        final user = UserService.instance.currentUserNotifier.value;
-        
-        if (user != null) {
-          // Account exists - show paywall modal
-          if (mounted) {
-            PaywallHelper.show(context);
-          }
-        } else {
-          // Account doesn't exist or incomplete - redirect to onboarding
-          if (mounted) {
-            IosToast.show(
-              context,
-              message: "Please complete your profile to continue.",
-              type: ToastType.warning,
-            );
-            nav.pushNamedAndRemoveUntil(AppRoutes.welcome, (route) => false);
-          }
-        }
-      } catch (secondError) {
-        // If we still can't get user data, redirect to onboarding as fallback
-        if (mounted) {
-          IosToast.show(
-            context,
-            message: "Please complete your profile to continue.",
-            type: ToastType.warning,
-          );
+      // Signed in, but the profile couldn't be loaded (network/server).
+      // Say what actually happened and stay here so the user can retry -
+      // don't pretend the profile is incomplete.
+      if (mounted) {
+        IosToast.show(
+          context,
+          message: ErrorHelper.getFriendlyMessage(e),
+          type: ToastType.error,
+        );
+      }
+      return;
+    }
+
+    nav.pushNamedAndRemoveUntil(AppRoutes.home, (route) => false);
+
+    // Not subscribed: open the paywall on top of Home. (Sending them to
+    // `welcome` doesn't work - the route guard turns `welcome` back into
+    // Home for any signed-in user, which left them on a Home where every
+    // call is refused.)
+    if (!UserService.instance.isPremium) {
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        await PaywallHelper.show(nav.context);
+        // Closed without subscribing: same as the splash screen - sign out
+        // and restart onboarding rather than sit on a Home that refuses
+        // every request.
+        if (!UserService.instance.isPremium) {
+          await AuthService.instance.logout();
           nav.pushNamedAndRemoveUntil(AppRoutes.welcome, (route) => false);
         }
-      }
+      });
     }
   }
 

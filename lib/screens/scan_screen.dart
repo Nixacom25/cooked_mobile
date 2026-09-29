@@ -27,6 +27,7 @@ import '../widgets/scan_animation_overlay.dart';
 import '../widgets/confetti_animation.dart';
 import '../widgets/red_header_background.dart';
 import '../core/theme/app_theme.dart';
+import '../core/motion/motion_widgets.dart';
 
 enum ScanState { scan, type, saved, results }
 
@@ -55,6 +56,8 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
   final List<String> _typedIngredients = [];
   List<Map<String, dynamic>> _savedIngredients = [];
   final Set<String> _selectedSavedNames = {};
+  // Typed ingredients currently playing their removal animation.
+  final Set<String> _removingTyped = {};
   bool _isLoadingSaved = false;
   bool _useAllSaved = false;
   List<Map<String, dynamic>> _recentIngredients = [];
@@ -283,6 +286,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
           _recipes.clear();
           _recipes.addAll(generatedRecipes);
           _typedIngredients.clear();
+          _removingTyped.clear();
           
           _overlayDetectedIngredients = allowed;
           _overlayGeneratedRecipes = generatedRecipes;
@@ -1358,18 +1362,30 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                 })(),
               ],
               SizedBox(height: 24.h),
+              // New ingredients pop in (0.9 → 1 + fade); removed ones fade
+              // and shrink, then the list closes the gap smoothly.
               ..._typedIngredients.map(
-                (ing) => _buildIngredientCard(
-                  ing,
-                  isSaved: _savedIngredients.any(
-                    (si) =>
-                        si['name'].toString().toLowerCase() ==
-                        ing.toLowerCase(),
+                (ing) => AnimatedRemoval(
+                  key: ValueKey('typed-$ing'),
+                  removing: _removingTyped.contains(ing),
+                  onRemoved: () => setState(() {
+                    _removingTyped.remove(ing);
+                    _typedIngredients.remove(ing);
+                  }),
+                  child: PopIn(
+                    child: _buildIngredientCard(
+                      ing,
+                      isSaved: _savedIngredients.any(
+                        (si) =>
+                            si['name'].toString().toLowerCase() ==
+                            ing.toLowerCase(),
+                      ),
+                      onContainerTap: () => _toggleSaveIngredient(ing),
+                      onHeartTap: () => _toggleSaveIngredient(ing),
+                      onDeleteTap: () =>
+                          setState(() => _removingTyped.add(ing)),
+                    ),
                   ),
-                  onContainerTap: () => _toggleSaveIngredient(ing),
-                  onHeartTap: () => _toggleSaveIngredient(ing),
-                  onDeleteTap: () =>
-                      setState(() => _typedIngredients.remove(ing)),
                 ),
               ),
             ],
@@ -1403,6 +1419,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                         value: _useAllSaved,
                         activeTrackColor: context.colors.accent,
                         onChanged: (val) {
+                          Motion.selectionHaptic();
                           setState(() {
                             _useAllSaved = val;
                             if (val) {
@@ -1837,10 +1854,15 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                                 color: Colors.white,
                                 shape: BoxShape.circle,
                               ),
-                              child: Icon(
-                                isSaved ? Icons.favorite : Icons.favorite_outline,
-                                color: isSaved ? context.colors.accent : context.colors.textMuted,
-                                size: 18.sp,
+                              child: HeartBump(
+                                active: isSaved,
+                                ringColor: context.colors.accent,
+                                ringSize: 34.r,
+                                child: Icon(
+                                  isSaved ? Icons.favorite : Icons.favorite_outline,
+                                  color: isSaved ? context.colors.accent : context.colors.textMuted,
+                                  size: 18.sp,
+                                ),
                               ),
                             ),
                           );

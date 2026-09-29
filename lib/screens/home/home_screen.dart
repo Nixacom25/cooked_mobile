@@ -23,6 +23,7 @@ import '../../widgets/recipe_shortcut_card.dart';
 import '../../widgets/scroll_blur_header_overlay.dart';
 import '../../services/recipe_service.dart';
 import '../../services/cookbook_service.dart';
+import '../../models/savings.dart';
 import '../../models/recipe.dart';
 import '../../models/cookbook.dart';
 import '../../widgets/recipe_card.dart';
@@ -41,6 +42,7 @@ import '../../core/utils/error_helper.dart';
 import '../../services/sharing_service.dart';
 import '../../widgets/skeleton_loader.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/motion/motion_widgets.dart';
 
 class HomeScreen extends StatefulWidget {
   final int initialTab;
@@ -323,7 +325,7 @@ class _HomeScreenState extends State<HomeScreen>
         extendBody: true,
         body: Stack(
             children: [
-              IndexedStack(index: _currentTab, children: _tabWidgets),
+              FadeIndexedStack(index: _currentTab, children: _tabWidgets),
 
               // Test animation FAB raised above bottom nav
               if (kDebugMode && _currentTab == 0)
@@ -573,16 +575,16 @@ class NotchedPillPainter extends CustomPainter {
     canvas.drawPath(path.shift(const Offset(0, 4)), shadowPaint);
 
     // High-Translucency Frosted Glass fill (scrolling content visible like a
-    // mirror) - dark frosted glass in dark mode instead of white, so the
-    // pill reads as glass over a black backdrop rather than a light smear.
+    // mirror) - dark frosted glass in dark mode instead of white, kept as
+    // translucent as the light variant so the blurred content shows through.
     final Paint fillPaint = Paint()
       ..shader = LinearGradient(
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
         colors: isDark
             ? [
-                AppColorTokens.dark.elevatedSurface.withValues(alpha: 0.75),
-                AppColorTokens.dark.elevatedSurface.withValues(alpha: 0.92),
+                AppColorTokens.dark.elevatedSurface.withValues(alpha: 0.48),
+                AppColorTokens.dark.elevatedSurface.withValues(alpha: 0.30),
               ]
             : [
                 Colors.white.withValues(alpha: 0.48),
@@ -591,6 +593,21 @@ class NotchedPillPainter extends CustomPainter {
       ).createShader(Rect.fromLTWH(0, 0, size.width, size.height))
       ..style = PaintingStyle.fill;
     canvas.drawPath(path, fillPaint);
+
+    // Dark glass has no white fill to catch light, so add a faint top sheen
+    // to give it the same glossy finish as the light pill.
+    if (isDark) {
+      final Paint sheenPaint = Paint()
+        ..shader = LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.center,
+          colors: [
+            Colors.white.withValues(alpha: 0.10),
+            Colors.white.withValues(alpha: 0.0),
+          ],
+        ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
+      canvas.drawPath(path, sheenPaint);
+    }
 
     // Crisp glass edge stroke
     final Paint borderPaint = Paint()
@@ -777,14 +794,16 @@ class _AnimatedScanButtonState extends State<_AnimatedScanButton>
   @override
   void initState() {
     super.initState();
+    // Idle "breathing": one slow cycle every ~5 s (2.5 s each way). Scale
+    // barely moves (1.0 → 1.02); the glow opacity carries the effect.
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 2000),
+      duration: const Duration(milliseconds: 2500),
     )..repeat(reverse: true);
 
     _scaleAnimation = Tween<double>(
       begin: 1.0,
-      end: 1.07,
+      end: 1.02,
     ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
 
     _glowAnimation = Tween<double>(
@@ -870,78 +889,62 @@ class _NavItem extends StatefulWidget {
   State<_NavItem> createState() => _NavItemState();
 }
 
-class _NavItemState extends State<_NavItem>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _anim;
-  late Animation<double> _scale;
+class _NavItemState extends State<_NavItem> {
+  bool _pressed = false;
 
-  @override
-  void initState() {
-    super.initState();
-    _anim = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 150),
-    );
-    _scale = Tween<double>(
-      begin: 1.0,
-      end: 0.88,
-    ).animate(CurvedAnimation(parent: _anim, curve: Curves.easeOutCubic));
-  }
-
-  @override
-  void dispose() {
-    _anim.dispose();
-    super.dispose();
-  }
-
-  Future<void> _handleTap() async {
-    // 1. Scale down
-    await _anim.forward();
-    // 2. Scale back up
-    await _anim.reverse();
-    // 3. Trigger action (turns red)
+  void _handleTap() {
+    // Switch immediately - the press/scale feedback never delays navigation.
+    if (widget.index != widget.current) Motion.selectionHaptic();
     widget.onTap(widget.index);
   }
 
   @override
   Widget build(BuildContext context) {
     final active = widget.index == widget.current;
+    final duration = Motion.of(context, Motion.micro);
+    final color = active ? context.colors.accent : context.colors.textSecondary;
     return Expanded(
       child: GestureDetector(
+        onTapDown: (_) => setState(() => _pressed = true),
+        onTapUp: (_) => setState(() => _pressed = false),
+        onTapCancel: () => setState(() => _pressed = false),
         onTap: _handleTap,
         behavior: HitTestBehavior.opaque,
-        child: AnimatedContainer(
+        child: Container(
           key: widget.iconKey,
-          duration: const Duration(milliseconds: 200),
           margin: EdgeInsets.symmetric(horizontal: 4.w, vertical: 4.h),
           padding: EdgeInsets.symmetric(vertical: 4.h),
-          decoration: const BoxDecoration(color: Colors.transparent),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              ScaleTransition(
-                scale: _scale,
-                child: SvgPicture.asset(
-                  widget.svgPath,
-                  width: 22.w,
-                  height: 22.h,
-                  colorFilter: ColorFilter.mode(
-                    active ? context.colors.accent : context.colors.textSecondary,
-                    BlendMode.srcIn,
+              AnimatedScale(
+                // Active icon grows slightly (1 → 1.08); pressing dips it.
+                scale: _pressed ? 0.92 : (active ? 1.08 : 1.0),
+                duration: duration,
+                curve: Motion.enter,
+                child: TweenAnimationBuilder<Color?>(
+                  tween: ColorTween(end: color),
+                  duration: duration,
+                  curve: Motion.standard,
+                  builder: (context, c, _) => SvgPicture.asset(
+                    widget.svgPath,
+                    width: 22.w,
+                    height: 22.h,
+                    colorFilter: ColorFilter.mode(c ?? color, BlendMode.srcIn),
                   ),
                 ),
               ),
               SizedBox(height: 2.h),
-              Text(
-                widget.label,
+              AnimatedDefaultTextStyle(
+                duration: duration,
+                curve: Motion.standard,
                 style: TextStyle(
                   fontFamily: 'Rubik',
                   fontSize: 11.sp,
                   fontWeight: active ? FontWeight.w700 : FontWeight.w600,
-                  color: active
-                      ? context.colors.accent
-                      : context.colors.textSecondary,
+                  color: color,
                 ),
+                child: Text(widget.label),
               ),
             ],
           ),
@@ -1455,10 +1458,14 @@ class _EmptyCookbookCard extends StatelessWidget {
                   color: context.colors.accent,
                   shape: BoxShape.circle,
                 ),
-                child: Icon(
-                  Icons.add_rounded,
-                  color: Colors.white,
-                  size: 30.sp,
+                // Book opens slightly, chef hat appears, closes (slow loop).
+                child: Center(
+                  child: EmptyStateAnimation(
+                    kind: EmptyStateKind.cookbook,
+                    size: 26.sp,
+                    color: Colors.white,
+                    accent: Colors.white,
+                  ),
                 ),
               ),
               SizedBox(height: 14.h),
@@ -1700,8 +1707,11 @@ class _CircularRecipeAvatarRow extends StatelessWidget {
       return CachedNetworkImage(
         imageUrl: image,
         fit: BoxFit.cover,
-        placeholder: (_, __) => Container(color: context.colors.surface),
         errorWidget: (_, __, ___) => Image.asset(fallback, fit: BoxFit.cover),
+        placeholder: (_, __) => const SkeletonBox(borderRadius: BorderRadius.zero),
+        fadeInDuration: Motion.imageFade,
+        fadeOutDuration: Duration.zero,
+        fadeInCurve: Motion.enter,
       );
     }
     return Image.asset(
@@ -1790,6 +1800,14 @@ class _EmptySavedRecipesCardState extends State<_EmptySavedRecipesCard> {
           padding: EdgeInsets.symmetric(horizontal: 16.w),
           child: Column(
             children: [
+              // Empty recipe card, heart gently fills, back to idle.
+              EmptyStateAnimation(
+                kind: EmptyStateKind.savedHeart,
+                size: 40.sp,
+                color: context.colors.textMuted,
+                accent: context.colors.accent,
+              ),
+              SizedBox(height: 8.h),
               Text(
                 'No saved recipes yet',
                 style: GoogleFonts.rubik(
@@ -2793,7 +2811,13 @@ class _SuggestedRecipesSectionState extends State<_SuggestedRecipesSection> {
         return Column(
           children: [
             SizedBox(height: 22.h),
-            _SectionRow(title: 'Suggested Recipes'),
+            // Title fades in rising ~10 px, once per session; cards follow
+            // with a light stagger.
+            const AnimatedCardEntrance(
+              onceId: 'home-suggested-title',
+              offset: 10,
+              child: _SectionRow(title: 'Suggested Recipes'),
+            ),
             SizedBox(height: 12.h),
             widget.isCompact
                 ? _buildHorizontalList(displayList, savedIds, savedNames)
@@ -2847,7 +2871,11 @@ class _SuggestedRecipesSectionState extends State<_SuggestedRecipesSection> {
           final isSaved =
               (r.id.isNotEmpty && savedIds.contains(r.id)) ||
               (r.name.isNotEmpty && savedNames.contains(r.name.toLowerCase()));
-          return RecipeCard(
+          return AnimatedCardEntrance(
+            key: ValueKey('suggested-${r.id}-${r.name}'),
+            onceId: 'suggested-${r.id}-${r.name}',
+            index: i + 1,
+            child: RecipeCard(
             recipe: r,
             index: i,
             useValidationIcon: true,
@@ -2906,6 +2934,7 @@ class _SuggestedRecipesSectionState extends State<_SuggestedRecipesSection> {
                 }
               }
             },
+          ),
           );
         },
       ),
@@ -2948,7 +2977,11 @@ class _SuggestedRecipesSectionState extends State<_SuggestedRecipesSection> {
               (r.name.isNotEmpty && savedNames.contains(r.name.toLowerCase()));
           return SizedBox(
             width: 160.w,
-            child: RecipeCard(
+            child: AnimatedCardEntrance(
+              key: ValueKey('suggested-${r.id}-${r.name}'),
+              onceId: 'suggested-${r.id}-${r.name}',
+              index: i + 1,
+              child: RecipeCard(
               recipe: r,
               index: i,
               useValidationIcon: true,
@@ -3011,6 +3044,7 @@ class _SuggestedRecipesSectionState extends State<_SuggestedRecipesSection> {
                   }
                 }
               },
+            ),
             ),
           );
         },
@@ -3130,6 +3164,8 @@ class _SavingsCardState extends State<_SavingsCard>
       curve: Curves.easeOutCubic,
       reverseCurve: Curves.easeInCubic,
     );
+    // Don't wait for a change to the recipe list to load the savings.
+    RecipeService.instance.refreshSavings().catchError((_) => null);
   }
 
   @override
@@ -3152,27 +3188,14 @@ class _SavingsCardState extends State<_SavingsCard>
   Widget build(BuildContext context) {
     if (_SavingsCard.isDismissed) return const SizedBox.shrink();
 
-    return ValueListenableBuilder<List<Recipe>?>(
-      valueListenable: RecipeService.instance.myRecipesNotifier,
-      builder: (context, recipes, _) {
-        final myRecipes = recipes ?? [];
-        final scanRecipes = myRecipes
-            .where((r) => r.origin?.toUpperCase() == 'SCAN')
-            .toList();
-
-        if (scanRecipes.isEmpty) return const SizedBox.shrink();
-
-        // Same formula as the recipe detail page's "Estimated savings" card.
-        double totalSaved = 0.0;
-        for (var r in scanRecipes) {
-          final servings = (r.servings != null && r.servings! > 0) ? r.servings! : 2;
-          final pricePerServing = (r.totalPrice != null && r.totalPrice! > 0)
-              ? r.totalPrice! / servings
-              : 3.50;
-          double restaurantPerServing = pricePerServing * 2.5 + 5.0;
-          if (restaurantPerServing < 14.75) restaurantPerServing = 14.75;
-          totalSaved += (restaurantPerServing * servings) - (pricePerServing * servings);
+    return ValueListenableBuilder<SavingsSummary?>(
+      valueListenable: RecipeService.instance.savingsNotifier,
+      builder: (context, summary, _) {
+        // Computed by the backend from scanned recipes only.
+        if (summary == null || summary.recipes.isEmpty) {
+          return const SizedBox.shrink();
         }
+        final double totalSaved = summary.totalSaved;
         if (totalSaved <= 0) return const SizedBox.shrink();
         final double displayAmount = totalSaved;
 
@@ -3248,8 +3271,17 @@ class _SavingsCardState extends State<_SavingsCard>
                         crossAxisAlignment: CrossAxisAlignment.baseline,
                         textBaseline: TextBaseline.alphabetic,
                         children: [
-                          Text(
-                            "\$${displayAmount.toStringAsFixed(0)}",
+                          // Counts up from $0 to the exact amount once the
+                          // card has settled, then later changes animate
+                          // from the current value.
+                          AnimatedNumber(
+                            value: displayAmount,
+                            format: (v) => "\$${v.toStringAsFixed(0)}",
+                            countUpFrom: 0,
+                            startDelay: const Duration(milliseconds: 250),
+                            duration: const Duration(milliseconds: 900),
+                            pulse: true,
+                            hapticThreshold: 1,
                             style: TextStyle(
                               fontFamily: 'Rubik',
                               fontSize: 34.sp,

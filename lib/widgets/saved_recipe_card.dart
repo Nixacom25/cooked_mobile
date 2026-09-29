@@ -5,6 +5,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../models/recipe.dart';
 import '../services/recipe_service.dart';
 import '../core/theme/app_theme.dart';
+import '../core/motion/motion_widgets.dart';
 
 class SavedRecipeCard extends StatefulWidget {
   final Recipe? recipe;
@@ -113,7 +114,8 @@ class _SavedRecipeCardState extends State<SavedRecipeCard> {
     final String? imgPath = widget.image ?? widget.recipe?.image;
 
     if (widget.isSavingsMode) {
-      return GestureDetector(
+      return RecipeHeroArea(
+        child: PressScale(
         onTap: widget.onTap,
         onLongPressStart: widget.onLongPressStart,
         onLongPress: widget.onLongPress,
@@ -191,13 +193,14 @@ class _SavedRecipeCardState extends State<SavedRecipeCard> {
                   borderRadius: BorderRadius.circular(24.r),
                   child: SizedBox(
                     height: double.infinity,
-                    child: _buildThumbnail(imgPath),
+                    child: RecipeHeroImage(child: _buildThumbnail(imgPath)),
                   ),
                 ),
               ),
             ],
           ),
         ),
+      ),
       );
     }
 
@@ -210,7 +213,8 @@ class _SavedRecipeCardState extends State<SavedRecipeCard> {
     final String caloriesStr = widget.kcal ?? '$kcalVal kcal';
     final bool pinned = widget.recipe?.isPinned ?? widget.isPinned;
 
-    return GestureDetector(
+    return RecipeHeroArea(
+      child: PressScale(
       onTap: widget.onTap,
       onLongPressStart: widget.onLongPressStart,
       onLongPress: widget.onLongPress,
@@ -246,17 +250,22 @@ class _SavedRecipeCardState extends State<SavedRecipeCard> {
                           shape: BoxShape.circle,
                         ),
                         child: Center(
-                          child: SvgPicture.asset(
-                            _isFavorite
-                                ? 'assets/icones/coeur.svg'
-                                : 'assets/icones/coeur1.svg',
-                            width: 16.r,
-                            height: 16.r,
-                            colorFilter: ColorFilter.mode(
+                          child: HeartBump(
+                            active: _isFavorite,
+                            ringColor: context.colors.accent,
+                            ringSize: 32.r,
+                            child: SvgPicture.asset(
                               _isFavorite
-                                  ? context.colors.accent
-                                  : context.colors.textMuted,
-                              BlendMode.srcIn,
+                                  ? 'assets/icones/coeur.svg'
+                                  : 'assets/icones/coeur1.svg',
+                              width: 16.r,
+                              height: 16.r,
+                              colorFilter: ColorFilter.mode(
+                                _isFavorite
+                                    ? context.colors.accent
+                                    : context.colors.textMuted,
+                                BlendMode.srcIn,
+                              ),
                             ),
                           ),
                         ),
@@ -299,7 +308,7 @@ class _SavedRecipeCardState extends State<SavedRecipeCard> {
                   Positioned.fill(
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(24.r),
-                      child: _buildThumbnail(imgPath),
+                      child: RecipeHeroImage(child: _buildThumbnail(imgPath)),
                     ),
                   ),
                   if (pinned)
@@ -327,7 +336,8 @@ class _SavedRecipeCardState extends State<SavedRecipeCard> {
           ],
         ),
       ),
-    );
+    ),
+      );
   }
 
   Widget _buildBadge(IconData icon, String label) {
@@ -367,14 +377,68 @@ class _SavedRecipeCardState extends State<SavedRecipeCard> {
       return CachedNetworkImage(
         imageUrl: image,
         fit: BoxFit.cover,
-        placeholder: (_, __) => Container(color: context.colors.surface),
         errorWidget: (_, __, ___) => Image.asset(fallback, fit: BoxFit.cover),
+        placeholder: (_, __) => const SkeletonBox(borderRadius: BorderRadius.zero),
+        fadeInDuration: Motion.imageFade,
+        fadeOutDuration: Duration.zero,
+        fadeInCurve: Motion.enter,
       );
     }
     return Image.asset(
       image,
       fit: BoxFit.cover,
       errorBuilder: (_, __, ___) => Image.asset(fallback, fit: BoxFit.cover),
+    );
+  }
+}
+
+/// Loading placeholder with exactly the [SavedRecipeCard] footprint, so the
+/// real card crossfades in without the layout jumping.
+class SavedRecipeCardSkeleton extends StatelessWidget {
+  const SavedRecipeCardSkeleton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      height: 135.h,
+      decoration: BoxDecoration(
+        color: isDark ? context.colors.elevatedSurface : const Color(0xFFFAF3E6),
+        borderRadius: BorderRadius.circular(24.r),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            flex: 5,
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(16.w, 14.h, 12.w, 14.h),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  SkeletonBox(width: 32.r, height: 32.r, shape: BoxShape.circle),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SkeletonBox(width: 110.w, height: 14.h),
+                      SizedBox(height: 6.h),
+                      SkeletonBox(width: 80.w, height: 14.h),
+                    ],
+                  ),
+                  SkeletonBox(width: 90.w, height: 12.h),
+                ],
+              ),
+            ),
+          ),
+          Expanded(
+            flex: 5,
+            child: SkeletonBox(
+              height: double.infinity,
+              borderRadius: BorderRadius.circular(24.r),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

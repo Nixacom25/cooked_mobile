@@ -10,6 +10,7 @@ import 'animated_validation_button.dart';
 import 'standard_plus_button.dart';
 import 'haptic_context_menu.dart';
 import '../core/theme/app_theme.dart';
+import '../core/motion/motion_widgets.dart';
 
 class RecipeCard extends StatelessWidget {
   final Recipe? recipe;
@@ -93,9 +94,9 @@ class RecipeCard extends StatelessWidget {
 
     final displayImg = recipe?.image ?? img ?? '';
 
-    return GestureDetector(
+    return RecipeHeroArea(
+      child: PressScale(
       onTap: onTap,
-      behavior: HitTestBehavior.opaque,
       onLongPressStart: (onEditTap == null && onShareTap == null && onPinTap == null && onDeleteTap == null && onAddToCookbookTap == null && onRemoveFromCookbookTap == null)
           ? null
           : (details) {
@@ -116,7 +117,7 @@ class RecipeCard extends StatelessWidget {
                       width: double.infinity,
                       height: double.infinity,
                       color: context.colors.surface,
-                      child: _buildImage(displayImg),
+                      child: RecipeHeroImage(child: _buildImage(displayImg)),
                     ),
                   ),
                 ),
@@ -228,7 +229,8 @@ class RecipeCard extends StatelessWidget {
           ),
         ],
       ),
-    );
+    ),
+      );
   }
 
   void _showContextMenu(BuildContext context, Offset position) {
@@ -308,10 +310,10 @@ class RecipeCard extends StatelessWidget {
         fit: BoxFit.cover,
         errorWidget: (_, __, ___) =>
             Image.asset('assets/images/recipes.png', fit: BoxFit.cover),
-        placeholder: (_, __) => const SkeletonLoader(
-          width: double.infinity,
-          height: double.infinity,
-        ),
+        placeholder: (_, __) => const SkeletonBox(borderRadius: BorderRadius.zero),
+        fadeInDuration: Motion.imageFade,
+        fadeOutDuration: Duration.zero,
+        fadeInCurve: Motion.enter,
       );
     }
 

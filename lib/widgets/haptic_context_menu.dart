@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../core/theme/app_theme.dart';
+import '../core/motion/motion_widgets.dart';
 
 class HapticMenuAction {
   final String title;
@@ -30,25 +31,15 @@ class HapticContextMenu {
       context: context,
       barrierDismissible: true,
       barrierLabel: 'Dismiss',
-      barrierColor: Colors.transparent, // No dark overlay on the screen when modal opens
-      transitionDuration: const Duration(milliseconds: 250),
+      // Subtle dim; the blur and the menu pop-in are driven by anim1 below.
+      barrierColor: Colors.black.withValues(alpha: 0.10),
+      transitionDuration: Motion.short,
       pageBuilder: (context, anim1, anim2) {
         return _HapticMenuOverlay(
           actions: actions,
           targetPosition: targetPosition,
           menuWidth: menuWidth,
-        );
-      },
-      transitionBuilder: (context, anim1, anim2, child) {
-        return FadeTransition(
-          opacity: anim1,
-          child: ScaleTransition(
-            alignment: Alignment.center,
-            scale: Tween<double>(begin: 0.85, end: 1.0).animate(
-              CurvedAnimation(parent: anim1, curve: Curves.easeOutCubic),
-            ),
-            child: child,
-          ),
+          animation: anim1,
         );
       },
     );
@@ -59,11 +50,13 @@ class _HapticMenuOverlay extends StatelessWidget {
   final List<HapticMenuAction> actions;
   final Offset targetPosition;
   final double menuWidth;
+  final Animation<double> animation;
 
   const _HapticMenuOverlay({
     required this.actions,
     required this.targetPosition,
     required this.menuWidth,
+    required this.animation,
   });
 
   @override
@@ -99,7 +92,16 @@ class _HapticMenuOverlay extends StatelessWidget {
             child: GestureDetector(
               onTap: () => Navigator.pop(context),
               onPanStart: (_) => Navigator.pop(context),
-              child: Container(color: Colors.transparent),
+              child: AnimatedBuilder(
+                animation: animation,
+                builder: (context, _) => BackdropFilter(
+                  filter: ImageFilter.blur(
+                    sigmaX: 4 * animation.value,
+                    sigmaY: 4 * animation.value,
+                  ),
+                  child: const ColoredBox(color: Colors.transparent),
+                ),
+              ),
             ),
           ),
 
@@ -107,55 +109,60 @@ class _HapticMenuOverlay extends StatelessWidget {
           Positioned(
             top: top,
             left: left,
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(20.r),
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
-                child: Container(
-                  width: menuWidth.w,
-                  decoration: BoxDecoration(
-                    // Same frosted-glass effect in both themes: light glass
-                    // over a blurred backdrop in light mode, dark glass in
-                    // dark mode.
-                    color: isDark
-                        ? context.colors.elevatedSurface.withValues(alpha: 0.75)
-                        : Colors.white.withValues(alpha: 0.65), // Translucent frosted glass
-                    borderRadius: BorderRadius.circular(20.r),
-                    border: Border.all(
+            child: GlassPopIn(
+              animation: animation,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(20.r),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
+                  child: Container(
+                    width: menuWidth.w,
+                    decoration: BoxDecoration(
+                      // Same frosted-glass effect in both themes: light glass
+                      // over a blurred backdrop in light mode, dark glass in
+                      // dark mode.
                       color: isDark
-                          ? Colors.white.withValues(alpha: 0.16)
-                          : Colors.white.withValues(alpha: 0.8),
-                      width: 1.2.w,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.12),
-                        blurRadius: 28,
-                        spreadRadius: 1,
-                        offset: const Offset(0, 8),
+                          ? context.colors.elevatedSurface.withValues(
+                              alpha: 0.75,
+                            )
+                          : Colors.white.withValues(
+                              alpha: 0.65,
+                            ), // Translucent frosted glass
+                      borderRadius: BorderRadius.circular(20.r),
+                      border: Border.all(
+                        color: isDark
+                            ? Colors.white.withValues(alpha: 0.16)
+                            : Colors.white.withValues(alpha: 0.8),
+                        width: 1.2.w,
                       ),
-                    ],
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: actions.asMap().entries.map((entry) {
-                      final i = entry.key;
-                      final action = entry.value;
-                      final isLast = i == actions.length - 1;
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.12),
+                          blurRadius: 28,
+                          spreadRadius: 1,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: actions.asMap().entries.map((entry) {
+                        final i = entry.key;
+                        final action = entry.value;
+                        final isLast = i == actions.length - 1;
 
-                      return Column(
-                        children: [
-                          _MenuTile(
-                            action: action,
-                          ),
-                          if (!isLast)
-                            Container(
-                              height: 0.5,
-                              color: Colors.black.withValues(alpha: 0.08),
-                            ),
-                        ],
-                      );
-                    }).toList(),
+                        return Column(
+                          children: [
+                            _MenuTile(action: action),
+                            if (!isLast)
+                              Container(
+                                height: 0.5,
+                                color: Colors.black.withValues(alpha: 0.08),
+                              ),
+                          ],
+                        );
+                      }).toList(),
+                    ),
                   ),
                 ),
               ),

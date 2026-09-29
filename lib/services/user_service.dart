@@ -57,6 +57,15 @@ class UserService {
     if (currentUserNotifier.value != null) {
       final updated = Map<String, dynamic>.from(currentUserNotifier.value!);
       updated['subscriptionStatus'] = isPremium ? 'ACTIVE' : 'EXPIRED';
+      if (isPremium) {
+        // A re-subscribing user still carries their old, past expiry date,
+        // which would make [isPremium] false right after paying. The real
+        // date comes back from the backend on the next profile load.
+        final expires = DateTime.tryParse(updated['subscriptionExpiresAt']?.toString() ?? '');
+        if (expires != null && expires.isBefore(DateTime.now())) {
+          updated['subscriptionExpiresAt'] = null;
+        }
+      }
       currentUserNotifier.value = updated;
     }
   }

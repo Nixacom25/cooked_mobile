@@ -33,6 +33,7 @@ import '../../widgets/glass_icon_button.dart';
 import '../../widgets/recent_import_tile.dart';
 import '../../widgets/saved_recipe_card.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/motion/motion_widgets.dart';
 
 // ══════════════════════════════════════════════════════════════════════════════
 // VIEW ALL SCREEN
@@ -1288,17 +1289,14 @@ class _StaticCookbooksGridState extends State<_StaticCookbooksGrid> {
                         ? CachedNetworkImage(
                             imageUrl: bustedImageUrl,
                             fit: BoxFit.cover,
-                            placeholder: (context, url) => const Center(
-                              child: SizedBox(
-                                width: 24,
-                                height: 24,
-                                child: AppLoadingIndicator(),
-                              ),
-                            ),
                             errorWidget: (context, url, error) => Image.asset(
                               fallbackImg,
                               fit: BoxFit.cover,
                             ),
+                            placeholder: (_, __) => const SkeletonBox(borderRadius: BorderRadius.zero),
+                            fadeInDuration: Motion.imageFade,
+                            fadeOutDuration: Duration.zero,
+                            fadeInCurve: Motion.enter,
                           )
                         : Image.asset(
                             imgUrl != null && imgUrl.isNotEmpty ? imgUrl : fallbackImg,

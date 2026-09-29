@@ -4,8 +4,8 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../core/extensions/string_extensions.dart';
-import 'skeleton_loader.dart';
 import '../core/theme/app_theme.dart';
+import '../core/motion/motion_widgets.dart';
 
 class RecentImportTile extends StatelessWidget {
   final String img;
@@ -51,16 +51,10 @@ class RecentImportTile extends StatelessWidget {
       return CachedNetworkImage(
         imageUrl: path,
         fit: BoxFit.cover,
-        placeholder: (_, __) => Container(
-          // Light mode keeps the original (0xFFF2F1EF) exactly as designed;
-          // only dark mode gets the theme's surface color.
-          color: Theme.of(context).brightness == Brightness.dark
-              ? context.colors.surface
-              : const Color(0xFFF2F1EF),
-          child: const Center(
-            child: SkeletonLoader(width: 30, height: 30, borderRadius: 15),
-          ),
-        ),
+        placeholder: (_, __) => const SkeletonBox(borderRadius: BorderRadius.zero),
+        fadeInDuration: Motion.imageFade,
+        fadeOutDuration: Duration.zero,
+        fadeInCurve: Motion.enter,
         errorWidget: (_, __, ___) =>
             Image.asset('assets/images/recipes.png', fit: BoxFit.cover),
       );
@@ -75,10 +69,10 @@ class RecentImportTile extends StatelessWidget {
       padding: EdgeInsets.all(12.r),
       decoration: BoxDecoration(
         // Light mode keeps the original cream (0xFFFAF5E8) exactly as
-        // designed; only dark mode gets the theme's surface color.
+        // designed; only dark mode gets pageBackground.
         color: Theme.of(context).brightness == Brightness.dark
-            ? context.colors.surface
-            : const Color(0xFFFAF5E8), // Cream yellow matching mockup
+            ? context.colors.pageBackground
+            : const Color(0xFFFAF5E8),
         borderRadius: BorderRadius.circular(20.r),
       ),
       child: Row(
@@ -146,17 +140,22 @@ class RecentImportTile extends StatelessWidget {
                   ],
                 ),
                 child: Center(
-                  child: SvgPicture.asset(
-                    isValidated
-                        ? 'assets/icones/coeur.svg'
-                        : 'assets/icones/coeur1.svg',
-                    width: 18.r,
-                    height: 18.r,
-                    colorFilter: ColorFilter.mode(
+                  child: HeartBump(
+                    active: isValidated,
+                    ringColor: context.colors.accent,
+                    ringSize: 36.r,
+                    child: SvgPicture.asset(
                       isValidated
-                          ? context.colors.accent
-                          : context.colors.textMuted,
-                      BlendMode.srcIn,
+                          ? 'assets/icones/coeur.svg'
+                          : 'assets/icones/coeur1.svg',
+                      width: 18.r,
+                      height: 18.r,
+                      colorFilter: ColorFilter.mode(
+                        isValidated
+                            ? context.colors.accent
+                            : context.colors.textMuted,
+                        BlendMode.srcIn,
+                      ),
                     ),
                   ),
                 ),

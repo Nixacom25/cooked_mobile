@@ -21,6 +21,7 @@ import '../models/view_all_type.dart';
 import '../core/api_config.dart';
 import '../core/utils/recipe_filters.dart';
 import '../core/theme/app_theme.dart';
+import '../core/motion/motion_widgets.dart';
 
 // ══════════════════════════════════════════════════════════════════════════════
 // EXPLORE SCREEN (Full Width Cards Parity with Home & Reusable Components)
@@ -53,6 +54,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
   List<Recipe>? _popularCache;
 
   String? _activeFilterId;
+  final ScrollController _forYouScroll = ScrollController();
 
   int _refreshTimestamp = DateTime.now().millisecondsSinceEpoch;
 
@@ -73,14 +75,36 @@ class _ExploreScreenState extends State<ExploreScreen> {
       } catch (_) {}
     }
     setState(() {
-      _cuisinesFuture = RecipeService.instance.getExploreCuisines(forceRefresh: force);
-      _popularFuture = RecipeService.instance.getPopularRecipes(size: 10, forceRefresh: force);
-      _categoriesFuture = RecipeService.instance.getExploreCategories(forceRefresh: force);
-      _filterPoolFuture = RecipeService.instance.getExploreRecipes(size: 150, forceRefresh: force);
+      _cuisinesFuture = RecipeService.instance.getExploreCuisines(
+        forceRefresh: force,
+      );
+      _popularFuture = RecipeService.instance.getPopularRecipes(
+        size: 10,
+        forceRefresh: force,
+      );
+      _categoriesFuture = RecipeService.instance.getExploreCategories(
+        forceRefresh: force,
+      );
+      _filterPoolFuture = RecipeService.instance.getExploreRecipes(
+        size: 150,
+        forceRefresh: force,
+      );
     });
-    _cuisinesFuture.then((v) { if (mounted) setState(() => _cuisinesCache = v); }).catchError((_) {});
-    _popularFuture.then((v) { if (mounted) setState(() => _popularCache = v); }).catchError((_) {});
-    _categoriesFuture.then((v) { if (mounted) setState(() => _categoriesCache = v); }).catchError((_) {});
+    _cuisinesFuture
+        .then((v) {
+          if (mounted) setState(() => _cuisinesCache = v);
+        })
+        .catchError((_) {});
+    _popularFuture
+        .then((v) {
+          if (mounted) setState(() => _popularCache = v);
+        })
+        .catchError((_) {});
+    _categoriesFuture
+        .then((v) {
+          if (mounted) setState(() => _categoriesCache = v);
+        })
+        .catchError((_) {});
   }
 
   @override
@@ -117,6 +141,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
     _refreshTimer?.cancel();
     _searchCtrl.dispose();
     _searchFocusNode.dispose();
+    _forYouScroll.dispose();
     super.dispose();
   }
 
@@ -128,7 +153,6 @@ class _ExploreScreenState extends State<ExploreScreen> {
       _popularFuture,
     ]).catchError((_) => <dynamic>[]);
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -153,37 +177,39 @@ class _ExploreScreenState extends State<ExploreScreen> {
                   child: const RedHeaderBackground(),
                 ),
 
-              // ── Scrollable Body Column ──
-              Column(
-                children: [
-                  // 1. Shared App Header over red background
-                  const AppTopHeader(textColor: Colors.white),
+                // ── Scrollable Body Column ──
+                Column(
+                  children: [
+                    // 1. Shared App Header over red background
+                    const AppTopHeader(textColor: Colors.white),
 
-                  SizedBox(height: 8.h),
+                    SizedBox(height: 8.h),
 
-                  // 2. Fused Top Card: Explore Header, Search, Filters & "For You" Section
-                  _buildTopExploreAndForYouCard(),
+                    // 2. Fused Top Card: Explore Header, Search, Filters & "For You" Section
+                    _buildTopExploreAndForYouCard(),
 
-                  SizedBox(height: 16.h),
+                    SizedBox(height: 16.h),
 
-                  // 3. Card 2: Cuisines Card
-                  _buildCuisinesSectionCard(),
+                    // 3. Card 2: Cuisines Card
+                    _buildCuisinesSectionCard(),
 
-                  SizedBox(height: 16.h),
+                    SizedBox(height: 16.h),
 
-                  // 4. Card 3: Popular Now Card
-                  _buildPopularNowSectionCard(),
+                    // 4. Card 3: Popular Now Card
+                    _buildPopularNowSectionCard(),
 
-                  SizedBox(height: 140.h + MediaQuery.of(context).padding.bottom),
-                ],
-              ),
-            ],
+                    SizedBox(
+                      height: 140.h + MediaQuery.of(context).padding.bottom,
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   // ── Fused Top Card: Explore Header, Search, Filters & "For You" Section ───────
   Widget _buildTopExploreAndForYouCard() {
@@ -224,7 +250,9 @@ class _ExploreScreenState extends State<ExploreScreen> {
                   backgroundColor: context.colors.pageBackground,
                   borderColor: context.colors.pageBackground,
                   hintText: 'Search your recipes',
-                  suffixIcon: searchQuery.isNotEmpty ? Icons.close_rounded : null,
+                  suffixIcon: searchQuery.isNotEmpty
+                      ? Icons.close_rounded
+                      : null,
                   onSuffixTap: searchQuery.isNotEmpty
                       ? () => _searchCtrl.clear()
                       : null,
@@ -237,186 +265,230 @@ class _ExploreScreenState extends State<ExploreScreen> {
 
           // ── Filter Tags Row (Full Width Across Card) - always visible so
           // the active filter (if any) stays selectable/deselectable ──
-          SizedBox(
+          // One shared red pill slides from the previous chip to the newly
+          // selected one (Airbnb-style); text/border colors crossfade.
+          SlidingPillChips(
             height: 38.h,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              padding: EdgeInsets.symmetric(horizontal: 16.w),
-              itemCount: kRecipeFilters.length,
-              itemBuilder: (context, i) {
-                final filter = kRecipeFilters[i];
-                final isActive = _activeFilterId == filter.id;
-                return Padding(
-                  padding: EdgeInsets.only(right: 8.w),
-                  child: GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        _activeFilterId = isActive ? null : filter.id;
-                      });
-                    },
-                    child: Container(
-                      padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 8.h),
-                      decoration: BoxDecoration(
-                        color: isActive ? context.colors.accent : context.colors.surface,
-                        borderRadius: BorderRadius.circular(20.r),
-                        border: Border.all(
-                          // Light mode keeps the original (0xFFF3E8D3)
-                          // exactly as designed; only dark mode gets
-                          // the theme's border color.
-                          color: isActive
-                              ? context.colors.accent
-                              : (Theme.of(context).brightness == Brightness.dark
-                                  ? context.colors.border
-                                  : const Color(0xFFF3E8D3)),
-                          width: 1.w,
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            filter.emoji,
-                            style: TextStyle(fontSize: 14.sp),
-                          ),
-                          SizedBox(width: 6.w),
-                          Text(
-                            filter.label,
-                            style: TextStyle(
-                              fontFamily: 'Rubik',
-                              fontSize: 13.sp,
-                              fontWeight: FontWeight.w700,
-                              color: isActive ? Colors.white : context.colors.textPrimary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+            padding: EdgeInsets.symmetric(horizontal: 16.w),
+            spacing: 8.w,
+            pillColor: context.colors.accent,
+            borderRadius: BorderRadius.circular(20.r),
+            itemCount: kRecipeFilters.length,
+            selectedIndex: _activeFilterId == null
+                ? null
+                : kRecipeFilters.indexWhere((f) => f.id == _activeFilterId),
+            onTap: (i) {
+              final filter = kRecipeFilters[i];
+              Motion.selectionHaptic();
+              setState(() {
+                _activeFilterId = _activeFilterId == filter.id ? null : filter.id;
+              });
+            },
+            itemBuilder: (context, i, isActive) {
+              final filter = kRecipeFilters[i];
+              return AnimatedContainer(
+                duration: Motion.of(context, Motion.short),
+                curve: Motion.standard,
+                padding: EdgeInsets.symmetric(
+                  horizontal: 14.w,
+                  vertical: 8.h,
+                ),
+                decoration: BoxDecoration(
+                  // Transparent fill: the sliding pill behind provides the
+                  // selected background, and stays visible while it moves.
+                  color: Colors.transparent,
+                  borderRadius: BorderRadius.circular(20.r),
+                  border: Border.all(
+                    // Light mode keeps the original (0xFFF3E8D3)
+                    // exactly as designed; only dark mode gets
+                    // the theme's border color.
+                    color: isActive
+                        ? Colors.transparent
+                        : (Theme.of(context).brightness == Brightness.dark
+                              ? context.colors.border
+                              : const Color(0xFFF3E8D3)),
+                    width: 1.w,
                   ),
-                );
-              },
-            ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(filter.emoji, style: TextStyle(fontSize: 14.sp)),
+                    SizedBox(width: 6.w),
+                    AnimatedDefaultTextStyle(
+                      duration: Motion.of(context, Motion.short),
+                      curve: Motion.standard,
+                      style: TextStyle(
+                        fontFamily: 'Rubik',
+                        fontSize: 13.sp,
+                        fontWeight: FontWeight.w700,
+                        color: isActive
+                            ? Colors.white
+                            : context.colors.textPrimary,
+                      ),
+                      child: Text(filter.label),
+                    ),
+                  ],
+                ),
+              );
+            },
           ),
 
           SizedBox(height: 14.h),
 
           if (searchQuery.isNotEmpty || _activeFilterId != null)
-            _buildInlineSearchResults(searchQuery)
+            // Switching filter: old results fade out fast (~100 ms) and the
+            // new set fades in; header, search and chips stay put.
+            AnimatedSwitcher(
+              duration: Motion.of(context, Motion.short),
+              reverseDuration: Motion.of(
+                context,
+                const Duration(milliseconds: 100),
+              ),
+              switchInCurve: Motion.enter,
+              switchOutCurve: Motion.exit,
+              layoutBuilder: (current, previous) => Stack(
+                alignment: Alignment.topCenter,
+                children: [...previous, if (current != null) current],
+              ),
+              child: KeyedSubtree(
+                key: ValueKey('results-$_activeFilterId'),
+                child: _buildInlineSearchResults(searchQuery),
+              ),
+            )
           else ...[
-          SizedBox(height: 10.h),
+            SizedBox(height: 10.h),
 
-          // ── "For You" Section ──
-          FutureBuilder<List<Map<String, dynamic>>>(
-            future: _categoriesFuture,
-            builder: (context, snapshot) {
-              // Background refreshes keep showing the last-known-good list
-              // instead of flashing back to a spinner; only the true first
-              // load (no cache yet) shows one.
-              final categories = _categoriesCache ?? snapshot.data ?? [];
-              if (categories.isEmpty) {
-                if (_categoriesCache == null &&
-                    snapshot.connectionState == ConnectionState.waiting) {
-                  return Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16.w),
-                    child: SizedBox(
+            // ── "For You" Section ──
+            FutureBuilder<List<Map<String, dynamic>>>(
+              future: _categoriesFuture,
+              builder: (context, snapshot) {
+                // Background refreshes keep showing the last-known-good list
+                // instead of flashing back to a spinner; only the true first
+                // load (no cache yet) shows one.
+                final categories = _categoriesCache ?? snapshot.data ?? [];
+                if (categories.isEmpty) {
+                  if (_categoriesCache == null &&
+                      snapshot.connectionState == ConnectionState.waiting) {
+                    return SizedBox(
                       height: 200.h,
-                      child: Center(
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2.w,
-                          color: context.colors.accent,
+                      child: Shimmer(
+                        child: ListView.builder(
+                          scrollDirection: Axis.horizontal,
+                          physics: const NeverScrollableScrollPhysics(),
+                          padding: EdgeInsets.symmetric(horizontal: 16.w),
+                          itemCount: 3,
+                          itemBuilder: (_, __) => Padding(
+                            padding: EdgeInsets.only(right: 14.w),
+                            child: SkeletonBox(
+                              width: 160.w,
+                              height: 200.h,
+                              borderRadius: BorderRadius.circular(24.r),
+                            ),
+                          ),
                         ),
                       ),
-                    ),
-                  );
+                    );
+                  }
+                  return const SizedBox.shrink();
                 }
-                return const SizedBox.shrink();
-              }
 
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16.w),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          "For You",
-                          style: TextStyle(
-                            fontFamily: 'Rubik',
-                            fontSize: 18.sp,
-                            fontWeight: FontWeight.w800,
-                            color: context.colors.textPrimary,
-                          ),
-                        ),
-                        GestureDetector(
-                          onTap: () {
-                            Navigator.pushNamed(
-                              context,
-                              AppRoutes.viewAll,
-                              arguments: {
-                                'type': ViewAllType.exploreCategories,
-                                'title': 'Popular Categories',
-                              },
-                            );
-                          },
-                          child: Text(
-                            "View All",
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 16.w),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            "For You",
                             style: TextStyle(
                               fontFamily: 'Rubik',
-                              fontSize: 14.sp,
-                              fontWeight: FontWeight.w700,
-                              color: context.colors.accent,
+                              fontSize: 18.sp,
+                              fontWeight: FontWeight.w800,
+                              color: context.colors.textPrimary,
                             ),
                           ),
-                        ),
-                      ],
+                          GestureDetector(
+                            onTap: () {
+                              Navigator.pushNamed(
+                                context,
+                                AppRoutes.viewAll,
+                                arguments: {
+                                  'type': ViewAllType.exploreCategories,
+                                  'title': 'Popular Categories',
+                                },
+                              );
+                            },
+                            child: Text(
+                              "View All",
+                              style: TextStyle(
+                                fontFamily: 'Rubik',
+                                fontSize: 14.sp,
+                                fontWeight: FontWeight.w700,
+                                color: context.colors.accent,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
 
-                  SizedBox(height: 14.h),
+                    SizedBox(height: 14.h),
 
-                  // ── For You Category Cards (Horizontal Scrollable) ──
-                  SizedBox(
-                    height: 200.h,
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      padding: EdgeInsets.symmetric(horizontal: 16.w),
-                      itemCount: categories.length,
-                      itemBuilder: (context, i) {
-                        final item = categories[i];
-                        final name = (item['name'] as String?) ?? "Category";
-                        final count = recipeCountLabel(item['recipeCount']);
-                        final img = (item['image'] as String?) ?? "";
+                    // ── For You Category Cards (Horizontal Scrollable) ──
+                  Builder(builder: (context) {
+                    ScrollHint.play(context, _forYouScroll, 'explore-for-you');
+                    return const SizedBox.shrink();
+                  }),
+                    SizedBox(
+                      height: 200.h,
+                      child: ListView.builder(
+                      controller: _forYouScroll,
+                        scrollDirection: Axis.horizontal,
+                        padding: EdgeInsets.symmetric(horizontal: 16.w),
+                        itemCount: categories.length,
+                        itemBuilder: (context, i) {
+                          final item = categories[i];
+                          final name = (item['name'] as String?) ?? "Category";
+                          final count = recipeCountLabel(item['recipeCount']);
+                          final img = (item['image'] as String?) ?? "";
 
-                        return Padding(
-                          padding: EdgeInsets.only(right: 14.w),
-                          child: SizedBox(
-                            width: 160.w,
-                            child: _buildCategoryCard(
-                              title: name,
-                              subtitle: count,
-                              imagePath: img,
-                              onTap: () {
-                                Navigator.pushNamed(
-                                  context,
-                                  AppRoutes.viewAll,
-                                  arguments: {
-                                    'type': ViewAllType.exploreRecipesByCategory,
-                                    'title': name,
-                                    'category': name,
+                          return Padding(
+                            padding: EdgeInsets.only(right: 14.w),
+                            child: SizedBox(
+                              width: 160.w,
+                              child: AnimatedCardEntrance(
+                                onceId: 'explore-category-$name',
+                                index: i,
+                                child: _buildCategoryCard(
+                                  title: name,
+                                  subtitle: count,
+                                  imagePath: img,
+                                  onTap: () {
+                                    Navigator.pushNamed(
+                                      context,
+                                      AppRoutes.viewAll,
+                                      arguments: {
+                                        'type': ViewAllType
+                                            .exploreRecipesByCategory,
+                                        'title': name,
+                                        'category': name,
+                                      },
+                                    );
                                   },
-                                );
-                              },
+                                ),
+                              ),
                             ),
-                          ),
-                        );
-                      },
+                          );
+                        },
+                      ),
                     ),
-                  ),
-                ],
-              );
-            },
-          ),
+                  ],
+                );
+              },
+            ),
           ],
         ],
       ),
@@ -429,34 +501,49 @@ class _ExploreScreenState extends State<ExploreScreen> {
   // combined with any typed text (AND) rather than the small popular-recipes
   // pool plain text search alone would use.
   Widget _buildInlineSearchResults(String query) {
-    final activeFilter = _activeFilterId != null ? findRecipeFilter(_activeFilterId!) : null;
+    final activeFilter = _activeFilterId != null
+        ? findRecipeFilter(_activeFilterId!)
+        : null;
     return FutureBuilder<List<Recipe>>(
       future: activeFilter != null ? _filterPoolFuture : _popularFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Padding(
-            padding: EdgeInsets.symmetric(vertical: 32.h),
-            child: const Center(child: AppLoadingIndicator()),
+            padding: EdgeInsets.symmetric(horizontal: 16.w),
+            child: Shimmer(
+              child: Column(
+                children: [
+                  for (int i = 0; i < 3; i++) ...[
+                    if (i > 0) SizedBox(height: 12.h),
+                    const SavedRecipeCardSkeleton(),
+                  ],
+                ],
+              ),
+            ),
           );
         }
 
         final lowerQuery = query.toLowerCase();
-        final matches = (snapshot.data ?? [])
-            .where((r) {
-              if (activeFilter != null && !activeFilter.matches(r)) return false;
-              if (lowerQuery.isEmpty) return true;
-              return r.name.toLowerCase().contains(lowerQuery) ||
-                  (r.cuisine?.toLowerCase().contains(lowerQuery) ?? false) ||
-                  (r.categories?.any((c) => c.toLowerCase().contains(lowerQuery)) ?? false);
-            })
-            .toList();
+        final matches = (snapshot.data ?? []).where((r) {
+          if (activeFilter != null && !activeFilter.matches(r)) return false;
+          if (lowerQuery.isEmpty) return true;
+          return r.name.toLowerCase().contains(lowerQuery) ||
+              (r.cuisine?.toLowerCase().contains(lowerQuery) ?? false) ||
+              (r.categories?.any((c) => c.toLowerCase().contains(lowerQuery)) ??
+                  false);
+        }).toList();
 
         if (matches.isEmpty) {
           return Padding(
             padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 32.h),
             child: Column(
               children: [
-                Icon(Icons.search_off_rounded, size: 40.sp, color: context.colors.border),
+                EmptyStateAnimation(
+                  kind: EmptyStateKind.search,
+                  size: 40.sp,
+                  color: context.colors.border,
+                  accent: context.colors.accent,
+                ),
                 SizedBox(height: 12.h),
                 Text(
                   'No recipes found',
@@ -510,15 +597,21 @@ class _ExploreScreenState extends State<ExploreScreen> {
             separatorBuilder: (_, __) => SizedBox(height: 12.h),
             itemBuilder: (context, i) {
               final r = matches[i];
-              return SavedRecipeCard(
-                recipe: r,
-                onTap: () {
-                  Navigator.pushNamed(
-                    context,
-                    AppRoutes.recipeDetail,
-                    arguments: {'recipe': r, 'isPreview': true},
-                  );
-                },
+              // Keyed per recipe: rows that stay while typing don't flash,
+              // only newly matching rows fade in.
+              return AnimatedCardEntrance(
+                key: ValueKey('match-${r.id}-${r.name}'),
+                index: i,
+                child: SavedRecipeCard(
+                  recipe: r,
+                  onTap: () {
+                    Navigator.pushNamed(
+                      context,
+                      AppRoutes.recipeDetail,
+                      arguments: {'recipe': r, 'isPreview': true},
+                    );
+                  },
+                ),
               );
             },
           ),
@@ -536,10 +629,13 @@ class _ExploreScreenState extends State<ExploreScreen> {
     final String resolvedUrl = imagePath.startsWith('/')
         ? '${ApiConfig.baseUrl}$imagePath'
         : imagePath;
-    final isNetwork = resolvedUrl.startsWith('http://') || resolvedUrl.startsWith('https://');
+    final isNetwork =
+        resolvedUrl.startsWith('http://') || resolvedUrl.startsWith('https://');
 
-    return GestureDetector(
+    return PressScale(
       onTap: onTap,
+      darken: 0.05,
+      borderRadius: BorderRadius.circular(24.r),
       child: Container(
         decoration: BoxDecoration(
           color: context.colors.surface,
@@ -558,19 +654,25 @@ class _ExploreScreenState extends State<ExploreScreen> {
                         imageUrl: _bustedUrl(resolvedUrl),
                         fit: BoxFit.cover,
                         memCacheWidth: 500,
-                        fadeInDuration: const Duration(milliseconds: 150),
-                        placeholder: (_, __) => Container(color: Colors.grey[200]),
                         errorWidget: (_, __, ___) => Image.asset(
                           'assets/images/explore_autumn.png',
                           fit: BoxFit.cover,
                         ),
+                        placeholder: (_, __) =>
+                            const SkeletonBox(borderRadius: BorderRadius.zero),
+                        fadeInDuration: Motion.imageFade,
+                        fadeOutDuration: Duration.zero,
+                        fadeInCurve: Motion.enter,
                       )
                     : Image.asset(
                         imagePath,
                         fit: BoxFit.cover,
                         errorBuilder: (_, __, ___) => Container(
                           color: Colors.grey[200],
-                          child: Icon(Icons.restaurant, color: Colors.grey[400]),
+                          child: Icon(
+                            Icons.restaurant,
+                            color: Colors.grey[400],
+                          ),
                         ),
                       ),
               ),
@@ -633,12 +735,16 @@ class _ExploreScreenState extends State<ExploreScreen> {
     if (lower.contains('greek')) return 'assets/cuisine/greek.png';
     if (lower.contains('japanese')) return 'assets/cuisine/japanese.png';
     if (lower.contains('korean')) return 'assets/cuisine/korean.png';
-    if (lower.contains('mediterranean')) return 'assets/cuisine/mediterranean.png';
+    if (lower.contains('mediterranean'))
+      return 'assets/cuisine/mediterranean.png';
     if (lower.contains('caribbean')) return 'assets/cuisine/caribbean.png';
-    if (lower.contains('asian') || lower.contains('chinese')) return 'assets/cuisine/chinese.png';
+    if (lower.contains('asian') || lower.contains('chinese'))
+      return 'assets/cuisine/chinese.png';
     if (lower.contains('indian')) return 'assets/cuisine/indian.png';
-    if (lower.contains('west african')) return 'assets/cuisine/west-african.png';
-    if (lower.contains('east african')) return 'assets/cuisine/east-african.png';
+    if (lower.contains('west african'))
+      return 'assets/cuisine/west-african.png';
+    if (lower.contains('east african'))
+      return 'assets/cuisine/east-african.png';
     if (lower.contains('middle')) return 'assets/cuisine/middle-east.png';
     if (lower.contains('thai')) return 'assets/cuisine/thai.png';
     if (lower.contains('spanish')) return 'assets/cuisine/spanish.png';
@@ -664,10 +770,28 @@ class _ExploreScreenState extends State<ExploreScreen> {
               ),
               child: SizedBox(
                 height: 125.h,
-                child: Center(
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2.w,
-                    color: context.colors.accent,
+                child: Shimmer(
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    physics: const NeverScrollableScrollPhysics(),
+                    padding: EdgeInsets.symmetric(horizontal: 16.w),
+                    itemCount: 5,
+                    itemBuilder: (_, __) => Padding(
+                      padding: EdgeInsets.only(right: 18.w),
+                      child: Column(
+                        children: [
+                          SkeletonBox(
+                            width: 72.r,
+                            height: 72.r,
+                            shape: BoxShape.circle,
+                          ),
+                          SizedBox(height: 8.h),
+                          SkeletonBox(width: 50.w, height: 12.h),
+                          SizedBox(height: 4.h),
+                          SkeletonBox(width: 36.w, height: 10.h),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -677,57 +801,57 @@ class _ExploreScreenState extends State<ExploreScreen> {
         }
 
         return Container(
-      width: double.infinity,
-      padding: EdgeInsets.symmetric(vertical: 20.h),
-      decoration: BoxDecoration(
-        color: context.colors.surface,
-        borderRadius: BorderRadius.circular(24.r),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16.w),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  "Cuisines",
-                  style: TextStyle(
-                    fontFamily: 'Rubik',
-                    fontSize: 18.sp,
-                    fontWeight: FontWeight.w800,
-                    color: context.colors.textPrimary,
-                  ),
-                ),
-                GestureDetector(
-                  onTap: () {
-                    Navigator.pushNamed(
-                      context,
-                      AppRoutes.viewAll,
-                      arguments: {
-                        'type': ViewAllType.exploreCuisines,
-                        'title': 'Cuisines',
-                      },
-                    );
-                  },
-                  child: Text(
-                    "View All",
-                    style: TextStyle(
-                      fontFamily: 'Rubik',
-                      fontSize: 14.sp,
-                      fontWeight: FontWeight.w700,
-                      color: context.colors.accent,
-                    ),
-                  ),
-                ),
-              ],
-            ),
+          width: double.infinity,
+          padding: EdgeInsets.symmetric(vertical: 20.h),
+          decoration: BoxDecoration(
+            color: context.colors.surface,
+            borderRadius: BorderRadius.circular(24.r),
           ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16.w),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      "Cuisines",
+                      style: TextStyle(
+                        fontFamily: 'Rubik',
+                        fontSize: 18.sp,
+                        fontWeight: FontWeight.w800,
+                        color: context.colors.textPrimary,
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.pushNamed(
+                          context,
+                          AppRoutes.viewAll,
+                          arguments: {
+                            'type': ViewAllType.exploreCuisines,
+                            'title': 'Cuisines',
+                          },
+                        );
+                      },
+                      child: Text(
+                        "View All",
+                        style: TextStyle(
+                          fontFamily: 'Rubik',
+                          fontSize: 14.sp,
+                          fontWeight: FontWeight.w700,
+                          color: context.colors.accent,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
 
-          SizedBox(height: 16.h),
+              SizedBox(height: 16.h),
 
-          SizedBox(
+              SizedBox(
                 height: 125.h,
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
@@ -745,7 +869,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
 
                     return Padding(
                       padding: EdgeInsets.only(right: 18.w),
-                      child: GestureDetector(
+                      child: PressScale(
                         onTap: () {
                           Navigator.pushNamed(
                             context,
@@ -775,19 +899,28 @@ class _ExploreScreenState extends State<ExploreScreen> {
                                         imageUrl: _bustedUrl(imgPath),
                                         fit: BoxFit.cover,
                                         memCacheWidth: 160,
-                                        fadeInDuration: const Duration(milliseconds: 150),
-                                        placeholder: (_, __) => Container(color: Colors.grey[200]),
-                                        errorWidget: (_, __, ___) => Image.asset(
-                                          _getCuisineImagePath(name, null),
-                                          fit: BoxFit.cover,
-                                        ),
+                                        errorWidget: (_, __, ___) =>
+                                            Image.asset(
+                                              _getCuisineImagePath(name, null),
+                                              fit: BoxFit.cover,
+                                            ),
+                                        placeholder: (_, __) =>
+                                            const SkeletonBox(
+                                              borderRadius: BorderRadius.zero,
+                                            ),
+                                        fadeInDuration: Motion.imageFade,
+                                        fadeOutDuration: Duration.zero,
+                                        fadeInCurve: Motion.enter,
                                       )
                                     : Image.asset(
                                         imgPath,
                                         fit: BoxFit.cover,
                                         errorBuilder: (_, __, ___) => Container(
                                           color: Colors.grey[200],
-                                          child: Icon(Icons.restaurant, color: Colors.grey[400]),
+                                          child: Icon(
+                                            Icons.restaurant,
+                                            color: Colors.grey[400],
+                                          ),
                                         ),
                                       ),
                               ),
@@ -882,6 +1015,20 @@ class _ExploreScreenState extends State<ExploreScreen> {
             builder: (context, snapshot) {
               final recipes = snapshot.data ?? [];
 
+              if (recipes.isEmpty &&
+                  snapshot.connectionState == ConnectionState.waiting) {
+                return Shimmer(
+                  child: Column(
+                    children: [
+                      for (int i = 0; i < 3; i++) ...[
+                        if (i > 0) SizedBox(height: 12.h),
+                        const SavedRecipeCardSkeleton(),
+                      ],
+                    ],
+                  ),
+                );
+              }
+
               if (recipes.isNotEmpty) {
                 final displayList = recipes.take(3).toList();
                 return ListView.separated(
@@ -892,36 +1039,49 @@ class _ExploreScreenState extends State<ExploreScreen> {
                   separatorBuilder: (_, __) => SizedBox(height: 12.h),
                   itemBuilder: (ctx, i) {
                     final r = displayList[i];
-                    return SavedRecipeCard(
-                      recipe: r,
-                      isRegistered: RecipeService.instance.isRecipeSaved(r),
-                      onTap: () {
-                        Navigator.pushNamed(
-                          context,
-                          AppRoutes.recipeDetail,
-                          arguments: {'recipe': r},
-                        );
-                      },
-                      onFavoriteTap: () {
-                        HapticFeedback.lightImpact();
-                        final wasRegistered = RecipeService.instance.isRecipeSaved(r);
-                        final newFavState = !wasRegistered;
-                        setState(() {
-                          r.isFavorite = newFavState;
-                        });
-                        if (newFavState) {
-                          RecipeService.instance.markRecipeAsSaved(r);
-                          IosToast.show(context, message: 'Recipe saved to favorites!', type: ToastType.success);
-                        } else {
-                          RecipeService.instance.markRecipeAsUnsaved(r);
-                          if (r.id.isNotEmpty) {
-                            RecipeService.instance.deleteRecipe(r.id);
+                    return AnimatedCardEntrance(
+                      key: ValueKey('popular-${r.id}-${r.name}'),
+                      index: i,
+                      child: SavedRecipeCard(
+                        recipe: r,
+                        isRegistered: RecipeService.instance.isRecipeSaved(r),
+                        onTap: () {
+                          Navigator.pushNamed(
+                            context,
+                            AppRoutes.recipeDetail,
+                            arguments: {'recipe': r},
+                          );
+                        },
+                        onFavoriteTap: () {
+                          HapticFeedback.lightImpact();
+                          final wasRegistered = RecipeService.instance
+                              .isRecipeSaved(r);
+                          final newFavState = !wasRegistered;
+                          setState(() {
+                            r.isFavorite = newFavState;
+                          });
+                          if (newFavState) {
+                            RecipeService.instance.markRecipeAsSaved(r);
+                            IosToast.show(
+                              context,
+                              message: 'Recipe saved to favorites!',
+                              type: ToastType.success,
+                            );
+                          } else {
+                            RecipeService.instance.markRecipeAsUnsaved(r);
+                            if (r.id.isNotEmpty) {
+                              RecipeService.instance.deleteRecipe(r.id);
+                            }
+                            r.isFavorite = false;
+                            r.isInCookbook = false;
+                            IosToast.show(
+                              context,
+                              message: 'Recipe removed from saved',
+                              type: ToastType.success,
+                            );
                           }
-                          r.isFavorite = false;
-                          r.isInCookbook = false;
-                          IosToast.show(context, message: 'Recipe removed from saved', type: ToastType.success);
-                        }
-                      },
+                        },
+                      ),
                     );
                   },
                 );
@@ -953,6 +1113,4 @@ class _ExploreScreenState extends State<ExploreScreen> {
       ),
     );
   }
-
 }
-

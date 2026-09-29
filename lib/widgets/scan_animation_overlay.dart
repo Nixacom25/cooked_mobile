@@ -627,13 +627,14 @@ class _ImageScanAnimationState extends State<_ImageScanAnimation>
   }
 }
 
-/// A regular grid of dots, dim and tiny by default, with a soft glowing
-/// horizontal band that descends then ascends slowly over the scan phase -
-/// the whole width lights up together at a given row (not a localized
-/// spot), with no hard edge (Gaussian falloff by vertical distance only),
-/// fading smoothly back down as the band moves past. Rows near the
-/// top/bottom edge fade toward black so the grid dissolves into the dark
-/// rather than cutting off.
+/// A regular grid of dots, dim and tiny by default, swept by a dark green
+/// horizontal band that descends then ascends over the scan phase. Wherever
+/// the band has passed, the dots keep a light green afterglow that fades out
+/// over time (not over distance), so the scan leaves a trace that slowly
+/// disappears behind it. Each dot fades at a slightly different rate so the
+/// trace breaks up organically instead of vanishing as a flat stripe. Rows
+/// near the top/bottom edge fade toward black so the grid dissolves into the
+/// dark rather than cutting off.
 class _DotGridScanPainter extends CustomPainter {
   final double progress;
 
@@ -642,67 +643,91 @@ class _DotGridScanPainter extends CustomPainter {
   static const double _spacing = 11;
   static const double _baseRadius = 0.7;
   static const double _maxRadius = 3.0;
-  static const double _glowSigma = 70; // px - bright head of the wave
-  static const double _trailLength = 160; // px - decay of the fading tail
-  static const double _trailStrength = 0.55;
+  static const double _glowSigma = 45; // px - dark green head of the wave
+  static const double _scanSeconds = 3; // matches the controller duration
+  static const double _trailFadeSeconds = 0.55; // afterglow time constant
+  static const double _trailStrength = 0.85;
   static const double _edgeFadeDistance = 30; // px from top/bottom to fully dim
   static const Color _dimColor = Color(0xFF10281C);
-  static const Color _midColor = Color(0xFF3ED67F);
-  static const Color _brightColor = Color(0xFFB8FFDD);
+  static const Color _headColor = Color(0xFF15803D);
+  static const Color _trailColor = Color(0xFF9EF5C0);
+
+  /// Progress at which the wave last crossed [y], or null if not yet.
+  static double? _lastCrossing(double y, double height, double progress) {
+    // waveY = height * (0.05 + 0.85 * sin(pi * t)): each row is crossed once
+    // on the way down (t1) and once on the way back up (t2 = 1 - t1).
+    final s = ((y / height - 0.05) / 0.85).clamp(0.0, 1.0);
+    final t1 = math.asin(s) / math.pi;
+    final t2 = 1 - t1;
+    if (progress >= t2) return t2;
+    if (progress >= t1) return t1;
+    return null;
+  }
+
+  /// Stable pseudo-random value in [0, 1) per grid cell.
+  static double _hash(int x, int y) {
+    final h = math.sin(x * 12.9898 + y * 78.233) * 43758.5453;
+    return h - h.floorToDouble();
+  }
 
   @override
   void paint(Canvas canvas, Size size) {
-    // One full down-then-up cycle over the scan phase: sin(0)=sin(pi)=0, so
-    // the wave starts near the top, reaches the bottom at the midpoint, and
-    // returns to the top by the end - a single smooth bounce rather than a
-    // one-way pass that just gets cut off.
     final wave = math.sin(progress * math.pi);
     final waveY = size.height * (0.05 + 0.85 * wave);
-    final movingDown = math.cos(progress * math.pi) >= 0;
 
     final cols = (size.width / _spacing).ceil() + 1;
     final rows = (size.height / _spacing).ceil() + 1;
+
+    final dotPaint = Paint();
+    final haloPaint = Paint()
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3.5);
 
     for (int gy = 0; gy <= rows; gy++) {
       final py = gy * _spacing;
       final dy = py - waveY;
       final head = math.exp(-(dy * dy) / (2 * _glowSigma * _glowSigma));
-      final behind = movingDown ? -dy : dy;
-      final trail = behind > 0
-          ? _trailStrength * math.exp(-behind / _trailLength)
-          : 0.0;
-      final intensity = math.max(head, trail);
+
+      final crossing = _lastCrossing(py, size.height, progress);
+      final elapsed =
+          crossing == null ? null : (progress - crossing) * _scanSeconds;
 
       final edgeDist = math.min(py, size.height - py);
       final edgeFactor = (edgeDist / _edgeFadeDistance).clamp(0.0, 1.0);
-
-      final baseOpacity = 0.12 * edgeFactor;
-      final glowOpacity = intensity * edgeFactor;
-      final opacity = math.max(baseOpacity, glowOpacity).clamp(0.0, 1.0);
-      if (opacity <= 0.01) continue;
-
-      final radius = _baseRadius + (_maxRadius - _baseRadius) * intensity;
-      final color = intensity < 0.5
-          ? Color.lerp(_dimColor, _midColor, intensity / 0.5)!
-          : Color.lerp(_midColor, _brightColor, (intensity - 0.5) / 0.5)!;
-
-      // Same value for every dot on this row - one Paint reused across the
-      // whole row instead of allocating one per dot.
-      final rowPaint = Paint()..color = color.withValues(alpha: opacity);
-      final haloPaint = intensity > 0.55
-          ? (Paint()
-            ..color = _brightColor.withValues(alpha: (intensity - 0.55) * 0.32)
-            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3.5))
-          : null;
+      if (edgeFactor <= 0) continue;
 
       for (int gx = 0; gx <= cols; gx++) {
         final px = gx * _spacing;
-        canvas.drawCircle(Offset(px, py), radius, rowPaint);
 
-        // Subtle halo only on the brightest rows near the wave's centre -
-        // deliberately small/low-opacity so it stays a thin glow rather
-        // than a blurry blob.
-        if (haloPaint != null) {
+        double trail = 0;
+        if (elapsed != null) {
+          final jitter = _hash(gx, gy);
+          final fade = _trailFadeSeconds * (0.5 + jitter);
+          trail = _trailStrength * (0.6 + 0.4 * jitter) *
+              math.exp(-elapsed / fade);
+        }
+
+        final intensity = math.max(head, trail);
+        final opacity =
+            (math.max(0.12, intensity) * edgeFactor).clamp(0.0, 1.0);
+        if (opacity <= 0.01) continue;
+
+        final glow = head + trail;
+        final color = glow <= 0.001
+            ? _dimColor
+            : Color.lerp(
+                Color.lerp(_dimColor, _trailColor, trail.clamp(0.0, 1.0))!,
+                _headColor,
+                head / glow,
+              )!;
+        final radius = _baseRadius + (_maxRadius - _baseRadius) * intensity;
+
+        dotPaint.color = color.withValues(alpha: opacity);
+        canvas.drawCircle(Offset(px, py), radius, dotPaint);
+
+        // Soft halo only on the freshest part of the light green trace.
+        if (trail > 0.45) {
+          haloPaint.color =
+              _trailColor.withValues(alpha: (trail - 0.45) * 0.4 * edgeFactor);
           canvas.drawCircle(Offset(px, py), radius * 2.1, haloPaint);
         }
       }

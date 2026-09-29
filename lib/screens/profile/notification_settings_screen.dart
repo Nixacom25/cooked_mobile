@@ -6,6 +6,7 @@ import '../../widgets/red_header_background.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/ios_toast.dart';
 import '../../core/utils/error_helper.dart';
+import '../../core/motion/motion_widgets.dart';
 
 /// Profile > Settings > Notifications. Lets users opt out of push categories
 /// that are genuinely optional. Account-security alerts (new sign-in,
@@ -244,7 +245,13 @@ class _NotificationToggleRow extends StatelessWidget {
             child: Switch(
               value: value,
               activeTrackColor: context.colors.accent,
-              onChanged: onChanged,
+              // Native thumb/track animation + a light haptic.
+              onChanged: onChanged == null
+                  ? null
+                  : (v) {
+                      Motion.selectionHaptic();
+                      onChanged!(v);
+                    },
             ),
           ),
         ],

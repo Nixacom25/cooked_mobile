@@ -16,6 +16,7 @@ import '../core/extensions/string_extensions.dart';
 import '../widgets/grocery_skeleton.dart';
 import '../widgets/app_loading_indicator.dart';
 import '../core/theme/app_theme.dart';
+import '../core/motion/motion_widgets.dart';
 
 // ══════════════════════════════════════════════════════════════════════════════
 // GROCERY SCREEN
@@ -309,7 +310,12 @@ class GroceryScreenState extends State<GroceryScreen> with SingleTickerProviderS
                                           sizeCurve: Curves.easeInOut,
                                           firstChild: Column(
                                             children: items.map((item) {
-                                              return Column(
+                                              // Keyed per item: rows already on screen stay put,
+                                              // newly added ingredients fade in in quick sequence.
+                                              return AnimatedCardEntrance(
+                                                key: ValueKey('grocery-${item.id}'),
+                                                index: items.indexOf(item),
+                                                child: Column(
                                                 children: [
                                                   gi == 0 && item == items.first
                                                       ? AnimatedBuilder(
@@ -351,6 +357,7 @@ class GroceryScreenState extends State<GroceryScreen> with SingleTickerProviderS
                                                     endIndent: 20,
                                                   ),
                                                 ],
+                                              ),
                                               );
                                             }).toList(),
                                           ),
@@ -445,10 +452,11 @@ class GroceryScreenState extends State<GroceryScreen> with SingleTickerProviderS
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            Icons.shopping_basket_outlined,
+          EmptyStateAnimation(
+            kind: EmptyStateKind.basket,
             size: 56.sp,
-            color: Colors.grey[300],
+            color: Colors.grey[300]!,
+            accent: context.colors.accent,
           ),
           SizedBox(height: 14.h),
           Text(
@@ -715,8 +723,15 @@ class _ItemRow extends StatelessWidget {
       ),
       child: InkWell(
         onTap: isPlaceholder ? null : onToggle,
-        child: Padding(
+        // Checked items settle slightly faded so the list reads at a glance.
+        child: AnimatedOpacity(
+          opacity: item.isBought ? 0.7 : 1,
+          duration: Motion.of(context, Motion.short),
+          child: Padding(
             padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 14.h),
+            // Name left, quantity right - each with its own share of the
+            // width (flex 3 / 2) and up to two lines, so a long quantity can
+            // never squeeze the name into one letter per line.
             child: Row(
               children: [
                 _AnimatedCheckbox(isBought: item.isBought),
@@ -729,6 +744,7 @@ class _ItemRow extends StatelessWidget {
                   SizedBox(width: 8.w),
                 ],
                 Expanded(
+                  flex: 3,
                   child: AnimatedDefaultTextStyle(
                     duration: const Duration(milliseconds: 250),
                     curve: Curves.easeInOut,
@@ -743,24 +759,47 @@ class _ItemRow extends StatelessWidget {
                           ? TextDecoration.lineThrough
                           : TextDecoration.none,
                     ),
-                    child: Text(item.ingredientName.capitalize()),
+                    child: Text(
+                      item.ingredientName.capitalize(),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                 ),
-                Text(
-                  item.quantity,
-                  style: TextStyle(
-                    fontFamily: 'Rubik',
-                    fontWeight: FontWeight.w500,
-                    fontSize: 14.sp,
-                    color: context.colors.textSecondary,
+                SizedBox(width: 10.w),
+                Expanded(
+                  flex: 2,
+                  child: Text(
+                    _cleanQuantity(item.quantity),
+                    textAlign: TextAlign.right,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontFamily: 'Rubik',
+                      fontWeight: FontWeight.w500,
+                      fontSize: 14.sp,
+                      color: context.colors.textSecondary,
+                    ),
                   ),
                 ),
               ],
             ),
           ),
+        ),
       ),
     );
   }
+}
+
+/// Tidies raw quantities from recipes: drops markdown asterisks
+/// ("*optional*"), collapses spaces and stray separators.
+String _cleanQuantity(String raw) {
+  return raw
+      .replaceAll('*', '')
+      .replaceAll(RegExp(r'\s+'), ' ')
+      .replaceAll(RegExp(r'\s+,'), ',')
+      .replaceAll(RegExp(r'^[\s,+]+|[\s,+]+$'), '')
+      .trim();
 }
 
 class _AnimatedCheckbox extends StatefulWidget {
@@ -781,7 +820,7 @@ class _AnimatedCheckboxState extends State<_AnimatedCheckbox> with SingleTickerP
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 400),
+      duration: const Duration(milliseconds: 300),
     );
 
     _fillAnimation = CurvedAnimation(
@@ -822,7 +861,14 @@ class _AnimatedCheckboxState extends State<_AnimatedCheckbox> with SingleTickerP
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, child) {
-        return Container(
+        // Small pop (1 → 1.12 → 1) as the circle fills.
+        final t = _controller.value;
+        final pop = _controller.isAnimating && widget.isBought
+            ? 1 + 0.12 * (t < 0.5 ? t * 2 : (1 - t) * 2)
+            : 1.0;
+        return Transform.scale(
+          scale: pop,
+          child: Container(
           width: 22.r,
           height: 22.r,
           decoration: BoxDecoration(
@@ -842,6 +888,7 @@ class _AnimatedCheckboxState extends State<_AnimatedCheckbox> with SingleTickerP
               progress: _checkAnimation.value,
               color: Colors.white,
             ),
+          ),
           ),
         );
       },

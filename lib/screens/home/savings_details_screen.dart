@@ -1,28 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import '../../models/recipe.dart';
+import '../../models/savings.dart';
 import '../../services/recipe_service.dart';
 import '../../routes/app_routes.dart';
 import '../../widgets/glass_icon_button.dart';
 import '../../widgets/saved_recipe_card.dart';
 import '../../widgets/red_header_background.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/motion/motion_widgets.dart';
 
-class SavingsDetailsScreen extends StatelessWidget {
+class SavingsDetailsScreen extends StatefulWidget {
   const SavingsDetailsScreen({super.key});
 
-  // Same formula as the recipe detail page's "Estimated savings" card, so
-  // both screens agree on the number for the same recipe.
-  static double _estimatedSavings(Recipe r) {
-    final servings = (r.servings != null && r.servings! > 0) ? r.servings! : 2;
-    final pricePerServing = (r.totalPrice != null && r.totalPrice! > 0)
-        ? r.totalPrice! / servings
-        : 3.50;
-    double restaurantPerServing = pricePerServing * 2.5 + 5.0;
-    if (restaurantPerServing < 14.75) restaurantPerServing = 14.75;
-    final makeAtHome = pricePerServing * servings;
-    final orderNearby = restaurantPerServing * servings;
-    return orderNearby - makeAtHome;
+  @override
+  State<SavingsDetailsScreen> createState() => _SavingsDetailsScreenState();
+}
+
+class _SavingsDetailsScreenState extends State<SavingsDetailsScreen> {
+  // Savings are computed by the backend from scanned recipes only; this
+  // screen only displays them.
+  @override
+  void initState() {
+    super.initState();
+    RecipeService.instance.refreshSavings().catchError((_) => null);
   }
 
   @override
@@ -80,18 +80,17 @@ class SavingsDetailsScreen extends StatelessWidget {
 
                   // Page Content Body
                   Expanded(
-                    child: ValueListenableBuilder<List<Recipe>?>(
-                      valueListenable: RecipeService.instance.myRecipesNotifier,
-                      builder: (context, recipes, _) {
-                        final myRecipes = recipes ?? [];
-                        final displayRecipes = myRecipes.where((r) {
-                          return r.origin?.toUpperCase() == 'SCAN';
-                        }).toList();
-
-                        double totalSaved = 0.0;
-                        for (var r in displayRecipes) {
-                          totalSaved += _estimatedSavings(r);
+                    child: ValueListenableBuilder<SavingsSummary?>(
+                      valueListenable: RecipeService.instance.savingsNotifier,
+                      builder: (context, summary, _) {
+                        if (summary == null) {
+                          return const Center(
+                            child: CircularProgressIndicator.adaptive(),
+                          );
                         }
+
+                        final displayRecipes = summary.recipes;
+                        final totalSaved = summary.totalSaved;
 
                         if (displayRecipes.isEmpty) {
                           return Center(
@@ -133,8 +132,10 @@ class SavingsDetailsScreen extends StatelessWidget {
                                       ),
                                     ),
                                     SizedBox(height: 4.h),
-                                    Text(
-                                      "\$${totalSaved.toStringAsFixed(0)}",
+                                    AnimatedNumber(
+                                      value: totalSaved,
+                                      format: (v) => "\$${v.toStringAsFixed(0)}",
+                                      pulse: true,
                                       style: TextStyle(
                                         fontFamily: 'Rubik',
                                         fontSize: 54.sp,
@@ -171,11 +172,13 @@ class SavingsDetailsScreen extends StatelessWidget {
                                 itemCount: displayRecipes.length,
                                 separatorBuilder: (context, index) => SizedBox(height: 14.h),
                                 itemBuilder: (context, index) {
-                                  final recipe = displayRecipes[index];
-                                  final itemSavings = _estimatedSavings(recipe);
+                                  final item = displayRecipes[index];
+                                  final recipe = item.recipe;
+                                  final itemSavings = item.savings;
 
                                   return SavedRecipeCard(
                                     recipe: recipe,
+                                    title: item.displayName,
                                     isRegistered: true,
                                     isSavingsMode: true,
                                     subtitle: "Scanned at home",

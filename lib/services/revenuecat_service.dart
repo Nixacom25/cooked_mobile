@@ -55,9 +55,77 @@ class RevenueCatService {
         // Initial check
         final customerInfo = await Purchases.getCustomerInfo();
         _updateUserPremiumStatus(customerInfo);
+
+        // Identify the RevenueCat customer with our own user id, so webhooks
+        // (subscriptions, gift purchases) and server-side grants (redeemed
+        // gifts) can be matched to the account instead of an anonymous id.
+        UserService.instance.currentUserNotifier.addListener(_syncIdentity);
+        _syncIdentity();
       }
     } catch (e) {
       debugPrint("RevenueCat initialization error: $e");
+    }
+  }
+
+  String? _identifiedUserId;
+
+  void _syncIdentity() {
+    final id = UserService.instance.currentUserNotifier.value?['id']?.toString();
+    if (id != null && id.isNotEmpty) {
+      if (id != _identifiedUserId) {
+        _identifiedUserId = id;
+        logIn(id);
+      }
+    } else if (_identifiedUserId != null) {
+      _identifiedUserId = null;
+      logOut();
+    }
+  }
+
+  // ── Gifts (consumable in-app purchases) ────────────────────────────────
+  static const String giftOneYearProductId = 'gift_1_year';
+  static const String giftThreeMonthsProductId = 'gift_3_months';
+
+  Future<List<StoreProduct>> getGiftProducts() async {
+    try {
+      return await Purchases.getProducts(
+        [giftOneYearProductId, giftThreeMonthsProductId],
+        productCategory: ProductCategory.nonSubscription,
+      );
+    } catch (e) {
+      debugPrint("RevenueCat getGiftProducts error: $e");
+      return [];
+    }
+  }
+
+  /// Buys one gift card. Returns false if the user cancelled; throws on
+  /// store errors. The gift code itself is created by the backend once
+  /// RevenueCat's webhook confirms the purchase.
+  Future<bool> purchaseGift(StoreProduct product) async {
+    try {
+      await Purchases.purchase(PurchaseParams.storeProduct(product));
+      return true;
+    } on PlatformException catch (e) {
+      if (PurchasesErrorHelper.getErrorCode(e) ==
+          PurchasesErrorCode.purchaseCancelledError) {
+        return false;
+      }
+      await ErrorMonitoringService.instance.recordPaymentFailure(
+        productId: product.identifier,
+        reason: e.message ?? 'Gift purchase error',
+      );
+      rethrow;
+    }
+  }
+
+  /// Re-reads entitlements after the backend granted premium (redeemed gift).
+  Future<void> refreshCustomerInfo() async {
+    if (!_isInitialized) return;
+    try {
+      await Purchases.invalidateCustomerInfoCache();
+      _updateUserPremiumStatus(await Purchases.getCustomerInfo());
+    } catch (e) {
+      debugPrint("RevenueCat refreshCustomerInfo error: $e");
     }
   }
 
