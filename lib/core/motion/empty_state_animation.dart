@@ -26,6 +26,8 @@ class EmptyStateAnimation extends StatefulWidget {
   final double size;
   final Color color;
   final Color accent;
+  /// Replaces the main icon (e.g. the app's own basket svg for [basket]).
+  final Widget? glyph;
 
   const EmptyStateAnimation({
     super.key,
@@ -33,6 +35,7 @@ class EmptyStateAnimation extends StatefulWidget {
     required this.color,
     this.accent = const Color(0xFFC31E26),
     this.size = 64,
+    this.glyph,
   });
 
   @override
@@ -85,7 +88,7 @@ class _EmptyStateAnimationState extends State<EmptyStateAnimation>
               final show = t < 0.6 ? 0.0 : math.sin(_seg(t, 0.6, 1) * math.pi);
               return Stack(alignment: Alignment.center, children: [
                 Opacity(
-                  opacity: show,
+                  opacity: (show).clamp(0.0, 1.0).toDouble(),
                   child: Transform.scale(
                     scale: 0.6 + 0.4 * show,
                     child: Icon(Icons.restaurant_menu_rounded, size: s * 0.38, color: widget.accent),
@@ -105,13 +108,13 @@ class _EmptyStateAnimationState extends State<EmptyStateAnimation>
                   Transform.translate(
                     offset: Offset(0, -s * 0.55 * (1 - drop)),
                     child: Opacity(
-                      opacity: 1 - _seg(t, 0.4, 0.5),
+                      opacity: (1 - _seg(t, 0.4, 0.5)).clamp(0.0, 1.0).toDouble(),
                       child: Icon(Icons.eco_rounded, size: s * 0.34, color: widget.accent),
                     ),
                   ),
                 Transform.translate(
                   offset: Offset(0, s * 0.08 * nudge),
-                  child: Icon(Icons.shopping_basket_outlined, size: s, color: widget.color),
+                  child: widget.glyph ?? Icon(Icons.shopping_basket_outlined, size: s, color: widget.color),
                 ),
               ]);
             case EmptyStateKind.savedHeart:
@@ -123,7 +126,7 @@ class _EmptyStateAnimationState extends State<EmptyStateAnimation>
                   child: Stack(alignment: Alignment.center, children: [
                     Icon(Icons.favorite_border_rounded, size: s * 0.45, color: widget.color),
                     Opacity(
-                      opacity: fill,
+                      opacity: (fill).clamp(0.0, 1.0).toDouble(),
                       child: Icon(Icons.favorite_rounded, size: s * 0.45, color: widget.accent),
                     ),
                   ]),
@@ -135,7 +138,7 @@ class _EmptyStateAnimationState extends State<EmptyStateAnimation>
                 Transform.translate(
                   offset: Offset(0, -s * 0.42 * open),
                   child: Opacity(
-                    opacity: open,
+                    opacity: (open).clamp(0.0, 1.0).toDouble(),
                     child: Icon(Icons.restaurant_rounded, size: s * 0.3, color: widget.accent),
                   ),
                 ),
@@ -158,7 +161,7 @@ class _EmptyStateAnimationState extends State<EmptyStateAnimation>
                 Transform.translate(
                   offset: Offset(s * 0.28, 0),
                   child: Opacity(
-                    opacity: card,
+                    opacity: (card).clamp(0.0, 1.0).toDouble(),
                     child: Transform.scale(
                       scale: 0.8 + 0.2 * card,
                       child: Icon(Icons.receipt_long_rounded, size: s * 0.7, color: widget.accent),
@@ -168,7 +171,8 @@ class _EmptyStateAnimationState extends State<EmptyStateAnimation>
                 Transform.translate(
                   offset: Offset(-s * 0.3 + s * 0.5 * travel, 0),
                   child: Opacity(
-                    opacity: 1 - _seg(t, 0.5, 0.6) + (t >= 1 || t == 0 ? 1 : 0),
+                    // Visible while travelling and while resting between loops.
+                    opacity: (t >= 1 || t == 0) ? 1.0 : 1 - _seg(t, 0.5, 0.6),
                     child: Icon(Icons.link_rounded, size: s * 0.6, color: widget.color),
                   ),
                 ),

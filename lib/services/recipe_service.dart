@@ -13,6 +13,7 @@ import 'package:cooked/services/auth_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:cooked/services/database_service.dart';
 import 'package:cooked/services/error_monitoring_service.dart';
+import '../core/l10n/l10n.dart';
 
 // Top-level parsing functions for compute()
 List<Recipe> _parseRecipesList(String responseBody) {
@@ -43,6 +44,12 @@ class RecipeService {
   Timer? _savingsRefreshDebounce;
 
   final ValueNotifier<List<Recipe>?> myRecipesNotifier = ValueNotifier(null);
+
+  /// The single definition of "Saved Recipes" (Home list, View All grid and
+  /// the count shown with them): real recipes, not pending placeholders or
+  /// temporary suggestions. Recipes also in a cookbook are included.
+  static List<Recipe> savedRecipesOf(List<Recipe>? recipes) =>
+      (recipes ?? const <Recipe>[]).where((r) => !r.isPlaceholder && !r.isSuggested).toList();
   final ValueNotifier<List<Recipe>?> recentImportsNotifier = ValueNotifier(null);
   final ValueNotifier<List<Recipe>?> homeSuggestionsNotifier = ValueNotifier(null);
   final ValueNotifier<Map<String, bool>> favoriteStatesNotifier =
@@ -95,7 +102,7 @@ class RecipeService {
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
     } else {
-      String errorMessage = 'Ingredient detection failed. Please try again.';
+      String errorMessage = appL10n.errIngredientDetection;
       try {
         final errorData = jsonDecode(response.body);
         if (errorData['message'] != null) {
@@ -135,15 +142,13 @@ class RecipeService {
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
     } else {
-      String errorMessage = 'Scan failed. Please try again.';
+      String errorMessage = appL10n.errScan;
       try {
         final errorData = jsonDecode(response.body);
         if (errorData['message'] != null) {
           errorMessage = errorData['message'];
         }
-        debugPrint('Scan failed: Status ${response.statusCode}, Error: $errorMessage, Body: ${response.body}');
       } catch (e) {
-        debugPrint('Scan failed: Status ${response.statusCode}, Response: ${response.body}');
       }
 
       // Record scan failure
@@ -174,7 +179,7 @@ class RecipeService {
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
     } else {
-      String errorMessage = 'Validation failed. Please try again.';
+      String errorMessage = appL10n.errValidation;
       try {
         final errorData = jsonDecode(response.body);
         if (errorData['message'] != null) {
@@ -198,7 +203,7 @@ class RecipeService {
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
     } else {
-      String errorMessage = 'Generation failed. Please try again.';
+      String errorMessage = appL10n.errGeneration;
       try {
         final errorData = jsonDecode(response.body);
         if (errorData['message'] != null) {
@@ -233,7 +238,7 @@ class RecipeService {
     if (response.statusCode == 200) {
       return await compute(_parseRecipesList, response.body);
     } else {
-      String errorMessage = 'Failed to generate recipes. Please try again.';
+      String errorMessage = appL10n.errGenerateRecipes;
       try {
         final errorData = jsonDecode(response.body);
         if (errorData['message'] != null) {
@@ -270,7 +275,6 @@ class RecipeService {
           _hydrateFavoriteStates(cachedRecipes);
         }
       } catch (e) {
-        debugPrint('Failed to load recipe cache: $e');
       }
     }
 
@@ -353,7 +357,7 @@ class RecipeService {
       items.add(SavingsItem(
         recipe: r,
         savings: savings,
-        displayName: isCopy ? '(Copy) $name' : name,
+        displayName: isCopy ? appL10n.savingsCopyName(name) : name,
       ));
     }
     return SavingsSummary(totalSaved: total, recipeCount: items.length, recipes: items);
@@ -436,8 +440,6 @@ class RecipeService {
       CookbookService.instance.getMyCookbooks(forceRefresh: true).then((_) => null).catchError((_) => null);
       return saved;
     } else {
-      debugPrint('Failed to save recipe: ${response.statusCode}');
-      debugPrint('Response body: ${response.body}');
       throw Exception('Failed to save recipe: ${response.body}');
     }
   }
@@ -791,7 +793,6 @@ class RecipeService {
       final jsonList = recipes.map((r) => r.toJson()).toList();
       await DatabaseService.instance.writeCacheRaw(_recentImportsCacheKey, jsonEncode(jsonList));
     } catch (e) {
-      debugPrint('Failed to save local recent imports: $e');
     }
   }
 
@@ -803,7 +804,6 @@ class RecipeService {
         return decoded.map((j) => Recipe.fromJson(j)).toList();
       }
     } catch (e) {
-      debugPrint('Failed to load local recent imports: $e');
     }
     return [];
   }
@@ -845,7 +845,7 @@ class RecipeService {
       CookbookService.instance.getMyCookbooks(forceRefresh: true).then((_) => null).catchError((_) => null);
       return recipe;
     } else {
-      String errorMessage = 'Import failed';
+      String errorMessage = appL10n.errImport;
       try {
         final errorData = jsonDecode(response.body);
         if (errorData['message'] != null) {
@@ -895,7 +895,7 @@ class RecipeService {
         final List<dynamic> data = jsonDecode(response.body);
         return data.map((item) => Map<String, dynamic>.from(item)).toList();
       } else {
-        String errorMessage = 'Web search failed';
+        String errorMessage = appL10n.errWebSearch;
         try {
           final errorData = jsonDecode(response.body);
           if (errorData['message'] != null) {
@@ -984,7 +984,6 @@ class RecipeService {
         return mergedList;
       }
     } catch (e) {
-      debugPrint('getRecentImports backend error: $e');
     }
 
     final fallback = recentImportsNotifier.value ?? _loadLocalRecentImports();
@@ -1152,7 +1151,20 @@ class RecipeService {
     }
   }
 
-  Future<bool> deleteRecipe(String id) async {
+  /// Deletes the user's saved copy of a recipe. [name] lets callers holding
+  /// an Explore/suggested recipe (whose id isn't the user's copy - saving
+  /// from Explore creates a private copy) still delete the right one.
+  Future<bool> deleteRecipe(String id, {String? name}) async {
+    final mine = myRecipesNotifier.value ?? const <Recipe>[];
+    if (!mine.any((r) => r.id == id) && name != null && name.trim().isNotEmpty) {
+      final lower = name.trim().toLowerCase();
+      for (final r in mine) {
+        if (r.id.isNotEmpty && r.name.trim().toLowerCase() == lower) {
+          id = r.id;
+          break;
+        }
+      }
+    }
     Recipe? existing;
     for (final collection in <List<Recipe>?>[
       myRecipesNotifier.value,

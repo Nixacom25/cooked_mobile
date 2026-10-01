@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:cooked/widgets/scan_animation_overlay.dart';
 import 'package:cooked/models/recipe.dart';
+import 'package:cooked/l10n/app_localizations.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -45,6 +46,8 @@ void main() {
           ScreenUtilInit(
             designSize: const Size(375, 812),
             builder: (context, child) => MaterialApp(
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
               home: Scaffold(
                 body: ScanAnimationOverlay(
                   showTestControls: true,
@@ -97,6 +100,8 @@ void main() {
           ScreenUtilInit(
             designSize: const Size(375, 812),
             builder: (context, child) => MaterialApp(
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
               home: Scaffold(
                 body: ScanAnimationOverlay(
                   generatedRecipes: [

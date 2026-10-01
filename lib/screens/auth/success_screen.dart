@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../routes/app_routes.dart';
 import '../../widgets/red_button.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/l10n/l10n.dart';
 
 class SuccessScreen extends StatelessWidget {
   const SuccessScreen({super.key});
@@ -23,7 +24,7 @@ class SuccessScreen extends StatelessWidget {
             children: [
               // Top Title: Congratulations!
               Text(
-                'Congratulations!',
+                context.l10n.commonCongratulations,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 28.sp,
@@ -46,7 +47,7 @@ class SuccessScreen extends StatelessWidget {
 
               // Bottom Info: Account Created!
               Text(
-                'Creation Successfully!',
+                context.l10n.authAccountCreated,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 24.sp,
@@ -58,7 +59,7 @@ class SuccessScreen extends StatelessWidget {
               SizedBox(height: 12.h),
 
               Text(
-                'Your account is complete, please enjoy\nthe best menu from us.',
+                context.l10n.authAccountCreatedMessage,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 14.sp,
@@ -70,7 +71,7 @@ class SuccessScreen extends StatelessWidget {
               SizedBox(height: 32.h),
 
               RedButton(
-                label: 'Get Started',
+                label: context.l10n.commonGetStarted,
                 color: context.colors.accent,
                 height: 52.h,
                 fontSize: 16.sp,

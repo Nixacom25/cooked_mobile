@@ -4,6 +4,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/l10n/option_labels.dart';
+import '../../../core/l10n/l10n.dart';
 
 class MealPlanningStep extends StatefulWidget {
   final String initialSelected;
@@ -59,7 +61,7 @@ class _MealPlanningStepState extends State<MealPlanningStep> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'How do you like to plan meals?',
+            context.l10n.onbPlanningTitle,
             style: GoogleFonts.poppins(
               fontSize: 24.sp,
               fontWeight: FontWeight.w900,
@@ -67,7 +69,7 @@ class _MealPlanningStepState extends State<MealPlanningStep> {
               height: 1.2)),
           SizedBox(height: 8.h),
           Text(
-            'We\'ll customize the experience for you',
+            context.l10n.onbPlanningSubtitle,
             style: GoogleFonts.poppins(
               fontSize: 14.sp,
               color: context.colors.textMuted)),
@@ -118,13 +120,13 @@ class _MealPlanningStepState extends State<MealPlanningStep> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      opt['title']!,
+                      optionLabel(context, opt['title']!),
                       style: GoogleFonts.poppins(fontSize: 14.sp,
                         fontWeight: FontWeight.w700,
                         color: context.colors.textPrimary)),
                     SizedBox(height: 2.h),
                     Text(
-                      opt['subtitle']!,
+                      optionLabel(context, opt['subtitle']!),
                       style: GoogleFonts.poppins(fontSize: 12.sp,
                         color: context.colors.textMuted)),
                   ])),

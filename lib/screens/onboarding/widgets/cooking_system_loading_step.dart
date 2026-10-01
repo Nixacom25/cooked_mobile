@@ -6,6 +6,7 @@ import 'dart:ui';
 import '../../../widgets/red_button.dart';
 import '../../../widgets/app_loading_indicator.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/l10n/l10n.dart';
 
 class CookingSystemLoadingStep extends StatefulWidget {
   final VoidCallback onContinue;
@@ -20,11 +21,11 @@ class _CookingSystemLoadingStepState extends State<CookingSystemLoadingStep> wit
   int _currentLoadingStep = 0; // 0 to 3 for the 4 steps, 4 means all completed
   Timer? _timer;
 
-  final List<String> _loadingTasks = [
-    'Understanding your cooking challenges',
-    'Calculating your potential savings',
-    'Understanding your dietary preferences',
-    'Learning your cuisine preferences',
+  List<String> get _loadingTasks => [
+    context.l10n.onbTaskChallenges,
+    context.l10n.onbTaskPotentialSavings,
+    context.l10n.onbTaskDietary,
+    context.l10n.onbTaskCuisines,
   ];
 
   @override
@@ -154,14 +155,14 @@ class _CookingSystemLoadingStepState extends State<CookingSystemLoadingStep> wit
                         color: context.colors.textPrimary,
                         height: 1.15),
                       children: [
-                        TextSpan(text: 'Let’s build your\ncooking '),
+                        TextSpan(text: context.l10n.onbBuildProfileA),
                         TextSpan(
-                          text: 'profile',
+                          text: context.l10n.onbBuildProfileB,
                           style: TextStyle(color: context.colors.accent)),
                       ])),
                   SizedBox(height: 10.h),
                   Text(
-                    'The more we learn, the better your recommendations',
+                    context.l10n.onbBuildProfileSubtitle,
                     style: GoogleFonts.poppins(
                       fontSize: 15.sp,
                       color: context.colors.textPrimary,
@@ -193,7 +194,7 @@ class _CookingSystemLoadingStepState extends State<CookingSystemLoadingStep> wit
               child: Padding(
                 padding: EdgeInsets.fromLTRB(24.w, 8.h, 24.w, 20.h),
                 child: RedButton(
-                  label: 'Start \u2192',
+                  label: context.l10n.onbStartArrow,
                   color: context.colors.accent,
                   onTap: widget.onContinue,
                   height: 52.h,

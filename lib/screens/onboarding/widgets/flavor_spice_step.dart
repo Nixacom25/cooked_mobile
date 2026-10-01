@@ -4,6 +4,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter/services.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/l10n/option_labels.dart';
+import '../../../core/l10n/l10n.dart';
 
 class FlavorSpiceStep extends StatefulWidget {
   final Map<String, int> initialDna;
@@ -121,15 +123,17 @@ class _FlavorSpiceStepState extends State<FlavorSpiceStep> with SingleTickerProv
   }
 
   String _getSummaryLabel(int value) {
-    if (value < 40) return 'Sweet';
-    if (value > 60) return 'Savory';
-    return 'Balanced';
+    final l10n = context.l10n;
+    if (value < 40) return l10n.flavorLeaningSweet;
+    if (value > 60) return l10n.flavorLeaningSavory;
+    return l10n.flavorLeaningBalanced;
   }
 
   String _getTextureLabel(int value) {
-    if (value < 40) return 'Crunchy';
-    if (value > 60) return 'Creamy';
-    return 'Balanced';
+    final l10n = context.l10n;
+    if (value < 40) return l10n.flavorTextureCrunchy;
+    if (value > 60) return l10n.flavorTextureCreamy;
+    return l10n.flavorTextureBalanced;
   }
 
   @override
@@ -152,7 +156,7 @@ class _FlavorSpiceStepState extends State<FlavorSpiceStep> with SingleTickerProv
                 child: SlideTransition(
                   position: _titleSlide,
                   child: Text(
-                    'Your flavor DNA',
+                    context.l10n.onbFlavorTitle,
                     style: GoogleFonts.poppins(
                       fontSize: 24.sp,
                       fontWeight: FontWeight.w900,
@@ -164,7 +168,7 @@ class _FlavorSpiceStepState extends State<FlavorSpiceStep> with SingleTickerProv
                 child: SlideTransition(
                   position: _subtitleSlide,
                   child: Text(
-                    'Move the sliders to match your taste',
+                    context.l10n.onbFlavorSubtitle,
                     style: GoogleFonts.poppins(
                       fontSize: 14.sp,
                       color: context.colors.textMuted)))),
@@ -179,7 +183,7 @@ class _FlavorSpiceStepState extends State<FlavorSpiceStep> with SingleTickerProv
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Spice Tolerance',
+                        context.l10n.onbSpiceTolerance,
                         style: GoogleFonts.poppins(
                           fontSize: 18.sp,
                           fontWeight: FontWeight.w700,
@@ -220,7 +224,7 @@ class _FlavorSpiceStepState extends State<FlavorSpiceStep> with SingleTickerProv
                                 crossAxisAlignment: CrossAxisAlignment.end,
                                 children: [
                                   Text(
-                                    currentLevel['title']!,
+                                    optionLabel(context, currentLevel['title']!),
                                     style: GoogleFonts.poppins(
                                       fontSize: 14.sp,
                                       fontWeight: FontWeight.w700,
@@ -228,7 +232,7 @@ class _FlavorSpiceStepState extends State<FlavorSpiceStep> with SingleTickerProv
                                   FittedBox(
                                     fit: BoxFit.scaleDown,
                                     child: Text(
-                                      currentLevel['desc']!,
+                                      optionLabel(context, currentLevel['desc']!),
                                       style: GoogleFonts.poppins(
                                         fontSize: 11.sp,
                                         color: context.colors.textMuted))),
@@ -266,7 +270,7 @@ class _FlavorSpiceStepState extends State<FlavorSpiceStep> with SingleTickerProv
                                     style: TextStyle(fontSize: 14.sp)),
                                   SizedBox(width: 4.w),
                                   Text(
-                                    scale['left']!,
+                                    optionLabel(context, scale['left']!),
                                     style: GoogleFonts.poppins(
                                       fontSize: 12.sp,
                                       fontWeight: FontWeight.w600,
@@ -275,7 +279,7 @@ class _FlavorSpiceStepState extends State<FlavorSpiceStep> with SingleTickerProv
                               Row(
                                 children: [
                                   Text(
-                                    scale['right']!,
+                                    optionLabel(context, scale['right']!),
                                     style: GoogleFonts.poppins(
                                       fontSize: 12.sp,
                                       fontWeight: FontWeight.w600,
@@ -323,7 +327,7 @@ class _FlavorSpiceStepState extends State<FlavorSpiceStep> with SingleTickerProv
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'YOUR PROFILE PREVIEW',
+                          context.l10n.onbProfilePreview,
                           style: GoogleFonts.poppins(
                             fontSize: 12.sp,
                             fontWeight: FontWeight.w700,
@@ -335,19 +339,19 @@ class _FlavorSpiceStepState extends State<FlavorSpiceStep> with SingleTickerProv
                           runSpacing: 8.h,
                           children: [
                             _buildSummaryCapsule(
-                              label: _spice,
+                              label: optionLabel(context, _spice),
                               bgColor: Theme.of(context).brightness == Brightness.dark
                                   ? const Color(0xFFEF4444).withValues(alpha: 0.18)
                                   : const Color(0xFFFEE2E2), // Light Red
                               textColor: const Color(0xFFEF4444), // Red
                             ),
                             _buildSummaryCapsule(
-                              label: '${_getSummaryLabel(_dna['sweetness']!)} leaning',
+                              label: _getSummaryLabel(_dna['sweetness']!),
                               bgColor: context.colors.divider, // Light Grey
                               textColor: context.colors.textSecondary, // Grey
                             ),
                             _buildSummaryCapsule(
-                              label: '${_getTextureLabel(_dna['texture']!)} texture',
+                              label: _getTextureLabel(_dna['texture']!),
                               bgColor: Theme.of(context).brightness == Brightness.dark
                                   ? const Color(0xFF3B82F6).withValues(alpha: 0.18)
                                   : const Color(0xFFDBEAFE), // Light Blue

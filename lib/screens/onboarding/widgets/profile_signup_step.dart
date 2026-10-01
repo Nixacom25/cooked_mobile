@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'dart:ui';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/l10n/l10n.dart';
 
 class ProfileSignupStep extends StatefulWidget {
   final VoidCallback onSignupEmail;
@@ -151,7 +152,7 @@ class _ProfileSignupStepState extends State<ProfileSignupStep>
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Save your\npersonalized plan',
+                                context.l10n.onbSavePlan,
                                 style: GoogleFonts.rubik(
                                   fontSize: 32.sp,
                                   fontWeight: FontWeight.w500,
@@ -159,7 +160,7 @@ class _ProfileSignupStepState extends State<ProfileSignupStep>
                                   height: 1.15)),
                               SizedBox(height: 10.h),
                               Text(
-                                'Create your account to keep your recipes, meal plans, grocery lists, and savings tracker',
+                                context.l10n.onbKeepEverything,
                                 style: GoogleFonts.poppins(
                                   fontSize: 15.sp,
                                   color: context.colors.textPrimary,
@@ -185,7 +186,7 @@ class _ProfileSignupStepState extends State<ProfileSignupStep>
                         child: _buildAuthButton(
                           onPressed: widget.onSignupGoogle,
                           icon: 'google.svg',
-                          label: 'Sign in with Google'))),
+                          label: context.l10n.authSignInWithGoogle))),
                     SizedBox(height: 12.h),
 
                     FadeTransition(
@@ -195,7 +196,7 @@ class _ProfileSignupStepState extends State<ProfileSignupStep>
                         child: _buildAuthButton(
                           onPressed: widget.onSignupApple,
                           icon: 'apple.svg',
-                          label: 'Sign in with Apple',
+                          label: context.l10n.authSignInWithApple,
                           isEnabled: widget.isAppleEnabled,
                           iconColor: Theme.of(context).brightness == Brightness.dark
                               ? Colors.white
@@ -209,7 +210,7 @@ class _ProfileSignupStepState extends State<ProfileSignupStep>
                         child: _buildAuthButton(
                           onPressed: widget.onSignupEmail,
                           icon: 'email.svg',
-                          label: 'Sign in with Email',
+                          label: context.l10n.authSignInWithEmail,
                           iconColor: context.colors.textPrimary))),
                   ]))),
           ]);
@@ -251,7 +252,7 @@ class _ProfileSignupStepState extends State<ProfileSignupStep>
                   size: 22.sp)),
               SizedBox(width: 12.w),
               Text(
-                isEnabled ? label : '$label (Soon)',
+                isEnabled ? label : context.l10n.commonSoonSuffix(label),
                 style: GoogleFonts.rubik(fontSize: 15.sp,
                   fontWeight: FontWeight.w500,
                   color: isEnabled ? context.colors.textPrimary : Colors.grey)),

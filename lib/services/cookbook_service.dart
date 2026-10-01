@@ -12,7 +12,6 @@ List<Cookbook> _parseCookbooks(String responseBody) {
     try {
       cookbooks.add(Cookbook.fromJson(item));
     } catch (e) {
-      debugPrint('Error parsing individual cookbook: $e');
     }
   }
   return cookbooks;
@@ -56,8 +55,6 @@ class CookbookService {
         myCookbooksNotifier.value = cookbooks;
         return cookbooks;
       } catch (e) {
-        debugPrint('ERROR parsing cookbooks: $e');
-        debugPrint('BODY: ${response.body}');
         rethrow;
       }
     } else {
@@ -128,7 +125,6 @@ class CookbookService {
       ));
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        debugPrint('COOKBOOK CREATE RAW BODY: ${response.body}');
         try {
           final dynamic decoded = jsonDecode(response.body);
           // Handle case where backend might return a list with one item or a single object
@@ -145,23 +141,16 @@ class CookbookService {
             ...current.where((item) => item.id != placeholder?.id && item.id != cookbook.id),
           ];
           getMyCookbooks(forceRefresh: true).catchError((error) {
-            debugPrint('Non-critical background refresh failed: $error');
             return <Cookbook>[];
           });
           return cookbook;
-        } catch (e, stack) {
-          debugPrint('CRITICAL ERROR parsing new cookbook: $e');
-          debugPrint('STACKTRACE: $stack');
-          debugPrint('RAW JSON: ${response.body}');
+        } catch (e) {
           rethrow;
         }
       } else {
-        debugPrint('COOKBOOK CREATE SERVER ERROR: ${response.statusCode}');
-        debugPrint('SERVER BODY: ${response.body}');
         throw Exception(response.body);
       }
     } catch (e) {
-      debugPrint('TOTAL FAILURE in createCookbook: $e');
       // Revert placeholder on error
       if (myCookbooksNotifier.value != null && placeholder != null) {
         myCookbooksNotifier.value = myCookbooksNotifier.value!

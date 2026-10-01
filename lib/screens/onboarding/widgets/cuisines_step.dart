@@ -6,6 +6,8 @@ import '../../../widgets/red_button.dart';
 import 'package:flutter/services.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/ios_toast.dart';
+import '../../../core/l10n/option_labels.dart';
+import '../../../core/l10n/l10n.dart';
 
 class CuisinesStep extends StatefulWidget {
   final List<String> initialSelected;
@@ -101,7 +103,7 @@ class _CuisinesStepState extends State<CuisinesStep> {
       HapticFeedback.heavyImpact();
       IosToast.show(
         context,
-        message: 'Please select at least one cuisine',
+        message: context.l10n.onbSelectOneCuisine,
         type: ToastType.warning);
       return;
     }
@@ -122,7 +124,7 @@ class _CuisinesStepState extends State<CuisinesStep> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'What cuisines do\nyou love?',
+                  context.l10n.onbCuisinesTitle,
                   style: GoogleFonts.rubik(
                     fontSize: 32.sp,
                     fontWeight: FontWeight.w500,
@@ -130,7 +132,7 @@ class _CuisinesStepState extends State<CuisinesStep> {
                     height: 1.15)),
                 SizedBox(height: 10.h),
                 Text(
-                  'Pick your favorites. The more you choose, the\nbetter your recommendations',
+                  context.l10n.onbCuisinesSubtitle,
                   style: GoogleFonts.poppins(
                     fontSize: 15.sp,
                     color: context.colors.textPrimary,
@@ -153,7 +155,7 @@ class _CuisinesStepState extends State<CuisinesStep> {
                 if (_selected.contains('Others')) ...[
                   SizedBox(height: 24.h),
                   Text(
-                    'Specify other cuisines',
+                    context.l10n.onbSpecifyCuisines,
                     style: GoogleFonts.rubik(fontSize: 14.sp,
                       fontWeight: FontWeight.w500,
                       color: context.colors.textPrimary)),
@@ -190,7 +192,7 @@ class _CuisinesStepState extends State<CuisinesStep> {
                               color: context.colors.textPrimary,
                             ),
                             decoration: InputDecoration(
-                              hintText: 'Type a cuisine...',
+                              hintText: context.l10n.onbTypeCuisine,
                               hintStyle: GoogleFonts.rubik(
                                 fontSize: 14.sp,
                                 color: context.colors.textMuted,
@@ -246,7 +248,7 @@ class _CuisinesStepState extends State<CuisinesStep> {
               top: false,
               bottom: true,
               child: RedButton(
-                label: 'Continue',
+                label: context.l10n.commonContinue,
                 color: context.colors.accent,
                 onTap: _handleContinue,
                 height: 52.h,
@@ -306,7 +308,7 @@ class _CuisinesStepState extends State<CuisinesStep> {
                 children: [
                   Expanded(
                     child: Text(
-                      cuisine['title']!,
+                      optionLabel(context, cuisine['title']!),
                       style: GoogleFonts.rubik(fontSize: 14.sp,
                         fontWeight: FontWeight.w500,
                         color: isSelected ? context.colors.accent : context.colors.textPrimary),

@@ -1,4 +1,5 @@
 import '../../models/recipe.dart';
+import '../l10n/l10n.dart';
 
 /// One quick-filter chip: a label, an emoji, and a predicate that decides
 /// whether a given recipe belongs to it. Predicates run entirely on data
@@ -9,6 +10,33 @@ class RecipeFilterDef {
   final String label;
   final String emoji;
   final bool Function(Recipe recipe) matches;
+
+  /// [label] in the UI language ([label] itself stays English).
+  String localizedLabel(AppLocalizations l10n) => switch (id) {
+    'high_protein' => l10n.filterHighProtein,
+    'under_30_min' => l10n.filterUnder30Min,
+    'breakfast' => l10n.filterBreakfast,
+    'lunch' => l10n.filterLunch,
+    'dinner' => l10n.filterDinner,
+    'low_calorie' => l10n.filterLowCalorie,
+    'one_pot' => l10n.filterOnePot,
+    'budget_friendly' => l10n.filterBudgetFriendly,
+    'vegetarian' => l10n.filterVegetarian,
+    'vegan' => l10n.filterVegan,
+    'no_cook' => l10n.filterNoCook,
+    'desserts' => l10n.filterDesserts,
+    'snacks' => l10n.filterSnacks,
+    'smoothies' => l10n.filterSmoothies,
+    'salads' => l10n.filterSalads,
+    'soups' => l10n.filterSoups,
+    'pasta' => l10n.filterPasta,
+    'bowls' => l10n.filterBowls,
+    'sandwiches_wraps' => l10n.filterSandwichesWraps,
+    'chicken' => l10n.filterChicken,
+    'beef' => l10n.filterBeef,
+    'seafood' => l10n.filterSeafood,
+    _ => label,
+  };
 
   const RecipeFilterDef({
     required this.id,

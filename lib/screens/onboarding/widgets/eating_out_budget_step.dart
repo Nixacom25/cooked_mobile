@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'selection_onboarding_step.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/l10n/l10n.dart';
 
 class EatingOutBudgetStep extends StatefulWidget {
   final ValueChanged<int> onContinue;
@@ -59,7 +60,7 @@ class _EatingOutBudgetStepState extends State<EatingOutBudgetStep> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Potential Yearly Savings', 
+            context.l10n.onbPotentialYearlySavings, 
             style: GoogleFonts.rubik(
               color: context.colors.textSecondary, 
               fontSize: 14.sp,
@@ -85,7 +86,7 @@ class _EatingOutBudgetStepState extends State<EatingOutBudgetStep> {
             ]),
           SizedBox(height: 4.h),
           Text(
-            'That could be over',
+            context.l10n.onbThatCouldBeOver,
             style: GoogleFonts.poppins(
               color: context.colors.textPrimary,
               fontSize: 13.sp,
@@ -96,8 +97,8 @@ class _EatingOutBudgetStepState extends State<EatingOutBudgetStep> {
   @override
   Widget build(BuildContext context) {
     return SelectionOnboardingStep(
-      title: 'How much do you spend eating out every week?',
-      subtitle: 'Take your best guess. We’ll do the math',
+      title: context.l10n.onbEatingOutTitle,
+      subtitle: context.l10n.onbBestGuess,
       maxSelections: 1,
       useGrid: true,
       initialSelected: [_selectedValue],

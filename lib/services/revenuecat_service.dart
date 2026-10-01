@@ -7,7 +7,9 @@ import 'package:purchases_flutter/purchases_flutter.dart';
 import '../core/api_config.dart';
 import 'auth_service.dart';
 import 'user_service.dart';
+import 'store_price_service.dart';
 import 'error_monitoring_service.dart';
+import '../core/l10n/l10n.dart';
 
 class RevenueCatService {
   RevenueCatService._privateConstructor();
@@ -63,7 +65,6 @@ class RevenueCatService {
         _syncIdentity();
       }
     } catch (e) {
-      debugPrint("RevenueCat initialization error: $e");
     }
   }
 
@@ -82,6 +83,22 @@ class RevenueCatService {
     }
   }
 
+  /// Makes sure RevenueCat knows the signed-in user and has fresh
+  /// entitlements before the app decides where to send them. The backend's
+  /// copy of the subscription can lag behind (missed webhook), which made a
+  /// subscribed user see "subscription required" until they relaunched.
+  Future<void> identifyNow() async {
+    if (!_isInitialized) return;
+    final id = UserService.instance.currentUserNotifier.value?['id']?.toString();
+    if (id == null || id.isEmpty) return;
+    if (id != _identifiedUserId) {
+      _identifiedUserId = id;
+      await logIn(id);
+    } else {
+      await refreshCustomerInfo();
+    }
+  }
+
   // ── Gifts (consumable in-app purchases) ────────────────────────────────
   static const String giftOneYearProductId = 'gift_1_year';
   static const String giftThreeMonthsProductId = 'gift_3_months';
@@ -93,7 +110,6 @@ class RevenueCatService {
         productCategory: ProductCategory.nonSubscription,
       );
     } catch (e) {
-      debugPrint("RevenueCat getGiftProducts error: $e");
       return [];
     }
   }
@@ -125,7 +141,6 @@ class RevenueCatService {
       await Purchases.invalidateCustomerInfoCache();
       _updateUserPremiumStatus(await Purchases.getCustomerInfo());
     } catch (e) {
-      debugPrint("RevenueCat refreshCustomerInfo error: $e");
     }
   }
 
@@ -135,7 +150,6 @@ class RevenueCatService {
       LogInResult result = await Purchases.logIn(userId);
       _updateUserPremiumStatus(result.customerInfo);
     } catch (e) {
-      debugPrint("RevenueCat logIn error: $e");
     }
   }
 
@@ -145,7 +159,6 @@ class RevenueCatService {
       CustomerInfo customerInfo = await Purchases.logOut();
       _updateUserPremiumStatus(customerInfo);
     } catch (e) {
-      debugPrint("RevenueCat logOut error: $e");
     }
   }
 
@@ -153,7 +166,6 @@ class RevenueCatService {
     try {
       return await Purchases.getOfferings();
     } catch (e) {
-      debugPrint("RevenueCat getOfferings error: $e");
       return null;
     }
   }
@@ -174,7 +186,6 @@ class RevenueCatService {
       return result[productIdentifier]?.status ==
           IntroEligibilityStatus.introEligibilityStatusEligible;
     } catch (e) {
-      debugPrint("RevenueCat checkTrialOrIntroductoryPriceEligibility error: $e");
       return false;
     }
   }
@@ -192,7 +203,7 @@ class RevenueCatService {
         return true;
       }
       // Purchase succeeded but subscription not active
-      onPurchaseError?.call('Purchase completed but subscription not active');
+      onPurchaseError?.call(appL10n.errPurchaseNotActive);
       return false;
     } on PlatformException catch (e) {
       var errorCode = PurchasesErrorHelper.getErrorCode(e);
@@ -204,7 +215,7 @@ class RevenueCatService {
           productId: package.identifier,
           reason: e.message ?? 'Purchase error occurred',
         );
-        onPurchaseError?.call(e.message ?? 'Purchase error occurred');
+        onPurchaseError?.call(e.message ?? appL10n.errPurchase);
       }
       return false;
     } catch (e) {
@@ -228,11 +239,11 @@ class RevenueCatService {
         onPurchaseSuccess?.call();
         return true;
       } else {
-        onPurchaseError?.call("No active subscriptions found to restore.");
+        onPurchaseError?.call(appL10n.subNothingToRestore);
         return false;
       }
     } catch (e) {
-      onPurchaseError?.call("Restore purchases failed: ${e.toString()}");
+      onPurchaseError?.call(appL10n.payRestoreFailed(e.toString()));
       return false;
     }
   }
@@ -270,6 +281,17 @@ class RevenueCatService {
       final user = UserService.instance.currentUserNotifier.value;
       if (user == null || user['id'] == null) return;
 
+      // Real localized store price of the subscribed plan (e.g.
+      // "29,99 €/year") so backend reminders never use a hardcoded price.
+      String? priceLabel;
+      final productId = entitlementInfo?.productIdentifier;
+      if (productId != null) {
+        try {
+          await StorePriceService.instance.load().timeout(const Duration(seconds: 5));
+          priceLabel = StorePriceService.instance.prices.value.labelFor(productId);
+        } catch (_) {}
+      }
+
       final Map<String, dynamic> subscriptionData = {
         'isActive': entitlementInfo?.isActive ?? false,
         'expirationDate': entitlementInfo?.expirationDate ?? '',
@@ -278,6 +300,7 @@ class RevenueCatService {
         'willRenew': entitlementInfo?.willRenew,
         'periodType': entitlementInfo?.periodType.toString(),
         'revenueCatCustomerId': customerInfo.originalAppUserId,
+        if (priceLabel != null) 'priceLabel': priceLabel,
       };
 
       // Send subscription data to backend
@@ -291,10 +314,8 @@ class RevenueCatService {
       );
 
       if (response.statusCode == 200) {
-        debugPrint('Subscription synced with backend successfully');
       }
     } catch (e) {
-      debugPrint('Failed to sync subscription with backend: $e');
     }
   }
 }

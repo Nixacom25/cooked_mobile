@@ -1,23 +1,31 @@
 import 'package:flutter/foundation.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/material.dart';
+import '../referral_code_screen.dart';
+import '../../../services/store_price_service.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter/services.dart';
 import 'dart:ui';
-import '../../../services/revenuecat_service.dart';
 import '../../../widgets/red_button.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/l10n/l10n.dart';
 
 class TrialStep extends StatefulWidget {
   final Function(String plan) onPlanSelected;
   final VoidCallback onSkip;
   final bool showTrialBadge;
+  /// Called when the user redeemed a referral/gift code (Premium unlocked,
+  /// no payment needed).
+  final VoidCallback? onRedeemed;
+  final List<String> favoriteCuisines;
 
   const TrialStep({
     super.key,
     required this.onPlanSelected,
     required this.onSkip,
     this.showTrialBadge = true,
+    this.onRedeemed,
+    this.favoriteCuisines = const [],
   });
 
   @override
@@ -26,8 +34,10 @@ class TrialStep extends StatefulWidget {
 
 class _TrialStepState extends State<TrialStep> with SingleTickerProviderStateMixin {
   String _selectedPlan = 'yearly';
-  String _monthlyPrice = '\$9.99 /mo';
-  String _yearlyPrice = '\$2.49 /mo';
+  // Filled from the store (never hardcoded); empty until loaded.
+  String _monthlyPrice = '';
+  String _yearlyPrice = '';
+  StorePrices _prices = const StorePrices();
   bool _isLoading = false;
 
   late AnimationController _controller;
@@ -72,22 +82,18 @@ class _TrialStepState extends State<TrialStep> with SingleTickerProviderStateMix
   }
 
   void _loadPrices() async {
-    final offerings = await RevenueCatService.instance.getOfferings();
-    if (mounted && offerings?.current != null) {
-      final current = offerings!.current!;
-      setState(() {
-        if (current.monthly != null) {
-          _monthlyPrice = '${current.monthly!.storeProduct.priceString} /mo';
-        }
-        if (current.annual != null) {
-          final annualPrice = current.annual!.storeProduct.price;
-          final monthlyPrice = annualPrice / 12;
-          final currencySymbol = current.annual!.storeProduct.priceString.replaceAll(RegExp(r'[\d.,\s]'), '');
-          _yearlyPrice = '$currencySymbol${monthlyPrice.toStringAsFixed(2)} /mo';
-        }
-      });
-    }
+    await StorePriceService.instance.load();
+    if (!mounted) return;
+    final p = StorePriceService.instance.prices.value;
+    setState(() {
+      _prices = p;
+      _monthlyPrice = p.monthly != null ? context.l10n.pricePerMonthShort(p.monthly!) : '';
+      _yearlyPrice = p.yearlyPerMonth != null
+          ? context.l10n.pricePerMonthShort(p.yearlyPerMonth!)
+          : (p.yearly != null ? context.l10n.pricePerYearShort(p.yearly!) : '');
+    });
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -151,7 +157,7 @@ class _TrialStepState extends State<TrialStep> with SingleTickerProviderStateMix
                       child: Column(
                         children: [
                           Text(
-                            'Unlock your full\npersonalized cooking system.',
+                            context.l10n.trialTitle,
                             textAlign: TextAlign.center,
                             style: GoogleFonts.rubik(
                               fontSize: 30.sp,
@@ -160,7 +166,7 @@ class _TrialStepState extends State<TrialStep> with SingleTickerProviderStateMix
                               height: 1.15)),
                           SizedBox(height: 6.h),
                           Text(
-                            'Built around your goals, schedule, and taste.',
+                            context.l10n.trialSubtitle,
                             textAlign: TextAlign.center,
                             style: GoogleFonts.poppins(
                               fontSize: 14.sp,
@@ -179,7 +185,7 @@ class _TrialStepState extends State<TrialStep> with SingleTickerProviderStateMix
                             scale: _card1Scale.value,
                             child: _buildPlanCard(
                               id: 'monthly',
-                              title: 'Monthly',
+                              title: context.l10n.planMonthly,
                               price: _monthlyPrice,
                               isSelected: _selectedPlan == 'monthly')))),
                       SizedBox(width: 12.w),
@@ -190,10 +196,10 @@ class _TrialStepState extends State<TrialStep> with SingleTickerProviderStateMix
                             scale: _card2Scale.value,
                             child: _buildPlanCard(
                               id: 'yearly',
-                              title: 'Yearly',
+                              title: context.l10n.planYearly,
                               price: _yearlyPrice,
                               isSelected: _selectedPlan == 'yearly',
-                              badge: widget.showTrialBadge ? '3 days free' : null)))),
+                              badge: widget.showTrialBadge ? context.l10n.trialThreeDaysFree : null)))),
                     ]),
                   SizedBox(height: 14.h),
 
@@ -205,7 +211,7 @@ class _TrialStepState extends State<TrialStep> with SingleTickerProviderStateMix
                         widget.onSkip();
                       },
                       child: Text(
-                        'No payment due today',
+                        context.l10n.trialNoPaymentToday,
                         style: GoogleFonts.rubik(
                           fontSize: 14.sp,
                           fontWeight: FontWeight.w500,
@@ -219,7 +225,7 @@ class _TrialStepState extends State<TrialStep> with SingleTickerProviderStateMix
                     child: Column(
                       children: [
                         RedButton(
-                          label: _isLoading ? 'Processing...' : (_selectedPlan == 'yearly' ? 'Try for Free' : 'Subscribe Now'),
+                          label: _isLoading ? context.l10n.commonProcessingDots : (_selectedPlan == 'yearly' ? context.l10n.trialTryFree : context.l10n.trialSubscribeNow),
                           color: context.colors.accent,
                           onTap: _isLoading ? null : () => widget.onPlanSelected(_selectedPlan),
                           height: 52.h,
@@ -227,17 +233,47 @@ class _TrialStepState extends State<TrialStep> with SingleTickerProviderStateMix
                         SizedBox(height: 8.h),
                         Text(
                           _selectedPlan == 'yearly'
-                              ? '3 days free, then \$29.99/year. Cancel anytime.'
-                              : 'No free trial. Billed immediately at $_monthlyPrice. Cancel anytime.',
+                              ? context.l10n.commonCancelAnytime(_prices.trialThenYearly(context.l10n))
+                              : (_prices.monthly != null
+                                  ? context.l10n.trialMonthlyNoTrial(_prices.monthly!)
+                                  : context.l10n.trialMonthlyNoTrialNoPrice),
                           textAlign: TextAlign.center,
                           style: GoogleFonts.poppins(
                             fontSize: 12.sp,
                             color: context.colors.textPrimary)),
-                        SizedBox(height: 14.h),
+                        SizedBox(height: 6.h),
+                        // Friend gave you a code? Redeem it instead of paying.
+                        GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onTap: _isLoading ? null : _openReferralCode,
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(vertical: 6.h, horizontal: 12.w),
+                            child: Text(
+                              context.l10n.trialHaveReferralCode,
+                              style: GoogleFonts.rubik(
+                                fontSize: 13.sp,
+                                fontWeight: FontWeight.w600,
+                                color: context.colors.accent,
+                                decoration: TextDecoration.underline,
+                                decorationColor: context.colors.accent)),
+                          ),
+                        ),
+                        SizedBox(height: 8.h),
                       ])),
                 ])),
           ]);
       });
+  }
+
+  Future<void> _openReferralCode() async {
+    HapticFeedback.selectionClick();
+    final redeemed = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ReferralCodeScreen(favoriteCuisines: widget.favoriteCuisines),
+      ),
+    );
+    if (redeemed == true && mounted) widget.onRedeemed?.call();
   }
 
   Widget _buildPlanCard({

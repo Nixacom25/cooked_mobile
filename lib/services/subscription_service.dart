@@ -1,9 +1,9 @@
 import 'dart:convert';
-import 'dart:developer' as developer;
 import 'package:http/http.dart' as http;
 import '../core/api_config.dart';
 import '../models/subscription_payment.dart';
 import 'auth_service.dart';
+import '../core/l10n/l10n.dart';
 
 class SubscriptionService {
   SubscriptionService._privateConstructor();
@@ -53,7 +53,7 @@ class SubscriptionService {
 
     if (response.statusCode != 200) {
       final decoded = jsonDecode(response.body);
-      throw Exception(decoded['message'] ?? 'Payment failed');
+      throw Exception(decoded['message'] ?? appL10n.errPayment);
     }
   }
 
@@ -71,8 +71,6 @@ class SubscriptionService {
       'packageName': packageName ?? 'com.cookedapp.app', // Fallback or use package_info
     });
 
-    developer.log('Verifying IAP Receipt: $url with body: $body',
-        name: 'SubscriptionService');
 
     final response = await http.post(
       url,
@@ -81,14 +79,9 @@ class SubscriptionService {
     );
 
     if (response.statusCode == 200) {
-      developer.log('IAP Verification SUCCESS: ${response.body}',
-          name: 'SubscriptionService');
     } else {
-      developer.log(
-          'IAP Verification FAILED [${response.statusCode}]: ${response.body}',
-          name: 'SubscriptionService');
       final decoded = jsonDecode(response.body);
-      throw Exception(decoded['message'] ?? 'Verification failed');
+      throw Exception(decoded['message'] ?? appL10n.errVerification);
     }
   }
 

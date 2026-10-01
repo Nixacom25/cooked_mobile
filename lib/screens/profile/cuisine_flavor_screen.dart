@@ -10,6 +10,8 @@ import '../../core/theme/app_theme.dart';
 import '../onboarding/widgets/cuisines_step.dart';
 import '../onboarding/widgets/flavor_spice_step.dart';
 import 'preferences_helpers.dart';
+import '../../core/l10n/l10n.dart';
+import '../../core/l10n/option_labels.dart';
 
 /// Profile > Cuisine + Flavor DNA - promoted out of the general Dietary
 /// Preferences hub into its own top-level entry, combining Favorite
@@ -59,14 +61,14 @@ class _CuisineFlavorScreenState extends State<CuisineFlavorScreen> {
       );
     } catch (e) {
       if (!mounted) return;
-      IosToast.show(context, message: 'Failed to update cuisine & flavor preferences', type: ToastType.error);
+      IosToast.show(context, message: context.l10n.prefsCuisineUpdateFailed, type: ToastType.error);
     }
   }
 
   Future<void> _openCuisines() async {
     await pushPreferenceStep(
       context,
-      title: 'Favorite Cuisines',
+      title: context.l10n.prefsFavoriteCuisines,
       step: CuisinesStep(
         initialSelected: _favoriteCuisines,
         onChanged: (val) => setState(() => _favoriteCuisines = val),
@@ -78,7 +80,7 @@ class _CuisineFlavorScreenState extends State<CuisineFlavorScreen> {
   Future<void> _openFlavorSpice() async {
     await pushPreferenceStep(
       context,
-      title: 'Flavor & Spice',
+      title: context.l10n.prefsFlavorSpice,
       step: FlavorSpiceStep(
         initialDna: _flavorDna,
         initialSpice: _spiceLevel,
@@ -127,7 +129,7 @@ class _CuisineFlavorScreenState extends State<CuisineFlavorScreen> {
                         ),
                         Expanded(
                           child: Text(
-                            'Cuisine + Flavor DNA',
+                            context.l10n.settingsCuisineFlavor,
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontFamily: 'Rubik',
@@ -146,14 +148,14 @@ class _CuisineFlavorScreenState extends State<CuisineFlavorScreen> {
                       padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
                       children: [
                         _buildTile(
-                          'Favorite Cuisines',
-                          _favoriteCuisines.isEmpty ? 'Not set' : _favoriteCuisines.join(', '),
+                          context.l10n.prefsFavoriteCuisines,
+                          _favoriteCuisines.isEmpty ? context.l10n.commonNotSet : optionLabels(context, _favoriteCuisines),
                           _openCuisines,
                         ),
                         SizedBox(height: 10.h),
                         _buildTile(
-                          'Flavor & Spice',
-                          '$_spiceLevel, ${_flavorDna.length} preferences',
+                          context.l10n.prefsFlavorSpice,
+                          context.l10n.prefsFlavorSummary(optionLabel(context, _spiceLevel), _flavorDna.length),
                           _openFlavorSpice,
                         ),
                       ],

@@ -6,6 +6,7 @@ import '../../services/support_service.dart';
 import '../../services/user_service.dart';
 import '../../widgets/glass_icon_button.dart';
 import '../../widgets/red_header_background.dart';
+import '../../core/l10n/l10n.dart';
 
 class SendFeedbackScreen extends StatefulWidget {
   const SendFeedbackScreen({super.key});
@@ -25,6 +26,20 @@ class _SendFeedbackScreenState extends State<SendFeedbackScreen> {
     'Other',
   ];
 
+  /// Categories are sent to support in English; only the chip is translated.
+  static String _categoryLabel(BuildContext context, String category) {
+    final l10n = context.l10n;
+    return switch (category) {
+      'Account' => l10n.feedbackCatAccount,
+      'Payment' => l10n.feedbackCatPayment,
+      'Scan' => l10n.feedbackCatScan,
+      'Import' => l10n.feedbackCatImport,
+      'Recipe' => l10n.feedbackCatRecipe,
+      'Shopping' => l10n.feedbackCatShopping,
+      _ => l10n.feedbackCatOther,
+    };
+  }
+
   final _messageCtrl = TextEditingController();
   String _category = _categories.first;
   bool _sending = false;
@@ -38,7 +53,7 @@ class _SendFeedbackScreenState extends State<SendFeedbackScreen> {
   Future<void> _submit() async {
     final message = _messageCtrl.text.trim();
     if (message.isEmpty) {
-      IosToast.show(context, message: 'Please write a message first.', type: ToastType.warning);
+      IosToast.show(context, message: context.l10n.feedbackWriteFirst, type: ToastType.warning);
       return;
     }
 
@@ -51,7 +66,7 @@ class _SendFeedbackScreenState extends State<SendFeedbackScreen> {
     final userId = user?['id'] as String?;
 
     if (email == null || email.isEmpty) {
-      IosToast.show(context, message: 'Could not find your account email.', type: ToastType.error);
+      IosToast.show(context, message: context.l10n.feedbackNoEmail, type: ToastType.error);
       return;
     }
 
@@ -66,11 +81,11 @@ class _SendFeedbackScreenState extends State<SendFeedbackScreen> {
         category: _category,
       );
       if (!mounted) return;
-      IosToast.show(context, message: 'Thanks! Your feedback has been sent.', type: ToastType.success);
+      IosToast.show(context, message: context.l10n.feedbackSent, type: ToastType.success);
       Navigator.pop(context);
     } catch (e) {
       if (!mounted) return;
-      IosToast.show(context, message: 'Could not send feedback. Please try again.', type: ToastType.error);
+      IosToast.show(context, message: context.l10n.feedbackFailed, type: ToastType.error);
     } finally {
       if (mounted) setState(() => _sending = false);
     }
@@ -107,7 +122,7 @@ class _SendFeedbackScreenState extends State<SendFeedbackScreen> {
                         ),
                         Expanded(
                           child: Text(
-                            'Contact Support',
+                            context.l10n.settingsContactSupport,
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontFamily: 'Rubik',
@@ -128,7 +143,7 @@ class _SendFeedbackScreenState extends State<SendFeedbackScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            "We'd love to hear from you 💬\nDescribe your problem and we'll help you as soon as possible.",
+                            context.l10n.feedbackHeadline,
                             style: TextStyle(
                               fontFamily: 'Rubik',
                               fontSize: 15.sp,
@@ -139,7 +154,7 @@ class _SendFeedbackScreenState extends State<SendFeedbackScreen> {
                           SizedBox(height: 24.h),
 
                           Text(
-                            'Category',
+                            context.l10n.feedbackCategory,
                             style: TextStyle(
                               fontFamily: 'Rubik',
                               fontWeight: FontWeight.w700,
@@ -162,7 +177,7 @@ class _SendFeedbackScreenState extends State<SendFeedbackScreen> {
                                     borderRadius: BorderRadius.circular(20.r),
                                   ),
                                   child: Text(
-                                    category,
+                                    _categoryLabel(context, category),
                                     style: TextStyle(
                                       fontFamily: 'Rubik',
                                       fontWeight: FontWeight.w600,
@@ -177,7 +192,7 @@ class _SendFeedbackScreenState extends State<SendFeedbackScreen> {
                           SizedBox(height: 22.h),
 
                           Text(
-                            'Message',
+                            context.l10n.feedbackMessage,
                             style: TextStyle(
                               fontFamily: 'Rubik',
                               fontWeight: FontWeight.w700,
@@ -196,7 +211,7 @@ class _SendFeedbackScreenState extends State<SendFeedbackScreen> {
                               maxLines: 6,
                               style: TextStyle(fontFamily: 'Rubik', fontSize: 14.sp, color: context.colors.textPrimary),
                               decoration: InputDecoration(
-                                hintText: "Describe your problem...",
+                                hintText: context.l10n.feedbackHint,
                                 hintStyle: TextStyle(fontFamily: 'Rubik', fontSize: 14.sp, color: context.colors.textMuted),
                                 border: InputBorder.none,
                                 contentPadding: EdgeInsets.all(16.w),
@@ -222,7 +237,7 @@ class _SendFeedbackScreenState extends State<SendFeedbackScreen> {
                                       child: const CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white),
                                     )
                                   : Text(
-                                      'Contact Support',
+                                      context.l10n.settingsContactSupport,
                                       style: TextStyle(fontFamily: 'Rubik', fontWeight: FontWeight.w700, fontSize: 15.sp),
                                     ),
                             ),

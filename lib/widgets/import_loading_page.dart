@@ -5,6 +5,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../core/motion/motion_widgets.dart';
 import 'cooked_blob_background.dart';
+import '../core/l10n/l10n.dart';
 
 /// Stages of a link import. Driven by the real request where possible:
 /// [receiving] as soon as the link is accepted, [finding] once the request
@@ -13,16 +14,16 @@ import 'cooked_blob_background.dart';
 enum ImportStage { receiving, finding, pulling, ready }
 
 extension ImportStageCopy on ImportStage {
-  String get title {
+  String title(AppLocalizations l10n) {
     switch (this) {
       case ImportStage.receiving:
-        return 'Receiving link…';
+        return l10n.importStageReceiving;
       case ImportStage.finding:
-        return 'Finding the recipe…';
+        return l10n.importStageFinding;
       case ImportStage.pulling:
-        return 'Pulling ingredients & steps…';
+        return l10n.importStagePulling;
       case ImportStage.ready:
-        return 'Recipe ready';
+        return l10n.importStageReady;
     }
   }
 }
@@ -161,7 +162,9 @@ class _ImportLoadingPageState extends State<ImportLoadingPage>
                 children: [
                   SizedBox(
                     width: 310.w,
-                    height: 330.h,
+                    // Tall enough for the whole card, so the stage copy
+                    // below never overlaps it.
+                    height: 392.h,
                     child: Stack(
                       clipBehavior: Clip.none,
                       children: [
@@ -305,15 +308,21 @@ class _ImportLoadingPageState extends State<ImportLoadingPage>
                           child: child,
                         ),
                       ),
-                      child: Text(
-                        stage.title,
+                      // One line, scaled down if a stage label is long
+                      // (e.g. "Pulling ingredients & steps…", translations).
+                      child: FittedBox(
                         key: ValueKey(stage),
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontFamily: 'Rubik',
-                          fontSize: 22.sp,
-                          fontWeight: FontWeight.w800,
-                          color: isDark ? Colors.white : const Color(0xFF1E1E1E),
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          stage.title(context.l10n),
+                          maxLines: 1,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontFamily: 'Rubik',
+                            fontSize: 22.sp,
+                            fontWeight: FontWeight.w800,
+                            color: isDark ? Colors.white : const Color(0xFF1E1E1E),
+                          ),
                         ),
                       ),
                     ),
@@ -322,7 +331,7 @@ class _ImportLoadingPageState extends State<ImportLoadingPage>
                   SizedBox(height: 4.h),
 
                   Text(
-                    'Getting it ready for Cooked',
+                    context.l10n.importGettingReady,
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontFamily: 'Rubik',
@@ -367,7 +376,8 @@ class _SourceBadge extends StatelessWidget {
         height: size,
         padding: EdgeInsets.all(size * 0.22),
         decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1C1C1E) : Colors.white,
+          // Same tone as the page background in light mode (like dark mode).
+          color: isDark ? const Color(0xFF1C1C1E) : const Color(0xFFFAF7F2),
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
@@ -377,7 +387,12 @@ class _SourceBadge extends StatelessWidget {
             ),
           ],
         ),
-        child: SvgPicture.asset(asset, fit: BoxFit.contain),
+        child: SvgPicture.asset(
+          asset,
+          fit: BoxFit.contain,
+          // White glyphs would vanish on the light page: draw them black.
+          colorFilter: isDark ? null : const ColorFilter.mode(Colors.black, BlendMode.srcIn),
+        ),
       ),
     );
   }

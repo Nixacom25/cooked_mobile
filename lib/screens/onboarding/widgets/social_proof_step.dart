@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:in_app_review/in_app_review.dart';
 import '../../../widgets/red_button.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/l10n/l10n.dart';
 
 class SocialProofStep extends StatefulWidget {
   final List<String> favoriteCuisines;
@@ -92,7 +93,6 @@ class _SocialProofStepState extends State<SocialProofStep>
         await inAppReview.requestReview();
       }
     } catch (e) {
-      debugPrint('Error triggering in-app review: $e');
     }
   }
 
@@ -151,7 +151,7 @@ class _SocialProofStepState extends State<SocialProofStep>
                       child: SlideTransition(
                         position: _subtitleSlide,
                         child: Text(
-                          'Stars from thousands\nof food lovers',
+                          context.l10n.onbStarsFromThousands,
                           textAlign: TextAlign.center,
                           style: GoogleFonts.rubik(
                             fontSize: 28.sp,
@@ -170,7 +170,7 @@ class _SocialProofStepState extends State<SocialProofStep>
                             child: _buildReviewCard(
                               name: 'Cheikh G.',
                               quote:
-                                  '"Cooked helped me stop\nordering dinner every night."'))),
+                                  context.l10n.onbReview1))),
                         FadeTransition(
                           opacity: _reviewOpacities[1],
                           child: SlideTransition(
@@ -178,7 +178,7 @@ class _SocialProofStepState extends State<SocialProofStep>
                             child: _buildReviewCard(
                               name: 'Immanuel O.',
                               quote:
-                                  '"I finally use the groceries I\nalready have."'))),
+                                  context.l10n.onbReview2))),
                         FadeTransition(
                           opacity: _reviewOpacities[2],
                           child: SlideTransition(
@@ -186,7 +186,7 @@ class _SocialProofStepState extends State<SocialProofStep>
                             child: _buildReviewCard(
                               name: 'Miles M.',
                               quote:
-                                  '"Meal ideas feel personalized\ninstead of random."'))),
+                                  context.l10n.onbReview3))),
                       ]),
                     SizedBox(height: 20.h),
                   ]))),
@@ -202,7 +202,7 @@ class _SocialProofStepState extends State<SocialProofStep>
                     top: false,
                     bottom: true,
                     child: RedButton(
-                      label: 'Continue',
+                      label: context.l10n.commonContinue,
                       color: context.colors.accent,
                       onTap: widget.onContinue,
                       height: 52.h,

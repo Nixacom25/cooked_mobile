@@ -11,6 +11,7 @@ import 'cookbook_form_modal.dart';
 import 'haptic_context_menu.dart';
 import '../core/theme/app_theme.dart';
 import '../core/motion/motion_widgets.dart';
+import '../core/l10n/l10n.dart';
 
 /// Cookbook tile shared by Home's "Your Cookbooks" row and the Cookbooks
 /// "View All" grid so both look exactly the same. [isMain] renders the
@@ -57,7 +58,7 @@ class CookbookCardTile extends StatelessWidget {
           targetPosition: details.globalPosition,
           actions: [
             HapticMenuAction(
-              title: cookbook.isPinned ? 'Unpin Cookbook' : 'Pin Cookbook',
+              title: cookbook.isPinned ? context.l10n.cookbookUnpin : context.l10n.cookbookPin,
               icon: cookbook.isPinned
                   ? Icons.push_pin_rounded
                   : Icons.push_pin_outlined,
@@ -69,7 +70,7 @@ class CookbookCardTile extends StatelessWidget {
               },
             ),
             HapticMenuAction(
-              title: 'Edit Cookbook',
+              title: context.l10n.cookbookEdit,
               icon: Icons.edit_outlined,
               onTap: () async {
                 final result = await showModalBottomSheet(
@@ -85,7 +86,7 @@ class CookbookCardTile extends StatelessWidget {
               },
             ),
             HapticMenuAction(
-              title: 'Delete Cookbook',
+              title: context.l10n.cookbookDelete,
               icon: Icons.delete_outline_rounded,
               isDestructive: true,
               onTap: () async {
@@ -94,7 +95,7 @@ class CookbookCardTile extends StatelessWidget {
                   if (context.mounted) {
                     IosToast.show(
                       context,
-                      message: 'Cookbook deleted',
+                      message: context.l10n.cookbookDeleted,
                       type: ToastType.success,
                     );
                   }
@@ -103,7 +104,7 @@ class CookbookCardTile extends StatelessWidget {
                   if (context.mounted) {
                     IosToast.show(
                       context,
-                      message: 'Failed to delete cookbook',
+                      message: context.l10n.cookbookDeleteFailed,
                       type: ToastType.error,
                     );
                   }
@@ -162,7 +163,7 @@ class CookbookCardTile extends StatelessWidget {
                           ),
                           SizedBox(width: 4.w),
                           Text(
-                            recipeCountLabel(cookbook.recipes.length, capitalize: true),
+                            recipeCountLabel(context.l10n, cookbook.recipes.length, capitalize: true),
                             style: TextStyle(
                               fontFamily: 'Rubik',
                               fontSize: 13.sp,
@@ -212,7 +213,7 @@ class CookbookCardTile extends StatelessWidget {
                               ),
                               SizedBox(width: 4.w),
                               Text(
-                                recipeCountLabel(cookbook.recipes.length, capitalize: true),
+                                recipeCountLabel(context.l10n, cookbook.recipes.length, capitalize: true),
                                 style: TextStyle(
                                   fontFamily: 'Rubik',
                                   fontSize: 12.sp,

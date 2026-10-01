@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../widgets/red_button.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/l10n/l10n.dart';
 
 class MealRepetitionIntroStep extends StatelessWidget {
   final VoidCallback onContinue;
@@ -28,7 +29,7 @@ class MealRepetitionIntroStep extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        "Tired of eating the\nsame thing every\nweek?",
+                        context.l10n.onbRepetitionTitle,
                         style: GoogleFonts.rubik(
                           fontSize: 32.sp,
                           fontWeight: FontWeight.w500,
@@ -36,7 +37,7 @@ class MealRepetitionIntroStep extends StatelessWidget {
                           height: 1.15)),
                       SizedBox(height: 10.h),
                       Text(
-                        "Built around your taste.",
+                        context.l10n.onbRepetitionSubtitle,
                         style: GoogleFonts.poppins(
                           fontSize: 15.sp,
                           color: context.colors.textPrimary,
@@ -68,7 +69,7 @@ class MealRepetitionIntroStep extends StatelessWidget {
             top: false,
             bottom: true,
             child: RedButton(
-              label: 'Continue',
+              label: context.l10n.commonContinue,
               color: context.colors.accent,
               onTap: onContinue,
               height: 52.h,

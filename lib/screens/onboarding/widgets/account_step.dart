@@ -5,6 +5,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../widgets/red_button.dart';
 import '../../../core/widgets/ios_toast.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/l10n/l10n.dart';
 
 class AccountStep extends StatefulWidget {
   final String initialEmail;
@@ -100,7 +101,7 @@ class _AccountStepState extends State<AccountStep> {
     if (fullName.isEmpty) {
       IosToast.show(
         context,
-        message: 'Please enter your name',
+        message: context.l10n.valEnterName,
         type: ToastType.warning);
       return;
     }
@@ -108,7 +109,7 @@ class _AccountStepState extends State<AccountStep> {
     if (email.isEmpty) {
       IosToast.show(
         context,
-        message: 'Please enter your email',
+        message: context.l10n.valEnterEmail,
         type: ToastType.warning);
       return;
     }
@@ -117,7 +118,7 @@ class _AccountStepState extends State<AccountStep> {
     if (!emailRegex.hasMatch(email)) {
       IosToast.show(
         context,
-        message: 'Please enter a valid email address',
+        message: context.l10n.valValidEmail,
         type: ToastType.warning);
       return;
     }
@@ -125,7 +126,7 @@ class _AccountStepState extends State<AccountStep> {
     if (password.isEmpty) {
       IosToast.show(
         context,
-        message: 'Please enter a password',
+        message: context.l10n.valEnterPassword,
         type: ToastType.warning);
       return;
     }
@@ -133,7 +134,7 @@ class _AccountStepState extends State<AccountStep> {
     if (password.length < 6) {
       IosToast.show(
         context,
-        message: 'Password must be at least 6 characters',
+        message: context.l10n.valPasswordMin,
         type: ToastType.warning);
       return;
     }
@@ -141,7 +142,7 @@ class _AccountStepState extends State<AccountStep> {
     if (password != confirmPassword) {
       IosToast.show(
         context,
-        message: 'Passwords do not match',
+        message: context.l10n.authPasswordsDontMatch,
         type: ToastType.warning);
       return;
     }
@@ -161,7 +162,7 @@ class _AccountStepState extends State<AccountStep> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Create your account',
+                  context.l10n.onbCreateAccountTitle,
                   style: GoogleFonts.rubik(
                     fontSize: 32.sp,
                     fontWeight: FontWeight.w500,
@@ -169,33 +170,33 @@ class _AccountStepState extends State<AccountStep> {
                     height: 1.15)),
                 SizedBox(height: 10.h),
                 Text(
-                  'Secure your recipes and preferences',
+                  context.l10n.onbCreateAccountSubtitle,
                   style: GoogleFonts.poppins(
                     fontSize: 15.sp,
                     color: context.colors.textPrimary,
                     height: 1.3)),
                 SizedBox(height: 24.h),
 
-                _buildLabel('Full Name', required: true),
+                _buildLabel(context.l10n.commonFullName, required: true),
                 SizedBox(height: 8.h),
                 _buildField(
                   controller: _nameController,
-                  hint: 'John Doe',
+                  hint: context.l10n.onbNameHint,
                   icon: Icons.person_outline_rounded),
 
                 SizedBox(height: 16.h),
 
-                _buildLabel('Email', required: true),
+                _buildLabel(context.l10n.commonEmail, required: true),
                 SizedBox(height: 8.h),
                 _buildField(
                   controller: _emailController,
-                  hint: 'john@example.com',
+                  hint: context.l10n.onbEmailHint,
                   icon: Icons.email_outlined,
                   keyboardType: TextInputType.emailAddress),
 
                 SizedBox(height: 16.h),
 
-                _buildLabel('Password', required: true),
+                _buildLabel(context.l10n.commonPassword, required: true),
                 SizedBox(height: 8.h),
                 _buildField(
                   controller: _passwordController,
@@ -216,7 +217,7 @@ class _AccountStepState extends State<AccountStep> {
 
                 SizedBox(height: 16.h),
 
-                _buildLabel('Confirm Password', required: true),
+                _buildLabel(context.l10n.authConfirmPassword, required: true),
                 SizedBox(height: 8.h),
                 _buildField(
                   controller: _confirmController,
@@ -242,7 +243,7 @@ class _AccountStepState extends State<AccountStep> {
             top: false,
             bottom: true,
             child: RedButton(
-              label: 'Create Account',
+              label: context.l10n.onbCreateAccount,
               color: context.colors.accent,
               onTap: _submitForm,
               height: 52.h,

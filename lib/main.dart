@@ -58,13 +58,35 @@ import 'dart:ui';
 
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:rive/rive.dart';
+import 'package:http/http.dart' as http;
+import 'core/network/subscription_aware_client.dart';
+import 'core/l10n/l10n.dart';
+import 'services/user_service.dart';
+import 'services/posthog_service.dart';
+import 'utils/paywall_helper.dart';
 
-void main() async {
+
+// Every http call in the app goes through SubscriptionAwareClient: a request
+// refused for a lapsed subscription opens the paywall instead of failing
+// silently. The whole startup runs inside that zone - Flutter requires the
+// bindings to be initialized in the same zone as runApp ("Zone mismatch").
+void main() {
+  http.runWithClient(
+    _startApp,
+    () => SubscriptionAwareClient(
+      http.Client(),
+      onSubscriptionRequired: () => WidgetsBinding.instance.addPostFrameCallback(
+        (_) => PaywallHelper.showForExpiredSubscription(appNavigatorKey.currentContext),
+      ),
+    ),
+  );
+}
+
+Future<void> _startApp() async {
   WidgetsFlutterBinding.ensureInitialized();
   try {
     await RiveNative.init();
   } catch (e) {
-    debugPrint('RiveNative.init warning: $e');
   }
   await Firebase.initializeApp();
 
@@ -77,7 +99,19 @@ void main() async {
   
   await DatabaseService.instance.init();
   await ThemeService.instance.init();
+  await LocaleService.instance.init();
+  // The language saved in the profile (Language page) drives the UI locale.
+  UserService.instance.currentUserNotifier.addListener(() {
+    final language = UserService.instance.currentUserNotifier.value?['language'] as String?;
+    if (language != null) LocaleService.instance.setFromLanguageValue(language);
+  });
   await ErrorMonitoringService.instance.initialize();
+  await PostHogService.instance.init();
+  UserService.instance.currentUserNotifier.addListener(() {
+    PostHogService.instance.syncUser(
+      UserService.instance.currentUserNotifier.value?['id']?.toString(),
+    );
+  });
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
@@ -234,7 +268,6 @@ class _CookedAppState extends State<CookedApp> with WidgetsBindingObserver {
 
       _initDeepLinks();
     } catch (e) {
-      debugPrint('Initialization error: $e');
     }
   }
 
@@ -250,7 +283,6 @@ class _CookedAppState extends State<CookedApp> with WidgetsBindingObserver {
     // Handle deep link from notification campaigns
     if (data.containsKey('deepLink') && data['deepLink'] != null) {
       final deepLink = data['deepLink'] as String;
-      debugPrint("CookedApp: Handling deep link from push notification: $deepLink");
       _handleDeepLink(deepLink);
       return;
     }
@@ -273,7 +305,6 @@ class _CookedAppState extends State<CookedApp> with WidgetsBindingObserver {
     // Handle link when app is in cold state
     _appLinks.getInitialLink().then((Uri? uri) {
       if (uri != null) {
-        debugPrint("CookedApp: Initial AppLink received: $uri");
         _handleDeepLink(uri.toString());
       }
     });
@@ -281,11 +312,9 @@ class _CookedAppState extends State<CookedApp> with WidgetsBindingObserver {
     // Handle link when app is in background/foreground
     _linkSubscription = _appLinks.uriLinkStream.listen((Uri? uri) {
       if (uri != null) {
-        debugPrint("CookedApp: AppLink stream received: $uri");
         _handleDeepLink(uri.toString());
       }
     }, onError: (err) {
-      debugPrint("CookedApp: AppLink stream error: $err");
     });
   }
 
@@ -313,11 +342,9 @@ class _CookedAppState extends State<CookedApp> with WidgetsBindingObserver {
 
   void _onSharedTextReceived() {
     final text = SharingService.instance.sharedTextNotifier.value;
-    debugPrint("CookedApp: _onSharedTextReceived triggered with text: $text");
     
     if (text != null && text.isNotEmpty) {
       final url = SharingService.instance.extractUrl(text);
-      debugPrint("CookedApp: Extracted URL: $url");
       
       if (url != null) {
         // Heavy impact to show we caught it
@@ -326,7 +353,6 @@ class _CookedAppState extends State<CookedApp> with WidgetsBindingObserver {
         final isLoggedIn = AuthService.instance.isLoggedIn;
         
         if (!isLoggedIn) {
-          debugPrint("CookedApp: User not logged in. Keeping shared URL in memory for post-login import.");
           // We don't clear it from SharingService, so it stays available
           // If the user is on Welcome/Login, they will eventually log in
           // We can optionally force redirect to Welcome if they are elsewhere
@@ -341,7 +367,6 @@ class _CookedAppState extends State<CookedApp> with WidgetsBindingObserver {
              if (currentRoute != AppRoutes.welcome && 
                  currentRoute != AppRoutes.login && 
                  currentRoute != AppRoutes.otp) {
-               debugPrint("CookedApp: Not on auth screens, redirecting to Welcome.");
                state.pushNamedAndRemoveUntil(AppRoutes.welcome, (route) => false);
              }
           }
@@ -352,7 +377,6 @@ class _CookedAppState extends State<CookedApp> with WidgetsBindingObserver {
         Future.delayed(const Duration(milliseconds: 500), () {
           final state = appNavigatorKey.currentState;
           if (state != null) {
-            debugPrint("CookedApp: Processing shared URL: $url");
 
             // Utility app links used by transactional emails (Welcome,
             // billing issue, new sign-in) - matched first so they land on
@@ -369,7 +393,6 @@ class _CookedAppState extends State<CookedApp> with WidgetsBindingObserver {
 
             if (utilityMatch != null) {
               final target = utilityMatch.group(1);
-              debugPrint("CookedApp: Utility app link detected: $target");
               switch (target) {
                 case 'manage-subscription':
                   state.pushNamedAndRemoveUntil(AppRoutes.home, (route) => false);
@@ -385,7 +408,6 @@ class _CookedAppState extends State<CookedApp> with WidgetsBindingObserver {
               }
             } else if (match != null) {
               final recipeId = match.group(1);
-              debugPrint("CookedApp: Internal recipe link detected. ID: $recipeId");
               
               state.pushNamedAndRemoveUntil(
                 AppRoutes.home,
@@ -396,7 +418,6 @@ class _CookedAppState extends State<CookedApp> with WidgetsBindingObserver {
                 arguments: {'recipeId': recipeId},
               );
             } else {
-              debugPrint("CookedApp: External link detected. Navigating to Import with URL: $url");
               state.pushNamedAndRemoveUntil(
                 AppRoutes.home,
                 (route) => false,
@@ -405,7 +426,6 @@ class _CookedAppState extends State<CookedApp> with WidgetsBindingObserver {
             }
             SharingService.instance.consumeSharedText();
           } else {
-            debugPrint("CookedApp: Navigator state is STILL NULL after delay.");
           }
         });
       }
@@ -423,10 +443,16 @@ class _CookedAppState extends State<CookedApp> with WidgetsBindingObserver {
           behavior: _NoScrollbarBehavior(),
           child: ValueListenableBuilder<ThemeMode>(
             valueListenable: ThemeService.instance.themeModeNotifier,
-            builder: (context, themeMode, _) => MaterialApp(
+            builder: (context, themeMode, _) => ValueListenableBuilder<Locale>(
+            valueListenable: LocaleService.instance.locale,
+            builder: (context, locale, _) => MaterialApp(
             navigatorKey: appNavigatorKey,
             title: 'Cooked',
             debugShowCheckedModeBanner: false,
+            // UI language (English default; FR / ES from the Language page).
+            locale: locale,
+            supportedLocales: AppLocalizations.supportedLocales,
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
             theme: AppTheme.light,
             darkTheme: AppTheme.dark,
             themeMode: themeMode,
@@ -446,6 +472,7 @@ class _CookedAppState extends State<CookedApp> with WidgetsBindingObserver {
             navigatorObservers: [
               routeObserver,
               FirebaseAnalyticsObserver(analytics: FirebaseAnalytics.instance),
+              if (PostHogService.instance.observer case final posthog?) posthog,
             ],
             initialRoute: AppRoutes.splash,
             onGenerateRoute: (settings) {
@@ -488,7 +515,8 @@ class _CookedAppState extends State<CookedApp> with WidgetsBindingObserver {
                   builder = const SuccessScreen();
                   break;
                 case AppRoutes.preferences:
-                  builder = const OnboardingScreen();
+                  final args = settings.arguments as Map<String, dynamic>?;
+                  builder = OnboardingScreen(resumeAtPage: args?['resumeAtPage'] as int?);
                   break;
                 case AppRoutes.forgotPassword:
                   builder = const ForgotPasswordScreen();
@@ -585,6 +613,7 @@ class _CookedAppState extends State<CookedApp> with WidgetsBindingObserver {
                 settings: settings,
               );
             },
+          ),
           ),
           ),
         );

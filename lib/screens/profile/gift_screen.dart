@@ -13,6 +13,7 @@ import '../../services/revenuecat_service.dart';
 import '../../widgets/profile_subpage_scaffold.dart';
 import '../../widgets/red_button.dart';
 import '../../core/motion/motion_widgets.dart';
+import '../../core/l10n/l10n.dart';
 
 /// "Give the gift of Cooked": gift cards sold as consumable in-app purchases
 /// (Apple on iOS, Google on Android). One purchase = one single-use code,
@@ -25,20 +26,13 @@ class GiftScreen extends StatefulWidget {
 }
 
 class _GiftScreenState extends State<GiftScreen> {
-  static const _plans = [
-    (
-      RevenueCatService.giftOneYearProductId,
-      '1 Year',
-      'Give the gift of a 1-year Premium subscription to Cooked. Purchase is not refundable.',
-      true,
-    ),
-    (
-      RevenueCatService.giftThreeMonthsProductId,
-      '3 Months',
-      'Give the gift of a 3-month Premium subscription to Cooked. Purchase is not refundable.',
-      false,
-    ),
-  ];
+  static List<(String, String, String, bool)> _plans(BuildContext context) {
+    final l10n = context.l10n;
+    return [
+      (RevenueCatService.giftOneYearProductId, l10n.giftPlanOneYear, l10n.giftPlanOneYearDesc, true),
+      (RevenueCatService.giftThreeMonthsProductId, l10n.giftPlanThreeMonths, l10n.giftPlanThreeMonthsDesc, false),
+    ];
+  }
 
   Map<String, StoreProduct> _products = {};
   List<GiftCode> _gifts = [];
@@ -85,13 +79,13 @@ class _GiftScreenState extends State<GiftScreen> {
       } else {
         IosToast.show(
           context,
-          message: "Payment received! We'll email you the gift code in a moment.",
+          message: context.l10n.giftPaymentReceived,
           type: ToastType.success,
         );
       }
     } catch (e) {
       if (!mounted) return;
-      IosToast.show(context, message: 'Purchase failed. Please try again.', type: ToastType.error);
+      IosToast.show(context, message: context.l10n.giftPurchaseFailed, type: ToastType.error);
     } finally {
       if (mounted) setState(() => _purchasingId = null);
     }
@@ -113,15 +107,13 @@ class _GiftScreenState extends State<GiftScreen> {
 
   void _share(GiftCode gift) {
     SharePlus.instance.share(ShareParams(
-      text: '🎁 I got you ${gift.planLabel} of Cooked Premium! '
-          'Redeem it here: ${gift.redeemUrl}\n\n'
-          'Or open Cooked → Profile → Redeem a gift and enter: ${gift.code}',
+      text: context.l10n.giftShareMessage(gift.planLabel, gift.redeemUrl, gift.code),
     ));
   }
 
   void _copy(GiftCode gift) {
     Clipboard.setData(ClipboardData(text: gift.code));
-    IosToast.show(context, message: 'Gift code copied', type: ToastType.success);
+    IosToast.show(context, message: context.l10n.giftCodeCopied, type: ToastType.success);
   }
 
   void _showGiftReady(GiftCode gift) {
@@ -139,7 +131,7 @@ class _GiftScreenState extends State<GiftScreen> {
             Text('🎁', style: TextStyle(fontSize: 44.sp)),
             SizedBox(height: 8.h),
             Text(
-              'Your gift is ready!',
+              context.l10n.giftReady,
               style: TextStyle(
                 fontFamily: 'Rubik',
                 fontWeight: FontWeight.w700,
@@ -149,7 +141,7 @@ class _GiftScreenState extends State<GiftScreen> {
             ),
             SizedBox(height: 6.h),
             Text(
-              'Send this ${gift.planLabel} code to a friend. We also emailed it to you.',
+              context.l10n.giftSendThisCode(gift.planLabel),
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontFamily: 'Rubik',
@@ -161,7 +153,7 @@ class _GiftScreenState extends State<GiftScreen> {
             _CodeBox(code: gift.code, onTap: () => _copy(gift)),
             SizedBox(height: 20.h),
             RedButton(
-              label: 'Send to a friend',
+              label: context.l10n.giftSendToFriend,
               onTap: () {
                 Navigator.pop(sheetContext);
                 _share(gift);
@@ -176,7 +168,7 @@ class _GiftScreenState extends State<GiftScreen> {
   @override
   Widget build(BuildContext context) {
     return ProfileSubpageScaffold(
-      title: 'Gift Cooked',
+      title: context.l10n.giftTitle,
       child: _loading
           ? const Center(child: CircularProgressIndicator.adaptive())
           : RefreshIndicator.adaptive(
@@ -185,7 +177,7 @@ class _GiftScreenState extends State<GiftScreen> {
                 padding: EdgeInsets.fromLTRB(20.w, 4.h, 20.w, 40.h + MediaQuery.of(context).padding.bottom),
                 children: [
                   Text(
-                    'Give the gift of Cooked',
+                    context.l10n.giftHeadline,
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontFamily: 'Rubik',
@@ -196,7 +188,7 @@ class _GiftScreenState extends State<GiftScreen> {
                   ),
                   SizedBox(height: 6.h),
                   Text(
-                    "Buy a gift code and send it to a friend. They redeem it in the app - no subscription needed on their side.",
+                    context.l10n.giftSubtitle,
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontFamily: 'Rubik',
@@ -206,7 +198,7 @@ class _GiftScreenState extends State<GiftScreen> {
                     ),
                   ),
                   SizedBox(height: 20.h),
-                  for (final (id, title, description, bestValue) in _plans) ...[
+                  for (final (id, title, description, bestValue) in _plans(context)) ...[
                     _GiftCard(
                       title: title,
                       price: _products[id]?.priceString,
@@ -221,7 +213,7 @@ class _GiftScreenState extends State<GiftScreen> {
                   if (_gifts.isNotEmpty) ...[
                     SizedBox(height: 12.h),
                     Text(
-                      'Your gifts',
+                      context.l10n.giftYourGifts,
                       style: TextStyle(
                         fontFamily: 'Rubik',
                         fontWeight: FontWeight.w700,
@@ -289,7 +281,7 @@ class _GiftCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(999),
                   ),
                   child: Text(
-                    'Best value',
+                    context.l10n.giftBestValue,
                     style: TextStyle(
                       fontFamily: 'Rubik',
                       fontWeight: FontWeight.w600,
@@ -331,8 +323,8 @@ class _GiftCard extends StatelessWidget {
           ),
           SizedBox(height: 16.h),
           RedButton(
-            label: 'Buy gift',
-            loadingLabel: 'Processing...',
+            label: context.l10n.giftBuy,
+            loadingLabel: context.l10n.commonProcessingDots,
             isLoading: isLoading,
             isDisabled: isDisabled,
             onTap: onBuy,
@@ -354,10 +346,10 @@ class _GiftRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.colors;
     final statusLabel = gift.isAvailable
-        ? 'Not used yet'
+        ? context.l10n.giftNotUsed
         : gift.isRedeemed
-            ? 'Redeemed'
-            : 'Refunded';
+            ? context.l10n.giftRedeemed
+            : context.l10n.giftRefunded;
     return Container(
       margin: EdgeInsets.only(bottom: 10.h),
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
@@ -441,7 +433,7 @@ class _CodeBox extends StatelessWidget {
             ),
             SizedBox(height: 4.h),
             Text(
-              'Tap to copy',
+              context.l10n.giftTapToCopy,
               style: TextStyle(fontFamily: 'Rubik', fontSize: 12.sp, color: context.colors.textSecondary),
             ),
           ],

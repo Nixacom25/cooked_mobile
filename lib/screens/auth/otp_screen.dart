@@ -9,6 +9,7 @@ import '../../widgets/glass_icon_button.dart';
 import '../../widgets/red_button.dart';
 import '../../widgets/loading_text.dart';
 import '../../widgets/red_header_background.dart';
+import '../../core/l10n/l10n.dart';
 
 class OtpScreen extends StatefulWidget {
   const OtpScreen({super.key});
@@ -74,7 +75,7 @@ class _OtpScreenState extends State<OtpScreen> {
     if (code.length < _otpLength) {
       IosToast.show(
         context,
-        message: 'Please enter the complete 6-digit code.',
+        message: context.l10n.authEnterFullCode,
         type: ToastType.success,
       );
       return;
@@ -109,7 +110,7 @@ class _OtpScreenState extends State<OtpScreen> {
       if (!mounted) return;
       IosToast.show(
         context,
-        message: 'Verification code resent.',
+        message: context.l10n.authCodeResent,
         type: ToastType.success,
       );
     } catch (e) {
@@ -198,7 +199,7 @@ class _OtpScreenState extends State<OtpScreen> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                            'Please enter the code\nwe just sent to ${identifier ?? 'your email'}',
+                            context.l10n.authCodeSentTo(identifier ?? context.l10n.authYourEmailFallback),
                             textAlign: TextAlign.center,
                             style: const TextStyle(
                               fontSize: 18,
@@ -232,8 +233,8 @@ class _OtpScreenState extends State<OtpScreen> {
 
                           const SizedBox(height: 24),
 
-                          const Text(
-                            "If you didn't receive a code ?",
+                          Text(
+                            context.l10n.authDidntReceiveCode,
                             style: TextStyle(
                               color: Colors.white70,
                               fontFamily: 'SF Pro',
@@ -250,8 +251,8 @@ class _OtpScreenState extends State<OtpScreen> {
                                     }
                                   },
                             child: _isResending
-                                ? const LoadingText(
-                                    text: 'Resending',
+                                ? LoadingText(
+                                    text: context.l10n.authResending,
                                     style: TextStyle(
                                       color: Color(0xFFFFF6D6),
                                       fontFamily: 'SF Pro',
@@ -259,8 +260,8 @@ class _OtpScreenState extends State<OtpScreen> {
                                       fontSize: 14,
                                     ),
                                   )
-                                : const Text(
-                                    'Resend Code',
+                                : Text(
+                                    context.l10n.authResendCode,
                                     style: TextStyle(
                                       color: Color(0xFFFFF6D6),
                                       fontFamily: 'SF Pro',
@@ -273,8 +274,8 @@ class _OtpScreenState extends State<OtpScreen> {
                           const SizedBox(height: 28),
 
                           RedButton(
-                            label: 'Confirm',
-                            loadingLabel: 'Verifying',
+                            label: context.l10n.commonConfirm,
+                            loadingLabel: context.l10n.authVerifying,
                             isLoading: _isLoading,
                             onTap: () {
                               if (identifier != null) {
@@ -282,7 +283,7 @@ class _OtpScreenState extends State<OtpScreen> {
                               } else {
                                 IosToast.show(
                                   context,
-                                  message: 'Missing identifier context. Please try again.',
+                                  message: context.l10n.authMissingIdentifier,
                                   type: ToastType.success,
                                 );
                               }
@@ -320,8 +321,8 @@ class _OtpScreenState extends State<OtpScreen> {
                     color: AppColors.textDark,
                   ),
                 ),
-                const Text(
-                  'VERIFICATION CODE',
+                Text(
+                  context.l10n.authVerificationCodeLabel,
                   style: TextStyle(
                     fontFamily: 'SF Pro',
                     fontWeight: FontWeight.w800,

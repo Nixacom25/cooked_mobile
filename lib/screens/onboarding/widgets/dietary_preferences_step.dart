@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'selection_onboarding_step.dart';
+import '../../../core/l10n/l10n.dart';
 
 class DietaryPreferencesStep extends StatefulWidget {
   final VoidCallback? onContinue;
@@ -60,8 +61,8 @@ class _DietaryPreferencesStepState extends State<DietaryPreferencesStep> {
   @override
   Widget build(BuildContext context) {
     return SelectionOnboardingStep(
-      title: "What's your dietary profile?",
-      subtitle: "Select all that apply.",
+      title: context.l10n.onbDietTitle,
+      subtitle: context.l10n.commonSelectAllThatApply,
       useGrid: true,
       preserveSvgColor: true,
       maxSelections: 10,

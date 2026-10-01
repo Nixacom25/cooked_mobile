@@ -144,6 +144,7 @@ class RecentImportTile extends StatelessWidget {
                     active: isValidated,
                     ringColor: context.colors.accent,
                     ringSize: 36.r,
+                    iconSize: 18.r,
                     child: SvgPicture.asset(
                       isValidated
                           ? 'assets/icones/coeur.svg'

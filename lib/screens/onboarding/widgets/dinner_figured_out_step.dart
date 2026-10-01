@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../widgets/red_button.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/l10n/l10n.dart';
 
 class DinnerFiguredOutStep extends StatefulWidget {
   final VoidCallback onContinue;
@@ -130,9 +131,9 @@ class _DinnerFiguredOutStepState extends State<DinnerFiguredOutStep> with Single
                                 height: 1.2,
                                 letterSpacing: -0.3),
                               children: [
-                                TextSpan(text: 'Imagine dinner\nalready '),
+                                TextSpan(text: context.l10n.onbDinnerTitleA),
                                 TextSpan(
-                                  text: 'figured out',
+                                  text: context.l10n.onbDinnerTitleB,
                                   style: TextStyle(color: context.colors.accent)),
                               ])))),
                       SizedBox(height: 10.h),
@@ -141,7 +142,7 @@ class _DinnerFiguredOutStepState extends State<DinnerFiguredOutStep> with Single
                         child: SlideTransition(
                           position: _subtitleSlide,
                           child: Text(
-                            'No stress. No guesswork',
+                            context.l10n.onbDinnerSubtitle,
                             textAlign: TextAlign.left,
                             style: GoogleFonts.poppins(
                               fontSize: 16.sp,
@@ -160,7 +161,7 @@ class _DinnerFiguredOutStepState extends State<DinnerFiguredOutStep> with Single
                       child: Padding(
                         padding: EdgeInsets.fromLTRB(24.w, 12.h, 24.w, 20.h),
                         child: RedButton(
-                          label: 'Continue',
+                          label: context.l10n.commonContinue,
                           color: context.colors.accent,
                           onTap: widget.onContinue,
                           height: 52.h,

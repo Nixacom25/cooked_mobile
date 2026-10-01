@@ -7,6 +7,7 @@ import '../../widgets/glass_icon_button.dart';
 import '../../widgets/red_header_background.dart';
 import '../../widgets/app_loading_indicator.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/l10n/l10n.dart';
 
 class ChangePasswordScreen extends StatefulWidget {
   const ChangePasswordScreen({super.key});
@@ -41,7 +42,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     if (oldPass.isEmpty || newPass.isEmpty || confirmPass.isEmpty) {
       IosToast.show(
         context,
-        message: 'Please fill in all fields.',
+        message: context.l10n.pwdFillAllFields,
         type: ToastType.error,
       );
       return;
@@ -49,7 +50,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     if (newPass != confirmPass) {
       IosToast.show(
         context,
-        message: 'New passwords do not match.',
+        message: context.l10n.pwdNoMatch,
         type: ToastType.error,
       );
       return;
@@ -64,7 +65,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
       if (!mounted) return;
       IosToast.show(
         context,
-        message: 'Password updated successfully.',
+        message: context.l10n.pwdUpdated,
         type: ToastType.success,
       );
       Navigator.pop(context);
@@ -120,7 +121,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                         ),
                         Expanded(
                           child: Text(
-                            'New Password',
+                            context.l10n.authNewPassword,
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontFamily: 'Rubik',
@@ -142,7 +143,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _buildLabel('Password'),
+                          _buildLabel(context.l10n.pwdCurrentPassword),
                           SizedBox(height: 8.h),
                           _buildPasswordField(
                             controller: _oldPasswordCtrl,
@@ -151,7 +152,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                           ),
                           SizedBox(height: 20.h),
 
-                          _buildLabel('New Password'),
+                          _buildLabel(context.l10n.authNewPassword),
                           SizedBox(height: 8.h),
                           _buildPasswordField(
                             controller: _newPasswordCtrl,
@@ -160,7 +161,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                           ),
                           SizedBox(height: 20.h),
 
-                          _buildLabel('Confirm Password'),
+                          _buildLabel(context.l10n.authConfirmPassword),
                           SizedBox(height: 8.h),
                           _buildPasswordField(
                             controller: _confirmPasswordCtrl,
@@ -189,7 +190,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                                         ),
                                       )
                                     : Text(
-                                        'Change Password',
+                                        context.l10n.settingsChangePassword,
                                         style: TextStyle(
                                           fontFamily: 'Rubik',
                                           fontWeight: FontWeight.w700,

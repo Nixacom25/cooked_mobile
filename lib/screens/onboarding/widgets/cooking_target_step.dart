@@ -5,6 +5,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter/services.dart';
 import '../../../widgets/red_button.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/l10n/option_labels.dart';
+import '../../../core/l10n/l10n.dart';
 
 class CookingTargetStep extends StatefulWidget {
   final String initialTarget;
@@ -63,7 +65,7 @@ class _CookingTargetStepState extends State<CookingTargetStep> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Who are you usually\ncooking for?',
+                  context.l10n.onbTargetTitle,
                   style: GoogleFonts.rubik(
                     fontSize: 32.sp,
                     fontWeight: FontWeight.w500,
@@ -71,7 +73,7 @@ class _CookingTargetStepState extends State<CookingTargetStep> {
                     height: 1.15)),
                 SizedBox(height: 10.h),
                 Text(
-                  "This helps us recommend the right portions",
+                  context.l10n.onbTargetSubtitle,
                   style: GoogleFonts.poppins(
                     fontSize: 15.sp,
                     color: context.colors.textPrimary,
@@ -88,7 +90,7 @@ class _CookingTargetStepState extends State<CookingTargetStep> {
               top: false,
               bottom: true,
               child: RedButton(
-                label: 'Continue',
+                label: context.l10n.commonContinue,
                 color: context.colors.accent,
                 onTap: widget.onContinue!,
                 height: 52.h,
@@ -135,7 +137,7 @@ class _CookingTargetStepState extends State<CookingTargetStep> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      opt['title']!,
+                      optionLabel(context, opt['title']!),
                       style: GoogleFonts.rubik(fontSize: 15.sp,
                         fontWeight: FontWeight.w500,
                         color: isSelected
@@ -143,7 +145,7 @@ class _CookingTargetStepState extends State<CookingTargetStep> {
                             : context.colors.textPrimary)),
                     SizedBox(height: 2.h),
                     Text(
-                      opt['subtitle']!,
+                      optionLabel(context, opt['subtitle']!),
                       style: GoogleFonts.poppins(fontSize: 13.sp,
                         color: context.colors.textPrimary)),
                   ])),

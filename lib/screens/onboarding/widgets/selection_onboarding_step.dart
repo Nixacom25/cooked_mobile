@@ -4,6 +4,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../../widgets/red_button.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/l10n/option_labels.dart';
+import '../../../core/l10n/l10n.dart';
 
 class SelectionOption {
   final String id;
@@ -310,7 +312,7 @@ class _SelectionOnboardingStepState extends State<SelectionOnboardingStep> with 
                                                       size: 24.sp),
                                                   SizedBox(height: 8.h),
                                                   Text(
-                                                    option.label,
+                                                    optionLabel(context, option.label),
                                                     textAlign: TextAlign.center,
                                                     style: GoogleFonts.rubik(
                                                       fontSize: 14.sp,
@@ -340,7 +342,7 @@ class _SelectionOnboardingStepState extends State<SelectionOnboardingStep> with 
                                             ],
                                             Expanded(
                                               child: Text(
-                                                option.label,
+                                                optionLabel(context, option.label),
                                                 textAlign: TextAlign.start,
                                                 style: GoogleFonts.rubik(
                                                   fontSize: 15.sp,
@@ -402,7 +404,7 @@ class _SelectionOnboardingStepState extends State<SelectionOnboardingStep> with 
                                       ],
                                       Expanded(
                                         child: Text(
-                                          option.label,
+                                          optionLabel(context, option.label),
                                           style: GoogleFonts.rubik(
                                             fontSize: 15.sp,
                                             fontWeight: FontWeight.w500,
@@ -453,7 +455,7 @@ class _SelectionOnboardingStepState extends State<SelectionOnboardingStep> with 
                     child: Padding(
                       padding: EdgeInsets.fromLTRB(24.w, 8.h, 24.w, 20.h),
                       child: RedButton(
-                        label: 'Continue',
+                        label: context.l10n.commonContinue,
                         color: context.colors.accent,
                         onTap: widget.onContinue!,
                         isDisabled: _selectedIds.isEmpty,

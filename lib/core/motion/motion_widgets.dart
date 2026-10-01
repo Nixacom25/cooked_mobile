@@ -17,3 +17,4 @@ export 'scroll_hint.dart';
 export 'recipe_hero.dart';
 export 'presence.dart';
 export 'sliding_pill_chips.dart';
+export 'shimmer_text.dart';

@@ -7,6 +7,8 @@ import '../core/utils/error_helper.dart';
 import 'glass_icon_button.dart';
 import 'red_button.dart';
 import '../core/theme/app_theme.dart';
+import '../core/motion/motion_widgets.dart';
+import '../core/l10n/l10n.dart';
 
 class AddToGroceryModal extends StatefulWidget {
   final Recipe recipe;
@@ -56,8 +58,94 @@ class _AddToGroceryModalState extends State<AddToGroceryModal> {
 
   bool get _canSubmit => _selectedIngredients.any((selected) => selected) && !_isSaving;
 
+  /// True when this recipe already has ingredients in the grocery list.
+  Future<bool> _alreadyInGroceryList() async {
+    if (widget.recipe.id.isEmpty) return false;
+    var items = GroceryService.instance.myGroceriesNotifier.value;
+    if (items == null) {
+      try {
+        items = await GroceryService.instance.getMyGroceries();
+      } catch (_) {
+        return false;
+      }
+    }
+    return items.any((i) => i.recipeId == widget.recipe.id);
+  }
+
+  Future<bool> _confirmAddAgain() async {
+    final confirmed = await showGlassSheet<bool>(
+      context,
+      builder: (sheetContext) => Container(
+        padding: EdgeInsets.fromLTRB(24.w, 24.h, 24.w, 20.h + MediaQuery.of(sheetContext).padding.bottom),
+        decoration: BoxDecoration(
+          color: context.colors.surface,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28.r)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.shopping_basket_outlined, size: 40.sp, color: context.colors.accent),
+            SizedBox(height: 12.h),
+            Text(
+              context.l10n.groceryAlreadyTitle,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontFamily: 'Rubik',
+                fontWeight: FontWeight.w700,
+                fontSize: 19.sp,
+                color: context.colors.textPrimary,
+              ),
+            ),
+            SizedBox(height: 8.h),
+            Text(
+              context.l10n.groceryAlreadyMessage(widget.recipe.name) +
+                  context.l10n.groceryQuantitiesDoubled,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontFamily: 'Rubik',
+                fontSize: 14.sp,
+                height: 1.4,
+                color: context.colors.textSecondary,
+              ),
+            ),
+            SizedBox(height: 20.h),
+            RedButton(
+              label: context.l10n.groceryAddAgain,
+              onTap: () => Navigator.pop(sheetContext, true),
+              color: context.colors.accent,
+              textColor: Colors.white,
+              height: 52.h,
+            ),
+            SizedBox(height: 8.h),
+            TextButton(
+              onPressed: () => Navigator.pop(sheetContext, false),
+              child: Text(
+                context.l10n.commonCancel,
+                style: TextStyle(
+                  fontFamily: 'Rubik',
+                  fontWeight: FontWeight.w600,
+                  fontSize: 15.sp,
+                  color: context.colors.textSecondary,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+    return confirmed == true;
+  }
+
   Future<void> _handleSave() async {
     if (!_canSubmit) return;
+
+    // Same recipe added twice: ask first. Confirming merges the new
+    // quantities with the existing ones (shown summed in the list).
+    if (await _alreadyInGroceryList()) {
+      if (!mounted) return;
+      if (!await _confirmAddAgain()) return;
+      if (!mounted) return;
+    }
 
     setState(() => _isSaving = true);
     try {
@@ -133,7 +221,7 @@ class _AddToGroceryModalState extends State<AddToGroceryModal> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Add to Grocery List',
+                  context.l10n.groceryAddToList,
                   style: TextStyle(
                     fontFamily: 'Rubik',
                     fontWeight: FontWeight.w700,
@@ -162,7 +250,7 @@ class _AddToGroceryModalState extends State<AddToGroceryModal> {
               padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
               children: [
                 Text(
-                  'Select Ingredients',
+                  context.l10n.grocerySelectIngredients,
                   style: TextStyle(
                     fontFamily: 'Rubik',
                     fontWeight: FontWeight.w700,
@@ -227,7 +315,7 @@ class _AddToGroceryModalState extends State<AddToGroceryModal> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'Save Location',
+                      context.l10n.grocerySaveLocation,
                       style: TextStyle(
                         fontFamily: 'Rubik',
                         fontWeight: FontWeight.w700,
@@ -237,7 +325,7 @@ class _AddToGroceryModalState extends State<AddToGroceryModal> {
                     ),
                     if (_isSpecificDate && _selectedDate != null)
                       Text(
-                        "Date: ${_fmtDate(_selectedDate!)}",
+                        context.l10n.groceryDate(_fmtDate(_selectedDate!)),
                         style: TextStyle(
                           fontFamily: 'Rubik',
                           fontWeight: FontWeight.w700,
@@ -254,7 +342,7 @@ class _AddToGroceryModalState extends State<AddToGroceryModal> {
                   children: [
                     Expanded(
                       child: _LocationOption(
-                        label: 'General List',
+                        label: context.l10n.groceryGeneralList,
                         icon: Icons.inventory_2_outlined,
                         selected: !_isSpecificDate,
                         onTap: () => setState(() => _isSpecificDate = false),
@@ -263,7 +351,7 @@ class _AddToGroceryModalState extends State<AddToGroceryModal> {
                     SizedBox(width: 12.w),
                     Expanded(
                       child: _LocationOption(
-                        label: 'Specific Date',
+                        label: context.l10n.grocerySpecificDate,
                         icon: Icons.calendar_today_outlined,
                         selected: _isSpecificDate,
                         onTap: () async {
@@ -292,8 +380,8 @@ class _AddToGroceryModalState extends State<AddToGroceryModal> {
           Padding(
             padding: EdgeInsets.fromLTRB(20.w, 10.h, 20.w, 10.h + bottomPad),
             child: RedButton(
-              label: 'Add selected ingredients',
-              loadingLabel: 'Saving',
+              label: context.l10n.groceryAddSelected,
+              loadingLabel: context.l10n.commonSaving,
               isLoading: _isSaving,
               isDisabled: !_canSubmit,
               onTap: _handleSave,

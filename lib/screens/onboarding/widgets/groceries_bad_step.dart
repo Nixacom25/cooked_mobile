@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'selection_onboarding_step.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/l10n/l10n.dart';
 
 class GroceriesBadStep extends StatefulWidget {
   final ValueChanged<int> onContinue;
@@ -57,7 +58,7 @@ class _GroceriesBadStepState extends State<GroceriesBadStep> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'The average household wastes', 
+            context.l10n.onbHouseholdWastes, 
             style: GoogleFonts.rubik(
               color: context.colors.textSecondary, 
               fontSize: 14.sp,
@@ -68,7 +69,7 @@ class _GroceriesBadStepState extends State<GroceriesBadStep> {
             textBaseline: TextBaseline.alphabetic,
             children: [
               Text(
-                'over ',
+                context.l10n.onbOver,
                 style: GoogleFonts.poppins(
                   color: context.colors.textPrimary,
                   fontSize: 14.sp,
@@ -95,8 +96,8 @@ class _GroceriesBadStepState extends State<GroceriesBadStep> {
   @override
   Widget build(BuildContext context) {
     return SelectionOnboardingStep(
-      title: 'How often do groceries go unused?',
-      subtitle: 'Take your best guess. We’ll do the math',
+      title: context.l10n.onbGroceriesUnusedTitle,
+      subtitle: context.l10n.onbBestGuess,
       maxSelections: 1,
       useGrid: true,
       initialSelected: [_selectedValue],

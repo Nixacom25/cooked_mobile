@@ -5,6 +5,7 @@ import '../../widgets/preference_step_scaffold.dart';
 import '../../core/widgets/ios_toast.dart';
 import '../onboarding/widgets/allergies_step.dart';
 import 'preferences_helpers.dart';
+import '../../core/l10n/l10n.dart';
 
 /// Profile > Allergies - promoted out of the general Dietary Preferences
 /// hub into its own top-level entry.
@@ -49,14 +50,14 @@ class _AllergiesScreenState extends State<AllergiesScreen> {
       );
     } catch (e) {
       if (!mounted) return;
-      IosToast.show(context, message: 'Failed to update allergies', type: ToastType.error);
+      IosToast.show(context, message: context.l10n.prefsAllergiesUpdateFailed, type: ToastType.error);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return PreferenceStepScaffold(
-      title: 'Allergies',
+      title: context.l10n.settingsAllergies,
       step: AllergiesStep(
         initialSelected: _selected,
         onChanged: (val) => _selected = val,

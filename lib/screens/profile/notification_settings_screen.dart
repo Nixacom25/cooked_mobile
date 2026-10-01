@@ -7,6 +7,7 @@ import '../../core/theme/app_theme.dart';
 import '../../core/widgets/ios_toast.dart';
 import '../../core/utils/error_helper.dart';
 import '../../core/motion/motion_widgets.dart';
+import '../../core/l10n/l10n.dart';
 
 /// Profile > Settings > Notifications. Lets users opt out of push categories
 /// that are genuinely optional. Account-security alerts (new sign-in,
@@ -115,7 +116,7 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
                         ),
                         Expanded(
                           child: Text(
-                            'Notifications',
+                            context.l10n.settingsNotifications,
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontFamily: 'Rubik',
@@ -134,8 +135,8 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
                       padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 8.h),
                       children: [
                         _NotificationToggleRow(
-                          title: 'Push Notifications',
-                          subtitle: 'Receive notifications on this device',
+                          title: context.l10n.notifPush,
+                          subtitle: context.l10n.notifPushSubtitle,
                           value: _pushEnabled,
                           onChanged: _saving ? null : (v) => _apply(pushEnabled: v),
                         ),
@@ -147,8 +148,8 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
                             child: Column(
                               children: [
                                 _NotificationToggleRow(
-                                  title: 'Reminders',
-                                  subtitle: 'Trial ending and subscription reminders',
+                                  title: context.l10n.notifReminders,
+                                  subtitle: context.l10n.notifRemindersSubtitle,
                                   value: _pushRemindersEnabled,
                                   onChanged: _saving
                                       ? null
@@ -160,8 +161,8 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
                                   color: context.colors.pageBackground,
                                 ),
                                 _NotificationToggleRow(
-                                  title: 'News, Tips & Offers',
-                                  subtitle: 'New features, recipes and special offers',
+                                  title: context.l10n.notifNews,
+                                  subtitle: context.l10n.notifNewsSubtitle,
                                   value: _pushNewsOffersEnabled,
                                   onChanged: _saving
                                       ? null
@@ -173,8 +174,7 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
                         ),
                         SizedBox(height: 20.h),
                         Text(
-                          'Account and security alerts (like new sign-ins or payment '
-                          'issues) are always sent while push notifications are enabled.',
+                          context.l10n.notifSecurityNote,
                           style: TextStyle(
                             fontFamily: 'Rubik',
                             fontSize: 13.sp,

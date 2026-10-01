@@ -10,6 +10,7 @@ import '../models/recipe.dart';
 import '../core/widgets/ios_toast.dart';
 import '../core/theme/app_theme.dart';
 import '../services/error_monitoring_service.dart';
+import '../core/l10n/l10n.dart';
 
 enum _AnimationPlatform { ios, android }
 
@@ -148,7 +149,6 @@ class _ScanAnimationOverlayState extends State<ScanAnimationOverlay> {
     _maxTimeoutTimer?.cancel();
     _imageScanTimer?.cancel();
     _videoController?.dispose();
-    debugPrint('🎬 ScanAnimationOverlay disposed');
     super.dispose();
   }
 
@@ -168,17 +168,14 @@ class _ScanAnimationOverlayState extends State<ScanAnimationOverlay> {
         ? 'assets/animations/cooked_dark.mp4'
         : 'assets/animations/cooked.mp4';
 
-    debugPrint('🎬 Preparing video: $assetPath (isDark: $_isDark)');
 
     if (_videoController == null ||
         _videoController!.dataSource != assetPath) {
       _videoController?.dispose();
       _videoController = VideoPlayerController.asset(assetPath);
       _videoInitialization = _videoController!.initialize().then((_) {
-        debugPrint('✅ Video initialized successfully: ${_videoController!.value.size}');
         _videoController!.setLooping(false);
       }).catchError((error) {
-        debugPrint('❌ Video initialization failed for $assetPath: $error');
         throw error;
       });
     }
@@ -192,7 +189,6 @@ class _ScanAnimationOverlayState extends State<ScanAnimationOverlay> {
     }
     await _videoController!.seekTo(Duration.zero);
     await _videoController!.play();
-    debugPrint('✅ Video playing successfully (isDark: $_isDark)');
   }
 
   Future<void> _showAnimation() async {
@@ -202,7 +198,6 @@ class _ScanAnimationOverlayState extends State<ScanAnimationOverlay> {
           await _playVideo();
         } catch (error) {
           if (!_isDark || _darkVideoFailed) rethrow;
-          debugPrint('❌ Dark video failed, using light video: $error');
           ErrorMonitoringService.instance.recordRiveAnimationFailure(
             animationName: 'cooked_dark.mp4',
             reason: error.toString(),
@@ -211,7 +206,6 @@ class _ScanAnimationOverlayState extends State<ScanAnimationOverlay> {
           await _playVideo();
         }
       } catch (error) {
-        debugPrint('❌ Video animation failed, falling back to Rive: $error');
         ErrorMonitoringService.instance.recordRiveAnimationFailure(
           animationName: 'cooked.mp4',
           reason: error.toString(),
@@ -385,7 +379,6 @@ class _FallbackScanAnimationState extends State<_FallbackScanAnimation> {
       // "loading" state - force the native spinner instead of a blank screen.
       _riveLoadTimeoutTimer = Timer(const Duration(seconds: 8), () {
         if (mounted && !_riveLoaded) {
-          debugPrint('⏱️ Rive load timed out, falling back to native spinner');
           if (context.mounted) {
             IosToast.show(
               context,
@@ -422,12 +415,6 @@ class _FallbackScanAnimationState extends State<_FallbackScanAnimation> {
         artboardSelector: const ArtboardDefault(),
         stateMachineSelector: const StateMachineDefault(),
         onLoaded: (RiveLoaded state) {
-          debugPrint(
-            '✅ Rive animation cooked_no_scan.riv loaded using Factory.flutter!',
-          );
-          debugPrint('📱 Platform: ${defaultTargetPlatform.name}');
-          debugPrint('🎨 Artboard size: ${state.controller.artboard?.bounds}');
-          debugPrint('🔧 State machine inputs: ${state.controller.stateMachine?.inputs}');
           
           _riveLoaded = true;
           _riveLoadTimeoutTimer?.cancel();
@@ -437,9 +424,7 @@ class _FallbackScanAnimationState extends State<_FallbackScanAnimation> {
             // ignore: deprecated_member_use
             final burst = sm.boolean('burstActive');
             burst?.value = true;
-            debugPrint('✅ Set burstActive to true');
           } catch (e) {
-            debugPrint('⚠️ Rive input burstActive notice: $e');
           }
 
           try {
@@ -451,26 +436,20 @@ class _FallbackScanAnimationState extends State<_FallbackScanAnimation> {
                 // ignore: deprecated_member_use
                 sm.boolean('cookingPhase');
             skipScan?.value = true;
-            debugPrint('✅ Set skipScan/directRecipes/cookingPhase to true');
           } catch (e) {
-            debugPrint('⚠️ Rive input skipScan notice: $e');
           }
 
           // iOS-specific: Ensure proper artboard alignment
           if (defaultTargetPlatform == TargetPlatform.iOS) {
-            debugPrint('🍎 iOS-specific: Configuring artboard alignment');
             // Note: ArtboardOrigin may not be available in current Rive version
             // This is handled by fit and alignment parameters instead
           }
         },
         onFailed: (Object error, StackTrace stackTrace) {
-          debugPrint('❌ RIVE LOAD ERROR on ${defaultTargetPlatform.name}: $error');
-          debugPrint('❌ Stack trace: $stackTrace');
           _riveLoadTimeoutTimer?.cancel();
           
           // Record Rive animation failure for monitoring
           if (defaultTargetPlatform == TargetPlatform.iOS) {
-            debugPrint('🍎 iOS Rive failure detected - recording error');
             ErrorMonitoringService.instance.recordRiveAnimationFailure(
               animationName: widget.isDark ? 'cooked_rkdarkm.riv' : 'cooked_no_scan.riv',
               reason: error.toString(),
@@ -489,7 +468,6 @@ class _FallbackScanAnimationState extends State<_FallbackScanAnimation> {
         builder: (context, state) {
           switch (state) {
             case RiveLoaded loadedState:
-              debugPrint('🎨 Rendering Rive widget with fit: Fit.cover');
               return RepaintBoundary(
                 child: RiveWidget(
                   controller: loadedState.controller,
@@ -498,12 +476,10 @@ class _FallbackScanAnimationState extends State<_FallbackScanAnimation> {
                 ),
               );
             case RiveFailed():
-              debugPrint('⚠️ Rive state is RiveFailed, using fallback spinner');
               return _NativeSpinnerFallback(
                 skipImageAnalysis: widget.skipImageAnalysis,
               );
             case RiveLoading():
-              debugPrint('⏳ Rive loading on ${defaultTargetPlatform.name}');
               // Do not display spinner before Rive launches - keep background clean
               return const SizedBox.expand();
           }
@@ -815,8 +791,8 @@ class _NativeSpinnerFallbackState extends State<_NativeSpinnerFallback>
           SizedBox(height: 24.h),
           Text(
             widget.skipImageAnalysis
-                ? 'Generating recipes...'
-                : 'Analyzing recipe...',
+                ? context.l10n.scanGeneratingRecipes
+                : context.l10n.scanAnalyzingRecipe,
             style: TextStyle(
               fontFamily: 'Rubik',
               fontWeight: FontWeight.w700,

@@ -8,6 +8,7 @@ import '../../widgets/glass_icon_button.dart';
 import '../../widgets/red_header_background.dart';
 import '../../core/theme/app_theme.dart';
 import 'send_feedback_screen.dart';
+import '../../core/l10n/l10n.dart';
 
 class HelpCenterScreen extends StatefulWidget {
   const HelpCenterScreen({super.key});
@@ -22,7 +23,6 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
     try {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } catch (e) {
-      debugPrint('Could not launch $url : $e');
     }
   }
 
@@ -30,28 +30,16 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
     LegalContentModal.show(context, title: title, content: content);
   }
 
-  static const _faqs = [
-    (
-      'How do I import a recipe?',
-      'Go to the Import tab, paste a link, or use the camera to scan a recipe.',
-    ),
-    (
-      'Can I share my recipes?',
-      'Yes! Open a recipe and tap the share button in the top right corner.',
-    ),
-    (
-      'How do I create a cookbook?',
-      'From the Home tab, tap the « + » button next to Your Cookbooks.',
-    ),
-    (
-      'How do I change my password?',
-      'Go to Profile → Security and enter your new password.',
-    ),
-    (
-      'Is there a web version?',
-      'No, Cooked is currently available as a mobile app only.',
-    ),
-  ];
+  static List<(String, String)> _faqs(BuildContext context) {
+    final l10n = context.l10n;
+    return [
+      (l10n.faqImportQ, l10n.faqImportA),
+      (l10n.faqShareQ, l10n.faqShareA),
+      (l10n.faqCookbookQ, l10n.faqCookbookA),
+      (l10n.faqPasswordQ, l10n.faqPasswordA),
+      (l10n.faqWebQ, l10n.faqWebA),
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -94,7 +82,7 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
                         ),
                         Expanded(
                           child: Text(
-                            'Help Center',
+                            context.l10n.helpTitle,
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontFamily: 'Rubik',
@@ -117,7 +105,7 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Tell us how we can help 👋\nChapters are standing by for service & support!',
+                            context.l10n.helpHeadline,
                             style: TextStyle(
                               fontFamily: 'Rubik',
                               fontWeight: FontWeight.w400,
@@ -131,8 +119,8 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
                           // Email Card
                           _buildContactCard(
                             icon: Icons.mail_outline_rounded,
-                            title: 'Email',
-                            subtitle: 'Send to your email',
+                            title: context.l10n.commonEmail,
+                            subtitle: context.l10n.authSendToEmail,
                             onTap: () => _openUrl('mailto:contact@cookedapp.com'),
                           ),
                           SizedBox(height: 14.h),
@@ -140,8 +128,8 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
                           // Phone Card
                           _buildContactCard(
                             icon: Icons.phone_outlined,
-                            title: 'Phone Number',
-                            subtitle: 'Send to your phone',
+                            title: context.l10n.commonPhoneNumber,
+                            subtitle: context.l10n.authSendToPhone,
                             onTap: () => _openUrl('tel:+1234567890'),
                           ),
                           SizedBox(height: 14.h),
@@ -149,8 +137,8 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
                           // Feedback Card
                           _buildContactCard(
                             icon: Icons.chat_bubble_outline_rounded,
-                            title: 'Send Feedback',
-                            subtitle: 'Bugs, ideas, or anything else',
+                            title: context.l10n.helpSendFeedback,
+                            subtitle: context.l10n.helpSendFeedbackSubtitle,
                             onTap: () => Navigator.push(
                               context,
                               MaterialPageRoute(builder: (_) => const SendFeedbackScreen()),
@@ -160,7 +148,7 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
 
                           // Legal Policies
                           Text(
-                            'Legal & Policies',
+                            context.l10n.helpLegal,
                             style: TextStyle(
                               fontFamily: 'Rubik',
                               fontWeight: FontWeight.w700,
@@ -179,23 +167,23 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
                             children: [
                               _PolicyButton(
                                 icon: Icons.description_outlined,
-                                label: 'Terms & Conditions',
-                                onTap: () => _showPolicy('Terms & Conditions', dummyTerms),
+                                label: context.l10n.legalTerms,
+                                onTap: () => _showPolicy(context.l10n.legalTerms, dummyTerms),
                               ),
                               _PolicyButton(
                                 icon: Icons.receipt_long_outlined,
-                                label: 'Refund Policy',
-                                onTap: () => _showPolicy('Refund & Cancellation', dummyRefund),
+                                label: context.l10n.legalRefund,
+                                onTap: () => _showPolicy(context.l10n.legalRefundCancellation, dummyRefund),
                               ),
                               _PolicyButton(
                                 icon: Icons.policy_outlined,
-                                label: 'Privacy Policy',
-                                onTap: () => _showPolicy('Privacy Policy', dummyPrivacy),
+                                label: context.l10n.commonPrivacyPolicy,
+                                onTap: () => _showPolicy(context.l10n.commonPrivacyPolicy, dummyPrivacy),
                               ),
                               _PolicyButton(
                                 icon: Icons.cookie_outlined,
-                                label: 'Cookie Policy',
-                                onTap: () => _showPolicy('Cookie Policy', dummyCookies),
+                                label: context.l10n.legalCookies,
+                                onTap: () => _showPolicy(context.l10n.legalCookies, dummyCookies),
                               ),
                             ],
                           ),
@@ -212,7 +200,7 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
                             ),
                           ),
                           SizedBox(height: 14.h),
-                          ..._faqs.map((faq) => _FaqItem(question: faq.$1, answer: faq.$2)),
+                          ..._faqs(context).map((faq) => _FaqItem(question: faq.$1, answer: faq.$2)),
                           SizedBox(height: 30.h),
                         ],
                       ),

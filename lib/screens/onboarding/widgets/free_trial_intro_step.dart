@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'dart:ui';
 import '../../../widgets/red_button.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/l10n/l10n.dart';
 
 class FreeTrialIntroStep extends StatefulWidget {
   final VoidCallback onContinue;
@@ -28,10 +29,10 @@ class _FreeTrialIntroStepState extends State<FreeTrialIntroStep> with SingleTick
   late Animation<double> _buttonOpacity;
   late Animation<Offset> _buttonSlide;
 
-  final List<String> _benefits = [
-    'Full access to 10,000+ chef-curated recipes',
-    'Personalized meal plans',
-    'Smart grocery lists that save you money',
+  List<String> get _benefits => [
+    context.l10n.onbBenefitRecipes,
+    context.l10n.onbBenefitPlans,
+    context.l10n.onbBenefitGrocery,
   ];
 
   @override
@@ -103,14 +104,14 @@ class _FreeTrialIntroStepState extends State<FreeTrialIntroStep> with SingleTick
                             color: context.colors.textPrimary,
                             height: 1.15),
                           children: [
-                            TextSpan(text: 'We want you to try\nCooked for '),
+                            TextSpan(text: context.l10n.onbTryFreeA),
                             TextSpan(
-                              text: 'free',
+                              text: context.l10n.onbTryFreeB,
                               style: TextStyle(color: context.colors.accent)),
                           ])),
                       SizedBox(height: 10.h),
                       Text(
-                        'Create your account to keep your recipes, meal plans, grocery lists, and savings tracker.',
+                        context.l10n.onbKeepEverything,
                         style: GoogleFonts.poppins(
                           fontSize: 15.sp,
                           color: context.colors.textPrimary,
@@ -202,7 +203,7 @@ class _FreeTrialIntroStepState extends State<FreeTrialIntroStep> with SingleTick
                           top: false,
                           bottom: true,
                           child: RedButton(
-                            label: 'Try for \$0.00',
+                            label: context.l10n.onbTryForZero,
                             color: context.colors.accent,
                             onTap: widget.onContinue,
                             height: 52.h,

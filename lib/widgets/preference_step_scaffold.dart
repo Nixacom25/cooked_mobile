@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'glass_icon_button.dart';
 import 'red_header_background.dart';
 import '../core/theme/app_theme.dart';
+import '../core/l10n/l10n.dart';
 
 /// Full-screen wrapper around a single onboarding-style selection step,
 /// reused wherever Profile lets the user edit one preference field on its
@@ -78,7 +79,7 @@ class PreferenceStepScaffold extends StatelessWidget {
                           ),
                           child: Center(
                             child: Text(
-                              'Confirm',
+                              context.l10n.commonConfirm,
                               style: TextStyle(
                                 fontFamily: 'Rubik',
                                 fontWeight: FontWeight.w700,

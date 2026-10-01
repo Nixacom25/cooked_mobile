@@ -22,6 +22,8 @@ import '../../widgets/saved_recipe_card.dart';
 import '../../widgets/recipe_shortcut_card.dart';
 import '../../widgets/scroll_blur_header_overlay.dart';
 import '../../services/recipe_service.dart';
+import '../../services/grocery_service.dart';
+import '../../models/grocery_item.dart';
 import '../../services/cookbook_service.dart';
 import '../../models/savings.dart';
 import '../../models/recipe.dart';
@@ -43,6 +45,8 @@ import '../../services/sharing_service.dart';
 import '../../widgets/skeleton_loader.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/motion/motion_widgets.dart';
+import '../../core/l10n/l10n.dart';
+import '../../services/posthog_service.dart';
 
 class HomeScreen extends StatefulWidget {
   final int initialTab;
@@ -86,6 +90,7 @@ class _HomeScreenState extends State<HomeScreen>
     super.initState();
     _currentTab = widget.initialTab;
     _previousTab = 0;
+    PostHogService.instance.trackTab(_currentTab);
     _navVisible = _currentTab != 2;
     _scanActiveNotifier.value = _currentTab == 2;
     _importActiveNotifier.value = _currentTab == 4;
@@ -137,6 +142,14 @@ class _HomeScreenState extends State<HomeScreen>
       CookbookService.instance.getMyCookbooks();
     }
 
+    // Warm up the grocery list in the background so the Grocery tab opens
+    // with data instead of waiting on the network.
+    if (GroceryService.instance.myGroceriesNotifier.value == null) {
+      GroceryService.instance.getMyGroceries().catchError(
+        (_) => <GroceryItem>[],
+      );
+    }
+
     // 🔗 Auto-trigger pending shared URL after login/startup
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
@@ -144,7 +157,6 @@ class _HomeScreenState extends State<HomeScreen>
         if (widget.initialUrl == null) {
           final pendingUrl = SharingService.instance.sharedTextNotifier.value;
           if (pendingUrl != null && pendingUrl.isNotEmpty) {
-            debugPrint("HomeScreen: Found pending shared URL: $pendingUrl");
             _switchTab(4);
             // The ImportScreen (tab 4) will be built/active.
             // We'll update it to listen to the service as well.
@@ -197,7 +209,6 @@ class _HomeScreenState extends State<HomeScreen>
             onTabSwitch: (idx) => _switchTab(idx),
           );
         } catch (e) {
-          debugPrint("Silent tutorial error: $e");
         }
       });
     });
@@ -269,6 +280,7 @@ class _HomeScreenState extends State<HomeScreen>
     });
 
     HomeScreen.activeTabNotifier.value = i;
+    if (i != prev) PostHogService.instance.trackTab(i);
 
     // If returning to Home during tutorial, advance step based on where we came from
     if (TutorialService.instance.isTutorialActive && i == 0 && prev != 0) {
@@ -673,14 +685,14 @@ class _FloatingBottomNav extends StatelessWidget {
                       children: [
                         _NavItem(
                           svgPath: 'assets/icones/home.svg',
-                          label: 'Home',
+                          label: context.l10n.navHome,
                           index: 0,
                           current: currentIndex,
                           onTap: onTap,
                         ),
                         _NavItem(
                           svgPath: 'assets/icones/explore.svg',
-                          label: 'Explore',
+                          label: context.l10n.navExplore,
                           index: 1,
                           current: currentIndex,
                           onTap: onTap,
@@ -709,15 +721,15 @@ class _FloatingBottomNav extends StatelessWidget {
                                       );
                                       final labelMeasure = TextPainter(
                                         text: TextSpan(
-                                          text: 'Scan Recipe',
+                                          text: context.l10n.navScanRecipe,
                                           style: labelStyle,
                                         ),
                                         textDirection: Directionality.of(context),
                                         textScaler: MediaQuery.textScalerOf(context),
                                       )..layout();
                                       final label = labelMeasure.width <= constraints.maxWidth
-                                          ? 'Scan Recipe'
-                                          : 'Scan';
+                                          ? context.l10n.navScanRecipe
+                                          : context.l10n.navScan;
 
                                       return SizedBox(
                                         width: double.infinity,
@@ -740,7 +752,7 @@ class _FloatingBottomNav extends StatelessWidget {
                         _NavItem(
                           iconKey: groceryTabKey,
                           svgPath: 'assets/icones/grocerys.svg',
-                          label: 'Grocery',
+                          label: context.l10n.navGrocery,
                           index: 3,
                           current: currentIndex,
                           onTap: onTap,
@@ -748,7 +760,7 @@ class _FloatingBottomNav extends StatelessWidget {
                         _NavItem(
                           iconKey: importTabKey,
                           svgPath: 'assets/icones/imports.svg',
-                          label: 'Import',
+                          label: context.l10n.navImport,
                           index: 4,
                           current: currentIndex,
                           onTap: onTap,
@@ -1096,8 +1108,8 @@ class _HomeTabState extends State<_HomeTab> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(
-                                    'What would you like to cook today?',
+                                  ShimmerText(
+                                    context.l10n.homeHeadline,
                                     style: TextStyle(
                                       fontFamily: 'Rubik',
                                       fontWeight: FontWeight.w700,
@@ -1118,7 +1130,7 @@ class _HomeTabState extends State<_HomeTab> {
                               onChanged: (val) {
                                 _searchQueryNotifier.value = val;
                               },
-                              hintText: 'Search your recipes',
+                              hintText: context.l10n.homeSearchHint,
                               suffixIcon: searchQuery.isNotEmpty
                                   ? Icons.close_rounded
                                   : null,
@@ -1144,12 +1156,12 @@ class _HomeTabState extends State<_HomeTab> {
                                         CrossAxisAlignment.start,
                                     children: [
                                       _SectionRow(
-                                        title: 'Your Cookbooks',
+                                        title: context.l10n.homeYourCookbooks,
                                         onViewAll: count >= 3
                                             ? () => _goViewAll(
                                                 context,
                                                 ViewAllType.cookbooks,
-                                                'Cookbooks',
+                                                context.l10n.homeCookbooks,
                                               )
                                             : null,
                                       ),
@@ -1218,12 +1230,12 @@ class _HomeTabState extends State<_HomeTab> {
                                       Padding(
                                         padding: EdgeInsets.symmetric(horizontal: 16.w),
                                         child: _SectionRow(
-                                          title: 'Recently Viewed',
+                                          title: context.l10n.homeRecentlyViewed,
                                           onViewAll: recent.length > 5
                                               ? () => _goViewAll(
                                                   context,
                                                   ViewAllType.recentlyViewed,
-                                                  'Recently Viewed',
+                                                  context.l10n.homeRecentlyViewed,
                                                 )
                                               : null,
                                         ),
@@ -1265,12 +1277,12 @@ class _HomeTabState extends State<_HomeTab> {
                                       Padding(
                                         padding: EdgeInsets.symmetric(horizontal: 16.w),
                                         child: _SectionRow(
-                                          title: 'Suggested for you',
+                                          title: context.l10n.homeSuggested,
                                           onViewAll: list.length > 5
                                               ? () => _goViewAll(
                                                   context,
                                                   ViewAllType.explore,
-                                                  'Suggested for you',
+                                                  context.l10n.homeSuggested,
                                                 )
                                               : null,
                                         ),
@@ -1293,9 +1305,7 @@ class _HomeTabState extends State<_HomeTab> {
                           valueListenable:
                               RecipeService.instance.myRecipesNotifier,
                           builder: (context, recipes, _) {
-                            final savedRecipes = (recipes ?? [])
-                                .where((r) => !r.isPlaceholder)
-                                .toList();
+                            final savedRecipes = RecipeService.savedRecipesOf(recipes);
 
                             return Container(
                               width: double.infinity,
@@ -1313,12 +1323,12 @@ class _HomeTabState extends State<_HomeTab> {
                                       horizontal: 16.w,
                                     ),
                                     child: _SectionRow(
-                                      title: 'Saved Recipes',
+                                      title: context.l10n.homeSavedRecipes,
                                       onViewAll: savedRecipes.length > 5
                                           ? () => _goViewAll(
                                               context,
                                               ViewAllType.savedRecipes,
-                                              'Saved Recipes',
+                                              context.l10n.homeSavedRecipes,
                                             )
                                           : null,
                                     ),
@@ -1389,7 +1399,7 @@ class _SectionRow extends StatelessWidget {
             GestureDetector(
               onTap: onViewAll,
               child: Text(
-                'View All',
+                context.l10n.commonViewAll,
                 style: TextStyle(
                   fontFamily: 'Rubik',
                   fontWeight: FontWeight.w600,
@@ -1458,19 +1468,15 @@ class _EmptyCookbookCard extends StatelessWidget {
                   color: context.colors.accent,
                   shape: BoxShape.circle,
                 ),
-                // Book opens slightly, chef hat appears, closes (slow loop).
-                child: Center(
-                  child: EmptyStateAnimation(
-                    kind: EmptyStateKind.cookbook,
-                    size: 26.sp,
+                child: Icon(
+                  Icons.add_rounded,
                     color: Colors.white,
-                    accent: Colors.white,
-                  ),
+                  size: 30.sp,
                 ),
               ),
               SizedBox(height: 14.h),
               Text(
-                'Start building your cookbook',
+                context.l10n.homeCookbookEmptyTitle,
                 style: TextStyle(
                   fontFamily: 'Rubik',
                   fontWeight: FontWeight.w700,
@@ -1480,7 +1486,7 @@ class _EmptyCookbookCard extends StatelessWidget {
               ),
               SizedBox(height: 6.h),
               Text(
-                'Save your favorite recipes and\nkeep them all in one place.',
+                context.l10n.homeCookbookEmptySubtitle,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontFamily: 'Rubik',
@@ -1614,7 +1620,7 @@ class _AddCookbookCardTile extends StatelessWidget {
               ),
               SizedBox(height: 6.h),
               Text(
-                'Add cookbook',
+                context.l10n.homeAddCookbook,
                 style: TextStyle(
                   fontFamily: 'Rubik',
                   fontWeight: FontWeight.w700,
@@ -1809,7 +1815,7 @@ class _EmptySavedRecipesCardState extends State<_EmptySavedRecipesCard> {
               ),
               SizedBox(height: 8.h),
               Text(
-                'No saved recipes yet',
+                context.l10n.homeNoSavedTitle,
                 style: GoogleFonts.rubik(
                   fontWeight: FontWeight.w700,
                   fontSize: 20.sp,
@@ -1818,7 +1824,7 @@ class _EmptySavedRecipesCardState extends State<_EmptySavedRecipesCard> {
               ),
               SizedBox(height: 8.h),
               Text(
-                'Explore our recipes and save your favorites\nto build your personal collection.',
+                context.l10n.homeNoSavedSubtitle,
                 textAlign: TextAlign.center,
                 style: GoogleFonts.poppins(
                   fontSize: 14.sp,
@@ -1833,7 +1839,7 @@ class _EmptySavedRecipesCardState extends State<_EmptySavedRecipesCard> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      'Browse Recipes',
+                      context.l10n.homeBrowseRecipes,
                       style: GoogleFonts.rubik(
                         fontWeight: FontWeight.w700,
                         fontSize: 15.sp,
@@ -1914,7 +1920,7 @@ class _PopulatedSavedRecipesList extends StatelessWidget {
             Icon(Icons.search_off_rounded, size: 40.sp, color: context.colors.border),
             SizedBox(height: 12.h),
             Text(
-              'No recipes found',
+              context.l10n.commonNoRecipesFound,
               style: TextStyle(
                 fontFamily: 'Rubik',
                 fontSize: 15.sp,
@@ -1924,7 +1930,7 @@ class _PopulatedSavedRecipesList extends StatelessWidget {
             ),
             SizedBox(height: 4.h),
             Text(
-              'Try a different search term.',
+              context.l10n.commonTryDifferentSearch,
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontFamily: 'Rubik',
@@ -1938,19 +1944,19 @@ class _PopulatedSavedRecipesList extends StatelessWidget {
               child: Row(
                 children: [
                   RecipeShortcutCard(
-                    title: 'Explore',
+                    title: context.l10n.navExplore,
                     icon: Icons.search_rounded,
                     onTap: () => HomeScreen.tabRequestNotifier.value = 1,
                   ),
                   SizedBox(width: 12.w),
                   RecipeShortcutCard(
-                    title: 'Scan',
+                    title: context.l10n.navScan,
                     icon: Icons.crop_free_rounded,
                     onTap: () => HomeScreen.tabRequestNotifier.value = 2,
                   ),
                   SizedBox(width: 12.w),
                   RecipeShortcutCard(
-                    title: 'Import',
+                    title: context.l10n.navImport,
                     icon: Icons.file_download_outlined,
                     onTap: () => HomeScreen.tabRequestNotifier.value = 4,
                   ),
@@ -1982,18 +1988,18 @@ class _PopulatedSavedRecipesList extends StatelessWidget {
             r.isFavorite = newFavState;
             if (newFavState) {
               RecipeService.instance.markRecipeAsSaved(r);
-              IosToast.show(ctx, message: 'Recipe saved to favorites!', type: ToastType.success);
+              IosToast.show(ctx, message: context.l10n.recipeSavedToast, type: ToastType.success);
             } else {
               RecipeService.instance.markRecipeAsUnsaved(r);
               if (r.id.isNotEmpty) {
-                RecipeService.instance.deleteRecipe(r.id);
+                RecipeService.instance.deleteRecipe(r.id, name: r.name);
               }
               r.isFavorite = false;
               r.isInCookbook = false;
               final current = RecipeService.instance.myRecipesNotifier.value ?? [];
               RecipeService.instance.myRecipesNotifier.value =
                   current.where((item) => item.id != r.id).toList();
-              IosToast.show(ctx, message: 'Recipe removed from saved', type: ToastType.success);
+              IosToast.show(ctx, message: context.l10n.recipeRemovedToast, type: ToastType.success);
             }
           },
           onTap: () {
@@ -2010,7 +2016,7 @@ class _PopulatedSavedRecipesList extends StatelessWidget {
               targetPosition: details.globalPosition,
               actions: [
                 HapticMenuAction(
-                  title: r.isPinned ? 'Unpin Recipe' : 'Pin Recipe',
+                  title: r.isPinned ? context.l10n.recipeUnpin : context.l10n.recipePin,
                   icon: r.isPinned
                       ? Icons.push_pin_rounded
                       : Icons.push_pin_outlined,
@@ -2020,8 +2026,8 @@ class _PopulatedSavedRecipesList extends StatelessWidget {
                 ),
                 HapticMenuAction(
                   title: r.isInCookbook
-                      ? 'Remove from Cookbook'
-                      : 'Add to Cookbook',
+                      ? context.l10n.recipeRemoveFromCookbook
+                      : context.l10n.recipeAddToCookbook,
                   icon: r.isInCookbook
                       ? Icons.remove_circle_outline_rounded
                       : Icons.add_circle_outline_rounded,
@@ -2037,10 +2043,11 @@ class _PopulatedSavedRecipesList extends StatelessWidget {
                   },
                 ),
                 HapticMenuAction(
-                  title: 'Share Recipe',
+                  title: context.l10n.recipeShare,
                   icon: Icons.ios_share_rounded,
                   onTap: () async {
                     try {
+                      final l10n = context.l10n;
                       final rawLink = await RecipeService.instance.getShareLink(
                         r.id,
                       );
@@ -2054,21 +2061,22 @@ class _PopulatedSavedRecipesList extends StatelessWidget {
                             'https://link.cookedapp.com',
                           );
                       final name = r.name;
-                      final creatorStr = r.creator != null
-                          ? "${r.creator!.displayName}'s "
-                          : "";
-                      final template =
-                          "Check out $creatorStr$name on Cooked 🙌\n$link";
+                      final template = recipeShareText(
+                        l10n,
+                        name: name,
+                        link: link,
+                        creator: r.creator != null ? r.creator!.displayName : null,
+                      );
                       SharePlus.instance.share(ShareParams(text: template));
                     } catch (_) {}
                   },
                 ),
                 HapticMenuAction(
-                  title: 'Delete Recipe',
+                  title: context.l10n.recipeDelete,
                   icon: Icons.delete_outline_rounded,
                   isDestructive: true,
                   onTap: () {
-                    RecipeService.instance.deleteRecipe(r.id);
+                    RecipeService.instance.deleteRecipe(r.id, name: r.name);
                   },
                 ),
               ],
@@ -2106,7 +2114,7 @@ class _FeedbackCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Help us improve Cooked',
+            context.l10n.feedbackCardTitle,
             style: TextStyle(
               fontFamily: 'Rubik',
               fontWeight: FontWeight.w800,
@@ -2116,7 +2124,7 @@ class _FeedbackCard extends StatelessWidget {
           ),
           SizedBox(height: 6.h),
           Text(
-            'Share your thoughts, ideas, or anything that could make your experience better.',
+            context.l10n.feedbackCardSubtitle,
             style: TextStyle(
               fontFamily: 'Rubik',
               fontSize: 13.sp,
@@ -2137,7 +2145,7 @@ class _FeedbackCard extends StatelessWidget {
                 elevation: 0,
               ),
               child: Text(
-                'Send feedback',
+                context.l10n.feedbackCardButton,
                 style: TextStyle(
                   fontFamily: 'Rubik',
                   fontWeight: FontWeight.w700,
@@ -2234,7 +2242,7 @@ void _showFeedbackModal(BuildContext context) {
             ),
             SizedBox(height: 16.h),
             Text(
-              'Help us improve Cooked',
+              context.l10n.feedbackCardTitle,
               style: TextStyle(
                 fontFamily: 'Rubik',
                 fontWeight: FontWeight.w800,
@@ -2244,7 +2252,7 @@ void _showFeedbackModal(BuildContext context) {
             ),
             SizedBox(height: 6.h),
             Text(
-              'Share your thoughts, ideas, or anything that could make your experience better.',
+              context.l10n.feedbackCardSubtitle,
               style: TextStyle(
                 fontFamily: 'Rubik',
                 fontSize: 13.sp,
@@ -2256,7 +2264,7 @@ void _showFeedbackModal(BuildContext context) {
               controller: feedbackCtrl,
               maxLines: 4,
               decoration: InputDecoration(
-                hintText: 'Type your feedback here...',
+                hintText: context.l10n.feedbackTypeHere,
                 hintStyle: TextStyle(
                   fontFamily: 'Rubik',
                   fontSize: 14.sp,
@@ -2288,7 +2296,7 @@ void _showFeedbackModal(BuildContext context) {
                     Navigator.pop(context);
                     IosToast.show(
                       context,
-                      message: 'Thank you for your feedback!',
+                      message: context.l10n.feedbackThanks,
                       type: ToastType.success,
                     );
                   }
@@ -2301,7 +2309,7 @@ void _showFeedbackModal(BuildContext context) {
                   elevation: 0,
                 ),
                 child: Text(
-                  'Submit Feedback',
+                  context.l10n.feedbackSubmit,
                   style: TextStyle(
                     fontFamily: 'Rubik',
                     fontWeight: FontWeight.w700,
@@ -2486,7 +2494,7 @@ class _CookbooksRowState extends State<_CookbooksRow> {
                             ),
                             SizedBox(height: 7.h),
                             Text(
-                              "New Cookbook",
+                              context.l10n.cookbookNew,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
@@ -2541,7 +2549,7 @@ class _CookbooksRowState extends State<_CookbooksRow> {
                         targetPosition: details.globalPosition,
                         actions: [
                           HapticMenuAction(
-                            title: 'Add Recipes',
+                            title: context.l10n.cookbookAddRecipes,
                             icon: Icons.add_circle_outline_rounded,
                             onTap: () async {
                               final result = await showModalBottomSheet(
@@ -2557,7 +2565,7 @@ class _CookbooksRowState extends State<_CookbooksRow> {
                             },
                           ),
                           HapticMenuAction(
-                            title: 'Edit Cookbook',
+                            title: context.l10n.cookbookEdit,
                             icon: Icons.edit_outlined,
                             onTap: () async {
                               final result = await showModalBottomSheet(
@@ -2574,8 +2582,8 @@ class _CookbooksRowState extends State<_CookbooksRow> {
                           ),
                           HapticMenuAction(
                             title: cb.isPinned
-                                ? 'Unpin Cookbook'
-                                : 'Pin Cookbook',
+                                ? context.l10n.cookbookUnpin
+                                : context.l10n.cookbookPin,
                             icon: cb.isPinned
                                 ? Icons.push_pin_rounded
                                 : Icons.push_pin_outlined,
@@ -2588,8 +2596,8 @@ class _CookbooksRowState extends State<_CookbooksRow> {
                                       IosToast.show(
                                         context,
                                         message: updated.isPinned
-                                            ? 'Cookbook pinned'
-                                            : 'Cookbook unpinned',
+                                            ? context.l10n.cookbookPinned
+                                            : context.l10n.cookbookUnpinned,
                                         type: ToastType.success,
                                       );
                                     }
@@ -2598,7 +2606,7 @@ class _CookbooksRowState extends State<_CookbooksRow> {
                                     if (context.mounted) {
                                       IosToast.show(
                                         context,
-                                        message: 'Operation failed',
+                                        message: context.l10n.commonOperationFailed,
                                         type: ToastType.error,
                                       );
                                     }
@@ -2606,7 +2614,7 @@ class _CookbooksRowState extends State<_CookbooksRow> {
                             },
                           ),
                           HapticMenuAction(
-                            title: 'Delete Cookbook',
+                            title: context.l10n.cookbookDelete,
                             icon: Icons.delete_outline_rounded,
                             isDestructive: true,
                             onTap: () {
@@ -2617,7 +2625,7 @@ class _CookbooksRowState extends State<_CookbooksRow> {
                                     if (context.mounted) {
                                       IosToast.show(
                                         context,
-                                        message: 'Cookbook deleted',
+                                        message: context.l10n.cookbookDeleted,
                                         type: ToastType.success,
                                       );
                                     }
@@ -2626,7 +2634,7 @@ class _CookbooksRowState extends State<_CookbooksRow> {
                                     if (context.mounted) {
                                       IosToast.show(
                                         context,
-                                        message: 'Failed to delete cookbook',
+                                        message: context.l10n.cookbookDeleteFailed,
                                         type: ToastType.error,
                                       );
                                     }
@@ -2667,7 +2675,7 @@ class _CookbooksRowState extends State<_CookbooksRow> {
                               ),
                               SizedBox(width: 4.w),
                               Text(
-                                recipeCountLabel(cb.recipes.length, capitalize: true),
+                                recipeCountLabel(context.l10n, cb.recipes.length, capitalize: true),
                                 style: TextStyle(
                                   fontFamily: 'SF Pro',
                                   fontSize: 11.sp,
@@ -2813,10 +2821,10 @@ class _SuggestedRecipesSectionState extends State<_SuggestedRecipesSection> {
             SizedBox(height: 22.h),
             // Title fades in rising ~10 px, once per session; cards follow
             // with a light stagger.
-            const AnimatedCardEntrance(
+            AnimatedCardEntrance(
               onceId: 'home-suggested-title',
               offset: 10,
-              child: _SectionRow(title: 'Suggested Recipes'),
+              child: _SectionRow(title: context.l10n.homeSuggestedRecipes),
             ),
             SizedBox(height: 12.h),
             widget.isCompact
@@ -2904,6 +2912,7 @@ class _SuggestedRecipesSectionState extends State<_SuggestedRecipesSection> {
                 final Rect? sharePositionOrigin = box != null
                     ? box.localToGlobal(Offset.zero) & box.size
                     : null;
+                final l10n = context.l10n;
                 final rawLink = await RecipeService.instance.getShareLink(r.id);
                 final link = rawLink
                     .replaceAll('cooked.nixacom.com', 'link.cookedapp.com')
@@ -2912,11 +2921,12 @@ class _SuggestedRecipesSectionState extends State<_SuggestedRecipesSection> {
                       'https://link.cookedapp.com',
                     );
                 final name = r.name;
-                final creatorStr = r.creator != null
-                    ? "${r.creator!.displayName}'s "
-                    : "";
-                final template =
-                    "Check out $creatorStr$name on Cooked 🙌\n$link";
+                final template = recipeShareText(
+                  l10n,
+                  name: name,
+                  link: link,
+                  creator: r.creator != null ? r.creator!.displayName : null,
+                );
 
                 SharePlus.instance.share(
                   ShareParams(
@@ -3012,6 +3022,7 @@ class _SuggestedRecipesSectionState extends State<_SuggestedRecipesSection> {
                       ? box.localToGlobal(Offset.zero) & box.size
                       : null;
 
+                  final l10n = context.l10n;
                   final rawLink = await RecipeService.instance.getShareLink(
                     r.id,
                   );
@@ -3022,11 +3033,12 @@ class _SuggestedRecipesSectionState extends State<_SuggestedRecipesSection> {
                         'https://link.cookedapp.com',
                       );
                   final name = r.name;
-                  final creatorStr = r.creator != null
-                      ? "${r.creator!.displayName}'s "
-                      : "";
-                  final template =
-                      "Check out $creatorStr$name on Cooked 🙌\n$link";
+                  final template = recipeShareText(
+                    l10n,
+                    name: name,
+                    link: link,
+                    creator: r.creator != null ? r.creator!.displayName : null,
+                  );
 
                   SharePlus.instance.share(
                     ShareParams(
@@ -3056,7 +3068,7 @@ class _SuggestedRecipesSectionState extends State<_SuggestedRecipesSection> {
     if (isSaved) {
       IosToast.show(
         context,
-        message: "This recipe is already present in your recipes",
+        message: context.l10n.recipeAlreadySaved,
         type: ToastType.success,
       );
       return;
@@ -3240,7 +3252,7 @@ class _SavingsCardState extends State<_SavingsCard>
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            "Your saved",
+                            context.l10n.savingsYourSaved,
                             style: TextStyle(
                               fontFamily: 'Rubik',
                               fontSize: 16.sp,
@@ -3291,7 +3303,7 @@ class _SavingsCardState extends State<_SavingsCard>
                           ),
                           SizedBox(width: 8.w),
                           Text(
-                            "This month",
+                            context.l10n.savingsThisMonth,
                             style: TextStyle(
                               fontFamily: 'Rubik',
                               fontSize: 16.sp,
@@ -3303,7 +3315,7 @@ class _SavingsCardState extends State<_SavingsCard>
                       ),
                       SizedBox(height: 6.h),
                       Text(
-                        "Comparing to ordered takeout.",
+                        context.l10n.savingsComparedTakeout,
                         style: TextStyle(
                           fontFamily: 'Rubik',
                           fontSize: 14.sp,

@@ -8,6 +8,7 @@ import '../../widgets/saved_recipe_card.dart';
 import '../../widgets/red_header_background.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/motion/motion_widgets.dart';
+import '../../core/l10n/l10n.dart';
 
 class SavingsDetailsScreen extends StatefulWidget {
   const SavingsDetailsScreen({super.key});
@@ -63,7 +64,7 @@ class _SavingsDetailsScreenState extends State<SavingsDetailsScreen> {
                         ),
                         Expanded(
                           child: Text(
-                            "Your Savings",
+                            context.l10n.savingsTitle,
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontFamily: 'Rubik',
@@ -101,7 +102,7 @@ class _SavingsDetailsScreenState extends State<SavingsDetailsScreen> {
                                     size: 60.sp, color: Colors.grey[300]),
                                 SizedBox(height: 16.h),
                                 Text(
-                                  "No scan savings yet",
+                                  context.l10n.savingsEmpty,
                                   style: TextStyle(
                                     fontFamily: 'Rubik',
                                     fontSize: 16.sp,
@@ -123,7 +124,7 @@ class _SavingsDetailsScreenState extends State<SavingsDetailsScreen> {
                                 child: Column(
                                   children: [
                                     Text(
-                                      "Your saved",
+                                      context.l10n.savingsYourSaved,
                                       style: TextStyle(
                                         fontFamily: 'Rubik',
                                         fontSize: 14.sp,
@@ -145,9 +146,7 @@ class _SavingsDetailsScreenState extends State<SavingsDetailsScreen> {
                                     ),
                                     SizedBox(height: 4.h),
                                     Text(
-                                      displayRecipes.length == 1
-                                          ? "From 1 saved recipe"
-                                          : "From ${displayRecipes.length} saved ${displayRecipes.length >= 2 ? 'recipes' : 'recipe'}",
+                                      context.l10n.savingsFromRecipes(displayRecipes.length),
                                       style: TextStyle(
                                         fontFamily: 'Rubik',
                                         fontSize: 14.sp,
@@ -181,7 +180,7 @@ class _SavingsDetailsScreenState extends State<SavingsDetailsScreen> {
                                     title: item.displayName,
                                     isRegistered: true,
                                     isSavingsMode: true,
-                                    subtitle: "Scanned at home",
+                                    subtitle: context.l10n.savingsScannedAtHome,
                                     savingsBadgeText: "+${itemSavings.toStringAsFixed(0)}\$",
                                     onTap: () {
                                       Navigator.pushNamed(

@@ -8,6 +8,7 @@ import '../../services/revenuecat_service.dart';
 import '../../services/user_service.dart';
 import '../../widgets/profile_subpage_scaffold.dart';
 import '../../widgets/red_button.dart';
+import '../../core/l10n/l10n.dart';
 
 class RedeemGiftScreen extends StatefulWidget {
   /// Pre-filled from a gift link (link.cookedapp.com/redeem?code=...).
@@ -44,7 +45,7 @@ class _RedeemGiftScreenState extends State<RedeemGiftScreen> {
       if (!mounted) return;
       IosToast.show(
         context,
-        message: '🎉 ${result.planLabel} of Cooked Premium unlocked!',
+        message: context.l10n.giftUnlocked(result.planLabel),
         type: ToastType.success,
       );
       Navigator.pop(context);
@@ -64,14 +65,14 @@ class _RedeemGiftScreenState extends State<RedeemGiftScreen> {
   Widget build(BuildContext context) {
     final colors = context.colors;
     return ProfileSubpageScaffold(
-      title: 'Redeem a gift',
+      title: context.l10n.giftRedeemTitle,
       child: ListView(
         padding: EdgeInsets.fromLTRB(24.w, 12.h, 24.w, 40.h),
         children: [
           Center(child: Text('🎁', style: TextStyle(fontSize: 56.sp))),
           SizedBox(height: 12.h),
           Text(
-            'Someone gifted you Cooked?',
+            context.l10n.giftRedeemHeadline,
             textAlign: TextAlign.center,
             style: TextStyle(
               fontFamily: 'Rubik',
@@ -82,7 +83,7 @@ class _RedeemGiftScreenState extends State<RedeemGiftScreen> {
           ),
           SizedBox(height: 6.h),
           Text(
-            'Enter your gift code to unlock Cooked Premium on this account.',
+            context.l10n.giftRedeemSubtitle,
             textAlign: TextAlign.center,
             style: TextStyle(
               fontFamily: 'Rubik',
@@ -122,8 +123,8 @@ class _RedeemGiftScreenState extends State<RedeemGiftScreen> {
           ValueListenableBuilder<TextEditingValue>(
             valueListenable: _controller,
             builder: (context, value, _) => RedButton(
-              label: 'Redeem',
-              loadingLabel: 'Redeeming...',
+              label: context.l10n.giftRedeem,
+              loadingLabel: context.l10n.giftRedeeming,
               isLoading: _loading,
               isDisabled: value.text.trim().isEmpty,
               onTap: _redeem,

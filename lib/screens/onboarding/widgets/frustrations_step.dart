@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'selection_onboarding_step.dart';
+import '../../../core/l10n/l10n.dart';
 
 class FrustrationsStep extends StatelessWidget {
   final VoidCallback onContinue;
@@ -17,8 +18,8 @@ class FrustrationsStep extends StatelessWidget {
   Widget build(BuildContext context) {
     final selected = initialSelected.isNotEmpty ? initialSelected : const ['dont_know'];
     return SelectionOnboardingStep(
-      title: "What's holding you back from cooking more?",
-      subtitle: 'Choose the ones that feel most true',
+      title: context.l10n.onbFrustrationsTitle,
+      subtitle: context.l10n.onbFrustrationsSubtitle,
       maxSelections: 3,
       onContinue: onContinue,
       initialSelected: selected,

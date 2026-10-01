@@ -32,6 +32,7 @@ import '../widgets/add_to_cookbook_sheet.dart';
 import '../widgets/recent_import_tile.dart';
 import '../core/theme/app_theme.dart';
 import '../core/motion/motion_widgets.dart';
+import '../core/l10n/l10n.dart';
 
 class ImportScreen extends StatefulWidget {
   final ValueNotifier<bool>? isActiveNotifier;
@@ -103,7 +104,7 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
       if (widget.initialUrl != null && widget.initialUrl!.isNotEmpty) {
         _linkCtrl.text = widget.initialUrl!;
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          _showWebPreview(widget.initialUrl!, 'Recipe Preview');
+          _showWebPreview(widget.initialUrl!, context.l10n.importRecipePreview);
         });
       } else {
         _onSharedUrlUpdated();
@@ -135,7 +136,7 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
       if (!_isImporting && _linkCtrl.text != url) {
         _linkCtrl.text = url;
         SharingService.instance.consumeSharedText();
-        _showWebPreview(url, 'Recipe Preview');
+        _showWebPreview(url, context.l10n.importRecipePreview);
       }
     }
   }
@@ -176,7 +177,7 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
     final normalizedUrl = url.trim();
     final uri = Uri.tryParse(normalizedUrl);
     if (uri == null || !uri.hasScheme || (uri.scheme != 'http' && uri.scheme != 'https')) {
-      IosToast.show(context, message: 'Ce lien de recette n\'est pas disponible.', type: ToastType.error);
+      IosToast.show(context, message: context.l10n.importLinkUnavailable, type: ToastType.error);
       return;
     }
 
@@ -261,7 +262,7 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
     if (!isValidRecipeLink) {
       _showImportFallback(
         failedUrl: trimmedUrl,
-        errorMessage: 'Veuillez entrer un lien de recette valide (ex: https://exemple.com/recette)',
+        errorMessage: context.l10n.importInvalidLink,
       );
       return;
     }
@@ -304,7 +305,7 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
         arguments: {
           'recipe': existing,
           'isPreview': existing.isSuggested,
-          'infoMessage': 'Cette recette existe déjà dans votre collection',
+          'infoMessage': context.l10n.importAlreadyExists,
         },
       );
       setState(() => _isImporting = false);
@@ -332,9 +333,10 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
       final hasRealName = recipe.name.trim().isNotEmpty &&
           !recipe.name.trim().toLowerCase().contains('title of recipe');
       if (!hasContent || !hasRealName) {
+        if (!mounted) return;
         _showImportFallback(
           failedUrl: url,
-          errorMessage: "Nous n'avons pas pu extraire cette recette de ce lien. La page ne contenait pas suffisamment d'informations sur la recette.",
+          errorMessage: context.l10n.importExtractFailed,
         );
         return;
       }
@@ -356,7 +358,7 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
 
       IosToast.show(
         context,
-        message: 'Recette importée avec succès!',
+        message: context.l10n.importSuccess,
         type: ToastType.success,
       );
     } catch (e) {
@@ -472,7 +474,7 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
     if (r.isInCookbook) {
       IosToast.show(
         context,
-        message: "Déjà dans vos recettes",
+        message: context.l10n.recipeAlreadyInYours,
         type: ToastType.success,
       );
       return;
@@ -525,13 +527,13 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
   }
 
   Future<void> _handleDeleteRecipe(Recipe r) async {
-    final success = await RecipeService.instance.deleteRecipe(r.id);
+    final success = await RecipeService.instance.deleteRecipe(r.id, name: r.name);
     if (!mounted) return;
     if (success) {
       await RecipeService.instance.getRecentImports(forceRefresh: true);
       if (!mounted) return;
       setState(() {});
-      IosToast.show(context, message: 'Recette supprimée', type: ToastType.success);
+      IosToast.show(context, message: context.l10n.recipeDeleted, type: ToastType.success);
     }
   }
 
@@ -619,30 +621,23 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => ImportFallbackPage(
+        builder: (pageContext) => ImportFallbackPage(
           failedUrl: failedUrl,
           errorMessage: errorMessage,
           onTryAnotherLink: () {
-            Navigator.pop(context);
+            Navigator.pop(pageContext);
             _linkCtrl.clear();
           },
           onEnterManually: () {
-            Navigator.pop(context);
-            // Navigate to manual recipe entry (if exists)
-            // For now, just clear the link and show a toast
+            Navigator.pop(pageContext);
+            // Manual entry isn't built yet: tell the user on the Import tab
+            // (the fallback page's context is gone once popped).
+            if (!mounted) return;
             IosToast.show(
               context,
-              message: 'Saisie manuelle de recette bientôt disponible',
+              message: context.l10n.importManualSoon,
               type: ToastType.warning,
             );
-          },
-          onSearchWeb: () {
-            Navigator.pop(context);
-            _toggleSearchModal(true);
-          },
-          onRetry: () {
-            Navigator.pop(context);
-            _importFromUrl(failedUrl);
           },
         ),
       ),
@@ -699,7 +694,7 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            'Import',
+                            context.l10n.navImport,
                             style: TextStyle(
                               fontFamily: 'Rubik',
                               fontWeight: FontWeight.w800,
@@ -744,7 +739,7 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
                       // Section Title: "Recipe Link"
                       Center(
                         child: Text(
-                          'Recipe Link',
+                          context.l10n.importRecipeLink,
                           style: TextStyle(
                             fontFamily: 'Rubik',
                             fontWeight: FontWeight.w800,
@@ -796,7 +791,7 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
                                   color: context.colors.textPrimary,
                                 ),
                                 decoration: InputDecoration(
-                                  hintText: 'Paste a recipe link...',
+                                  hintText: context.l10n.importPasteHint,
                                   hintStyle: TextStyle(
                                     fontFamily: 'Rubik',
                                     fontSize: 14.sp,
@@ -843,7 +838,7 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
                       // Import Recipes Red Pill Button
                       RedButton(
                         label: 'Import Recipes',
-                        loadingLabel: 'Importing',
+                        loadingLabel: context.l10n.importImporting,
                         isLoading: _isImporting,
                         onTap: () => _importFromUrl(_linkCtrl.text.trim()),
                         height: 50.h,
@@ -890,7 +885,7 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
                                   Icon(Icons.search_rounded, color: context.colors.textSecondary, size: 22.sp),
                                   SizedBox(width: 10.w),
                                   Text(
-                                    'Search web',
+                                    context.l10n.importSearchWeb,
                                     style: TextStyle(
                                       fontFamily: 'Rubik',
                                       fontSize: 14.sp,
@@ -958,7 +953,7 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
                       // Trending Section
                       if (_trendingRecipes.isNotEmpty) ...[
                         Text(
-                          'Trending',
+                          context.l10n.importTrending,
                           style: TextStyle(
                             fontFamily: 'Rubik',
                             fontWeight: FontWeight.w800,
@@ -991,7 +986,7 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(
-                                    'Recent Imports',
+                                    context.l10n.importRecent,
                                     style: TextStyle(
                                       fontFamily: 'Rubik',
                                       fontWeight: FontWeight.w800,
@@ -1007,12 +1002,12 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
                                           AppRoutes.viewAll,
                                           arguments: {
                                             'type': ViewAllType.imports,
-                                            'title': 'Recent Imports',
+                                            'title': context.l10n.importRecent,
                                           },
                                         );
                                       },
                                       child: Text(
-                                        'View All',
+                                        context.l10n.commonViewAll,
                                         style: TextStyle(
                                           fontFamily: 'Rubik',
                                           fontWeight: FontWeight.w700,
@@ -1039,7 +1034,7 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
                                       ),
                                       SizedBox(height: 6.h),
                                       Text(
-                                        'No recent imports yet.',
+                                        context.l10n.importNoRecent,
                                         style: TextStyle(fontFamily: 'Rubik', color: context.colors.textMuted, fontSize: 13.sp),
                                       ),
                                     ],
@@ -1095,17 +1090,17 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
                                         targetPosition: details.globalPosition,
                                         actions: [
                                           HapticMenuAction(
-                                            title: 'Edit Recipe',
+                                            title: context.l10n.recipeEdit,
                                             icon: Icons.edit_outlined,
                                             onTap: () {},
                                           ),
                                           HapticMenuAction(
-                                            title: 'Share Recipe',
+                                            title: context.l10n.recipeShare,
                                             icon: Icons.ios_share_rounded,
                                             onTap: () {},
                                           ),
                                           HapticMenuAction(
-                                            title: 'Delete Recipe',
+                                            title: context.l10n.recipeDelete,
                                             icon: Icons.delete_outline_rounded,
                                             isDestructive: true,
                                             onTap: () => _handleDeleteRecipe(r),
@@ -1202,7 +1197,7 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
                           Padding(
                             padding: EdgeInsets.symmetric(horizontal: 20.w),
                             child: Text(
-                              'Recommended',
+                              context.l10n.importRecommended,
                               style: TextStyle(
                                 fontFamily: 'Rubik',
                                 fontWeight: FontWeight.w800,
@@ -1249,7 +1244,7 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
                             Padding(
                               padding: EdgeInsets.symmetric(horizontal: 20.w),
                               child: Text(
-                                'Trending',
+                                context.l10n.importTrending,
                                 style: TextStyle(
                                   fontFamily: 'Rubik',
                                   fontWeight: FontWeight.w800,
@@ -1283,7 +1278,7 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'Suggestions',
+                                  context.l10n.importSuggestions,
                                   style: TextStyle(
                                     fontFamily: 'Rubik',
                                     fontWeight: FontWeight.w800,
@@ -1351,7 +1346,7 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
                     Expanded(
                       child: AppSearchField(
                         controller: _overlaySearchCtrl,
-                        hintText: 'Search recipes...',
+                        hintText: context.l10n.importSearchRecipesHint,
                         backgroundColor: context.colors.surface,
                         suffixIcon: Icons.check_circle_rounded,
                         borderColor: val > 0.5 ? context.colors.surface : Colors.transparent,
@@ -1515,7 +1510,7 @@ class _WebSearchResults extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'Search Results',
+              context.l10n.importSearchResults,
               style: TextStyle(
                 fontFamily: 'Rubik',
                 fontWeight: FontWeight.w700,
@@ -1526,7 +1521,7 @@ class _WebSearchResults extends StatelessWidget {
             GestureDetector(
               onTap: onClear,
               child: Text(
-                'Clear',
+                context.l10n.commonClear,
                 style: TextStyle(
                   fontFamily: 'Rubik',
                   fontSize: 13.sp,
@@ -1544,7 +1539,7 @@ class _WebSearchResults extends StatelessWidget {
           snippet: res['snippet'] ?? '',
           onView: () => onView(
             res['url'] ?? res['link'] ?? '',
-            res['title'] ?? 'Recipe Preview',
+            res['title'] ?? context.l10n.importRecipePreview,
           ),
         )),
         SizedBox(height: 20.h),
@@ -1612,7 +1607,7 @@ class _SearchResultTile extends StatelessWidget {
                 borderRadius: BorderRadius.circular(20.r),
               ),
               child: Text(
-                'View this recipe',
+                context.l10n.importViewThisRecipe,
                 style: TextStyle(
                   fontFamily: 'Rubik',
                   fontWeight: FontWeight.w700,
@@ -1751,8 +1746,8 @@ class _RecipeWebPreviewModalState extends State<_RecipeWebPreviewModal> {
                   30.h + MediaQuery.of(context).padding.bottom,
                 ),
                 child: RedButton(
-                  label: 'Import to Cooked',
-                  loadingLabel: 'Importing',
+                  label: context.l10n.importToCooked,
+                  loadingLabel: context.l10n.importImporting,
                   onTap: widget.onImport,
                   height: 52.h,
                   fontSize: 16.sp,

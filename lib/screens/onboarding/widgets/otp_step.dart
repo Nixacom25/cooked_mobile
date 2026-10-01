@@ -8,6 +8,7 @@ import '../../../core/utils/error_helper.dart';
 import '../../../widgets/red_button.dart';
 import '../../../widgets/loading_text.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/l10n/l10n.dart';
 
 class OtpStep extends StatefulWidget {
   final String email;
@@ -71,7 +72,7 @@ class _OtpStepState extends State<OtpStep> {
     if (code.length < _otpLength) {
       IosToast.show(
         context,
-        message: 'Please enter the complete 6-digit code.',
+        message: context.l10n.authEnterFullCode,
         type: ToastType.warning);
       return;
     }
@@ -103,7 +104,7 @@ class _OtpStepState extends State<OtpStep> {
       if (!mounted) return;
       IosToast.show(
         context,
-        message: 'Verification code resent.',
+        message: context.l10n.authCodeResent,
         type: ToastType.success);
     } catch (e) {
       if (!mounted) return;
@@ -128,7 +129,7 @@ class _OtpStepState extends State<OtpStep> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Verify your account',
+                  context.l10n.onbVerifyAccount,
                   style: GoogleFonts.rubik(
                     fontSize: 32.sp,
                     fontWeight: FontWeight.w500,
@@ -136,7 +137,7 @@ class _OtpStepState extends State<OtpStep> {
                     height: 1.15)),
                 SizedBox(height: 10.h),
                 Text(
-                  'Please enter the 6-digit code we sent to\n${widget.email}',
+                  context.l10n.onbOtpSentTo(widget.email),
                   style: GoogleFonts.poppins(
                     fontSize: 15.sp,
                     color: context.colors.textPrimary,
@@ -182,7 +183,7 @@ class _OtpStepState extends State<OtpStep> {
                   child: Column(
                     children: [
                       Text(
-                        "Didn't receive a code?",
+                        context.l10n.onbNoCode,
                         style: GoogleFonts.poppins(
                           fontSize: 14.sp,
                           color: context.colors.textPrimary)),
@@ -191,13 +192,13 @@ class _OtpStepState extends State<OtpStep> {
                         onPressed: _isResending ? null : _resendCode,
                         child: _isResending
                             ? LoadingText(
-                                text: 'Resending',
+                                text: context.l10n.authResending,
                                 style: GoogleFonts.rubik(
                                   fontSize: 15.sp,
                                   fontWeight: FontWeight.w500,
                                   color: context.colors.accent))
                             : Text(
-                                'Resend Code',
+                                context.l10n.authResendCode,
                                 style: GoogleFonts.rubik(
                                   fontSize: 15.sp,
                                   fontWeight: FontWeight.w500,
@@ -211,8 +212,8 @@ class _OtpStepState extends State<OtpStep> {
             top: false,
             bottom: true,
             child: RedButton(
-              label: 'Verify & Continue',
-              loadingLabel: 'Verifying',
+              label: context.l10n.onbVerifyContinue,
+              loadingLabel: context.l10n.authVerifying,
               isLoading: _isLoading,
               color: context.colors.accent,
               onTap: _verifyCode,

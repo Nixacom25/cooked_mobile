@@ -5,6 +5,8 @@ import '../../../core/extensions/string_extensions.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter/services.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/l10n/option_labels.dart';
+import '../../../core/l10n/l10n.dart';
 
 class KitchenStep extends StatefulWidget {
   final List<String> initialSelected;
@@ -98,7 +100,7 @@ class _KitchenStepState extends State<KitchenStep> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'What\'s in your kitchen?',
+            context.l10n.onbKitchenTitle,
             style: GoogleFonts.poppins(
               fontSize: 24.sp,
               fontWeight: FontWeight.w900,
@@ -106,7 +108,7 @@ class _KitchenStepState extends State<KitchenStep> {
               height: 1.2)),
           SizedBox(height: 8.h),
           Text(
-            'Select your equipment',
+            context.l10n.onbKitchenSubtitle,
             style: GoogleFonts.poppins(
               fontSize: 14.sp,
               color: context.colors.textMuted)),
@@ -128,7 +130,7 @@ class _KitchenStepState extends State<KitchenStep> {
           if (isOtherSelected) ...[
             SizedBox(height: 24.h),
             Text(
-              'Specify other equipment',
+              context.l10n.onbSpecifyEquipment,
               style: GoogleFonts.poppins(fontSize: 14.sp,
                 fontWeight: FontWeight.w600,
                 color: context.colors.textMuted)),
@@ -165,7 +167,7 @@ class _KitchenStepState extends State<KitchenStep> {
                         color: context.colors.textPrimary,
                       ),
                       decoration: InputDecoration(
-                        hintText: 'Enter equipment and press Enter',
+                        hintText: context.l10n.onbEquipmentHint,
                         hintStyle: GoogleFonts.poppins(
                           fontSize: 14.sp,
                           color: context.colors.textMuted,
@@ -276,7 +278,7 @@ class _KitchenStepState extends State<KitchenStep> {
               Icon(Icons.add_circle_outline, size: 28.sp, color: isSelected ? context.colors.accent : context.colors.textMuted),
             SizedBox(height: 8.h),
             Text(
-              app['title']!,
+              optionLabel(context, app['title']!),
               textAlign: TextAlign.center,
               style: GoogleFonts.poppins(fontSize: 14.sp,
                 fontWeight: FontWeight.w700,

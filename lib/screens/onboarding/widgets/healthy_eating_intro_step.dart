@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../widgets/red_button.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/l10n/l10n.dart';
 
 class HealthyEatingIntroStep extends StatelessWidget {
   final VoidCallback onContinue;
@@ -35,18 +36,18 @@ class HealthyEatingIntroStep extends StatelessWidget {
                             color: context.colors.textPrimary,
                             height: 1.15),
                           children: [
-                            const TextSpan(text: "Healthy eating\nshouldn’t "),
+                            TextSpan(text: context.l10n.onbHealthyTitleA),
                             TextSpan(
-                              text: "feel like",
+                              text: context.l10n.onbHealthyTitleB,
                               style: TextStyle(color: context.colors.accent)),
-                            const TextSpan(text: " a\n"),
+                            TextSpan(text: context.l10n.onbHealthyTitleC),
                             TextSpan(
-                              text: "second job",
+                              text: context.l10n.onbHealthyTitleD,
                               style: TextStyle(color: context.colors.accent)),
                           ])),
                       SizedBox(height: 10.h),
                       Text(
-                        "Recipes you’ll actually look forward\nto eating.",
+                        context.l10n.onbHealthySubtitle,
                         style: GoogleFonts.poppins(
                           fontSize: 15.sp,
                           color: context.colors.textPrimary,
@@ -78,7 +79,7 @@ class HealthyEatingIntroStep extends StatelessWidget {
             top: false,
             bottom: true,
             child: RedButton(
-              label: 'Continue',
+              label: context.l10n.commonContinue,
               color: context.colors.accent,
               onTap: onContinue,
               height: 52.h,

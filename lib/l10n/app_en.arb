@@ -1,0 +1,1329 @@
+{
+  "@@locale": "en",
+  "appName": "Cooked",
+  "groceryInlineAddHint": "e.g. Garlic - 2, 2 Garlic, or Garlic 2",
+  "groceryAddIngredientPlaceholder": "Add an ingredient...",
+  "groceryQuantityFormatError": "Please add the quantity following the format, e.g: garlic - 2, 2 garlic, or garlic 2.",
+  "commonSave": "Save",
+  "groceryAddItemOrRecipe": "Please add an item or select a recipe",
+  "groceryIngredientHint": "Cheese",
+  "commonIngredient": "Ingredient",
+  "groceryChooseRecipe": "Choose a recipe",
+  "commonNoRecipesFound": "No recipes found",
+  "commonRecipe": "Recipe",
+  "groceryAddSheetTitle": "Add Grocery",
+  "groceryItemsSaved": "Grocery items saved successfully",
+  "commonDelete": "Delete",
+  "commonCancel": "Cancel",
+  "groceryDeleteItemMessage": "Are you sure you want to delete \"{name}\" from your grocery list?",
+  "@groceryDeleteItemMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "groceryDeleteItemTitle": "Delete Item",
+  "commonDismiss": "Dismiss",
+  "groceryAddIngredients": "Add ingredients",
+  "groceryEmptySubtitle": "Add ingredients from a recipe or import to get started.",
+  "groceryEmptyTitle": "Your Grocery List Is Empty",
+  "commonAdd": "Add",
+  "groceryListTitle": "Grocery List",
+  "commonTryAgain": "Try again",
+  "commonCheckConnection": "Check your connection and try again.",
+  "groceryLoadErrorTitle": "Couldn't load your Grocery List",
+  "authMissingIdentifier": "Missing identifier context. Please try again.",
+  "authVerifying": "Verifying",
+  "commonContinue": "Continue",
+  "authResendCode": "Resend Code",
+  "authResending": "Resending",
+  "authDidntReceiveCode": "If you didn’t receive a code? ",
+  "authCodeSentTo": "Please enter the code we just sent to\n{target}",
+  "@authCodeSentTo": {
+    "placeholders": {
+      "target": {
+        "type": "String"
+      }
+    }
+  },
+  "authForgotPasswordTitle": "Forgot Password",
+  "authCodeResent": "Verification code resent.",
+  "authEnterFullCode": "Please enter the complete 6-digit code.",
+  "commonEmail": "Email",
+  "commonSending": "Sending",
+  "commonSend": "Send",
+  "commonPhoneNumber": "Phone Number",
+  "authEnterPhoneForCode": "Please enter the phone number, \nwe will send a verification code\n to your phone number",
+  "authEnterEmailForCode": "Please enter the email, we will send a\nverification code to your email",
+  "authSendToPhone": "Send to your phone",
+  "authSendToEmail": "Send to your email",
+  "authSelectContactMethod": "Select which contact details we should\nuse to reset your password",
+  "authCodeSent": "Code sent!",
+  "commonFieldRequired": "This field is required",
+  "commonGetStarted": "Get Started",
+  "authPasswordChangedMessage": "Password changed successfully, you can\nlogin again with a new password.",
+  "authPasswordChanged": "Password Changed!",
+  "commonCongratulations": "Congratulations!",
+  "commonTermsOfUse": "Terms of Use",
+  "commonPrivacyPolicy": "Privacy Policy",
+  "authSignInWithApple": "Sign in with Apple",
+  "authSignInWithGoogle": "Sign in with Google",
+  "commonSignUp": "Sign Up",
+  "authNoAccount": "Don’t have an account? ",
+  "authLoggingIn": "Logging in",
+  "authLogin": "Login",
+  "authForgotPasswordLink": "Forgot password?",
+  "commonPassword": "Password",
+  "authSignInSubtitle": "Sign in to your account",
+  "commonSignIn": "Sign In",
+  "authSocialLoginSuccess": "Social login successful!",
+  "authLoginSuccess": "Login successful!",
+  "authVerificationCodeLabel": "VERIFICATION CODE",
+  "commonConfirm": "Confirm",
+  "commonUpdating": "Updating",
+  "authConfirmPassword": "Confirm Password",
+  "authNewPassword": "New Password",
+  "authCreateNewPassword": "Create New Password",
+  "authResetSuccess": "Reset successful!",
+  "authPasswordsDontMatch": "Passwords don't match",
+  "authPasswordMinLength": "Minimum 6 characters",
+  "authAccountCreatedMessage": "Your account is complete, please enjoy\nthe best menu from us.",
+  "authAccountCreated": "Account Created!",
+  "welcomeHaveAccount": "Already have an account? ",
+  "welcomeSubtitle": "Scan ingredients. Save recipes.\nPlan effortlessly.",
+  "welcomeTitle": "Welcome to Cooked",
+  "authEmailOrPhoneFallback": "mail/phone number",
+  "authYourEmailFallback": "your email",
+  "themeDarkOn": "On",
+  "themeDarkOff": "Off",
+  "themeSystemSettings": "System Settings",
+  "themeSystem": "System",
+  "themeLight": "Light",
+  "themeDark": "Dark",
+  "themeMatchPhone": "Match your phone's setting",
+  "themeAlwaysDark": "Always use the dark theme",
+  "themeAlwaysLight": "Always use the light theme",
+  "themeSystemHint": "If System Settings is selected, the app's appearance will automatically switch to match your device's setting.",
+  "notifSecurityNote": "Account and security alerts (like new sign-ins or payment issues) are always sent while push notifications are enabled.",
+  "profileInviteMessage": "You should try Cooked. It turns what's in your fridge into recipes in seconds and saves you money on takeout. Click here to join! {link}",
+  "@profileInviteMessage": {
+    "placeholders": {
+      "link": {
+        "type": "String"
+      }
+    }
+  },
+  "appearanceTitle": "Appearance",
+  "settingsDarkMode": "Dark Mode",
+  "langSuggestRow": "Suggest a language…",
+  "settingsLanguage": "Language",
+  "langUpdateFailed": "Failed to update language",
+  "langSuggestionFailed": "Couldn't send your suggestion. Please try again.",
+  "langSuggestionThanks": "Thanks! We got your suggestion.",
+  "langSendSuggestion": "Send suggestion",
+  "langSuggestHint": "e.g. Italian, Wolof, Portuguese…",
+  "langSuggestMessage": "Which language would you like Cooked in? We'll use your suggestions to decide what comes next.",
+  "langSuggestTitle": "Suggest a language",
+  "commonSaveChanges": "Save Changes",
+  "commonName": "Name",
+  "accountChangePicture": "Change Picture",
+  "accountDefaultName": "Chef",
+  "settingsMyAccount": "My Account",
+  "accountProfileUpdated": "Profile updated successfully!",
+  "notifNewsSubtitle": "New features, recipes and special offers",
+  "notifNews": "News, Tips & Offers",
+  "notifRemindersSubtitle": "Trial ending and subscription reminders",
+  "notifReminders": "Reminders",
+  "notifPushSubtitle": "Receive notifications on this device",
+  "notifPush": "Push Notifications",
+  "settingsNotifications": "Notifications",
+  "settingsDeletePermanently": "Delete permanently",
+  "settingsDeleteAccountConfirm": "Are you sure you want to permanently delete your account? This action cannot be undone and you will lose all your data (Cookbooks, grocery items, etc.).",
+  "settingsDeleteAccount": "Delete Account",
+  "settingsLogout": "Logout",
+  "settingsLogoutConfirm": "Are you sure you want to log out of your account? You will need to enter your credentials to log back in.",
+  "settingsContactSupport": "Contact Support",
+  "settingsGiftCooked": "Gift Cooked to a friend",
+  "settingsInviteFriends": "Invite friends",
+  "settingsManageSubscription": "Manage Subscription & Restore Purchases",
+  "settingsKitchenEquipment": "Kitchen Equipment",
+  "settingsCuisineFlavor": "Cuisine + Flavor DNA",
+  "settingsAllergies": "Allergies",
+  "settingsDietaryPreferences": "Dietary Preferences",
+  "settingsChangePassword": "Change Password",
+  "settingsTitle": "Settings",
+  "pwdCurrentPassword": "Current Password",
+  "pwdUpdated": "Password updated successfully.",
+  "pwdNoMatch": "New passwords do not match.",
+  "pwdFillAllFields": "Please fill in all fields.",
+  "optTotalBeginner": "Total Beginner",
+  "optICanBarelyBoilWater": "I can barely boil water",
+  "optHomeCook": "Home Cook",
+  "optIFollowRecipesStepByStep": "I follow recipes step by step",
+  "optConfidentCook": "Confident Cook",
+  "optIImproviseAndExperiment": "I improvise and experiment",
+  "optAdvancedSemiPro": "Advanced / Semi-Pro",
+  "optIWantChallengingRecipes": "I want challenging recipes.",
+  "optUnder15Minutes": "Under 15 minutes",
+  "optUltraFastMeals": "Ultra-fast meals",
+  "optForWhenYouNeedFoodInstantly": "For when you need food instantly.",
+  "opt_1530Minutes": "15–30 minutes",
+  "optQuickButNotRushed": "Quick but not rushed",
+  "optPerfectForQuickWeekdayMeals": "Perfect for quick weekday meals.",
+  "opt_3060Minutes": "30–60 minutes",
+  "optANormalCookingWindow": "A normal cooking window",
+  "optGreatForRelaxedDinners": "Great for relaxed dinners.",
+  "opt_12Hours": "1–2 hours",
+  "optIEnjoyTheCookingProcess": "I enjoy the cooking process",
+  "optForWeekendCookingSessions": "For weekend cooking sessions.",
+  "optAnyAmountOfTime": "Any amount of time",
+  "optShowMeEverything": "Show me everything",
+  "optAllRecipesAreOnTheTable": "All recipes are on the table.",
+  "optWeeklyMealPlan": "Weekly meal plan",
+  "optGetAFullPlanEveryWeek": "Get a full plan every week",
+  "optDailySuggestions": "Daily suggestions",
+  "optOneRecipeEachMorning": "One recipe each morning",
+  "optILlPlanMyself": "I'll plan myself",
+  "optJustShowMeRecipes": "Just show me recipes",
+  "optPlanByIngredients": "Plan by ingredients",
+  "optScanMyFridgeGiveMeA": "Scan my fridge, give me a plan",
+  "optJustMe": "Just me",
+  "opt_1Person": "1 person",
+  "optTwoPeople": "Two people",
+  "optCoupleOrPair": "Couple or pair",
+  "opt_34People": "3–4 people",
+  "optSmallFamily": "Small family",
+  "opt_56People": "5–6 people",
+  "optLargerFamily": "Larger family",
+  "opt_7PlusPeople": "7+ people",
+  "optLargeFamilyOrGroup": "Large family or group",
+  "optItVaries": "It varies",
+  "optILlAdjustPerRecipe": "I'll adjust per recipe",
+  "optSaveMoney": "Save money",
+  "optEatHealthier": "Eat healthier",
+  "optGainMuscle": "Gain muscle",
+  "optLoseWeight": "Lose weight",
+  "optWasteLessFood": "Waste less food",
+  "optLearnToCook": "Learn to cook",
+  "optDiscoverRecipes": "Discover recipes",
+  "optMealPrepEasier": "Meal prep easier",
+  "optNoRestrictions": "No Restrictions",
+  "optIEatEverything": "I eat everything",
+  "optVegetarian": "Vegetarian",
+  "optNoMeatOrFish": "No meat or fish",
+  "optVegan": "Vegan",
+  "optNoAnimalProducts": "No animal products",
+  "optPescatarian": "Pescatarian",
+  "optFishOkNoOtherMeat": "Fish OK, no other meat",
+  "optGlutenFree": "Gluten-Free",
+  "optNoWheatOrGluten": "No wheat or gluten",
+  "optDairyFree": "Dairy Free",
+  "optNoMilkOrDairy": "No milk or dairy",
+  "optHalal": "Halal",
+  "optIslamicDietaryLaws": "Islamic dietary laws",
+  "optKosher": "Kosher",
+  "optJewishDietaryLaws": "Jewish Dietary Laws",
+  "optKetoLowCarb": "Keto/Low-Carb",
+  "optHighFatLowCarb": "High fat, low carb",
+  "optHighProtein": "High Protein",
+  "optHighProteinFoods": "High protein foods",
+  "optTreeNuts": "Tree nuts",
+  "optPeanuts": "Peanuts",
+  "optShellfish": "Shellfish",
+  "optFish": "Fish",
+  "optEggs": "Eggs",
+  "optSoy": "Soy",
+  "optDairyMilk": "Dairy Milk",
+  "optWheatGluten": "Wheat/Gluten",
+  "optSesame": "Sesame",
+  "optNoAllergies": "No Allergies",
+  "optItalian": "Italian",
+  "optJapanese": "Japanese",
+  "optMexican": "Mexican",
+  "optChinese": "Chinese",
+  "optThai": "Thai",
+  "optMiddleEastern": "Middle Eastern",
+  "optWestAfrican": "West African",
+  "optEastAfrican": "East African",
+  "optCaribbean": "Caribbean",
+  "optIndian": "Indian",
+  "optSpanish": "Spanish",
+  "optGreek": "Greek",
+  "optFrench": "French",
+  "optKorean": "Korean",
+  "optMediterranean": "Mediterranean",
+  "optOthers": "Others",
+  "optOven": "Oven",
+  "optStovetopGasBurner": "Stovetop / Gas burner",
+  "optMicrowave": "Microwave",
+  "optAirFryer": "Air fryer",
+  "optBlenderLiquidizer": "Blender / Liquidizer",
+  "optFoodProcessor": "Food processor",
+  "optInstantPotPressureCooker": "Instant Pot / Pressure cooker",
+  "optGrillBbq": "Grill / BBQ",
+  "optRiceCooker": "Rice cooker",
+  "optStandMixerHandMixer": "Stand mixer / Hand mixer",
+  "optSteamer": "Steamer",
+  "optOther": "Other",
+  "optScanIngredients": "Scan Ingredients",
+  "optTakeAPhotoAndGetRecipes": "Take a photo and get recipes from what you already have.",
+  "optMealPlanning": "Meal Planning",
+  "optPlanYourMealsForTheWeek": "Plan your meals for the week without starting from scratch.",
+  "optImportRecipes": "Import Recipes",
+  "optSaveRecipesFromTiktokInstagramYoutube": "Save recipes from TikTok, Instagram, YouTube, or websites.",
+  "optGroceryLists": "Grocery Lists",
+  "optTurnRecipesIntoShoppingListsAutomatically": "Turn recipes into shopping lists automatically.",
+  "optDailyRecipeInspiration": "Daily recipe inspiration",
+  "optMorningSuggestion": "Morning suggestion",
+  "optGroceryReminder": "Grocery Reminder",
+  "optRememberWhatToBuyBeforeIngredients": "Remember what to buy before ingredients run out.",
+  "optMild": "Mild",
+  "optNoHeatAtAll": "No heat at all",
+  "optMedium": "Medium",
+  "optJustAHintOfSpice": "Just a hint of spice",
+  "optSpicy": "Spicy",
+  "optIEnjoySpice": "I enjoy spice",
+  "optHot": "Hot",
+  "optTheSpicierTheBetter": "The spicier the better",
+  "optInferno": "Inferno",
+  "optIPutHotSauce": "I put hot sauce",
+  "optUnder18": "Under 18",
+  "optUnder50": "Under $50",
+  "optIDonTKnowWhatTo": "I don't know what to cook",
+  "optCookingTakesTooMuchTime": "Cooking takes too much time",
+  "optISpendTooMuchOnTakeout": "I spend too much on takeout",
+  "optHealthyEatingFeelsDifficult": "Healthy eating feels difficult",
+  "optGroceryShoppingIsStressful": "Grocery shopping is stressful",
+  "optAlmostNever": "Almost never",
+  "optSometimes": "Sometimes",
+  "optWeekly": "Weekly",
+  "optConstantly": "Constantly",
+  "optAnchovies": "Anchovies",
+  "optBlackLicorice": "Black licorice",
+  "optBrusselsSprouts": "Brussels sprouts",
+  "optBlueCheese": "Blue cheese",
+  "optOysters": "Oysters",
+  "optSardines": "Sardines",
+  "optOlives": "Olives",
+  "optBeets": "Beets",
+  "optCottageCheese": "Cottage cheese",
+  "optOkra": "Okra",
+  "optSpam": "Spam",
+  "optTofu": "Tofu",
+  "optTurnips": "Turnips",
+  "optKimchi": "Kimchi",
+  "optEggplant": "Eggplant",
+  "optCauliflower": "Cauliflower",
+  "optCilantro": "Cilantro",
+  "optLimaBeans": "Lima beans",
+  "optPickledHerring": "Pickled herring",
+  "optSauerkraut": "Sauerkraut",
+  "optGoatCheese": "Goat cheese",
+  "optBitterMelon": "Bitter melon",
+  "optMushrooms": "Mushrooms",
+  "optGrapefruit": "Grapefruit",
+  "opt_23TimesAWeek": "2–3 times a week",
+  "optMetric": "Metric",
+  "optImperial": "Imperial",
+  "optLiver": "Liver",
+  "onbBestGuess": "Take your best guess. We’ll do the math",
+  "onbEatingOutTitle": "How much do you spend eating out every week?",
+  "onbThatCouldBeOver": "That could be over",
+  "onbPotentialYearlySavings": "Potential Yearly Savings",
+  "onbThanHome": "Than cooking at home",
+  "onbNearlyB": " more",
+  "onbNearlyA": "That is nearly ",
+  "onbMadeAtHome": "Made at home",
+  "onbHomeCooked": "Home Cooked",
+  "onbThreeMealsWeek": "3 Meals / Week",
+  "onbTakeout": "Takeout",
+  "onbCostingSubtitle": "Small decisions become\nexpensive habits",
+  "onbCostingTitleD": "time",
+  "onbCostingTitleC": "more than ",
+  "onbCostingTitleB": "costing\n",
+  "onbCostingTitleA": "And it’s ",
+  "onbDinnerSubtitle": "No stress. No guesswork",
+  "onbDinnerTitleB": "figured out",
+  "onbDinnerTitleA": "Imagine dinner\nalready ",
+  "onbViewOtherPlans": "View other plans",
+  "onbTrialReminder": "We'll send you a reminder before your trial ends.",
+  "onbTrialDay3": "Day 3",
+  "onbTrialDay2": "Day 2",
+  "onbTrialGuideToday": "Unlock personalized recipes, meal suggestions, and ingredient scanning.",
+  "commonToday": "Today",
+  "onbTrialGuideSubtitle": "Get the most out of your Cooked trial.",
+  "onbTrialGuideTitle": "Free trial guide",
+  "onbTryForZero": "Start 3-Day Free Trial",
+  "onbKeepEverything": "Create your account to keep your recipes, meal plans, grocery lists, and savings tracker.",
+  "onbTryFreeB": "free",
+  "onbTryFreeA": "We want you to try\nCooked for ",
+  "onbBenefitGrocery": "Smart grocery lists that save you money",
+  "onbBenefitPlans": "Personalized meal plans",
+  "onbBenefitRecipes": "Full access to 10,000+ chef-curated recipes",
+  "onbGroceriesUnusedTitle": "How often do groceries go unused?",
+  "onbOver": "over ",
+  "onbHouseholdWastes": "The average household wastes",
+  "onbHandlesSubtitle": "We plan. You cook.",
+  "onbHandlesTitleB": "meals",
+  "onbHandlesTitleA": "Cooked handles\nall your ",
+  "onbHealthySubtitle": "Recipes you’ll actually look forward\nto eating.",
+  "onbHealthyTitleD": "second job",
+  "onbHealthyTitleC": " a\n",
+  "onbHealthyTitleB": "feel like",
+  "onbHealthyTitleA": "Healthy eating\nshouldn’t ",
+  "onbMealsSubtitle": "Dinner shouldn’t be the hardest\ndecision of your day",
+  "onbMealsTitleD": " again",
+  "onbMealsTitleC": "to cook",
+  "onbMealsTitleB": "what\n",
+  "onbMealsTitleA": "Never wonder ",
+  "onbBuildingSystem": "Building your\npersonalized cooking\nsystem{dots}",
+  "@onbBuildingSystem": {
+    "placeholders": {
+      "dots": {
+        "type": "String"
+      }
+    }
+  },
+  "onbTaskPersonalizing": "Personalizing recommendations",
+  "onbTaskFeed": "Building your meal feed",
+  "onbTaskSavings": "Calculating savings",
+  "onbTaskFindRecipes": "Finding recipes you'll love",
+  "onbTaskTastes": "Learning your tastes",
+  "onbRepetitionSubtitle": "Built around your taste.",
+  "onbRepetitionTitle": "Tired of eating the\nsame thing every\nweek?",
+  "onbOfYourLife": "of your life\nevery year",
+  "onbDays": "Days",
+  "onbSpentDeciding": "Spent deciding\nwhat to eat",
+  "onbHours": "Hours",
+  "onbNotAloneSubtitle": "Most people spend over 200 hours\nevery year deciding what to eat",
+  "onbNotAloneB": "not alone",
+  "onbNotAloneA": "You’re ",
+  "onbSkillSubtitle": "We'll match recipes to your experience.",
+  "onbSkillTitle": "What's your cooking\nskill level?",
+  "onbAvoidB": " recipes.",
+  "onbAvoidA": "Great, we'll avoid ",
+  "onbAvoidComplex": "complex",
+  "onbAvoidBasic": "basic",
+  "onbAvoidBoring": "boring",
+  "onbAvoidUntested": "untested",
+  "onbAvoidOverlyComplex": "overly complex",
+  "onbReview3": "\"Meal ideas feel personalized\ninstead of random.\"",
+  "onbReview2": "\"I finally use the groceries I\nalready have.\"",
+  "onbReview1": "\"Cooked helped me stop\nordering dinner every night.\"",
+  "onbStarsFromThousands": "Stars from thousands\nof food lovers",
+  "onbUnlock": "Unlock",
+  "onbBadgeHealthier": "Healthier meals,\nmade easy",
+  "onbBadgeRecipes": "1,847 recipes\nmatched",
+  "onbBadgeSaveHours": "Save 180+ hours/\nyear",
+  "onbBadgeSaveMoney": "Save $2,496/\nyear",
+  "onbRecipesCurated": "recipes curated for your taste",
+  "onbPlanReadySubtitle": "Built around your goals, taste,\nschedule, and savings",
+  "onbPlanReady": "Your personalized\nplan is ready.",
+  "onbStartArrow": "Start →",
+  "onbBuildProfileSubtitle": "The more we learn, the better your recommendations",
+  "onbBuildProfileB": "profile",
+  "onbBuildProfileA": "Let’s build your\ncooking ",
+  "onbTaskCuisines": "Learning your cuisine preferences",
+  "onbTaskDietary": "Understanding your dietary preferences",
+  "onbTaskPotentialSavings": "Calculating your potential savings",
+  "onbTaskChallenges": "Understanding your cooking challenges",
+  "onbCookingSmarter": "Just by cooking smarter",
+  "onbEveryYear": "Every Year",
+  "onbCouldSave": "You could save\napproximately",
+  "optSweet": "Sweet",
+  "optSavory": "Savory",
+  "optCrunchyTextures": "Crunchy textures",
+  "optSoftCreamy": "Soft & creamy",
+  "flavorLeaningSweet": "Sweet leaning",
+  "flavorLeaningSavory": "Savory leaning",
+  "flavorLeaningBalanced": "Balanced leaning",
+  "flavorTextureCrunchy": "Crunchy texture",
+  "flavorTextureCreamy": "Creamy texture",
+  "flavorTextureBalanced": "Balanced texture",
+  "onbCreateAccount": "Create Account",
+  "onbEmailHint": "john@example.com",
+  "onbNameHint": "John Doe",
+  "commonFullName": "Full Name",
+  "onbCreateAccountSubtitle": "Secure your recipes and preferences",
+  "onbCreateAccountTitle": "Create your account",
+  "valPasswordMin": "Password must be at least 6 characters",
+  "valEnterPassword": "Please enter a password",
+  "valValidEmail": "Please enter a valid email address",
+  "valEnterEmail": "Please enter your email",
+  "valEnterName": "Please enter your name",
+  "onbAgeSubtitle": "We’ll use this to personalize your recommendations",
+  "onbAgeTitle": "How old are you?",
+  "onbAllergiesSubtitle": "We’ll automatically filter recipes for you",
+  "onbAllergiesTitle": "Do you have any\ndietary restrictions or\nallergies?",
+  "onbMoreDietLater": "Additional dietary preferences can be updated later in Settings.",
+  "onbCommonAllergies": "Common allergies",
+  "onbTypeCuisine": "Type a cuisine...",
+  "onbSpecifyCuisines": "Specify other cuisines",
+  "onbCuisinesSubtitle": "Pick your favorites. The more you choose, the\nbetter your recommendations",
+  "onbCuisinesTitle": "What cuisines do\nyou love?",
+  "onbSelectOneCuisine": "Please select at least one cuisine",
+  "commonSelectAllThatApply": "Select all that apply.",
+  "onbDietTitle": "What's your dietary profile?",
+  "onbMorePrefsLater": "More preferences can be updated later in Settings.",
+  "onbDislikeHint": "Type a food you dislike (e.g. Pork, Mayo)...",
+  "onbDislikesSubtitle": "We’ll keep them out of your\nrecommendations",
+  "onbDislikesTitle": "What foods don’t\nyou like?",
+  "onbFeaturesSubtitle": "Pick the features you’ll use most",
+  "onbFeaturesTitle": "What are you most\nexcited about?",
+  "onbProfilePreview": "YOUR PROFILE PREVIEW",
+  "onbSpiceTolerance": "Spice Tolerance",
+  "onbFlavorSubtitle": "Move the sliders to match your taste",
+  "onbFlavorTitle": "Your flavor DNA",
+  "onbFrustrationsSubtitle": "Choose the ones that feel most true",
+  "onbFrustrationsTitle": "What's holding you back from cooking more?",
+  "onbGoalsSubtitle": "We’ll personalize everything around it",
+  "onbGoalsTitle": "What’s your goal\nright now?",
+  "onbEquipmentHint": "Enter equipment and press Enter",
+  "onbSpecifyEquipment": "Specify other equipment",
+  "onbKitchenSubtitle": "Select your equipment",
+  "onbKitchenTitle": "What's in your kitchen?",
+  "onbPlanningSubtitle": "We'll customize the experience for you",
+  "onbPlanningTitle": "How do you like to plan meals?",
+  "onbNotifFooter": "You can adjust these anytime in your settings",
+  "onbTurnOnAll": "Turn on all",
+  "onbTurnOffAll": "Turn off all",
+  "onbNotifSubtitle": "Choose what you'd like to hear about",
+  "onbNotifTitle": "Stay inspired with new recipes",
+  "onbVerifyContinue": "Verify & Continue",
+  "onbNoCode": "Didn't receive a code?",
+  "onbOtpSentTo": "Please enter the 6-digit code we sent to\n{email}",
+  "@onbOtpSentTo": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "onbVerifyAccount": "Verify your account",
+  "onbStartCooking": "Start Cookin'",
+  "onbUsesIngredients": "Uses your ingredients",
+  "onbQuickDinner": "Quick dinner",
+  "onbMatchesTaste": "Matches your taste",
+  "onbWhyPicked": "Why we picked this",
+  "onbPerfectMealSubtitle": "Based on your goals, taste, and cooking",
+  "onbPerfectMeal": "Perfect meal for you",
+  "commonSoonSuffix": "{label} (Soon)",
+  "@commonSoonSuffix": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "authSignInWithEmail": "Sign in with Email",
+  "onbSavePlan": "Save your\npersonalized plan",
+  "onbTargetSubtitle": "This helps us recommend the right portions",
+  "onbTargetTitle": "Who are you usually\ncooking for?",
+  "onbCookingTime": "Cooking time",
+  "onbTimeSubtitle": "We’ll prioritize recipes that fit your schedule",
+  "onbTimeTitle": "How much time do you\nusually have to cook?",
+  "priceBilledMonthly": "Billed monthly",
+  "priceBilledPerMonth": "Billed {price} per month",
+  "@priceBilledPerMonth": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "commonProcessing": "Processing",
+  "commonContinuing": "Continuing",
+  "onbStartTrial": "Start My 3-Day Free Trial",
+  "onbSkipEatMost": "Skip — I eat most things",
+  "commonConnecting": "Connecting",
+  "onbGoogleSignupTip": "{error}\n\nTip: If the problem persists with Google, try signing up via email.",
+  "@onbGoogleSignupTip": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "onbCompleteAccountInfo": "Please complete account info to save your profile",
+  "payCouldNotStart": "Could not initiate purchase",
+  "commonSkip": "Skip",
+  "commonSubmit": "Submit",
+  "referralCodeHint": "Referral Code",
+  "referralCanSkip": "You can skip this step",
+  "referralEnterCode": "Enter referral code (optional)",
+  "giftUnlocked": "🎉 {plan} of Cooked Premium unlocked!",
+  "@giftUnlocked": {
+    "placeholders": {
+      "plan": {
+        "type": "String"
+      }
+    }
+  },
+  "priceTrialThenYearly": "3 days free, then {price}/year",
+  "@priceTrialThenYearly": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "priceTrialThenBilledYearly": "3 days free, then billed yearly",
+  "commonCancelAnytime": "{text}. Cancel anytime.",
+  "@commonCancelAnytime": {
+    "placeholders": {
+      "text": {
+        "type": "String"
+      }
+    }
+  },
+  "trialHaveReferralCode": "Do you have a referral code?",
+  "trialMonthlyNoTrialNoPrice": "No free trial. Billed immediately. Cancel anytime.",
+  "trialMonthlyNoTrial": "No free trial. Billed immediately at {price}/month. Cancel anytime.",
+  "@trialMonthlyNoTrial": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "commonProcessingDots": "Processing...",
+  "trialTryFree": "Start 3-Day Free Trial",
+  "trialSubscribeNow": "Subscribe Now",
+  "trialNoPaymentToday": "No payment due today",
+  "trialThreeDaysFree": "3 days free",
+  "planYearly": "Yearly",
+  "planMonthly": "Monthly",
+  "trialSubtitle": "Built around your goals, schedule, and taste.",
+  "trialTitle": "Unlock your full\npersonalized cooking system.",
+  "pricePerYearShort": "{price} /year",
+  "@pricePerYearShort": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "pricePerMonthShort": "{price} /mo",
+  "@pricePerMonthShort": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "faqImportQ": "How do I import a recipe?",
+  "faqImportA": "Go to the Import tab, paste a link, or use the camera to scan a recipe.",
+  "faqShareQ": "Can I share my recipes?",
+  "faqShareA": "Yes! Open a recipe and tap the share button in the top right corner.",
+  "faqCookbookQ": "How do I create a cookbook?",
+  "faqCookbookA": "From the Home tab, tap the « + » button next to Your Cookbooks.",
+  "faqPasswordQ": "How do I change my password?",
+  "faqPasswordA": "Go to Settings → Change Password and enter your new password.",
+  "faqWebQ": "Is there a web version?",
+  "faqWebA": "No, Cooked is currently available as a mobile app only.",
+  "feedbackCatAccount": "Account",
+  "feedbackCatPayment": "Payment",
+  "feedbackCatScan": "Scan",
+  "feedbackCatImport": "Import",
+  "feedbackCatRecipe": "Recipe",
+  "feedbackCatShopping": "Shopping",
+  "feedbackCatOther": "Other",
+  "prefsFlavorSummary": "{spice}, {count, plural, =1{1 preference} other{{count} preferences}}",
+  "@prefsFlavorSummary": {
+    "placeholders": {
+      "spice": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "savingsFromRecipes": "{count, plural, =1{From 1 saved recipe} other{From {count} saved recipes}}",
+  "@savingsFromRecipes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "activityEmpty": "You haven't imported or scanned any recipes yet.",
+  "activityRecentRecipes": "Recent Recipes",
+  "prefsAllergiesUpdateFailed": "Failed to update allergies",
+  "prefsFlavorSpice": "Flavor & Spice",
+  "commonNotSet": "Not set",
+  "prefsFavoriteCuisines": "Favorite Cuisines",
+  "prefsCuisineUpdateFailed": "Failed to update cuisine & flavor preferences",
+  "feedbackHint": "Describe your problem...",
+  "feedbackMessage": "Message",
+  "feedbackCategory": "Category",
+  "feedbackHeadline": "We'd love to hear from you 💬\nDescribe your problem and we'll help you as soon as possible.",
+  "feedbackFailed": "Could not send feedback. Please try again.",
+  "feedbackSent": "Thanks! Your feedback has been sent.",
+  "feedbackNoEmail": "Could not find your account email.",
+  "feedbackWriteFirst": "Please write a message first.",
+  "legalCookies": "Cookie Policy",
+  "legalRefundCancellation": "Refund & Cancellation",
+  "legalRefund": "Refund Policy",
+  "legalTerms": "Terms & Conditions",
+  "helpLegal": "Legal & Policies",
+  "helpSendFeedbackSubtitle": "Bugs, ideas, or anything else",
+  "helpSendFeedback": "Send Feedback",
+  "helpHeadline": "Tell us how we can help 👋\nOur team is standing by for service & support!",
+  "helpTitle": "Help Center",
+  "prefsKitchenUpdateFailed": "Failed to update kitchen equipment",
+  "giftRedeeming": "Redeeming...",
+  "giftRedeem": "Redeem",
+  "giftRedeemSubtitle": "Enter your gift code to unlock Cooked Premium on this account.",
+  "giftRedeemHeadline": "Someone gifted you Cooked?",
+  "giftRedeemTitle": "Redeem a gift",
+  "savingsScannedAtHome": "Scanned at home",
+  "savingsYourSaved": "Your saved",
+  "savingsEmpty": "No scan savings yet",
+  "savingsTitle": "Your Savings",
+  "subAmount": "Amount",
+  "commonNotAvailable": "N/A",
+  "subFreeTrial": "Free Trial",
+  "subPremiumPlan": "Premium Plan",
+  "subNoPayments": "No payment history found",
+  "subPaymentHistory": "Payment History",
+  "subRestorePurchases": "Restore Purchases",
+  "subActive": "Active Subscription",
+  "subRenew": "Renew or Upgrade",
+  "subAlreadyPremium": "You are already a Premium member!",
+  "subStatus": "Status",
+  "subEndDate": "End Date",
+  "subStartDate": "Start Date",
+  "subPlan": "Plan",
+  "subDetails": "Subscription Details",
+  "subTitle": "Subscription",
+  "subNothingToRestore": "No active subscriptions found to restore.",
+  "subRestored": "Purchases restored!",
+  "subExpiringSoon": "Expiring soon",
+  "subHoursLeft": "{count, plural, =1{1 hour left} other{{count} hours left}}",
+  "@subHoursLeft": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "subDaysLeft": "{count, plural, =1{1 day left} other{{count} days left}}",
+  "@subDaysLeft": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "subExpired": "Expired",
+  "subNoActive": "No active subscription",
+  "subLoadFailed": "Failed to load subscription status",
+  "prefsGoals": "Onboarding Goals",
+  "prefsSectionOther": "Other",
+  "prefsCookingTarget": "Cooking Target",
+  "prefsPlanningStyle": "Meal Planning Style",
+  "prefsSectionPlanning": "Meal Planning & Habits",
+  "prefsTimePreference": "Time Preference",
+  "prefsCookingSkill": "Cooking Skill",
+  "prefsSectionCooking": "Cooking & Skills",
+  "prefsFoodDislikes": "Food Dislikes",
+  "prefsDietaryProfile": "Dietary Profile",
+  "prefsSectionDiet": "Diet",
+  "prefsUpdateFailed": "Failed to update preferences",
+  "prefsUpdated": "Preferences updated successfully!",
+  "prefsLoadFailed": "Failed to load preferences",
+  "giftPlanOneYear": "1 Year",
+  "giftPlanThreeMonths": "3 Months",
+  "giftPlanOneYearDesc": "Give the gift of a 1-year Premium subscription to Cooked. Purchase is not refundable.",
+  "giftPlanThreeMonthsDesc": "Give the gift of a 3-month Premium subscription to Cooked. Purchase is not refundable.",
+  "giftShareMessage": "🎁 I got you {plan} of Cooked Premium! Redeem it here: {url}\n\nOr open Cooked and enter this code: {code}",
+  "@giftShareMessage": {
+    "placeholders": {
+      "plan": {
+        "type": "String"
+      },
+      "url": {
+        "type": "String"
+      },
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "giftTapToCopy": "Tap to copy",
+  "giftRefunded": "Refunded",
+  "giftRedeemed": "Redeemed",
+  "giftNotUsed": "Not used yet",
+  "giftBuy": "Buy gift",
+  "giftBestValue": "Best value",
+  "giftYourGifts": "Your gifts",
+  "giftSubtitle": "Buy a gift code and send it to a friend. They redeem it in the app - no subscription needed on their side.",
+  "giftHeadline": "Give the gift of Cooked",
+  "giftTitle": "Gift Cooked",
+  "giftSendToFriend": "Send to a friend",
+  "giftSendThisCode": "Send this {plan} code to a friend. We also emailed it to you.",
+  "@giftSendThisCode": {
+    "placeholders": {
+      "plan": {
+        "type": "String"
+      }
+    }
+  },
+  "giftReady": "Your gift is ready!",
+  "giftCodeCopied": "Gift code copied",
+  "giftPurchaseFailed": "Purchase failed. Please try again.",
+  "giftPaymentReceived": "Payment received! We'll email you the gift code in a moment.",
+  "shareRecipe": "Check out {name} on Cooked 🙌\n{link}",
+  "@shareRecipe": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "link": {
+        "type": "String"
+      }
+    }
+  },
+  "shareRecipeByCreator": "Check out {creator}'s {name} on Cooked 🙌\n{link}",
+  "@shareRecipeByCreator": {
+    "placeholders": {
+      "creator": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      },
+      "link": {
+        "type": "String"
+      }
+    }
+  },
+  "savingsComparedTakeout": "Comparing to ordered takeout.",
+  "savingsThisMonth": "This month",
+  "recipeAlreadySaved": "This recipe is already present in your recipes",
+  "homeSuggestedRecipes": "Suggested Recipes",
+  "cookbookDeleteFailed": "Failed to delete cookbook",
+  "cookbookDeleted": "Cookbook deleted",
+  "cookbookDelete": "Delete Cookbook",
+  "commonOperationFailed": "Operation failed",
+  "cookbookUnpinned": "Cookbook unpinned",
+  "cookbookPinned": "Cookbook pinned",
+  "cookbookPin": "Pin Cookbook",
+  "cookbookUnpin": "Unpin Cookbook",
+  "cookbookEdit": "Edit Cookbook",
+  "cookbookAddRecipes": "Add Recipes",
+  "cookbookNew": "New Cookbook",
+  "feedbackSubmit": "Submit Feedback",
+  "feedbackThanks": "Thank you for your feedback!",
+  "feedbackTypeHere": "Type your feedback here...",
+  "feedbackCardSubtitle": "Share your thoughts, ideas, or anything that could make your experience better.",
+  "feedbackCardTitle": "Help us improve Cooked",
+  "feedbackCardButton": "Send feedback",
+  "recipeDelete": "Delete Recipe",
+  "recipeShare": "Share Recipe",
+  "recipeAddToCookbook": "Add to Cookbook",
+  "recipeRemoveFromCookbook": "Remove from Cookbook",
+  "recipeUnpin": "Unpin Recipe",
+  "recipePin": "Pin Recipe",
+  "recipeRemovedToast": "Recipe removed from saved",
+  "recipeSavedToast": "Recipe saved to favorites!",
+  "navImport": "Import",
+  "navScan": "Scan",
+  "navExplore": "Explore",
+  "commonTryDifferentSearch": "Try a different search term.",
+  "homeBrowseRecipes": "Browse Recipes",
+  "homeNoSavedSubtitle": "Explore our recipes and save your favorites\nto build your personal collection.",
+  "homeNoSavedTitle": "No saved recipes yet",
+  "homeAddCookbook": "Add cookbook",
+  "homeCookbookEmptySubtitle": "Save your favorite recipes and\nkeep them all in one place.",
+  "homeCookbookEmptyTitle": "Start building your cookbook",
+  "commonViewAll": "View All",
+  "homeSavedRecipes": "Saved Recipes",
+  "homeSuggested": "Suggested for you",
+  "homeRecentlyViewed": "Recently Viewed",
+  "homeCookbooks": "Cookbooks",
+  "homeYourCookbooks": "Your Cookbooks",
+  "homeSearchHint": "Search your recipes",
+  "homeHeadline": "What would you like to cook today?",
+  "navGrocery": "Grocery",
+  "navScanRecipe": "Scan Recipe",
+  "navHome": "Home",
+  "recipeCount": "{count, plural, =1{1 recipe} other{{count} recipes}}",
+  "@recipeCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recipeCountTitle": "{count, plural, =1{1 Recipe} other{{count} Recipes}}",
+  "@recipeCountTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "cookbookDefaultName": "Cookbook",
+  "recipePinned": "Recipe pinned",
+  "recipeUnpinned": "Recipe unpinned",
+  "recipePinFailed": "Failed to pin recipe",
+  "recipeRemovedFromCookbook": "Removed from Cookbook",
+  "recipeDeleted": "Recipe deleted",
+  "cookbookEmptyTitle": "No recipes yet",
+  "cookbookEmptySubtitle": "Start adding recipes to this cookbook by scanning, importing or exploring.",
+  "recipeServings": "Servings",
+  "recipeQuantitiesAdjust": "Quantities adjust automatically",
+  "commonLoadingDots": "Loading...",
+  "commonGoBack": "Go Back",
+  "recipeServingsPeople": "{count, plural, =1{1 Person} other{{count} People}}",
+  "@recipeServingsPeople": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recipeAddToGrocery": "Add to Grocery",
+  "recipeSteps": "Steps",
+  "recipeIngredients": "Ingredients",
+  "recipeAlsoRemoveSaved": "Do you also want to remove this recipe from Saved Recipes?",
+  "commonNo": "No",
+  "commonYes": "Yes",
+  "recipeRemovedBoth": "Removed from Cookbook and Saved Recipes",
+  "recipeNoIngredients": "No ingredients listed",
+  "recipeNoIngredientsHint": "Check the recipe description for details.",
+  "recipeNoEquipment": "No specific equipment listed",
+  "recipeNoEquipmentHint": "Standard kitchen tools should be enough.",
+  "recipeNoSteps": "No steps listed",
+  "recipeNoStepsHint": "Follow your intuition or check the source.",
+  "recipeRequiredEquipment": "Required Equipment",
+  "recipeNotesTips": "Notes / Tips",
+  "recipeTonightSaving": "Tonight’s Saving",
+  "recipeOrderingNearby": "Ordering nearby",
+  "recipeMakingAtHome": "Making at home",
+  "recipeEstimatedSavings": "Estimated savings",
+  "viewAllCuisine": "Cuisine",
+  "viewAllSearchCuisine": "Search cuisine ...",
+  "viewAllSearchCategory": "Search category ...",
+  "viewAllSearchCuisineRecipes": "Search {cuisine} recipes...",
+  "@viewAllSearchCuisineRecipes": {
+    "placeholders": {
+      "cuisine": {
+        "type": "String"
+      }
+    }
+  },
+  "viewAllSearchRecent": "Search recently viewed recipes..",
+  "viewAllSearchAll": "Search recipes, cookbooks....",
+  "viewAllNoCookbooks": "No cookbooks found.",
+  "viewAllNoCookbooksMatch": "No cookbooks match your search.",
+  "viewAllNoRecipesMatch": "No recipes match your search.",
+  "viewAllNoRecipes": "No recipes found.",
+  "commonRecipes": "Recipes",
+  "recipeDeleteFailed": "Couldn't delete this recipe. Please try again.",
+  "recipeAlreadyInYours": "Already in your recipes",
+  "viewAllNoCreatorsMatch": "No creators match your search.",
+  "viewAllNoItems": "No items found.",
+  "viewAllNoItemsMatch": "No items match your search.",
+  "cameraInitializing": "Starting camera...",
+  "cameraOnHold": "On hold",
+  "cameraOff": "Camera off",
+  "cameraPermissionDenied": "Camera permission denied",
+  "cameraFinding": "Finding cameras...",
+  "cameraNotFound": "No camera found",
+  "cameraReady": "Ready",
+  "cameraError": "Camera unavailable",
+  "scanAddIngredientsFirst": "Please add or select ingredients",
+  "scanTypeIngredient": "Type Ingredient",
+  "scanSaved": "Saved",
+  "scanGetRecipes": "Get Recipes",
+  "scanTypeIngredients": "Type Ingredients",
+  "scanEnterOneByOne": "Enter ingredients one by one",
+  "scanAddToFind": "Add ingredients to find recipes you can make",
+  "scanRecentlyUsed": "Recently Used",
+  "scanUseAll": "Use all",
+  "scanClearSelection": "Clear selection",
+  "scanNoSaved": "No saved ingredients yet.",
+  "scanResultsTitleA": "Recipes You\n",
+  "scanResultsTitleB": "Can Cook Now",
+  "scanFoundRecipes": "{count, plural, =1{We found 1 recipe for you} other{We found {count} recipes for you}}",
+  "@scanFoundRecipes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "scanYourIngredients": "Your Ingredients",
+  "scanFoundItems": "{count, plural, =1{We found 1 item in your kitchen} other{We found {count} items in your kitchen}}",
+  "@scanFoundItems": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "scanViewRecipe": "View Recipe",
+  "importRecipePreview": "Recipe Preview",
+  "importLinkUnavailable": "This recipe link isn't available.",
+  "importInvalidLink": "Please enter a valid recipe link (e.g. https://example.com/recipe)",
+  "importAlreadyExists": "This recipe is already in your collection",
+  "importExtractFailed": "We couldn't extract a recipe from this link. The page didn't contain enough recipe information.",
+  "importSuccess": "Recipe imported successfully!",
+  "importManualSoon": "Manual recipe entry coming soon",
+  "importRecipeLink": "Recipe Link",
+  "importPasteHint": "Paste a recipe link...",
+  "importImporting": "Importing",
+  "importSearchWeb": "Search web",
+  "importTrending": "Trending",
+  "importRecent": "Recent Imports",
+  "importNoRecent": "No recent imports yet.",
+  "recipeEdit": "Edit Recipe",
+  "importRecommended": "Recommended",
+  "importSuggestions": "Suggestions",
+  "importSearchRecipesHint": "Search recipes...",
+  "importSearchResults": "Search Results",
+  "commonClear": "Clear",
+  "importViewThisRecipe": "View this recipe",
+  "importToCooked": "Import to Cooked",
+  "filterHighProtein": "High Protein",
+  "filterUnder30Min": "Under 30 Min",
+  "filterBreakfast": "Breakfast",
+  "filterLunch": "Lunch",
+  "filterDinner": "Dinner",
+  "filterLowCalorie": "Low Calorie",
+  "filterOnePot": "One-Pot",
+  "filterBudgetFriendly": "Budget Friendly",
+  "filterVegetarian": "Vegetarian",
+  "filterVegan": "Vegan",
+  "filterNoCook": "No-Cook",
+  "filterDesserts": "Desserts",
+  "filterSnacks": "Snacks",
+  "filterSmoothies": "Smoothies",
+  "filterSalads": "Salads",
+  "filterSoups": "Soups",
+  "filterPasta": "Pasta",
+  "filterBowls": "Bowls",
+  "filterSandwichesWraps": "Sandwiches & Wraps",
+  "filterChicken": "Chicken",
+  "filterBeef": "Beef",
+  "filterSeafood": "Seafood",
+  "exploreNoFilterMatch": "No recipes match \"{filter}\" yet.",
+  "@exploreNoFilterMatch": {
+    "placeholders": {
+      "filter": {
+        "type": "String"
+      }
+    }
+  },
+  "exploreForYou": "For You",
+  "explorePopularCategories": "Popular Categories",
+  "exploreCategory": "Category",
+  "exploreCuisines": "Cuisines",
+  "explorePopularNow": "Popular Now",
+  "cookbookSelectRecipes": "Select Recipes",
+  "cookbookNameHint": "Cookbook name",
+  "cookbookAddRecipesLower": "Add recipes",
+  "cookbookSelectForThis": "Select recipes for this cookbook",
+  "cookbookSelectedRecipes": "Selected recipes",
+  "cookbookUpdated": "Cookbook updated!",
+  "cookbookCreated": "Cookbook created!",
+  "cookbookSaveFailed": "Couldn't save \"{name}\": {error}",
+  "@cookbookSaveFailed": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "cookbookNoMatch": "No recipes found matching \"{query}\"",
+  "@cookbookNoMatch": {
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
+  "cookbookExploreRecipes": "Explore recipes",
+  "payActivated": "Premium Activated! Welcome to the Chef Club.",
+  "paySpecialComeback": "Special comeback offer",
+  "payUnlockPremium": "Unlock Premium",
+  "payUnlockToKeep": "Unlock Cooked to keep \ncreating recipes.",
+  "paySpecialOffer": "Special Offer",
+  "paySpecialOfferDesc": "Unlock all features forever with this limited discount.",
+  "payUnlimitedAccess": "Unlimited Access",
+  "payUnlimitedAccessDesc": "Scan your fridge and import recipes without any limits.",
+  "payExclusiveRecipes": "Exclusive Recipes",
+  "payExclusiveRecipesDesc": "Access premium recipes and themed cookbooks.",
+  "payImmediateAccess": "Immediate Access",
+  "payImmediateAccessDesc": "Scan your ingredients and import recipes from any link.",
+  "payExclusiveContent": "Exclusive Content",
+  "payExclusiveContentDesc": "Access premium generated recipes and themed cookbooks.",
+  "payMasterChef": "Master Chef Status",
+  "payMasterChefDesc": "Enjoy a complete ad-free experience with priority AI processing.",
+  "payPercentOff": "33% OFF",
+  "payBestValue": "BEST VALUE",
+  "payImmediatePremium": "Immediate Premium Access",
+  "paySubscribeNow": "Subscribe now",
+  "pricePerMonthLong": "{price} / month",
+  "@pricePerMonthLong": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "pricePerYearLong": "{price} / year",
+  "@pricePerYearLong": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "payDaysFree": "{days} days free",
+  "@payDaysFree": {
+    "placeholders": {
+      "days": {
+        "type": "String"
+      }
+    }
+  },
+  "payNoPaymentToday": "no payment due today",
+  "pricePerYearSentence": "{price} per year",
+  "@pricePerYearSentence": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "priceBilledYearly": "billed yearly",
+  "pricePerMonthSentence": "{price} per month",
+  "@pricePerMonthSentence": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "priceBilledMonthlyLower": "billed monthly",
+  "paySubscriptionsUnavailable": "Subscriptions are unavailable right now. Please try again later.",
+  "payPurchaseFailed": "Purchase failed: {error}",
+  "@payPurchaseFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "payRestoreFailed": "Restore error: {error}",
+  "@payRestoreFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "tutImportTarget": "Import recipes from TikTok,\nInstagram, or any Link",
+  "tutScanTarget": "Scan and get instant recipes",
+  "tutCookbooksTarget": "Save and organize your recipes here.",
+  "tutScanBestTitle": "Get the best scan",
+  "tutScanSteady": "Hold your phone steady",
+  "tutScanLighting": "Use good lighting",
+  "tutScanVisible": "Make sure all ingredients are visible",
+  "commonNext": "Next",
+  "tutScanFindTitle": "We instantly find your ingredients",
+  "tutScanSnap": "Snap a photo of your ingredients",
+  "tutScanDetect": "We detect what's inside instantly",
+  "tutScanEdit": "Edit anything that looks off",
+  "tutScanReadyTitle": "Ready to scan",
+  "tutScanFridge": "Scan your fridge, pantry, or ingredients",
+  "tutScanAngles": "Try different angles for better results",
+  "tutScanMoreVisible": "The more visible, the better your recipes",
+  "tutScanNow": "Scan Now",
+  "tutImportTitle": "Import recipes from anywhere",
+  "tutImportPaste": "Paste a link from TikTok, Instagram, or any site",
+  "tutImportShare": "Or share directly from social apps to import instantly",
+  "tutImportTurn": "We'll turn it into a full recipe automatically",
+  "tutImportSave": "Save it to your cookbook",
+  "commonShare": "Share",
+  "tutCookbookTitle1": "Your Organised Recipes",
+  "tutCookbookItem1": "Explore all recipes saved in this cookbook",
+  "tutCookbookItem2": "Quickly browse through categories",
+  "tutCookbookItem3": "Access your favorites in one tap",
+  "tutCookbookTitle2": "Complete Control",
+  "tutCookbookItem4": "Edit cookbook details anytime",
+  "tutCookbookItem5": "Add new recipes using the plus button",
+  "tutCookbookItem6": "Tap any recipe to see full details",
+  "tutExploreNow": "Explore Now",
+  "tutIngredientsDetected": "Ingredients detected",
+  "commonEdit": "Edit",
+  "cookbookAddedTo": "Added to {name}",
+  "@cookbookAddedTo": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "cookbookAddedGeneric": "Added to Cookbook",
+  "avatarChooseLibrary": "Choose from library",
+  "avatarTakePhoto": "Take photo",
+  "avatarDeleting": "Deleting profile photo...",
+  "avatarDeleted": "Profile photo deleted",
+  "avatarUpdating": "Updating profile photo...",
+  "avatarUpdated": "Profile photo updated!",
+  "clipRecipeDetected": "Recipe detected",
+  "clipLinkFound": "Link found in clipboard",
+  "clipPaste": "Paste",
+  "fallbackTitle": "Recipe not found",
+  "fallbackHeadline": "We couldn’t import this recipe.",
+  "fallbackMessage": "This link didn’t include enough recipe information for Cooked to import it correctly.",
+  "fallbackFailedUrl": "Failed link",
+  "fallbackTryOther": "Try another link",
+  "fallbackTryOtherDesc": "Paste a different recipe link",
+  "fallbackManual": "Add recipe manually",
+  "fallbackManualDesc": "Enter the ingredients and steps yourself",
+  "groceryAlreadyTitle": "Already in your Grocery List",
+  "groceryAlreadyMessage": "\"{name}\" is already in your list. Add it again? ",
+  "@groceryAlreadyMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "groceryQuantitiesDoubled": "The quantities of these ingredients will be doubled.",
+  "groceryAddAgain": "Add again",
+  "groceryAddToList": "Add to Grocery List",
+  "grocerySelectIngredients": "Select Ingredients",
+  "grocerySaveLocation": "Save Location",
+  "groceryDate": "Date: {date}",
+  "@groceryDate": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "groceryGeneralList": "General List",
+  "grocerySpecificDate": "Specific Date",
+  "groceryAddSelected": "Add selected ingredients",
+  "commonSaving": "Saving",
+  "recipeSavedInCookbook": "Saved in your cookbook",
+  "headerGreeting": "Hi, {name}",
+  "@headerGreeting": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "importGettingReady": "Getting it ready for Cooked",
+  "scanGeneratingRecipes": "Generating recipes...",
+  "scanAnalyzingRecipe": "Analyzing recipe...",
+  "importStageReceiving": "Receiving link…",
+  "importStageFinding": "Finding the recipe…",
+  "importStagePulling": "Pulling ingredients & steps…",
+  "importStageReady": "Recipe ready",
+  "errRegistration": "Registration failed. Please check your information.",
+  "authAccountExistsLoggedIn": "This account already exists. You've been signed in.",
+  "errInvalidCredentials": "Invalid credentials",
+  "errInvalidCredentialsRetry": "Invalid credentials, please try again",
+  "errCodeExpired": "Invalid or expired verification code, please try again",
+  "errResendCode": "Unable to resend the code. Please try again.",
+  "errResetStart": "Unable to initiate password reset.",
+  "errResetCodeExpired": "Invalid or expired reset code, please try again",
+  "errResetPassword": "Unable to reset password. Please try again.",
+  "errDeleteAccount": "Failed to delete account.",
+  "errUnexpected": "An unexpected error occurred.",
+  "errAi": "🤖 AI error: {msg}",
+  "@errAi": {
+    "placeholders": {
+      "msg": {
+        "type": "String"
+      }
+    }
+  },
+  "errServer": "⚙️ Server error: {msg}",
+  "@errServer": {
+    "placeholders": {
+      "msg": {
+        "type": "String"
+      }
+    }
+  },
+  "errInput": "📝 Input error: {msg}",
+  "@errInput": {
+    "placeholders": {
+      "msg": {
+        "type": "String"
+      }
+    }
+  },
+  "errAuth": "🔒 Authentication error: {msg}",
+  "@errAuth": {
+    "placeholders": {
+      "msg": {
+        "type": "String"
+      }
+    }
+  },
+  "errPremiumRequired": "Premium access required. Please check your subscription.",
+  "errNotFound": "The requested item was not found.",
+  "errSessionExpired": "Session expired or invalid. Please log in again.",
+  "errNoInternet": "No internet connection. Please check your network and try again.",
+  "errAccountExists": "This account already exists. Please log in.",
+  "errItemExists": "This item already exists.",
+  "errInvalidCode": "Invalid verification code. Please try again.",
+  "errAccountNotFound": "Account not found. Please sign up via onboarding.",
+  "errServersBusy": "Our servers are currently busy. Please try again in a moment.",
+  "errExtractFailed": "Failed to extract recipe from this link. Please check the URL or try another one.",
+  "errSiteBlocking": "Website is blocking access. Please try another source.",
+  "errGeneric": "Something went wrong. Please try again later.",
+  "notifChannelShopping": "Shopping Reminders",
+  "notifChannelShoppingDesc": "Reminders to go shopping",
+  "notifGroceryTitle": "Grocery Shopping",
+  "notifGroceryBody": "Don’t forget to do your shopping!",
+  "notifChannelPushDesc": "Notifications from the Cooked team",
+  "errPurchaseNotActive": "Purchase completed but subscription not active",
+  "errPurchase": "Purchase error occurred",
+  "errIngredientDetection": "Ingredient detection failed. Please try again.",
+  "errScan": "Scan failed. Please try again.",
+  "errValidation": "Validation failed. Please try again.",
+  "errGeneration": "Generation failed. Please try again.",
+  "errGenerateRecipes": "Failed to generate recipes. Please try again.",
+  "savingsCopyName": "(Copy) {name}",
+  "@savingsCopyName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "errImport": "Import failed",
+  "errWebSearch": "Web search failed",
+  "errPayment": "Payment failed",
+  "errVerification": "Verification failed",
+  "errLoadProfile": "Unable to load profile.",
+  "errUpdateProfile": "Unable to update profile.",
+  "errSavePreferences": "Unable to save your preferences.",
+  "errChangePassword": "Unable to change password.",
+  "errNotifSettings": "Unable to update notification settings.",
+  "errUploadPhoto": "Unable to upload profile picture.",
+  "termsIntro": "Before continuing with social login, please review and accept our legal terms to protect your data.",
+  "termsAgreeA": "I have read and agree to the ",
+  "termsAnd": " and ",
+  "termsConfirm": "Confirm and Continue",
+  "fallbackExtractTitle": "We couldn’t extract a recipe from this link.",
+  "fallbackExtractHint": "Please check the URL or try another one.",
+  "fallbackLinkCopied": "Link copied",
+  "fallbackCopyLink": "Copy link"
+}

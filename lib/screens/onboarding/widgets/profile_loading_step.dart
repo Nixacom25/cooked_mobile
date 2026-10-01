@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../widgets/app_loading_indicator.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/l10n/l10n.dart';
 
 class ProfileLoadingStep extends StatefulWidget {
   final VoidCallback onComplete;
@@ -25,12 +26,14 @@ class _ProfileLoadingStepState extends State<ProfileLoadingStep> with TickerProv
   late PageController _pageController;
   Timer? _carouselTimer;
 
-  final List<String> _loadingTasks = [
-    'Learning your tastes',
-    'Finding recipes you\'ll love',
-    'Calculating savings',
-    'Building your meal feed',
-    'Personalizing recommendations',
+  static const _taskCount = 5;
+
+  List<String> get _loadingTasks => [
+    context.l10n.onbTaskTastes,
+    context.l10n.onbTaskFindRecipes,
+    context.l10n.onbTaskSavings,
+    context.l10n.onbTaskFeed,
+    context.l10n.onbTaskPersonalizing,
   ];
 
   final List<String> _recipeImages = [
@@ -72,12 +75,12 @@ class _ProfileLoadingStepState extends State<ProfileLoadingStep> with TickerProv
 
     // 2.5s total, 5 tasks => 0.5s per task
     _tasksTimer = Timer.periodic(const Duration(milliseconds: 500), (timer) {
-      if (_currentTaskIndex < _loadingTasks.length) {
+      if (_currentTaskIndex < _taskCount) {
         setState(() {
           _currentTaskIndex++;
         });
       }
-      if (_currentTaskIndex >= _loadingTasks.length) {
+      if (_currentTaskIndex >= _taskCount) {
         timer.cancel();
         _startComplete();
       }
@@ -155,7 +158,7 @@ class _ProfileLoadingStepState extends State<ProfileLoadingStep> with TickerProv
         Padding(
           padding: EdgeInsets.symmetric(horizontal: 24.w),
           child: Text(
-            "Building your\npersonalized cooking\nsystem${'.' * _dotCount}",
+            context.l10n.onbBuildingSystem('.' * _dotCount),
             textAlign: TextAlign.center,
             style: GoogleFonts.rubik(
               fontSize: 30.sp,

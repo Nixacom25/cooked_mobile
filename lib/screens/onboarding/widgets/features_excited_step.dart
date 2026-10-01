@@ -5,6 +5,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../../widgets/red_button.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/l10n/option_labels.dart';
+import '../../../core/l10n/l10n.dart';
 
 class FeaturesExcitedStep extends StatefulWidget {
   final List<String> initialSelected;
@@ -81,7 +83,7 @@ class _FeaturesExcitedStepState extends State<FeaturesExcitedStep> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'What are you most\nexcited about?',
+                  context.l10n.onbFeaturesTitle,
                   style: GoogleFonts.rubik(
                     fontSize: 32.sp,
                     fontWeight: FontWeight.w500,
@@ -89,7 +91,7 @@ class _FeaturesExcitedStepState extends State<FeaturesExcitedStep> {
                     height: 1.15)),
                 SizedBox(height: 10.h),
                 Text(
-                  "Pick the features you’ll use most",
+                  context.l10n.onbFeaturesSubtitle,
                   style: GoogleFonts.poppins(
                     fontSize: 15.sp,
                     color: context.colors.textPrimary,
@@ -138,7 +140,7 @@ class _FeaturesExcitedStepState extends State<FeaturesExcitedStep> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    opt['title']!,
+                                    optionLabel(context, opt['title']!),
                                     style: GoogleFonts.rubik(fontSize: 15.sp,
                                       fontWeight: FontWeight.w500,
                                       color: isSelected
@@ -146,7 +148,7 @@ class _FeaturesExcitedStepState extends State<FeaturesExcitedStep> {
                                           : context.colors.textPrimary)),
                                   SizedBox(height: 3.h),
                                   Text(
-                                    opt['desc']!,
+                                    optionLabel(context, opt['desc']!),
                                     style: GoogleFonts.poppins(fontSize: 13.sp,
                                       color: context.colors.textPrimary,
                                       height: 1.3)),
@@ -183,7 +185,7 @@ class _FeaturesExcitedStepState extends State<FeaturesExcitedStep> {
             top: false,
             bottom: true,
             child: RedButton(
-              label: 'Continue',
+              label: context.l10n.commonContinue,
               color: context.colors.accent,
               onTap: widget.onContinue,
               height: 52.h,

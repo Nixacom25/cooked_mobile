@@ -13,6 +13,7 @@ import '../../widgets/skeleton_loader.dart';
 import '../../core/widgets/legal_content_modal.dart';
 import '../../core/widgets/terms_validation_modal.dart' show dummyTerms, dummyPrivacy;
 import '../../core/theme/app_theme.dart';
+import '../../core/l10n/l10n.dart';
 
 enum PaywallFlowType { standard, offer }
 
@@ -76,8 +77,8 @@ class _PaywallScreenState extends State<PaywallScreen> {
     RevenueCatService.instance.onPurchaseSuccess = () {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("Premium Activated! Welcome to the Chef Club."),
+          SnackBar(
+            content: Text(context.l10n.payActivated),
             backgroundColor: Colors.green,
           ),
         );
@@ -146,17 +147,15 @@ class _PaywallScreenState extends State<PaywallScreen> {
   Map<String, dynamic> _getDefaultConfig() {
     if (widget.flowType == PaywallFlowType.offer) {
       return {
-        'title': 'Special comeback offer',
-        'yearlyPriceLabel': '\$19.99 / year',
-        'monthlyPriceLabel': '\$9.99 / month',
-        'ctaText': 'Unlock Premium for \$19.99',
+        'title': context.l10n.paySpecialComeback,
+        'ctaText': context.l10n.payUnlockPremium,
       };
     }
+    // Prices are never hardcoded here: they come from the store (see
+    // _monthlyLabel / _yearlyLabels).
     return {
-      'title': 'Unlock Cooked to keep \ncreating recipes.',
-      'yearlyPriceLabel': '\$2.49 / mo',
-      'monthlyPriceLabel': '\$9.99 / month',
-      'ctaText': 'Unlock Premium',
+      'title': context.l10n.payUnlockToKeep,
+      'ctaText': context.l10n.payUnlockPremium,
     };
   }
 
@@ -229,48 +228,48 @@ class _PaywallScreenState extends State<PaywallScreen> {
                   if (isOffer) ...[
                     _buildTimelineItem(
                       icon: 'crown.svg',
-                      title: 'Special Offer',
+                      title: context.l10n.paySpecialOffer,
                       description:
-                          "Unlock all features forever with this limited discount.",
+                          context.l10n.paySpecialOfferDesc,
                       color: primaryColor,
                       isFirst: true,
                     ),
                     _buildTimelineItem(
                       icon: 'unlock.svg',
-                      title: 'Unlimited Access',
+                      title: context.l10n.payUnlimitedAccess,
                       description:
-                          "Scan your fridge and import recipes without any limits.",
+                          context.l10n.payUnlimitedAccessDesc,
                       color: primaryColor,
                     ),
                     _buildTimelineItem(
                       icon: 'star.svg',
-                      title: 'Exclusive Recipes',
+                      title: context.l10n.payExclusiveRecipes,
                       description:
-                          "Access premium recipes and themed cookbooks.",
+                          context.l10n.payExclusiveRecipesDesc,
                       color: primaryColor,
                       isLast: true,
                     ),
                   ] else ...[
                     _buildTimelineItem(
                       icon: 'unlock.svg',
-                      title: 'Immediate Access',
+                      title: context.l10n.payImmediateAccess,
                       description:
-                          "Scan your ingredients and import recipes from any link.",
+                          context.l10n.payImmediateAccessDesc,
                       color: const Color(0xFFF97316),
                       isFirst: true,
                     ),
                     _buildTimelineItem(
                       icon: 'star.svg',
-                      title: 'Exclusive Content',
+                      title: context.l10n.payExclusiveContent,
                       description:
-                          "Access premium generated recipes and themed cookbooks.",
+                          context.l10n.payExclusiveContentDesc,
                       color: const Color(0xFFEAB308),
                     ),
                     _buildTimelineItem(
                       icon: 'crown.svg',
-                      title: 'Master Chef Status',
+                      title: context.l10n.payMasterChef,
                       description:
-                          "Enjoy a complete ad-free experience with priority AI processing.",
+                          context.l10n.payMasterChefDesc,
                       color: const Color(0xFFEAB308),
                       isLast: true,
                     ),
@@ -284,11 +283,8 @@ class _PaywallScreenState extends State<PaywallScreen> {
                         Expanded(
                           child: _buildPlanCard(
                             id: 'monthly_sub',
-                            title: 'Monthly',
-                            price: _getProductPrice(
-                              'monthly_sub',
-                              config!['monthlyPriceLabel'],
-                            ),
+                            title: context.l10n.planMonthly,
+                            price: _monthlyLabel(),
                             isSelected: _selectedPlanId == 'monthly_sub',
                             color: primaryColor,
                           ),
@@ -298,16 +294,11 @@ class _PaywallScreenState extends State<PaywallScreen> {
                       Expanded(
                         child: _buildPlanCard(
                           id: 'yearly_sub',
-                          title: 'Yearly',
-                          price: _getProductPrice(
-                            'yearly_sub',
-                            config!['yearlyPriceLabel'],
-                          ),
-                          subPrice: !isOffer
-                              ? '(${_getProductPrice('yearly_sub', config!['yearlyPriceLabel'])} / year)'
-                              : null,
+                          title: context.l10n.planYearly,
+                          price: isOffer ? _yearlyTotalLabel() : _yearlyPerMonthLabel(),
+                          subPrice: !isOffer ? '(${_yearlyTotalLabel()})' : null,
                           isSelected: _selectedPlanId == 'yearly_sub',
-                          badge: isOffer ? '33% OFF' : (_getTrialPeriod('yearly_sub').isNotEmpty ? _getTrialPeriod('yearly_sub') : 'BEST VALUE'),
+                          badge: isOffer ? context.l10n.payPercentOff : (_getTrialPeriod('yearly_sub').isNotEmpty ? _getTrialPeriod('yearly_sub') : context.l10n.payBestValue),
                           color: primaryColor,
                         ),
                       ),
@@ -367,8 +358,8 @@ class _PaywallScreenState extends State<PaywallScreen> {
                             SizedBox(width: 8.w),
                             Text(
                               isUserPremium 
-                                  ? "You are already a Premium member!" 
-                                  : "Immediate Premium Access",
+                                  ? context.l10n.subAlreadyPremium 
+                                  : context.l10n.payImmediatePremium,
                               style: TextStyle(
                                 fontSize: 16.sp,
                                 fontWeight: FontWeight.w800,
@@ -381,8 +372,8 @@ class _PaywallScreenState extends State<PaywallScreen> {
                         SizedBox(height: 16.h),
                       ],
                       RedButton(
-                        label: isUserPremium ? 'Active Subscription' : (config!['ctaText'] ?? 'Subscribe now'),
-                        loadingLabel: 'Processing',
+                        label: isUserPremium ? context.l10n.subActive : (config!['ctaText'] ?? context.l10n.paySubscribeNow),
+                        loadingLabel: context.l10n.commonProcessing,
                         isLoading: _isPurchasing,
                         isDisabled: isUserPremium,
                         onTap: _handlePurchase,
@@ -408,23 +399,23 @@ class _PaywallScreenState extends State<PaywallScreen> {
                           GestureDetector(
                             onTap: _handleRestore,
                             child: Text(
-                              'Restore Purchases',
+                              context.l10n.subRestorePurchases,
                               style: TextStyle(fontSize: 12.sp, color: context.colors.textMuted, fontWeight: FontWeight.bold, decoration: TextDecoration.underline),
                             ),
                           ),
                           Text('  •  ', style: TextStyle(fontSize: 12.sp, color: context.colors.textMuted)),
                           GestureDetector(
-                            onTap: () => LegalContentModal.show(context, title: 'Terms of Use', content: dummyTerms),
+                            onTap: () => LegalContentModal.show(context, title: context.l10n.commonTermsOfUse, content: dummyTerms),
                             child: Text(
-                              'Terms of Use',
+                              context.l10n.commonTermsOfUse,
                               style: TextStyle(fontSize: 12.sp, color: context.colors.textMuted, decoration: TextDecoration.underline),
                             ),
                           ),
                           Text('  •  ', style: TextStyle(fontSize: 12.sp, color: context.colors.textMuted)),
                           GestureDetector(
-                            onTap: () => LegalContentModal.show(context, title: 'Privacy Policy', content: dummyPrivacy),
+                            onTap: () => LegalContentModal.show(context, title: context.l10n.commonPrivacyPolicy, content: dummyPrivacy),
                             child: Text(
-                              'Privacy Policy',
+                              context.l10n.commonPrivacyPolicy,
                               style: TextStyle(fontSize: 12.sp, color: context.colors.textMuted, decoration: TextDecoration.underline),
                             ),
                           ),
@@ -441,27 +432,32 @@ class _PaywallScreenState extends State<PaywallScreen> {
     );
   }
 
-  String _getProductPrice(String id, String defaultPrice) {
-    if (_offerings == null || _offerings!.current == null) return defaultPrice;
-    try {
-      final current = _offerings!.current!;
-      
-      // Try to find the package by product identifier
-      for (var package in current.availablePackages) {
-        if (package.storeProduct.identifier == id) {
-          return package.storeProduct.priceString;
-        }
-      }
-      
-      // Fallback to annual/monthly if direct match fails
-      if (id == 'yearly_sub' && current.annual != null) {
-        return current.annual!.storeProduct.priceString;
-      }
-      if (id == 'monthly_sub' && current.monthly != null) {
-        return current.monthly!.storeProduct.priceString;
-      }
-    } catch (_) {}
-    return defaultPrice;
+  // ── Store prices (App Store / Play Store via RevenueCat), localized ──
+  StoreProduct? _product(String id) {
+    final current = _offerings?.current;
+    if (current == null) return null;
+    for (final package in current.availablePackages) {
+      if (package.storeProduct.identifier.split(':').first == id) return package.storeProduct;
+    }
+    if (id == 'yearly_sub') return current.annual?.storeProduct;
+    if (id == 'monthly_sub') return current.monthly?.storeProduct;
+    return null;
+  }
+
+  String _monthlyLabel() {
+    final p = _product('monthly_sub');
+    return p != null ? context.l10n.pricePerMonthLong(p.priceString) : '—';
+  }
+
+  String _yearlyTotalLabel() {
+    final p = _product('yearly_sub');
+    return p != null ? context.l10n.pricePerYearLong(p.priceString) : '—';
+  }
+
+  String _yearlyPerMonthLabel() {
+    final p = _product('yearly_sub');
+    if (p == null) return '—';
+    return p.pricePerMonthString != null ? context.l10n.pricePerMonthShort(p.pricePerMonthString!) : context.l10n.pricePerYearLong(p.priceString);
   }
 
   String _getTrialPeriod(String id) {
@@ -480,7 +476,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
           if (introPrice != null && introPrice.period.isNotEmpty) {
             final periodValue = int.tryParse(introPrice.period);
             if (periodValue != null && periodValue > 0) {
-              return '${introPrice.period} days free';
+              return context.l10n.payDaysFree(introPrice.period);
             }
           }
         }
@@ -492,7 +488,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
         if (introPrice != null && introPrice.period.isNotEmpty) {
           final periodValue = int.tryParse(introPrice.period);
           if (periodValue != null && periodValue > 0) {
-            return '${introPrice.period} days free';
+            return context.l10n.payDaysFree(introPrice.period);
           }
         }
       }
@@ -504,12 +500,12 @@ class _PaywallScreenState extends State<PaywallScreen> {
   /// trial the account isn't actually eligible for (see _yearlyTrialEligible).
   String _getBottomPriceLine() {
     if (_selectedPlanId == 'yearly_sub') {
-      if (_yearlyTrialEligible) return "no payment due today";
-      final price = _getProductPrice('yearly_sub', config!['yearlyPriceLabel']);
-      return "$price per year";
+      if (_yearlyTrialEligible) return context.l10n.payNoPaymentToday;
+      final p = _product('yearly_sub');
+      return p != null ? context.l10n.pricePerYearSentence(p.priceString) : context.l10n.priceBilledYearly;
     }
-    final price = _getProductPrice('monthly_sub', config!['monthlyPriceLabel']);
-    return "$price per month";
+    final p = _product('monthly_sub');
+    return p != null ? context.l10n.pricePerMonthSentence(p.priceString) : context.l10n.priceBilledMonthlyLower;
   }
 
   String _getProductPeriod(String id) {
@@ -745,10 +741,10 @@ class _PaywallScreenState extends State<PaywallScreen> {
       if (packageToBuy != null) {
         await RevenueCatService.instance.buyPackage(packageToBuy);
       } else {
-        _showErrorSnackBar("RevenueCat Offerings look empty or not configured yet on console.");
+        _showErrorSnackBar(context.l10n.paySubscriptionsUnavailable);
       }
     } catch (e) {
-      _showErrorSnackBar("Purchase failed: ${e.toString()}");
+      if (mounted) _showErrorSnackBar(context.l10n.payPurchaseFailed(e.toString()));
     } finally {
       if (mounted) setState(() => _isPurchasing = false);
     }
@@ -759,7 +755,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
     try {
       await RevenueCatService.instance.restorePurchases();
     } catch (e) {
-      _showErrorSnackBar("Restore error: ${e.toString()}");
+      if (mounted) _showErrorSnackBar(context.l10n.payRestoreFailed(e.toString()));
     } finally {
       if (mounted) setState(() => _isPurchasing = false);
     }

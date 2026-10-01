@@ -9,6 +9,7 @@ import '../../widgets/glass_icon_button.dart';
 import '../../widgets/red_button.dart';
 import '../../widgets/red_header_background.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/l10n/l10n.dart';
 
 class ResetPasswordScreen extends StatefulWidget {
   const ResetPasswordScreen({super.key});
@@ -40,12 +41,12 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
 
     setState(() {
       _newPassError = newPass.isEmpty
-          ? 'Ce champ est requis'
-          : (newPass.length < 6 ? 'Minimum 6 caractères' : null);
+          ? context.l10n.commonFieldRequired
+          : (newPass.length < 6 ? context.l10n.authPasswordMinLength : null);
       _confirmPassError = confirmPass.isEmpty
-          ? 'Ce champ est requis'
+          ? context.l10n.commonFieldRequired
           : (newPass != confirmPass
-                ? 'Les mots de passe ne correspondent pas'
+                ? context.l10n.authPasswordsDontMatch
                 : null);
     });
 
@@ -64,7 +65,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
       if (!mounted) return;
       IosToast.show(
         context,
-        message: "Reset successful!",
+        message: context.l10n.authResetSuccess,
         type: ToastType.success,
       );
       nav.pushNamedAndRemoveUntil(
@@ -126,7 +127,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                   ),
                   SizedBox(width: 16.w),
                   Text(
-                    'Forgot Password',
+                    context.l10n.authForgotPasswordTitle,
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontFamily: 'Rubik',
@@ -166,7 +167,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                     children: [
                       Center(
                         child: Text(
-                          'Create New Password',
+                          context.l10n.authCreateNewPassword,
                           style: TextStyle(
                             fontSize: 24.sp,
                             fontWeight: FontWeight.w800,
@@ -178,7 +179,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                       SizedBox(height: 24.h),
 
                       // New Password
-                      const _Label('New Password'),
+                      _Label(context.l10n.authNewPassword),
                       SizedBox(height: 8.h),
                       _PasswordField(
                         controller: _newPassCtrl,
@@ -190,7 +191,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                       SizedBox(height: 18.h),
 
                       // Confirm Password
-                      const _Label('Confirm Password'),
+                      _Label(context.l10n.authConfirmPassword),
                       SizedBox(height: 8.h),
                       _PasswordField(
                         controller: _confirmPassCtrl,
@@ -203,8 +204,8 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                       SizedBox(height: 28.h),
 
                       RedButton(
-                        label: 'Continue',
-                        loadingLabel: 'Updating',
+                        label: context.l10n.commonContinue,
+                        loadingLabel: context.l10n.commonUpdating,
                         isLoading: _isLoading,
                         color: context.colors.accent,
                         height: 52.h,
@@ -216,7 +217,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                             IosToast.show(
                               context,
                               message:
-                                  'Missing identifier context. Please try again.',
+                                  context.l10n.authMissingIdentifier,
                               type: ToastType.error,
                             );
                           }

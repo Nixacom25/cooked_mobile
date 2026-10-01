@@ -1,10 +1,10 @@
 import 'dart:convert';
-import 'dart:developer' as developer;
 import 'package:http/http.dart' as http;
 import '../core/api_config.dart';
 import 'package:flutter/foundation.dart';
 import '../models/activity_log.dart';
 import 'auth_service.dart';
+import '../core/l10n/l10n.dart';
 
 class UserService {
   // Singleton pattern
@@ -55,6 +55,18 @@ class UserService {
 
   void updateLocalUserPremiumStatus(bool isPremium) {
     if (currentUserNotifier.value != null) {
+      // RevenueCat not seeing an entitlement must not override access the
+      // backend still grants (INFINITE, staff roles, or an expiry date in
+      // the future - e.g. a gift or a manual grant).
+      if (!isPremium && this.isPremium) {
+        final user = currentUserNotifier.value!;
+        final status = user['subscriptionStatus'];
+        final expires = DateTime.tryParse(user['subscriptionExpiresAt']?.toString() ?? '');
+        final backendStillActive = status == 'INFINITE' ||
+            (expires != null && expires.isAfter(DateTime.now()));
+        final staff = user['role'] == 'CREATOR' || user['role'] == 'ADMIN' || user['role'] == 'EDITOR';
+        if (backendStillActive || staff) return;
+      }
       final updated = Map<String, dynamic>.from(currentUserNotifier.value!);
       updated['subscriptionStatus'] = isPremium ? 'ACTIVE' : 'EXPIRED';
       if (isPremium) {
@@ -88,7 +100,7 @@ class UserService {
       return data;
     } else {
       throw Exception(
-        _extractErrorMessage(response.body, 'Unable to load profile.'),
+        _extractErrorMessage(response.body, appL10n.errLoadProfile),
       );
     }
   }
@@ -125,7 +137,7 @@ class UserService {
       return data;
     } else {
       throw Exception(
-        _extractErrorMessage(response.body, 'Unable to update profile.'),
+        _extractErrorMessage(response.body, appL10n.errUpdateProfile),
       );
     }
   }
@@ -202,7 +214,7 @@ class UserService {
       }
     } else {
       throw Exception(
-        _extractErrorMessage(response.body, 'Unable to save your preferences.'),
+        _extractErrorMessage(response.body, appL10n.errSavePreferences),
       );
     }
   }
@@ -223,7 +235,7 @@ class UserService {
 
     if (response.statusCode != 200) {
       throw Exception(
-        _extractErrorMessage(response.body, 'Unable to change password.'),
+        _extractErrorMessage(response.body, appL10n.errChangePassword),
       );
     }
   }
@@ -251,7 +263,7 @@ class UserService {
       currentUserNotifier.value = data;
     } else {
       throw Exception(
-        _extractErrorMessage(response.body, 'Unable to update notification settings.'),
+        _extractErrorMessage(response.body, appL10n.errNotifSettings),
       );
     }
   }
@@ -276,7 +288,7 @@ class UserService {
       throw Exception(
         _extractErrorMessage(
           response.body,
-          'Unable to upload profile picture.',
+          appL10n.errUploadPhoto,
         ),
       );
     }
@@ -335,10 +347,8 @@ class UserService {
       final response = await http.post(url, headers: await _getHeaders());
 
       if (response.statusCode != 200) {
-        debugPrint('Failed to update last active: ${response.statusCode}');
       }
     } catch (e) {
-      debugPrint('Error updating last active: $e');
     }
   }
 
@@ -350,10 +360,6 @@ class UserService {
         return backendError;
       }
     } catch (_) {
-      developer.log(
-        'API Error parsing response: $responseBody',
-        name: 'UserService',
-      );
     }
     return defaultMessage;
   }

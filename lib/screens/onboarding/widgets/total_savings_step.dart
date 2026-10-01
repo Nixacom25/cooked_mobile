@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../widgets/red_button.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/l10n/l10n.dart';
 
 class TotalSavingsStep extends StatefulWidget {
   final int eatingOutSavings;
@@ -135,7 +136,7 @@ class _TotalSavingsStepState extends State<TotalSavingsStep> with SingleTickerPr
                     child: SlideTransition(
                       position: _titleSlide,
                       child: Text(
-                        'You could save\napproximately',
+                        context.l10n.onbCouldSave,
                         textAlign: TextAlign.start,
                         style: GoogleFonts.rubik(
                           fontSize: 32.sp,
@@ -164,7 +165,7 @@ class _TotalSavingsStepState extends State<TotalSavingsStep> with SingleTickerPr
                             letterSpacing: -1.0)),
                         SizedBox(height: 10.h),
                         Text(
-                          'Every Year',
+                          context.l10n.onbEveryYear,
                           textAlign: TextAlign.center,
                           style: GoogleFonts.rubik(
                             fontSize: 15.sp,
@@ -172,7 +173,7 @@ class _TotalSavingsStepState extends State<TotalSavingsStep> with SingleTickerPr
                             color: context.colors.textPrimary)),
                         SizedBox(height: 4.h),
                         Text(
-                          'Just by cooking smarter',
+                          context.l10n.onbCookingSmarter,
                           textAlign: TextAlign.center,
                           style: GoogleFonts.poppins(
                             fontSize: 14.sp,
@@ -193,7 +194,7 @@ class _TotalSavingsStepState extends State<TotalSavingsStep> with SingleTickerPr
                       child: Padding(
                         padding: EdgeInsets.fromLTRB(24.w, 8.h, 24.w, 20.h),
                         child: RedButton(
-                          label: 'Continue',
+                          label: context.l10n.commonContinue,
                           color: context.colors.accent,
                           onTap: widget.onContinue,
                           height: 52.h,

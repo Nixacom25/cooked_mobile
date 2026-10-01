@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:developer' as developer;
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../core/api_config.dart';
@@ -14,6 +13,7 @@ import 'grocery_service.dart';
 import 'push_notification_service.dart';
 import '../core/services/tutorial_service.dart';
 import 'error_monitoring_service.dart';
+import '../core/l10n/l10n.dart';
 
 class AuthService {
   // Singleton pattern
@@ -91,10 +91,6 @@ class AuthService {
   }) async {
     final url = Uri.parse('${ApiConfig.baseUrl}/auth/register');
     
-    developer.log(
-      'Attempting Register: $url',
-      name: 'AuthService',
-    );
 
     // Clear any previous session data before starting fresh
     _clearAllServiceData();
@@ -146,13 +142,9 @@ class AuthService {
       }
       return {};
     } else {
-      developer.log(
-        'Register error [${response.statusCode}]: ${response.body}',
-        name: 'AuthService',
-      );
       final errorMessage = _extractErrorMessage(
         response.body,
-        'Registration failed. Please check your information.',
+        appL10n.errRegistration,
       );
 
       // Record authentication failure
@@ -173,7 +165,7 @@ class AuthService {
             password: password,
             provider: provider ?? 'LOCAL',
           );
-          loginResult['info_message'] = 'Ce compte existe déjà. Vous avez été connecté avec succès.';
+          loginResult['info_message'] = appL10n.authAccountExistsLoggedIn;
           return loginResult;
         } catch (e) {
           if (provider == 'GOOGLE' || provider == 'APPLE') {
@@ -216,21 +208,17 @@ class AuthService {
       }
       return data;
     } else {
-      developer.log(
-        'Login error [${response.statusCode}]: ${response.body}',
-        name: 'AuthService',
-      );
       
       // Record authentication failure
       await ErrorMonitoringService.instance.recordAuthFailure(
-        reason: _extractErrorMessage(response.body, 'Invalid credentials'),
+        reason: _extractErrorMessage(response.body, appL10n.errInvalidCredentials),
         authMethod: provider,
       );
       
       throw Exception(
         _extractErrorMessage(
           response.body,
-          'Invalid credentials, please try again',
+          appL10n.errInvalidCredentialsRetry,
         ),
       );
     }
@@ -245,7 +233,6 @@ class AuthService {
   }) async {
     try {
       // 1. Google Sign-In attempt
-      developer.log('DEBUG: Starting Google Sign-In process (isSignup: $isSignup)...', name: 'AuthService');
       
       // Force account selection by signing out first
       try {
@@ -255,22 +242,18 @@ class AuthService {
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
       
       if (googleUser == null) {
-        developer.log('DEBUG: Google Sign-In CANCELLED by user', name: 'AuthService');
         throw Exception('Google sign in cancelled');
       }
       
-      developer.log('DEBUG: Google account selected: ${googleUser.email}', name: 'AuthService');
 
       // 2. Obtain Authentication Details
       final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
       final String? idToken = googleAuth.idToken;
 
       if (idToken == null) {
-        developer.log('DEBUG: ID Token is NULL', name: 'AuthService');
         throw Exception('Missing ID Token from Google');
       }
 
-      developer.log('DEBUG: Google Sign-In SUCCESS locally.', name: 'AuthService');
 
       if (!isManualBackendCall) {
         return {
@@ -294,7 +277,6 @@ class AuthService {
         'phone': phone,
       };
       
-      developer.log('DEBUG: Sending request to Backend: $url', name: 'AuthService');
       // Clear any previous session data before starting fresh
       _clearAllServiceData();
       
@@ -304,7 +286,6 @@ class AuthService {
         body: jsonEncode(requestBody),
       ).timeout(const Duration(seconds: 15));
 
-      developer.log('DEBUG: Backend response status: ${response.statusCode}', name: 'AuthService');
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -315,18 +296,17 @@ class AuthService {
         return data;
       } else {
         await ErrorMonitoringService.instance.recordAuthFailure(
-          reason: _extractErrorMessage(response.body, 'Incorrect credentials'),
+          reason: _extractErrorMessage(response.body, appL10n.errInvalidCredentials),
           authMethod: 'GOOGLE',
         );
-        throw Exception(_extractErrorMessage(response.body, 'Incorrect credentials, please try again'));
+        throw Exception(_extractErrorMessage(response.body, appL10n.errInvalidCredentialsRetry));
       }
     } catch (e) {
-      developer.log('DEBUG: Google Sign-In ERROR: $e', name: 'AuthService');
       await ErrorMonitoringService.instance.recordAuthFailure(
         reason: e.toString(),
         authMethod: 'GOOGLE',
       );
-      throw Exception(_extractErrorMessage(e.toString(), 'Incorrect credentials, please try again'));
+      throw Exception(_extractErrorMessage(e.toString(), appL10n.errInvalidCredentialsRetry));
     }
   }
 
@@ -376,7 +356,6 @@ class AuthService {
               email = payload['email'];
             }
           } catch (e) {
-            developer.log('JWT Decode Error: $e');
           }
         }
 
@@ -417,18 +396,17 @@ class AuthService {
         return data;
       } else {
         await ErrorMonitoringService.instance.recordAuthFailure(
-          reason: _extractErrorMessage(response.body, 'Incorrect credentials'),
+          reason: _extractErrorMessage(response.body, appL10n.errInvalidCredentials),
           authMethod: 'APPLE',
         );
         throw Exception(
           _extractErrorMessage(
             response.body,
-            'Incorrect credentials, please try again',
+            appL10n.errInvalidCredentialsRetry,
           ),
         );
       }
     } catch (e) {
-      developer.log('Apple Sign-In Error: $e', name: 'AuthService');
       await ErrorMonitoringService.instance.recordAuthFailure(
         reason: e.toString(),
         authMethod: 'APPLE',
@@ -436,7 +414,7 @@ class AuthService {
       throw Exception(
         _extractErrorMessage(
           e.toString(),
-          'Incorrect credentials, please try again',
+          appL10n.errInvalidCredentialsRetry,
         ),
       );
     }
@@ -463,7 +441,7 @@ class AuthService {
       throw Exception(
         _extractErrorMessage(
           response.body,
-          'Invalid or expired verification code, please try again',
+          appL10n.errCodeExpired,
         ),
       );
     }
@@ -481,7 +459,7 @@ class AuthService {
       throw Exception(
         _extractErrorMessage(
           response.body,
-          'Unable to resend the code. Please try again.',
+          appL10n.errResendCode,
         ),
       );
     }
@@ -499,7 +477,7 @@ class AuthService {
       throw Exception(
         _extractErrorMessage(
           response.body,
-          'Unable to initiate password reset.',
+          appL10n.errResetStart,
         ),
       );
     }
@@ -520,7 +498,7 @@ class AuthService {
       throw Exception(
         _extractErrorMessage(
           response.body,
-          'Invalid or expired reset code, please try again',
+          appL10n.errResetCodeExpired,
         ),
       );
     }
@@ -547,7 +525,7 @@ class AuthService {
       throw Exception(
         _extractErrorMessage(
           response.body,
-          'Unable to reset password. Please try again.',
+          appL10n.errResetPassword,
         ),
       );
     }
@@ -565,16 +543,13 @@ class AuthService {
     _clearAllServiceData();
     _token = null;
     
-    developer.log('Logged out successfully', name: 'AuthService');
       } catch (e) {
-        developer.log('Backend logout failed: $e', name: 'AuthService');
       }
     }
     
     // Deep cleanup: Delete all local data to avoid leaks
     final prefs = await SharedPreferences.getInstance();
     await prefs.clear();
-    developer.log('All local data cleared on logout', name: 'AuthService');
   }
 
   Future<void> deleteAccount() async {
@@ -595,12 +570,10 @@ class AuthService {
         _token = null;
         final prefs = await SharedPreferences.getInstance();
         await prefs.clear();
-        developer.log('Account deleted and local data cleared successfully', name: 'AuthService');
       } else {
-        throw Exception(_extractErrorMessage(response.body, 'Failed to delete account.'));
+        throw Exception(_extractErrorMessage(response.body, appL10n.errDeleteAccount));
       }
     } catch (e) {
-      developer.log('Error deleting account: $e', name: 'AuthService');
       rethrow;
     }
   }
@@ -643,10 +616,6 @@ class AuthService {
         return backendError;
       }
     } catch (_) {
-      developer.log(
-        'API Error parsing response: $responseBody',
-        name: 'AuthService',
-      );
     }
     return defaultMessage;
   }

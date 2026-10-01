@@ -15,6 +15,8 @@ import '../onboarding/widgets/cooking_target_step.dart';
 import '../onboarding/widgets/meal_planning_step.dart';
 import '../onboarding/widgets/goals_step.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/l10n/l10n.dart';
+import '../../core/l10n/option_labels.dart';
 
 // Allergies, Favorite Cuisines, Flavor & Spice and Kitchen Appliances used
 // to live in this screen too, but are now their own top-level Profile
@@ -48,7 +50,7 @@ class _UserPreferencesScreenState extends State<UserPreferencesScreen> {
   String _mealPlanningStyle = 'Weekly meal plan';
   List<String> _notificationPreferences = [];
   List<String> _onboardingGoals = [];
-  String _language = 'GB English';
+  String _language = LocaleService.instance.languageValue;
   String _country = 'US United States';
   String _measurementSystem = 'Metric';
 
@@ -79,7 +81,7 @@ class _UserPreferencesScreenState extends State<UserPreferencesScreen> {
           user['notificationPreferences'] ?? [],
         );
         _onboardingGoals = List<String>.from(user['onboardingGoals'] ?? []);
-        _language = user['language'] ?? 'GB English';
+        _language = user['language'] ?? LocaleService.instance.languageValue;
         _country = user['country'] ?? 'US United States';
         _measurementSystem = user['measurementSystem'] ?? 'Metric';
         _isLoading = false;
@@ -88,7 +90,7 @@ class _UserPreferencesScreenState extends State<UserPreferencesScreen> {
       if (!mounted) return;
       IosToast.show(
         context,
-        message: 'Failed to load preferences',
+        message: context.l10n.prefsLoadFailed,
         type: ToastType.error,
       );
       setState(() => _isLoading = false);
@@ -119,32 +121,17 @@ class _UserPreferencesScreenState extends State<UserPreferencesScreen> {
       if (!mounted) return;
       IosToast.show(
         context,
-        message: 'Preferences updated successfully!',
+        message: context.l10n.prefsUpdated,
         type: ToastType.success,
       );
     } catch (e) {
       if (!mounted) return;
       IosToast.show(
         context,
-        message: 'Failed to update preferences',
+        message: context.l10n.prefsUpdateFailed,
         type: ToastType.error,
       );
     }
-  }
-
-  static const Map<String, String> _goalLabels = {
-    'save_money': 'Save money',
-    'eat_healthier': 'Eat healthier',
-    'gain_muscle': 'Gain muscle',
-    'lose_weight': 'Lose weight',
-    'waste_less': 'Waste less food',
-    'learn_cook': 'Learn to cook',
-    'discover_recipes': 'Discover recipes',
-    'meal_prep': 'Meal prep easier',
-  };
-
-  String _formatGoals(List<String> goals) {
-    return goals.map((id) => _goalLabels[id] ?? id).join(', ');
   }
 
   Future<void> _openEditor(String title, Widget editor) async {
@@ -192,7 +179,7 @@ class _UserPreferencesScreenState extends State<UserPreferencesScreen> {
                         ),
                         Expanded(
                           child: Text(
-                            'Dietary Preferences',
+                            context.l10n.settingsDietaryPreferences,
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontFamily: 'Rubik',
@@ -217,12 +204,12 @@ class _UserPreferencesScreenState extends State<UserPreferencesScreen> {
                         : ListView(
                             padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
                             children: [
-                              _buildSectionHeader('Diet'),
+                              _buildSectionHeader(context.l10n.prefsSectionDiet),
                               _buildTile(
-                                'Dietary Profile',
-                                _selectedDiet.join(', '),
+                                context.l10n.prefsDietaryProfile,
+                                optionLabels(context, _selectedDiet),
                                 () => _openEditor(
-                                  'Dietary Profile',
+                                  context.l10n.prefsDietaryProfile,
                                   DietaryPreferencesStep(
                                     initialSelected: _selectedDiet,
                                     onChanged: (val) => setState(() => _selectedDiet = val),
@@ -230,10 +217,10 @@ class _UserPreferencesScreenState extends State<UserPreferencesScreen> {
                                 ),
                               ),
                               _buildTile(
-                                'Food Dislikes',
-                                _selectedDislikes.join(', '),
+                                context.l10n.prefsFoodDislikes,
+                                optionLabels(context, _selectedDislikes),
                                 () => _openEditor(
-                                  'Food Dislikes',
+                                  context.l10n.prefsFoodDislikes,
                                   DislikesStep(
                                     initialSelected: _selectedDislikes,
                                     isFromProfile: true,
@@ -243,12 +230,12 @@ class _UserPreferencesScreenState extends State<UserPreferencesScreen> {
                                 ),
                               ),
                               SizedBox(height: 24.h),
-                              _buildSectionHeader('Cooking & Skills'),
+                              _buildSectionHeader(context.l10n.prefsSectionCooking),
                               _buildTile(
-                                'Cooking Skill',
-                                _cookingSkill,
+                                context.l10n.prefsCookingSkill,
+                                optionLabel(context, _cookingSkill),
                                 () => _openEditor(
-                                  'Cooking Skill',
+                                  context.l10n.prefsCookingSkill,
                                   CookingSkillStep(
                                     initialSelected: _cookingSkill,
                                     onChanged: (val) => setState(() => _cookingSkill = val),
@@ -256,10 +243,10 @@ class _UserPreferencesScreenState extends State<UserPreferencesScreen> {
                                 ),
                               ),
                               _buildTile(
-                                'Time Preference',
-                                _cookingTime,
+                                context.l10n.prefsTimePreference,
+                                optionLabel(context, _cookingTime),
                                 () => _openEditor(
-                                  'Time Preference',
+                                  context.l10n.prefsTimePreference,
                                   TimePreferenceStep(
                                     initialSelected: _cookingTime,
                                     onChanged: (val) => setState(() => _cookingTime = val),
@@ -267,12 +254,12 @@ class _UserPreferencesScreenState extends State<UserPreferencesScreen> {
                                 ),
                               ),
                               SizedBox(height: 24.h),
-                              _buildSectionHeader('Meal Planning & Habits'),
+                              _buildSectionHeader(context.l10n.prefsSectionPlanning),
                               _buildTile(
-                                'Meal Planning Style',
-                                _mealPlanningStyle,
+                                context.l10n.prefsPlanningStyle,
+                                optionLabel(context, _mealPlanningStyle),
                                 () => _openEditor(
-                                  'Meal Planning Style',
+                                  context.l10n.prefsPlanningStyle,
                                   MealPlanningStep(
                                     initialSelected: _mealPlanningStyle,
                                     onChanged: (val) =>
@@ -281,10 +268,10 @@ class _UserPreferencesScreenState extends State<UserPreferencesScreen> {
                                 ),
                               ),
                               _buildTile(
-                                'Cooking Target',
-                                _cookingTarget,
+                                context.l10n.prefsCookingTarget,
+                                optionLabel(context, _cookingTarget),
                                 () => _openEditor(
-                                  'Cooking Target',
+                                  context.l10n.prefsCookingTarget,
                                   CookingTargetStep(
                                     initialTarget: _cookingTarget,
                                     onChanged: (val) => setState(() => _cookingTarget = val),
@@ -292,12 +279,12 @@ class _UserPreferencesScreenState extends State<UserPreferencesScreen> {
                                 ),
                               ),
                               SizedBox(height: 24.h),
-                              _buildSectionHeader('Other'),
+                              _buildSectionHeader(context.l10n.prefsSectionOther),
                               _buildTile(
-                                'Onboarding Goals',
-                                _formatGoals(_onboardingGoals),
+                                context.l10n.prefsGoals,
+                                optionLabels(context, _onboardingGoals),
                                 () => _openEditor(
-                                  'Onboarding Goals',
+                                  context.l10n.prefsGoals,
                                   GoalsStep(
                                     initialSelected: _onboardingGoals,
                                     onChanged: (val) =>
@@ -362,7 +349,7 @@ class _UserPreferencesScreenState extends State<UserPreferencesScreen> {
                     ),
                     SizedBox(height: 4.h),
                     Text(
-                      value.isEmpty ? 'Not set' : value,
+                      value.isEmpty ? context.l10n.commonNotSet : value,
                       style: TextStyle(
                         fontFamily: 'Rubik',
                         fontSize: 13.sp,

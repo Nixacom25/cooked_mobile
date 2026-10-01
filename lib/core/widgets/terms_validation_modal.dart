@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'legal_content_modal.dart';
 import '../../widgets/red_button.dart';
 import '../theme/app_theme.dart';
+import '../l10n/l10n.dart';
 
 class TermsValidationModal extends StatefulWidget {
   final VoidCallback onAccepted;
@@ -58,7 +59,7 @@ class _TermsValidationModalState extends State<TermsValidationModal> {
           SizedBox(height: 16.h),
 
           Text(
-            'Terms & Conditions',
+            context.l10n.legalTerms,
             style: TextStyle(
               fontSize: 22.sp,
               fontWeight: FontWeight.w900,
@@ -70,7 +71,7 @@ class _TermsValidationModalState extends State<TermsValidationModal> {
           SizedBox(height: 12.h),
 
           Text(
-            'Before continuing with social login, please review and accept our legal terms to protect your data.',
+            context.l10n.termsIntro,
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 14.sp,
@@ -108,30 +109,30 @@ class _TermsValidationModalState extends State<TermsValidationModal> {
                   child: Wrap(
                     children: [
                       Text(
-                        'I have read and agree to the ',
+                        context.l10n.termsAgreeA,
                         style: TextStyle(
                           fontSize: 13.sp,
                           color: colors.textSecondary,
                           fontFamily: 'SF Pro',
                         ),
                       ),
-                      _linkText(context, 'Terms of Use', () {
+                      _linkText(context, context.l10n.commonTermsOfUse, () {
                         LegalContentModal.show(context,
-                          title: 'Terms of Use',
+                          title: context.l10n.commonTermsOfUse,
                           content: dummyTerms
                         );
                       }),
                       Text(
-                        ' and ',
+                        context.l10n.termsAnd,
                         style: TextStyle(
                           fontSize: 13.sp,
                           color: colors.textSecondary,
                           fontFamily: 'SF Pro',
                         ),
                       ),
-                      _linkText(context, 'Privacy Policy', () {
+                      _linkText(context, context.l10n.commonPrivacyPolicy, () {
                         LegalContentModal.show(context,
-                          title: 'Privacy Policy',
+                          title: context.l10n.commonPrivacyPolicy,
                           content: dummyPrivacy
                         );
                       }),
@@ -154,7 +155,7 @@ class _TermsValidationModalState extends State<TermsValidationModal> {
 
           // Action Button
           RedButton(
-            label: 'Confirm and Continue',
+            label: context.l10n.termsConfirm,
             isDisabled: !_accepted,
             onTap: () {
               Navigator.pop(context);

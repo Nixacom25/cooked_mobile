@@ -5,6 +5,7 @@ import '../../widgets/preference_step_scaffold.dart';
 import '../../core/widgets/ios_toast.dart';
 import '../onboarding/widgets/kitchen_step.dart';
 import 'preferences_helpers.dart';
+import '../../core/l10n/l10n.dart';
 
 /// Profile > Kitchen Equipment - promoted out of the general Dietary
 /// Preferences hub into its own top-level entry.
@@ -49,14 +50,14 @@ class _KitchenEquipmentScreenState extends State<KitchenEquipmentScreen> {
       );
     } catch (e) {
       if (!mounted) return;
-      IosToast.show(context, message: 'Failed to update kitchen equipment', type: ToastType.error);
+      IosToast.show(context, message: context.l10n.prefsKitchenUpdateFailed, type: ToastType.error);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return PreferenceStepScaffold(
-      title: 'Kitchen Equipment',
+      title: context.l10n.settingsKitchenEquipment,
       step: KitchenStep(
         initialSelected: _selected,
         onChanged: (val) => _selected = val,

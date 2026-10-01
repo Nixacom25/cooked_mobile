@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -41,6 +40,7 @@ import '../../services/auth_service.dart';
 import '../../widgets/red_header_background.dart';
 import '../../services/iap_service.dart';
 import '../../services/revenuecat_service.dart';
+import '../../services/store_price_service.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 import '../../core/services/tutorial_service.dart';
 import '../../core/utils/error_helper.dart';
@@ -51,9 +51,20 @@ import '../../widgets/glass_icon_button.dart';
 import '../../widgets/red_button.dart';
 import '../../widgets/loading_text.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/l10n/l10n.dart';
 
 class OnboardingScreen extends StatefulWidget {
-  const OnboardingScreen({super.key});
+  /// Page to resume at for an account that exists but never finished
+  /// onboarding (left at the subscription step). The locally saved step is
+  /// kept if it's already further along the subscription steps.
+  final int? resumeAtPage;
+
+  const OnboardingScreen({super.key, this.resumeAtPage});
+
+  /// First subscription page (FreeTrialIntroStep), right after sign-up.
+  static const int subscriptionStartPage = 26;
+  /// Last subscription page (TrialStep).
+  static const int subscriptionEndPage = 28;
 
   @override
   State<OnboardingScreen> createState() => _OnboardingScreenState();
@@ -122,6 +133,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   void _initIap() async {
     IapService.instance.initialize();
+    // Real store prices for the trial/plan texts (never hardcoded).
+    StorePriceService.instance.load();
     // The actual purchase on this screen goes through RevenueCatService
     // (see buyPackage() below) - its own success/error callbacks are what
     // fire, not IapService's, so they must be wired here too or the
@@ -247,7 +260,16 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   Future<void> _restoreProgress() async {
     final progress = await OnboardingStorage.loadProgress();
-    if (progress == null) return;
+    final resumeAt = widget.resumeAtPage;
+    if (progress == null) {
+      if (resumeAt != null && mounted) {
+        setState(() => _currentPage = resumeAt);
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (_pageController.hasClients) _pageController.jumpToPage(resumeAt);
+        });
+      }
+      return;
+    }
 
     if (!mounted) return;
 
@@ -309,6 +331,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       _eatingOutSavings = progress['eatingOutSavings'] ?? 0;
       _grocerySavings = progress['grocerySavings'] ?? 0;
     });
+
+    // Existing account that never finished: go to the subscription steps,
+    // unless the saved progress is already somewhere within them.
+    if (resumeAt != null &&
+        (_currentPage < resumeAt || _currentPage > OnboardingScreen.subscriptionEndPage)) {
+      _currentPage = resumeAt;
+    }
 
     if (_currentPage > 0) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -417,7 +446,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         if (mounted) {
           IosToast.show(
             context,
-            message: 'Could not initiate purchase',
+            message: context.l10n.payCouldNotStart,
             type: ToastType.error);
         }
       }
@@ -481,7 +510,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       _pageController.jumpToPage(24);
       IosToast.show(
         context,
-        message: 'Please complete account info to save your profile',
+        message: context.l10n.onbCompleteAccountInfo,
         type: ToastType.warning);
       return;
     }
@@ -553,7 +582,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           _startAnalysisLoading();
           setState(() => _isLoading = true);
 
-          developer.log('Social Auth Result: $socialRes', name: 'OnboardingScreen');
 
           if (socialRes['success'] != true) {
             throw Exception('Social authentication failed');
@@ -578,7 +606,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
              throw Exception('Email is required for registration. Please provide your email in the previous step.');
           }
 
-          developer.log('Final Registration Info: $finalEmail, $finalFirst $finalLast', name: 'OnboardingScreen');
 
           // Now call register with ALL preferences + social identity
           registerResult = await AuthService.instance.register(
@@ -655,7 +682,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       // Security Logic: Block navigation and show clear fallback instructions
       String finalMsg = errorMsg;
       if (isSocial && !errorMsg.contains('already exists')) {
-        finalMsg = '$errorMsg\n\nTip: If the problem persists with Google, try signing up via email.';
+        finalMsg = context.l10n.onbGoogleSignupTip(errorMsg);
       }
       
       IosToast.show(
@@ -694,7 +721,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               fit: BoxFit.contain),
             SizedBox(height: 24.h),
             LoadingText(
-              text: 'Connecting',
+              text: context.l10n.commonConnecting,
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 18.sp,
@@ -928,6 +955,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         },
                         onSkip: () {
                           _pageController.nextPage(duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
+                        },
+                        favoriteCuisines: _favoriteCuisines,
+                        // Referral/gift code redeemed: Premium is active, skip paying.
+                        onRedeemed: () {
+                          _pageController.nextPage(duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
                         }), // step 26
                       PerfectMealStep(
                         favoriteCuisines: _favoriteCuisines,
@@ -937,7 +969,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           if (mounted) {
                             // Send welcome email after onboarding completion
                             UserService.instance.sendWelcomeEmail().catchError((e) {
-                              developer.log('Failed to send welcome email: $e', name: 'OnboardingScreen');
                             });
                             Navigator.pushNamedAndRemoveUntil(
                               context,
@@ -950,7 +981,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           if (mounted) {
                             // Send welcome email after onboarding completion
                             UserService.instance.sendWelcomeEmail().catchError((e) {
-                              developer.log('Failed to send welcome email: $e', name: 'OnboardingScreen');
                             });
                             Navigator.pushNamedAndRemoveUntil(
                               context,
@@ -1011,7 +1041,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                   borderRadius: BorderRadius.circular(50.r)),
                                 child: Center(
                                   child: Text(
-                                    'Skip — I eat most things',
+                                    context.l10n.onbSkipEatMost,
                                     style: TextStyle(
                                       fontFamily: 'SF Pro',
                                       fontSize: 18.sp,
@@ -1021,9 +1051,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           ],
                           RedButton(
                             label: _currentPage == 36
-                                ? 'Start My 3-Day Free Trial (\$0.00)'
-                                : 'Continue',
-                            loadingLabel: _currentPage == 36 ? 'Processing' : 'Continuing',
+                                ? context.l10n.onbStartTrial
+                                : context.l10n.commonContinue,
+                            loadingLabel: _currentPage == 36 ? context.l10n.commonProcessing : context.l10n.commonContinuing,
                             isLoading: _isLoading,
                             isDisabled: (_currentPage == 22 && (_groceryFrequency == null || _groceryStores.isEmpty || _groceryBudget == null)) ||
                                 (_currentPage == 24 && _recipeSources.isEmpty) ||
@@ -1041,8 +1071,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             SizedBox(height: 12.h),
                             Text(
                               _selectedPlanId == 'yearly'
-                                  ? '3 days free, then \$29.99 per year (\$2.49/mo)'
-                                  : '3 days free, then \$9.99 per month',
+                                  ? StorePriceService.instance.prices.value.trialThenYearly(context.l10n)
+                                  : (StorePriceService.instance.prices.value.monthly != null
+                                      ? context.l10n.priceBilledPerMonth(StorePriceService.instance.prices.value.monthly!)
+                                      : context.l10n.priceBilledMonthly),
                               style: TextStyle(
                                 fontSize: 14.sp,
                                 color: context.colors.textMuted,
@@ -1055,7 +1087,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Text(
-                                  'Already have an account? ',
+                                  context.l10n.welcomeHaveAccount,
                                   style: TextStyle(
                                     fontSize: 14.sp,
                                     color: context.colors.textMuted,
@@ -1065,7 +1097,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                     context,
                                     AppRoutes.login),
                                   child: Text(
-                                    'Sign In',
+                                    context.l10n.commonSignIn,
                                     style: TextStyle(
                                       fontSize: 14.sp,
                                       fontWeight: FontWeight.w700,

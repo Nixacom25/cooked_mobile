@@ -100,7 +100,10 @@ jobs:
       run: flutter precache --ios
 
     - name: Build IPA
-      run: flutter build ipa --release --export-options-plist=ios/ExportOptions.plist
+      env:
+        # PostHog analytics (empty = disabled)
+        POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}
+      run: flutter build ipa --release --export-options-plist=ios/ExportOptions.plist --dart-define=POSTHOG_API_KEY="$POSTHOG_API_KEY" --dart-define=POSTHOG_HOST=https://us.i.posthog.com
 
     - name: Upload dSYMs to Crashlytics
       continue-on-error: true

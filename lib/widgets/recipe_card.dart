@@ -11,6 +11,7 @@ import 'standard_plus_button.dart';
 import 'haptic_context_menu.dart';
 import '../core/theme/app_theme.dart';
 import '../core/motion/motion_widgets.dart';
+import '../core/l10n/l10n.dart';
 
 class RecipeCard extends StatelessWidget {
   final Recipe? recipe;
@@ -240,32 +241,32 @@ class RecipeCard extends StatelessWidget {
       actions: [
         if (onAddToCookbookTap != null && (recipe == null || !recipe!.isInCookbook))
           HapticMenuAction(
-            title: 'Add to Cookbook',
+            title: context.l10n.recipeAddToCookbook,
             icon: Icons.add_circle_outline_rounded,
             onTap: onAddToCookbookTap!,
           ),
         if (onRemoveFromCookbookTap != null)
           HapticMenuAction(
-            title: 'Remove from Cookbook',
+            title: context.l10n.recipeRemoveFromCookbook,
             icon: Icons.remove_circle_outline_rounded,
             isDestructive: true,
             onTap: onRemoveFromCookbookTap!,
           ),
         if (onPinTap != null)
           HapticMenuAction(
-            title: (recipe?.isPinned == true) ? 'Unpin Recipe' : 'Pin Recipe',
+            title: (recipe?.isPinned == true) ? context.l10n.recipeUnpin : context.l10n.recipePin,
             icon: (recipe?.isPinned == true) ? Icons.push_pin_rounded : Icons.push_pin_outlined,
             onTap: onPinTap!,
           ),
         if (onShareTap != null)
           HapticMenuAction(
-            title: 'Share Recipe',
+            title: context.l10n.recipeShare,
             icon: Icons.ios_share_rounded,
             onTap: onShareTap!,
           ),
         if (onDeleteTap != null)
           HapticMenuAction(
-            title: 'Delete Recipe',
+            title: context.l10n.recipeDelete,
             icon: Icons.delete_outline_rounded,
             isDestructive: true,
             onTap: onDeleteTap!,

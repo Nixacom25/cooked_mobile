@@ -1,3 +1,5 @@
+import '../../core/l10n/locale_service.dart';
+
 /// `PUT /user/me/preferences` replaces the whole preferences bundle on
 /// every call (it's not a partial update) - so any screen that edits just
 /// one field (Allergies, Kitchen Equipment, Favorite Cuisines...) still has
@@ -21,7 +23,7 @@ Map<String, dynamic> currentPreferenceArgs(Map<String, dynamic>? user) {
     'mealPlanningStyle': u['mealPlanningStyle'] ?? 'Weekly meal plan',
     'notificationPreferences': List<String>.from(u['notificationPreferences'] ?? []),
     'onboardingGoals': List<String>.from(u['onboardingGoals'] ?? []),
-    'language': u['language'] ?? 'GB English',
+    'language': u['language'] ?? LocaleService.instance.languageValue,
     'country': u['country'] ?? 'US United States',
     'measurementSystem': u['measurementSystem'] ?? 'Metric',
   };

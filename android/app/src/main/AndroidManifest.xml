@@ -12,6 +12,8 @@
         android:usesCleartextTraffic="true"
         android:hardwareAccelerated="true"
         android:icon="@mipmap/ic_launcher">
+        <!-- PostHog is set up from Dart (PostHogService) with build-time keys. -->
+        <meta-data android:name="com.posthog.posthog.AUTO_INIT" android:value="false" />
         <activity
             android:name=".MainActivity"
             android:exported="true"

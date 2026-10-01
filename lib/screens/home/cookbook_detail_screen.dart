@@ -21,6 +21,7 @@ import '../../widgets/glass_icon_button.dart';
 import '../../widgets/red_header_background.dart';
 import '../../widgets/saved_recipe_card.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/l10n/l10n.dart';
 
 class CookbookDetailScreen extends StatefulWidget {
   const CookbookDetailScreen({super.key});
@@ -106,7 +107,7 @@ class _CookbookDetailScreenState extends State<CookbookDetailScreen> {
           }
         }
 
-        final String name = _cookbook?.name ?? 'Cookbook';
+        final String name = _cookbook?.name ?? context.l10n.cookbookDefaultName;
         final List<Recipe> allRecipes = _cookbook?.recipes != null
             ? List.from(_cookbook!.recipes)
             : [];
@@ -213,7 +214,7 @@ class _CookbookDetailScreenState extends State<CookbookDetailScreen> {
                           onChanged: (_) {
                             setState(() {});
                           },
-                          hintText: 'Search your recipes',
+                          hintText: context.l10n.homeSearchHint,
                           backgroundColor: context.colors.pageBackground,
                           borderColor: Colors.transparent,
                           borderRadius: 16.r,
@@ -271,15 +272,15 @@ class _CookbookDetailScreenState extends State<CookbookDetailScreen> {
                                           });
                                           if (newFavState) {
                                             RecipeService.instance.markRecipeAsSaved(r);
-                                            IosToast.show(ctx, message: 'Recipe saved to favorites!', type: ToastType.success);
+                                            IosToast.show(ctx, message: context.l10n.recipeSavedToast, type: ToastType.success);
                                           } else {
                                             RecipeService.instance.markRecipeAsUnsaved(r);
                                             if (r.id.isNotEmpty) {
-                                              RecipeService.instance.deleteRecipe(r.id);
+                                              RecipeService.instance.deleteRecipe(r.id, name: r.name);
                                             }
                                               r.isFavorite = false;
                                               r.isInCookbook = false;
-                                            IosToast.show(ctx, message: 'Recipe removed from saved', type: ToastType.success);
+                                            IosToast.show(ctx, message: context.l10n.recipeRemovedToast, type: ToastType.success);
                                           }
                                         },
                                         onTap: () => Navigator.pushNamed(
@@ -323,7 +324,7 @@ class _CookbookDetailScreenState extends State<CookbookDetailScreen> {
       targetPosition: position,
       actions: [
         HapticMenuAction(
-          title: r.isPinned ? 'Unpin Recipe' : 'Pin Recipe',
+          title: r.isPinned ? context.l10n.recipeUnpin : context.l10n.recipePin,
           icon: r.isPinned ? Icons.push_pin_rounded : Icons.push_pin_outlined,
           onTap: () {
             setState(() {
@@ -342,8 +343,8 @@ class _CookbookDetailScreenState extends State<CookbookDetailScreen> {
                     IosToast.show(
                       context,
                       message: updated.isPinned
-                          ? 'Recipe pinned'
-                          : 'Recipe unpinned',
+                          ? context.l10n.recipePinned
+                          : context.l10n.recipeUnpinned,
                       type: ToastType.success,
                     );
                   }
@@ -352,7 +353,7 @@ class _CookbookDetailScreenState extends State<CookbookDetailScreen> {
                   if (context.mounted) {
                     IosToast.show(
                       context,
-                      message: 'Failed to pin recipe',
+                      message: context.l10n.recipePinFailed,
                       type: ToastType.error,
                     );
                   }
@@ -360,7 +361,7 @@ class _CookbookDetailScreenState extends State<CookbookDetailScreen> {
           },
         ),
         HapticMenuAction(
-          title: 'Add to Cookbook',
+          title: context.l10n.recipeAddToCookbook,
           icon: Icons.add_circle_outline_rounded,
           onTap: () {
             showModalBottomSheet(
@@ -373,7 +374,7 @@ class _CookbookDetailScreenState extends State<CookbookDetailScreen> {
           },
         ),
         HapticMenuAction(
-          title: 'Remove from Cookbook',
+          title: context.l10n.recipeRemoveFromCookbook,
           icon: Icons.remove_circle_outline_rounded,
           isDestructive: true,
           onTap: () {
@@ -392,16 +393,17 @@ class _CookbookDetailScreenState extends State<CookbookDetailScreen> {
 
             IosToast.show(
               context,
-              message: 'Removed from cookbook',
+              message: context.l10n.recipeRemovedFromCookbook,
               type: ToastType.success,
             );
           },
         ),
         HapticMenuAction(
-          title: 'Share Recipe',
+          title: context.l10n.recipeShare,
           icon: Icons.ios_share_rounded,
           onTap: () async {
             try {
+              final l10n = context.l10n;
               final rawLink =
                   await RecipeService.instance.getShareLink(r.id);
               final link = rawLink
@@ -409,9 +411,12 @@ class _CookbookDetailScreenState extends State<CookbookDetailScreen> {
                   .replaceAll('https://cooked.nixacom.app',
                       'https://link.cookedapp.com');
               final name = r.name;
-              final creatorStr =
-                  r.creator != null ? "${r.creator!.displayName}'s " : "";
-              final template = "Check out $creatorStr$name on Cooked 🙌\n$link";
+              final template = recipeShareText(
+                l10n,
+                name: name,
+                link: link,
+                creator: r.creator != null ? r.creator!.displayName : null,
+              );
 
               SharePlus.instance.share(ShareParams(text: template));
             } catch (e) {
@@ -426,16 +431,16 @@ class _CookbookDetailScreenState extends State<CookbookDetailScreen> {
           },
         ),
         HapticMenuAction(
-          title: 'Delete Recipe',
+          title: context.l10n.recipeDelete,
           icon: Icons.delete_outline_rounded,
           isDestructive: true,
           onTap: () {
             RecipeService.instance
-                .deleteRecipe(r.id)
+                .deleteRecipe(r.id, name: r.name)
                 .catchError((_) => false);
             IosToast.show(
               context,
-              message: 'Recipe deleted',
+              message: context.l10n.recipeDeleted,
               type: ToastType.success,
             );
           },
@@ -456,19 +461,19 @@ class _CookbookDetailScreenState extends State<CookbookDetailScreen> {
               _buildShortcutButton(
                 context,
                 icon: Icons.crop_free_rounded,
-                label: 'Scan',
+                label: context.l10n.navScan,
                 tabIndex: 2,
               ),
               _buildShortcutButton(
                 context,
                 icon: Icons.file_download_outlined,
-                label: 'Import',
+                label: context.l10n.navImport,
                 tabIndex: 4,
               ),
               _buildShortcutButton(
                 context,
                 icon: Icons.search_rounded,
-                label: 'Explore',
+                label: context.l10n.navExplore,
                 tabIndex: 1,
               ),
             ],
@@ -478,7 +483,7 @@ class _CookbookDetailScreenState extends State<CookbookDetailScreen> {
 
           // Text Section
           Text(
-            "No recipes yet",
+            context.l10n.cookbookEmptyTitle,
             textAlign: TextAlign.center,
             style: TextStyle(
               fontFamily: 'Rubik',
@@ -491,7 +496,7 @@ class _CookbookDetailScreenState extends State<CookbookDetailScreen> {
           Padding(
             padding: EdgeInsets.symmetric(horizontal: 24.w),
             child: Text(
-              "Start adding recipes to this cookbook by scanning, importing or exploring.",
+              context.l10n.cookbookEmptySubtitle,
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontFamily: 'Rubik',
@@ -519,7 +524,7 @@ class _CookbookDetailScreenState extends State<CookbookDetailScreen> {
               ),
               child: Center(
                 child: Text(
-                  'Save',
+                  context.l10n.commonSave,
                   style: TextStyle(
                     fontFamily: 'Rubik',
                     fontWeight: FontWeight.w700,

@@ -4,6 +4,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../models/recipe.dart';
 import '../core/theme/app_theme.dart';
 import '../core/motion/motion_widgets.dart';
+import '../core/l10n/l10n.dart';
 
 class RecipeHorizontalCard extends StatelessWidget {
   final Recipe? recipe;
@@ -36,12 +37,12 @@ class RecipeHorizontalCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final displayTitle = title ?? recipe?.name ?? 'Recipe';
+    final displayTitle = title ?? recipe?.name ?? context.l10n.commonRecipe;
     final displaySubtitle = subtitle ??
         (recipe?.origin?.toUpperCase() == 'SCAN'
-            ? "Scanned at home"
+            ? context.l10n.savingsScannedAtHome
             : recipe != null
-                ? "Saved in your cookbook"
+                ? context.l10n.recipeSavedInCookbook
                 : null);
 
     final displayTime = time ?? (recipe?.cookTime != null ? '${recipe!.cookTime} min' : null);
@@ -89,6 +90,7 @@ class RecipeHorizontalCard extends StatelessWidget {
                             active: isFavorite,
                             ringColor: context.colors.accent,
                             ringSize: 34.r,
+                            iconSize: 18.sp,
                             child: Icon(
                               isFavorite
                                   ? Icons.favorite_rounded

@@ -28,6 +28,7 @@ import '../widgets/confetti_animation.dart';
 import '../widgets/red_header_background.dart';
 import '../core/theme/app_theme.dart';
 import '../core/motion/motion_widgets.dart';
+import '../core/l10n/l10n.dart';
 
 enum ScanState { scan, type, saved, results }
 
@@ -80,6 +81,30 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
   bool _isCameraInitialized = false;
   bool _isInitializing = false;
   String _cameraStatus = "Initializing...";
+
+  /// [_cameraStatus] holds an internal state; this is what the user reads.
+  String _cameraStatusLabel(BuildContext context) {
+    final l10n = context.l10n;
+    switch (_cameraStatus) {
+      case "Initializing...":
+      case "Direct Access...":
+        return l10n.cameraInitializing;
+      case "On hold":
+        return l10n.cameraOnHold;
+      case "Camera Off":
+        return l10n.cameraOff;
+      case "Camera permission denied":
+        return l10n.cameraPermissionDenied;
+      case "Finding cameras...":
+        return l10n.cameraFinding;
+      case "No cameras found":
+        return l10n.cameraNotFound;
+      case "Ready":
+        return l10n.cameraReady;
+      default:
+        return l10n.cameraError;
+    }
+  }
   bool _hasCameraError = false;
   bool _useManualStreaming = false;
   DateTime? _lastInitAttempt;
@@ -245,7 +270,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
     if (allIngredients.isEmpty) {
       IosToast.show(
         context,
-        message: "Please add or select ingredients",
+        message: context.l10n.scanAddIngredientsFirst,
         type: ToastType.error,
       );
       return;
@@ -371,7 +396,6 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
     final now = DateTime.now();
     if (_lastInitAttempt != null &&
         now.difference(_lastInitAttempt!).inSeconds < 5) {
-      debugPrint("CAMERA_LOG: Init throttled (too frequent).");
       return;
     }
     _lastInitAttempt = now;
@@ -430,10 +454,8 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
         imageFormatGroup: ImageFormatGroup.jpeg, // Fixes ImageReader_JNI buffer spam on Android
       );
 
-      debugPrint("CAMERA_LOG: Stabilization delay 2...");
       await Future.delayed(const Duration(milliseconds: 200));
 
-      debugPrint("CAMERA_LOG: Executing initialize()...");
       await _cameraController!.initialize();
 
       if (!mounted) return;
@@ -446,9 +468,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
         _isInitializing = false;
         _cameraStatus = "Ready";
       });
-      debugPrint("CAMERA_LOG: Setup finished.");
     } catch (e) {
-      debugPrint("CAMERA_LOG: Critical HW Catch: $e");
       if (mounted) {
         setState(() {
           _isInitializing = false;
@@ -474,7 +494,6 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
           if (mounted) _handleCameraStream(image);
         });
       } catch (e) {
-        debugPrint("CAMERA_LOG: Manual stream start fail: $e");
       }
     }
   }
@@ -588,9 +607,6 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    debugPrint(
-      "BUILD_SCAN: state=$_state manual=$_useManualStreaming init=$_isCameraInitialized status=$_cameraStatus notify=${widget.isActiveNotifier.value}",
-    );
     final bool isKeyboardOpen = MediaQuery.of(context).viewInsets.bottom > 0;
     final bool isScan = _state == ScanState.scan;
     bool showPill = _state != ScanState.results && !isKeyboardOpen;
@@ -708,7 +724,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                 const SkeletonLoader(width: 40, height: 40, borderRadius: 20),
                 SizedBox(height: 16.h),
                 LoadingText(
-                  text: "Initializing Camera",
+                  text: context.l10n.cameraInitializing,
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 16.sp,
@@ -764,7 +780,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                   ),
                 ),
                 Text(
-                  "Scan",
+                  context.l10n.navScan,
                   style: TextStyle(
                     fontFamily: 'Rubik',
                     fontWeight: FontWeight.w800,
@@ -812,7 +828,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                     child: Text(
                       _useManualStreaming
                           ? "MODE: DIRECT STREAM (Logic)"
-                          : _cameraStatus,
+                          : _cameraStatusLabel(context),
                       style: TextStyle(
                         color: _useManualStreaming
                             ? Colors.amber
@@ -922,7 +938,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
   }
 
   Widget _buildDynamicHeader() {
-    String title = _state == ScanState.type ? "Type Ingredient" : "Saved";
+    String title = _state == ScanState.type ? context.l10n.scanTypeIngredient : context.l10n.scanSaved;
     return Padding(
       padding: EdgeInsets.fromLTRB(16.w, 20.h, 16.w, 16.h),
       child: Row(
@@ -1038,7 +1054,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
     }
 
     // Action button ("Get Recipes" for Type, "Add" for Saved)
-    final String label = _state == ScanState.saved ? "Add" : "Get Recipes";
+    final String label = _state == ScanState.saved ? context.l10n.commonAdd : context.l10n.scanGetRecipes;
     Widget actionBtn = _buildWideBtn(label, _generateFromTyped);
 
     return Positioned(
@@ -1144,18 +1160,18 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
           child: Row(
             children: [
               _PillTab(
-                label: 'Scan',
+                label: context.l10n.navScan,
                 active: _state == ScanState.scan,
                 onTap: () => _updateState(ScanState.scan),
               ),
               _PillTab(
                 key: _typeTabKey,
-                label: 'Type Ingredients',
+                label: context.l10n.scanTypeIngredients,
                 active: _state == ScanState.type,
                 onTap: () => _updateState(ScanState.type),
               ),
               _PillTab(
-                label: 'Saved',
+                label: context.l10n.scanSaved,
                 active: _state == ScanState.saved,
                 onTap: () => _updateState(ScanState.saved),
               ),
@@ -1179,7 +1195,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                "Enter ingredients one by one",
+                context.l10n.scanEnterOneByOne,
                 style: TextStyle(
                   fontFamily: 'Rubik',
                   color: context.colors.textSecondary,
@@ -1208,7 +1224,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                       color: context.colors.textSecondary,
                       size: 22.sp,
                     ),
-                    hintText: 'Search your recipes',
+                    hintText: context.l10n.homeSearchHint,
                     hintStyle: TextStyle(
                       fontFamily: 'Rubik',
                       color: context.colors.textMuted,
@@ -1298,7 +1314,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
               if (_ingCtrl.text.isEmpty) ...[
                 SizedBox(height: 5.h),
                 Text(
-                  "Add ingredients to find recipes you can make",
+                  context.l10n.scanAddToFind,
                   style: TextStyle(
                     color: context.colors.textMuted,
                     fontSize: 12.sp,
@@ -1318,7 +1334,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                   return [
                     SizedBox(height: 25.h),
                     Text(
-                      "Recently Used",
+                      context.l10n.scanRecentlyUsed,
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 14.sp,
@@ -1437,7 +1453,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                       ),
                     ),
                     Text(
-                      "Use all",
+                      context.l10n.scanUseAll,
                       style: TextStyle(
                         fontSize: 14.sp,
                         fontWeight: FontWeight.w600,
@@ -1454,7 +1470,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                     });
                   },
                   child: Text(
-                    "Clear selection",
+                    context.l10n.scanClearSelection,
                     style: TextStyle(
                       color: context.colors.textSecondary,
                       fontSize: 13.sp,
@@ -1488,7 +1504,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
             child: Padding(
               padding: EdgeInsets.only(top: 40.h),
               child: Text(
-                "No saved ingredients yet.",
+                context.l10n.scanNoSaved,
                 style: TextStyle(
                   color: context.colors.textMuted,
                   fontSize: 14.sp,
@@ -1625,9 +1641,11 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // Cooked Logo
+              // Cooked Logo (dark variant in dark mode)
               Image.asset(
-                'assets/images/logo2.png',
+                Theme.of(context).brightness == Brightness.dark
+                    ? 'assets/images/logo_icon_only_dark.png'
+                    : 'assets/images/logo2.png',
                 height: 36.h,
                 fit: BoxFit.contain,
                 errorBuilder: (_, __, ___) => Text(
@@ -1667,7 +1685,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
             TextSpan(
               children: [
                 TextSpan(
-                  text: 'Recipes You\n',
+                  text: context.l10n.scanResultsTitleA,
                   style: TextStyle(
                     fontFamily: 'Rubik',
                     fontSize: 26.sp,
@@ -1677,7 +1695,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                   ),
                 ),
                 TextSpan(
-                  text: 'Can Cook Now',
+                  text: context.l10n.scanResultsTitleB,
                   style: TextStyle(
                     fontFamily: 'Rubik',
                     fontSize: 26.sp,
@@ -1691,7 +1709,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
           ),
           SizedBox(height: 4.h),
           Text(
-            'We found ${_recipes.length} ${_recipes.length == 1 ? "recipe" : "recipes"} for you',
+            context.l10n.scanFoundRecipes(_recipes.length),
             style: TextStyle(
               fontFamily: 'Rubik',
               fontSize: 13.sp,
@@ -1858,6 +1876,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                                 active: isSaved,
                                 ringColor: context.colors.accent,
                                 ringSize: 34.r,
+                                iconSize: 18.sp,
                                 child: Icon(
                                   isSaved ? Icons.favorite : Icons.favorite_outline,
                                   color: isSaved ? context.colors.accent : context.colors.textMuted,
@@ -1931,7 +1950,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
 
                   // Your Ingredients Header
                   Text(
-                    'Your Ingredients',
+                    context.l10n.scanYourIngredients,
                     style: TextStyle(
                       fontFamily: 'Rubik',
                       fontSize: 14.sp,
@@ -1941,7 +1960,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                   ),
                   SizedBox(height: 2.h),
                   Text(
-                    'We found ${displayIngredients.length} items in your kitchen',
+                    context.l10n.scanFoundItems(displayIngredients.length),
                     style: TextStyle(
                       fontFamily: 'Rubik',
                       fontSize: 12.sp,
@@ -1988,7 +2007,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                       ),
                       alignment: Alignment.center,
                       child: Text(
-                        'View Recipe',
+                        context.l10n.scanViewRecipe,
                         style: TextStyle(
                           fontFamily: 'Rubik',
                           fontSize: 15.sp,
@@ -2089,7 +2108,6 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
         photo = await _cameraController!.takePicture();
         await _cameraController!.pausePreview();
       } catch (e) {
-        debugPrint('Error taking picture: $e');
         return;
       }
     } else {

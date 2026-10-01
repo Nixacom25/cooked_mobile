@@ -15,6 +15,7 @@ import 'app_loading_indicator.dart';
 import 'cookbook_form_modal.dart';
 import '../core/theme/app_theme.dart';
 import '../core/motion/motion_widgets.dart';
+import '../core/l10n/l10n.dart';
 
 enum _SheetMode { list, create }
 
@@ -211,7 +212,7 @@ class _AddToCookbookSheetState extends State<AddToCookbookSheet> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Cookbooks',
+                context.l10n.homeCookbooks,
                 style: TextStyle(
                   color: context.colors.textPrimary,
                   fontSize: 16.sp,
@@ -222,7 +223,7 @@ class _AddToCookbookSheetState extends State<AddToCookbookSheet> {
               GestureDetector(
                 onTap: _openNewCookbookModal,
                 child: Text(
-                  'New Cookbook',
+                  context.l10n.cookbookNew,
                   style: TextStyle(
                     color: context.colors.accent, // Red as requested
                     fontSize: 14.sp,
@@ -325,7 +326,7 @@ class _AddToCookbookSheetState extends State<AddToCookbookSheet> {
                     ),
                   ),
                   Text(
-                    recipeCountLabel(cb.recipes.length),
+                    recipeCountLabel(context.l10n, cb.recipes.length),
                     style: TextStyle(
                       color: context.colors.textMuted,
                       fontSize: 13.sp,
@@ -432,7 +433,7 @@ class _AddToCookbookSheetState extends State<AddToCookbookSheet> {
           final nav = Navigator.of(context);
           IosToast.show(
             context,
-            message: name != null ? 'Added to ${name.toTitleCase()}' : 'Added to Cookbook',
+            message: name != null ? context.l10n.cookbookAddedTo(name.toTitleCase()) : context.l10n.cookbookAddedGeneric,
             type: ToastType.success,
           );
           nav.pop();
@@ -440,7 +441,6 @@ class _AddToCookbookSheetState extends State<AddToCookbookSheet> {
 
         // 3. Add to cookbook in backend DB & update state
         await CookbookService.instance.addRecipeToCookbook(cookbookId, targetRecipe.id).catchError((e) {
-           debugPrint('Background add to cookbook failed: $e');
            return Cookbook(id: '', name: '', recipes: [], createdAt: DateTime.now(), updatedAt: DateTime.now(), isPlaceholder: true);
         });
       } else {

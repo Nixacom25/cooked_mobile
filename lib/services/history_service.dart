@@ -38,7 +38,6 @@ class HistoryService {
           try {
             return Recipe.fromJson(jsonDecode(item));
           } catch (e) {
-            debugPrint('HistoryService: Failed to decode item: $e');
             return null;
           }
         })
@@ -79,7 +78,6 @@ class HistoryService {
 
       recentlyViewedNotifier.value = recipes;
     } catch (e) {
-      debugPrint('Error loading history: $e');
     }
   }
 
@@ -95,7 +93,6 @@ class HistoryService {
       
       // Add to start
       current.insert(0, recipe);
-      debugPrint('HistoryService: Added recipe ${recipe.name} to history. Total: ${current.length}');
       
       // Limit to 15 items
       if (current.length > 15) {
@@ -111,7 +108,6 @@ class HistoryService {
           .toList();
       await prefs.setStringList(_getKey(), jsonList);
     } catch (e) {
-      debugPrint('Error adding to history: $e');
     }
   }
 
@@ -121,7 +117,6 @@ class HistoryService {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove(_getKey());
     } catch (e) {
-      debugPrint('Error clearing history: $e');
     }
   }
 }

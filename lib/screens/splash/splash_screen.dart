@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../routes/app_routes.dart';
 import '../../services/auth_service.dart';
 import '../../services/user_service.dart';
+import '../../services/account_router.dart';
 import '../../widgets/cooked_blob_background.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -33,21 +34,10 @@ class _SplashScreenState extends State<SplashScreen> {
         await UserService.instance.getCurrentUser();
         if (!mounted) return;
 
-        final bool isUserPremium = UserService.instance.isPremium;
-        if (!isUserPremium) {
-          // Only logout if we're sure the user exists but isn't premium
-          // If user data is null, let them proceed to home and handle there
-          if (UserService.instance.currentUserNotifier.value != null) {
-            await AuthService.instance.logout();
-            if (!mounted) return;
-            Navigator.pushNamedAndRemoveUntil(context, AppRoutes.welcome, (route) => false);
-          } else {
-            // User data not loaded, proceed to home to handle there
-            Navigator.pushNamedAndRemoveUntil(context, AppRoutes.home, (route) => false);
-          }
-        } else {
-          Navigator.pushNamedAndRemoveUntil(context, AppRoutes.home, (route) => false);
-        }
+        // Signed in: lapsed subscriptions stay signed in and go Home
+        // (premium actions open the paywall); only an account abandoned at
+        // the onboarding subscription step is sent back to finish it.
+        await AccountRouter.routeSignedInUser(Navigator.of(context));
       } catch (e) {
         // If token is invalid or expired, force logout and go to welcome
         await AuthService.instance.logout();

@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
-import 'package:flutter/foundation.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:cooked/services/user_service.dart';
 import 'package:cooked/core/api_config.dart';
@@ -77,9 +76,7 @@ class ErrorMonitoringService {
         );
       }
 
-      debugPrint('🚨 [ErrorMonitoring] $errorType: $errorMessage (Critical: $isCritical)');
     } catch (e) {
-      debugPrint('❌ [ErrorMonitoring] Failed to record error: $e');
     }
   }
 
@@ -117,12 +114,9 @@ class ErrorMonitoringService {
       );
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
-        debugPrint('✅ [ErrorMonitoring] Critical error sent to backend successfully');
       } else {
-        debugPrint('⚠️ [ErrorMonitoring] Failed to send critical error to backend: ${response.statusCode}');
       }
     } catch (e) {
-      debugPrint('❌ [ErrorMonitoring] Exception sending critical error to backend: $e');
     }
   }
 

@@ -5,6 +5,8 @@ import 'package:flutter/services.dart';
 import '../../../widgets/red_button.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/ios_toast.dart';
+import '../../../core/l10n/option_labels.dart';
+import '../../../core/l10n/l10n.dart';
 
 class DislikesStep extends StatefulWidget {
   final Set<String> initialSelected;
@@ -149,7 +151,7 @@ class _DislikesStepState extends State<DislikesStep> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  "What foods don’t\nyou like?",
+                  context.l10n.onbDislikesTitle,
                   style: GoogleFonts.rubik(
                     fontSize: 32.sp,
                     fontWeight: FontWeight.w500,
@@ -159,7 +161,7 @@ class _DislikesStepState extends State<DislikesStep> {
                 ),
                 SizedBox(height: 10.h),
                 Text(
-                  "We’ll keep them out of your\nrecommendations",
+                  context.l10n.onbDislikesSubtitle,
                   style: GoogleFonts.poppins(
                     fontSize: 15.sp,
                     color: context.colors.textPrimary,
@@ -207,7 +209,7 @@ class _DislikesStepState extends State<DislikesStep> {
                               color: context.colors.textPrimary,
                             ),
                             decoration: InputDecoration(
-                              hintText: 'Type a food you dislike (e.g. Pork, Mayo)...',
+                              hintText: context.l10n.onbDislikeHint,
                               hintStyle: GoogleFonts.rubik(
                                 fontSize: 14.sp,
                                 color: context.colors.textMuted,
@@ -269,7 +271,7 @@ class _DislikesStepState extends State<DislikesStep> {
                           ),
                         ),
                         child: Text(
-                          s,
+                          optionLabel(context, s),
                           style: GoogleFonts.rubik(
                             color: isSelected
                                 ? context.colors.accent
@@ -310,7 +312,7 @@ class _DislikesStepState extends State<DislikesStep> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                            'Other',
+                            context.l10n.optOther,
                             style: GoogleFonts.rubik(
                               color: _showCustomInput
                                   ? Colors.white
@@ -372,7 +374,7 @@ class _DislikesStepState extends State<DislikesStep> {
                               color: context.colors.textPrimary,
                             ),
                             decoration: InputDecoration(
-                              hintText: 'Type a food you dislike (e.g. Pork, Mayo)...',
+                              hintText: context.l10n.onbDislikeHint,
                               hintStyle: GoogleFonts.rubik(
                                 fontSize: 14.sp,
                                 color: context.colors.textMuted,
@@ -423,7 +425,7 @@ class _DislikesStepState extends State<DislikesStep> {
                       borderRadius: BorderRadius.circular(14.r),
                     ),
                     child: Text(
-                      "More preferences can be updated later in Settings.",
+                      context.l10n.onbMorePrefsLater,
                       style: GoogleFonts.poppins(
                         fontSize: 14.sp,
                         color: context.colors.textPrimary,
@@ -444,7 +446,7 @@ class _DislikesStepState extends State<DislikesStep> {
               top: false,
               bottom: true,
               child: RedButton(
-                label: 'Continue',
+                label: context.l10n.commonContinue,
                 color: context.colors.accent,
                 onTap: _handleContinue,
                 height: 52.h,

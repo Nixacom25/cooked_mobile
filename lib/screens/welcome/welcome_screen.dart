@@ -8,6 +8,7 @@ import '../../services/notification_service.dart';
 import '../../widgets/red_button.dart';
 import '../../widgets/scan_animation_overlay.dart';
 import '../splash/splash_screen.dart';
+import '../../core/l10n/l10n.dart';
 
 /// The Welcome screen using welcome2.png background.
 class WelcomeScreen extends StatefulWidget {
@@ -84,7 +85,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        'Welcome to Cooked',
+                        context.l10n.welcomeTitle,
                         textAlign: TextAlign.center,
                         style: GoogleFonts.rubik(
                           fontSize: 32.sp,
@@ -94,7 +95,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                       ),
                       SizedBox(height: 12.h),
                       Text(
-                        'Scan ingredients. Save recipes.\nPlan effortlessly.',
+                        context.l10n.welcomeSubtitle,
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 16.sp,
@@ -108,7 +109,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
 
                       // Get Started Button (White background, refined dark red text)
                       RedButton(
-                        label: 'Get Started',
+                        label: context.l10n.commonGetStarted,
                         color: Colors.white,
                         textColor: const Color(0xFF8B1D1D),
                         fontSize: 17.sp,
@@ -125,7 +126,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            'Already have an account? ',
+                            context.l10n.welcomeHaveAccount,
                             style: TextStyle(
                               color: Colors.white,
                               fontFamily: 'Poppins',
@@ -135,7 +136,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                           GestureDetector(
                             onTap: () => Navigator.pushNamed(context, AppRoutes.login),
                             child: Text(
-                              'Sign In',
+                              context.l10n.commonSignIn,
                               style: GoogleFonts.rubik(
                                 color: Colors.white,
                                 fontWeight: FontWeight.w800,
@@ -155,10 +156,9 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
             ),
           ),
 
-          // "Test push" stays available in release builds so push delivery
-          // can be verified on a real device (e.g. via TestFlight) after
-          // deployment. The other debug buttons remain kDebugMode-gated.
-          SafeArea(
+          // Test buttons: debug builds only, never in production/TestFlight.
+          if (kDebugMode)
+            SafeArea(
             child: Align(
               alignment: Alignment.topRight,
               child: Padding(

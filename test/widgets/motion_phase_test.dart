@@ -73,6 +73,29 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('\$68'), findsOneWidget);
   });
+
+  testWidgets('HeartBump plays save and unsave animations without errors', (tester) async {
+    var saved = false;
+    late StateSetter set;
+    await tester.pumpWidget(MaterialApp(
+      home: StatefulBuilder(builder: (context, setState) {
+        set = setState;
+        return Center(
+          child: HeartBump(
+            active: saved,
+            iconSize: 24,
+            child: Icon(saved ? Icons.favorite : Icons.favorite_border, size: 24),
+          ),
+        );
+      }),
+    ));
+    set(() => saved = true);
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.pumpAndSettle();
+    set(() => saved = false);
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+  });
 }
 
 String _dollars(double v) => '\$${v.toStringAsFixed(0)}';

@@ -21,7 +21,6 @@ class SharingService {
         for (final item in value) {
           final url = extractUrl(item.path);
           if (url != null) {
-            debugPrint("Received shared URL (stream): $url");
             sharedTextNotifier.value = url;
             return;
           }
@@ -30,7 +29,6 @@ class SharingService {
         sharedTextNotifier.value = value.first.path;
       }
     }, onError: (err) {
-      debugPrint("getMediaStream error: $err");
     });
 
     // For sharing or opening urls from outside the app while the app is closed
@@ -39,7 +37,6 @@ class SharingService {
         for (final item in value) {
           final url = extractUrl(item.path);
           if (url != null) {
-            debugPrint("Received shared URL (initial): $url");
             sharedTextNotifier.value = url;
             return;
           }
@@ -68,7 +65,6 @@ class SharingService {
         clipboardTextNotifier.value = "DETECTED_URL";
         return;
       } catch (e) {
-        debugPrint("Clipboard channel error: $e");
         return;
       }
     }
@@ -98,7 +94,6 @@ class SharingService {
         }
       }
     } catch (e) {
-      debugPrint("Error checking clipboard: $e");
     }
   }
 

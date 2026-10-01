@@ -1,0 +1,9 @@
+# App UI translations. English is the template: every key must exist in
+# app_en.arb; app_fr.arb / app_es.arb translate them. Generated class:
+# AppLocalizations (use `context.l10n.someKey`).
+arb-dir: lib/l10n
+template-arb-file: app_en.arb
+output-localization-file: app_localizations.dart
+output-class: AppLocalizations
+nullable-getter: false
+untranslated-messages-file: build/untranslated_messages.json

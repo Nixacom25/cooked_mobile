@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../widgets/red_button.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/l10n/l10n.dart';
 
 class SavingsStep extends StatefulWidget {
   final VoidCallback onContinue;
@@ -142,9 +143,9 @@ class _SavingsStepState extends State<SavingsStep> with SingleTickerProviderStat
                                 height: 1.2,
                                 letterSpacing: -0.3),
                               children: [
-                                TextSpan(text: 'You’re '),
+                                TextSpan(text: context.l10n.onbNotAloneA),
                                 TextSpan(
-                                  text: 'not alone',
+                                  text: context.l10n.onbNotAloneB,
                                   style: TextStyle(color: context.colors.accent)),
                               ])))),
                       SizedBox(height: 10.h),
@@ -153,7 +154,7 @@ class _SavingsStepState extends State<SavingsStep> with SingleTickerProviderStat
                         child: SlideTransition(
                           position: _subtitleSlide,
                           child: Text(
-                            'Most people spend over 200 hours\nevery year deciding what to eat',
+                            context.l10n.onbNotAloneSubtitle,
                             textAlign: TextAlign.left,
                             style: GoogleFonts.poppins(
                               fontSize: 16.sp,
@@ -203,14 +204,14 @@ class _SavingsStepState extends State<SavingsStep> with SingleTickerProviderStat
                                   ),
                                   SizedBox(height: 4.h),
                                   Text(
-                                    'Hours',
+                                    context.l10n.onbHours,
                                     style: GoogleFonts.rubik(
                                       fontSize: 15.sp,
                                       fontWeight: FontWeight.w500,
                                       color: context.colors.textPrimary)),
                                   SizedBox(height: 4.h),
                                   Text(
-                                    'Spent deciding\nwhat to eat',
+                                    context.l10n.onbSpentDeciding,
                                     style: GoogleFonts.poppins(
                                       fontSize: 12.sp,
                                       fontWeight: FontWeight.w400,
@@ -248,14 +249,14 @@ class _SavingsStepState extends State<SavingsStep> with SingleTickerProviderStat
                                   ),
                                   SizedBox(height: 4.h),
                                   Text(
-                                    'Days',
+                                    context.l10n.onbDays,
                                     style: GoogleFonts.rubik(
                                       fontSize: 15.sp,
                                       fontWeight: FontWeight.w500,
                                       color: context.colors.textPrimary)),
                                   SizedBox(height: 4.h),
                                   Text(
-                                    'of your life\nevery year',
+                                    context.l10n.onbOfYourLife,
                                     style: GoogleFonts.poppins(
                                       fontSize: 12.sp,
                                       fontWeight: FontWeight.w400,
@@ -275,7 +276,7 @@ class _SavingsStepState extends State<SavingsStep> with SingleTickerProviderStat
                       child: Padding(
                         padding: EdgeInsets.fromLTRB(24.w, 16.h, 24.w, 20.h),
                         child: RedButton(
-                          label: 'Continue',
+                          label: context.l10n.commonContinue,
                           color: context.colors.accent,
                           onTap: widget.onContinue,
                           height: 52.h,

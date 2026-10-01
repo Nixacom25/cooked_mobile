@@ -9,6 +9,7 @@ import '../routes/app_routes.dart';
 import 'glass_icon_button.dart';
 import 'alphabet_avatar.dart';
 import '../core/theme/app_theme.dart';
+import '../core/l10n/l10n.dart';
 
 class AppTopHeader extends StatefulWidget {
   final double? topPadding;
@@ -55,7 +56,7 @@ class _AppTopHeaderState extends State<AppTopHeader> {
     showGeneralDialog(
       context: context,
       barrierDismissible: true,
-      barrierLabel: 'Dismiss',
+      barrierLabel: context.l10n.commonDismiss,
       barrierColor: Colors.transparent,
       transitionDuration: const Duration(milliseconds: 200),
       pageBuilder: (ctx, anim1, anim2) {
@@ -120,7 +121,7 @@ class _AppTopHeaderState extends State<AppTopHeader> {
                                   SizedBox(width: 10.w),
                                   Expanded(
                                     child: Text(
-                                      'Settings',
+                                      context.l10n.settingsTitle,
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                       style: TextStyle(
@@ -160,7 +161,7 @@ class _AppTopHeaderState extends State<AppTopHeader> {
                                   SizedBox(width: 10.w),
                                   Expanded(
                                     child: Text(
-                                      'Logout',
+                                      context.l10n.settingsLogout,
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                       style: TextStyle(
@@ -246,7 +247,7 @@ class _AppTopHeaderState extends State<AppTopHeader> {
                   GestureDetector(
                     onTap: () => Navigator.of(context).pushNamed(AppRoutes.profile),
                     child: Text(
-                      'Hi, $firstName',
+                      context.l10n.headerGreeting(firstName),
                       style: TextStyle(
                         fontFamily: 'Rubik',
                         fontWeight: FontWeight.w700,

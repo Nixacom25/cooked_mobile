@@ -10,6 +10,7 @@ import '../../widgets/red_button.dart';
 import '../../widgets/loading_text.dart';
 import '../../widgets/red_header_background.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/l10n/l10n.dart';
 
 class ForgotOtpScreen extends StatefulWidget {
   const ForgotOtpScreen({super.key});
@@ -74,7 +75,7 @@ class _ForgotOtpScreenState extends State<ForgotOtpScreen> {
     if (code.length < _otpLength) {
       IosToast.show(
         context,
-        message: 'Please enter the complete 6-digit code.',
+        message: context.l10n.authEnterFullCode,
         type: ToastType.success,
       );
       return;
@@ -112,7 +113,7 @@ class _ForgotOtpScreenState extends State<ForgotOtpScreen> {
       if (!mounted) return;
       IosToast.show(
         context,
-        message: 'Verification code resent.',
+        message: context.l10n.authCodeResent,
         type: ToastType.success,
       );
     } catch (e) {
@@ -167,7 +168,7 @@ class _ForgotOtpScreenState extends State<ForgotOtpScreen> {
                   ),
                   SizedBox(width: 16.w),
                   Text(
-                    'Forgot Password',
+                    context.l10n.authForgotPasswordTitle,
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontFamily: 'Rubik',
@@ -205,7 +206,7 @@ class _ForgotOtpScreenState extends State<ForgotOtpScreen> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        'Please enter the code we just sent to\n${identifier ?? 'mail/phone number'}',
+                        context.l10n.authCodeSentTo(identifier ?? context.l10n.authEmailOrPhoneFallback),
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 18.sp,
@@ -232,7 +233,7 @@ class _ForgotOtpScreenState extends State<ForgotOtpScreen> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            'If you didn’t receive a code? ',
+                            context.l10n.authDidntReceiveCode,
                             style: TextStyle(
                               color: context.colors.textSecondary,
                               fontFamily: 'SF Pro',
@@ -249,7 +250,7 @@ class _ForgotOtpScreenState extends State<ForgotOtpScreen> {
                                   },
                             child: _isResending
                                 ? LoadingText(
-                                    text: 'Resending',
+                                    text: context.l10n.authResending,
                                     style: TextStyle(
                                       color: context.colors.textPrimary,
                                       fontFamily: 'SF Pro',
@@ -258,7 +259,7 @@ class _ForgotOtpScreenState extends State<ForgotOtpScreen> {
                                     ),
                                   )
                                 : Text(
-                                    'Resend Code',
+                                    context.l10n.authResendCode,
                                     style: TextStyle(
                                       color: context.colors.textPrimary,
                                       fontFamily: 'SF Pro',
@@ -272,8 +273,8 @@ class _ForgotOtpScreenState extends State<ForgotOtpScreen> {
                       SizedBox(height: 28.h),
 
                       RedButton(
-                        label: 'Continue',
-                        loadingLabel: 'Verifying',
+                        label: context.l10n.commonContinue,
+                        loadingLabel: context.l10n.authVerifying,
                         isLoading: _isLoading,
                         color: context.colors.accent,
                         height: 52.h,
@@ -285,7 +286,7 @@ class _ForgotOtpScreenState extends State<ForgotOtpScreen> {
                             IosToast.show(
                               context,
                               message:
-                                  'Missing identifier context. Please try again.',
+                                  context.l10n.authMissingIdentifier,
                               type: ToastType.success,
                             );
                           }

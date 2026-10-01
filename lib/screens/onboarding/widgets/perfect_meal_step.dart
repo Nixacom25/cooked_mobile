@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'dart:ui';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/l10n/l10n.dart';
 
 class PerfectMealStep extends StatefulWidget {
   final List<String> favoriteCuisines;
@@ -91,7 +92,7 @@ class _PerfectMealStepState extends State<PerfectMealStep> with SingleTickerProv
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Perfect meal for you',
+                                context.l10n.onbPerfectMeal,
                                 style: GoogleFonts.rubik(
                                   fontSize: 32.sp,
                                   fontWeight: FontWeight.w500,
@@ -99,7 +100,7 @@ class _PerfectMealStepState extends State<PerfectMealStep> with SingleTickerProv
                                   height: 1.15)),
                               SizedBox(height: 8.h),
                               Text(
-                                'Based on your goals, taste, and cooking',
+                                context.l10n.onbPerfectMealSubtitle,
                                 style: GoogleFonts.poppins(
                                   fontSize: 15.sp,
                                   color: context.colors.textPrimary,
@@ -156,7 +157,7 @@ class _PerfectMealStepState extends State<PerfectMealStep> with SingleTickerProv
                             Padding(
                               padding: EdgeInsets.symmetric(horizontal: 24.w),
                               child: Text(
-                                'Why we picked this',
+                                context.l10n.onbWhyPicked,
                                 style: GoogleFonts.rubik(
                                   fontSize: 18.sp,
                                   fontWeight: FontWeight.w500,
@@ -172,7 +173,7 @@ class _PerfectMealStepState extends State<PerfectMealStep> with SingleTickerProv
                                 children: [
                                   _buildReasonChip(
                                     icon: Icons.favorite_outline_rounded,
-                                    label: 'Matches your taste',
+                                    label: context.l10n.onbMatchesTaste,
                                     bgColor: Theme.of(context).brightness == Brightness.dark
                                         ? context.colors.accent.withValues(alpha: 0.16)
                                         : const Color(0xFFFFF7ED),
@@ -183,7 +184,7 @@ class _PerfectMealStepState extends State<PerfectMealStep> with SingleTickerProv
                                   SizedBox(width: 10.w),
                                   _buildReasonChip(
                                     icon: Icons.flash_on_outlined,
-                                    label: 'Quick dinner',
+                                    label: context.l10n.onbQuickDinner,
                                     bgColor: Theme.of(context).brightness == Brightness.dark
                                         ? context.colors.accent.withValues(alpha: 0.16)
                                         : const Color(0xFFFFF7ED),
@@ -194,7 +195,7 @@ class _PerfectMealStepState extends State<PerfectMealStep> with SingleTickerProv
                                   SizedBox(width: 10.w),
                                   _buildReasonChip(
                                     icon: Icons.restaurant_menu_rounded,
-                                    label: 'Uses your ingredients',
+                                    label: context.l10n.onbUsesIngredients,
                                     bgColor: Theme.of(context).brightness == Brightness.dark
                                         ? context.colors.accent.withValues(alpha: 0.16)
                                         : const Color(0xFFFFF7ED),
@@ -233,7 +234,7 @@ class _PerfectMealStepState extends State<PerfectMealStep> with SingleTickerProv
                             Icon(Icons.restaurant_rounded, color: Colors.white, size: 20.sp),
                             SizedBox(width: 8.w),
                             Text(
-                              "Start Cookin'",
+                              context.l10n.onbStartCooking,
                               style: GoogleFonts.rubik(fontSize: 16.sp,
                                 fontWeight: FontWeight.w500,
                                 color: Colors.white)),

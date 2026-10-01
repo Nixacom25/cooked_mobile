@@ -5,6 +5,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter/services.dart';
 import '../../../widgets/red_button.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/l10n/option_labels.dart';
+import '../../../core/l10n/l10n.dart';
 
 class TimePreferenceStep extends StatefulWidget {
   final String? initialSelected;
@@ -79,7 +81,7 @@ class _TimePreferenceStepState extends State<TimePreferenceStep> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'How much time do you\nusually have to cook?',
+                  context.l10n.onbTimeTitle,
                   style: GoogleFonts.rubik(
                     fontSize: 32.sp,
                     fontWeight: FontWeight.w500,
@@ -87,14 +89,14 @@ class _TimePreferenceStepState extends State<TimePreferenceStep> {
                     height: 1.15)),
                 SizedBox(height: 10.h),
                 Text(
-                  'We’ll prioritize recipes that fit your schedule',
+                  context.l10n.onbTimeSubtitle,
                   style: GoogleFonts.poppins(
                     fontSize: 15.sp,
                     color: context.colors.textPrimary,
                     height: 1.3)),
                 SizedBox(height: 24.h),
                 Text(
-                  'Cooking time',
+                  context.l10n.onbCookingTime,
                   style: GoogleFonts.rubik(fontSize: 15.sp,
                     fontWeight: FontWeight.w500,
                     color: context.colors.textPrimary)),
@@ -125,7 +127,7 @@ class _TimePreferenceStepState extends State<TimePreferenceStep> {
                     color: context.colors.surface,
                     borderRadius: BorderRadius.circular(14.r)),
                   child: Text(
-                    selectedOption['summary']!,
+                    optionLabel(context, selectedOption['summary']!),
                     style: GoogleFonts.poppins(fontSize: 14.sp,
                       color: context.colors.textPrimary,
                       height: 1.35))),
@@ -138,7 +140,7 @@ class _TimePreferenceStepState extends State<TimePreferenceStep> {
               top: false,
               bottom: true,
               child: RedButton(
-                label: 'Continue',
+                label: context.l10n.commonContinue,
                 color: context.colors.accent,
                 onTap: widget.onContinue!,
                 isDisabled: _selectedTime == null,
@@ -179,7 +181,7 @@ class _TimePreferenceStepState extends State<TimePreferenceStep> {
               placeholderBuilder: (context) => const SizedBox.shrink()),
             SizedBox(height: 8.h),
             Text(
-              option['title']!,
+              optionLabel(context, option['title']!),
               textAlign: TextAlign.center,
               style: GoogleFonts.rubik(
                 fontSize: 14.sp,
@@ -187,7 +189,7 @@ class _TimePreferenceStepState extends State<TimePreferenceStep> {
                 color: isSelected ? context.colors.accent : context.colors.textPrimary)),
             SizedBox(height: 2.h),
             Text(
-              option['desc']!,
+              optionLabel(context, option['desc']!),
               textAlign: TextAlign.center,
               style: GoogleFonts.poppins(
                 fontSize: 12.sp,

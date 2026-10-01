@@ -22,6 +22,7 @@ import '../core/api_config.dart';
 import '../core/utils/recipe_filters.dart';
 import '../core/theme/app_theme.dart';
 import '../core/motion/motion_widgets.dart';
+import '../core/l10n/l10n.dart';
 
 // ══════════════════════════════════════════════════════════════════════════════
 // EXPLORE SCREEN (Full Width Cards Parity with Home & Reusable Components)
@@ -231,7 +232,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  "Explore",
+                  context.l10n.navExplore,
                   style: TextStyle(
                     fontFamily: 'Rubik',
                     fontSize: 22.sp,
@@ -249,7 +250,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                   focusNode: _searchFocusNode,
                   backgroundColor: context.colors.pageBackground,
                   borderColor: context.colors.pageBackground,
-                  hintText: 'Search your recipes',
+                  hintText: context.l10n.homeSearchHint,
                   suffixIcon: searchQuery.isNotEmpty
                       ? Icons.close_rounded
                       : null,
@@ -326,7 +327,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                             ? Colors.white
                             : context.colors.textPrimary,
                       ),
-                      child: Text(filter.label),
+                      child: Text(filter.localizedLabel(context.l10n)),
                     ),
                   ],
                 ),
@@ -402,7 +403,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            "For You",
+                            context.l10n.exploreForYou,
                             style: TextStyle(
                               fontFamily: 'Rubik',
                               fontSize: 18.sp,
@@ -417,12 +418,12 @@ class _ExploreScreenState extends State<ExploreScreen> {
                                 AppRoutes.viewAll,
                                 arguments: {
                                   'type': ViewAllType.exploreCategories,
-                                  'title': 'Popular Categories',
+                                  'title': context.l10n.explorePopularCategories,
                                 },
                               );
                             },
                             child: Text(
-                              "View All",
+                              context.l10n.commonViewAll,
                               style: TextStyle(
                                 fontFamily: 'Rubik',
                                 fontSize: 14.sp,
@@ -451,8 +452,8 @@ class _ExploreScreenState extends State<ExploreScreen> {
                         itemCount: categories.length,
                         itemBuilder: (context, i) {
                           final item = categories[i];
-                          final name = (item['name'] as String?) ?? "Category";
-                          final count = recipeCountLabel(item['recipeCount']);
+                          final name = (item['name'] as String?) ?? context.l10n.exploreCategory;
+                          final count = recipeCountLabel(context.l10n, item['recipeCount']);
                           final img = (item['image'] as String?) ?? "";
 
                           return Padding(
@@ -546,7 +547,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                 ),
                 SizedBox(height: 12.h),
                 Text(
-                  'No recipes found',
+                  context.l10n.commonNoRecipesFound,
                   style: TextStyle(
                     fontFamily: 'Rubik',
                     fontSize: 15.sp,
@@ -557,8 +558,8 @@ class _ExploreScreenState extends State<ExploreScreen> {
                 SizedBox(height: 4.h),
                 Text(
                   activeFilter != null && lowerQuery.isEmpty
-                      ? 'No recipes match "${activeFilter.label}" yet.'
-                      : 'Try a different search term.',
+                      ? context.l10n.exploreNoFilterMatch(activeFilter.localizedLabel(context.l10n))
+                      : context.l10n.commonTryDifferentSearch,
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontFamily: 'Rubik',
@@ -570,13 +571,13 @@ class _ExploreScreenState extends State<ExploreScreen> {
                 Row(
                   children: [
                     RecipeShortcutCard(
-                      title: 'Scan',
+                      title: context.l10n.navScan,
                       icon: Icons.crop_free_rounded,
                       onTap: () => HomeScreen.tabRequestNotifier.value = 2,
                     ),
                     SizedBox(width: 12.w),
                     RecipeShortcutCard(
-                      title: 'Import',
+                      title: context.l10n.navImport,
                       icon: Icons.file_download_outlined,
                       onTap: () => HomeScreen.tabRequestNotifier.value = 4,
                     ),
@@ -816,7 +817,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      "Cuisines",
+                      context.l10n.exploreCuisines,
                       style: TextStyle(
                         fontFamily: 'Rubik',
                         fontSize: 18.sp,
@@ -831,12 +832,12 @@ class _ExploreScreenState extends State<ExploreScreen> {
                           AppRoutes.viewAll,
                           arguments: {
                             'type': ViewAllType.exploreCuisines,
-                            'title': 'Cuisines',
+                            'title': context.l10n.exploreCuisines,
                           },
                         );
                       },
                       child: Text(
-                        "View All",
+                        context.l10n.commonViewAll,
                         style: TextStyle(
                           fontFamily: 'Rubik',
                           fontSize: 14.sp,
@@ -859,10 +860,10 @@ class _ExploreScreenState extends State<ExploreScreen> {
                   itemCount: list.length,
                   itemBuilder: (context, i) {
                     final item = list[i];
-                    final name = (item['name'] as String?) ?? 'Cuisine';
+                    final name = (item['name'] as String?) ?? context.l10n.viewAllCuisine;
                     final count = item['count'] != null
                         ? item['count'].toString()
-                        : recipeCountLabel(item['recipeCount']);
+                        : recipeCountLabel(context.l10n, item['recipeCount']);
                     final rawImgPath = item['image'] as String?;
                     final imgPath = _getCuisineImagePath(name, rawImgPath);
                     final isNetwork = imgPath.startsWith('http');
@@ -975,7 +976,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                "Popular Now",
+                context.l10n.explorePopularNow,
                 style: TextStyle(
                   fontFamily: 'Rubik',
                   fontSize: 18.sp,
@@ -990,12 +991,12 @@ class _ExploreScreenState extends State<ExploreScreen> {
                     AppRoutes.viewAll,
                     arguments: {
                       'type': ViewAllType.explore,
-                      'title': 'Popular Now',
+                      'title': context.l10n.explorePopularNow,
                     },
                   );
                 },
                 child: Text(
-                  "View All",
+                  context.l10n.commonViewAll,
                   style: TextStyle(
                     fontFamily: 'Rubik',
                     fontSize: 14.sp,
@@ -1064,19 +1065,19 @@ class _ExploreScreenState extends State<ExploreScreen> {
                             RecipeService.instance.markRecipeAsSaved(r);
                             IosToast.show(
                               context,
-                              message: 'Recipe saved to favorites!',
+                              message: context.l10n.recipeSavedToast,
                               type: ToastType.success,
                             );
                           } else {
                             RecipeService.instance.markRecipeAsUnsaved(r);
                             if (r.id.isNotEmpty) {
-                              RecipeService.instance.deleteRecipe(r.id);
+                              RecipeService.instance.deleteRecipe(r.id, name: r.name);
                             }
                             r.isFavorite = false;
                             r.isInCookbook = false;
                             IosToast.show(
                               context,
-                              message: 'Recipe removed from saved',
+                              message: context.l10n.recipeRemovedToast,
                               type: ToastType.success,
                             );
                           }

@@ -5,6 +5,7 @@ import '../core/api_config.dart';
 import '../models/grocery_item.dart';
 import 'auth_service.dart';
 import 'analytics_service.dart';
+import 'database_service.dart';
 import 'package:flutter/foundation.dart';
 
 class GroceryService {
@@ -25,28 +26,55 @@ class GroceryService {
     };
   }
 
+  /// True when the list couldn't be loaded and there's nothing cached to
+  /// show - the screen then offers a retry instead of endless skeletons.
+  final ValueNotifier<bool> loadFailedNotifier = ValueNotifier(false);
+  static const String _cacheKey = 'my_groceries_cache_v1';
+
   Future<List<GroceryItem>> getMyGroceries({bool forceRefresh = false}) async {
     if (!forceRefresh && myGroceriesNotifier.value != null) {
       return myGroceriesNotifier.value!;
     }
-    final url = Uri.parse('${ApiConfig.baseUrl}/grocery-items');
-    final response = await http.get(url, headers: await _getHeaders());
 
-    if (response.statusCode == 200) {
+    // Show the last known list instantly; the network result replaces it.
+    if (myGroceriesNotifier.value == null) {
+      try {
+        final cached = DatabaseService.instance.readCacheRaw(_cacheKey);
+        if (cached != null) {
+          final List<dynamic> data = jsonDecode(cached);
+          myGroceriesNotifier.value = data.map((json) => GroceryItem.fromJson(json)).toList();
+        }
+      } catch (_) {}
+    }
+
+    try {
+      final url = Uri.parse('${ApiConfig.baseUrl}/grocery-items');
+      final response = await http
+          .get(url, headers: await _getHeaders())
+          .timeout(const Duration(seconds: 20));
+
+      if (response.statusCode != 200) {
+        throw Exception('Failed to load grocery list.');
+      }
       final List<dynamic> data = jsonDecode(response.body);
       final items = data.map((json) => GroceryItem.fromJson(json)).toList();
-      
+
       // Auto-cleanup items: bought or expired planned dates
       _autoCleanupItems(items);
-      
+
       myGroceriesNotifier.value = items;
-      
+      loadFailedNotifier.value = false;
+      try {
+        await DatabaseService.instance.writeCacheRaw(_cacheKey, response.body);
+      } catch (_) {}
+
       // Analytics log
       AnalyticsService.instance.logGroceryListView(itemCount: items.length);
 
       return items;
-    } else {
-      throw Exception('Failed to load grocery list.');
+    } catch (e) {
+      if (myGroceriesNotifier.value == null) loadFailedNotifier.value = true;
+      rethrow;
     }
   }
 
@@ -220,7 +248,6 @@ class GroceryService {
           final url = Uri.parse('${ApiConfig.baseUrl}/grocery-items/$id/toggle');
           await _reliableRequest(() async => http.put(url, headers: await _getHeaders()));
         } catch (e) {
-          debugPrint('Error syncing toggle state for grocery $id: $e');
           // On total failure, refresh list to revert UI
           await getMyGroceries(forceRefresh: true);
         }
@@ -330,7 +357,6 @@ class GroceryService {
         http.delete(url, headers: await _getHeaders());
         items.remove(item);
       } catch (e) {
-        debugPrint('Error auto-cleaning item ${item.id}: $e');
       }
     }
   }

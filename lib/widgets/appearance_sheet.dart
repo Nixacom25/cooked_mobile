@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../core/theme/app_theme.dart';
 import '../services/theme_service.dart';
+import '../core/l10n/l10n.dart';
 
 /// System/Light/Dark picker, opened from both the Profile menu and the
 /// header's three-dot account menu so the toggle is reachable from
@@ -17,11 +18,14 @@ void showAppearanceSheet(BuildContext context) {
 class AppearanceSheet extends StatelessWidget {
   const AppearanceSheet({super.key});
 
-  static const _options = [
-    (ThemeMode.system, 'System', 'Match your phone\'s setting'),
-    (ThemeMode.light, 'Light', 'Always use the light theme'),
-    (ThemeMode.dark, 'Dark', 'Always use the dark theme'),
-  ];
+  static List<(ThemeMode, String, String)> _options(BuildContext context) {
+    final l10n = context.l10n;
+    return [
+      (ThemeMode.system, l10n.themeSystem, l10n.themeMatchPhone),
+      (ThemeMode.light, l10n.themeLight, l10n.themeAlwaysLight),
+      (ThemeMode.dark, l10n.themeDark, l10n.themeAlwaysDark),
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -50,7 +54,7 @@ class AppearanceSheet extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Appearance',
+                  context.l10n.appearanceTitle,
                   style: TextStyle(
                     fontFamily: 'Rubik',
                     fontWeight: FontWeight.w800,
@@ -70,7 +74,7 @@ class AppearanceSheet extends StatelessWidget {
             valueListenable: ThemeService.instance.themeModeNotifier,
             builder: (context, currentMode, _) {
               return Column(
-                children: _options.map((opt) {
+                children: _options(context).map((opt) {
                   final (mode, label, subtitle) = opt;
                   final isSelected = currentMode == mode;
                   return GestureDetector(

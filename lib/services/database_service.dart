@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:flutter/foundation.dart';
 
 class DatabaseService {
   DatabaseService._privateConstructor();
@@ -25,7 +24,6 @@ class DatabaseService {
       };
       await cacheBox.put(key, jsonEncode(cacheData));
     } catch (e) {
-      debugPrint('Hive write error: $e');
     }
   }
 

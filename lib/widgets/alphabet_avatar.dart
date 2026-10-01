@@ -11,6 +11,7 @@ import '../core/widgets/ios_toast.dart';
 import '../core/utils/error_helper.dart';
 import '../core/theme/app_theme.dart';
 import '../core/motion/motion_widgets.dart';
+import '../core/l10n/l10n.dart';
 
 class AlphabetAvatar extends StatelessWidget {
   final String name;
@@ -76,7 +77,7 @@ class AlphabetAvatar extends StatelessWidget {
     final action = await showGeneralDialog<String>(
       context: context,
       barrierDismissible: true,
-      barrierLabel: 'Dismiss',
+      barrierLabel: context.l10n.commonDismiss,
       barrierColor: Colors.black.withValues(alpha: 0.62),
       transitionDuration: Motion.short,
       pageBuilder: (ctx, anim1, anim2) {
@@ -183,7 +184,7 @@ class AlphabetAvatar extends StatelessWidget {
                                     // 1. Choose from library
                                     _buildPickerItem(
                                       icon: Icons.photo_library_outlined,
-                                      title: 'Choose from library',
+                                      title: context.l10n.avatarChooseLibrary,
                                       color: context.colors.surface,
                                       onTap: () => Navigator.pop(ctx, 'gallery'),
                                     ),
@@ -199,7 +200,7 @@ class AlphabetAvatar extends StatelessWidget {
                                     // 2. Take photo
                                     _buildPickerItem(
                                       icon: Icons.camera_alt_outlined,
-                                      title: 'Take photo',
+                                      title: context.l10n.avatarTakePhoto,
                                       color: Colors.white,
                                       onTap: () => Navigator.pop(ctx, 'camera'),
                                     ),
@@ -215,7 +216,7 @@ class AlphabetAvatar extends StatelessWidget {
                                     // 3. Delete
                                     _buildPickerItem(
                                       icon: Icons.delete_outline_rounded,
-                                      title: 'Delete',
+                                      title: context.l10n.commonDelete,
                                       color: context.colors.destructive,
                                       onTap: () => Navigator.pop(ctx, 'delete'),
                                     ),
@@ -262,7 +263,7 @@ class AlphabetAvatar extends StatelessWidget {
     final action = await showGeneralDialog<String>(
       context: context,
       barrierDismissible: true,
-      barrierLabel: 'Dismiss',
+      barrierLabel: context.l10n.commonDismiss,
       barrierColor: Colors.black.withValues(alpha: 0.12),
       transitionDuration: Motion.short,
       pageBuilder: (ctx, anim1, anim2) {
@@ -311,19 +312,19 @@ class AlphabetAvatar extends StatelessWidget {
                         children: [
                           _buildCompactMenuItem(
                             icon: Icons.photo_library_outlined,
-                            label: 'Choose from library',
+                            label: context.l10n.avatarChooseLibrary,
                             color: context.colors.textPrimary,
                             onTap: () => Navigator.pop(ctx, 'gallery'),
                           ),
                           _buildCompactMenuItem(
                             icon: Icons.camera_alt_outlined,
-                            label: 'Take photo',
+                            label: context.l10n.avatarTakePhoto,
                             color: context.colors.textPrimary,
                             onTap: () => Navigator.pop(ctx, 'camera'),
                           ),
                           _buildCompactMenuItem(
                             icon: Icons.delete_outline_rounded,
-                            label: 'Delete',
+                            label: context.l10n.commonDelete,
                             color: context.colors.accent,
                             onTap: () => Navigator.pop(ctx, 'delete'),
                           ),
@@ -351,11 +352,11 @@ class AlphabetAvatar extends StatelessWidget {
     if (action == 'delete') {
       try {
         if (context.mounted) {
-          IosToast.show(context, message: 'Deleting profile photo...', type: ToastType.success);
+          IosToast.show(context, message: context.l10n.avatarDeleting, type: ToastType.success);
         }
         await UserService.instance.deleteProfilePhoto();
         if (context.mounted) {
-          IosToast.show(context, message: 'Profile photo deleted', type: ToastType.success);
+          IosToast.show(context, message: context.l10n.avatarDeleted, type: ToastType.success);
         }
       } catch (e) {
         if (context.mounted) {
@@ -374,7 +375,7 @@ class AlphabetAvatar extends StatelessWidget {
         final picked = await picker.pickImage(source: source);
         if (picked != null) {
           if (context.mounted) {
-            IosToast.show(context, message: 'Updating profile photo...', type: ToastType.success);
+            IosToast.show(context, message: context.l10n.avatarUpdating, type: ToastType.success);
           }
           final compressed = await FlutterImageCompress.compressWithFile(
             picked.path,
@@ -385,7 +386,7 @@ class AlphabetAvatar extends StatelessWidget {
           if (compressed != null) {
             await UserService.instance.uploadProfilePhoto(compressed, 'profile_photo.jpg');
             if (context.mounted) {
-              IosToast.show(context, message: 'Profile photo updated!', type: ToastType.success);
+              IosToast.show(context, message: context.l10n.avatarUpdated, type: ToastType.success);
             }
           }
         }

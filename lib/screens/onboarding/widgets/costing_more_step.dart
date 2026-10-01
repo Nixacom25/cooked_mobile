@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../../widgets/red_button.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/l10n/l10n.dart';
 
 class CostingMoreStep extends StatefulWidget {
   final VoidCallback onContinue;
@@ -120,13 +121,13 @@ class _CostingMoreStepState extends State<CostingMoreStep> with SingleTickerProv
                             height: 1.2,
                             letterSpacing: -0.3),
                           children: [
-                            TextSpan(text: 'And it’s '),
+                            TextSpan(text: context.l10n.onbCostingTitleA),
                             TextSpan(
-                              text: 'costing\n',
+                              text: context.l10n.onbCostingTitleB,
                               style: TextStyle(color: context.colors.accent)),
-                            TextSpan(text: 'more than '),
+                            TextSpan(text: context.l10n.onbCostingTitleC),
                             TextSpan(
-                              text: 'time',
+                              text: context.l10n.onbCostingTitleD,
                               style: TextStyle(color: context.colors.accent)),
                           ])))),
                   SizedBox(height: 8.h),
@@ -135,7 +136,7 @@ class _CostingMoreStepState extends State<CostingMoreStep> with SingleTickerProv
                     child: SlideTransition(
                       position: _subtitleSlide,
                       child: Text(
-                        'Small decisions become\nexpensive habits',
+                        context.l10n.onbCostingSubtitle,
                         textAlign: TextAlign.left,
                         style: GoogleFonts.poppins(
                           fontSize: 16.sp,
@@ -251,13 +252,13 @@ class _CostingMoreStepState extends State<CostingMoreStep> with SingleTickerProv
                                           ),
                                           SizedBox(height: 6.h),
                                           Text(
-                                            'Takeout',
+                                            context.l10n.onbTakeout,
                                             style: GoogleFonts.rubik(fontSize: 13.sp,
                                               fontWeight: FontWeight.w500,
                                               color: Colors.white)),
                                           SizedBox(height: 2.h),
                                           Text(
-                                            '3 Meals / Week',
+                                            context.l10n.onbThreeMealsWeek,
                                             style: GoogleFonts.poppins(
                                               fontSize: 10.sp,
                                               fontWeight: FontWeight.w400,
@@ -313,13 +314,13 @@ class _CostingMoreStepState extends State<CostingMoreStep> with SingleTickerProv
                                           ),
                                           SizedBox(height: 4.h),
                                           Text(
-                                            'Home Cooked',
+                                            context.l10n.onbHomeCooked,
                                             style: GoogleFonts.rubik(
                                               fontSize: 12.sp,
                                               fontWeight: FontWeight.w500,
                                               color: context.colors.textPrimary)),
                                           Text(
-                                            'Made at home',
+                                            context.l10n.onbMadeAtHome,
                                             style: GoogleFonts.poppins(
                                               fontSize: 9.sp,
                                               fontWeight: FontWeight.w400,
@@ -362,17 +363,17 @@ class _CostingMoreStepState extends State<CostingMoreStep> with SingleTickerProv
                                     fontWeight: FontWeight.w500,
                                     color: context.colors.textPrimary),
                                   children: [
-                                    TextSpan(text: 'That is nearly '),
+                                    TextSpan(text: context.l10n.onbNearlyA),
                                     TextSpan(
                                       text: '4x',
                                       style: TextStyle(
                                         color: context.colors.accent,
                                         fontWeight: FontWeight.w500)),
-                                    TextSpan(text: ' more'),
+                                    TextSpan(text: context.l10n.onbNearlyB),
                                   ])),
                               SizedBox(height: 2.h),
                               Text(
-                                'Than cooking at home',
+                                context.l10n.onbThanHome,
                                 style: GoogleFonts.poppins(
                                   fontSize: 13.sp,
                                   color: context.colors.textPrimary,
@@ -391,7 +392,7 @@ class _CostingMoreStepState extends State<CostingMoreStep> with SingleTickerProv
                   child: Padding(
                     padding: EdgeInsets.fromLTRB(24.w, 12.h, 24.w, 20.h),
                     child: RedButton(
-                      label: 'Continue',
+                      label: context.l10n.commonContinue,
                       color: context.colors.accent,
                       onTap: widget.onContinue,
                       height: 52.h,

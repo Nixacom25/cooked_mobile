@@ -35,6 +35,21 @@ class PaywallHelper {
     );
   }
 
+  static bool _gateOpen = false;
+  static DateTime? _lastGateAt;
+
+  /// Called by the network layer when the backend answers
+  /// SUBSCRIPTION_REQUIRED: opens the paywall once (several refused calls
+  /// in a row must not stack paywalls), from anywhere in the app.
+  static void showForExpiredSubscription(BuildContext? context) {
+    if (context == null || _gateOpen) return;
+    final now = DateTime.now();
+    if (_lastGateAt != null && now.difference(_lastGateAt!) < const Duration(seconds: 3)) return;
+    _lastGateAt = now;
+    _gateOpen = true;
+    show(context).whenComplete(() => _gateOpen = false);
+  }
+
   // Vérifie si l'erreur nécessite l'affichage du paywall
   static bool handleError(BuildContext context, dynamic error) {
     // Check if user is creator, admin, or editor - they should not see paywall even on errors

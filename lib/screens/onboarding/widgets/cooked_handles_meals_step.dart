@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../widgets/red_button.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/l10n/l10n.dart';
 
 class CookedHandlesMealsStep extends StatelessWidget {
   final VoidCallback onContinue;
@@ -35,14 +36,14 @@ class CookedHandlesMealsStep extends StatelessWidget {
                             color: context.colors.textPrimary,
                             height: 1.15),
                           children: [
-                            const TextSpan(text: "Cooked handles\nall your "),
+                            TextSpan(text: context.l10n.onbHandlesTitleA),
                             TextSpan(
-                              text: "meals",
+                              text: context.l10n.onbHandlesTitleB,
                               style: TextStyle(color: context.colors.accent)),
                           ])),
                       SizedBox(height: 10.h),
                       Text(
-                        "We plan. You cook.",
+                        context.l10n.onbHandlesSubtitle,
                         style: GoogleFonts.poppins(
                           fontSize: 15.sp,
                           color: context.colors.textPrimary,
@@ -74,7 +75,7 @@ class CookedHandlesMealsStep extends StatelessWidget {
             top: false,
             bottom: true,
             child: RedButton(
-              label: 'Continue',
+              label: context.l10n.commonContinue,
               color: context.colors.accent,
               onTap: onContinue,
               height: 52.h,

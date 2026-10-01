@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'selection_onboarding_step.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/l10n/l10n.dart';
 
 class CookingSkillStep extends StatefulWidget {
   final VoidCallback? onContinue;
@@ -31,11 +32,11 @@ class _CookingSkillStepState extends State<CookingSkillStep> {
 
   String _getHighlightText(String value) {
     switch (value) {
-      case 'beginner': return 'overly complex';
-      case 'home_cook': return 'untested';
-      case 'confident': return 'boring';
-      case 'advanced': return 'basic';
-      default: return 'complex';
+      case 'beginner': return context.l10n.onbAvoidOverlyComplex;
+      case 'home_cook': return context.l10n.onbAvoidUntested;
+      case 'confident': return context.l10n.onbAvoidBoring;
+      case 'advanced': return context.l10n.onbAvoidBasic;
+      default: return context.l10n.onbAvoidComplex;
     }
   }
 
@@ -59,21 +60,21 @@ class _CookingSkillStepState extends State<CookingSkillStep> {
             color: context.colors.textPrimary,
             fontSize: 16.sp),
           children: [
-            const TextSpan(text: 'Great, we\'ll avoid '),
+            TextSpan(text: context.l10n.onbAvoidA),
             TextSpan(
               text: _getHighlightText(selectedValue),
               style: const TextStyle(
                 color: Color(0xFFD92D20),
                 fontWeight: FontWeight.bold)),
-            const TextSpan(text: ' recipes.'),
+            TextSpan(text: context.l10n.onbAvoidB),
           ])));
   }
 
   @override
   Widget build(BuildContext context) {
     return SelectionOnboardingStep(
-      title: "What's your cooking\nskill level?",
-      subtitle: "We'll match recipes to your experience.",
+      title: context.l10n.onbSkillTitle,
+      subtitle: context.l10n.onbSkillSubtitle,
       maxSelections: 1,
       useGrid: true,
       onContinue: widget.onContinue,

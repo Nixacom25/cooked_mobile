@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter/services.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/l10n/option_labels.dart';
+import '../../../core/l10n/l10n.dart';
 
 class NotificationsStep extends StatefulWidget {
   final List<String> initialSelected;
@@ -40,7 +42,7 @@ class _NotificationsStepState extends State<NotificationsStep> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Stay inspired with new recipes',
+            context.l10n.onbNotifTitle,
             style: GoogleFonts.poppins(
               fontSize: 24.sp,
               fontWeight: FontWeight.w900,
@@ -49,7 +51,7 @@ class _NotificationsStepState extends State<NotificationsStep> {
               letterSpacing: -0.5)),
           SizedBox(height: 8.h),
           Text(
-            'Choose what you\'d like to hear about',
+            context.l10n.onbNotifSubtitle,
             style: GoogleFonts.poppins(
               fontSize: 14.sp,
               color: context.colors.textMuted)),
@@ -79,7 +81,7 @@ class _NotificationsStepState extends State<NotificationsStep> {
                     color: context.colors.accent,
                     width: 1.5.w))),
               child: Text(
-                _selected.isEmpty ? 'Turn on all' : 'Turn off all',
+                _selected.isEmpty ? context.l10n.onbTurnOnAll : context.l10n.onbTurnOffAll,
                 style: GoogleFonts.poppins(fontSize: 16.sp,
                   fontWeight: FontWeight.w600,
                   color: context.colors.accent)))),
@@ -102,7 +104,7 @@ class _NotificationsStepState extends State<NotificationsStep> {
                 SizedBox(width: 12.w),
                 Expanded(
                   child: Text(
-                    'You can adjust these anytime in your settings',
+                    context.l10n.onbNotifFooter,
                     style: GoogleFonts.poppins(fontSize: 13.sp,
                       fontWeight: FontWeight.w500,
                       color: context.colors.textPrimary))),
@@ -150,13 +152,13 @@ class _NotificationsStepState extends State<NotificationsStep> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      opt['title']!,
+                      optionLabel(context, opt['title']!),
                       style: GoogleFonts.poppins(fontSize: 15.sp,
                         fontWeight: FontWeight.w600,
                         color: context.colors.textPrimary)),
                     SizedBox(height: 4.h),
                     Text(
-                      opt['subtitle']!,
+                      optionLabel(context, opt['subtitle']!),
                       style: GoogleFonts.poppins(fontSize: 13.sp,
                         color: context.colors.textMuted)),
                   ])),

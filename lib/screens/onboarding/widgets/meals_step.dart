@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../widgets/red_button.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/l10n/l10n.dart';
 
 class MealsStep extends StatefulWidget {
   final VoidCallback onContinue;
@@ -130,14 +131,14 @@ class _MealsStepState extends State<MealsStep> with SingleTickerProviderStateMix
                                 height: 1.2,
                                 letterSpacing: -0.3),
                               children: [
-                                TextSpan(text: 'Never wonder '),
+                                TextSpan(text: context.l10n.onbMealsTitleA),
                                 TextSpan(
-                                  text: 'what\n',
+                                  text: context.l10n.onbMealsTitleB,
                                   style: TextStyle(color: context.colors.accent)),
                                 TextSpan(
-                                  text: 'to cook',
+                                  text: context.l10n.onbMealsTitleC,
                                   style: TextStyle(color: context.colors.accent)),
-                                TextSpan(text: ' again'),
+                                TextSpan(text: context.l10n.onbMealsTitleD),
                               ])))),
                       SizedBox(height: 10.h),
                       FadeTransition(
@@ -145,7 +146,7 @@ class _MealsStepState extends State<MealsStep> with SingleTickerProviderStateMix
                         child: SlideTransition(
                           position: _subtitleSlide,
                           child: Text(
-                            'Dinner shouldn’t be the hardest\ndecision of your day',
+                            context.l10n.onbMealsSubtitle,
                             textAlign: TextAlign.left,
                             style: GoogleFonts.poppins(
                               fontSize: 16.sp,
@@ -164,7 +165,7 @@ class _MealsStepState extends State<MealsStep> with SingleTickerProviderStateMix
                       child: Padding(
                         padding: EdgeInsets.fromLTRB(24.w, 12.h, 24.w, 20.h),
                         child: RedButton(
-                          label: 'Continue',
+                          label: context.l10n.commonContinue,
                           color: context.colors.accent,
                           onTap: widget.onContinue,
                           height: 52.h,

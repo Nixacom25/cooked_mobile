@@ -1,5 +1,4 @@
 import 'package:firebase_analytics/firebase_analytics.dart';
-import 'package:flutter/foundation.dart';
 
 class AnalyticsService {
   AnalyticsService._privateConstructor();
@@ -10,9 +9,7 @@ class AnalyticsService {
   Future<void> logEvent(String name, {Map<String, Object>? parameters}) async {
     try {
       await _analytics.logEvent(name: name, parameters: parameters);
-      debugPrint('📊 [Analytics] Event logged: $name ${parameters ?? ''}');
     } catch (e) {
-      debugPrint('⚠️ [Analytics] Failed to log event $name: $e');
     }
   }
 

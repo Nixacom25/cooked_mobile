@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 
 class Recipe {
   final String id;
@@ -67,7 +66,6 @@ class Recipe {
     try {
       final stepsList = (json['steps'] as List?)?.map((e) => e.toString()).toList() ?? [];
       final equipmentList = (json['equipment'] as List?)?.map((e) => e.toString()).toList() ?? [];
-      debugPrint('📦 [Recipe.fromJson] parsing ${json['name']}: steps=${stepsList.length}, equipment=${equipmentList.length}');
 
       String? cleanImage;
       if (json['image'] != null) {

@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter/services.dart';
 import 'selection_onboarding_step.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/l10n/l10n.dart';
 
 class AllergiesStep extends StatefulWidget {
   final VoidCallback? onContinue;
@@ -88,7 +89,7 @@ class _AllergiesStepState extends State<AllergiesStep> {
 
   Widget _buildTopCard() {
     return Text(
-      'Common allergies',
+      context.l10n.onbCommonAllergies,
       style: GoogleFonts.rubik(fontSize: 15.sp,
         fontWeight: FontWeight.w500,
         color: context.colors.textPrimary));
@@ -102,7 +103,7 @@ class _AllergiesStepState extends State<AllergiesStep> {
         color: context.colors.surface,
         borderRadius: BorderRadius.circular(14.r)),
       child: Text(
-        "Additional dietary preferences can be updated later in Settings.",
+        context.l10n.onbMoreDietLater,
         style: GoogleFonts.poppins(fontSize: 14.sp,
           color: context.colors.textPrimary,
           height: 1.35)));
@@ -111,8 +112,8 @@ class _AllergiesStepState extends State<AllergiesStep> {
   @override
   Widget build(BuildContext context) {
     return SelectionOnboardingStep(
-      title: "Do you have any\ndietary restrictions or\nallergies?",
-      subtitle: "We’ll automatically filter recipes for you",
+      title: context.l10n.onbAllergiesTitle,
+      subtitle: context.l10n.onbAllergiesSubtitle,
       useGrid: true,
       preserveSvgColor: false,
       gridItemDirection: Axis.vertical,

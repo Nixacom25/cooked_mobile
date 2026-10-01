@@ -19,6 +19,7 @@ import '../screens/home/home_screen.dart';
 import '../core/theme/app_theme.dart';
 import '../main.dart' show appNavigatorKey;
 import '../core/motion/motion_widgets.dart';
+import '../core/l10n/l10n.dart';
 
 class CookbookFormModal extends StatefulWidget {
   final Cookbook? cookbook;
@@ -98,7 +99,7 @@ class _CookbookFormModalState extends State<CookbookFormModal> {
     showGeneralDialog(
       context: buttonContext,
       barrierDismissible: true,
-      barrierLabel: 'Dismiss',
+      barrierLabel: buttonContext.l10n.commonDismiss,
       barrierColor: Colors.transparent,
       transitionDuration: const Duration(milliseconds: 200),
       pageBuilder: (ctx, anim1, anim2) {
@@ -181,19 +182,19 @@ class _CookbookFormModalState extends State<CookbookFormModal> {
                         children: [
                           menuItem(
                             icon: Icons.search_rounded,
-                            label: 'Explore',
+                            label: context.l10n.navExplore,
                             onTap: () => goToTab(1),
                           ),
                           SizedBox(height: 2.h),
                           menuItem(
                             icon: Icons.crop_free_rounded,
-                            label: 'Scan',
+                            label: context.l10n.navScan,
                             onTap: () => goToTab(2),
                           ),
                           SizedBox(height: 2.h),
                           menuItem(
                             icon: Icons.file_download_outlined,
-                            label: 'Import',
+                            label: context.l10n.navImport,
                             onTap: () => goToTab(4),
                           ),
                         ],
@@ -317,8 +318,8 @@ class _CookbookFormModalState extends State<CookbookFormModal> {
                   _isPickingRecipes
                       ? (_nameCtrl.text.trim().isNotEmpty
                           ? _nameCtrl.text.trim().toTitleCase()
-                          : 'Select Recipes')
-                      : (_isEdit ? 'Edit Cookbook' : 'New Cookbook'),
+                          : context.l10n.cookbookSelectRecipes)
+                      : (_isEdit ? context.l10n.cookbookEdit : context.l10n.cookbookNew),
                   style: TextStyle(
                     color: context.colors.textPrimary,
                     fontSize: 20.sp,
@@ -386,7 +387,7 @@ class _CookbookFormModalState extends State<CookbookFormModal> {
                               ),
                               onChanged: (_) => setState(() {}),
                               decoration: InputDecoration(
-                                hintText: 'Cookbook name',
+                                hintText: context.l10n.cookbookNameHint,
                                 hintStyle: TextStyle(
                                   color: context.colors.textMuted,
                                   fontFamily: 'Rubik',
@@ -448,7 +449,7 @@ class _CookbookFormModalState extends State<CookbookFormModal> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    'Add recipes',
+                                    context.l10n.cookbookAddRecipesLower,
                                     style: TextStyle(
                                       color: context.colors.textPrimary,
                                       fontSize: 15.sp,
@@ -458,7 +459,7 @@ class _CookbookFormModalState extends State<CookbookFormModal> {
                                   ),
                                   SizedBox(height: 2.h),
                                   Text(
-                                    'Select recipes for this cookbook',
+                                    context.l10n.cookbookSelectForThis,
                                     style: TextStyle(
                                       color: context.colors.textSecondary,
                                       fontSize: 13.sp,
@@ -484,7 +485,7 @@ class _CookbookFormModalState extends State<CookbookFormModal> {
                     Padding(
                       padding: EdgeInsets.symmetric(horizontal: 16.w),
                       child: Text(
-                        'Selected recipes',
+                        context.l10n.cookbookSelectedRecipes,
                         style: TextStyle(
                           fontFamily: 'Rubik',
                           fontWeight: FontWeight.w700,
@@ -568,7 +569,7 @@ class _CookbookFormModalState extends State<CookbookFormModal> {
                           ),
                         )
                       : Text(
-                          'Save',
+                          context.l10n.commonSave,
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 16.sp,
@@ -635,7 +636,7 @@ class _CookbookFormModalState extends State<CookbookFormModal> {
     if (mounted) {
       IosToast.show(
         context,
-        message: isEdit ? 'Cookbook updated!' : 'Cookbook created!',
+        message: isEdit ? context.l10n.cookbookUpdated : context.l10n.cookbookCreated,
         type: ToastType.success,
       );
     }
@@ -646,7 +647,6 @@ class _CookbookFormModalState extends State<CookbookFormModal> {
         try {
           Navigator.of(context).pop();
         } catch (e) {
-          debugPrint('Silent error during modal pop: $e');
         }
       }
     }
@@ -699,10 +699,10 @@ class _CookbookFormModalState extends State<CookbookFormModal> {
       // now, so report it via the app's root overlay instead of a local
       // BuildContext that may no longer be mounted.
       final ctx = appNavigatorKey.currentContext;
-      if (ctx != null) {
+      if (ctx != null && ctx.mounted) {
         IosToast.show(
           ctx,
-          message: 'Couldn\'t save "$name": ${ErrorHelper.getFriendlyMessage(e)}',
+          message: ctx.l10n.cookbookSaveFailed(name, ErrorHelper.getFriendlyMessage(e)),
           type: ToastType.error,
         );
       }
@@ -902,7 +902,7 @@ class _InlineRecipePickerState extends State<_InlineRecipePicker> {
                       setState(() => _searchQuery = val);
                     },
                     decoration: InputDecoration(
-                      hintText: 'Search your recipes',
+                      hintText: context.l10n.homeSearchHint,
                       hintStyle: TextStyle(
                         fontFamily: 'Rubik',
                         color: context.colors.textMuted,
@@ -941,19 +941,19 @@ class _InlineRecipePickerState extends State<_InlineRecipePicker> {
             child: Row(
               children: [
                 RecipeShortcutCard(
-                  title: 'Scan',
+                  title: context.l10n.navScan,
                   icon: Icons.crop_free_rounded,
                   onTap: () => _handleShortcutTap('scan'),
                 ),
                 SizedBox(width: 12.w),
                 RecipeShortcutCard(
-                  title: 'Import',
+                  title: context.l10n.navImport,
                   icon: Icons.file_download_outlined,
                   onTap: () => _handleShortcutTap('import'),
                 ),
                 SizedBox(width: 12.w),
                 RecipeShortcutCard(
-                  title: 'Explore',
+                  title: context.l10n.navExplore,
                   icon: Icons.search_rounded,
                   onTap: () => _handleShortcutTap('explore'),
                 ),
@@ -967,7 +967,7 @@ class _InlineRecipePickerState extends State<_InlineRecipePicker> {
               child: Column(
                 children: [
                   Text(
-                    'No recipes yet',
+                    context.l10n.cookbookEmptyTitle,
                     style: TextStyle(
                       fontFamily: 'Rubik',
                       fontWeight: FontWeight.w800,
@@ -977,7 +977,7 @@ class _InlineRecipePickerState extends State<_InlineRecipePicker> {
                   ),
                   SizedBox(height: 8.h),
                   Text(
-                    'Start adding recipes to this cookbook by scanning, importing or exploring.',
+                    context.l10n.cookbookEmptySubtitle,
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontFamily: 'Rubik',
@@ -997,7 +997,7 @@ class _InlineRecipePickerState extends State<_InlineRecipePicker> {
             child: Padding(
               padding: EdgeInsets.all(40.r),
               child: Text(
-                'No recipes found matching "$_searchQuery"',
+                context.l10n.cookbookNoMatch(_searchQuery),
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontFamily: 'Rubik',
@@ -1011,7 +1011,7 @@ class _InlineRecipePickerState extends State<_InlineRecipePicker> {
           Padding(
             padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
             child: Text(
-              'Explore recipes',
+              context.l10n.cookbookExploreRecipes,
               style: TextStyle(
                 fontFamily: 'Rubik',
                 fontWeight: FontWeight.w800,

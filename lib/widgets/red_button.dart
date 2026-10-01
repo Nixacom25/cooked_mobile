@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'loading_text.dart';
 import '../core/theme/app_theme.dart';
+import '../core/l10n/l10n.dart';
 
 // ── Shared red button with loading state ──────────────────────────────────────
 class RedButton extends StatelessWidget {
@@ -60,7 +61,7 @@ class RedButton extends StatelessWidget {
         child: Center(
           child: isLoading
               ? LoadingText(
-                  text: loadingLabel ?? 'Processing',
+                  text: loadingLabel ?? context.l10n.commonProcessing,
                   style: TextStyle(
                     fontFamily: 'SF Pro',
                     fontWeight: FontWeight.w700,
@@ -68,13 +69,21 @@ class RedButton extends StatelessWidget {
                     color: effectiveTextColor,
                   ),
                 )
-              : Text(
-                  label,
-                  style: TextStyle(
-                    fontFamily: 'SF Pro',
-                    fontWeight: FontWeight.w700,
-                    fontSize: fontSize ?? 16.sp,
-                    color: effectiveTextColor,
+              // One line; long labels (translations) shrink to fit.
+              : Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16.w),
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      label,
+                      maxLines: 1,
+                      style: TextStyle(
+                        fontFamily: 'SF Pro',
+                        fontWeight: FontWeight.w700,
+                        fontSize: fontSize ?? 16.sp,
+                        color: effectiveTextColor,
+                      ),
+                    ),
                   ),
                 ),
         ),

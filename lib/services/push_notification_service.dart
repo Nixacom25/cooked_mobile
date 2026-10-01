@@ -14,7 +14,6 @@ import 'user_service.dart';
 /// in that state, so there's nothing to do here beyond logging.
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  debugPrint('Background FCM message received: ${message.messageId}');
   
   // Track notification open when app is opened from background
   if (message.data.containsKey('campaignId')) {
@@ -28,7 +27,6 @@ Future<void> _trackNotificationOpenBackground(String campaignId) async {
     final url = Uri.parse('${ApiConfig.baseUrl}/notification-campaigns/$campaignId/open');
     await http.post(url, headers: {'Content-Type': 'application/json'});
   } catch (e) {
-    debugPrint('Could not track notification open (background): $e');
   }
 }
 
@@ -79,14 +77,6 @@ class PushNotificationService {
       if (!kIsWeb && Platform.isIOS) {
         final apnsToken = await _waitForApnsToken();
         if (apnsToken == null) {
-          debugPrint(
-            'Could not register FCM token: no APNs token after waiting - '
-            'check that Push Notifications is enabled for this App ID AND '
-            'that the provisioning profile used to sign this build was '
-            'regenerated/reinstalled after enabling it (an old profile '
-            'won\'t carry the aps-environment entitlement even if the '
-            'capability is now on in App Store Connect).',
-          );
           return;
         }
       }
@@ -94,7 +84,6 @@ class PushNotificationService {
       final token = await _messaging.getToken();
       await _registerToken(token);
     } catch (e) {
-      debugPrint('Could not fetch FCM token: $e');
     }
   }
 
@@ -124,7 +113,6 @@ class PushNotificationService {
         body: jsonEncode({'fcmToken': token}),
       );
     } catch (e) {
-      debugPrint('Could not register FCM token: $e');
     }
   }
 
@@ -132,7 +120,6 @@ class PushNotificationService {
     final notification = message.notification;
     if (notification == null) return;
     
-    debugPrint('Foreground message received: ${notification.title} - ${notification.body}');
     
     // Track notification open for foreground messages
     if (message.data.containsKey('campaignId')) {
@@ -172,7 +159,6 @@ class PushNotificationService {
         headers: ApiConfig.authHeaders(authToken),
       );
     } catch (e) {
-      debugPrint('Could not track notification open: $e');
     }
   }
 
@@ -188,7 +174,6 @@ class PushNotificationService {
         headers: ApiConfig.authHeaders(authToken),
       );
     } catch (e) {
-      debugPrint('Could not track notification click: $e');
     }
   }
 
@@ -197,7 +182,6 @@ class PushNotificationService {
       if (!AuthService.instance.isLoggedIn) return;
       await UserService.instance.updateLastActive();
     } catch (e) {
-      debugPrint('Could not update last active: $e');
     }
   }
 }

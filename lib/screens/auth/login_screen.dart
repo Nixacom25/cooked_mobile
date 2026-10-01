@@ -10,10 +10,11 @@ import '../../widgets/red_button.dart';
 import '../../widgets/red_header_background.dart';
 import '../../core/utils/error_helper.dart';
 import '../../services/user_service.dart';
+import '../../services/account_router.dart';
 import '../../core/theme/app_theme.dart';
-import '../../utils/paywall_helper.dart';
 import '../../core/widgets/legal_content_modal.dart';
 import '../../core/widgets/terms_validation_modal.dart';
+import '../../core/l10n/l10n.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -70,8 +71,8 @@ class _LoginScreenState extends State<LoginScreen> {
     final password = _passCtrl.text;
 
     setState(() {
-      _emailError = identifier.isEmpty ? 'This field is required' : null;
-      _passError = password.isEmpty ? 'This field is required' : null;
+      _emailError = identifier.isEmpty ? context.l10n.commonFieldRequired : null;
+      _passError = password.isEmpty ? context.l10n.commonFieldRequired : null;
     });
 
     if (_emailError != null || _passError != null) {
@@ -89,7 +90,7 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!mounted) return;
       IosToast.show(
         context,
-        message: "Login successful!",
+        message: context.l10n.authLoginSuccess,
         type: ToastType.success,
       );
       await _verifyPremiumAndNavigate(nav);
@@ -126,7 +127,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
       IosToast.show(
         context,
-        message: "Social login successful!",
+        message: context.l10n.authSocialLoginSuccess,
         type: ToastType.success,
       );
       await _verifyPremiumAndNavigate(nav);
@@ -159,24 +160,10 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
 
-    nav.pushNamedAndRemoveUntil(AppRoutes.home, (route) => false);
-
-    // Not subscribed: open the paywall on top of Home. (Sending them to
-    // `welcome` doesn't work - the route guard turns `welcome` back into
-    // Home for any signed-in user, which left them on a Home where every
-    // call is refused.)
-    if (!UserService.instance.isPremium) {
-      WidgetsBinding.instance.addPostFrameCallback((_) async {
-        await PaywallHelper.show(nav.context);
-        // Closed without subscribing: same as the splash screen - sign out
-        // and restart onboarding rather than sit on a Home that refuses
-        // every request.
-        if (!UserService.instance.isPremium) {
-          await AuthService.instance.logout();
-          nav.pushNamedAndRemoveUntil(AppRoutes.welcome, (route) => false);
-        }
-      });
-    }
+    // Complete accounts (subscribed or not) go Home - premium actions open
+    // the paywall themselves. Only an account abandoned at the subscription
+    // step of onboarding is sent back there.
+    await AccountRouter.routeSignedInUser(nav);
   }
 
   @override
@@ -219,7 +206,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   SizedBox(width: 16.w),
                   Text(
-                    'Sign In',
+                    context.l10n.commonSignIn,
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontFamily: 'SF Pro',
@@ -257,7 +244,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     children: [
                       Center(
                         child: Text(
-                          'Sign in to your account',
+                          context.l10n.authSignInSubtitle,
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontSize: 24.sp,
@@ -270,17 +257,17 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       SizedBox(height: 24.h),
 
-                      _Label('Email'),
+                      _Label(context.l10n.commonEmail),
                       SizedBox(height: 8.h),
                       _Field(
                         controller: _emailCtrl,
-                        hint: 'Email',
+                        hint: context.l10n.commonEmail,
                         type: TextInputType.emailAddress,
                         errorText: _emailError,
                       ),
                       SizedBox(height: 18.h),
 
-                      _Label('Password'),
+                      _Label(context.l10n.commonPassword),
                       SizedBox(height: 8.h),
                       _Field(
                         controller: _passCtrl,
@@ -312,7 +299,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             );
                           },
                           child: Text(
-                            'Forgot password?',
+                            context.l10n.authForgotPasswordLink,
                             style: TextStyle(
                               color: context.colors.textPrimary,
                               fontFamily: 'SF Pro',
@@ -326,8 +313,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
                       // Login Button
                       RedButton(
-                        label: 'Login',
-                        loadingLabel: 'Logging in',
+                        label: context.l10n.authLogin,
+                        loadingLabel: context.l10n.authLoggingIn,
                         isLoading: _isLoading,
                         color: context.colors.accent,
                         height: 52.h,
@@ -353,11 +340,11 @@ class _LoginScreenState extends State<LoginScreen> {
                                 fontSize: 14.sp,
                               ),
                               children: [
-                                const TextSpan(
-                                  text: "Don’t have an account? ",
+                                TextSpan(
+                                  text: context.l10n.authNoAccount,
                                 ),
                                 TextSpan(
-                                  text: 'Sign Up',
+                                  text: context.l10n.commonSignUp,
                                   style: TextStyle(
                                     color: context.colors.textPrimary,
                                     fontWeight: FontWeight.w700,
@@ -401,7 +388,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       SizedBox(height: 24.h),
 
                       _SocialBtn(
-                        label: 'Sign in with Google',
+                        label: context.l10n.authSignInWithGoogle,
                         icon: Image.asset(
                           'assets/images/google.png',
                           width: 20.w,
@@ -413,7 +400,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       SizedBox(height: 12.h),
                       _SocialBtn(
-                        label: 'Sign in with Apple',
+                        label: context.l10n.authSignInWithApple,
                         icon: SvgPicture.asset(
                           'assets/icones/apple.svg',
                           width: 20.w,
@@ -436,9 +423,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           TextButton(
-                            onPressed: () => _showLegalModal('Privacy Policy', _getPrivacyPolicy()),
+                            onPressed: () => _showLegalModal(context.l10n.commonPrivacyPolicy, _getPrivacyPolicy()),
                             child: Text(
-                              'Privacy Policy',
+                              context.l10n.commonPrivacyPolicy,
                               style: TextStyle(
                                 color: context.colors.textSecondary,
                                 fontSize: 12.sp,
@@ -454,9 +441,9 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           ),
                           TextButton(
-                            onPressed: () => _showLegalModal('Terms of Use', _getTermsOfUse()),
+                            onPressed: () => _showLegalModal(context.l10n.commonTermsOfUse, _getTermsOfUse()),
                             child: Text(
-                              'Terms of Use',
+                              context.l10n.commonTermsOfUse,
                               style: TextStyle(
                                 color: context.colors.textSecondary,
                                 fontSize: 12.sp,

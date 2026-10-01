@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'selection_onboarding_step.dart';
+import '../../../core/l10n/l10n.dart';
 
 class AgeStep extends StatelessWidget {
   final VoidCallback onContinue;
@@ -16,8 +17,8 @@ class AgeStep extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SelectionOnboardingStep(
-      title: 'How old are you?',
-      subtitle: 'We’ll use this to personalize your recommendations',
+      title: context.l10n.onbAgeTitle,
+      subtitle: context.l10n.onbAgeSubtitle,
       maxSelections: 1,
       onContinue: onContinue,
       initialSelected: initialSelected != null && initialSelected!.isNotEmpty ? [initialSelected!] : [],

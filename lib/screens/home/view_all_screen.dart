@@ -34,6 +34,7 @@ import '../../widgets/recent_import_tile.dart';
 import '../../widgets/saved_recipe_card.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/motion/motion_widgets.dart';
+import '../../core/l10n/l10n.dart';
 
 // ══════════════════════════════════════════════════════════════════════════════
 // VIEW ALL SCREEN
@@ -92,7 +93,7 @@ class _ViewAllScreenState extends State<ViewAllScreen> {
         ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
     final ViewAllType type = args['type'] as ViewAllType;
     final String title = type == ViewAllType.exploreCuisines
-        ? 'Cuisine'
+        ? context.l10n.viewAllCuisine
         : (args['title'] as String? ?? '');
     final bool showPlus = type == ViewAllType.cookbooks;
 
@@ -183,16 +184,16 @@ class _ViewAllScreenState extends State<ViewAllScreen> {
                         _searchQueryNotifier.value = val;
                       },
                       hintText: type == ViewAllType.cookbooks
-                          ? 'Search your recipes'
+                          ? context.l10n.homeSearchHint
                           : type == ViewAllType.exploreCuisines
-                              ? 'Search cuisine ...'
+                              ? context.l10n.viewAllSearchCuisine
                               : type == ViewAllType.exploreCategories
-                                  ? 'Search category ...'
+                                  ? context.l10n.viewAllSearchCategory
                                   : type == ViewAllType.exploreRecipesByCuisine
-                                      ? 'Search ${title.toLowerCase()} recipes...'
+                                      ? context.l10n.viewAllSearchCuisineRecipes(title.toLowerCase())
                                       : type == ViewAllType.recentlyViewed
-                                          ? 'Search recently viewed recipes..'
-                                          : 'Search recipes, cookbooks....',
+                                          ? context.l10n.viewAllSearchRecent
+                                          : context.l10n.viewAllSearchAll,
                       backgroundColor: context.colors.pageBackground,
                       borderColor: Colors.transparent,
                       borderRadius: 16.r,
@@ -255,9 +256,12 @@ class _ViewAllScreenState extends State<ViewAllScreen> {
     return ValueListenableBuilder<List<Recipe>?>(
       valueListenable: notifier,
       builder: (context, recipes, _) {
-        final count = recipes?.length ?? 0;
+        // Same filter as the grid below, so the count matches what's shown.
+        final count = type == ViewAllType.savedRecipes
+            ? RecipeService.savedRecipesOf(recipes).length
+            : (recipes?.length ?? 0);
         return Text(
-          recipeCountLabel(count, capitalize: true),
+          recipeCountLabel(context.l10n, count, capitalize: true),
           style: TextStyle(
             fontFamily: 'SF Pro',
             fontSize: 12,
@@ -309,7 +313,7 @@ class _CookbooksGridState extends State<_CookbooksGrid> {
         }
 
         if (cookbooks.isEmpty) {
-          return const Center(child: Text("No cookbooks found."));
+          return Center(child: Text(context.l10n.viewAllNoCookbooks));
         }
 
         List<Cookbook> displayList = cookbooks;
@@ -321,7 +325,7 @@ class _CookbooksGridState extends State<_CookbooksGrid> {
         }
 
         if (displayList.isEmpty) {
-          return const Center(child: Text("No cookbooks match your search."));
+          return Center(child: Text(context.l10n.viewAllNoCookbooksMatch));
         }
 
         return GridView.builder(
@@ -510,8 +514,8 @@ class _RecipesGridState extends State<_RecipesGrid> {
 
     if (displayList.isEmpty) {
       final message = widget.searchQuery.trim().isNotEmpty
-          ? "No recipes match your search."
-          : "No recipes found.";
+          ? context.l10n.viewAllNoRecipesMatch
+          : context.l10n.viewAllNoRecipes;
       return Center(child: Text(message));
     }
 
@@ -587,7 +591,7 @@ class _RecipesGridState extends State<_RecipesGrid> {
                 Padding(
                   padding: EdgeInsets.fromLTRB(16.w, 0.h, 16.w, 12.h),
                   child: Text(
-                    'Recipes',
+                    context.l10n.commonRecipes,
                     style: TextStyle(
                       fontFamily: 'Rubik',
                       fontWeight: FontWeight.w800,
@@ -629,18 +633,18 @@ class _RecipesGridState extends State<_RecipesGrid> {
                         });
                         if (newFavState) {
                           RecipeService.instance.markRecipeAsSaved(r);
-                          IosToast.show(ctx, message: 'Recipe saved to favorites!', type: ToastType.success);
+                          IosToast.show(ctx, message: context.l10n.recipeSavedToast, type: ToastType.success);
                         } else {
                           RecipeService.instance.markRecipeAsUnsaved(r);
                           if (r.id.isNotEmpty) {
-                            RecipeService.instance.deleteRecipe(r.id);
+                            RecipeService.instance.deleteRecipe(r.id, name: r.name);
                           }
                           r.isFavorite = false;
                           r.isInCookbook = false;
                           final current = RecipeService.instance.myRecipesNotifier.value ?? [];
                           RecipeService.instance.myRecipesNotifier.value =
                               current.where((item) => item.id != r.id).toList();
-                          IosToast.show(ctx, message: 'Recipe removed from saved', type: ToastType.success);
+                          IosToast.show(ctx, message: context.l10n.recipeRemovedToast, type: ToastType.success);
                         }
                       },
                       onTap: () async {
@@ -657,7 +661,7 @@ class _RecipesGridState extends State<_RecipesGrid> {
                           actions: [
                             if (canPinRecipe)
                               HapticMenuAction(
-                              title: r.isPinned ? 'Unpin Recipe' : 'Pin Recipe',
+                              title: r.isPinned ? context.l10n.recipeUnpin : context.l10n.recipePin,
                               icon: r.isPinned
                                   ? Icons.push_pin_rounded
                                   : Icons.push_pin_outlined,
@@ -667,8 +671,8 @@ class _RecipesGridState extends State<_RecipesGrid> {
                               ),
                             HapticMenuAction(
                               title: r.isInCookbook
-                                  ? 'Remove from Cookbook'
-                                  : 'Add to Cookbook',
+                                  ? context.l10n.recipeRemoveFromCookbook
+                                  : context.l10n.recipeAddToCookbook,
                               icon: r.isInCookbook
                                   ? Icons.remove_circle_outline_rounded
                                   : Icons.add_circle_outline_rounded,
@@ -684,10 +688,11 @@ class _RecipesGridState extends State<_RecipesGrid> {
                               },
                             ),
                             HapticMenuAction(
-                              title: 'Share Recipe',
+                              title: context.l10n.recipeShare,
                               icon: Icons.ios_share_rounded,
                               onTap: () async {
                                 try {
+                                  final l10n = context.l10n;
                                   final rawLink = await RecipeService.instance
                                       .getShareLink(r.id);
                                   final link = rawLink
@@ -700,22 +705,23 @@ class _RecipesGridState extends State<_RecipesGrid> {
                                         'https://link.cookedapp.com',
                                       );
                                   final name = r.name;
-                                  final creatorStr = r.creator != null
-                                      ? "${r.creator!.displayName}'s "
-                                      : "";
-                                  final template =
-                                      "Check out $creatorStr$name on Cooked 🙌\n$link";
+                                  final template = recipeShareText(
+                                    l10n,
+                                    name: name,
+                                    link: link,
+                                    creator: r.creator != null ? r.creator!.displayName : null,
+                                  );
                                   SharePlus.instance.share(ShareParams(text: template));
                                 } catch (_) {}
                               },
                             ),
                             if (canPinRecipe)
                               HapticMenuAction(
-                                title: 'Delete Recipe',
+                                title: context.l10n.recipeDelete,
                                 icon: Icons.delete_outline_rounded,
                                 isDestructive: true,
                                 onTap: () {
-                                  RecipeService.instance.deleteRecipe(r.id);
+                                  RecipeService.instance.deleteRecipe(r.id, name: r.name);
                                 },
                               ),
                           ],
@@ -781,11 +787,16 @@ class _RecipesGridState extends State<_RecipesGrid> {
                       try {
                         final RenderBox? box = ctx.findRenderObject() as RenderBox?;
                         final Rect? sharePositionOrigin = box != null ? box.localToGlobal(Offset.zero) & box.size : null;
+                        final l10n = context.l10n;
                         final rawLink = await RecipeService.instance.getShareLink(r.id);
                         final link = rawLink.replaceAll('cooked.nixacom.com','link.cookedapp.com').replaceAll('https://cookedapp.app','https://link.cookedapp.com');
                         final name = r.name;
-                        final creatorStr = r.creator != null ? "${r.creator!.displayName}'s " : "";
-                        final template = "Check out $creatorStr$name on Cooked 🙌\n$link";
+                        final template = recipeShareText(
+                          l10n,
+                          name: name,
+                          link: link,
+                          creator: r.creator != null ? r.creator!.displayName : null,
+                        );
 
                         SharePlus.instance.share(
                           ShareParams(
@@ -813,8 +824,8 @@ class _RecipesGridState extends State<_RecipesGrid> {
                               IosToast.show(
                                 ctx,
                                 message: updated.isPinned
-                                    ? 'Recipe pinned'
-                                    : 'Recipe unpinned',
+                                    ? context.l10n.recipePinned
+                                    : context.l10n.recipeUnpinned,
                                 type: ToastType.success,
                               );
                             }
@@ -823,7 +834,7 @@ class _RecipesGridState extends State<_RecipesGrid> {
                             if (ctx.mounted) {
                               IosToast.show(
                                 ctx,
-                                message: 'Failed to pin recipe',
+                                message: context.l10n.recipePinFailed,
                                 type: ToastType.error,
                               );
                             }
@@ -834,11 +845,20 @@ class _RecipesGridState extends State<_RecipesGrid> {
                   ? () async {
                       final success = await RecipeService.instance.deleteRecipe(
                         r.id,
+                        name: r.name,
                       );
+                      if (!success && ctx.mounted) {
+                        IosToast.show(
+                          ctx,
+                          message:
+                              context.l10n.recipeDeleteFailed,
+                          type: ToastType.error,
+                        );
+                      }
                       if (success && ctx.mounted) {
                         IosToast.show(
                           ctx,
-                          message: 'Recipe deleted',
+                          message: context.l10n.recipeDeleted,
                           type: ToastType.success,
                         );
                       }
@@ -862,7 +882,7 @@ class _RecipesGridState extends State<_RecipesGrid> {
     if (isSaved) {
       IosToast.show(
         ctx,
-        message: "Already in your recipes",
+        message: context.l10n.recipeAlreadyInYours,
         type: ToastType.success,
       );
       return;
@@ -950,7 +970,7 @@ class _RecipesGridState extends State<_RecipesGrid> {
           }
 
           final displayList = (_type == ViewAllType.savedRecipes)
-              ? recipes.where((r) => !r.isInCookbook && !r.isSuggested).toList()
+              ? RecipeService.savedRecipesOf( recipes)
               : recipes;
 
           return _buildGrid(displayList);
@@ -1030,7 +1050,7 @@ class _CreatorsGridState extends State<_CreatorsGrid> {
         }
 
         if (displayList.isEmpty) {
-          return const Center(child: Text("No creators match your search."));
+          return Center(child: Text(context.l10n.viewAllNoCreatorsMatch));
         }
 
         return GridView.builder(
@@ -1089,7 +1109,7 @@ class _CreatorsGridState extends State<_CreatorsGrid> {
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      recipeCountLabel(c.publicRecipeCount, capitalize: true),
+                      recipeCountLabel(context.l10n, c.publicRecipeCount, capitalize: true),
                       style: TextStyle(
                         fontFamily: 'SF Pro',
                         fontSize: 11,
@@ -1191,7 +1211,7 @@ class _StaticCookbooksGridState extends State<_StaticCookbooksGrid> {
         }
 
         if (items.isEmpty) {
-          return const Center(child: Text("No items found."));
+          return Center(child: Text(context.l10n.viewAllNoItems));
         }
 
         var filteredItems = items;
@@ -1207,7 +1227,7 @@ class _StaticCookbooksGridState extends State<_StaticCookbooksGrid> {
         }
 
         if (filteredItems.isEmpty) {
-          return const Center(child: Text("No items match your search."));
+          return Center(child: Text(context.l10n.viewAllNoItemsMatch));
         }
 
         return _buildGrid(filteredItems);

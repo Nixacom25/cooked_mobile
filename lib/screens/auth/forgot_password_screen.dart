@@ -10,6 +10,7 @@ import '../../widgets/glass_icon_button.dart';
 import '../../widgets/red_button.dart';
 import '../../widgets/red_header_background.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/l10n/l10n.dart';
 
 enum _ContactMethod { email, phone }
 
@@ -47,7 +48,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       }
 
       setState(() {
-        _inputError = identifier.isEmpty ? 'This field is required' : null;
+        _inputError = identifier.isEmpty ? context.l10n.commonFieldRequired : null;
       });
 
       if (_inputError != null) {
@@ -60,7 +61,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       try {
         await AuthService.instance.forgotPassword(identifier);
         if (!mounted) return;
-        IosToast.show(context, message: "Code sent!", type: ToastType.success);
+        IosToast.show(context, message: context.l10n.authCodeSent, type: ToastType.success);
         nav.pushNamed(AppRoutes.forgotOtp, arguments: identifier);
       } catch (e) {
         if (!mounted) return;
@@ -120,7 +121,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   ),
                   SizedBox(width: 16.w),
                   Text(
-                    'Forgot Password',
+                    context.l10n.authForgotPasswordTitle,
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontFamily: 'Rubik',
@@ -177,7 +178,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Text(
-          'Select which contact details we should\nuse to reset your password',
+          context.l10n.authSelectContactMethod,
           textAlign: TextAlign.center,
           style: TextStyle(
             fontSize: 18.sp,
@@ -191,8 +192,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
         _ContactCard(
           icon: Icons.email_outlined,
-          title: 'Email',
-          subtitle: 'Send to your email',
+          title: context.l10n.commonEmail,
+          subtitle: context.l10n.authSendToEmail,
           selected: _method == _ContactMethod.email,
           onTap: () {
             HapticFeedback.selectionClick();
@@ -203,8 +204,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
         _ContactCard(
           icon: Icons.phone_outlined,
-          title: 'Phone Number',
-          subtitle: 'Send to your phone',
+          title: context.l10n.commonPhoneNumber,
+          subtitle: context.l10n.authSendToPhone,
           selected: _method == _ContactMethod.phone,
           onTap: () {
             HapticFeedback.selectionClick();
@@ -214,7 +215,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         SizedBox(height: 28.h),
 
         RedButton(
-          label: 'Continue',
+          label: context.l10n.commonContinue,
           color: context.colors.accent,
           height: 52.h,
           fontSize: 16.sp,
@@ -235,8 +236,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         Center(
           child: Text(
             isEmail
-                ? 'Please enter the email, we will send a\nverification code to your email'
-                : 'Please enter the phone number, \nwe will send a verification code\n to your phone number',
+                ? context.l10n.authEnterEmailForCode
+                : context.l10n.authEnterPhoneForCode,
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 18.sp,
@@ -250,7 +251,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         SizedBox(height: 24.h),
 
         Text(
-          isEmail ? 'Email' : 'Phone Number',
+          isEmail ? context.l10n.commonEmail : context.l10n.commonPhoneNumber,
           style: TextStyle(
             color: context.colors.textSecondary,
             fontFamily: 'SF Pro',
@@ -272,8 +273,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         SizedBox(height: 28.h),
 
         RedButton(
-          label: 'Send',
-          loadingLabel: 'Sending',
+          label: context.l10n.commonSend,
+          loadingLabel: context.l10n.commonSending,
           isLoading: _isLoading,
           color: context.colors.accent,
           height: 52.h,
@@ -403,7 +404,7 @@ class _EmailField extends StatelessWidget {
           color: context.colors.textPrimary,
         ),
         decoration: InputDecoration(
-          hintText: 'Email',
+          hintText: context.l10n.commonEmail,
           hintStyle: TextStyle(
             color: context.colors.textMuted,
             fontFamily: 'SF Pro',

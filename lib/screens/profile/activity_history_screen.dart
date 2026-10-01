@@ -10,6 +10,7 @@ import '../../widgets/glass_icon_button.dart';
 import '../../widgets/red_header_background.dart';
 import '../../widgets/recipe_horizontal_card.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/l10n/l10n.dart';
 
 class ActivityHistoryScreen extends StatefulWidget {
   const ActivityHistoryScreen({super.key});
@@ -68,7 +69,7 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
                         ),
                         Expanded(
                           child: Text(
-                            'Recent Recipes',
+                            context.l10n.activityRecentRecipes,
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontFamily: 'Rubik',
@@ -115,7 +116,7 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
                             child: Padding(
                               padding: EdgeInsets.all(24.w),
                               child: Text(
-                                "You haven't imported or scanned any recipes yet.",
+                                context.l10n.activityEmpty,
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                   fontFamily: 'Rubik',

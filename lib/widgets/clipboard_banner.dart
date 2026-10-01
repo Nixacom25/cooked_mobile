@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'dart:math' as math;
 import '../core/theme/app_theme.dart';
+import '../core/l10n/l10n.dart';
 
 class ClipboardBanner extends StatefulWidget {
   final String url;
@@ -168,7 +169,7 @@ class _ClipboardBannerState extends State<ClipboardBanner> with SingleTickerProv
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Recipe detected',
+                                context.l10n.clipRecipeDetected,
                                 style: TextStyle(
                                   fontFamily: 'SF Pro',
                                   fontWeight: FontWeight.w800,
@@ -177,7 +178,7 @@ class _ClipboardBannerState extends State<ClipboardBanner> with SingleTickerProv
                                 ),
                               ),
                               Text(
-                                'Link found in clipboard',
+                                context.l10n.clipLinkFound,
                                 style: TextStyle(
                                   fontFamily: 'SF Pro',
                                   fontSize: 12.sp,
@@ -200,7 +201,7 @@ class _ClipboardBannerState extends State<ClipboardBanner> with SingleTickerProv
                               borderRadius: BorderRadius.circular(30.r),
                             ),
                             child: Text(
-                              'Paste',
+                              context.l10n.clipPaste,
                               style: TextStyle(
                                 fontFamily: 'SF Pro',
                                 fontWeight: FontWeight.w700,

@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../widgets/red_button.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/l10n/l10n.dart';
 
 class ProfileSummaryStep extends StatefulWidget {
   final List<String> favoriteCuisines;
@@ -141,7 +142,7 @@ class _ProfileSummaryStepState extends State<ProfileSummaryStep>
                             child: SlideTransition(
                               position: _titleSlide,
                               child: Text(
-                                'Your personalized\nplan is ready.',
+                                context.l10n.onbPlanReady,
                                 textAlign: TextAlign.left,
                                 style: GoogleFonts.rubik(
                                   fontSize: 32.sp,
@@ -156,7 +157,7 @@ class _ProfileSummaryStepState extends State<ProfileSummaryStep>
                             child: SlideTransition(
                               position: _titleSlide,
                               child: Text(
-                                'Built around your goals, taste,\nschedule, and savings',
+                                context.l10n.onbPlanReadySubtitle,
                                 style: GoogleFonts.poppins(
                                   fontSize: 15.sp,
                                   color: context.colors.textPrimary,
@@ -178,7 +179,7 @@ class _ProfileSummaryStepState extends State<ProfileSummaryStep>
                                       height: 1.0)),
                                   SizedBox(height: 8.h),
                                   Text(
-                                    'recipes curated for your taste',
+                                    context.l10n.onbRecipesCurated,
                                     style: GoogleFonts.poppins(
                                       fontSize: 14.sp,
                                       color: context.colors.textPrimary,
@@ -240,12 +241,12 @@ class _ProfileSummaryStepState extends State<ProfileSummaryStep>
                                   Expanded(
                                     child: _buildBadgeCard(
                                       svgAsset: 'money.svg',
-                                      title: 'Save \$2,496/\nyear')),
+                                      title: context.l10n.onbBadgeSaveMoney)),
                                   SizedBox(width: 10.w),
                                   Expanded(
                                     child: _buildBadgeCard(
                                       svgAsset: 'demi.svg',
-                                      title: 'Save 180+ hours/\nyear')),
+                                      title: context.l10n.onbBadgeSaveHours)),
                                 ]),
                               SizedBox(height: 10.h),
                               Row(
@@ -253,12 +254,12 @@ class _ProfileSummaryStepState extends State<ProfileSummaryStep>
                                   Expanded(
                                     child: _buildBadgeCard(
                                       svgAsset: 'cook.svg',
-                                      title: '1,847 recipes\nmatched')),
+                                      title: context.l10n.onbBadgeRecipes)),
                                   SizedBox(width: 10.w),
                                   Expanded(
                                     child: _buildBadgeCard(
                                       svgAsset: 'lose.svg',
-                                      title: 'Healthier meals,\nmade easy')),
+                                      title: context.l10n.onbBadgeHealthier)),
                                 ]),
                             ]))),
                     ),
@@ -276,7 +277,7 @@ class _ProfileSummaryStepState extends State<ProfileSummaryStep>
                     top: false,
                     bottom: true,
                     child: RedButton(
-                      label: 'Unlock',
+                      label: context.l10n.onbUnlock,
                       color: context.colors.accent,
                       onTap: widget.onContinue,
                       height: 52.h,

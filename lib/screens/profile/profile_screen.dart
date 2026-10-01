@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../routes/app_routes.dart';
 import '../../services/auth_service.dart';
@@ -15,6 +16,7 @@ import '../../core/widgets/ios_toast.dart';
 import '../../core/utils/error_helper.dart';
 import 'settings_screen.dart';
 import '../../core/motion/motion_widgets.dart';
+import '../../core/l10n/l10n.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -93,9 +95,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   // comes from the site's Open Graph tags), no referral code.
   void _inviteFriends() {
     SharePlus.instance.share(ShareParams(
-      text: 'You should try Cooked. It turns what\'s in your fridge into '
-          'recipes in seconds and saves you money on takeout. '
-          'Click here to join! $_appLink',
+      text: context.l10n.profileInviteMessage(_appLink),
     ));
   }
 
@@ -149,7 +149,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                         Expanded(
                           child: Text(
-                            'Settings',
+                            context.l10n.settingsTitle,
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontFamily: 'Rubik',
@@ -222,14 +222,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         // 1. Profile / account / change password
                         SettingsMenuItem(
                           svgPath: 'assets/icones/people1.svg',
-                          label: 'My Account',
+                          label: context.l10n.settingsMyAccount,
                           onTap: () =>
                               Navigator.pushNamed(context, AppRoutes.myAccount),
                         ),
                         _menuDivider(context),
                         SettingsMenuItem(
                           svgPath: 'assets/icones/password.svg',
-                          label: 'Change Password',
+                          label: context.l10n.settingsChangePassword,
                           onTap: () =>
                               Navigator.pushNamed(context, AppRoutes.changePassword),
                         ),
@@ -238,7 +238,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         // 2. Dietary preferences
                         SettingsMenuItem(
                           svgPath: 'assets/icones/eating.svg',
-                          label: 'Dietary Preferences',
+                          label: context.l10n.settingsDietaryPreferences,
                           onTap: () =>
                               Navigator.pushNamed(context, AppRoutes.editPreferences),
                         ),
@@ -247,7 +247,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         // 3. Allergies
                         SettingsMenuItem(
                           svgPath: 'assets/icones/alert.svg',
-                          label: 'Allergies',
+                          label: context.l10n.settingsAllergies,
                           onTap: () =>
                               Navigator.pushNamed(context, AppRoutes.allergies),
                         ),
@@ -256,7 +256,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         // 4. Cuisine + Flavor DNA
                         SettingsMenuItem(
                           icon: Icons.ramen_dining_rounded,
-                          label: 'Cuisine + Flavor DNA',
+                          label: context.l10n.settingsCuisineFlavor,
                           onTap: () =>
                               Navigator.pushNamed(context, AppRoutes.cuisineFlavor),
                         ),
@@ -265,7 +265,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         // 5. Kitchen equipment
                         SettingsMenuItem(
                           icon: Icons.kitchen_rounded,
-                          label: 'Kitchen Equipment',
+                          label: context.l10n.settingsKitchenEquipment,
                           onTap: () =>
                               Navigator.pushNamed(context, AppRoutes.kitchenEquipment),
                         ),
@@ -274,7 +274,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         // 6. Notifications
                         SettingsMenuItem(
                           svgPath: 'assets/icones/notif.svg',
-                          label: 'Notifications',
+                          label: context.l10n.settingsNotifications,
                           onTap: () => Navigator.pushNamed(
                               context, AppRoutes.notificationSettings),
                         ),
@@ -283,7 +283,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         // 7. Dark mode
                         SettingsMenuItem(
                           icon: Icons.dark_mode_outlined,
-                          label: 'Dark Mode',
+                          label: context.l10n.settingsDarkMode,
                           onTap: () =>
                               Navigator.pushNamed(context, AppRoutes.darkMode),
                         ),
@@ -292,7 +292,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         // Language
                         SettingsMenuItem(
                           icon: Icons.translate_rounded,
-                          label: 'Language',
+                          label: context.l10n.settingsLanguage,
                           onTap: () =>
                               Navigator.pushNamed(context, AppRoutes.language),
                         ),
@@ -301,7 +301,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         // 8. Manage subscription & restore purchases
                         SettingsMenuItem(
                           svgPath: 'assets/icones/billing.svg',
-                          label: 'Manage Subscription & Restore Purchases',
+                          label: context.l10n.settingsManageSubscription,
                           onTap: () => Navigator.pushNamed(
                             context,
                             AppRoutes.subscriptionManagement,
@@ -312,29 +312,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         // Invite friends / Gift Cooked
                         SettingsMenuItem(
                           icon: Icons.person_add_alt_1_outlined,
-                          label: 'Invite friends',
+                          label: context.l10n.settingsInviteFriends,
                           onTap: _inviteFriends,
                         ),
                         _menuDivider(context),
+                        // Gifts are sold on the website for now.
                         SettingsMenuItem(
                           icon: Icons.card_giftcard_outlined,
-                          label: 'Gift Cooked to a friend',
-                          onTap: () =>
-                              Navigator.pushNamed(context, AppRoutes.giftCooked),
-                        ),
-                        _menuDivider(context),
-                        SettingsMenuItem(
-                          icon: Icons.redeem_rounded,
-                          label: 'Redeem a gift',
-                          onTap: () =>
-                              Navigator.pushNamed(context, AppRoutes.redeemGift),
+                          label: context.l10n.settingsGiftCooked,
+                          onTap: () => launchUrl(
+                            Uri.parse('https://cookedapp.com/gift'),
+                            mode: LaunchMode.externalApplication,
+                          ),
                         ),
                         _menuDivider(context),
 
                         // 9. Contact Support / Report Problem / Privacy / Terms
                         SettingsMenuItem(
                           svgPath: 'assets/icones/email1.svg',
-                          label: 'Contact Support',
+                          label: context.l10n.settingsContactSupport,
                           onTap: () =>
                               Navigator.pushNamed(context, AppRoutes.helpCenter),
                         ),
@@ -343,7 +339,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         // 10. Delete Account
                         SettingsMenuItem(
                           svgPath: 'assets/icones/delete.svg',
-                          label: 'Delete Account',
+                          label: context.l10n.settingsDeleteAccount,
                           textColor: context.colors.destructive,
                           iconColor: context.colors.destructive,
                           chevronColor: context.colors.destructive,
@@ -357,7 +353,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         _menuDivider(context),
                         SettingsMenuItem(
                           svgPath: 'assets/icones/logout.svg',
-                          label: 'Logout',
+                          label: context.l10n.settingsLogout,
                           textColor: context.colors.destructive,
                           iconColor: context.colors.destructive,
                           chevronColor: context.colors.destructive,
@@ -411,7 +407,7 @@ class _LogoutSheet extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Logout',
+                  context.l10n.settingsLogout,
                   style: TextStyle(
                     fontFamily: 'Rubik',
                     fontWeight: FontWeight.w800,
@@ -435,7 +431,7 @@ class _LogoutSheet extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Are you sure you want to log out of your account? You will need to enter your credentials to log back in.',
+                  context.l10n.settingsLogoutConfirm,
                   style: TextStyle(
                     fontFamily: 'Rubik',
                     fontSize: 14.sp,
@@ -466,7 +462,7 @@ class _LogoutSheet extends StatelessWidget {
                     ),
                     child: Center(
                       child: Text(
-                        'Logout',
+                        context.l10n.settingsLogout,
                         style: TextStyle(
                           fontFamily: 'Rubik',
                           fontWeight: FontWeight.w700,
@@ -528,7 +524,7 @@ class _DeleteAccountSheetState extends State<_DeleteAccountSheet> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Delete Account',
+                  context.l10n.settingsDeleteAccount,
                   style: TextStyle(
                     fontFamily: 'Rubik',
                     fontWeight: FontWeight.w800,
@@ -552,7 +548,7 @@ class _DeleteAccountSheetState extends State<_DeleteAccountSheet> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Are you sure you want to permanently delete your account? This action cannot be undone and you will lose all your data (Cookbooks, grocery items, etc.).',
+                  context.l10n.settingsDeleteAccountConfirm,
                   style: TextStyle(
                     fontFamily: 'Rubik',
                     fontSize: 14.sp,
@@ -599,7 +595,7 @@ class _DeleteAccountSheetState extends State<_DeleteAccountSheet> {
                             child: AppLoadingIndicator(color: Colors.white)
                           )
                         : Text(
-                            'Delete permanently',
+                            context.l10n.settingsDeletePermanently,
                             style: TextStyle(
                               fontFamily: 'Rubik',
                               fontWeight: FontWeight.w700,

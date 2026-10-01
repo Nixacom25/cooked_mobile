@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../routes/app_routes.dart';
 import '../../widgets/red_button.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/l10n/l10n.dart';
 
 class ForgotSuccessScreen extends StatelessWidget {
   const ForgotSuccessScreen({super.key});
@@ -23,7 +24,7 @@ class ForgotSuccessScreen extends StatelessWidget {
             children: [
               // Top Title: Congratulations!
               Text(
-                'Congratulations!',
+                context.l10n.commonCongratulations,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 28.sp,
@@ -46,7 +47,7 @@ class ForgotSuccessScreen extends StatelessWidget {
 
               // Bottom Info: Password Changed!
               Text(
-                'Password Changed!',
+                context.l10n.authPasswordChanged,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 24.sp,
@@ -58,7 +59,7 @@ class ForgotSuccessScreen extends StatelessWidget {
               SizedBox(height: 12.h),
 
               Text(
-                'Password changed successfully, you can\nlogin again with a new password.',
+                context.l10n.authPasswordChangedMessage,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 14.sp,
@@ -70,7 +71,7 @@ class ForgotSuccessScreen extends StatelessWidget {
               SizedBox(height: 32.h),
 
               RedButton(
-                label: 'Get Started',
+                label: context.l10n.commonGetStarted,
                 color: context.colors.accent,
                 height: 52.h,
                 fontSize: 16.sp,

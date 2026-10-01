@@ -18,6 +18,7 @@ import '../../widgets/glass_icon_button.dart';
 import '../../widgets/app_loading_indicator.dart';
 import '../../widgets/red_header_background.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/l10n/l10n.dart';
 
 class SubscriptionManagementScreen extends StatefulWidget {
   const SubscriptionManagementScreen({super.key});
@@ -55,7 +56,7 @@ class _SubscriptionManagementScreenState
       setState(() => _isLoading = false);
       IosToast.show(
         context,
-        message: 'Failed to load subscription status',
+        message: context.l10n.subLoadFailed,
         type: ToastType.error,
       );
     }
@@ -64,19 +65,19 @@ class _SubscriptionManagementScreenState
   String _getTimeRemaining() {
     if (_subscription == null) return '';
     final endDateStr = _subscription!['endDate'];
-    if (endDateStr == null) return 'No active subscription';
+    if (endDateStr == null) return context.l10n.subNoActive;
     final endDate = DateTime.parse(endDateStr);
     final now = DateTime.now();
     final difference = endDate.difference(now);
 
-    if (difference.isNegative) return 'Expired';
+    if (difference.isNegative) return context.l10n.subExpired;
 
     if (difference.inDays > 0) {
-      return '${difference.inDays} days left';
+      return context.l10n.subDaysLeft(difference.inDays);
     } else if (difference.inHours > 0) {
-      return '${difference.inHours} hours left';
+      return context.l10n.subHoursLeft(difference.inHours);
     } else {
-      return 'Expiring soon';
+      return context.l10n.subExpiringSoon;
     }
   }
 
@@ -132,8 +133,8 @@ class _SubscriptionManagementScreenState
       IosToast.show(
         context,
         message: restored
-            ? 'Purchases restored!'
-            : 'No active subscriptions found to restore.',
+            ? context.l10n.subRestored
+            : context.l10n.subNothingToRestore,
         type: restored ? ToastType.success : ToastType.warning,
       );
       if (restored) _loadSubscription();
@@ -190,7 +191,7 @@ class _SubscriptionManagementScreenState
                         ),
                         Expanded(
                           child: Text(
-                            'Subscription',
+                            context.l10n.subTitle,
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontFamily: 'Rubik',
@@ -230,7 +231,7 @@ class _SubscriptionManagementScreenState
                                 _buildStatusCard(),
                                 SizedBox(height: 28.h),
                                 Text(
-                                  'Subscription Details',
+                                  context.l10n.subDetails,
                                   style: TextStyle(
                                     fontFamily: 'Rubik',
                                     fontSize: 18.sp,
@@ -240,19 +241,19 @@ class _SubscriptionManagementScreenState
                                 ),
                                 SizedBox(height: 14.h),
                                 _buildDetailRow(
-                                  'Plan',
-                                  _subscription?['isYearly'] == true ? 'Yearly' : 'Monthly',
+                                  context.l10n.subPlan,
+                                  _subscription?['isYearly'] == true ? context.l10n.planYearly : context.l10n.planMonthly,
                                 ),
                                 _buildDetailRow(
-                                  'Start Date',
+                                  context.l10n.subStartDate,
                                   _formatDate(_subscription?['startDate']),
                                 ),
                                 _buildDetailRow(
-                                  'End Date',
+                                  context.l10n.subEndDate,
                                   _formatDate(_subscription?['endDate']),
                                 ),
                                 _buildDetailRow(
-                                  'Status',
+                                  context.l10n.subStatus,
                                   _subscription?['status'] ?? 'UNKNOWN',
                                 ),
                                 SizedBox(height: 28.h),
@@ -288,7 +289,7 @@ class _SubscriptionManagementScreenState
                                               ),
                                               SizedBox(width: 8.w),
                                               Text(
-                                                "You are already a Premium member!",
+                                                context.l10n.subAlreadyPremium,
                                                 style: TextStyle(
                                                   fontFamily: 'Rubik',
                                                   fontSize: 14.sp,
@@ -313,7 +314,7 @@ class _SubscriptionManagementScreenState
                                             ),
                                             child: Center(
                                               child: Text(
-                                                isPremium ? 'Active Subscription' : 'Renew or Upgrade',
+                                                isPremium ? context.l10n.subActive : context.l10n.subRenew,
                                                 style: TextStyle(
                                                   fontFamily: 'Rubik',
                                                   fontWeight: FontWeight.w700,
@@ -337,7 +338,7 @@ class _SubscriptionManagementScreenState
                                                     child: const AppLoadingIndicator(),
                                                   )
                                                 : Text(
-                                                    'Restore Purchases',
+                                                    context.l10n.subRestorePurchases,
                                                     style: TextStyle(
                                                       fontFamily: 'Rubik',
                                                       fontWeight: FontWeight.w600,
@@ -355,7 +356,7 @@ class _SubscriptionManagementScreenState
 
                                 SizedBox(height: 36.h),
                                 Text(
-                                  'Payment History',
+                                  context.l10n.subPaymentHistory,
                                   style: TextStyle(
                                     fontFamily: 'Rubik',
                                     fontSize: 18.sp,
@@ -368,7 +369,7 @@ class _SubscriptionManagementScreenState
                                   Padding(
                                     padding: EdgeInsets.symmetric(vertical: 12.h),
                                     child: Text(
-                                      'No payment history found',
+                                      context.l10n.subNoPayments,
                                       style: TextStyle(
                                         fontFamily: 'Rubik',
                                         color: context.colors.textSecondary,
@@ -410,7 +411,7 @@ class _SubscriptionManagementScreenState
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                isTrial ? 'Free Trial' : 'Premium Plan',
+                isTrial ? context.l10n.subFreeTrial : context.l10n.subPremiumPlan,
                 style: TextStyle(
                   fontFamily: 'Rubik',
                   fontSize: 18.sp,
@@ -509,7 +510,7 @@ class _SubscriptionManagementScreenState
   }
 
   String _formatDate(String? dateStr) {
-    if (dateStr == null) return 'N/A';
+    if (dateStr == null) return context.l10n.commonNotAvailable;
     try {
       final date = DateTime.parse(dateStr);
       return DateFormat('MMM dd, yyyy').format(date);
@@ -600,7 +601,7 @@ class _SubscriptionManagementScreenState
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Amount',
+                context.l10n.subAmount,
                 style: TextStyle(
                   fontFamily: 'Rubik',
                   color: context.colors.textSecondary,

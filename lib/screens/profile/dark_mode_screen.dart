@@ -4,15 +4,19 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../services/theme_service.dart';
 import '../../widgets/red_header_background.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/l10n/l10n.dart';
 
 class DarkModeScreen extends StatelessWidget {
   const DarkModeScreen({super.key});
 
-  static const _options = [
-    (ThemeMode.dark, 'On', 'Always use the dark theme'),
-    (ThemeMode.system, 'System Settings', "Match your phone's setting"),
-    (ThemeMode.light, 'Off', 'Always use the light theme'),
-  ];
+  static List<(ThemeMode, String, String)> _options(BuildContext context) {
+    final l10n = context.l10n;
+    return [
+      (ThemeMode.dark, l10n.themeDarkOn, l10n.themeAlwaysDark),
+      (ThemeMode.system, l10n.themeSystemSettings, l10n.themeMatchPhone),
+      (ThemeMode.light, l10n.themeDarkOff, l10n.themeAlwaysLight),
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -55,7 +59,7 @@ class DarkModeScreen extends StatelessWidget {
                         ),
                         Expanded(
                           child: Text(
-                            'Dark Mode',
+                            context.l10n.settingsDarkMode,
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontFamily: 'Rubik',
@@ -76,7 +80,7 @@ class DarkModeScreen extends StatelessWidget {
                         return ListView(
                           padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 8.h),
                           children: [
-                            ..._options.map((opt) {
+                            ..._options(context).map((opt) {
                               final (mode, label, subtitle) = opt;
                               final isSelected = currentMode == mode;
                               return GestureDetector(
@@ -114,8 +118,7 @@ class DarkModeScreen extends StatelessWidget {
                             }),
                             SizedBox(height: 12.h),
                             Text(
-                              "If System Settings is selected, the app's appearance will "
-                              "automatically switch to match your device's setting.",
+                              context.l10n.themeSystemHint,
                               style: TextStyle(
                                 fontFamily: 'Rubik',
                                 fontSize: 13.sp,

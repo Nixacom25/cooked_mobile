@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import '../core/utils/quantity_format.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../services/grocery_service.dart';
@@ -17,6 +19,7 @@ import '../widgets/grocery_skeleton.dart';
 import '../widgets/app_loading_indicator.dart';
 import '../core/theme/app_theme.dart';
 import '../core/motion/motion_widgets.dart';
+import '../core/l10n/l10n.dart';
 
 // ══════════════════════════════════════════════════════════════════════════════
 // GROCERY SCREEN
@@ -96,6 +99,53 @@ class GroceryScreenState extends State<GroceryScreen> with SingleTickerProviderS
     GroceryService.instance.myGroceriesNotifier.removeListener(_onDataLoaded);
     _hintController.dispose();
     super.dispose();
+  }
+
+  Widget _buildLoadError() {
+    return Center(
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 32.w),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.wifi_off_rounded, size: 44.sp, color: context.colors.textMuted),
+            SizedBox(height: 12.h),
+            Text(
+              context.l10n.groceryLoadErrorTitle,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontFamily: 'Rubik',
+                fontWeight: FontWeight.w700,
+                fontSize: 17.sp,
+                color: context.colors.textPrimary,
+              ),
+            ),
+            SizedBox(height: 6.h),
+            Text(
+              context.l10n.commonCheckConnection,
+              textAlign: TextAlign.center,
+              style: TextStyle(fontFamily: 'Rubik', fontSize: 14.sp, color: context.colors.textSecondary),
+            ),
+            SizedBox(height: 18.h),
+            TextButton.icon(
+              onPressed: () {
+                GroceryService.instance.loadFailedNotifier.value = false;
+                _loadGroceries();
+              },
+              icon: Icon(Icons.refresh_rounded, color: context.colors.accent),
+              label: Text(
+                context.l10n.commonTryAgain,
+                style: TextStyle(
+                  fontFamily: 'Rubik',
+                  fontWeight: FontWeight.w700,
+                  color: context.colors.accent,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Future<void> _loadGroceries() async {
@@ -194,7 +244,7 @@ class GroceryScreenState extends State<GroceryScreen> with SingleTickerProviderS
                           Padding(
                             padding: EdgeInsets.fromLTRB(20.w, 20.h, 20.w, 8.h),
                             child: Text(
-                              'Grocery List',
+                              context.l10n.groceryListTitle,
                               style: TextStyle(
                                 fontFamily: 'Rubik',
                                 fontWeight: FontWeight.w800,
@@ -209,7 +259,14 @@ class GroceryScreenState extends State<GroceryScreen> with SingleTickerProviderS
                               valueListenable: GroceryService.instance.myGroceriesNotifier,
                               builder: (context, allItems, _) {
                                 if (allItems == null) {
-                                  return const GrocerySkeleton();
+                                  // Failed with nothing cached: offer a retry
+                                  // instead of skeletons that never end.
+                                  return ValueListenableBuilder<bool>(
+                                    valueListenable: GroceryService.instance.loadFailedNotifier,
+                                    builder: (context, failed, _) => failed
+                                        ? _buildLoadError()
+                                        : const GrocerySkeleton(),
+                                  );
                                 }
 
                                 if (allItems.isEmpty) return _buildEmpty(allItems);
@@ -417,7 +474,7 @@ class GroceryScreenState extends State<GroceryScreen> with SingleTickerProviderS
                                         Icon(Icons.add_rounded, color: Colors.white, size: 20.sp),
                                         SizedBox(width: 6.w),
                                         Text(
-                                          'Add',
+                                          context.l10n.commonAdd,
                                           style: TextStyle(
                                             fontFamily: 'Rubik',
                                             fontWeight: FontWeight.w700,
@@ -452,15 +509,22 @@ class GroceryScreenState extends State<GroceryScreen> with SingleTickerProviderS
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+          // Same basket as the Grocery tab icon; an ingredient drops in.
           EmptyStateAnimation(
             kind: EmptyStateKind.basket,
             size: 56.sp,
             color: Colors.grey[300]!,
             accent: context.colors.accent,
+            glyph: SvgPicture.asset(
+              'assets/icones/grocerys.svg',
+              width: 56.sp,
+              height: 56.sp,
+              colorFilter: ColorFilter.mode(Colors.grey[300]!, BlendMode.srcIn),
+            ),
           ),
           SizedBox(height: 14.h),
           Text(
-            'Your Grocery List is empty',
+            context.l10n.groceryEmptyTitle,
             textAlign: TextAlign.center,
             style: TextStyle(
               fontFamily: 'Rubik',
@@ -473,7 +537,7 @@ class GroceryScreenState extends State<GroceryScreen> with SingleTickerProviderS
           Padding(
             padding: EdgeInsets.symmetric(horizontal: 40.w),
             child: Text(
-              'Add ingredients from a recipe or import to get started.',
+              context.l10n.groceryEmptySubtitle,
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontFamily: 'Rubik',
@@ -489,7 +553,7 @@ class GroceryScreenState extends State<GroceryScreen> with SingleTickerProviderS
               _showAddGrocerySheet(context, allItems);
             },
             icon: const Icon(Icons.add_rounded, color: Colors.white),
-            label: const Text('Add ingredients', style: TextStyle(fontFamily: 'Rubik', fontWeight: FontWeight.bold)),
+            label: Text(context.l10n.groceryAddIngredients, style: TextStyle(fontFamily: 'Rubik', fontWeight: FontWeight.bold)),
             style: ElevatedButton.styleFrom(
               backgroundColor: context.colors.accent,
               padding: EdgeInsets.symmetric(horizontal: 32.w, vertical: 16.h),
@@ -508,7 +572,7 @@ class GroceryScreenState extends State<GroceryScreen> with SingleTickerProviderS
     return showGeneralDialog<bool>(
       context: context,
       barrierDismissible: true,
-      barrierLabel: 'Dismiss',
+      barrierLabel: context.l10n.commonDismiss,
       barrierColor: Colors.transparent,
       transitionDuration: const Duration(milliseconds: 200),
       pageBuilder: (ctx, anim1, anim2) {
@@ -546,7 +610,7 @@ class GroceryScreenState extends State<GroceryScreen> with SingleTickerProviderS
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        'Delete Item',
+                        context.l10n.groceryDeleteItemTitle,
                         style: TextStyle(
                           fontFamily: 'Rubik',
                           fontWeight: FontWeight.w800,
@@ -556,7 +620,7 @@ class GroceryScreenState extends State<GroceryScreen> with SingleTickerProviderS
                       ),
                       SizedBox(height: 8.h),
                       Text(
-                        'Are you sure you want to delete "$name" from your grocery list?',
+                        context.l10n.groceryDeleteItemMessage(name),
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontFamily: 'Rubik',
@@ -581,7 +645,7 @@ class GroceryScreenState extends State<GroceryScreen> with SingleTickerProviderS
                                 ),
                               ),
                               child: Text(
-                                'Cancel',
+                                context.l10n.commonCancel,
                                 style: TextStyle(
                                   fontFamily: 'Rubik',
                                   fontWeight: FontWeight.w600,
@@ -603,7 +667,7 @@ class GroceryScreenState extends State<GroceryScreen> with SingleTickerProviderS
                                 ),
                               ),
                               child: Text(
-                                'Delete',
+                                context.l10n.commonDelete,
                                 style: TextStyle(
                                   fontFamily: 'Rubik',
                                   fontWeight: FontWeight.w700,
@@ -677,7 +741,7 @@ class GroceryScreenState extends State<GroceryScreen> with SingleTickerProviderS
             if (context.mounted) {
               IosToast.show(
                 context,
-                message: 'Grocery items saved successfully',
+                message: context.l10n.groceryItemsSaved,
                 type: ToastType.success,
               );
             }
@@ -716,7 +780,7 @@ class _ItemRow extends StatelessWidget {
       confirmDismiss: (direction) => isPlaceholder ? Future.value(false) : onDelete(item),
       onDismissed: (_) {},
       background: Container(
-        color: const Color(0xFFE11D48),
+        color: context.colors.accent,
         alignment: Alignment.centerRight,
         padding: EdgeInsets.only(right: 20.w),
         child: Icon(Icons.delete_outline_rounded, color: Colors.white, size: 24.sp),
@@ -770,7 +834,7 @@ class _ItemRow extends StatelessWidget {
                 Expanded(
                   flex: 2,
                   child: Text(
-                    _cleanQuantity(item.quantity),
+                    summarizeQuantity(item.quantity),
                     textAlign: TextAlign.right,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
@@ -789,17 +853,6 @@ class _ItemRow extends StatelessWidget {
       ),
     );
   }
-}
-
-/// Tidies raw quantities from recipes: drops markdown asterisks
-/// ("*optional*"), collapses spaces and stray separators.
-String _cleanQuantity(String raw) {
-  return raw
-      .replaceAll('*', '')
-      .replaceAll(RegExp(r'\s+'), ' ')
-      .replaceAll(RegExp(r'\s+,'), ',')
-      .replaceAll(RegExp(r'^[\s,+]+|[\s,+]+$'), '')
-      .trim();
 }
 
 class _AnimatedCheckbox extends StatefulWidget {
@@ -1079,7 +1132,7 @@ class _AddGrocerySheetState extends State<_AddGrocerySheet> {
 
           // Header Title Row: "Add Grocery"
           Text(
-            'Add Grocery',
+            context.l10n.groceryAddSheetTitle,
             style: TextStyle(
               fontFamily: 'Rubik',
               fontWeight: FontWeight.w800,
@@ -1097,7 +1150,7 @@ class _AddGrocerySheetState extends State<_AddGrocerySheet> {
                 children: [
                   // Field 1: Recipe
                   Text(
-                    'Recipe',
+                    context.l10n.commonRecipe,
                     style: TextStyle(
                       fontFamily: 'Rubik',
                       fontWeight: FontWeight.w600,
@@ -1124,7 +1177,7 @@ class _AddGrocerySheetState extends State<_AddGrocerySheet> {
                             borderRadius: BorderRadius.circular(16.r),
                             value: _selectedRecipe,
                             hint: Text(
-                              hasRecipes ? 'Choose a recipe' : 'No recipes found',
+                              hasRecipes ? context.l10n.groceryChooseRecipe : context.l10n.commonNoRecipesFound,
                               style: TextStyle(
                                 fontFamily: 'Rubik',
                                 fontSize: 14.sp,
@@ -1163,7 +1216,7 @@ class _AddGrocerySheetState extends State<_AddGrocerySheet> {
 
                   // Field 2: Item Entry Row
                   Text(
-                    'Ingredient',
+                    context.l10n.commonIngredient,
                     style: TextStyle(
                       fontFamily: 'Rubik',
                       fontWeight: FontWeight.w600,
@@ -1191,7 +1244,7 @@ class _AddGrocerySheetState extends State<_AddGrocerySheet> {
                               color: context.colors.textPrimary,
                             ),
                             decoration: InputDecoration(
-                              hintText: 'Cheese',
+                              hintText: context.l10n.groceryIngredientHint,
                               hintStyle: TextStyle(
                                 fontFamily: 'Rubik',
                                 color: context.colors.textMuted,
@@ -1387,7 +1440,7 @@ class _AddGrocerySheetState extends State<_AddGrocerySheet> {
                               if (_draftItems.isEmpty && _selectedRecipe == null) {
                                 IosToast.show(
                                   context,
-                                  message: 'Please add an item or select a recipe',
+                                  message: context.l10n.groceryAddItemOrRecipe,
                                   type: ToastType.error,
                                 );
                                 return;
@@ -1418,7 +1471,7 @@ class _AddGrocerySheetState extends State<_AddGrocerySheet> {
                               ),
                             )
                           : Text(
-                              'Save',
+                              context.l10n.commonSave,
                               style: TextStyle(
                                 fontFamily: 'Rubik',
                                 fontWeight: FontWeight.w700,
@@ -1530,7 +1583,7 @@ class _InlineAddRowState extends State<_InlineAddRow> {
     if (name == null || qty == null || name.isEmpty || qty.isEmpty) {
       IosToast.show(
         context,
-        message: 'Please add the quantity following the format, e.g: garlic - 2, 2 garlic, or garlic 2.',
+        message: context.l10n.groceryQuantityFormatError,
         type: ToastType.error,
       );
       return;
@@ -1610,7 +1663,7 @@ class _InlineAddRowState extends State<_InlineAddRow> {
                   ),
                   SizedBox(width: 8.w),
                   Text(
-                    'Add an ingredient...',
+                    context.l10n.groceryAddIngredientPlaceholder,
                     style: TextStyle(
                       fontFamily: 'Rubik',
                       fontWeight: FontWeight.w500,
@@ -1677,7 +1730,7 @@ class _InlineAddRowState extends State<_InlineAddRow> {
                       color: context.colors.textPrimary,
                     ),
                     decoration: InputDecoration(
-                      hintText: 'e.g. Garlic - 2, 2 Garlic, or Garlic 2',
+                      hintText: context.l10n.groceryInlineAddHint,
                       hintStyle: TextStyle(
                         fontFamily: 'Rubik',
                         fontSize: 15.sp,

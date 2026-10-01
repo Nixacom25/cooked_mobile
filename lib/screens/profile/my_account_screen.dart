@@ -14,6 +14,7 @@ import '../../core/utils/error_helper.dart';
 import '../../widgets/alphabet_avatar.dart';
 import '../../widgets/app_loading_indicator.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/l10n/l10n.dart';
 
 class MyAccountScreen extends StatefulWidget {
   const MyAccountScreen({super.key});
@@ -93,7 +94,7 @@ class _MyAccountScreenState extends State<MyAccountScreen> {
       }
 
       if (!mounted) return;
-      IosToast.show(context, message: 'Profile updated successfully!', type: ToastType.success);
+      IosToast.show(context, message: context.l10n.accountProfileUpdated, type: ToastType.success);
     } catch (e) {
       if (!mounted) return;
       IosToast.show(context, message: ErrorHelper.getFriendlyMessage(e), type: ToastType.error);
@@ -142,7 +143,7 @@ class _MyAccountScreenState extends State<MyAccountScreen> {
                         ),
                         Expanded(
                           child: Text(
-                            'My Account',
+                            context.l10n.settingsMyAccount,
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontFamily: 'Rubik',
@@ -165,7 +166,7 @@ class _MyAccountScreenState extends State<MyAccountScreen> {
                         children: [
                           // Avatar
                           AlphabetAvatar(
-                            name: _nameCtrl.text.isNotEmpty ? _nameCtrl.text : 'Chef',
+                            name: _nameCtrl.text.isNotEmpty ? _nameCtrl.text : context.l10n.accountDefaultName,
                             photoUrl: _photoUrl,
                             imageBytes: _selectedImageBytes,
                             size: 100.r,
@@ -178,7 +179,7 @@ class _MyAccountScreenState extends State<MyAccountScreen> {
                           GestureDetector(
                             onTap: () => AlphabetAvatar.showPhotoPicker(context),
                             child: Text(
-                              'Change Picture',
+                              context.l10n.accountChangePicture,
                               style: TextStyle(
                                 fontFamily: 'Rubik',
                                 fontWeight: FontWeight.w600,
@@ -204,20 +205,20 @@ class _MyAccountScreenState extends State<MyAccountScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 // Name field
-                                _buildLabel('Name'),
+                                _buildLabel(context.l10n.commonName),
                                 SizedBox(height: 8.h),
                                 _buildInputField(
                                   child: TextField(
                                     controller: _nameCtrl,
                                     style: _inputTextStyle(),
                                     textCapitalization: TextCapitalization.words,
-                                    decoration: _inputDecoration('Name'),
+                                    decoration: _inputDecoration(context.l10n.commonName),
                                   ),
                                 ),
                                 SizedBox(height: 20.h),
 
                                 // Email field
-                                _buildLabel('Email'),
+                                _buildLabel(context.l10n.commonEmail),
                                 SizedBox(height: 8.h),
                                 _buildInputField(
                                   child: TextField(
@@ -231,7 +232,7 @@ class _MyAccountScreenState extends State<MyAccountScreen> {
                                 SizedBox(height: 20.h),
 
                                 // Phone field
-                                _buildLabel('Phone Number'),
+                                _buildLabel(context.l10n.commonPhoneNumber),
                                 SizedBox(height: 8.h),
                                 IntlPhoneField(
                                   initialValue: _phoneNumberStr.isNotEmpty ? _phoneNumberStr : null,
@@ -311,7 +312,7 @@ class _MyAccountScreenState extends State<MyAccountScreen> {
                                               ),
                                             )
                                           : Text(
-                                              'Save Changes',
+                                              context.l10n.commonSaveChanges,
                                               style: TextStyle(
                                                 fontFamily: 'Rubik',
                                                 fontWeight: FontWeight.w700,

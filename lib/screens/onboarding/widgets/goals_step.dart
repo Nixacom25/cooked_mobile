@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'selection_onboarding_step.dart';
+import '../../../core/l10n/l10n.dart';
 
 class GoalsStep extends StatefulWidget {
   final VoidCallback? onContinue;
@@ -21,8 +22,8 @@ class _GoalsStepState extends State<GoalsStep> {
   @override
   Widget build(BuildContext context) {
     return SelectionOnboardingStep(
-      title: 'What’s your goal\nright now?',
-      subtitle: 'We’ll personalize everything around it',
+      title: context.l10n.onbGoalsTitle,
+      subtitle: context.l10n.onbGoalsSubtitle,
       maxSelections: 8,
       useGrid: true,
       onContinue: widget.onContinue,

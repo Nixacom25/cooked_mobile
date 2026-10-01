@@ -6,6 +6,7 @@ import '../services/tutorial_service.dart';
 import '../../widgets/red_header_background.dart';
 import '../../models/cookbook.dart';
 import '../theme/app_theme.dart';
+import '../l10n/l10n.dart';
 
 class TutorialHelper {
   static TutorialCoachMark? _activeCoachMark;
@@ -48,7 +49,6 @@ class TutorialHelper {
     });
 
     if (!allContextsReady) {
-      debugPrint("TutorialHelper: Not all target contexts are ready yet.");
       return;
     }
 
@@ -195,7 +195,7 @@ class TutorialHelper {
             builder: (context, controller) {
               return _TutorialContent(
                 title: "Import Recipes",
-                description: "Import recipes from TikTok,\nInstagram, or any Link",
+                description: context.l10n.tutImportTarget,
                 step: 1,
                 totalSteps: 3,
                 arrowAlignment: const Alignment(0.7, 1.0),
@@ -229,7 +229,7 @@ class TutorialHelper {
             builder: (context, controller) {
               return _TutorialContent(
                 title: "Scan Ingredients",
-                description: "Scan and get instant recipes",
+                description: context.l10n.tutScanTarget,
                 step: 2,
                 totalSteps: 3,
                 arrowAlignment: Alignment.bottomCenter,
@@ -261,8 +261,8 @@ class TutorialHelper {
             align: ContentAlign.top,
             builder: (context, controller) {
               return _TutorialContent(
-                title: "Your Cookbooks",
-                description: "Save and organize your recipes here.",
+                title: context.l10n.homeYourCookbooks,
+                description: context.l10n.tutCookbooksTarget,
                 step: 3,
                 totalSteps: 3,
                 isLast: true,
@@ -299,65 +299,65 @@ class ScanOnboardingModal extends StatefulWidget {
 class _ScanOnboardingModalState extends State<ScanOnboardingModal> {
   int _currentPage = 0;
 
-  final List<Map<String, dynamic>> _steps = [
+  List<Map<String, dynamic>> get _steps => [
     {
-      'title': 'Get the best scan',
+      'title': context.l10n.tutScanBestTitle,
       'image': 'assets/images/scan.png',
       'items': [
         {
           'svg': 'assets/icones/phones.svg',
-          'text': 'Hold your phone steady',
+          'text': context.l10n.tutScanSteady,
         },
         {
           'svg': 'assets/icones/good.svg',
-          'text': 'Use good lighting',
+          'text': context.l10n.tutScanLighting,
         },
         {
           'svg': 'assets/icones/cook.svg',
-          'text': 'Make sure all ingredients are visible',
+          'text': context.l10n.tutScanVisible,
         },
       ],
-      'btnText': 'Next',
+      'btnText': context.l10n.commonNext,
       'showCard': false,
     },
     {
-      'title': 'We instantly find your ingredients',
+      'title': context.l10n.tutScanFindTitle,
       'image': null,
       'items': [
         {
           'svg': 'assets/icones/scan1.svg',
-          'text': 'Snap a photo of your ingredients',
+          'text': context.l10n.tutScanSnap,
         },
         {
           'svg': 'assets/icones/detect.svg',
-          'text': 'We detect what\'s inside instantly',
+          'text': context.l10n.tutScanDetect,
         },
         {
           'svg': 'assets/icones/edit.svg',
-          'text': 'Edit anything that looks off',
+          'text': context.l10n.tutScanEdit,
         },
       ],
-      'btnText': 'Next',
+      'btnText': context.l10n.commonNext,
       'showCard': true,
     },
     {
-      'title': 'Ready to scan',
+      'title': context.l10n.tutScanReadyTitle,
       'image': 'assets/images/scan.png',
       'items': [
         {
           'svg': 'assets/icones/scan1.svg',
-          'text': 'Scan your fridge, pantry, or ingredients',
+          'text': context.l10n.tutScanFridge,
         },
         {
           'svg': 'assets/icones/result.svg',
-          'text': 'Try different angles for better results',
+          'text': context.l10n.tutScanAngles,
         },
         {
           'svg': 'assets/icones/eyes.svg',
-          'text': 'The more visible, the better your recipes',
+          'text': context.l10n.tutScanMoreVisible,
         },
       ],
-      'btnText': 'Scan Now',
+      'btnText': context.l10n.tutScanNow,
       'showCard': false,
     },
   ];
@@ -439,7 +439,7 @@ class _ScanOnboardingModalState extends State<ScanOnboardingModal> {
                   ],
                 ),
                 child: Text(
-                  'Skip',
+                  context.l10n.commonSkip,
                   style: TextStyle(
                     fontFamily: 'Rubik',
                     fontSize: 14.sp,
@@ -710,7 +710,7 @@ class _ImportOnboardingModalState extends State<ImportOnboardingModal> {
                   ],
                 ),
                 child: Text(
-                  'Skip',
+                  context.l10n.commonSkip,
                   style: TextStyle(
                     fontFamily: 'Rubik',
                     fontSize: 14.sp,
@@ -782,7 +782,7 @@ class _ImportOnboardingModalState extends State<ImportOnboardingModal> {
                         borderRadius: BorderRadius.circular(16.r),
                       ),
                       child: Text(
-                        'Paste a recipe link...',
+                        context.l10n.importPasteHint,
                         style: TextStyle(
                           fontFamily: 'Rubik',
                           fontSize: 14.sp,
@@ -817,7 +817,7 @@ class _ImportOnboardingModalState extends State<ImportOnboardingModal> {
 
                     // Title
                     Text(
-                      'Import recipes from anywhere',
+                      context.l10n.tutImportTitle,
                       style: TextStyle(
                         fontFamily: 'Rubik',
                         fontSize: 22.sp,
@@ -828,25 +828,25 @@ class _ImportOnboardingModalState extends State<ImportOnboardingModal> {
                     SizedBox(height: 16.h),
 
                     // Bullets
-                    const _ImportBulletItem(
+                    _ImportBulletItem(
                       svg: 'assets/icones/paste.svg',
                       icon: Icons.link_rounded,
-                      text: 'Paste a link from TikTok, Instagram, or any site',
+                      text: context.l10n.tutImportPaste,
                     ),
-                    const _ImportBulletItem(
+                    _ImportBulletItem(
                       svg: 'assets/icones/imports1.svg',
                       icon: Icons.share_outlined,
-                      text: 'Or share directly from social apps to import instantly',
+                      text: context.l10n.tutImportShare,
                     ),
-                    const _ImportBulletItem(
+                    _ImportBulletItem(
                       svg: 'assets/icones/turn.svg',
                       icon: Icons.auto_awesome_rounded,
-                      text: 'We\'ll turn it into a full recipe automatically',
+                      text: context.l10n.tutImportTurn,
                     ),
-                    const _ImportBulletItem(
+                    _ImportBulletItem(
                       svg: 'assets/icones/coeur1.svg',
                       icon: Icons.favorite_border_rounded,
-                      text: 'Save it to your cookbook',
+                      text: context.l10n.tutImportSave,
                     ),
 
                     SizedBox(height: 20.h),
@@ -990,7 +990,7 @@ class _ImportFlowDiagram extends StatelessWidget {
 
         // Card 2: Share
         _FlowCard(
-          label: 'Share',
+          label: context.l10n.commonShare,
           child: SvgPicture.asset(
             'assets/icones/shared.svg',
             width: 26.w,
@@ -1009,7 +1009,7 @@ class _ImportFlowDiagram extends StatelessWidget {
 
         // Card 4: Import
         _FlowCard(
-          label: 'Import',
+          label: context.l10n.navImport,
           child: SvgPicture.asset(
             'assets/icones/import2.svg',
             width: 24.w,
@@ -1167,7 +1167,7 @@ class _TutorialContent extends StatelessWidget {
                         borderRadius: BorderRadius.circular(20.r),
                       ),
                       child: Text(
-                        'Skip',
+                        context.l10n.commonSkip,
                         style: TextStyle(
                           fontFamily: 'Rubik',
                           fontSize: 14.sp,
@@ -1188,7 +1188,7 @@ class _TutorialContent extends StatelessWidget {
                         borderRadius: BorderRadius.circular(20.r),
                       ),
                       child: Text(
-                        'Next',
+                        context.l10n.commonNext,
                         style: TextStyle(
                           fontFamily: 'Rubik',
                           fontSize: 14.sp,
@@ -1280,28 +1280,28 @@ class CookbookOnboardingModal extends StatefulWidget {
 class _CookbookOnboardingModalState extends State<CookbookOnboardingModal> {
   int _currentPage = 0;
 
-  final List<Map<String, dynamic>> _steps = [
+  List<Map<String, dynamic>> get _steps => [
     {
-      'title': 'Your Organised Recipes',
+      'title': context.l10n.tutCookbookTitle1,
       'items': [
-        'Explore all recipes saved in this cookbook',
-        'Quickly browse through categories',
-        'Access your favorites in one tap',
+        context.l10n.tutCookbookItem1,
+        context.l10n.tutCookbookItem2,
+        context.l10n.tutCookbookItem3,
       ],
       'image': 'assets/images/fond2.png',
       'illustration': 'assets/images/cookbook.png',
-      'btnText': 'Next',
+      'btnText': context.l10n.commonNext,
     },
     {
-      'title': 'Complete Control',
+      'title': context.l10n.tutCookbookTitle2,
       'items': [
-        'Edit cookbook details anytime',
-        'Add new recipes using the plus button',
-        'Tap any recipe to see full details',
+        context.l10n.tutCookbookItem4,
+        context.l10n.tutCookbookItem5,
+        context.l10n.tutCookbookItem6,
       ],
       'image': 'assets/images/fond3.png',
       'illustration': 'assets/images/logo2.png',
-      'btnText': 'Explore Now',
+      'btnText': context.l10n.tutExploreNow,
     },
   ];
 
@@ -1506,7 +1506,7 @@ class _IngredientsDetectedCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Ingredients detected',
+                context.l10n.tutIngredientsDetected,
                 style: TextStyle(
                   fontFamily: 'Rubik',
                   fontSize: 16.sp,
@@ -1515,7 +1515,7 @@ class _IngredientsDetectedCard extends StatelessWidget {
                 ),
               ),
               Text(
-                'Edit',
+                context.l10n.commonEdit,
                 style: TextStyle(
                   fontFamily: 'Rubik',
                   fontSize: 14.sp,

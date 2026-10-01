@@ -1,7 +1,7 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz;
+import '../core/l10n/l10n.dart';
 
 class NotificationService {
   NotificationService._privateConstructor();
@@ -33,7 +33,6 @@ class NotificationService {
     await _notificationsPlugin.initialize(
       initializationSettings,
       onDidReceiveNotificationResponse: (NotificationResponse response) {
-        debugPrint('Notification response received: ${response.payload}');
       },
     );
   }
@@ -50,10 +49,10 @@ class NotificationService {
 
     if (scheduledDate.isBefore(DateTime.now())) return;
 
-    const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
+    final androidDetails = AndroidNotificationDetails(
       'shopping_reminders',
-      'Shopping Reminders',
-      channelDescription: 'Reminders to go shopping',
+      appL10n.notifChannelShopping,
+      channelDescription: appL10n.notifChannelShoppingDesc,
       importance: Importance.max,
       priority: Priority.high,
     );
@@ -64,15 +63,15 @@ class NotificationService {
       presentSound: true,
     );
 
-    const NotificationDetails platformDetails = NotificationDetails(
+    final platformDetails = NotificationDetails(
       android: androidDetails,
       iOS: iosDetails,
     );
 
     await _notificationsPlugin.zonedSchedule(
       date.hashCode, // Unique ID based on date
-      'Grocery Shopping',
-      'Don’t forget to do your shopping!',
+      appL10n.notifGroceryTitle,
+      appL10n.notifGroceryBody,
       scheduledDate,
       platformDetails,
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
@@ -93,10 +92,10 @@ class NotificationService {
     required String body,
     String? payload,
   }) async {
-    const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
+    final androidDetails = AndroidNotificationDetails(
       'push_notifications',
-      'Push Notifications',
-      channelDescription: 'Notifications from the Cooked team',
+      appL10n.notifPush,
+      channelDescription: appL10n.notifChannelPushDesc,
       importance: Importance.max,
       priority: Priority.high,
     );
@@ -107,7 +106,7 @@ class NotificationService {
       presentSound: true,
     );
 
-    const NotificationDetails platformDetails = NotificationDetails(
+    final platformDetails = NotificationDetails(
       android: androidDetails,
       iOS: iosDetails,
     );

@@ -1,8 +1,10 @@
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/material.dart';
+import '../../../services/store_price_service.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../widgets/red_button.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/l10n/l10n.dart';
 
 class FreeTrialGuideStep extends StatefulWidget {
   final VoidCallback onContinue;
@@ -90,7 +92,7 @@ class _FreeTrialGuideStepState extends State<FreeTrialGuideStep> with SingleTick
                       child: SlideTransition(
                         position: _titleSlide,
                         child: Text(
-                          'Free trial guide',
+                          context.l10n.onbTrialGuideTitle,
                           style: GoogleFonts.rubik(
                             fontSize: 32.sp,
                             fontWeight: FontWeight.w500,
@@ -102,7 +104,7 @@ class _FreeTrialGuideStepState extends State<FreeTrialGuideStep> with SingleTick
                       child: SlideTransition(
                         position: _titleSlide,
                         child: Text(
-                          'Get the most out of your Cooked trial.',
+                          context.l10n.onbTrialGuideSubtitle,
                           style: GoogleFonts.poppins(
                             fontSize: 15.sp,
                             color: context.colors.textPrimary,
@@ -121,42 +123,42 @@ class _FreeTrialGuideStepState extends State<FreeTrialGuideStep> with SingleTick
                               child: SlideTransition(
                                 position: _itemSlides[0],
                                 child: _buildTimelineCard(
-                                  label: 'Today',
+                                  label: context.l10n.commonToday,
                                   icon: Icons.lock_outline_rounded,
                                   borderColor: const Color(0xFFFCA5A5),
                                   headerBgColor: Theme.of(context).brightness == Brightness.dark
                                       ? context.colors.destructive.withValues(alpha: 0.18)
                                       : const Color(0xFFFEE2E2),
                                   iconColor: context.colors.destructive,
-                                  description: 'Unlock personalized recipes, meal suggestions, and ingredient scanning.'))),
+                                  description: context.l10n.onbTrialGuideToday))),
                             SizedBox(height: 16.h),
                             FadeTransition(
                               opacity: _itemOpacities[1],
                               child: SlideTransition(
                                 position: _itemSlides[1],
                                 child: _buildTimelineCard(
-                                  label: 'Day 2',
+                                  label: context.l10n.onbTrialDay2,
                                   icon: Icons.notifications_none_rounded,
                                   borderColor: const Color(0xFF7DD3FC),
                                   headerBgColor: Theme.of(context).brightness == Brightness.dark
                                       ? const Color(0xFF0284C7).withValues(alpha: 0.18)
                                       : const Color(0xFFE0F2FE),
                                   iconColor: const Color(0xFF0284C7),
-                                  description: "We'll send you a reminder before your trial ends."))),
+                                  description: context.l10n.onbTrialReminder))),
                             SizedBox(height: 16.h),
                             FadeTransition(
                               opacity: _itemOpacities[2],
                               child: SlideTransition(
                                 position: _itemSlides[2],
                                 child: _buildTimelineCard(
-                                  label: 'Day 3',
+                                  label: context.l10n.onbTrialDay3,
                                   icon: Icons.star_outline_rounded,
                                   borderColor: const Color(0xFFFCD34D),
                                   headerBgColor: Theme.of(context).brightness == Brightness.dark
                                       ? const Color(0xFFD97706).withValues(alpha: 0.18)
                                       : const Color(0xFFFEF3C7),
                                   iconColor: const Color(0xFFD97706),
-                                  description: "We'll send you a reminder before your trial ends."))),
+                                  description: context.l10n.onbTrialReminder))),
                           ]))),
                     SizedBox(height: 36.h),
 
@@ -168,15 +170,17 @@ class _FreeTrialGuideStepState extends State<FreeTrialGuideStep> with SingleTick
                         child: Column(
                           children: [
                             Center(
-                              child: Text(
-                                '3 days free, then \$29.99/year',
+                              child: ValueListenableBuilder<StorePrices>(
+                                valueListenable: StorePriceService.instance.prices,
+                                builder: (context, prices, _) => Text(
+                                prices.trialThenYearly(context.l10n),
                                 style: GoogleFonts.rubik(fontSize: 22.sp,
                                   fontWeight: FontWeight.w500,
-                                  color: context.colors.textPrimary))),
+                                  color: context.colors.textPrimary)))),
                             SizedBox(height: 8.h),
                             Center(
                               child: Text(
-                                'View other plans',
+                                context.l10n.onbViewOtherPlans,
                                 style: GoogleFonts.poppins(fontSize: 14.sp,
                                   fontWeight: FontWeight.w500,
                                   color: context.colors.textPrimary))),
@@ -195,7 +199,7 @@ class _FreeTrialGuideStepState extends State<FreeTrialGuideStep> with SingleTick
                     top: false,
                     bottom: true,
                     child: RedButton(
-                      label: 'Continue',
+                      label: context.l10n.commonContinue,
                       color: context.colors.accent,
                       onTap: widget.onContinue,
                       height: 52.h,

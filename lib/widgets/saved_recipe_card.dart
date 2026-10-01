@@ -6,6 +6,7 @@ import '../models/recipe.dart';
 import '../services/recipe_service.dart';
 import '../core/theme/app_theme.dart';
 import '../core/motion/motion_widgets.dart';
+import '../core/l10n/l10n.dart';
 
 class SavedRecipeCard extends StatefulWidget {
   final Recipe? recipe;
@@ -110,7 +111,7 @@ class _SavedRecipeCardState extends State<SavedRecipeCard> {
   Widget build(BuildContext context) {
     final colors = context.colors;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final String displayName = widget.title ?? widget.recipe?.name ?? 'Recipe';
+    final String displayName = widget.title ?? widget.recipe?.name ?? context.l10n.commonRecipe;
     final String? imgPath = widget.image ?? widget.recipe?.image;
 
     if (widget.isSavingsMode) {
@@ -157,7 +158,7 @@ class _SavedRecipeCardState extends State<SavedRecipeCard> {
                           ),
                           SizedBox(height: 6.h),
                           Text(
-                            widget.subtitle ?? 'Scanned at home',
+                            widget.subtitle ?? context.l10n.savingsScannedAtHome,
                             style: TextStyle(
                               fontFamily: 'Rubik',
                               fontWeight: FontWeight.w400,
@@ -254,6 +255,7 @@ class _SavedRecipeCardState extends State<SavedRecipeCard> {
                             active: _isFavorite,
                             ringColor: context.colors.accent,
                             ringSize: 32.r,
+                            iconSize: 16.r,
                             child: SvgPicture.asset(
                               _isFavorite
                                   ? 'assets/icones/coeur.svg'
