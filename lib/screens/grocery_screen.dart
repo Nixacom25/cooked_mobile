@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import '../core/utils/quantity_format.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -509,18 +508,10 @@ class GroceryScreenState extends State<GroceryScreen> with SingleTickerProviderS
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Same basket as the Grocery tab icon; an ingredient drops in.
-          EmptyStateAnimation(
-            kind: EmptyStateKind.basket,
+          Icon(
+            Icons.shopping_basket_outlined,
             size: 56.sp,
-            color: Colors.grey[300]!,
-            accent: context.colors.accent,
-            glyph: SvgPicture.asset(
-              'assets/icones/grocerys.svg',
-              width: 56.sp,
-              height: 56.sp,
-              colorFilter: ColorFilter.mode(Colors.grey[300]!, BlendMode.srcIn),
-            ),
+            color: Colors.grey[300],
           ),
           SizedBox(height: 14.h),
           Text(

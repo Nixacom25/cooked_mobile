@@ -2,21 +2,17 @@ import 'package:flutter/material.dart';
 
 import 'motion.dart';
 
-/// Text with a soft highlight sweeping across it, left to right, on a loop
-/// (the "thinking" shine used by chat assistants). The text stays readable:
-/// it rests slightly muted and the band brings it back to full color as it
-/// passes.
+/// Text with a soft band sweeping across it, left to right, on a loop (the
+/// "thinking" shine used by chat assistants). The text keeps its own color;
+/// only the moving band is tinted ([bandColor], grey by default).
 ///
-/// Reduce Motion shows the plain text in full color.
+/// Reduce Motion shows the plain text.
 class ShimmerText extends StatefulWidget {
   final String text;
   final TextStyle style;
 
-  /// Full-strength color, reached under the band. Defaults to [style]'s color.
-  final Color? highlightColor;
-
-  /// Resting opacity of the text outside the band (0-1).
-  final double restOpacity;
+  /// Color of the moving band. The rest of the text uses [style]'s color.
+  final Color bandColor;
 
   /// Time for the band to cross the text.
   final Duration sweep;
@@ -31,8 +27,7 @@ class ShimmerText extends StatefulWidget {
     this.text, {
     super.key,
     required this.style,
-    this.highlightColor,
-    this.restOpacity = 0.45,
+    this.bandColor = const Color(0xFF9E9E9E),
     this.sweep = const Duration(milliseconds: 1800),
     this.pause = const Duration(milliseconds: 900),
     this.textAlign,
@@ -60,7 +55,7 @@ class _ShimmerTextState extends State<ShimmerText> with SingleTickerProviderStat
 
   @override
   Widget build(BuildContext context) {
-    final color = widget.highlightColor ?? widget.style.color ?? DefaultTextStyle.of(context).style.color!;
+    final color = widget.style.color ?? DefaultTextStyle.of(context).style.color!;
     final text = Text(
       widget.text,
       textAlign: widget.textAlign,
@@ -78,7 +73,6 @@ class _ShimmerTextState extends State<ShimmerText> with SingleTickerProviderStat
       );
     }
 
-    final rest = color.withValues(alpha: color.a * widget.restOpacity);
     final total = (widget.sweep + widget.pause).inMilliseconds;
     final sweepShare = widget.sweep.inMilliseconds / total;
 
@@ -93,7 +87,7 @@ class _ShimmerTextState extends State<ShimmerText> with SingleTickerProviderStat
         return ShaderMask(
           blendMode: BlendMode.srcIn,
           shaderCallback: (bounds) => LinearGradient(
-            colors: [rest, color, rest],
+            colors: [color, widget.bandColor, color],
             // Band ~44% of the text wide, centred, then slid into place.
             stops: const [0.28, 0.5, 0.72],
             transform: _SlideGradient((center - 0.5) * bounds.width),

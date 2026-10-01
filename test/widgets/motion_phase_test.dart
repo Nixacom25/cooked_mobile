@@ -1,5 +1,6 @@
 import 'package:cooked/core/motion/motion_widgets.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -72,6 +73,47 @@ void main() {
     expect(find.text('\$68'), findsNothing);
     await tester.pumpAndSettle();
     expect(find.text('\$68'), findsOneWidget);
+  });
+
+  testWidgets('HeartBump flying heart is drawn in the overlay and stays red', (tester) async {
+    var saved = false;
+    late StateSetter set;
+    const red = Color(0xFFC31E26);
+    await tester.pumpWidget(MaterialApp(
+      home: StatefulBuilder(builder: (context, setState) {
+        set = setState;
+        return Center(
+          child: ClipRect(
+            child: HeartBump(
+              active: saved,
+              ringColor: red,
+              iconSize: 24,
+              child: Icon(saved ? Icons.favorite : Icons.favorite_border, size: 24),
+            ),
+          ),
+        );
+      }),
+    ));
+    set(() => saved = true);
+    await tester.pump();
+    for (final ms in [80, 200, 400, 700]) {
+      await tester.pump(Duration(milliseconds: ms ~/ 4));
+      final flying = find.byWidgetPredicate(
+          (w) => w is Icon && w.icon == Icons.favorite_rounded);
+      expect(flying, findsOneWidget);
+      // Every frame of the jump uses the app red (no purple/pink phase).
+      expect(tester.widget<Icon>(flying).color, red);
+      // Painted in the overlay, not under the ClipRect around the button.
+      RenderObject? node = tester.renderObject(flying);
+      var clipped = false;
+      while (node != null) {
+        if (node is RenderClipRect) clipped = true;
+        node = node.parent;
+      }
+      expect(clipped, isFalse);
+    }
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('HeartBump plays save and unsave animations without errors', (tester) async {

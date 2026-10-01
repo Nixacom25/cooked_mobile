@@ -89,13 +89,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  static const String _appLink = 'https://link.cookedapp.com';
+  /// The website home page: the friend picks the App Store or Google Play
+  /// there. The big preview card in Messages/WhatsApp comes from the site's
+  /// Open Graph tags (image: /images/og-preview.jpg).
+  static const String _inviteLink = 'https://www.cookedapp.com';
 
-  // Same approach as ReciMe: a plain share of the app link (rich preview
-  // comes from the site's Open Graph tags), no referral code.
+  // Same approach as ReciMe: a short message + the link, no referral code.
   void _inviteFriends() {
     SharePlus.instance.share(ShareParams(
-      text: context.l10n.profileInviteMessage(_appLink),
+      text: context.l10n.profileInviteMessage(_inviteLink),
     ));
   }
 
