@@ -172,6 +172,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   Center(
                     child: AlphabetAvatar(
                       name: _name.isNotEmpty ? _name : 'Chef',
+                      seed: AlphabetAvatar.currentUserSeed,
                       photoUrl: _photoUrl,
                       size: 96.r,
                       showEditBadge: true,

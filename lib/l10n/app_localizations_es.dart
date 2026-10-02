@@ -3211,4 +3211,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get fallbackCopyLink => 'Copiar enlace';
+
+  @override
+  String get splashTagline => 'La cena empieza con lo que ya tienes.';
 }

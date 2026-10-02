@@ -3243,4 +3243,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get fallbackCopyLink => 'Copier le lien';
+
+  @override
+  String get splashTagline => 'Le dîner commence avec ce que vous avez déjà.';
 }

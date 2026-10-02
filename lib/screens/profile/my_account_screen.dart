@@ -167,6 +167,7 @@ class _MyAccountScreenState extends State<MyAccountScreen> {
                           // Avatar
                           AlphabetAvatar(
                             name: _nameCtrl.text.isNotEmpty ? _nameCtrl.text : context.l10n.accountDefaultName,
+                            seed: AlphabetAvatar.currentUserSeed,
                             photoUrl: _photoUrl,
                             imageBytes: _selectedImageBytes,
                             size: 100.r,

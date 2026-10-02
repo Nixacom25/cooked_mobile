@@ -35,6 +35,7 @@ import '../../widgets/saved_recipe_card.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/motion/motion_widgets.dart';
 import '../../core/l10n/l10n.dart';
+import '../../widgets/alphabet_avatar.dart';
 
 // ══════════════════════════════════════════════════════════════════════════════
 // VIEW ALL SCREEN
@@ -1066,25 +1067,13 @@ class _CreatorsGridState extends State<_CreatorsGrid> {
             final c = displayList[i];
             return Column(
               children: [
-                CircleAvatar(
-                  radius: 40,
-                  backgroundColor: context.colors.surface,
-                  backgroundImage: c.photo != null
-                      ? NetworkImage(c.photo!)
-                      : null,
-                  child:
-                      (c.photo == null &&
-                          c.firstname.isNotEmpty &&
-                          c.lastname.isNotEmpty)
-                      ? Text(
-                          c.firstname[0].toUpperCase() +
-                              c.lastname[0].toUpperCase(),
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: context.colors.accent,
-                          ),
-                        )
-                      : null,
+                // Creators without a photo get their own plate avatar.
+                AlphabetAvatar(
+                  name: c.displayName,
+                  seed: c.id,
+                  photoUrl: c.photo,
+                  size: 80,
+                  borderWidth: 0,
                 ),
                 const SizedBox(height: 8),
                 Text(

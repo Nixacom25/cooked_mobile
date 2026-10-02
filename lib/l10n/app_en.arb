@@ -1325,5 +1325,6 @@
   "fallbackExtractTitle": "We couldn’t extract a recipe from this link.",
   "fallbackExtractHint": "Please check the URL or try another one.",
   "fallbackLinkCopied": "Link copied",
-  "fallbackCopyLink": "Copy link"
+  "fallbackCopyLink": "Copy link",
+  "splashTagline": "Dinner starts with what you already have."
 }

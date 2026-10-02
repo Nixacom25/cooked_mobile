@@ -975,5 +975,6 @@
   "fallbackExtractTitle": "Aucune recette n’a pu être extraite de ce lien.",
   "fallbackExtractHint": "Vérifiez l’URL ou essayez-en une autre.",
   "fallbackLinkCopied": "Lien copié",
-  "fallbackCopyLink": "Copier le lien"
+  "fallbackCopyLink": "Copier le lien",
+  "splashTagline": "Le dîner commence avec ce que vous avez déjà."
 }

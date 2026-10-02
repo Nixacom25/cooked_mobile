@@ -5955,6 +5955,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Copy link'**
   String get fallbackCopyLink;
+
+  /// No description provided for @splashTagline.
+  ///
+  /// In en, this message translates to:
+  /// **'Dinner starts with what you already have.'**
+  String get splashTagline;
 }
 
 class _AppLocalizationsDelegate

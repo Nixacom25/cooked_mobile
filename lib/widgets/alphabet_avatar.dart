@@ -2,8 +2,8 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import '../services/user_service.dart';
@@ -23,6 +23,20 @@ class AlphabetAvatar extends StatelessWidget {
 
   final double? borderWidth;
 
+  /// Picks the plate shown when there's no photo. Use the person's id so the
+  /// same person gets the same plate on every screen; defaults to [name].
+  final String? seed;
+
+  /// Seed for the signed-in user (id, else email, else name).
+  static String? get currentUserSeed {
+    final user = UserService.instance.currentUserNotifier.value;
+    for (final key in ['id', 'email', 'firstname']) {
+      final value = user?[key]?.toString().trim();
+      if (value != null && value.isNotEmpty) return value;
+    }
+    return null;
+  }
+
   const AlphabetAvatar({
     super.key,
     required this.name,
@@ -32,14 +46,8 @@ class AlphabetAvatar extends StatelessWidget {
     this.onTap,
     this.showEditBadge = false,
     this.borderWidth,
+    this.seed,
   });
-
-  String get _firstLetter {
-    final trimmed = name.trim();
-    if (trimmed.isEmpty) return 'c';
-    final char = trimmed.characters.first;
-    return RegExp(r'[a-zA-Z0-9]').hasMatch(char) ? char : 'c';
-  }
 
   bool get _hasCustomPhoto {
     if (imageBytes != null && imageBytes!.isNotEmpty) return true;
@@ -125,6 +133,7 @@ class AlphabetAvatar extends StatelessWidget {
                           ),
                           child: AlphabetAvatar(
                             name: name,
+                            seed: AlphabetAvatar.currentUserSeed,
                             photoUrl: photoUrl,
                             size: 240.r,
                             borderWidth: 0,
@@ -488,10 +497,6 @@ class AlphabetAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final effectiveLetter = _firstLetter;
-    final fontSize = size * 0.52;
-    final strokeWidth = size * 0.08;
-
     Widget avatarContent;
 
     if (imageBytes != null && imageBytes!.isNotEmpty) {
@@ -500,10 +505,10 @@ class AlphabetAvatar extends StatelessWidget {
       avatarContent = CachedNetworkImage(
         imageUrl: photoUrl!,
         fit: BoxFit.cover,
-        errorWidget: (_, __, ___) => _buildLetterAvatar(context, effectiveLetter, fontSize, strokeWidth),
+        errorWidget: (_, __, ___) => _buildPlateAvatar(),
       );
     } else {
-      avatarContent = _buildLetterAvatar(context, effectiveLetter, fontSize, strokeWidth);
+      avatarContent = _buildPlateAvatar();
     }
 
     final double effectiveBorderWidth = borderWidth ?? (size * 0.04).clamp(1.5, 3.5);
@@ -576,76 +581,23 @@ class AlphabetAvatar extends StatelessWidget {
     return mainAvatar;
   }
 
-  Widget _buildLetterAvatar(BuildContext context, String letter, double fontSize, double strokeWidth) {
-    final char = letter.toLowerCase();
-    return Container(
-      color: context.colors.surface,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          // Glossy background arc highlight top-left
-          Positioned(
-            top: size * 0.05,
-            left: size * 0.08,
-            child: Container(
-              width: size * 0.4,
-              height: size * 0.25,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                gradient: LinearGradient(
-                  colors: [
-                    Colors.white.withValues(alpha: 0.6),
-                    Colors.white.withValues(alpha: 0.0),
-                  ],
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                ),
-              ),
-            ),
-          ),
+  /// Users without a photo get one of the 8 Cooked "plate" avatars, picked
+  /// from their name so the same person always gets the same plate.
+  Widget _buildPlateAvatar() => SvgPicture.asset(
+        plateAvatarAsset(seed ?? name),
+        width: size,
+        height: size,
+        fit: BoxFit.cover,
+      );
 
-          // Layer 1: Thick Black Outer Stroke/Outline (Image 2 style)
-          Text(
-            char,
-            style: GoogleFonts.rubik(
-              fontSize: fontSize * 1.15,
-              fontWeight: FontWeight.w900,
-              foreground: Paint()
-                ..style = PaintingStyle.stroke
-                ..strokeWidth = (strokeWidth * 1.6).clamp(2.0, 6.0)
-                ..strokeJoin = StrokeJoin.round
-                ..color = const Color(0xFF1E1E1E),
-            ),
-          ),
-
-          // Layer 2: Glossy Red Fill (Image 2 style)
-          Text(
-            char,
-            style: GoogleFonts.rubik(
-              fontSize: fontSize * 1.15,
-              fontWeight: FontWeight.w900,
-              color: context.colors.accent,
-            ),
-          ),
-
-          // Layer 3: Specular White Inner Highlight Line (Image 2 style)
-          Positioned(
-            top: size * 0.22,
-            left: size * 0.26,
-            child: Text(
-              char,
-              style: GoogleFonts.rubik(
-                fontSize: fontSize * 1.10,
-                fontWeight: FontWeight.w900,
-                foreground: Paint()
-                  ..style = PaintingStyle.stroke
-                  ..strokeWidth = (strokeWidth * 0.35).clamp(0.6, 2.2)
-                  ..color = Colors.white.withValues(alpha: 0.65),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
+  /// Stable across launches (unlike String.hashCode, which is not guaranteed).
+  static String plateAvatarAsset(String seed) {
+    final key = seed.trim().toLowerCase();
+    var hash = 0;
+    for (final unit in key.codeUnits) {
+      hash = (hash * 31 + unit) & 0x7fffffff;
+    }
+    final index = (key.isEmpty ? 0 : hash % 8) + 1;
+    return 'assets/images/avatars/plate_0$index.svg';
   }
 }

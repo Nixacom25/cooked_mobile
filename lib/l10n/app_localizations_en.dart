@@ -3185,4 +3185,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get fallbackCopyLink => 'Copy link';
+
+  @override
+  String get splashTagline => 'Dinner starts with what you already have.';
 }

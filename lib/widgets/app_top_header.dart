@@ -238,6 +238,7 @@ class _AppTopHeaderState extends State<AppTopHeader> {
                   Builder(
                     builder: (avatarContext) => AlphabetAvatar(
                       name: firstName,
+                      seed: AlphabetAvatar.currentUserSeed,
                       photoUrl: photoUrl,
                       size: 38.r,
                       onTap: () => AlphabetAvatar.showPhotoPicker(avatarContext, compact: true),

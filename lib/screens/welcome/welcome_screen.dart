@@ -7,8 +7,8 @@ import '../../services/auth_service.dart';
 import '../../services/notification_service.dart';
 import '../../widgets/red_button.dart';
 import '../../widgets/scan_animation_overlay.dart';
-import '../splash/splash_screen.dart';
 import '../../core/l10n/l10n.dart';
+import '../splash/splash_to_welcome.dart';
 
 /// The Welcome screen using welcome2.png background.
 class WelcomeScreen extends StatefulWidget {
@@ -171,7 +171,18 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                         label: 'Test splash',
                         onTap: () => Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (_) => const SplashScreen()),
+                          MaterialPageRoute(builder: (_) => const SplashToWelcome()),
+                        ),
+                      ),
+                    if (kDebugMode) SizedBox(height: 8.h),
+                    if (kDebugMode)
+                      _DebugButton(
+                        label: 'Test splash 2',
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const SplashToWelcome(variant: SplashVariant.scanFrame),
+                          ),
                         ),
                       ),
                     if (kDebugMode) SizedBox(height: 8.h),
