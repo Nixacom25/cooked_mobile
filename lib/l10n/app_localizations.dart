@@ -4738,6 +4738,18 @@ abstract class AppLocalizations {
   /// **'Try another dish name or a simpler search, like “pasta” or “chicken curry”.'**
   String get importNoWebResultsHint;
 
+  /// No description provided for @importWebSearchFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Search is unavailable right now'**
+  String get importWebSearchFailed;
+
+  /// No description provided for @importWebSearchFailedHint.
+  ///
+  /// In en, this message translates to:
+  /// **'The recipe search didn’t answer in time. Check your connection and try again.'**
+  String get importWebSearchFailedHint;
+
   /// No description provided for @importSearchResults.
   ///
   /// In en, this message translates to:

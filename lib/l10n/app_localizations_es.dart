@@ -2533,6 +2533,13 @@ class AppLocalizationsEs extends AppLocalizations {
       'Prueba con otro plato o una búsqueda más simple, como “pasta” o “pollo al curry”.';
 
   @override
+  String get importWebSearchFailed => 'La búsqueda no está disponible ahora';
+
+  @override
+  String get importWebSearchFailedHint =>
+      'La búsqueda de recetas no respondió a tiempo. Revisa tu conexión e inténtalo de nuevo.';
+
+  @override
   String get importSearchResults => 'Resultados';
 
   @override

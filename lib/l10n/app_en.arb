@@ -992,6 +992,8 @@
     }
   },
   "importNoWebResultsHint": "Try another dish name or a simpler search, like “pasta” or “chicken curry”.",
+  "importWebSearchFailed": "Search is unavailable right now",
+  "importWebSearchFailedHint": "The recipe search didn’t answer in time. Check your connection and try again.",
   "importSearchResults": "Search Results",
   "commonClear": "Clear",
   "importViewThisRecipe": "View this recipe",

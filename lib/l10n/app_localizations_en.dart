@@ -2514,6 +2514,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Try another dish name or a simpler search, like “pasta” or “chicken curry”.';
 
   @override
+  String get importWebSearchFailed => 'Search is unavailable right now';
+
+  @override
+  String get importWebSearchFailedHint =>
+      'The recipe search didn’t answer in time. Check your connection and try again.';
+
+  @override
   String get importSearchResults => 'Search Results';
 
   @override

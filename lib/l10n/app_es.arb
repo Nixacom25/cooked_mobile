@@ -773,6 +773,8 @@
   "importSearchRecipesHint": "Buscar recetas...",
   "importNoWebResults": "No se encontraron recetas para “{query}”",
   "importNoWebResultsHint": "Prueba con otro plato o una búsqueda más simple, como “pasta” o “pollo al curry”.",
+  "importWebSearchFailed": "La búsqueda no está disponible ahora",
+  "importWebSearchFailedHint": "La búsqueda de recetas no respondió a tiempo. Revisa tu conexión e inténtalo de nuevo.",
   "importSearchResults": "Resultados",
   "commonClear": "Borrar",
   "importViewThisRecipe": "Ver esta receta",

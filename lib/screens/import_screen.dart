@@ -73,6 +73,8 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
   List<Map<String, dynamic>> _searchResults = [];
   /// Query whose web search came back empty (shows the empty state).
   String? _emptySearchQuery;
+  /// The last web search failed (timeout / server error): shown in the panel.
+  bool _webSearchError = false;
   int _webSearchRequestId = 0;
   int _suggestionRequestId = 0;
 
@@ -401,6 +403,7 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
       _isSearching = true;
       _searchResults = [];
       _emptySearchQuery = null;
+      _webSearchError = false;
     });
     _importSearchOverlayEntry?.markNeedsBuild();
     try {
@@ -415,7 +418,11 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
       }
     } catch (e) {
       if (mounted && requestId == _webSearchRequestId) {
-        setState(() => _isSearching = false);
+        setState(() {
+          _isSearching = false;
+          _webSearchError = true;
+          _emptySearchQuery = query;
+        });
         _importSearchOverlayEntry?.markNeedsBuild();
         if (PaywallHelper.handleError(context, e)) return;
         IosToast.show(
@@ -546,6 +553,10 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
 
   @override
   void dispose() {
+    // The search panel lives in the root overlay: remove it with its state,
+    // otherwise it stays on screen with a disposed controller (dead close
+    // button, results never shown) if Home is rebuilt while it's open.
+    _removeImportSearchOverlay();
     widget.isActiveNotifier?.removeListener(_onActiveStateChanged);
     SharingService.instance.sharedTextNotifier.removeListener(_onSharedUrlUpdated);
     _linkCtrl.dispose();
@@ -575,17 +586,31 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
       _importSearchController.forward();
       _showImportSearchOverlay();
     } else {
-      _importSearchController.reverse().then((_) {
-        if (mounted) {
-          setState(() {
-            _isSearchingModal = false;
-            _overlaySearchCtrl.clear();
-            _searchResults = [];
-            _emptySearchQuery = null;
-          });
-          _removeImportSearchOverlay();
-        }
-      });
+      _closeSearchModal();
+    }
+  }
+
+  /// Closes the search panel. A TickerFuture never completes when its
+  /// animation is interrupted, so cleanup must not depend on `.then` alone:
+  /// `orCancel` + try/finally guarantees the panel is always removed.
+  Future<void> _closeSearchModal() async {
+    _webSearchRequestId++; // ignore a search still in flight
+    try {
+      await _importSearchController.reverse().orCancel;
+    } catch (_) {
+      // Animation interrupted or controller unavailable: close anyway.
+    } finally {
+      _removeImportSearchOverlay();
+      if (mounted) {
+        setState(() {
+          _isSearchingModal = false;
+          _isSearching = false;
+          _overlaySearchCtrl.clear();
+          _searchResults = [];
+          _emptySearchQuery = null;
+          _webSearchError = false;
+        });
+      }
     }
   }
 
@@ -659,7 +684,13 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
     }
 
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
-    return GestureDetector(
+    // System back / swipe closes the search panel first.
+    return PopScope(
+      canPop: !_isSearchingModal,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop && _isSearchingModal) _closeSearchModal();
+      },
+      child: GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
         backgroundColor: context.colors.pageBackground,
@@ -1145,6 +1176,7 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
       ],
     ),
   ),
+  ),
 );
   }
 
@@ -1336,13 +1368,13 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
                                 Icon(Icons.search_off_rounded, size: 40.sp, color: context.colors.textSecondary),
                                 SizedBox(height: 12.h),
                                 Text(
-                                  context.l10n.importNoWebResults(_emptySearchQuery!),
+                                  _webSearchError ? context.l10n.importWebSearchFailed : context.l10n.importNoWebResults(_emptySearchQuery!),
                                   textAlign: TextAlign.center,
                                   style: TextStyle(fontFamily: 'Rubik', fontWeight: FontWeight.w600, fontSize: 15.sp, color: context.colors.textPrimary),
                                 ),
                                 SizedBox(height: 6.h),
                                 Text(
-                                  context.l10n.importNoWebResultsHint,
+                                  _webSearchError ? context.l10n.importWebSearchFailedHint : context.l10n.importNoWebResultsHint,
                                   textAlign: TextAlign.center,
                                   style: TextStyle(fontFamily: 'Rubik', fontSize: 13.sp, color: context.colors.textSecondary),
                                 ),
@@ -1401,6 +1433,7 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
                           setState(() {
                             _searchResults = [];
                             _emptySearchQuery = null;
+                            _webSearchError = false;
                           });
                           _onSearchChanged(v);
                         },
