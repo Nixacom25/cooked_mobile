@@ -186,7 +186,7 @@ class CookbookCover extends StatelessWidget {
   Widget _buildImage(String? imageUrl) {
     if (imageUrl == null || imageUrl.isEmpty) {
       return Image.asset(
-        'assets/images/recipes.png',
+        'assets/images/recipes.webp',
         width: double.infinity,
         height: double.infinity,
         fit: BoxFit.cover,
@@ -199,7 +199,7 @@ class CookbookCover extends StatelessWidget {
       height: double.infinity,
       fit: BoxFit.cover,
       errorWidget: (_, __, ___) => Image.asset(
-        'assets/images/recipes.png',
+        'assets/images/recipes.webp',
         width: double.infinity,
         height: double.infinity,
         fit: BoxFit.cover,

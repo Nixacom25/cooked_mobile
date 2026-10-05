@@ -99,7 +99,7 @@ class _DinnerFiguredOutStepState extends State<DinnerFiguredOutStep> with Single
                       // alone would show its own light background in dark mode.
                       Theme.of(context).brightness == Brightness.dark
                           ? 'assets/onboarding/step2.jpeg'
-                          : 'assets/onboarding/step2.png',
+                          : 'assets/onboarding/step2.webp',
                       width: double.infinity,
                       height: double.infinity,
                       fit: BoxFit.cover,
@@ -107,7 +107,7 @@ class _DinnerFiguredOutStepState extends State<DinnerFiguredOutStep> with Single
                       errorBuilder: (context, error, stackTrace) => Container(
                         color: context.colors.pageBackground,
                         alignment: Alignment.center,
-                        child: const Text('assets/onboarding/step2.png missing'))))))),
+                        child: const Text('assets/onboarding/step2.webp missing'))))))),
             // Overlay Content (Title, Subtitle & Button)
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,

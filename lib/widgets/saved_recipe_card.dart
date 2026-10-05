@@ -371,7 +371,7 @@ class _SavedRecipeCardState extends State<SavedRecipeCard> {
   }
 
   Widget _buildThumbnail(String? image) {
-    const fallback = 'assets/images/recipes.png';
+    const fallback = 'assets/images/recipes.webp';
     if (image == null || image.isEmpty || image == 'null') {
       return Image.asset(fallback, fit: BoxFit.cover);
     }

@@ -302,7 +302,7 @@ class RecipeCard extends StatelessWidget {
     final cleanPath = path.replaceAll('"', '').trim();
 
     if (cleanPath.isEmpty || cleanPath == 'null') {
-      return Image.asset('assets/images/recipes.png', fit: BoxFit.cover);
+      return Image.asset('assets/images/recipes.webp', fit: BoxFit.cover);
     }
 
     if (cleanPath.startsWith('http')) {
@@ -310,7 +310,7 @@ class RecipeCard extends StatelessWidget {
         imageUrl: cleanPath,
         fit: BoxFit.cover,
         errorWidget: (_, __, ___) =>
-            Image.asset('assets/images/recipes.png', fit: BoxFit.cover),
+            Image.asset('assets/images/recipes.webp', fit: BoxFit.cover),
         placeholder: (_, __) => const SkeletonBox(borderRadius: BorderRadius.zero),
         fadeInDuration: Motion.imageFade,
         fadeOutDuration: Duration.zero,
@@ -323,7 +323,7 @@ class RecipeCard extends StatelessWidget {
       cleanPath,
       fit: BoxFit.cover,
       errorBuilder: (_, __, ___) =>
-          Image.asset('assets/images/recipes.png', fit: BoxFit.cover),
+          Image.asset('assets/images/recipes.webp', fit: BoxFit.cover),
     );
   }
 }

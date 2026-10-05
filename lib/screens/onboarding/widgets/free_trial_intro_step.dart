@@ -150,7 +150,7 @@ class _FreeTrialIntroStepState extends State<FreeTrialIntroStep> with SingleTick
                             // alone would show its own light background in dark mode.
                             Theme.of(context).brightness == Brightness.dark
                                 ? 'assets/onboarding/step25.jpeg'
-                                : 'assets/onboarding/step25.png',
+                                : 'assets/onboarding/step25.webp',
                             fit: BoxFit.cover,
                             alignment: Alignment.center,
                             errorBuilder: (context, error, stackTrace) => Container(

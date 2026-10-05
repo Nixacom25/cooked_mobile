@@ -299,7 +299,7 @@ class CookbookCardTile extends StatelessWidget {
                         imageUrl: images[idx],
                         fit: BoxFit.cover,
                         errorWidget: (_, __, ___) => Image.asset(
-                          'assets/images/recipes.png',
+                          'assets/images/recipes.webp',
                           fit: BoxFit.cover,
                         ),
                         placeholder: (_, __) => const SkeletonBox(borderRadius: BorderRadius.zero),

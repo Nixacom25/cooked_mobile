@@ -84,7 +84,7 @@ class RedHeaderBackground extends StatelessWidget {
                 },
                 blendMode: BlendMode.dstIn,
                 child: Image.asset(
-                  'assets/images/fond_page2.png',
+                  'assets/images/fond_page2.webp',
                   fit: BoxFit.cover,
                   width: double.infinity,
                   height: double.infinity,

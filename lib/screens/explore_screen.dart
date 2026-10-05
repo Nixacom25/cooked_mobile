@@ -656,7 +656,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                         fit: BoxFit.cover,
                         memCacheWidth: 500,
                         errorWidget: (_, __, ___) => Image.asset(
-                          'assets/images/explore_autumn.png',
+                          'assets/images/explore_autumn.webp',
                           fit: BoxFit.cover,
                         ),
                         placeholder: (_, __) =>

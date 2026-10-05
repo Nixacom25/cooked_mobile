@@ -40,7 +40,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
         children: [
           // Background image welcome2.png
           Image.asset(
-            'assets/images/welcome2.png',
+            'assets/images/welcome2.webp',
             fit: BoxFit.cover,
             width: double.infinity,
             height: double.infinity,

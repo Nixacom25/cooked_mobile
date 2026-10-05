@@ -129,7 +129,7 @@ class _ProfileSignupStepState extends State<ProfileSignupStep>
                             // alone would show its own light background in dark mode.
                             Theme.of(context).brightness == Brightness.dark
                                 ? 'assets/onboarding/step24.jpeg'
-                                : 'assets/onboarding/step24.png',
+                                : 'assets/onboarding/step24.webp',
                             fit: BoxFit.cover,
                             alignment: Alignment.topCenter,
                             errorBuilder: (context, error, stackTrace) => Container(

@@ -134,8 +134,8 @@ class _TrialStepState extends State<TrialStep> with SingleTickerProviderStateMix
                           // illustration (dark backdrop, light text) - the png
                           // alone would show its own light background in dark mode.
                           isDark
-                              ? 'assets/onboarding/step27.jpeg'
-                              : 'assets/onboarding/step27.png',
+                              ? 'assets/onboarding/step27.webp'
+                              : 'assets/onboarding/step27_alt.webp',
                           fit: BoxFit.cover,
                           alignment: Alignment.center,
                           errorBuilder: (context, error, stackTrace) => Container(

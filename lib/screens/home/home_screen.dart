@@ -229,7 +229,7 @@ class _HomeScreenState extends State<HomeScreen>
   void didChangeDependencies() {
     super.didChangeDependencies();
     routeObserver.subscribe(this, ModalRoute.of(context)!);
-    precacheImage(const AssetImage('assets/images/home.png'), context);
+    precacheImage(const AssetImage('assets/images/home.webp'), context);
   }
 
   @override
@@ -363,7 +363,7 @@ class _HomeScreenState extends State<HomeScreen>
                           builder: (_) => Scaffold(
                             body: ScanAnimationOverlay(
                               showTestControls: true,
-                              imagePath: 'assets/images/scan.png',
+                              imagePath: 'assets/images/scan.webp',
                               detectedIngredients: [
                                 RecipeIngredient(
                                   id: 'i1',
@@ -1716,7 +1716,7 @@ class _CircularRecipeAvatarRow extends StatelessWidget {
   }
 
   Widget _buildThumbnail(BuildContext context, String? image) {
-    const fallback = 'assets/images/recipes.png';
+    const fallback = 'assets/images/recipes.webp';
     if (image == null || image.isEmpty || image == 'null') {
       return Image.asset(fallback, fit: BoxFit.cover);
     }
@@ -1796,13 +1796,13 @@ class _EmptySavedRecipesCardState extends State<_EmptySavedRecipesCard> {
                     ),
                     SizedBox(width: gap),
                     _buildCollageThumb(
-                      'assets/images/saved2.png',
+                      'assets/images/saved2.webp',
                       width: itemW,
                       height: 140.h,
                     ),
                     SizedBox(width: gap),
                     _buildCollageThumb(
-                      'assets/images/saved3.png',
+                      'assets/images/saved3.webp',
                       width: itemW,
                       height: 140.h,
                     ),

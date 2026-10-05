@@ -45,7 +45,7 @@ class RecentImportTile extends StatelessWidget {
 
   Widget _buildImage(BuildContext context, String path) {
     if (path.isEmpty) {
-      return Image.asset('assets/images/recipes.png', fit: BoxFit.cover);
+      return Image.asset('assets/images/recipes.webp', fit: BoxFit.cover);
     }
     if (path.startsWith('http')) {
       return CachedNetworkImage(
@@ -56,7 +56,7 @@ class RecentImportTile extends StatelessWidget {
         fadeOutDuration: Duration.zero,
         fadeInCurve: Motion.enter,
         errorWidget: (_, __, ___) =>
-            Image.asset('assets/images/recipes.png', fit: BoxFit.cover),
+            Image.asset('assets/images/recipes.webp', fit: BoxFit.cover),
       );
     }
     return Image.asset(path, fit: BoxFit.cover);

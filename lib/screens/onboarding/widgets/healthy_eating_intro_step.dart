@@ -61,8 +61,8 @@ class HealthyEatingIntroStep extends StatelessWidget {
                   // illustration (dark backdrop, light text) - the png
                   // alone would show its own light background in dark mode.
                   Theme.of(context).brightness == Brightness.dark
-                      ? 'assets/onboarding/step17.jpeg'
-                      : 'assets/onboarding/step17.png',
+                      ? 'assets/onboarding/step17.webp'
+                      : 'assets/onboarding/step17_alt.webp',
                   width: double.infinity,
                   fit: BoxFit.fitWidth,
                   alignment: Alignment.topCenter,
@@ -70,7 +70,7 @@ class HealthyEatingIntroStep extends StatelessWidget {
                     height: 300.h,
                     color: context.colors.pageBackground,
                     alignment: Alignment.center,
-                    child: const Text('assets/onboarding/step17.png missing'))),
+                    child: const Text('assets/onboarding/step17_alt.webp missing'))),
                 SizedBox(height: 20.h),
               ]))),
         Padding(

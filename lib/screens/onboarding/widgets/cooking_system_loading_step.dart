@@ -127,7 +127,7 @@ class _CookingSystemLoadingStepState extends State<CookingSystemLoadingStep> wit
               // would show its own light background in dark mode.
               Theme.of(context).brightness == Brightness.dark
                   ? 'assets/onboarding/step9.jpeg'
-                  : 'assets/onboarding/step9.png',
+                  : 'assets/onboarding/step9.webp',
               width: double.infinity,
               height: double.infinity,
               fit: BoxFit.cover,

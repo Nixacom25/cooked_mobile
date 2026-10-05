@@ -113,8 +113,8 @@ class _TotalSavingsStepState extends State<TotalSavingsStep> with SingleTickerPr
                     // illustration (dark backdrop, light text) - the png
                     // alone would show its own light background in dark mode.
                     Theme.of(context).brightness == Brightness.dark
-                        ? 'assets/onboarding/step8.jpeg'
-                        : 'assets/onboarding/step8.png',
+                        ? 'assets/onboarding/step8.webp'
+                        : 'assets/onboarding/step8_alt.webp',
                     width: double.infinity,
                     height: double.infinity,
                     fit: BoxFit.cover,

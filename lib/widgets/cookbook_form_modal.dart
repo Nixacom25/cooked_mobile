@@ -1067,7 +1067,7 @@ class _InlineRecipePickerState extends State<_InlineRecipePicker> {
                                           imageUrl: r.image!,
                                           fit: BoxFit.cover,
                                           errorWidget: (_, __, ___) => Image.asset(
-                                            'assets/images/recipes.png',
+                                            'assets/images/recipes.webp',
                                             fit: BoxFit.cover,
                                           ),
                                           placeholder: (_, __) => const SkeletonBox(borderRadius: BorderRadius.zero),
@@ -1079,12 +1079,12 @@ class _InlineRecipePickerState extends State<_InlineRecipePicker> {
                                           r.image!,
                                           fit: BoxFit.cover,
                                           errorBuilder: (_, __, ___) => Image.asset(
-                                            'assets/images/recipes.png',
+                                            'assets/images/recipes.webp',
                                             fit: BoxFit.cover,
                                           ),
                                         ))
                                   : Image.asset(
-                                      'assets/images/recipes.png',
+                                      'assets/images/recipes.webp',
                                       fit: BoxFit.cover,
                                     ),
                             ),

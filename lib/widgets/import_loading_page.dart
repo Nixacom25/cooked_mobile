@@ -533,7 +533,7 @@ class _RecipeCardMock extends StatelessWidget {
                   shimmer: shimmer,
                   active: !populating,
                   child: Image.asset(
-                    'assets/images/scan.png',
+                    'assets/images/scan.webp',
                     width: 82.w,
                     height: 82.w,
                     fit: BoxFit.cover,

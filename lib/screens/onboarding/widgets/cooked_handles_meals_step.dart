@@ -57,8 +57,8 @@ class CookedHandlesMealsStep extends StatelessWidget {
                   // illustration (dark backdrop, light text) - the png
                   // alone would show its own light background in dark mode.
                   Theme.of(context).brightness == Brightness.dark
-                      ? 'assets/onboarding/step19.jpeg'
-                      : 'assets/onboarding/step19.png',
+                      ? 'assets/onboarding/step19.webp'
+                      : 'assets/onboarding/step19_alt.webp',
                   width: double.infinity,
                   fit: BoxFit.fitWidth,
                   alignment: Alignment.topCenter,
@@ -66,7 +66,7 @@ class CookedHandlesMealsStep extends StatelessWidget {
                     height: 300.h,
                     color: context.colors.pageBackground,
                     alignment: Alignment.center,
-                    child: const Text('assets/onboarding/step19.png missing'))),
+                    child: const Text('assets/onboarding/step19_alt.webp missing'))),
                 SizedBox(height: 20.h),
               ]))),
         Padding(

@@ -99,7 +99,7 @@ class _MealsStepState extends State<MealsStep> with SingleTickerProviderStateMix
                       // alone would show its own light background in dark mode.
                       Theme.of(context).brightness == Brightness.dark
                           ? 'assets/onboarding/step1.jpeg'
-                          : 'assets/onboarding/step1.png',
+                          : 'assets/onboarding/step1.webp',
                       width: double.infinity,
                       height: double.infinity,
                       fit: BoxFit.cover,
@@ -107,7 +107,7 @@ class _MealsStepState extends State<MealsStep> with SingleTickerProviderStateMix
                       errorBuilder: (context, error, stackTrace) => Container(
                         color: context.colors.pageBackground,
                         alignment: Alignment.center,
-                        child: const Text('assets/onboarding/step1.png missing'))))))),
+                        child: const Text('assets/onboarding/step1.webp missing'))))))),
             // Overlay Content (Title, Subtitle & Button)
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,

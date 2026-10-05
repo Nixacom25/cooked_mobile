@@ -114,7 +114,7 @@ class _SplashToWelcomeState extends State<SplashToWelcome> with TickerProviderSt
               fit: StackFit.expand,
               children: [
                 // Welcome photo under the splash, revealed as the splash fades.
-                Image.asset('assets/images/welcome2.png', fit: BoxFit.cover),
+                Image.asset('assets/images/welcome2.webp', fit: BoxFit.cover),
                 IgnorePointer(ignoring: _started, child: Opacity(opacity: 1 - bg, child: splash)),
                 if (_started) ...[
                   // The logo (same image as Welcome's) glides up and shrinks

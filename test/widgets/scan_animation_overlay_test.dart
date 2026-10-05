@@ -51,7 +51,7 @@ void main() {
               home: Scaffold(
                 body: ScanAnimationOverlay(
                   showTestControls: true,
-                  imagePath: 'assets/images/scan.png',
+                  imagePath: 'assets/images/scan.webp',
                   onAnimationComplete: () {
                     completed = true;
                   },

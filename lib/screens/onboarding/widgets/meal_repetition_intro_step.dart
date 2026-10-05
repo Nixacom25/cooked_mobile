@@ -51,8 +51,8 @@ class MealRepetitionIntroStep extends StatelessWidget {
                   // illustration (dark backdrop, light text) - the png
                   // alone would show its own light background in dark mode.
                   Theme.of(context).brightness == Brightness.dark
-                      ? 'assets/onboarding/step18.jpeg'
-                      : 'assets/onboarding/step18.png',
+                      ? 'assets/onboarding/step18.webp'
+                      : 'assets/onboarding/step18_alt.webp',
                   width: double.infinity,
                   fit: BoxFit.fitWidth,
                   alignment: Alignment.topCenter,
@@ -60,7 +60,7 @@ class MealRepetitionIntroStep extends StatelessWidget {
                     height: 300.h,
                     color: context.colors.pageBackground,
                     alignment: Alignment.center,
-                    child: const Text('assets/onboarding/step18.png missing'))),
+                    child: const Text('assets/onboarding/step18_alt.webp missing'))),
                 SizedBox(height: 20.h),
               ]))),
         Padding(

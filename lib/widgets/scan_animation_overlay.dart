@@ -49,7 +49,7 @@ class _ScanAnimationOverlayState extends State<ScanAnimationOverlay> {
   bool _isDark = false;
   bool _dependenciesResolved = false;
 
-  static const _defaultScanImage = 'assets/images/scan.png';
+  static const _defaultScanImage = 'assets/images/scan.webp';
 
   @override
   void didChangeDependencies() {

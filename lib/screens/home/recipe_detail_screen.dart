@@ -1025,7 +1025,7 @@ class _RecipeDetailHeaderDelegate extends SliverPersistentHeaderDelegate {
     const fit = BoxFit.cover;
     if (path.isEmpty) {
       return Image.asset(
-        'assets/images/recipes.png',
+        'assets/images/recipes.webp',
         width: width,
         height: height,
         fit: fit,
@@ -1038,7 +1038,7 @@ class _RecipeDetailHeaderDelegate extends SliverPersistentHeaderDelegate {
         height: height,
         fit: fit,
         errorWidget: (_, __, ___) => Image.asset(
-          'assets/images/recipes.png',
+          'assets/images/recipes.webp',
           width: width,
           height: height,
           fit: fit,
@@ -1055,7 +1055,7 @@ class _RecipeDetailHeaderDelegate extends SliverPersistentHeaderDelegate {
       height: height,
       fit: fit,
       errorBuilder: (_, __, ___) => Image.asset(
-        'assets/images/recipes.png',
+        'assets/images/recipes.webp',
         width: width,
         height: height,
         fit: fit,

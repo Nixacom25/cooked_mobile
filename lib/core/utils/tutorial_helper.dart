@@ -302,7 +302,7 @@ class _ScanOnboardingModalState extends State<ScanOnboardingModal> {
   List<Map<String, dynamic>> get _steps => [
     {
       'title': context.l10n.tutScanBestTitle,
-      'image': 'assets/images/scan.png',
+      'image': 'assets/images/scan.webp',
       'items': [
         {
           'svg': 'assets/icones/phones.svg',
@@ -342,7 +342,7 @@ class _ScanOnboardingModalState extends State<ScanOnboardingModal> {
     },
     {
       'title': context.l10n.tutScanReadyTitle,
-      'image': 'assets/images/scan.png',
+      'image': 'assets/images/scan.webp',
       'items': [
         {
           'svg': 'assets/icones/scan1.svg',
@@ -663,7 +663,7 @@ class _ImportOnboardingModalState extends State<ImportOnboardingModal> {
             right: 0,
             bottom: 260.h,
             child: Image.asset(
-              'assets/images/scan.png',
+              'assets/images/scan.webp',
               fit: BoxFit.cover,
               width: double.infinity,
               height: double.infinity,

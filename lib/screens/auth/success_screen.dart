@@ -38,7 +38,7 @@ class SuccessScreen extends StatelessWidget {
 
               // Center Illustration: success1.png
               Image.asset(
-                'assets/images/success1.png',
+                'assets/images/success1.webp',
                 width: 280.w,
                 fit: BoxFit.contain,
               ),

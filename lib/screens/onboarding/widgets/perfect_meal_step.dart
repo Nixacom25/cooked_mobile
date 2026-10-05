@@ -135,7 +135,7 @@ class _PerfectMealStepState extends State<PerfectMealStep> with SingleTickerProv
                               // background in dark mode.
                               Theme.of(context).brightness == Brightness.dark
                                   ? 'assets/onboarding/step28.jpeg'
-                                  : 'assets/onboarding/step28.png',
+                                  : 'assets/onboarding/step28.webp',
                               width: MediaQuery.of(context).size.width,
                               fit: BoxFit.contain,
                               alignment: Alignment.topCenter,

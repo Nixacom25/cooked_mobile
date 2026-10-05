@@ -109,7 +109,7 @@ class _SavingsStepState extends State<SavingsStep> with SingleTickerProviderStat
                       // alone would show its own light background in dark mode.
                       Theme.of(context).brightness == Brightness.dark
                           ? 'assets/onboarding/step4.jpeg'
-                          : 'assets/onboarding/step4.png',
+                          : 'assets/onboarding/step4.webp',
                       width: double.infinity,
                       height: double.infinity,
                       fit: BoxFit.cover,
@@ -117,7 +117,7 @@ class _SavingsStepState extends State<SavingsStep> with SingleTickerProviderStat
                       errorBuilder: (context, error, stackTrace) => Container(
                         color: context.colors.pageBackground,
                         alignment: Alignment.center,
-                        child: const Text('assets/onboarding/step4.png missing'))))))),
+                        child: const Text('assets/onboarding/step4.webp missing'))))))),
 
             // Content Overlay
             Column(
