@@ -148,8 +148,10 @@ class _LoginScreenState extends State<LoginScreen> {
       await UserService.instance.getCurrentUser();
     } catch (e) {
       // Signed in, but the profile couldn't be loaded (network/server).
-      // Say what actually happened and stay here so the user can retry -
-      // don't pretend the profile is incomplete.
+      // Close the half-open session (token without profile) so no other
+      // path - deep link, notification - can open Home without the user's
+      // data, then say what happened and stay here so the user can retry.
+      await AuthService.instance.logout();
       if (mounted) {
         IosToast.show(
           context,

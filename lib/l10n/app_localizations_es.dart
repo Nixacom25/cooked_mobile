@@ -2524,6 +2524,15 @@ class AppLocalizationsEs extends AppLocalizations {
   String get importSearchRecipesHint => 'Buscar recetas...';
 
   @override
+  String importNoWebResults(String query) {
+    return 'No se encontraron recetas para “$query”';
+  }
+
+  @override
+  String get importNoWebResultsHint =>
+      'Prueba con otro plato o una búsqueda más simple, como “pasta” o “pollo al curry”.';
+
+  @override
   String get importSearchResults => 'Resultados';
 
   @override

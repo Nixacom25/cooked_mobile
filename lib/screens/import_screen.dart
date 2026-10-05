@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -70,6 +71,8 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
   Timer? _pullingStageTimer;
   bool _isSearching = false;
   List<Map<String, dynamic>> _searchResults = [];
+  /// Query whose web search came back empty (shows the empty state).
+  String? _emptySearchQuery;
   int _webSearchRequestId = 0;
   int _suggestionRequestId = 0;
 
@@ -205,10 +208,10 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
           return _RecipeWebPreviewModal(
             url: normalizedUrl,
             title: title,
-            onImport: () {
+            onImport: (pageUrl, pageHtml) {
               restoreSearchResults = false;
               Navigator.pop(modalContext);
-              _importFromUrl(normalizedUrl);
+              _importFromUrl(pageUrl ?? normalizedUrl, pageHtml: pageHtml);
             },
           );
         },
@@ -237,7 +240,9 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
     });
   }
 
-  Future<void> _importFromUrl(String rawUrl) async {
+  /// [pageHtml]: recipe data captured from the preview WebView, used by the
+  /// backend for sites that refuse server-side fetches (e.g. Allrecipes).
+  Future<void> _importFromUrl(String rawUrl, {String? pageHtml}) async {
     if (rawUrl.isEmpty) return;
 
     var trimmedUrl = rawUrl.trim();
@@ -323,7 +328,7 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
           _importStage.value = ImportStage.pulling;
         }
       });
-      final recipe = await RecipeService.instance.importRecipeFromUrl(url);
+      final recipe = await RecipeService.instance.importRecipeFromUrl(url, pageHtml: pageHtml);
       _pullingStageTimer?.cancel();
 
       // A 200 response with nothing usable extracted (no ingredients/steps,
@@ -395,6 +400,7 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
     setState(() {
       _isSearching = true;
       _searchResults = [];
+      _emptySearchQuery = null;
     });
     _importSearchOverlayEntry?.markNeedsBuild();
     try {
@@ -403,6 +409,7 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
         setState(() {
           _searchResults = res;
           _isSearching = false;
+          _emptySearchQuery = res.isEmpty ? query : null;
         });
         _importSearchOverlayEntry?.markNeedsBuild();
       }
@@ -574,6 +581,7 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
             _isSearchingModal = false;
             _overlaySearchCtrl.clear();
             _searchResults = [];
+            _emptySearchQuery = null;
           });
           _removeImportSearchOverlay();
         }
@@ -1319,6 +1327,27 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
                                 _importSearchOverlayEntry?.markNeedsBuild();
                               }),
                             ),
+                          )
+                        else if (_emptySearchQuery != null)
+                          Padding(
+                            padding: EdgeInsets.fromLTRB(32.w, 48.h, 32.w, 0),
+                            child: Column(
+                              children: [
+                                Icon(Icons.search_off_rounded, size: 40.sp, color: context.colors.textSecondary),
+                                SizedBox(height: 12.h),
+                                Text(
+                                  context.l10n.importNoWebResults(_emptySearchQuery!),
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(fontFamily: 'Rubik', fontWeight: FontWeight.w600, fontSize: 15.sp, color: context.colors.textPrimary),
+                                ),
+                                SizedBox(height: 6.h),
+                                Text(
+                                  context.l10n.importNoWebResultsHint,
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(fontFamily: 'Rubik', fontSize: 13.sp, color: context.colors.textSecondary),
+                                ),
+                              ],
+                            ),
                           ),
                       ],
                     ),
@@ -1335,11 +1364,23 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
                     if (val > 0.9)
                       FadeTransition(
                         opacity: _importSearchAnimation,
-                        child: GestureDetector(
-                          onTap: () => _toggleSearchModal(false),
-                          child: Padding(
-                            padding: EdgeInsets.only(right: 12.w),
-                            child: Icon(Icons.close, color: Colors.black87, size: 22.sp),
+                        child: Semantics(
+                          button: true,
+                          label: MaterialLocalizations.of(context).closeButtonTooltip,
+                          child: GestureDetector(
+                            behavior: HitTestBehavior.opaque,
+                            onTap: () {
+                              HapticFeedback.selectionClick();
+                              FocusManager.instance.primaryFocus?.unfocus();
+                              _toggleSearchModal(false);
+                            },
+                            child: SizedBox(
+                              width: 44.w,
+                              height: 44.w,
+                              child: Center(
+                                child: Icon(Icons.close_rounded, color: context.colors.textPrimary, size: 24.sp),
+                              ),
+                            ),
                           ),
                         ),
                       ),
@@ -1357,7 +1398,10 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
                           _submitWebSearch(v);
                         },
                         onChanged: (v) {
-                          setState(() => _searchResults = []);
+                          setState(() {
+                            _searchResults = [];
+                            _emptySearchQuery = null;
+                          });
                           _onSearchChanged(v);
                         },
                       ),
@@ -1626,7 +1670,10 @@ class _SearchResultTile extends StatelessWidget {
 class _RecipeWebPreviewModal extends StatefulWidget {
   final String url;
   final String title;
-  final VoidCallback onImport;
+
+  /// Called with the page currently shown (the user may have navigated) and
+  /// its recipe markup (null when it couldn't be read).
+  final void Function(String? pageUrl, String? pageHtml) onImport;
 
   const _RecipeWebPreviewModal({
     required this.url,
@@ -1641,6 +1688,43 @@ class _RecipeWebPreviewModal extends StatefulWidget {
 class _RecipeWebPreviewModalState extends State<_RecipeWebPreviewModal> {
   late final WebViewController _controller;
   bool _isLoading = true;
+  bool _capturing = false;
+
+  /// Only the recipe-relevant parts of the page: schema.org JSON-LD blocks and
+  /// the title/image meta tags. Keeps the request small.
+  static const _captureJs = '''
+(function () {
+  var parts = [];
+  document.querySelectorAll('script[type="application/ld+json"]').forEach(function (s) {
+    parts.push('<script type="application/ld+json">' + s.textContent + '</' + 'script>');
+  });
+  document.querySelectorAll('meta[property^="og:"], meta[name^="twitter:"]').forEach(function (m) {
+    parts.push(m.outerHTML);
+  });
+  return JSON.stringify({ url: location.href, html: '<html><head><title>' + document.title.replace(/</g, '') + '</title>' + parts.join('') + '</head><body></body></html>' });
+})();
+''';
+
+  Future<void> _captureAndImport() async {
+    if (_capturing) return;
+    setState(() => _capturing = true);
+    String? pageUrl;
+    String? pageHtml;
+    try {
+      final raw = await _controller.runJavaScriptReturningResult(_captureJs).timeout(const Duration(seconds: 3));
+      // iOS returns the string itself, Android a JSON-quoted string.
+      var text = raw.toString();
+      if (text.startsWith('"')) text = jsonDecode(text) as String;
+      final data = jsonDecode(text) as Map<String, dynamic>;
+      pageUrl = data['url'] as String?;
+      final html = data['html'] as String?;
+      if (html != null && html.contains('ld+json')) pageHtml = html;
+    } catch (_) {
+      // Fall back to a plain link import.
+    }
+    if (!mounted) return;
+    widget.onImport(pageUrl, pageHtml);
+  }
 
   @override
   void initState() {
@@ -1748,7 +1832,8 @@ class _RecipeWebPreviewModalState extends State<_RecipeWebPreviewModal> {
                 child: RedButton(
                   label: context.l10n.importToCooked,
                   loadingLabel: context.l10n.importImporting,
-                  onTap: widget.onImport,
+                  isLoading: _capturing,
+                  onTap: _captureAndImport,
                   height: 52.h,
                   fontSize: 16.sp,
                 ),

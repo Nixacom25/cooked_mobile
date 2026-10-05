@@ -771,6 +771,8 @@
   "importRecommended": "Recomendado",
   "importSuggestions": "Sugerencias",
   "importSearchRecipesHint": "Buscar recetas...",
+  "importNoWebResults": "No se encontraron recetas para “{query}”",
+  "importNoWebResultsHint": "Prueba con otro plato o una búsqueda más simple, como “pasta” o “pollo al curry”.",
   "importSearchResults": "Resultados",
   "commonClear": "Borrar",
   "importViewThisRecipe": "Ver esta receta",

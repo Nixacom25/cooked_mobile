@@ -4726,6 +4726,18 @@ abstract class AppLocalizations {
   /// **'Search recipes...'**
   String get importSearchRecipesHint;
 
+  /// No description provided for @importNoWebResults.
+  ///
+  /// In en, this message translates to:
+  /// **'No recipes found for “{query}”'**
+  String importNoWebResults(String query);
+
+  /// No description provided for @importNoWebResultsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Try another dish name or a simpler search, like “pasta” or “chicken curry”.'**
+  String get importNoWebResultsHint;
+
   /// No description provided for @importSearchResults.
   ///
   /// In en, this message translates to:

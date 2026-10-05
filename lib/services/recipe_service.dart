@@ -808,12 +808,14 @@ class RecipeService {
     return [];
   }
 
-  Future<Recipe> importRecipeFromUrl(String url) async {
+  /// [pageHtml]: recipe markup captured from the in-app preview, so sites
+  /// that block server fetches (e.g. Allrecipes) can still be imported.
+  Future<Recipe> importRecipeFromUrl(String url, {String? pageHtml}) async {
     final endpoint = Uri.parse('${ApiConfig.baseUrl}/recipes/import');
     final response = await http.post(
       endpoint,
       headers: await _getHeaders(),
-      body: jsonEncode({'url': url}),
+      body: jsonEncode({'url': url, if (pageHtml != null) 'html': pageHtml}),
     );
 
     if (response.statusCode == 200) {

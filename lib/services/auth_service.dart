@@ -25,6 +25,9 @@ class AuthService {
 
   bool get isLoggedIn => _token != null && _token!.isNotEmpty;
 
+  /// Signed in AND the user's profile is loaded (see [ensureSession]).
+  bool get hasSession => isLoggedIn && UserService.instance.currentUserNotifier.value != null;
+
   void _clearAllServiceData() {
     RecipeService.instance.clearData();
     CookbookService.instance.clearData();
@@ -537,19 +540,39 @@ class AuthService {
       final url = Uri.parse('${ApiConfig.baseUrl}/auth/logout');
       try {
         await http.post(url, headers: ApiConfig.authHeaders(token)).timeout(const Duration(seconds: 5));
-      await _googleSignIn.signOut();
-    
-    // Global reset of all local services data
+      } catch (_) {
+        // Server unreachable: the local session is still cleared below.
+      }
+      try {
+        await _googleSignIn.signOut();
+      } catch (_) {}
+    }
+
+    // Always reset local state, even when the server call failed - otherwise
+    // the in-memory token keeps the app "signed in" with no profile loaded.
     _clearAllServiceData();
     _token = null;
-    
-      } catch (e) {
-      }
-    }
-    
+
     // Deep cleanup: Delete all local data to avoid leaks
     final prefs = await SharedPreferences.getInstance();
     await prefs.clear();
+  }
+
+  /// A usable session = a token AND the signed-in user's profile loaded from
+  /// the backend. Loads the profile when only the token is known; if that
+  /// fails the half-open session is closed, so no screen can render without
+  /// (or with someone else's) user data.
+  Future<bool> ensureSession() async {
+    final token = await getToken();
+    if (token == null || token.isEmpty) return false;
+    if (UserService.instance.currentUserNotifier.value != null) return true;
+    try {
+      await UserService.instance.getCurrentUser();
+      return true;
+    } catch (_) {
+      await logout();
+      return false;
+    }
   }
 
   Future<void> deleteAccount() async {

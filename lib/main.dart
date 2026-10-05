@@ -275,7 +275,7 @@ class _CookedAppState extends State<CookedApp> with WidgetsBindingObserver {
     final data = PushNotificationService.instance.tappedNotificationDataNotifier.value;
     if (data == null) return;
 
-    if (!AuthService.instance.isLoggedIn) return;
+    if (!AuthService.instance.hasSession) return;
 
     final state = appNavigatorKey.currentState;
     if (state == null) return;
@@ -325,7 +325,7 @@ class _CookedAppState extends State<CookedApp> with WidgetsBindingObserver {
     if (uri != null && uri.host.endsWith('cookedapp.com') &&
         (uri.path == '/redeem' || uri.path == '/gift')) {
       final state = appNavigatorKey.currentState;
-      if (state != null && AuthService.instance.isLoggedIn) {
+      if (state != null && AuthService.instance.hasSession) {
         if (uri.path == '/redeem') {
           state.pushNamed(AppRoutes.redeemGift,
               arguments: {'code': uri.queryParameters['code']});
@@ -340,7 +340,7 @@ class _CookedAppState extends State<CookedApp> with WidgetsBindingObserver {
     SharingService.instance.sharedTextNotifier.value = url;
   }
 
-  void _onSharedTextReceived() {
+  Future<void> _onSharedTextReceived() async {
     final text = SharingService.instance.sharedTextNotifier.value;
     
     if (text != null && text.isNotEmpty) {
@@ -350,7 +350,9 @@ class _CookedAppState extends State<CookedApp> with WidgetsBindingObserver {
         // Heavy impact to show we caught it
         HapticFeedback.heavyImpact();
         
-        final isLoggedIn = AuthService.instance.isLoggedIn;
+        // Token AND profile loaded - a token alone (e.g. right after a
+        // sign-in whose profile request failed) must not open Home.
+        final isLoggedIn = await AuthService.instance.ensureSession();
         
         if (!isLoggedIn) {
           // We don't clear it from SharingService, so it stays available
@@ -476,7 +478,9 @@ class _CookedAppState extends State<CookedApp> with WidgetsBindingObserver {
             ],
             initialRoute: AppRoutes.splash,
             onGenerateRoute: (settings) {
-              final isLoggedIn = AuthService.instance.isLoggedIn;
+              // Profile must be loaded too: a bare token (profile request
+              // refused) would otherwise turn Welcome/Login into a "Chef" Home.
+              final isLoggedIn = AuthService.instance.hasSession;
               final name = settings.name;
 
               // 🛡️ Navigation Guard

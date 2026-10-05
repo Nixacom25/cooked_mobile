@@ -21,6 +21,7 @@ import '../../widgets/red_header_background.dart';
 import '../../widgets/saved_recipe_card.dart';
 import '../../widgets/recipe_shortcut_card.dart';
 import '../../widgets/scroll_blur_header_overlay.dart';
+import '../../services/auth_service.dart';
 import '../../services/recipe_service.dart';
 import '../../services/grocery_service.dart';
 import '../../models/grocery_item.dart';
@@ -85,6 +86,15 @@ class _HomeScreenState extends State<HomeScreen>
   final GlobalKey _firstCookbookKey = GlobalKey();
   final GlobalKey<GroceryScreenState> _groceryScreenKey = GlobalKey();
 
+  /// Home only renders for a signed-in user whose profile is loaded; anything
+  /// else (expired token, profile request refused) goes back to Welcome
+  /// instead of showing a generic "Chef" home.
+  Future<void> _verifySession() async {
+    if (await AuthService.instance.ensureSession()) return;
+    if (!mounted) return;
+    Navigator.of(context).pushNamedAndRemoveUntil(AppRoutes.welcome, (route) => false);
+  }
+
   @override
   void initState() {
     super.initState();
@@ -95,6 +105,7 @@ class _HomeScreenState extends State<HomeScreen>
     _scanActiveNotifier.value = _currentTab == 2;
     _importActiveNotifier.value = _currentTab == 4;
     HomeScreen.tabRequestNotifier.addListener(_handleTabRequest);
+    _verifySession();
 
     _tabWidgets = [
       _HomeTab(

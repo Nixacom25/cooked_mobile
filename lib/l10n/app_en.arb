@@ -985,6 +985,13 @@
   "importRecommended": "Recommended",
   "importSuggestions": "Suggestions",
   "importSearchRecipesHint": "Search recipes...",
+  "importNoWebResults": "No recipes found for “{query}”",
+  "@importNoWebResults": {
+    "placeholders": {
+      "query": { "type": "String" }
+    }
+  },
+  "importNoWebResultsHint": "Try another dish name or a simpler search, like “pasta” or “chicken curry”.",
   "importSearchResults": "Search Results",
   "commonClear": "Clear",
   "importViewThisRecipe": "View this recipe",
