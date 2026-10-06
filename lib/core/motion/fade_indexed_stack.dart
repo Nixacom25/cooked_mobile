@@ -49,10 +49,16 @@ class _FadeIndexedStackState extends State<FadeIndexedStack>
       children: [
         // Same widget type for every child, whether active or not, so
         // switching tabs never remounts a subtree.
+        // IndexedStack keeps hidden children's animations running
+        // (maintainAnimation). TickerMode pauses them, so looping animations
+        // of off-screen tabs no longer render frames non-stop.
         for (int i = 0; i < widget.children.length; i++)
-          FadeTransition(
-            opacity: i == widget.index ? _fade : kAlwaysCompleteAnimation,
-            child: widget.children[i],
+          TickerMode(
+            enabled: i == widget.index,
+            child: FadeTransition(
+              opacity: i == widget.index ? _fade : kAlwaysCompleteAnimation,
+              child: widget.children[i],
+            ),
           ),
       ],
     );

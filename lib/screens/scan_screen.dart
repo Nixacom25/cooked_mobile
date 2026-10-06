@@ -50,7 +50,12 @@ class ScanScreen extends StatefulWidget {
   State<ScanScreen> createState() => _ScanScreenState();
 }
 
-class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
+class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin, WidgetsBindingObserver {
+  /// Releases the camera a little after leaving the Scan tab (quick back-and-
+  /// forth stays instant; the sensor isn't left running on other tabs).
+  Timer? _cameraReleaseTimer;
+  static const _cameraGrace = Duration(seconds: 15);
+
   ScanState _state = ScanState.scan;
   final bool _showingSuccessMessage = false;
   final TextEditingController _ingCtrl = TextEditingController();
@@ -152,6 +157,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
       duration: const Duration(seconds: 2),
     )..repeat(reverse: true);
     widget.isActiveNotifier.addListener(_onActiveStateChanged);
+    WidgetsBinding.instance.addObserver(this);
     _ingCtrl.addListener(_onIngChanged);
     _fetchSavedIngredients();
     _fetchRecentIngredients();
@@ -354,15 +360,43 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
         });
       }
 
+      _cameraReleaseTimer?.cancel();
       if (!_isCameraInitialized) {
+        _lastInitAttempt = null;
         _initCamera();
       }
     } else {
-      // Keep camera alive but maybe stop stream if any to save resources
-      // instead of full dispose which causes the re-init delay the user dislikes.
+      // Leaving Scan: stop frames now, release the sensor after a short grace
+      // period. Keeping it open on other tabs (at veryHigh resolution) heated
+      // the phone and drained the battery.
       if (_cameraController != null && _useManualStreaming) {
         _toggleManualStreaming(); // Stop stream if active
       }
+      if (_isCameraInitialized && _cameraController != null) {
+        _cameraController!.pausePreview().catchError((_) {});
+      }
+      _cameraReleaseTimer?.cancel();
+      _cameraReleaseTimer = Timer(_cameraGrace, () {
+        if (mounted && !widget.isActiveNotifier.value) _disposeCamera();
+      });
+    }
+  }
+
+  /// App in background / screen locked: release the camera at once; reopen
+  /// it when the app comes back on the Scan tab.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.paused ||
+        state == AppLifecycleState.hidden) {
+      _cameraReleaseTimer?.cancel();
+      _disposeCamera();
+    } else if (state == AppLifecycleState.resumed &&
+        widget.isActiveNotifier.value &&
+        !_isCameraInitialized &&
+        _state == ScanState.scan) {
+      _lastInitAttempt = null;
+      _initCamera();
     }
   }
 
@@ -569,6 +603,8 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _cameraReleaseTimer?.cancel();
     _scannerController.dispose();
     widget.isActiveNotifier.removeListener(_onActiveStateChanged);
     RecipeService.instance.myRecipesNotifier.removeListener(_onRecipesChanged);

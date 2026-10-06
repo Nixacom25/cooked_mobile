@@ -121,8 +121,9 @@ class _ExploreScreenState extends State<ExploreScreen> {
     // force: true here - that clears the entire image cache and cache-busts
     // every image URL, which was making recipe photos re-download from
     // scratch every couple of minutes and on every tab switch.
+    // Only while Explore is on screen (it already refreshes on tab entry).
     _refreshTimer = Timer.periodic(const Duration(minutes: 2), (_) {
-      _refreshData(force: false);
+      if (HomeScreen.activeTabNotifier.value == 1) _refreshData(force: false);
     });
 
     _searchCtrl.addListener(() {
