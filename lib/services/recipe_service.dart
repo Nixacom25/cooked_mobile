@@ -821,7 +821,7 @@ class RecipeService {
     if (response.statusCode == 200) {
       final recipe = Recipe.fromJson(jsonDecode(response.body));
       
-      // 1. Instantly update recentImportsNotifier & myRecipesNotifier with the imported recipe
+      // Imports belong to Recent Imports until the user explicitly saves them.
       final currentRecent = recentImportsNotifier.value ?? _loadLocalRecentImports();
       
       final filteredRecent = currentRecent.where((r) {
@@ -834,12 +834,6 @@ class RecipeService {
       final newRecentList = [recipe, ...filteredRecent];
       recentImportsNotifier.value = newRecentList;
       await _saveLocalRecentImports(newRecentList);
-
-      final currentMy = myRecipesNotifier.value ?? [];
-      myRecipesNotifier.value = [
-        recipe,
-        ...currentMy.where((r) => !r.isPlaceholder && r.id != recipe.id)
-      ];
 
       // 2. Refresh lists in background to stay in sync with backend database
       getMyRecipes(forceRefresh: true).catchError((_) => <Recipe>[]);
@@ -1026,7 +1020,7 @@ class RecipeService {
   void _hydrateFavoriteStates(Iterable<Recipe> recipes) {
     final states = Map<String, bool>.from(favoriteStatesNotifier.value);
     for (final recipe in recipes) {
-      states[_favoriteKey(recipe)] = true;
+      states[_favoriteKey(recipe)] = !recipe.isSuggested && !recipe.isPlaceholder;
     }
     favoriteStatesNotifier.value = states;
   }

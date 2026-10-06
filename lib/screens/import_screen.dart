@@ -1121,11 +1121,8 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
                                     sourceAsset = 'assets/images/facebook.png';
                                   }
 
-                                  final savedList = RecipeService.instance.myRecipesNotifier.value ?? [];
-                                  final bool isSaved = _validatedRecipeIds.contains(r.id) ||
-                                      r.isInCookbook ||
-                                      r.isFavorite ||
-                                      savedList.any((rec) => rec.id == r.id || (rec.name.isNotEmpty && rec.name.toLowerCase() == r.name.toLowerCase()));
+                                    final bool isSaved = _validatedRecipeIds.contains(r.id) ||
+                                      RecipeService.instance.isRecipeSaved(r);
 
                                   return GestureDetector(
                                     onTap: () {
