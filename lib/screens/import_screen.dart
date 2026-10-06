@@ -26,6 +26,7 @@ import 'package:webview_flutter/webview_flutter.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import '../utils/paywall_helper.dart';
+import '../widgets/glass_icon_button.dart';
 import '../widgets/skeleton_list.dart';
 import '../widgets/red_button.dart';
 import '../widgets/skeleton_loader.dart';
@@ -1413,19 +1414,17 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
                         child: Semantics(
                           button: true,
                           label: MaterialLocalizations.of(context).closeButtonTooltip,
-                          child: GestureDetector(
-                            behavior: HitTestBehavior.opaque,
-                            onTap: () {
-                              HapticFeedback.selectionClick();
-                              FocusManager.instance.primaryFocus?.unfocus();
-                              _toggleSearchModal(false);
-                            },
-                            child: SizedBox(
-                              width: 44.w,
-                              height: 44.w,
-                              child: Center(
-                                child: Icon(Icons.close_rounded, color: context.colors.textPrimary, size: 24.sp),
-                              ),
+                          // Same glass button as the back buttons elsewhere.
+                          child: Padding(
+                            padding: EdgeInsets.only(right: 8.w),
+                            child: GlassIconButton(
+                              size: 42.r,
+                              onTap: () {
+                                HapticFeedback.selectionClick();
+                                FocusManager.instance.primaryFocus?.unfocus();
+                                _toggleSearchModal(false);
+                              },
+                              child: Icon(Icons.close_rounded, color: context.colors.textPrimary, size: 20.sp),
                             ),
                           ),
                         ),

@@ -387,12 +387,18 @@ class _SourceBadge extends StatelessWidget {
             ),
           ],
         ),
-        child: SvgPicture.asset(
-          asset,
-          fit: BoxFit.contain,
-          // White glyphs would vanish on the light page: draw them black.
-          colorFilter: isDark ? null : const ColorFilter.mode(Colors.black, BlendMode.srcIn),
-        ),
+        // Glyph in the text colour: white on dark, black on light.
+        // web.svg only wraps an embedded PNG (pattern fill), which
+        // flutter_svg can't draw - use a vector globe for websites.
+        child: asset.endsWith('/web.svg')
+            ? FittedBox(
+                child: Icon(Icons.language_rounded, color: isDark ? Colors.white : Colors.black),
+              )
+            : SvgPicture.asset(
+                asset,
+                fit: BoxFit.contain,
+                colorFilter: ColorFilter.mode(isDark ? Colors.white : Colors.black, BlendMode.srcIn),
+              ),
       ),
     );
   }
