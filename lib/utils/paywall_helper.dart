@@ -6,6 +6,18 @@ import '../services/user_service.dart';
 import '../core/api_config.dart';
 
 class PaywallHelper {
+  /// Bumped right before the paywall opens. Panels that live in the root
+  /// overlay (above every route, e.g. the import search panel) listen and
+  /// close, so nothing can ever sit in front of the paywall.
+  static final ValueNotifier<int> opening = ValueNotifier<int>(0);
+
+  /// True when [error] means "no active subscription" (402 / 403 gate).
+  static bool isSubscriptionError(dynamic error) {
+    final s = error.toString().toLowerCase();
+    return s.contains('402') || s.contains('payment required') || s.contains('premium required') ||
+        s.contains('subscription required') || s.contains('subscription_required');
+  }
+
   static Future<void> show(BuildContext context, {PaywallFlowType flowType = PaywallFlowType.standard}) async {
     final token = await AuthService.instance.getToken();
     if (token == null) return;
@@ -23,6 +35,7 @@ class PaywallHelper {
 
     if (!context.mounted) return;
 
+    opening.value++;
     await Navigator.push<bool>(
       context,
       MaterialPageRoute(

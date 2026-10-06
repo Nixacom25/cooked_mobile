@@ -127,6 +127,8 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
       reverseCurve: Curves.easeInQuad,
     );
 
+    PaywallHelper.opening.addListener(_onPaywallOpening);
+
     _overlaySearchCtrl.addListener(() {
       if (_importSearchOverlayEntry != null) {
         _importSearchOverlayEntry!.markNeedsBuild();
@@ -418,10 +420,12 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
       }
     } catch (e) {
       if (mounted && requestId == _webSearchRequestId) {
+        final subscription = PaywallHelper.isSubscriptionError(e);
         setState(() {
           _isSearching = false;
-          _webSearchError = true;
-          _emptySearchQuery = query;
+          // Lapsed subscription isn't a search failure: the paywall explains it.
+          _webSearchError = !subscription;
+          _emptySearchQuery = subscription ? null : query;
         });
         _importSearchOverlayEntry?.markNeedsBuild();
         if (PaywallHelper.handleError(context, e)) return;
@@ -557,6 +561,7 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
     // otherwise it stays on screen with a disposed controller (dead close
     // button, results never shown) if Home is rebuilt while it's open.
     _removeImportSearchOverlay();
+    PaywallHelper.opening.removeListener(_onPaywallOpening);
     widget.isActiveNotifier?.removeListener(_onActiveStateChanged);
     SharingService.instance.sharedTextNotifier.removeListener(_onSharedUrlUpdated);
     _linkCtrl.dispose();
@@ -612,6 +617,15 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
         });
       }
     }
+  }
+
+  /// The paywall is opening: the search panel sits in the root overlay,
+  /// above every route, so remove it at once or it would hide the paywall.
+  void _onPaywallOpening() {
+    if (_importSearchOverlayEntry == null && !_isSearchingModal) return;
+    _webSearchRequestId++;
+    _dismissSearchModalForPreview();
+    if (mounted) setState(() => _isSearching = false);
   }
 
   void _searchTrendingInModal(String term) {
