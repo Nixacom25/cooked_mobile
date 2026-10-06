@@ -49,10 +49,11 @@ class _ImportLoadingPageState extends State<ImportLoadingPage>
     duration: const Duration(milliseconds: 1600),
   )..repeat(reverse: true);
 
-  // Skeleton shimmer on the card.
+  // Skeleton shimmer on the card: same rhythm as the home headline's
+  // ShimmerText (1800 ms sweep + 900 ms pause).
   late final AnimationController _shimmerController = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 1300),
+    duration: const Duration(milliseconds: 2700),
   )..repeat();
 
   // Dashed link line flowing from the source icon to the card.
@@ -313,10 +314,8 @@ class _ImportLoadingPageState extends State<ImportLoadingPage>
                       child: FittedBox(
                         key: ValueKey(stage),
                         fit: BoxFit.scaleDown,
-                        child: Text(
-                          stage.title(context.l10n),
-                          maxLines: 1,
-                          textAlign: TextAlign.center,
+                        child: _StageTitle(
+                          title: stage.title(context.l10n),
                           style: TextStyle(
                             fontFamily: 'Rubik',
                             fontSize: 22.sp,
@@ -558,9 +557,9 @@ class _RecipeCardMock extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _Bar(width: 130.w, height: 10.h, color: skeletonColor, shimmer: shimmer, active: !populating),
+                      _Bar(width: 130.w, height: 10.h, color: skeletonColor, shimmer: shimmer),
                       SizedBox(height: 8.h),
-                      _Bar(width: 90.w, height: 10.h, color: skeletonColor, shimmer: shimmer, active: !populating),
+                      _Bar(width: 90.w, height: 10.h, color: skeletonColor, shimmer: shimmer),
                     ],
                   ),
                 ),
@@ -580,7 +579,7 @@ class _RecipeCardMock extends StatelessWidget {
                       key: ValueKey('line-$i'),
                       index: i,
                       offset: 4,
-                      child: _IngredientLine(width: [150.w, 120.w, 170.w, 100.w][i], color: skeletonColor),
+                      child: _IngredientLine(width: [150.w, 120.w, 170.w, 100.w][i], color: skeletonColor, shimmer: shimmer),
                     )
                   : SizedBox(height: 8.h),
             ),
@@ -593,8 +592,9 @@ class _RecipeCardMock extends StatelessWidget {
 class _IngredientLine extends StatelessWidget {
   final double width;
   final Color color;
+  final Animation<double> shimmer;
 
-  const _IngredientLine({required this.width, required this.color});
+  const _IngredientLine({required this.width, required this.color, required this.shimmer});
 
   @override
   Widget build(BuildContext context) {
@@ -606,40 +606,119 @@ class _IngredientLine extends StatelessWidget {
           decoration: const BoxDecoration(color: Color(0xFFC31E26), shape: BoxShape.circle),
         ),
         SizedBox(width: 8.w),
-        Container(
-          width: width,
-          height: 8.h,
-          decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(6.r)),
-        ),
+        _Bar(width: width, height: 8.h, color: color, shimmer: shimmer),
       ],
     );
   }
 }
 
+/// Skeleton bar with the home headline's reflection: a lighter band sweeps
+/// left to right (same gradient, curve and pause as [ShimmerText]).
 class _Bar extends StatelessWidget {
   final double width;
   final double height;
   final Color color;
   final Animation<double> shimmer;
-  final bool active;
 
   const _Bar({
     required this.width,
     required this.height,
     required this.color,
     required this.shimmer,
-    required this.active,
   });
+
+  static const _sweepShare = 1800 / 2700;
 
   @override
   Widget build(BuildContext context) {
-    return ClipRRect(
+    final bar = ClipRRect(
       borderRadius: BorderRadius.circular(6.r),
-      child: _Shimmering(
-        shimmer: shimmer,
-        active: active,
+      child: Container(width: width, height: height, color: Colors.white),
+    );
+    if (Motion.reduced(context)) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(6.r),
         child: Container(width: width, height: height, color: color),
-      ),
+      );
+    }
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final band = Color.lerp(color, isDark ? Colors.white : const Color(0xFF9E9E9E), isDark ? 0.28 : 0.45)!;
+    return AnimatedBuilder(
+      animation: shimmer,
+      child: bar,
+      builder: (context, child) {
+        final p = (shimmer.value / _sweepShare).clamp(0.0, 1.0);
+        final center = -0.25 + 1.5 * Curves.easeInOut.transform(p);
+        return ShaderMask(
+          blendMode: BlendMode.srcIn,
+          shaderCallback: (bounds) => LinearGradient(
+            colors: [color, band, color],
+            stops: const [0.28, 0.5, 0.72],
+            transform: _Slide(center - 0.5),
+          ).createShader(bounds),
+          child: child,
+        );
+      },
+    );
+  }
+}
+
+/// Stage title with "…" replaced by dots that count 1, 2, 3, then restart.
+class _StageTitle extends StatefulWidget {
+  final String title;
+  final TextStyle style;
+
+  const _StageTitle({required this.title, required this.style});
+
+  @override
+  State<_StageTitle> createState() => _StageTitleState();
+}
+
+class _StageTitleState extends State<_StageTitle> with SingleTickerProviderStateMixin {
+  // 4 steps of 400 ms: ".", "..", "...", then a beat before restarting.
+  late final AnimationController _dots = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1600),
+  )..repeat();
+
+  @override
+  void dispose() {
+    _dots.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final raw = widget.title.trimRight();
+    final hasDots = raw.endsWith('…') || raw.endsWith('...');
+    if (!hasDots) return Text(raw, maxLines: 1, textAlign: TextAlign.center, style: widget.style);
+    final base = raw.endsWith('…') ? raw.substring(0, raw.length - 1) : raw.substring(0, raw.length - 3);
+    if (Motion.reduced(context)) {
+      return Text('$base…', maxLines: 1, textAlign: TextAlign.center, style: widget.style);
+    }
+    return AnimatedBuilder(
+      animation: _dots,
+      builder: (context, _) {
+        final step = (_dots.value * 4).floor() % 4; // 0 -> 1 dot ... 3 -> pause on 3
+        final visible = step >= 2 ? 3 : step + 1;
+        return Text.rich(
+          TextSpan(
+            text: base,
+            children: [
+              // All three dots always laid out (fixed width, no jiggle),
+              // hidden ones are transparent.
+              for (var i = 0; i < 3; i++)
+                TextSpan(
+                  text: '.',
+                  style: TextStyle(color: i < visible ? null : Colors.transparent),
+                ),
+            ],
+          ),
+          maxLines: 1,
+          textAlign: TextAlign.center,
+          style: widget.style,
+        );
+      },
     );
   }
 }
