@@ -17,6 +17,7 @@ import '../import_screen.dart';
 import '../scan_screen.dart';
 import '../../widgets/app_search_field.dart';
 import '../../widgets/app_top_header.dart';
+import '../../widgets/feedback_form.dart';
 import '../../widgets/red_header_background.dart';
 import '../../widgets/saved_recipe_card.dart';
 import '../../widgets/recipe_shortcut_card.dart';
@@ -2222,115 +2223,61 @@ class DashedBorderPainter extends CustomPainter {
 }
 
 void _showFeedbackModal(BuildContext context) {
-  final TextEditingController feedbackCtrl = TextEditingController();
   showModalBottomSheet(
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
-    builder: (context) => Padding(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom,
-      ),
+    builder: (sheetContext) => Padding(
+      padding: EdgeInsets.only(bottom: MediaQuery.of(sheetContext).viewInsets.bottom),
       child: Container(
         decoration: BoxDecoration(
-          color: context.colors.surface,
+          color: sheetContext.colors.surface,
           borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
         ),
         padding: EdgeInsets.fromLTRB(20.w, 20.h, 20.w, 30.h),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Container(
-                width: 40.w,
-                height: 4.h,
-                decoration: BoxDecoration(
-                  color: context.colors.border,
-                  borderRadius: BorderRadius.circular(2.r),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40.w,
+                  height: 4.h,
+                  decoration: BoxDecoration(
+                    color: sheetContext.colors.border,
+                    borderRadius: BorderRadius.circular(2.r),
+                  ),
                 ),
               ),
-            ),
-            SizedBox(height: 16.h),
-            Text(
-              context.l10n.feedbackCardTitle,
-              style: TextStyle(
-                fontFamily: 'Rubik',
-                fontWeight: FontWeight.w800,
-                fontSize: 18.sp,
-                color: context.colors.textPrimary,
-              ),
-            ),
-            SizedBox(height: 6.h),
-            Text(
-              context.l10n.feedbackCardSubtitle,
-              style: TextStyle(
-                fontFamily: 'Rubik',
-                fontSize: 13.sp,
-                color: context.colors.textSecondary,
-              ),
-            ),
-            SizedBox(height: 16.h),
-            TextField(
-              controller: feedbackCtrl,
-              maxLines: 4,
-              decoration: InputDecoration(
-                hintText: context.l10n.feedbackTypeHere,
-                hintStyle: TextStyle(
+              SizedBox(height: 16.h),
+              Text(
+                sheetContext.l10n.feedbackCardTitle,
+                style: TextStyle(
                   fontFamily: 'Rubik',
-                  fontSize: 14.sp,
-                  color: context.colors.textMuted,
-                ),
-                filled: true,
-                fillColor: context.colors.surface,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16.r),
-                  borderSide: BorderSide(color: context.colors.border),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16.r),
-                  borderSide: BorderSide(color: context.colors.border),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16.r),
-                  borderSide: BorderSide(color: context.colors.accent),
+                  fontWeight: FontWeight.w800,
+                  fontSize: 18.sp,
+                  color: sheetContext.colors.textPrimary,
                 ),
               ),
-            ),
-            SizedBox(height: 20.h),
-            SizedBox(
-              width: double.infinity,
-              height: 48.h,
-              child: ElevatedButton(
-                onPressed: () {
-                  if (feedbackCtrl.text.trim().isNotEmpty) {
-                    Navigator.pop(context);
-                    IosToast.show(
-                      context,
-                      message: context.l10n.feedbackThanks,
-                      type: ToastType.success,
-                    );
-                  }
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: context.colors.accent,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(24.r),
-                  ),
-                  elevation: 0,
-                ),
-                child: Text(
-                  context.l10n.feedbackSubmit,
-                  style: TextStyle(
-                    fontFamily: 'Rubik',
-                    fontWeight: FontWeight.w700,
-                    fontSize: 15.sp,
-                    color: Colors.white,
-                  ),
+              SizedBox(height: 6.h),
+              Text(
+                sheetContext.l10n.feedbackCardSubtitle,
+                style: TextStyle(
+                  fontFamily: 'Rubik',
+                  fontSize: 13.sp,
+                  color: sheetContext.colors.textSecondary,
                 ),
               ),
-            ),
-          ],
+              SizedBox(height: 18.h),
+              // Same subjects, field and submission as Settings › Contact support.
+              FeedbackForm(
+                maxLines: 4,
+                submitLabel: sheetContext.l10n.feedbackSubmit,
+                onSent: () => Navigator.pop(sheetContext),
+              ),
+            ],
+          ),
         ),
       ),
     ),
