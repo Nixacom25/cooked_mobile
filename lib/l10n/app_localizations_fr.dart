@@ -1586,6 +1586,11 @@ class AppLocalizationsFr extends AppLocalizations {
       'Saisissez un code de parrainage (facultatif)';
 
   @override
+  String referralApplied(String name) {
+    return 'Code appliqué — merci à $name ! Commencez votre essai pour débloquer Premium.';
+  }
+
+  @override
   String giftUnlocked(String plan) {
     return '🎉 $plan de Cooked Premium débloqué !';
   }

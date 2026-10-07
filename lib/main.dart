@@ -291,6 +291,7 @@ class _CookedAppState extends State<CookedApp> with WidgetsBindingObserver {
     switch (data['type']) {
       case 'trial_ends_tomorrow':
       case 'billing_issue':
+      case 'drip':
         state.pushNamed(AppRoutes.subscriptionManagement);
         break;
       case 'new_device_signin':

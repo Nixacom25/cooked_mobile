@@ -552,6 +552,14 @@
   "referralCodeHint": "Referral Code",
   "referralCanSkip": "You can skip this step",
   "referralEnterCode": "Enter referral code (optional)",
+  "referralApplied": "Code applied — thanks to {name}! Start your trial to unlock Premium.",
+  "@referralApplied": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "giftUnlocked": "🎉 {plan} of Cooked Premium unlocked!",
   "@giftUnlocked": {
     "placeholders": {

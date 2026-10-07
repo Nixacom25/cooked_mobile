@@ -42,7 +42,16 @@ class GiftRedeemResult {
   final String planLabel;
   final DateTime? premiumUntil;
 
-  const GiftRedeemResult({required this.planLabel, this.premiumUntil});
+  /// The code was an ambassador's referral code: nothing is unlocked.
+  final bool isAmbassador;
+  final String ambassadorName;
+
+  const GiftRedeemResult({
+    required this.planLabel,
+    this.premiumUntil,
+    this.isAmbassador = false,
+    this.ambassadorName = '',
+  });
 }
 
 /// Gift codes are created by the backend from the store-confirmed purchase
@@ -79,6 +88,8 @@ class GiftService {
       return GiftRedeemResult(
         planLabel: body?['planLabel']?.toString() ?? '',
         premiumUntil: DateTime.tryParse(body?['premiumUntil']?.toString() ?? ''),
+        isAmbassador: body?['kind']?.toString() == 'AMBASSADOR',
+        ambassadorName: body?['ambassadorName']?.toString() ?? '',
       );
     }
     final message = body is Map ? body['message']?.toString() : null;

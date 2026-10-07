@@ -496,6 +496,14 @@
   "referralCodeHint": "Code de parrainage",
   "referralCanSkip": "Vous pouvez passer cette étape",
   "referralEnterCode": "Saisissez un code de parrainage (facultatif)",
+  "referralApplied": "Code appliqué — merci à {name} ! Commencez votre essai pour débloquer Premium.",
+  "@referralApplied": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "giftUnlocked": "🎉 {plan} de Cooked Premium débloqué !",
   "priceTrialThenYearly": "3 jours offerts, puis {price}/an",
   "priceTrialThenBilledYearly": "3 jours offerts, puis facturation annuelle",

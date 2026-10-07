@@ -496,6 +496,14 @@
   "referralCodeHint": "Código de referido",
   "referralCanSkip": "Puedes omitir este paso",
   "referralEnterCode": "Introduce un código de referido (opcional)",
+  "referralApplied": "Código aplicado — ¡gracias a {name}! Empieza tu prueba para desbloquear Premium.",
+  "@referralApplied": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "giftUnlocked": "🎉 ¡{plan} de Cooked Premium desbloqueado!",
   "priceTrialThenYearly": "3 días gratis, luego {price}/año",
   "priceTrialThenBilledYearly": "3 días gratis, luego facturación anual",

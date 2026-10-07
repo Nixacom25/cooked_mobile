@@ -1568,6 +1568,11 @@ class AppLocalizationsEs extends AppLocalizations {
   String get referralEnterCode => 'Introduce un código de referido (opcional)';
 
   @override
+  String referralApplied(String name) {
+    return 'Código aplicado — ¡gracias a $name! Empieza tu prueba para desbloquear Premium.';
+  }
+
+  @override
   String giftUnlocked(String plan) {
     return '🎉 ¡$plan de Cooked Premium desbloqueado!';
   }

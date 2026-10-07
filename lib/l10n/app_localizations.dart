@@ -3076,6 +3076,12 @@ abstract class AppLocalizations {
   /// **'Enter referral code (optional)'**
   String get referralEnterCode;
 
+  /// No description provided for @referralApplied.
+  ///
+  /// In en, this message translates to:
+  /// **'Code applied — thanks to {name}! Start your trial to unlock Premium.'**
+  String referralApplied(String name);
+
   /// No description provided for @giftUnlocked.
   ///
   /// In en, this message translates to:

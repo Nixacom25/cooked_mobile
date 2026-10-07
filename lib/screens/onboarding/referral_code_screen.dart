@@ -56,6 +56,17 @@ class _ReferralCodeScreenState extends State<ReferralCodeScreen> {
     setState(() => _submitting = true);
     try {
       final result = await GiftService.instance.redeem(code);
+      if (result.isAmbassador) {
+        // Referral code: credited to the ambassador, nothing unlocked — back to the trial step.
+        if (!mounted) return;
+        IosToast.show(
+          context,
+          message: context.l10n.referralApplied(result.ambassadorName),
+          type: ToastType.success,
+        );
+        Navigator.pop(context, false);
+        return;
+      }
       UserService.instance.updateLocalUserPremiumStatus(true);
       await RevenueCatService.instance.refreshCustomerInfo();
       if (!mounted) return;

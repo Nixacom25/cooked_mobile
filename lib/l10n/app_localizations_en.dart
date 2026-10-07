@@ -1560,6 +1560,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get referralEnterCode => 'Enter referral code (optional)';
 
   @override
+  String referralApplied(String name) {
+    return 'Code applied — thanks to $name! Start your trial to unlock Premium.';
+  }
+
+  @override
   String giftUnlocked(String plan) {
     return '🎉 $plan of Cooked Premium unlocked!';
   }
