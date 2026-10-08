@@ -1,3 +1,6 @@
+import 'core/api_config.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'services/app_events_service.dart';
 import 'package:cooked/services/auth_service.dart';
 import 'package:cooked/services/revenuecat_service.dart';
 import 'package:cooked/services/error_monitoring_service.dart';
@@ -167,7 +170,10 @@ class _CookedAppState extends State<CookedApp> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
+      AppEventsService.instance.sessionStarted();
       // SharingService.instance.checkClipboard();
+    } else if (state == AppLifecycleState.paused) {
+      AppEventsService.instance.sessionEnded();
     }
   }
 
@@ -251,6 +257,10 @@ class _CookedAppState extends State<CookedApp> with WidgetsBindingObserver {
   // }
 
   Future<void> _initApp() async {
+    AppEventsService.instance.sessionStarted();
+    PackageInfo.fromPlatform().then((info) {
+      ApiConfig.appVersion = '${info.version}+${info.buildNumber}';
+    }, onError: (_) {});
     try {
       SharingService.instance.init();
       SharingService.instance.sharedTextNotifier.addListener(_onSharedTextReceived);

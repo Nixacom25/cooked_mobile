@@ -1,3 +1,4 @@
+import 'dart:ui' show PlatformDispatcher;
 import 'package:flutter/foundation.dart';
 class ApiConfig {
   static String get baseUrl {
@@ -15,10 +16,23 @@ class ApiConfig {
         _ => 'other',
       };
 
+  /// "1.0.5+107", set once at startup (see main.dart) for the admin Version filters.
+  static String? appVersion;
+
+  /// Device region (ISO country), for the admin Country filters.
+  static String? get clientCountry => PlatformDispatcher.instance.locale.countryCode;
+
+  /// Headers describing the client, sent with every request.
+  static Map<String, String> get clientHeaders => {
+        'X-Client-Platform': clientPlatform,
+        if (appVersion != null) 'X-App-Version': appVersion!,
+        if (clientCountry != null && clientCountry!.length == 2) 'X-Client-Country': clientCountry!,
+      };
+
   static Map<String, String> get defaultHeaders => {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
-        'X-Client-Platform': clientPlatform,
+        ...clientHeaders,
       };
 
   static Map<String, String> authHeaders(String token) {
@@ -26,7 +40,7 @@ class ApiConfig {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
       'Authorization': 'Bearer $token',
-      'X-Client-Platform': clientPlatform,
+      ...clientHeaders,
     };
   }
 }

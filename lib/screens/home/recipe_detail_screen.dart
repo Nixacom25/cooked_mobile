@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../../services/app_events_service.dart';
 import '../../services/history_service.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -88,6 +89,8 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
       final Recipe? r = args['recipe'] as Recipe?;
       final String? id = args['recipeId'] as String?;
       _isPreview = args['isPreview'] ?? false;
+      final viewedId = r?.id ?? id;
+      if (viewedId != null && !_isPreview) AppEventsService.instance.track('RECIPE_VIEW', detail: viewedId);
       _infoMessage = args['infoMessage'] as String?;
       _cookbookId = args['cookbookId'] as String?;
 

@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import '../widgets/app_search_field.dart';
 import '../widgets/app_top_header.dart';
 import '../widgets/red_header_background.dart';
+import '../services/app_events_service.dart';
 import '../services/recipe_service.dart';
 import '../models/recipe.dart';
 import '../routes/app_routes.dart';
@@ -180,6 +181,17 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
 
 
 
+  /// Web search result opened (admin search analytics: CTR and search → saved).
+  String? _searchOpenedUrl;
+  String? _searchOpenedQuery;
+
+  void _openSearchResult(String url, String title, String query) {
+    _searchOpenedUrl = url;
+    _searchOpenedQuery = query.trim().toLowerCase();
+    AppEventsService.instance.track('SEARCH_OPEN', detail: _searchOpenedQuery);
+    _showWebPreview(url, title);
+  }
+
   Future<void> _showWebPreview(String url, String title) async {
     FocusScope.of(context).unfocus();
     final normalizedUrl = url.trim();
@@ -352,6 +364,9 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
       }
 
       SharingService.instance.consumeSharedText();
+      if (_searchOpenedUrl != null && _searchOpenedUrl == url) {
+        AppEventsService.instance.track('SEARCH_SAVE', detail: _searchOpenedQuery);
+      }
 
       // Real result is in: show "Recipe ready" (check pops, card bumps),
       // then move on to the recipe without an extra tap.
@@ -1000,7 +1015,7 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
                       else if (_searchResults.isNotEmpty)
                         _WebSearchResults(
                           results: _searchResults,
-                          onView: (url, title) => _showWebPreview(url, title),
+                          onView: (url, title) => _openSearchResult(url, title, _searchCtrl.text),
                           onClear: () => setState(() => _searchResults = []),
                         ),
 
@@ -1364,7 +1379,7 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
                             padding: EdgeInsets.symmetric(horizontal: 20.w),
                             child: _WebSearchResults(
                               results: _searchResults,
-                              onView: (url, title) => _showWebPreview(url, title),
+                              onView: (url, title) => _openSearchResult(url, title, _overlaySearchCtrl.text),
                               onClear: () => setState(() {
                                 _searchResults = [];
                                 _overlaySearchCtrl.clear();
