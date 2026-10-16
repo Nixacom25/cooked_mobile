@@ -15,7 +15,6 @@ import '../../core/extensions/string_extensions.dart';
 import '../../core/utils/tutorial_helper.dart';
 import '../../widgets/skeleton_loader.dart';
 import '../../widgets/cookbook_form_modal.dart';
-import '../../widgets/add_to_cookbook_sheet.dart';
 import '../../widgets/haptic_context_menu.dart';
 import '../../widgets/cookbook_context_menu.dart';
 import '../../widgets/glass_icon_button.dart';
@@ -379,19 +378,6 @@ class _CookbookDetailScreenState extends State<CookbookDetailScreen> {
                     );
                   }
                 });
-          },
-        ),
-        HapticMenuAction(
-          title: context.l10n.recipeAddToCookbook,
-          icon: Icons.add_circle_outline_rounded,
-          onTap: () {
-            showModalBottomSheet(
-              context: context,
-              backgroundColor: Colors.transparent,
-              barrierColor: Colors.transparent,
-              isScrollControlled: true,
-              builder: (_) => AddToCookbookSheet(recipe: r),
-            );
           },
         ),
         HapticMenuAction(

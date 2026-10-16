@@ -34,7 +34,6 @@ class AppRoutes {
   static const String redeemGift = '/redeem-gift';
   static const String cookbookDetail = '/cookbook-detail';
   static const String cookbookForm = '/cookbook-form';
-  static const String receiveCookbook = '/receive-cookbook';
   static const String recipeDetail = '/recipe-detail';
   static const String subscriptionManagement = '/subscription-management';
   static const String scan = '/scan';

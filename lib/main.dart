@@ -23,7 +23,7 @@ import 'screens/onboarding/onboarding_screen.dart';
 import 'screens/home/home_screen.dart';
 import 'screens/home/view_all_screen.dart';
 import 'screens/home/cookbook_detail_screen.dart';
-import 'screens/home/receive_cookbook_screen.dart';
+import 'utils/receive_shared_cookbook.dart';
 import 'screens/home/cookbook_form_screen.dart';
 import 'screens/home/recipe_detail_screen.dart';
 import 'screens/home/savings_details_screen.dart';
@@ -408,7 +408,7 @@ class _CookedAppState extends State<CookedApp> with WidgetsBindingObserver {
                 state.pushNamed(AppRoutes.recipeDetail, arguments: {'recipeId': recipeId});
               case CookbookLink(:final cookbookId):
                 goHome();
-                state.pushNamed(AppRoutes.receiveCookbook, arguments: {'cookbookId': cookbookId});
+                receiveSharedCookbook(appNavigatorKey, cookbookId);
               case WebLink(:final url):
                 // External page: open it in the Import tab.
                 goHome(arguments: {'initialTab': 4, 'initialUrl': url});
@@ -539,10 +539,6 @@ class _CookedAppState extends State<CookedApp> with WidgetsBindingObserver {
                   break;
                 case AppRoutes.cookbookDetail:
                   builder = const CookbookDetailScreen();
-                  break;
-                case AppRoutes.receiveCookbook:
-                  final args = settings.arguments as Map<String, dynamic>?;
-                  builder = ReceiveCookbookScreen(cookbookId: args?['cookbookId']?.toString() ?? '');
                   break;
                 case AppRoutes.cookbookForm:
                   builder = const CookbookFormScreen();

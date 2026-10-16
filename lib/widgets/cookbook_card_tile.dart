@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../core/utils/recipe_count.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -33,161 +34,218 @@ class CookbookCardTile extends StatelessWidget {
     // just-created cookbook appears softly); lifts to 0.97 on press.
     return AnimatedCardEntrance(
       onceId: 'cookbook-${cookbook.id}',
-      child: _buildTile(context),
+      child: ValueListenableBuilder<Map<String, double>>(
+        valueListenable: CookbookService.instance.receiveProgressNotifier,
+        builder: (context, receiving, _) =>
+            _buildTile(context, receiving[cookbook.id]),
+      ),
     );
   }
 
-  Widget _buildTile(BuildContext context) {
+  /// [receiveProgress] is set while this is a shared cookbook still being
+  /// copied into the library: the tile is inert, shows a loader in the
+  /// middle and the progress filling along its bottom edge.
+  Widget _buildTile(BuildContext context, double? receiveProgress) {
+    final isReceiving = receiveProgress != null;
     return PressScale(
-      onTap: () async {
-        final result = await Navigator.pushNamed(
-          context,
-          AppRoutes.cookbookDetail,
-          arguments: {'cookbook': cookbook},
-        );
-        if (result == true) {
-          CookbookService.instance.getMyCookbooks();
-          onRefresh?.call();
-        }
-      },
-      onLongPressStart: (details) => showCookbookContextMenu(
-        context,
-        cookbook: cookbook,
-        position: details.globalPosition,
-        onChanged: onRefresh,
-      ),
-      child: Stack(
-        children: [
-          Container(
-            padding: EdgeInsets.all(12.w),
-            decoration: BoxDecoration(
-              // Light mode keeps the original cream (0xFFFAF3E6) exactly as
-              // designed. Dark mode alone gets pageBackground (black) since
-              // this tile otherwise sat directly on a surface-colored sheet
-              // and was invisible against its own backdrop there.
-              color: Theme.of(context).brightness == Brightness.dark
-                  ? context.colors.pageBackground
-                  : const Color(0xFFFAF3E6),
-              borderRadius: BorderRadius.circular(20.r),
+      onTap: isReceiving
+          ? null
+          : () async {
+              final result = await Navigator.pushNamed(
+                context,
+                AppRoutes.cookbookDetail,
+                arguments: {'cookbook': cookbook},
+              );
+              if (result == true) {
+                CookbookService.instance.getMyCookbooks();
+                onRefresh?.call();
+              }
+            },
+      onLongPressStart: isReceiving
+          ? null
+          : (details) => showCookbookContextMenu(
+              context,
+              cookbook: cookbook,
+              position: details.globalPosition,
+              onChanged: onRefresh,
             ),
-            child: isMain
-                ? Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(16.r),
-                          child: CookbookCover(cookbook: cookbook),
-                        ),
-                      ),
-                      SizedBox(height: 10.h),
-                      Text(
-                        cookbook.name.isEmpty
-                            ? cookbook.name
-                            : cookbook.name[0].toUpperCase() +
-                                  cookbook.name.substring(1).toLowerCase(),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontFamily: 'Rubik',
-                          fontWeight: FontWeight.w700,
-                          fontSize: 16.sp,
-                          color: context.colors.textPrimary,
-                        ),
-                      ),
-                      SizedBox(height: 4.h),
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.restaurant_menu_rounded,
-                            size: 14.sp,
-                            color: context.colors.textSecondary,
-                          ),
-                          SizedBox(width: 4.w),
-                          Text(
-                            recipeCountLabel(context.l10n, cookbook.recipes.length, capitalize: true),
-                            style: TextStyle(
-                              fontFamily: 'Rubik',
-                              fontSize: 13.sp,
-                              color: context.colors.textSecondary,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          const Spacer(),
-                          Icon(
-                            Icons.chevron_right_rounded,
-                            size: 18.sp,
-                            color: context.colors.textSecondary,
-                          ),
-                        ],
-                      ),
-                    ],
-                  )
-                : Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      _buildOverlappingThumbnails(context, cookbook),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            cookbook.name.isEmpty
-                                ? cookbook.name
-                                : cookbook.name[0].toUpperCase() +
-                                      cookbook.name.substring(1).toLowerCase(),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontFamily: 'Rubik',
-                              fontWeight: FontWeight.w700,
-                              fontSize: 14.sp,
-                              color: context.colors.textPrimary,
-                            ),
-                          ),
-                          SizedBox(height: 2.h),
-                          Row(
-                            children: [
-                              Icon(
-                                Icons.restaurant_menu_rounded,
-                                size: 13.sp,
-                                color: context.colors.textSecondary,
-                              ),
-                              SizedBox(width: 4.w),
-                              Text(
-                                recipeCountLabel(context.l10n, cookbook.recipes.length, capitalize: true),
-                                style: TextStyle(
-                                  fontFamily: 'Rubik',
-                                  fontSize: 12.sp,
-                                  color: context.colors.textSecondary,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              const Spacer(),
-                              Icon(
-                                Icons.chevron_right_rounded,
-                                size: 16.sp,
-                                color: context.colors.textSecondary,
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-          ),
-          if (cookbook.isPinned)
-            Positioned(
-              top: 10.h,
-              right: 10.w,
-              child: Icon(
-                Icons.push_pin_rounded,
-                size: 20.sp,
-                color: context.colors.accent,
-                shadows: const [Shadow(color: Colors.black26, blurRadius: 4)],
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20.r),
+        child: Stack(
+          children: [
+            Container(
+              padding: EdgeInsets.all(12.w),
+              decoration: BoxDecoration(
+                // Light mode keeps the original cream (0xFFFAF3E6) exactly as
+                // designed. Dark mode alone gets pageBackground (black) since
+                // this tile otherwise sat directly on a surface-colored sheet
+                // and was invisible against its own backdrop there.
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? context.colors.pageBackground
+                    : const Color(0xFFFAF3E6),
+                borderRadius: BorderRadius.circular(20.r),
               ),
+              child: isMain
+                  ? Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(16.r),
+                            child: CookbookCover(cookbook: cookbook),
+                          ),
+                        ),
+                        SizedBox(height: 10.h),
+                        Text(
+                          cookbook.name.isEmpty
+                              ? cookbook.name
+                              : cookbook.name[0].toUpperCase() +
+                                    cookbook.name.substring(1).toLowerCase(),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontFamily: 'Rubik',
+                            fontWeight: FontWeight.w700,
+                            fontSize: 16.sp,
+                            color: context.colors.textPrimary,
+                          ),
+                        ),
+                        SizedBox(height: 4.h),
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.restaurant_menu_rounded,
+                              size: 14.sp,
+                              color: context.colors.textSecondary,
+                            ),
+                            SizedBox(width: 4.w),
+                            Text(
+                              recipeCountLabel(
+                                context.l10n,
+                                cookbook.recipes.length,
+                                capitalize: true,
+                              ),
+                              style: TextStyle(
+                                fontFamily: 'Rubik',
+                                fontSize: 13.sp,
+                                color: context.colors.textSecondary,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            const Spacer(),
+                            Icon(
+                              Icons.chevron_right_rounded,
+                              size: 18.sp,
+                              color: context.colors.textSecondary,
+                            ),
+                          ],
+                        ),
+                      ],
+                    )
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        _buildOverlappingThumbnails(context, cookbook),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              cookbook.name.isEmpty
+                                  ? cookbook.name
+                                  : cookbook.name[0].toUpperCase() +
+                                        cookbook.name
+                                            .substring(1)
+                                            .toLowerCase(),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontFamily: 'Rubik',
+                                fontWeight: FontWeight.w700,
+                                fontSize: 14.sp,
+                                color: context.colors.textPrimary,
+                              ),
+                            ),
+                            SizedBox(height: 2.h),
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.restaurant_menu_rounded,
+                                  size: 13.sp,
+                                  color: context.colors.textSecondary,
+                                ),
+                                SizedBox(width: 4.w),
+                                Text(
+                                  recipeCountLabel(
+                                    context.l10n,
+                                    cookbook.recipes.length,
+                                    capitalize: true,
+                                  ),
+                                  style: TextStyle(
+                                    fontFamily: 'Rubik',
+                                    fontSize: 12.sp,
+                                    color: context.colors.textSecondary,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                const Spacer(),
+                                Icon(
+                                  Icons.chevron_right_rounded,
+                                  size: 16.sp,
+                                  color: context.colors.textSecondary,
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
             ),
-        ],
+            if (cookbook.isPinned)
+              Positioned(
+                top: 10.h,
+                right: 10.w,
+                child: Icon(
+                  Icons.push_pin_rounded,
+                  size: 20.sp,
+                  color: context.colors.accent,
+                  shadows: const [Shadow(color: Colors.black26, blurRadius: 4)],
+                ),
+              ),
+            if (isReceiving) ...[
+              Positioned.fill(
+                child: ColoredBox(
+                  color:
+                      (Theme.of(context).brightness == Brightness.dark
+                              ? context.colors.pageBackground
+                              : const Color(0xFFFAF3E6))
+                          .withValues(alpha: 0.55),
+                  child: Center(
+                    child: CupertinoActivityIndicator(
+                      radius: isMain ? 14.r : 11.r,
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: TweenAnimationBuilder<double>(
+                  tween: Tween(end: receiveProgress),
+                  duration: Motion.medium,
+                  curve: Motion.enter,
+                  builder: (context, value, _) => LinearProgressIndicator(
+                    value: value,
+                    minHeight: 4.h,
+                    backgroundColor: context.colors.border,
+                    valueColor: AlwaysStoppedAnimation(context.colors.accent),
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }
@@ -244,7 +302,8 @@ class CookbookCardTile extends StatelessWidget {
                           'assets/images/recipes.webp',
                           fit: BoxFit.cover,
                         ),
-                        placeholder: (_, __) => const SkeletonBox(borderRadius: BorderRadius.zero),
+                        placeholder: (_, __) =>
+                            const SkeletonBox(borderRadius: BorderRadius.zero),
                         fadeInDuration: Motion.imageFade,
                         fadeOutDuration: Duration.zero,
                         fadeInCurve: Motion.enter,
