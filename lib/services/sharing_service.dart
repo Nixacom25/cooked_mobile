@@ -16,34 +16,37 @@ class SharingService {
 
   void init() {
     // For sharing or opening urls from outside the app while the app is in the memory
-    _intentDataStreamSubscription = ReceiveSharingIntent.instance.getMediaStream().listen((List<SharedMediaFile> value) {
-      if (value.isNotEmpty) {
-        for (final item in value) {
-          final url = extractUrl(item.path);
-          if (url != null) {
-            sharedTextNotifier.value = url;
-            return;
-          }
-        }
-        // Fallback to first path if no URL found in any item
-        sharedTextNotifier.value = value.first.path;
-      }
-    }, onError: (err) {
-    });
+    _intentDataStreamSubscription = ReceiveSharingIntent.instance
+        .getMediaStream()
+        .listen(_onSharedMedia, onError: (err) {});
 
     // For sharing or opening urls from outside the app while the app is closed
-    ReceiveSharingIntent.instance.getInitialMedia().then((List<SharedMediaFile> value) {
-      if (value.isNotEmpty) {
-        for (final item in value) {
-          final url = extractUrl(item.path);
-          if (url != null) {
-            sharedTextNotifier.value = url;
-            return;
-          }
-        }
-        sharedTextNotifier.value = value.first.path;
-      }
-    });
+    ReceiveSharingIntent.instance.getInitialMedia().then(_onSharedMedia);
+  }
+
+  String? _lastSharedUrl;
+  DateTime? _lastSharedAt;
+
+  /// Publishes the first link found in a share. Shares without a link (the
+  /// reel thumbnail or caption Instagram/TikTok send alongside the URL) are
+  /// dropped: they used to be published as-is and reached the importer as a
+  /// bogus "URL", which showed "This recipe link isn't available" right over
+  /// the preview of the link that had just been received.
+  void _onSharedMedia(List<SharedMediaFile> items) {
+    for (final item in items) {
+      final url = extractUrl(item.path);
+      if (url == null) continue;
+
+      // The same share can arrive twice (initial media + stream).
+      final now = DateTime.now();
+      final isRepeat = url == _lastSharedUrl &&
+          _lastSharedAt != null &&
+          now.difference(_lastSharedAt!) < const Duration(seconds: 5);
+      _lastSharedUrl = url;
+      _lastSharedAt = now;
+      if (!isRepeat) sharedTextNotifier.value = url;
+      return;
+    }
   }
 
   static const _clipboardChannel = MethodChannel('com.cooked.app/clipboard');

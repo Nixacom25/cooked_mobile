@@ -2050,6 +2050,48 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cookbookDelete => 'Delete Cookbook';
 
   @override
+  String get cookbookShare => 'Share Cookbook';
+
+  @override
+  String cookbookShareMessage(String name, String link) {
+    return 'Check out my $name cookbook on Cooked 📚\nOpen it to get all its recipes: $link';
+  }
+
+  @override
+  String get cookbookShareFailed => 'Couldn\'t share this cookbook';
+
+  @override
+  String get receiveCookbookReceiving => 'Receiving cookbook…';
+
+  @override
+  String receiveCookbookSharedBy(String name) {
+    return 'Shared by $name';
+  }
+
+  @override
+  String receiveCookbookProgress(int done, int total) {
+    return '$done of $total recipes';
+  }
+
+  @override
+  String get receiveCookbookDone => 'Cookbook added to your library!';
+
+  @override
+  String get receiveCookbookOpen => 'Open Cookbook';
+
+  @override
+  String get receiveCookbookNotFound => 'This cookbook is no longer available.';
+
+  @override
+  String get receiveCookbookFailed => 'Couldn\'t add this cookbook.';
+
+  @override
+  String get receiveCookbookOwn => 'This cookbook is already yours.';
+
+  @override
+  String get receiveCookbookRetry => 'Try again';
+
+  @override
   String get commonOperationFailed => 'Operation failed';
 
   @override

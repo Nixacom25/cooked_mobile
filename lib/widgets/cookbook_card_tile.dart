@@ -5,10 +5,8 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../models/cookbook.dart';
 import '../routes/app_routes.dart';
 import '../services/cookbook_service.dart';
-import '../core/widgets/ios_toast.dart';
 import 'cookbook_cover.dart';
-import 'cookbook_form_modal.dart';
-import 'haptic_context_menu.dart';
+import 'cookbook_context_menu.dart';
 import '../core/theme/app_theme.dart';
 import '../core/motion/motion_widgets.dart';
 import '../core/l10n/l10n.dart';
@@ -52,68 +50,12 @@ class CookbookCardTile extends StatelessWidget {
           onRefresh?.call();
         }
       },
-      onLongPressStart: (details) {
-        HapticContextMenu.show(
-          context,
-          targetPosition: details.globalPosition,
-          actions: [
-            HapticMenuAction(
-              title: cookbook.isPinned ? context.l10n.cookbookUnpin : context.l10n.cookbookPin,
-              icon: cookbook.isPinned
-                  ? Icons.push_pin_rounded
-                  : Icons.push_pin_outlined,
-              onTap: () async {
-                try {
-                  await CookbookService.instance.togglePin(cookbook.id);
-                  onRefresh?.call();
-                } catch (_) {}
-              },
-            ),
-            HapticMenuAction(
-              title: context.l10n.cookbookEdit,
-              icon: Icons.edit_outlined,
-              onTap: () async {
-                final result = await showModalBottomSheet(
-                  context: context,
-                  isScrollControlled: true,
-                  backgroundColor: Colors.transparent,
-                  builder: (context) => CookbookFormModal(cookbook: cookbook),
-                );
-                if (result is Cookbook || result == 'deleted') {
-                  CookbookService.instance.getMyCookbooks(forceRefresh: true);
-                  onRefresh?.call();
-                }
-              },
-            ),
-            HapticMenuAction(
-              title: context.l10n.cookbookDelete,
-              icon: Icons.delete_outline_rounded,
-              isDestructive: true,
-              onTap: () async {
-                try {
-                  await CookbookService.instance.deleteCookbook(cookbook.id);
-                  if (context.mounted) {
-                    IosToast.show(
-                      context,
-                      message: context.l10n.cookbookDeleted,
-                      type: ToastType.success,
-                    );
-                  }
-                  onRefresh?.call();
-                } catch (e) {
-                  if (context.mounted) {
-                    IosToast.show(
-                      context,
-                      message: context.l10n.cookbookDeleteFailed,
-                      type: ToastType.error,
-                    );
-                  }
-                }
-              },
-            ),
-          ],
-        );
-      },
+      onLongPressStart: (details) => showCookbookContextMenu(
+        context,
+        cookbook: cookbook,
+        position: details.globalPosition,
+        onChanged: onRefresh,
+      ),
       child: Stack(
         children: [
           Container(

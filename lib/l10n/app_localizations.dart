@@ -3916,6 +3916,78 @@ abstract class AppLocalizations {
   /// **'Delete Cookbook'**
   String get cookbookDelete;
 
+  /// No description provided for @cookbookShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Share Cookbook'**
+  String get cookbookShare;
+
+  /// No description provided for @cookbookShareMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Check out my {name} cookbook on Cooked 📚\nOpen it to get all its recipes: {link}'**
+  String cookbookShareMessage(String name, String link);
+
+  /// No description provided for @cookbookShareFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t share this cookbook'**
+  String get cookbookShareFailed;
+
+  /// No description provided for @receiveCookbookReceiving.
+  ///
+  /// In en, this message translates to:
+  /// **'Receiving cookbook…'**
+  String get receiveCookbookReceiving;
+
+  /// No description provided for @receiveCookbookSharedBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Shared by {name}'**
+  String receiveCookbookSharedBy(String name);
+
+  /// No description provided for @receiveCookbookProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'{done} of {total} recipes'**
+  String receiveCookbookProgress(int done, int total);
+
+  /// No description provided for @receiveCookbookDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Cookbook added to your library!'**
+  String get receiveCookbookDone;
+
+  /// No description provided for @receiveCookbookOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Cookbook'**
+  String get receiveCookbookOpen;
+
+  /// No description provided for @receiveCookbookNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'This cookbook is no longer available.'**
+  String get receiveCookbookNotFound;
+
+  /// No description provided for @receiveCookbookFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t add this cookbook.'**
+  String get receiveCookbookFailed;
+
+  /// No description provided for @receiveCookbookOwn.
+  ///
+  /// In en, this message translates to:
+  /// **'This cookbook is already yours.'**
+  String get receiveCookbookOwn;
+
+  /// No description provided for @receiveCookbookRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get receiveCookbookRetry;
+
   /// No description provided for @commonOperationFailed.
   ///
   /// In en, this message translates to:

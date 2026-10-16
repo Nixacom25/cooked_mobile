@@ -17,6 +17,7 @@ import '../../widgets/skeleton_loader.dart';
 import '../../widgets/cookbook_form_modal.dart';
 import '../../widgets/add_to_cookbook_sheet.dart';
 import '../../widgets/haptic_context_menu.dart';
+import '../../widgets/cookbook_context_menu.dart';
 import '../../widgets/glass_icon_button.dart';
 import '../../widgets/red_header_background.dart';
 import '../../widgets/saved_recipe_card.dart';
@@ -59,6 +60,12 @@ class _CookbookDetailScreenState extends State<CookbookDetailScreen> {
       });
     }
   }
+
+  /// Placeholder cookbooks and empty ones have nothing to share.
+  bool get _canShare =>
+      _cookbook != null &&
+      !_cookbook!.id.startsWith('static_') &&
+      _cookbook!.recipes.isNotEmpty;
 
   Future<void> _load() async {
     if (_cookbook == null || _cookbook!.id.startsWith('static_')) return;
@@ -161,6 +168,8 @@ class _CookbookDetailScreenState extends State<CookbookDetailScreen> {
                                 color: context.colors.textPrimary,
                               ),
                             ),
+                            // Mirrors the share button so the title stays centered.
+                            if (_canShare) SizedBox(width: 42.r + 8.w),
                             Expanded(
                               child: Text(
                                 name.toTitleCase(),
@@ -173,6 +182,18 @@ class _CookbookDetailScreenState extends State<CookbookDetailScreen> {
                                 ),
                               ),
                             ),
+                            if (_canShare) ...[
+                              GlassIconButton(
+                                onTap: () => shareCookbook(context, _cookbook!),
+                                size: 42.r,
+                                child: Icon(
+                                  Icons.ios_share_rounded,
+                                  color: context.colors.textPrimary,
+                                  size: 20.sp,
+                                ),
+                              ),
+                              SizedBox(width: 8.w),
+                            ],
                             if (_cookbook != null &&
                                 !_cookbook!.id.startsWith('static_'))
                               GlassIconButton(

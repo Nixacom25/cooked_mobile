@@ -17,6 +17,7 @@ import '../widgets/import_loading_page.dart';
 import '../widgets/import_fallback_page.dart';
 import '../core/widgets/ios_toast.dart';
 import '../core/utils/error_helper.dart';
+import '../core/utils/app_link.dart';
 import '../core/utils/tutorial_helper.dart';
 import '../core/services/tutorial_service.dart';
 import '../core/extensions/string_extensions.dart';
@@ -140,14 +141,16 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
 
   void _onSharedUrlUpdated() {
     if (!mounted) return;
-    final url = SharingService.instance.sharedTextNotifier.value;
-    if (url != null && url.isNotEmpty) {
-      if (!_isImporting && _linkCtrl.text != url) {
-        _linkCtrl.text = url;
-        SharingService.instance.consumeSharedText();
-        _showWebPreview(url, context.l10n.importRecipePreview);
-      }
-    }
+    final text = SharingService.instance.sharedTextNotifier.value;
+    final url = text == null ? null : SharingService.instance.extractUrl(text);
+    // Cooked's own links (shared recipes/cookbooks, email links) are routed
+    // by main.dart; only external web pages are previewed here.
+    if (url == null || AppLink.parse(url) is! WebLink) return;
+    if (_isImporting || _linkCtrl.text == url) return;
+
+    _linkCtrl.text = url;
+    SharingService.instance.consumeSharedText();
+    _showWebPreview(url, context.l10n.importRecipePreview);
   }
 
   void _onActiveStateChanged() {

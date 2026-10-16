@@ -2063,6 +2063,48 @@ class AppLocalizationsEs extends AppLocalizations {
   String get cookbookDelete => 'Eliminar recetario';
 
   @override
+  String get cookbookShare => 'Compartir recetario';
+
+  @override
+  String cookbookShareMessage(String name, String link) {
+    return 'Mira mi recetario $name en Cooked 📚\nÁbrelo para obtener todas sus recetas: $link';
+  }
+
+  @override
+  String get cookbookShareFailed => 'No se pudo compartir este recetario';
+
+  @override
+  String get receiveCookbookReceiving => 'Recibiendo recetario…';
+
+  @override
+  String receiveCookbookSharedBy(String name) {
+    return 'Compartido por $name';
+  }
+
+  @override
+  String receiveCookbookProgress(int done, int total) {
+    return '$done de $total recetas';
+  }
+
+  @override
+  String get receiveCookbookDone => '¡Recetario añadido a tu biblioteca!';
+
+  @override
+  String get receiveCookbookOpen => 'Abrir recetario';
+
+  @override
+  String get receiveCookbookNotFound => 'Este recetario ya no está disponible.';
+
+  @override
+  String get receiveCookbookFailed => 'No se pudo añadir este recetario.';
+
+  @override
+  String get receiveCookbookOwn => 'Este recetario ya es tuyo.';
+
+  @override
+  String get receiveCookbookRetry => 'Reintentar';
+
+  @override
   String get commonOperationFailed => 'La operación ha fallado';
 
   @override

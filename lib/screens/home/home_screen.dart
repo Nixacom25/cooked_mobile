@@ -38,6 +38,7 @@ import '../../core/utils/tutorial_helper.dart';
 import '../../widgets/add_to_cookbook_sheet.dart';
 import '../../widgets/cookbook_form_modal.dart';
 import '../../widgets/haptic_context_menu.dart';
+import '../../widgets/cookbook_context_menu.dart';
 import '../../core/services/tutorial_service.dart';
 import '../../main.dart';
 import '../../services/history_service.dart';
@@ -2502,104 +2503,14 @@ class _CookbooksRowState extends State<_CookbooksRow> {
                     behavior: HitTestBehavior.opaque,
                     onLongPressStart: (details) {
                       HapticFeedback.heavyImpact();
-                      HapticContextMenu.show(
+                      showCookbookContextMenu(
                         context,
-                        targetPosition: details.globalPosition,
-                        actions: [
-                          HapticMenuAction(
-                            title: context.l10n.cookbookAddRecipes,
-                            icon: Icons.add_circle_outline_rounded,
-                            onTap: () async {
-                              final result = await showModalBottomSheet(
-                                context: context,
-                                isScrollControlled: true,
-                                backgroundColor: Colors.transparent,
-                                builder: (context) =>
-                                    CookbookFormModal(cookbook: cb),
-                              );
-                              if (result != null) {
-                                setState(() => _loadData());
-                              }
-                            },
-                          ),
-                          HapticMenuAction(
-                            title: context.l10n.cookbookEdit,
-                            icon: Icons.edit_outlined,
-                            onTap: () async {
-                              final result = await showModalBottomSheet(
-                                context: context,
-                                isScrollControlled: true,
-                                backgroundColor: Colors.transparent,
-                                builder: (context) =>
-                                    CookbookFormModal(cookbook: cb),
-                              );
-                              if (result != null) {
-                                setState(() => _loadData());
-                              }
-                            },
-                          ),
-                          HapticMenuAction(
-                            title: cb.isPinned
-                                ? context.l10n.cookbookUnpin
-                                : context.l10n.cookbookPin,
-                            icon: cb.isPinned
-                                ? Icons.push_pin_rounded
-                                : Icons.push_pin_outlined,
-                            onTap: () {
-                              // FIRE AND FORGET - Optimistic
-                              CookbookService.instance
-                                  .togglePin(cb.id)
-                                  .then((updated) {
-                                    if (context.mounted) {
-                                      IosToast.show(
-                                        context,
-                                        message: updated.isPinned
-                                            ? context.l10n.cookbookPinned
-                                            : context.l10n.cookbookUnpinned,
-                                        type: ToastType.success,
-                                      );
-                                    }
-                                  })
-                                  .catchError((e) {
-                                    if (context.mounted) {
-                                      IosToast.show(
-                                        context,
-                                        message: context.l10n.commonOperationFailed,
-                                        type: ToastType.error,
-                                      );
-                                    }
-                                  });
-                            },
-                          ),
-                          HapticMenuAction(
-                            title: context.l10n.cookbookDelete,
-                            icon: Icons.delete_outline_rounded,
-                            isDestructive: true,
-                            onTap: () {
-                              // FIRE AND FORGET - Optimistic
-                              CookbookService.instance
-                                  .deleteCookbook(cb.id)
-                                  .then((_) {
-                                    if (context.mounted) {
-                                      IosToast.show(
-                                        context,
-                                        message: context.l10n.cookbookDeleted,
-                                        type: ToastType.success,
-                                      );
-                                    }
-                                  })
-                                  .catchError((e) {
-                                    if (context.mounted) {
-                                      IosToast.show(
-                                        context,
-                                        message: context.l10n.cookbookDeleteFailed,
-                                        type: ToastType.error,
-                                      );
-                                    }
-                                  });
-                            },
-                          ),
-                        ],
+                        cookbook: cb,
+                        position: details.globalPosition,
+                        showAddRecipes: true,
+                        onChanged: () {
+                          if (mounted) setState(() => _loadData());
+                        },
                       );
                     },
                     child: SizedBox(

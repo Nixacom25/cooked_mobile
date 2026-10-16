@@ -23,6 +23,7 @@ import 'screens/onboarding/onboarding_screen.dart';
 import 'screens/home/home_screen.dart';
 import 'screens/home/view_all_screen.dart';
 import 'screens/home/cookbook_detail_screen.dart';
+import 'screens/home/receive_cookbook_screen.dart';
 import 'screens/home/cookbook_form_screen.dart';
 import 'screens/home/recipe_detail_screen.dart';
 import 'screens/home/savings_details_screen.dart';
@@ -67,6 +68,7 @@ import 'core/l10n/l10n.dart';
 import 'services/user_service.dart';
 import 'services/posthog_service.dart';
 import 'utils/paywall_helper.dart';
+import 'core/utils/app_link.dart';
 
 
 // Every http call in the app goes through SubscriptionAwareClient: a request
@@ -391,51 +393,31 @@ class _CookedAppState extends State<CookedApp> with WidgetsBindingObserver {
           final state = appNavigatorKey.currentState;
           if (state != null) {
 
-            // Utility app links used by transactional emails (Welcome,
-            // billing issue, new sign-in) - matched first so they land on
-            // the right screen instead of falling through to the "external
-            // link, try to import it as a recipe" branch below.
-            final utilityLinkRegex = RegExp(
-              r'(?:cooked://|link\.cookedapp\.com/)(open|manage-subscription|security)\b',
-            );
-            final utilityMatch = utilityLinkRegex.firstMatch(url);
+            void goHome({Map<String, dynamic>? arguments}) =>
+                state.pushNamedAndRemoveUntil(AppRoutes.home, (route) => false, arguments: arguments);
 
-            // Check if it's an internal recipe link
-            final recipeRegex = RegExp(r'(?:cooked\.nixacom\.com|cookedapp\.com)/(?:share/)?recipes/([a-zA-Z0-9-]+)');
-            final match = recipeRegex.firstMatch(url);
-
-            if (utilityMatch != null) {
-              final target = utilityMatch.group(1);
-              switch (target) {
-                case 'manage-subscription':
-                  state.pushNamedAndRemoveUntil(AppRoutes.home, (route) => false);
-                  state.pushNamed(AppRoutes.subscriptionManagement);
-                  break;
-                case 'security':
-                  state.pushNamedAndRemoveUntil(AppRoutes.home, (route) => false);
-                  state.pushNamed(AppRoutes.myAccount);
-                  break;
-                case 'open':
-                default:
-                  state.pushNamedAndRemoveUntil(AppRoutes.home, (route) => false);
-              }
-            } else if (match != null) {
-              final recipeId = match.group(1);
-              
-              state.pushNamedAndRemoveUntil(
-                AppRoutes.home,
-                (route) => false,
-              );
-              state.pushNamed(
-                AppRoutes.recipeDetail,
-                arguments: {'recipeId': recipeId},
-              );
-            } else {
-              state.pushNamedAndRemoveUntil(
-                AppRoutes.home,
-                (route) => false,
-                arguments: {'initialTab': 4, 'initialUrl': url},
-              );
+            switch (AppLink.parse(url)) {
+              case UtilityLink(target: 'manage-subscription'):
+                goHome();
+                state.pushNamed(AppRoutes.subscriptionManagement);
+              case UtilityLink(target: 'security'):
+                goHome();
+                state.pushNamed(AppRoutes.myAccount);
+              case RecipeLink(:final recipeId):
+                goHome();
+                state.pushNamed(AppRoutes.recipeDetail, arguments: {'recipeId': recipeId});
+              case CookbookLink(:final cookbookId):
+                goHome();
+                state.pushNamed(AppRoutes.receiveCookbook, arguments: {'cookbookId': cookbookId});
+              case WebLink(:final url):
+                // External page: open it in the Import tab.
+                goHome(arguments: {'initialTab': 4, 'initialUrl': url});
+              case UtilityLink():
+              case UnsupportedLink():
+                // `cooked://open`, payment returns, unknown custom links:
+                // never sent to the importer (it showed "This recipe link
+                // isn't available" for them).
+                goHome();
             }
             SharingService.instance.consumeSharedText();
           } else {
@@ -557,6 +539,10 @@ class _CookedAppState extends State<CookedApp> with WidgetsBindingObserver {
                   break;
                 case AppRoutes.cookbookDetail:
                   builder = const CookbookDetailScreen();
+                  break;
+                case AppRoutes.receiveCookbook:
+                  final args = settings.arguments as Map<String, dynamic>?;
+                  builder = ReceiveCookbookScreen(cookbookId: args?['cookbookId']?.toString() ?? '');
                   break;
                 case AppRoutes.cookbookForm:
                   builder = const CookbookFormScreen();

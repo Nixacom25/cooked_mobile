@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../core/api_config.dart';
 import '../models/cookbook.dart';
+import '../models/shared_cookbook_preview.dart';
 import 'package:flutter/foundation.dart';
 import 'auth_service.dart';
 
@@ -207,6 +208,44 @@ class CookbookService {
       await getMyCookbooks(forceRefresh: true);
       rethrow;
     }
+  }
+
+  /// Public link of one of my cookbooks; sharing it lets anyone holding
+  /// the link add a copy of the cookbook (and its recipes) to their library.
+  Future<String> getShareLink(String id) async {
+    final url = Uri.parse('${ApiConfig.baseUrl}/cookbooks/$id/share');
+    final response = await http.get(url, headers: await _getHeaders());
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body)['link'] as String;
+    }
+    throw Exception('Unable to share this cookbook.');
+  }
+
+  Future<SharedCookbookPreview> getSharedPreview(String id) async {
+    final url = Uri.parse('${ApiConfig.baseUrl}/cookbooks/shared/$id');
+    final response = await http.get(url, headers: await _getHeaders());
+    if (response.statusCode == 200) {
+      return SharedCookbookPreview.fromJson(jsonDecode(response.body));
+    }
+    if (response.statusCode == 404) throw const SharedCookbookNotFound();
+    throw Exception('Unable to load the shared cookbook.');
+  }
+
+  /// Copies a shared cookbook and its recipes into my library.
+  Future<Cookbook> importShared(String id) async {
+    final url = Uri.parse('${ApiConfig.baseUrl}/cookbooks/shared/$id/import');
+    final response = await _reliableRequest(
+      () async => http.post(url, headers: await _getHeaders()),
+    );
+    if (response.statusCode == 200) {
+      final cookbook = Cookbook.fromJson(jsonDecode(response.body));
+      _cache[cookbook.id] = cookbook;
+      myCookbooksNotifier.value = [...?myCookbooksNotifier.value, cookbook];
+      return cookbook;
+    }
+    if (response.statusCode == 402) throw Exception('402: subscription required');
+    if (response.statusCode == 404) throw const SharedCookbookNotFound();
+    throw Exception('Unable to add this cookbook.');
   }
 
   Future<void> deleteCookbook(String id) async {
