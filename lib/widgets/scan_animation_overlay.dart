@@ -10,6 +10,7 @@ import '../models/recipe.dart';
 import '../core/widgets/ios_toast.dart';
 import '../core/theme/app_theme.dart';
 import '../services/error_monitoring_service.dart';
+import '../services/user_service.dart';
 import '../core/l10n/l10n.dart';
 
 enum _AnimationPlatform { ios, android }
@@ -49,6 +50,14 @@ class _ScanAnimationOverlayState extends State<ScanAnimationOverlay> {
   bool _isDark = false;
   bool _dependenciesResolved = false;
 
+  // Creators get an AI photo made for every recipe, so their scan takes
+  // longer: a caption says which stage it is at.
+  final bool _isCreator =
+      UserService.instance.currentUserNotifier.value?['role'] == 'CREATOR';
+  final Stopwatch _creatorClock = Stopwatch();
+  Timer? _creatorTicker;
+  int _creatorStep = 0;
+
   static const _defaultScanImage = 'assets/images/scan.webp';
 
   @override
@@ -75,6 +84,15 @@ class _ScanAnimationOverlayState extends State<ScanAnimationOverlay> {
   @override
   void initState() {
     super.initState();
+
+    if (_isCreator && !widget.showTestControls) {
+      _creatorStep = _creatorStepAt(Duration.zero);
+      _creatorClock.start();
+      _creatorTicker = Timer.periodic(const Duration(seconds: 1), (_) {
+        final step = _creatorStepAt(_creatorClock.elapsed);
+        if (mounted && step != _creatorStep) setState(() => _creatorStep = step);
+      });
+    }
 
     _showRive = widget.skipImageAnalysis;
     if (widget.skipImageAnalysis) {
@@ -143,11 +161,32 @@ class _ScanAnimationOverlayState extends State<ScanAnimationOverlay> {
     }
   }
 
+  /// Scanning → recipes → photos → almost ready (typed scans skip scanning).
+  int _creatorStepAt(Duration elapsed) {
+    final first = widget.skipImageAnalysis ? 1 : 0;
+    final seconds = elapsed.inSeconds;
+    if (seconds >= 40) return 3;
+    if (seconds >= 14) return 2;
+    if (seconds >= 5) return math.max(first, 1);
+    return first;
+  }
+
+  String _creatorStepLabel(BuildContext context) {
+    final l10n = context.l10n;
+    return switch (_creatorStep) {
+      0 => l10n.scanCreatorStepScanning,
+      1 => l10n.scanCreatorStepRecipes,
+      2 => l10n.scanCreatorStepPhotos,
+      _ => l10n.scanCreatorStepAlmost,
+    };
+  }
+
   @override
   void dispose() {
     _minAnimationTimer?.cancel();
     _maxTimeoutTimer?.cancel();
     _imageScanTimer?.cancel();
+    _creatorTicker?.cancel();
     _videoController?.dispose();
     super.dispose();
   }
@@ -280,6 +319,38 @@ class _ScanAnimationOverlayState extends State<ScanAnimationOverlay> {
                       skipImageAnalysis: widget.skipImageAnalysis,
                       isDark: _isDark,
                     ),
+            ),
+          if (_isCreator && !widget.showTestControls)
+            Positioned(
+              left: 24.w,
+              right: 24.w,
+              bottom: MediaQuery.of(context).padding.bottom + 40.h,
+              child: Center(
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 300),
+                  child: Container(
+                    key: ValueKey(_creatorStep),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 18.w,
+                      vertical: 10.h,
+                    ),
+                    decoration: BoxDecoration(
+                      color: context.colors.surface.withValues(alpha: 0.9),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text(
+                      _creatorStepLabel(context),
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontFamily: 'Rubik',
+                        fontWeight: FontWeight.w700,
+                        fontSize: 15.sp,
+                        color: context.colors.textPrimary,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
             ),
           if (widget.showTestControls)
             Positioned(

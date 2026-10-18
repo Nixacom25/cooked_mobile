@@ -5686,6 +5686,30 @@ abstract class AppLocalizations {
   /// **'Analyzing recipe...'**
   String get scanAnalyzingRecipe;
 
+  /// No description provided for @scanCreatorStepScanning.
+  ///
+  /// In en, this message translates to:
+  /// **'Scanning your ingredients...'**
+  String get scanCreatorStepScanning;
+
+  /// No description provided for @scanCreatorStepRecipes.
+  ///
+  /// In en, this message translates to:
+  /// **'Creating your recipes...'**
+  String get scanCreatorStepRecipes;
+
+  /// No description provided for @scanCreatorStepPhotos.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing your recipe photos...'**
+  String get scanCreatorStepPhotos;
+
+  /// No description provided for @scanCreatorStepAlmost.
+  ///
+  /// In en, this message translates to:
+  /// **'Almost ready...'**
+  String get scanCreatorStepAlmost;
+
   /// No description provided for @importStageReceiving.
   ///
   /// In en, this message translates to:

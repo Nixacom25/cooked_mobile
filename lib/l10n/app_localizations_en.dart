@@ -3037,6 +3037,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get scanAnalyzingRecipe => 'Analyzing recipe...';
 
   @override
+  String get scanCreatorStepScanning => 'Scanning your ingredients...';
+
+  @override
+  String get scanCreatorStepRecipes => 'Creating your recipes...';
+
+  @override
+  String get scanCreatorStepPhotos => 'Preparing your recipe photos...';
+
+  @override
+  String get scanCreatorStepAlmost => 'Almost ready...';
+
+  @override
   String get importStageReceiving => 'Receiving link…';
 
   @override
