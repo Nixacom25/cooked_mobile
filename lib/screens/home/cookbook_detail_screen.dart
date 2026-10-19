@@ -381,31 +381,6 @@ class _CookbookDetailScreenState extends State<CookbookDetailScreen> {
           },
         ),
         HapticMenuAction(
-          title: context.l10n.recipeRemoveFromCookbook,
-          icon: Icons.remove_circle_outline_rounded,
-          isDestructive: true,
-          onTap: () {
-            CookbookService.instance
-                .removeRecipeFromCookbook(_cookbook!.id, r.id)
-                .catchError((e) {
-                  if (context.mounted) {
-                    IosToast.show(
-                      context,
-                      message: ErrorHelper.getFriendlyMessage(e),
-                      type: ToastType.error,
-                    );
-                  }
-                  return _cookbook!;
-                });
-
-            IosToast.show(
-              context,
-              message: context.l10n.recipeRemovedFromCookbook,
-              type: ToastType.success,
-            );
-          },
-        ),
-        HapticMenuAction(
           title: context.l10n.recipeShare,
           icon: Icons.ios_share_rounded,
           onTap: () async {
@@ -435,6 +410,31 @@ class _CookbookDetailScreenState extends State<CookbookDetailScreen> {
                 );
               }
             }
+          },
+        ),
+        HapticMenuAction(
+          title: context.l10n.recipeRemoveFromCookbook,
+          icon: Icons.remove_circle_outline_rounded,
+          isDestructive: true,
+          onTap: () {
+            CookbookService.instance
+                .removeRecipeFromCookbook(_cookbook!.id, r.id)
+                .catchError((e) {
+                  if (context.mounted) {
+                    IosToast.show(
+                      context,
+                      message: ErrorHelper.getFriendlyMessage(e),
+                      type: ToastType.error,
+                    );
+                  }
+                  return _cookbook!;
+                });
+
+            IosToast.show(
+              context,
+              message: context.l10n.recipeRemovedFromCookbook,
+              type: ToastType.success,
+            );
           },
         ),
         HapticMenuAction(
