@@ -58,6 +58,49 @@ class RecipeService {
   // Cache for explore data
   final Map<String, dynamic> _cache = {};
 
+  /// Creator accounts get their recipe photo generated asynchronously after
+  /// the recipe itself is saved, so a freshly created/validated recipe can
+  /// come back with no image yet. These timers re-check in the background
+  /// and patch [myRecipesNotifier] once the photo is ready.
+  final Map<String, Timer> _imagePollTimers = {};
+
+  void _pollForMissingImage(String recipeId) {
+    if (recipeId.isEmpty || _imagePollTimers.containsKey(recipeId)) return;
+
+    var attempts = 0;
+    const maxAttempts = 12; // 12 * 5s = 60s
+    _imagePollTimers[recipeId] = Timer.periodic(const Duration(seconds: 5), (timer) async {
+      attempts++;
+      if (attempts > maxAttempts) {
+        timer.cancel();
+        _imagePollTimers.remove(recipeId);
+        return;
+      }
+      try {
+        final fresh = await getRecipe(recipeId);
+        if (fresh.image != null && fresh.image!.isNotEmpty) {
+          _applyImageUpdate(recipeId, fresh.image!);
+          timer.cancel();
+          _imagePollTimers.remove(recipeId);
+        }
+      } catch (_) {
+        // Transient network error: keep retrying until maxAttempts.
+      }
+    });
+  }
+
+  void _applyImageUpdate(String recipeId, String image) {
+    final current = myRecipesNotifier.value;
+    if (current == null) return;
+    final idx = current.indexWhere((r) => r.id == recipeId);
+    if (idx == -1 || (current[idx].image != null && current[idx].image!.isNotEmpty)) {
+      return;
+    }
+    final newList = List<Recipe>.from(current);
+    newList[idx] = newList[idx].copyWith(image: image);
+    myRecipesNotifier.value = newList;
+  }
+
   static const String _persistentCachePrefix = 'persistent_cache_v3_';
 
   Future<void> _writeToPersistentCache(String key, dynamic data) async {
@@ -436,8 +479,13 @@ class RecipeService {
       
       // Cleanup from temporary suggestions
       await _removeTemporarySuggestion(recipe.name);
-      
+
       CookbookService.instance.getMyCookbooks(forceRefresh: true).then((_) => null).catchError((_) => null);
+
+      if (saved.image == null || saved.image!.isEmpty) {
+        _pollForMissingImage(saved.id);
+      }
+
       return saved;
     } else {
       throw Exception('Failed to save recipe: ${response.body}');
@@ -1137,6 +1185,11 @@ class RecipeService {
         // Background cleanup
         _removeTemporarySuggestion(validated.name).catchError((_) => null);
         CookbookService.instance.getMyCookbooks(forceRefresh: true).then((_) => null).catchError((_) => null);
+
+        if (validated.image == null || validated.image!.isEmpty) {
+          _pollForMissingImage(validated.id);
+        }
+
         return validated;
       } else {
         throw Exception('Failed to validate recipe.');
@@ -1216,6 +1269,10 @@ class RecipeService {
   }
 
   void clearData() {
+    for (final timer in _imagePollTimers.values) {
+      timer.cancel();
+    }
+    _imagePollTimers.clear();
     myRecipesNotifier.value = null;
     recentImportsNotifier.value = null;
     homeSuggestionsNotifier.value = null;
