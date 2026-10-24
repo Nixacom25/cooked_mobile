@@ -9,6 +9,7 @@ import '../../core/extensions/string_extensions.dart';
 import '../../models/recipe.dart';
 import '../../widgets/glass_icon_button.dart';
 import '../../services/recipe_service.dart';
+import '../../services/error_monitoring_service.dart';
 import '../../core/widgets/ios_toast.dart';
 import '../../core/utils/error_helper.dart';
 import '../../widgets/add_to_grocery_modal.dart';
@@ -211,6 +212,84 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
         type: ToastType.error,
       );
     }
+  }
+
+  Future<void> _handleReportImage() async {
+    final args =
+        ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>? ??
+        {};
+    final Recipe? r = _recipe ?? args['recipe'] as Recipe?;
+    if (r == null) return;
+
+    final confirmed = await showDialog<bool?>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24.r)),
+        backgroundColor: context.colors.surface,
+        title: Text(
+          context.l10n.reportPhotoConfirmTitle,
+          style: TextStyle(
+            fontFamily: 'Rubik',
+            fontWeight: FontWeight.w800,
+            fontSize: 18.sp,
+            color: context.colors.textPrimary,
+          ),
+        ),
+        content: Text(
+          context.l10n.reportPhotoConfirmBody,
+          style: TextStyle(
+            fontFamily: 'Rubik',
+            fontSize: 14.sp,
+            color: context.colors.textSecondary,
+            height: 1.4,
+          ),
+        ),
+        actionsPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(
+              context.l10n.commonCancel,
+              style: TextStyle(
+                fontFamily: 'Rubik',
+                fontWeight: FontWeight.w600,
+                fontSize: 15.sp,
+                color: context.colors.textSecondary,
+              ),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: context.colors.accent,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+              elevation: 0,
+            ),
+            child: Text(
+              context.l10n.reportPhotoConfirmCta,
+              style: TextStyle(
+                fontFamily: 'Rubik',
+                fontWeight: FontWeight.w700,
+                fontSize: 15.sp,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    HapticFeedback.mediumImpact();
+    await ErrorMonitoringService.instance.recordRecipeImageReport(
+      recipeId: r.id,
+      recipeName: r.name,
+      imageUrl: r.image,
+    );
+
+    if (!mounted) return;
+    IosToast.show(context, message: context.l10n.reportPhotoSuccess, type: ToastType.success);
   }
 
   Widget _buildServingsSelector(Recipe? r) {
@@ -425,6 +504,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                             kcal: kcal,
                             isPreview: _isPreview,
                             onShare: _handleShare,
+                            onReportImage: _handleReportImage,
                             recipeId: r?.id,
                             recipe: r,
                             topPadding: MediaQuery.of(context).padding.top,
@@ -849,6 +929,7 @@ class _RecipeDetailHeaderDelegate extends SliverPersistentHeaderDelegate {
   final String kcal;
   final bool isPreview;
   final VoidCallback onShare;
+  final VoidCallback onReportImage;
   final String? recipeId;
   final Recipe? recipe;
   final double topPadding;
@@ -862,6 +943,7 @@ class _RecipeDetailHeaderDelegate extends SliverPersistentHeaderDelegate {
     required this.kcal,
     required this.isPreview,
     required this.onShare,
+    required this.onReportImage,
     this.recipeId,
     this.recipe,
     required this.topPadding,
@@ -1007,14 +1089,29 @@ class _RecipeDetailHeaderDelegate extends SliverPersistentHeaderDelegate {
                     },
                   ),
                 ),
-                GlassIconButton(
-                  onTap: onShare,
-                  size: 42.r,
-                  child: Icon(
-                    Icons.share_outlined,
-                    size: 20.sp,
-                    color: context.colors.textPrimary,
-                  ),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    GlassIconButton(
+                      onTap: onReportImage,
+                      size: 42.r,
+                      child: Icon(
+                        Icons.flag_outlined,
+                        size: 20.sp,
+                        color: context.colors.textPrimary,
+                      ),
+                    ),
+                    SizedBox(width: 8.w),
+                    GlassIconButton(
+                      onTap: onShare,
+                      size: 42.r,
+                      child: Icon(
+                        Icons.share_outlined,
+                        size: 20.sp,
+                        color: context.colors.textPrimary,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),

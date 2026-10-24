@@ -4378,6 +4378,36 @@ abstract class AppLocalizations {
   /// **'Removed from Cookbook and Saved Recipes'**
   String get recipeRemovedBoth;
 
+  /// No description provided for @reportPhotoAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Report this photo'**
+  String get reportPhotoAction;
+
+  /// No description provided for @reportPhotoConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Report a problem with this photo?'**
+  String get reportPhotoConfirmTitle;
+
+  /// No description provided for @reportPhotoConfirmBody.
+  ///
+  /// In en, this message translates to:
+  /// **'We\'ll let the team know this photo is missing or doesn\'t match this recipe.'**
+  String get reportPhotoConfirmBody;
+
+  /// No description provided for @reportPhotoConfirmCta.
+  ///
+  /// In en, this message translates to:
+  /// **'Report'**
+  String get reportPhotoConfirmCta;
+
+  /// No description provided for @reportPhotoSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Thanks, we\'ve reported this photo.'**
+  String get reportPhotoSuccess;
+
   /// No description provided for @recipeNoIngredients.
   ///
   /// In en, this message translates to:

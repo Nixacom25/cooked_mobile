@@ -2351,6 +2351,23 @@ class AppLocalizationsFr extends AppLocalizations {
       'Retirée du livre et des recettes enregistrées';
 
   @override
+  String get reportPhotoAction => 'Signaler cette photo';
+
+  @override
+  String get reportPhotoConfirmTitle =>
+      'Signaler un problème avec cette photo ?';
+
+  @override
+  String get reportPhotoConfirmBody =>
+      'On préviendra l\'équipe que cette photo est absente ou ne correspond pas à cette recette.';
+
+  @override
+  String get reportPhotoConfirmCta => 'Signaler';
+
+  @override
+  String get reportPhotoSuccess => 'Merci, cette photo a été signalée.';
+
+  @override
   String get recipeNoIngredients => 'Aucun ingrédient indiqué';
 
   @override

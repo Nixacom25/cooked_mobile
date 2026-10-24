@@ -2316,6 +2316,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recipeRemovedBoth => 'Removed from Cookbook and Saved Recipes';
 
   @override
+  String get reportPhotoAction => 'Report this photo';
+
+  @override
+  String get reportPhotoConfirmTitle => 'Report a problem with this photo?';
+
+  @override
+  String get reportPhotoConfirmBody =>
+      'We\'ll let the team know this photo is missing or doesn\'t match this recipe.';
+
+  @override
+  String get reportPhotoConfirmCta => 'Report';
+
+  @override
+  String get reportPhotoSuccess => 'Thanks, we\'ve reported this photo.';
+
+  @override
   String get recipeNoIngredients => 'No ingredients listed';
 
   @override

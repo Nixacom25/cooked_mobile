@@ -2331,6 +2331,22 @@ class AppLocalizationsEs extends AppLocalizations {
       'Quitada del recetario y de tus recetas guardadas';
 
   @override
+  String get reportPhotoAction => 'Reportar esta foto';
+
+  @override
+  String get reportPhotoConfirmTitle => '¿Reportar un problema con esta foto?';
+
+  @override
+  String get reportPhotoConfirmBody =>
+      'Avisaremos al equipo de que esta foto falta o no corresponde a esta receta.';
+
+  @override
+  String get reportPhotoConfirmCta => 'Reportar';
+
+  @override
+  String get reportPhotoSuccess => 'Gracias, hemos reportado esta foto.';
+
+  @override
   String get recipeNoIngredients => 'No hay ingredientes';
 
   @override

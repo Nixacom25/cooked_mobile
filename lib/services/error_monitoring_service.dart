@@ -234,6 +234,27 @@ class ErrorMonitoringService {
     );
   }
 
+  /// A user flagged a recipe's photo as missing or not matching the recipe
+  /// (AI-generated photos for creator recipes). Sent as critical so it
+  /// reaches /errors/critical and is visible to the team, with the recipe id
+  /// so it can be traced back to the exact AI generation that produced it.
+  Future<void> recordRecipeImageReport({
+    required String recipeId,
+    required String recipeName,
+    String? imageUrl,
+  }) async {
+    await recordError(
+      errorType: 'RECIPE_IMAGE_REPORT',
+      errorMessage: 'User reported the photo for "$recipeName"',
+      context: {
+        'recipe_id': recipeId,
+        'recipe_name': recipeName,
+        'image_url': (imageUrl == null || imageUrl.isEmpty) ? 'none' : imageUrl,
+      },
+      isCritical: true,
+    );
+  }
+
   Future<void> recordScreenError({
     required String screenName,
     required String errorMessage,
