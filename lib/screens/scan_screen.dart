@@ -11,6 +11,7 @@ import '../routes/app_routes.dart';
 import '../core/utils/error_helper.dart';
 import '../services/ingredient_service.dart';
 import '../services/recipe_service.dart';
+import '../services/user_service.dart';
 import '../widgets/skeleton_loader.dart';
 import '../widgets/glass_icon_button.dart';
 import '../widgets/loading_text.dart';
@@ -136,6 +137,9 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin, 
   Timer? _celebrationHapticTimer;
 
   late final AnimationController _scannerController;
+
+  bool get _isCreator =>
+      UserService.instance.currentUserNotifier.value?['role'] == 'CREATOR';
 
   void _updateState(ScanState newState) {
     if (!mounted) return;
@@ -333,6 +337,14 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin, 
           _showAnimationOverlay = false;
         });
         if (!PaywallHelper.handleError(context, e)) {
+          if (_isCreator) {
+            IosToast.show(
+              context,
+              message: context.l10n.creatorScanRecovery,
+              type: ToastType.warning,
+            );
+            return;
+          }
           IosToast.show(
             context,
             message: e.toString().replaceAll("Exception: ", ""),
@@ -2207,6 +2219,15 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin, 
           _capturedImagePath = null;
         });
         if (!PaywallHelper.handleError(context, e)) {
+          if (_isCreator) {
+            _updateState(ScanState.type);
+            IosToast.show(
+              context,
+              message: context.l10n.creatorScanRecovery,
+              type: ToastType.warning,
+            );
+            return;
+          }
           IosToast.show(
             context,
             message: ErrorHelper.getFriendlyMessage(e),

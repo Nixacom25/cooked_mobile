@@ -1,6 +1,9 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../services/subscription_service.dart';
 import '../../services/revenuecat_service.dart';
@@ -32,6 +35,7 @@ class _SubscriptionManagementScreenState
     extends State<SubscriptionManagementScreen> {
   bool _isLoading = true;
   bool _isRestoring = false;
+  bool _isOpeningManagement = false;
   Map<String, dynamic>? _subscription;
   List<SubscriptionPayment> _history = [];
 
@@ -150,6 +154,54 @@ class _SubscriptionManagementScreenState
     }
   }
 
+  Future<bool> _openExternalUri(Uri uri) async {
+    try {
+      return await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } catch (e) {
+      debugPrint('Could not open subscription management URL: $e');
+      return false;
+    }
+  }
+
+  Future<void> _openSubscriptionManagement() async {
+    if (_isOpeningManagement) return;
+    setState(() => _isOpeningManagement = true);
+
+    final storeUri = Uri.parse(
+      Platform.isAndroid
+          ? 'https://play.google.com/store/account/subscriptions?package=com.cookedapp.app'
+          : 'https://apps.apple.com/account/subscriptions',
+    );
+
+    try {
+      try {
+        final managementUrl = await RevenueCatService.instance
+            .getSubscriptionManagementUrl();
+        final managementUri = managementUrl == null
+            ? null
+            : Uri.tryParse(managementUrl);
+        if (managementUri != null &&
+            (managementUri.scheme == 'https' ||
+                managementUri.scheme == 'http') &&
+            await _openExternalUri(managementUri)) {
+          return;
+        }
+      } catch (e) {
+        debugPrint('Could not get the RevenueCat management URL: $e');
+      }
+
+      if (!await _openExternalUri(storeUri) && mounted) {
+        IosToast.show(
+          context,
+          message: context.l10n.subManagementLinkFailed,
+          type: ToastType.error,
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isOpeningManagement = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -159,18 +211,14 @@ class _SubscriptionManagementScreenState
         fit: StackFit.expand,
         children: [
           // ── Red background fond_page.png ──
-          const Positioned.fill(
-            child: RedHeaderBackground(),
-          ),
+          const Positioned.fill(child: RedHeaderBackground()),
           SafeArea(
             bottom: false,
             child: Container(
               margin: EdgeInsets.only(top: 25.h),
               decoration: BoxDecoration(
                 color: context.colors.surface,
-                borderRadius: BorderRadius.vertical(
-                  top: Radius.circular(32.r),
-                ),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(32.r)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -214,17 +262,26 @@ class _SubscriptionManagementScreenState
                             child: Column(
                               children: [
                                 const SkeletonLoader(
-                                    height: 150, width: double.infinity, borderRadius: 20),
+                                  height: 150,
+                                  width: double.infinity,
+                                  borderRadius: 20,
+                                ),
                                 SizedBox(height: 32.h),
                                 const SkeletonList(height: 40, itemCount: 4),
                                 SizedBox(height: 32.h),
                                 const SkeletonLoader(
-                                    height: 56, width: double.infinity, borderRadius: 30),
+                                  height: 56,
+                                  width: double.infinity,
+                                  borderRadius: 30,
+                                ),
                               ],
                             ),
                           )
                         : SingleChildScrollView(
-                            padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 24.w,
+                              vertical: 12.h,
+                            ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -242,7 +299,9 @@ class _SubscriptionManagementScreenState
                                 SizedBox(height: 14.h),
                                 _buildDetailRow(
                                   context.l10n.subPlan,
-                                  _subscription?['isYearly'] == true ? context.l10n.planYearly : context.l10n.planMonthly,
+                                  _subscription?['isYearly'] == true
+                                      ? context.l10n.planYearly
+                                      : context.l10n.planMonthly,
                                 ),
                                 _buildDetailRow(
                                   context.l10n.subStartDate,
@@ -259,21 +318,90 @@ class _SubscriptionManagementScreenState
                                 SizedBox(height: 28.h),
 
                                 ValueListenableBuilder<Map<String, dynamic>?>(
-                                  valueListenable: UserService.instance.currentUserNotifier,
+                                  valueListenable:
+                                      UserService.instance.currentUserNotifier,
                                   builder: (context, user, _) {
                                     final bool isPremium =
                                         _subscription?['status'] == 'ACTIVE' ||
-                                            _subscription?['status'] == 'TRIAL' ||
-                                            _subscription?['status'] == 'INFINITE' ||
-                                            user?['role'] == 'CREATOR' ||
-                                            user?['role'] == 'ADMIN' ||
-                                            user?['role'] == 'EDITOR';
+                                        _subscription?['status'] == 'TRIAL' ||
+                                        _subscription?['status'] ==
+                                            'INFINITE' ||
+                                        user?['role'] == 'CREATOR' ||
+                                        user?['role'] == 'ADMIN' ||
+                                        user?['role'] == 'EDITOR';
 
                                     return Column(
                                       children: [
+                                        GestureDetector(
+                                          onTap: _isOpeningManagement
+                                              ? null
+                                              : _openSubscriptionManagement,
+                                          child: Container(
+                                            width: double.infinity,
+                                            height: 54.h,
+                                            decoration: BoxDecoration(
+                                              border: Border.all(
+                                                color: context.colors.accent,
+                                              ),
+                                              borderRadius:
+                                                  BorderRadius.circular(27.r),
+                                            ),
+                                            child: Center(
+                                              child: _isOpeningManagement
+                                                  ? SizedBox(
+                                                      width: 18.r,
+                                                      height: 18.r,
+                                                      child:
+                                                          const AppLoadingIndicator(),
+                                                    )
+                                                  : Row(
+                                                      mainAxisSize:
+                                                          MainAxisSize.min,
+                                                      children: [
+                                                        Text(
+                                                          context
+                                                              .l10n
+                                                              .subManageSubscription,
+                                                          style: TextStyle(
+                                                            fontFamily: 'Rubik',
+                                                            fontWeight:
+                                                                FontWeight.w700,
+                                                            fontSize: 15.sp,
+                                                            color: context
+                                                                .colors
+                                                                .accent,
+                                                          ),
+                                                        ),
+                                                        SizedBox(width: 8.w),
+                                                        Icon(
+                                                          Icons.open_in_new,
+                                                          size: 16.sp,
+                                                          color: context
+                                                              .colors
+                                                              .accent,
+                                                        ),
+                                                      ],
+                                                    ),
+                                            ),
+                                          ),
+                                        ),
+                                        SizedBox(height: 8.h),
+                                        Text(
+                                          context
+                                              .l10n
+                                              .subManageSubscriptionHint,
+                                          textAlign: TextAlign.center,
+                                          style: TextStyle(
+                                            fontFamily: 'Rubik',
+                                            fontSize: 12.sp,
+                                            color: context.colors.textSecondary,
+                                          ),
+                                        ),
+                                        SizedBox(height: 20.h),
                                         if (isPremium) ...[
                                           Row(
-                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
                                             children: [
                                               Container(
                                                 padding: EdgeInsets.all(2.r),
@@ -294,7 +422,9 @@ class _SubscriptionManagementScreenState
                                                   fontFamily: 'Rubik',
                                                   fontSize: 14.sp,
                                                   fontWeight: FontWeight.w700,
-                                                  color: const Color(0xFF10B981),
+                                                  color: const Color(
+                                                    0xFF10B981,
+                                                  ),
                                                 ),
                                               ),
                                             ],
@@ -302,7 +432,9 @@ class _SubscriptionManagementScreenState
                                           SizedBox(height: 16.h),
                                         ],
                                         GestureDetector(
-                                          onTap: isPremium ? null : _showRenewalScreen,
+                                          onTap: isPremium
+                                              ? null
+                                              : _showRenewalScreen,
                                           child: Container(
                                             width: double.infinity,
                                             height: 54.h,
@@ -310,11 +442,14 @@ class _SubscriptionManagementScreenState
                                               color: isPremium
                                                   ? context.colors.border
                                                   : context.colors.accent,
-                                              borderRadius: BorderRadius.circular(27.r),
+                                              borderRadius:
+                                                  BorderRadius.circular(27.r),
                                             ),
                                             child: Center(
                                               child: Text(
-                                                isPremium ? context.l10n.subActive : context.l10n.subRenew,
+                                                isPremium
+                                                    ? context.l10n.subActive
+                                                    : context.l10n.subRenew,
                                                 style: TextStyle(
                                                   fontFamily: 'Rubik',
                                                   fontWeight: FontWeight.w700,
@@ -329,22 +464,30 @@ class _SubscriptionManagementScreenState
                                         ),
                                         SizedBox(height: 16.h),
                                         GestureDetector(
-                                          onTap: _isRestoring ? null : _handleRestorePurchases,
+                                          onTap: _isRestoring
+                                              ? null
+                                              : _handleRestorePurchases,
                                           child: Center(
                                             child: _isRestoring
                                                 ? SizedBox(
                                                     width: 18.r,
                                                     height: 18.r,
-                                                    child: const AppLoadingIndicator(),
+                                                    child:
+                                                        const AppLoadingIndicator(),
                                                   )
                                                 : Text(
-                                                    context.l10n.subRestorePurchases,
+                                                    context
+                                                        .l10n
+                                                        .subRestorePurchases,
                                                     style: TextStyle(
                                                       fontFamily: 'Rubik',
-                                                      fontWeight: FontWeight.w600,
+                                                      fontWeight:
+                                                          FontWeight.w600,
                                                       fontSize: 14.sp,
-                                                      color: context.colors.accent,
-                                                      decoration: TextDecoration.underline,
+                                                      color:
+                                                          context.colors.accent,
+                                                      decoration: TextDecoration
+                                                          .underline,
                                                     ),
                                                   ),
                                           ),
@@ -367,7 +510,9 @@ class _SubscriptionManagementScreenState
                                 SizedBox(height: 14.h),
                                 if (_history.isEmpty)
                                   Padding(
-                                    padding: EdgeInsets.symmetric(vertical: 12.h),
+                                    padding: EdgeInsets.symmetric(
+                                      vertical: 12.h,
+                                    ),
                                     child: Text(
                                       context.l10n.subNoPayments,
                                       style: TextStyle(
@@ -411,7 +556,9 @@ class _SubscriptionManagementScreenState
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                isTrial ? context.l10n.subFreeTrial : context.l10n.subPremiumPlan,
+                isTrial
+                    ? context.l10n.subFreeTrial
+                    : context.l10n.subPremiumPlan,
                 style: TextStyle(
                   fontFamily: 'Rubik',
                   fontSize: 18.sp,
@@ -420,21 +567,24 @@ class _SubscriptionManagementScreenState
                 ),
               ),
               Container(
-                padding: EdgeInsets.symmetric(
-                  horizontal: 10.w,
-                  vertical: 4.h,
-                ),
+                padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
                 decoration: BoxDecoration(
                   color: isExpired
-                      ? (isDark ? context.colors.destructive.withValues(alpha: 0.18) : const Color(0xFFFEE2E2))
-                      : (isDark ? const Color(0xFF059669).withValues(alpha: 0.18) : const Color(0xFFD1FAE5)),
+                      ? (isDark
+                            ? context.colors.destructive.withValues(alpha: 0.18)
+                            : const Color(0xFFFEE2E2))
+                      : (isDark
+                            ? const Color(0xFF059669).withValues(alpha: 0.18)
+                            : const Color(0xFFD1FAE5)),
                   borderRadius: BorderRadius.circular(12.r),
                 ),
                 child: Text(
                   status,
                   style: TextStyle(
                     fontFamily: 'Rubik',
-                    color: isExpired ? context.colors.destructive : const Color(0xFF059669),
+                    color: isExpired
+                        ? context.colors.destructive
+                        : const Color(0xFF059669),
                     fontWeight: FontWeight.w700,
                     fontSize: 12.sp,
                   ),
@@ -578,15 +728,21 @@ class _SubscriptionManagementScreenState
                 padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
                 decoration: BoxDecoration(
                   color: isSuccess
-                      ? (isDark ? const Color(0xFF059669).withValues(alpha: 0.18) : const Color(0xFFD1FAE5))
-                      : (isDark ? context.colors.destructive.withValues(alpha: 0.18) : const Color(0xFFFEE2E2)),
+                      ? (isDark
+                            ? const Color(0xFF059669).withValues(alpha: 0.18)
+                            : const Color(0xFFD1FAE5))
+                      : (isDark
+                            ? context.colors.destructive.withValues(alpha: 0.18)
+                            : const Color(0xFFFEE2E2)),
                   borderRadius: BorderRadius.circular(8.r),
                 ),
                 child: Text(
                   isSuccess ? 'RENEWAL' : 'FAILED',
                   style: TextStyle(
                     fontFamily: 'Rubik',
-                    color: isSuccess ? const Color(0xFF059669) : context.colors.destructive,
+                    color: isSuccess
+                        ? const Color(0xFF059669)
+                        : context.colors.destructive,
                     fontSize: 10.sp,
                     fontWeight: FontWeight.w700,
                   ),

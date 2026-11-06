@@ -1838,6 +1838,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get subRestorePurchases => 'Restore Purchases';
 
   @override
+  String get subManageSubscription => 'Manage or cancel subscription';
+
+  @override
+  String get subManageSubscriptionHint =>
+      'Cancellation is completed through the store used for purchase.';
+
+  @override
+  String get subManagementLinkFailed =>
+      'Couldn’t open the store. Please open subscriptions in your Apple or Google account settings.';
+
+  @override
   String get subActive => 'Active Subscription';
 
   @override
@@ -3063,6 +3074,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get scanCreatorStepAlmost => 'Almost ready...';
+
+  @override
+  String get creatorScanRecovery =>
+      'You can enter ingredients manually to continue.';
+
+  @override
+  String get creatorImportRecovery =>
+      'Try a direct recipe link or another source.';
 
   @override
   String get importStageReceiving => 'Receiving link…';

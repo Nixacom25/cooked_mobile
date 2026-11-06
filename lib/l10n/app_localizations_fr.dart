@@ -1870,6 +1870,17 @@ class AppLocalizationsFr extends AppLocalizations {
   String get subRestorePurchases => 'Restaurer les achats';
 
   @override
+  String get subManageSubscription => 'Gérer ou annuler l’abonnement';
+
+  @override
+  String get subManageSubscriptionHint =>
+      'L’annulation se fait dans la boutique utilisée lors de l’achat.';
+
+  @override
+  String get subManagementLinkFailed =>
+      'Impossible d’ouvrir la boutique. Consultez les abonnements dans les réglages de votre compte Apple ou Google.';
+
+  @override
   String get subActive => 'Abonnement actif';
 
   @override
@@ -3117,6 +3128,14 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get scanCreatorStepAlmost => 'Presque prêt…';
+
+  @override
+  String get creatorScanRecovery =>
+      'Tu peux saisir les ingrédients manuellement pour continuer.';
+
+  @override
+  String get creatorImportRecovery =>
+      'Essaie un lien direct vers la recette ou une autre source.';
 
   @override
   String get importStageReceiving => 'Réception du lien…';

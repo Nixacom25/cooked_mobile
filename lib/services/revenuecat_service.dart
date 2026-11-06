@@ -13,12 +13,13 @@ import '../core/l10n/l10n.dart';
 
 class RevenueCatService {
   RevenueCatService._privateConstructor();
-  static final RevenueCatService instance = RevenueCatService._privateConstructor();
+  static final RevenueCatService instance =
+      RevenueCatService._privateConstructor();
 
   // RevenueCat Public API Keys (Replace with your actual keys from RevenueCat Dashboard)
   static const String _appleApiKey = 'appl_KydPawFScfkuOWNyDtoJyTZHYnn';
   static const String _googleApiKey = 'goog_sutqrppuWHniyEBbZUiQmkpHkds';
-  
+
   // Entitlement ID defined in RevenueCat Dashboard (default: 'premium')
   static const String premiumEntitlementId = 'premium';
 
@@ -48,7 +49,7 @@ class RevenueCatService {
         }
         await Purchases.configure(configuration);
         _isInitialized = true;
-        
+
         // Listen to purchaser info updates
         Purchases.addCustomerInfoUpdateListener((customerInfo) {
           _updateUserPremiumStatus(customerInfo);
@@ -64,14 +65,14 @@ class RevenueCatService {
         UserService.instance.currentUserNotifier.addListener(_syncIdentity);
         _syncIdentity();
       }
-    } catch (e) {
-    }
+    } catch (e) {}
   }
 
   String? _identifiedUserId;
 
   void _syncIdentity() {
-    final id = UserService.instance.currentUserNotifier.value?['id']?.toString();
+    final id = UserService.instance.currentUserNotifier.value?['id']
+        ?.toString();
     if (id != null && id.isNotEmpty) {
       if (id != _identifiedUserId) {
         _identifiedUserId = id;
@@ -89,7 +90,8 @@ class RevenueCatService {
   /// subscribed user see "subscription required" until they relaunched.
   Future<void> identifyNow() async {
     if (!_isInitialized) return;
-    final id = UserService.instance.currentUserNotifier.value?['id']?.toString();
+    final id = UserService.instance.currentUserNotifier.value?['id']
+        ?.toString();
     if (id == null || id.isEmpty) return;
     if (id != _identifiedUserId) {
       _identifiedUserId = id;
@@ -105,10 +107,10 @@ class RevenueCatService {
 
   Future<List<StoreProduct>> getGiftProducts() async {
     try {
-      return await Purchases.getProducts(
-        [giftOneYearProductId, giftThreeMonthsProductId],
-        productCategory: ProductCategory.nonSubscription,
-      );
+      return await Purchases.getProducts([
+        giftOneYearProductId,
+        giftThreeMonthsProductId,
+      ], productCategory: ProductCategory.nonSubscription);
     } catch (e) {
       return [];
     }
@@ -140,8 +142,13 @@ class RevenueCatService {
     try {
       await Purchases.invalidateCustomerInfoCache();
       _updateUserPremiumStatus(await Purchases.getCustomerInfo());
-    } catch (e) {
-    }
+    } catch (e) {}
+  }
+
+  Future<String?> getSubscriptionManagementUrl() async {
+    if (!_isInitialized) return null;
+    final customerInfo = await Purchases.getCustomerInfo();
+    return customerInfo.managementURL;
   }
 
   Future<void> logIn(String userId) async {
@@ -149,8 +156,7 @@ class RevenueCatService {
     try {
       LogInResult result = await Purchases.logIn(userId);
       _updateUserPremiumStatus(result.customerInfo);
-    } catch (e) {
-    }
+    } catch (e) {}
   }
 
   Future<void> logOut() async {
@@ -158,8 +164,7 @@ class RevenueCatService {
     try {
       CustomerInfo customerInfo = await Purchases.logOut();
       _updateUserPremiumStatus(customerInfo);
-    } catch (e) {
-    }
+    } catch (e) {}
   }
 
   Future<Offerings?> getOfferings() async {
@@ -180,9 +185,9 @@ class RevenueCatService {
   /// showing the badge.
   Future<bool> isEligibleForTrial(String productIdentifier) async {
     try {
-      final result = await Purchases.checkTrialOrIntroductoryPriceEligibility(
-        [productIdentifier],
-      );
+      final result = await Purchases.checkTrialOrIntroductoryPriceEligibility([
+        productIdentifier,
+      ]);
       return result[productIdentifier]?.status ==
           IntroEligibilityStatus.introEligibilityStatusEligible;
     } catch (e) {
@@ -192,9 +197,13 @@ class RevenueCatService {
 
   Future<bool> buyPackage(Package package) async {
     try {
-      final purchaseResult = await Purchases.purchase(PurchaseParams.package(package));
+      final purchaseResult = await Purchases.purchase(
+        PurchaseParams.package(package),
+      );
       CustomerInfo customerInfo = purchaseResult.customerInfo;
-      bool isSubscribed = customerInfo.entitlements.all[premiumEntitlementId]?.isActive ?? false;
+      bool isSubscribed =
+          customerInfo.entitlements.all[premiumEntitlementId]?.isActive ??
+          false;
 
       _updateUserPremiumStatus(customerInfo);
 
@@ -231,8 +240,10 @@ class RevenueCatService {
   Future<bool> restorePurchases() async {
     try {
       CustomerInfo customerInfo = await Purchases.restorePurchases();
-      bool isSubscribed = customerInfo.entitlements.all[premiumEntitlementId]?.isActive ?? false;
-      
+      bool isSubscribed =
+          customerInfo.entitlements.all[premiumEntitlementId]?.isActive ??
+          false;
+
       _updateUserPremiumStatus(customerInfo);
 
       if (isSubscribed) {
@@ -251,24 +262,26 @@ class RevenueCatService {
   Future<bool> isPremium() async {
     try {
       CustomerInfo customerInfo = await Purchases.getCustomerInfo();
-      return customerInfo.entitlements.all[premiumEntitlementId]?.isActive ?? false;
+      return customerInfo.entitlements.all[premiumEntitlementId]?.isActive ??
+          false;
     } catch (e) {
       return false;
     }
   }
 
   void _updateUserPremiumStatus(CustomerInfo customerInfo) {
-    final bool isSubscribed = customerInfo.entitlements.all[premiumEntitlementId]?.isActive ?? false;
+    final bool isSubscribed =
+        customerInfo.entitlements.all[premiumEntitlementId]?.isActive ?? false;
     final entitlementInfo = customerInfo.entitlements.all[premiumEntitlementId];
-    
+
     if (isSubscribed) {
       UserService.instance.updateLocalUserPremiumStatus(true);
-      
+
       // Sync subscription details with backend
       _syncSubscriptionWithBackend(customerInfo, entitlementInfo);
     } else {
       UserService.instance.updateLocalUserPremiumStatus(false);
-      
+
       // Check if subscription expired and sync with backend
       if (entitlementInfo != null && entitlementInfo.expirationDate != null) {
         _syncSubscriptionWithBackend(customerInfo, entitlementInfo);
@@ -276,7 +289,10 @@ class RevenueCatService {
     }
   }
 
-  Future<void> _syncSubscriptionWithBackend(CustomerInfo customerInfo, EntitlementInfo? entitlementInfo) async {
+  Future<void> _syncSubscriptionWithBackend(
+    CustomerInfo customerInfo,
+    EntitlementInfo? entitlementInfo,
+  ) async {
     try {
       final user = UserService.instance.currentUserNotifier.value;
       if (user == null || user['id'] == null) return;
@@ -287,8 +303,12 @@ class RevenueCatService {
       final productId = entitlementInfo?.productIdentifier;
       if (productId != null) {
         try {
-          await StorePriceService.instance.load().timeout(const Duration(seconds: 5));
-          priceLabel = StorePriceService.instance.prices.value.labelFor(productId);
+          await StorePriceService.instance.load().timeout(
+            const Duration(seconds: 5),
+          );
+          priceLabel = StorePriceService.instance.prices.value.labelFor(
+            productId,
+          );
         } catch (_) {}
       }
 
@@ -313,9 +333,7 @@ class RevenueCatService {
         body: jsonEncode(subscriptionData),
       );
 
-      if (response.statusCode == 200) {
-      }
-    } catch (e) {
-    }
+      if (response.statusCode == 200) {}
+    } catch (e) {}
   }
 }

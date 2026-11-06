@@ -3550,6 +3550,24 @@ abstract class AppLocalizations {
   /// **'Restore Purchases'**
   String get subRestorePurchases;
 
+  /// No description provided for @subManageSubscription.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage or cancel subscription'**
+  String get subManageSubscription;
+
+  /// No description provided for @subManageSubscriptionHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancellation is completed through the store used for purchase.'**
+  String get subManageSubscriptionHint;
+
+  /// No description provided for @subManagementLinkFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn’t open the store. Please open subscriptions in your Apple or Google account settings.'**
+  String get subManagementLinkFailed;
+
   /// No description provided for @subActive.
   ///
   /// In en, this message translates to:
@@ -5739,6 +5757,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Almost ready...'**
   String get scanCreatorStepAlmost;
+
+  /// No description provided for @creatorScanRecovery.
+  ///
+  /// In en, this message translates to:
+  /// **'You can enter ingredients manually to continue.'**
+  String get creatorScanRecovery;
+
+  /// No description provided for @creatorImportRecovery.
+  ///
+  /// In en, this message translates to:
+  /// **'Try a direct recipe link or another source.'**
+  String get creatorImportRecovery;
 
   /// No description provided for @importStageReceiving.
   ///

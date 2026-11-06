@@ -8,6 +8,7 @@ import '../widgets/app_top_header.dart';
 import '../widgets/red_header_background.dart';
 import '../services/app_events_service.dart';
 import '../services/recipe_service.dart';
+import '../services/user_service.dart';
 import '../models/recipe.dart';
 import '../routes/app_routes.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -53,6 +54,9 @@ class ImportScreen extends StatefulWidget {
 }
 
 class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMixin {
+  bool get _isCreator =>
+      UserService.instance.currentUserNotifier.value?['role'] == 'CREATOR';
+
   final Set<String> _validatedRecipeIds = {};
   final GlobalKey _searchFieldKey = GlobalKey();
   
@@ -285,6 +289,10 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
         (uri.scheme == 'http' || uri.scheme == 'https') &&
         domainRegex.hasMatch(uri.host);
     if (!isValidRecipeLink) {
+      if (_isCreator) {
+        _showCreatorImportRecovery(context.l10n.importInvalidLink);
+        return;
+      }
       _showImportFallback(
         failedUrl: trimmedUrl,
         errorMessage: context.l10n.importInvalidLink,
@@ -359,6 +367,15 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
           !recipe.name.trim().toLowerCase().contains('title of recipe');
       if (!hasContent || !hasRealName) {
         if (!mounted) return;
+        if (_isCreator) {
+          await ErrorMonitoringService.instance.recordImportFailure(
+            url: url,
+            reason: 'Import response did not contain a complete recipe.',
+          );
+          if (!mounted) return;
+          _showCreatorImportRecovery(context.l10n.creatorImportRecovery);
+          return;
+        }
         _showImportFallback(
           failedUrl: url,
           errorMessage: context.l10n.importExtractFailed,
@@ -397,8 +414,13 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
       );
       
       if (!mounted) return;
-      
+
       if (PaywallHelper.handleError(context, e)) return;
+
+      if (_isCreator) {
+        _showCreatorImportRecovery(context.l10n.creatorImportRecovery);
+        return;
+      }
       
       // Show fallback page for import failures
       _showImportFallback(
@@ -412,6 +434,11 @@ class _ImportScreenState extends State<ImportScreen> with TickerProviderStateMix
         widget.isImportingNotifier?.value = false;
       }
     }
+  }
+
+  void _showCreatorImportRecovery(String message) {
+    if (!mounted) return;
+    IosToast.show(context, message: message, type: ToastType.warning);
   }
 
   Future<void> _handleWebSearch(String val) async {
