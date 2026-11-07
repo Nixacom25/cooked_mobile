@@ -20,6 +20,7 @@ import '../../widgets/app_top_header.dart';
 import '../../widgets/feedback_form.dart';
 import '../../widgets/red_header_background.dart';
 import '../../widgets/saved_recipe_card.dart';
+import '../../widgets/recipe_image_placeholder.dart';
 import '../../widgets/recipe_shortcut_card.dart';
 import '../../widgets/scroll_blur_header_overlay.dart';
 import '../../services/auth_service.dart';
@@ -57,7 +58,9 @@ class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key, this.initialTab = 0, this.initialUrl});
 
   static final ValueNotifier<int> activeTabNotifier = ValueNotifier<int>(0);
-  static final ValueNotifier<int?> tabRequestNotifier = ValueNotifier<int?>(null);
+  static final ValueNotifier<int?> tabRequestNotifier = ValueNotifier<int?>(
+    null,
+  );
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -94,7 +97,9 @@ class _HomeScreenState extends State<HomeScreen>
   Future<void> _verifySession() async {
     if (await AuthService.instance.ensureSession()) return;
     if (!mounted) return;
-    Navigator.of(context).pushNamedAndRemoveUntil(AppRoutes.welcome, (route) => false);
+    Navigator.of(
+      context,
+    ).pushNamedAndRemoveUntil(AppRoutes.welcome, (route) => false);
   }
 
   @override
@@ -221,8 +226,7 @@ class _HomeScreenState extends State<HomeScreen>
             firstCookbook: firstCb,
             onTabSwitch: (idx) => _switchTab(idx),
           );
-        } catch (e) {
-        }
+        } catch (e) {}
       });
     });
   }
@@ -349,166 +353,166 @@ class _HomeScreenState extends State<HomeScreen>
         resizeToAvoidBottomInset: false,
         extendBody: true,
         body: Stack(
-            children: [
-              FadeIndexedStack(index: _currentTab, children: _tabWidgets),
+          children: [
+            FadeIndexedStack(index: _currentTab, children: _tabWidgets),
 
-              // Test animation FAB raised above bottom nav
-              if (kDebugMode && _currentTab == 0)
-                Positioned(
-                  right: 16.w,
-                  bottom: 95.h,
-                  child: FloatingActionButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => Scaffold(
-                            body: ScanAnimationOverlay(
-                              showTestControls: true,
-                              imagePath: 'assets/images/scan.webp',
-                              detectedIngredients: [
-                                RecipeIngredient(
-                                  id: 'i1',
-                                  name: "Tomates",
-                                  amount: 2.0,
-                                  unit: "pcs",
-                                  quantity: "2 pcs",
-                                  image: "assets/images/ing1.png",
-                                ),
-                                RecipeIngredient(
-                                  id: 'i2',
-                                  name: "Oignons",
-                                  amount: 1.0,
-                                  unit: "pc",
-                                  quantity: "1 pc",
-                                  image: "assets/images/ing2.png",
-                                ),
-                                RecipeIngredient(
-                                  id: 'i3',
-                                  name: "Ail",
-                                  amount: 3.0,
-                                  unit: "gousses",
-                                  quantity: "3 gousses",
-                                  image: "assets/images/ing3.png",
-                                ),
-                                RecipeIngredient(
-                                  id: 'i4',
-                                  name: "Poulet",
-                                  amount: 500.0,
-                                  unit: "g",
-                                  quantity: "500 g",
-                                  image: "assets/images/ing4.png",
-                                ),
-                                RecipeIngredient(
-                                  id: 'i5',
-                                  name: "Carottes",
-                                  amount: 2.0,
-                                  unit: "pcs",
-                                  quantity: "2 pcs",
-                                  image: "assets/images/ing5.png",
-                                ),
-                              ],
-                              generatedRecipes: [
-                                Recipe(
-                                  id: 'r1',
-                                  name: 'Poulet rôti aux légumes',
-                                  cookTime: 45,
-                                  kcal: 450,
-                                  steps: [],
-                                  equipment: [],
-                                  isPublic: true,
-                                  isFavorite: false,
-                                  createdAt: DateTime.now(),
-                                  updatedAt: DateTime.now(),
-                                  image: 'assets/images/plat1.png',
-                                  ingredients: [],
-                                ),
-                                Recipe(
-                                  id: 'r2',
-                                  name: 'Salade fraîcheur',
-                                  cookTime: 0,
-                                  kcal: 200,
-                                  steps: [],
-                                  equipment: [],
-                                  isPublic: true,
-                                  isFavorite: false,
-                                  createdAt: DateTime.now(),
-                                  updatedAt: DateTime.now(),
-                                  image: 'assets/images/plat2.png',
-                                  ingredients: [],
-                                ),
-                                Recipe(
-                                  id: 'r3',
-                                  name: 'Mijoté de poulet',
-                                  cookTime: 60,
-                                  kcal: 550,
-                                  steps: [],
-                                  equipment: [],
-                                  isPublic: true,
-                                  isFavorite: false,
-                                  createdAt: DateTime.now(),
-                                  updatedAt: DateTime.now(),
-                                  image: 'assets/images/plat3.png',
-                                  ingredients: [],
-                                ),
-                              ],
-                              onAnimationComplete: () {
-                                Navigator.pop(context);
-                              },
-                            ),
+            // Test animation FAB raised above bottom nav
+            if (kDebugMode && _currentTab == 0)
+              Positioned(
+                right: 16.w,
+                bottom: 95.h,
+                child: FloatingActionButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => Scaffold(
+                          body: ScanAnimationOverlay(
+                            showTestControls: true,
+                            imagePath: 'assets/images/scan.webp',
+                            detectedIngredients: [
+                              RecipeIngredient(
+                                id: 'i1',
+                                name: "Tomates",
+                                amount: 2.0,
+                                unit: "pcs",
+                                quantity: "2 pcs",
+                                image: "assets/images/ing1.png",
+                              ),
+                              RecipeIngredient(
+                                id: 'i2',
+                                name: "Oignons",
+                                amount: 1.0,
+                                unit: "pc",
+                                quantity: "1 pc",
+                                image: "assets/images/ing2.png",
+                              ),
+                              RecipeIngredient(
+                                id: 'i3',
+                                name: "Ail",
+                                amount: 3.0,
+                                unit: "gousses",
+                                quantity: "3 gousses",
+                                image: "assets/images/ing3.png",
+                              ),
+                              RecipeIngredient(
+                                id: 'i4',
+                                name: "Poulet",
+                                amount: 500.0,
+                                unit: "g",
+                                quantity: "500 g",
+                                image: "assets/images/ing4.png",
+                              ),
+                              RecipeIngredient(
+                                id: 'i5',
+                                name: "Carottes",
+                                amount: 2.0,
+                                unit: "pcs",
+                                quantity: "2 pcs",
+                                image: "assets/images/ing5.png",
+                              ),
+                            ],
+                            generatedRecipes: [
+                              Recipe(
+                                id: 'r1',
+                                name: 'Poulet rôti aux légumes',
+                                cookTime: 45,
+                                kcal: 450,
+                                steps: [],
+                                equipment: [],
+                                isPublic: true,
+                                isFavorite: false,
+                                createdAt: DateTime.now(),
+                                updatedAt: DateTime.now(),
+                                image: 'assets/images/plat1.png',
+                                ingredients: [],
+                              ),
+                              Recipe(
+                                id: 'r2',
+                                name: 'Salade fraîcheur',
+                                cookTime: 0,
+                                kcal: 200,
+                                steps: [],
+                                equipment: [],
+                                isPublic: true,
+                                isFavorite: false,
+                                createdAt: DateTime.now(),
+                                updatedAt: DateTime.now(),
+                                image: 'assets/images/plat2.png',
+                                ingredients: [],
+                              ),
+                              Recipe(
+                                id: 'r3',
+                                name: 'Mijoté de poulet',
+                                cookTime: 60,
+                                kcal: 550,
+                                steps: [],
+                                equipment: [],
+                                isPublic: true,
+                                isFavorite: false,
+                                createdAt: DateTime.now(),
+                                updatedAt: DateTime.now(),
+                                image: 'assets/images/plat3.png',
+                                ingredients: [],
+                              ),
+                            ],
+                            onAnimationComplete: () {
+                              Navigator.pop(context);
+                            },
                           ),
                         ),
-                      );
-                    },
-                    child: const Icon(Icons.animation),
-                  ),
+                      ),
+                    );
+                  },
+                  child: const Icon(Icons.animation),
                 ),
-
-              ValueListenableBuilder<bool>(
-                valueListenable: _isScanInResultsMode,
-                builder: (context, inResultsMode, _) {
-                  return ValueListenableBuilder<bool>(
-                    valueListenable: _isImportLoading,
-                    builder: (context, isImportLoading, _) {
-                      final isScanningTab = (_currentTab == 2);
-                      final hideNav = isScanningTab || isImportLoading;
-
-                      return Stack(
-                        children: [
-                          // Custom Bottom Navigation Bar overlaid entirely on top
-                          Positioned(
-                            left: 0,
-                            right: 0,
-                            bottom: 0,
-                            child: SlideTransition(
-                              position: _navSlide,
-                              child: hideNav || isKeyboardOpen
-                                  ? const SizedBox.shrink()
-                                  : _FloatingBottomNav(
-                                      currentIndex: _currentTab,
-                                      navVisible: _navVisible,
-                                      onTap: _switchTab,
-                                      onCameraTap: () {
-                                        if (_currentTab == 2) {
-                                          _toggleNav();
-                                        } else {
-                                          _switchTab(2);
-                                        }
-                                      },
-                                      scanTabKey: _scanTabKey,
-                                      groceryTabKey: _groceryTabKey,
-                                      importTabKey: _importTabKey,
-                                    ),
-                            ),
-                          ),
-                        ],
-                      );
-                    },
-                  );
-                },
               ),
-            ],
-          ),
+
+            ValueListenableBuilder<bool>(
+              valueListenable: _isScanInResultsMode,
+              builder: (context, inResultsMode, _) {
+                return ValueListenableBuilder<bool>(
+                  valueListenable: _isImportLoading,
+                  builder: (context, isImportLoading, _) {
+                    final isScanningTab = (_currentTab == 2);
+                    final hideNav = isScanningTab || isImportLoading;
+
+                    return Stack(
+                      children: [
+                        // Custom Bottom Navigation Bar overlaid entirely on top
+                        Positioned(
+                          left: 0,
+                          right: 0,
+                          bottom: 0,
+                          child: SlideTransition(
+                            position: _navSlide,
+                            child: hideNav || isKeyboardOpen
+                                ? const SizedBox.shrink()
+                                : _FloatingBottomNav(
+                                    currentIndex: _currentTab,
+                                    navVisible: _navVisible,
+                                    onTap: _switchTab,
+                                    onCameraTap: () {
+                                      if (_currentTab == 2) {
+                                        _toggleNav();
+                                      } else {
+                                        _switchTab(2);
+                                      }
+                                    },
+                                    scanTabKey: _scanTabKey,
+                                    groceryTabKey: _groceryTabKey,
+                                    importTabKey: _importTabKey,
+                                  ),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                );
+              },
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -737,10 +741,16 @@ class _FloatingBottomNav extends StatelessWidget {
                                           text: context.l10n.navScanRecipe,
                                           style: labelStyle,
                                         ),
-                                        textDirection: Directionality.of(context),
-                                        textScaler: MediaQuery.textScalerOf(context),
+                                        textDirection: Directionality.of(
+                                          context,
+                                        ),
+                                        textScaler: MediaQuery.textScalerOf(
+                                          context,
+                                        ),
                                       )..layout();
-                                      final label = labelMeasure.width <= constraints.maxWidth
+                                      final label =
+                                          labelMeasure.width <=
+                                              constraints.maxWidth
                                           ? context.l10n.navScanRecipe
                                           : context.l10n.navScan;
 
@@ -1241,14 +1251,19 @@ class _HomeTabState extends State<_HomeTab> {
                                         CrossAxisAlignment.start,
                                     children: [
                                       Padding(
-                                        padding: EdgeInsets.symmetric(horizontal: 16.w),
+                                        padding: EdgeInsets.symmetric(
+                                          horizontal: 16.w,
+                                        ),
                                         child: _SectionRow(
-                                          title: context.l10n.homeRecentlyViewed,
+                                          title:
+                                              context.l10n.homeRecentlyViewed,
                                           onViewAll: recent.length > 5
                                               ? () => _goViewAll(
                                                   context,
                                                   ViewAllType.recentlyViewed,
-                                                  context.l10n.homeRecentlyViewed,
+                                                  context
+                                                      .l10n
+                                                      .homeRecentlyViewed,
                                                 )
                                               : null,
                                         ),
@@ -1288,7 +1303,9 @@ class _HomeTabState extends State<_HomeTab> {
                                         CrossAxisAlignment.start,
                                     children: [
                                       Padding(
-                                        padding: EdgeInsets.symmetric(horizontal: 16.w),
+                                        padding: EdgeInsets.symmetric(
+                                          horizontal: 16.w,
+                                        ),
                                         child: _SectionRow(
                                           title: context.l10n.homeSuggested,
                                           onViewAll: list.length > 5
@@ -1318,7 +1335,9 @@ class _HomeTabState extends State<_HomeTab> {
                           valueListenable:
                               RecipeService.instance.myRecipesNotifier,
                           builder: (context, recipes, _) {
-                            final savedRecipes = RecipeService.savedRecipesOf(recipes);
+                            final savedRecipes = RecipeService.savedRecipesOf(
+                              recipes,
+                            );
 
                             return Container(
                               width: double.infinity,
@@ -1370,9 +1389,13 @@ class _HomeTabState extends State<_HomeTab> {
 
                         // ── CARD 5: HELP US IMPROVE COOKED ──
                         _FeedbackCard(onTap: () => _showFeedbackModal(context)),
-                        SizedBox(height: 120.h + MediaQuery.of(context).padding.bottom),
+                        SizedBox(
+                          height: 120.h + MediaQuery.of(context).padding.bottom,
+                        ),
                       ] else ...[
-                        SizedBox(height: 120.h + MediaQuery.of(context).padding.bottom),
+                        SizedBox(
+                          height: 120.h + MediaQuery.of(context).padding.bottom,
+                        ),
                       ],
                     ],
                   ),
@@ -1483,7 +1506,7 @@ class _EmptyCookbookCard extends StatelessWidget {
                 ),
                 child: Icon(
                   Icons.add_rounded,
-                    color: Colors.white,
+                  color: Colors.white,
                   size: 30.sp,
                 ),
               ),
@@ -1649,7 +1672,6 @@ class _AddCookbookCardTile extends StatelessWidget {
   }
 }
 
-
 // ── Circular Recipe Avatars ─────────────────────────────────────────────────────
 class _CircularRecipeAvatarRow extends StatelessWidget {
   final List<Recipe> recipes;
@@ -1693,7 +1715,7 @@ class _CircularRecipeAvatarRow extends StatelessWidget {
                           width: 2.5.w,
                         ),
                       ),
-                      child: ClipOval(child: _buildThumbnail(context, recipes[i].image)),
+                      child: ClipOval(child: _buildThumbnail(recipes[i].image)),
                     ),
                     SizedBox(height: 6.h),
                     Text(
@@ -1717,17 +1739,17 @@ class _CircularRecipeAvatarRow extends StatelessWidget {
     );
   }
 
-  Widget _buildThumbnail(BuildContext context, String? image) {
-    const fallback = 'assets/images/recipes.webp';
+  Widget _buildThumbnail(String? image) {
     if (image == null || image.isEmpty || image == 'null') {
-      return Image.asset(fallback, fit: BoxFit.cover);
+      return const RecipeImagePlaceholder();
     }
     if (image.startsWith('http')) {
       return CachedNetworkImage(
         imageUrl: image,
         fit: BoxFit.cover,
-        errorWidget: (_, __, ___) => Image.asset(fallback, fit: BoxFit.cover),
-        placeholder: (_, __) => const SkeletonBox(borderRadius: BorderRadius.zero),
+        errorWidget: (_, __, ___) => const RecipeImagePlaceholder(),
+        placeholder: (_, __) =>
+            const SkeletonBox(borderRadius: BorderRadius.zero),
         fadeInDuration: Motion.imageFade,
         fadeOutDuration: Duration.zero,
         fadeInCurve: Motion.enter,
@@ -1736,7 +1758,7 @@ class _CircularRecipeAvatarRow extends StatelessWidget {
     return Image.asset(
       image,
       fit: BoxFit.cover,
-      errorBuilder: (_, __, ___) => Image.asset(fallback, fit: BoxFit.cover),
+      errorBuilder: (_, __, ___) => const RecipeImagePlaceholder(),
     );
   }
 }
@@ -1930,7 +1952,11 @@ class _PopulatedSavedRecipesList extends StatelessWidget {
         padding: EdgeInsets.symmetric(vertical: 32.h),
         child: Column(
           children: [
-            Icon(Icons.search_off_rounded, size: 40.sp, color: context.colors.border),
+            Icon(
+              Icons.search_off_rounded,
+              size: 40.sp,
+              color: context.colors.border,
+            ),
             SizedBox(height: 12.h),
             Text(
               context.l10n.commonNoRecipesFound,
@@ -2001,7 +2027,11 @@ class _PopulatedSavedRecipesList extends StatelessWidget {
             r.isFavorite = newFavState;
             if (newFavState) {
               RecipeService.instance.markRecipeAsSaved(r);
-              IosToast.show(ctx, message: context.l10n.recipeSavedToast, type: ToastType.success);
+              IosToast.show(
+                ctx,
+                message: context.l10n.recipeSavedToast,
+                type: ToastType.success,
+              );
             } else {
               RecipeService.instance.markRecipeAsUnsaved(r);
               if (r.id.isNotEmpty) {
@@ -2009,10 +2039,16 @@ class _PopulatedSavedRecipesList extends StatelessWidget {
               }
               r.isFavorite = false;
               r.isInCookbook = false;
-              final current = RecipeService.instance.myRecipesNotifier.value ?? [];
-              RecipeService.instance.myRecipesNotifier.value =
-                  current.where((item) => item.id != r.id).toList();
-              IosToast.show(ctx, message: context.l10n.recipeRemovedToast, type: ToastType.success);
+              final current =
+                  RecipeService.instance.myRecipesNotifier.value ?? [];
+              RecipeService.instance.myRecipesNotifier.value = current
+                  .where((item) => item.id != r.id)
+                  .toList();
+              IosToast.show(
+                ctx,
+                message: context.l10n.recipeRemovedToast,
+                type: ToastType.success,
+              );
             }
           },
           onTap: () {
@@ -2029,7 +2065,9 @@ class _PopulatedSavedRecipesList extends StatelessWidget {
               targetPosition: details.globalPosition,
               actions: [
                 HapticMenuAction(
-                  title: r.isPinned ? context.l10n.recipeUnpin : context.l10n.recipePin,
+                  title: r.isPinned
+                      ? context.l10n.recipeUnpin
+                      : context.l10n.recipePin,
                   icon: r.isPinned
                       ? Icons.push_pin_rounded
                       : Icons.push_pin_outlined,
@@ -2078,7 +2116,9 @@ class _PopulatedSavedRecipesList extends StatelessWidget {
                         l10n,
                         name: name,
                         link: link,
-                        creator: r.creator != null ? r.creator!.displayName : null,
+                        creator: r.creator != null
+                            ? r.creator!.displayName
+                            : null,
                       );
                       SharePlus.instance.share(ShareParams(text: template));
                     } catch (_) {}
@@ -2229,7 +2269,9 @@ void _showFeedbackModal(BuildContext context) {
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
     builder: (sheetContext) => Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.of(sheetContext).viewInsets.bottom),
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(sheetContext).viewInsets.bottom,
+      ),
       child: Container(
         decoration: BoxDecoration(
           color: sheetContext.colors.surface,
@@ -2544,7 +2586,11 @@ class _CookbooksRowState extends State<_CookbooksRow> {
                               ),
                               SizedBox(width: 4.w),
                               Text(
-                                recipeCountLabel(context.l10n, cb.recipes.length, capitalize: true),
+                                recipeCountLabel(
+                                  context.l10n,
+                                  cb.recipes.length,
+                                  capitalize: true,
+                                ),
                                 style: TextStyle(
                                   fontFamily: 'SF Pro',
                                   fontSize: 11.sp,
@@ -2753,67 +2799,70 @@ class _SuggestedRecipesSectionState extends State<_SuggestedRecipesSection> {
             onceId: 'suggested-${r.id}-${r.name}',
             index: i + 1,
             child: RecipeCard(
-            recipe: r,
-            index: i,
-            useValidationIcon: true,
-            isValidated: isSaved,
-            disableSlide: true,
-            onValidateTap: () => _handleValidation(r, isSaved),
-            onTap: () {
-              HistoryService.instance.addToHistory(r);
-              Navigator.pushNamed(
-                context,
-                AppRoutes.recipeDetail,
-                arguments: {'recipe': r, 'isPreview': !isSaved},
-              );
-            },
-            onAddToCookbookTap: () {
-              showModalBottomSheet(
-                context: ctx,
-                backgroundColor: Colors.transparent,
-                isScrollControlled: true,
-                builder: (_) => AddToCookbookSheet(recipe: r),
-              );
-            },
-            onShareTap: () async {
-              try {
-                final RenderBox? box = context.findRenderObject() as RenderBox?;
-                final Rect? sharePositionOrigin = box != null
-                    ? box.localToGlobal(Offset.zero) & box.size
-                    : null;
-                final l10n = context.l10n;
-                final rawLink = await RecipeService.instance.getShareLink(r.id);
-                final link = rawLink
-                    .replaceAll('cooked.nixacom.com', 'link.cookedapp.com')
-                    .replaceAll(
-                      'https://cookedapp.app',
-                      'https://link.cookedapp.com',
-                    );
-                final name = r.name;
-                final template = recipeShareText(
-                  l10n,
-                  name: name,
-                  link: link,
-                  creator: r.creator != null ? r.creator!.displayName : null,
+              recipe: r,
+              index: i,
+              useValidationIcon: true,
+              isValidated: isSaved,
+              disableSlide: true,
+              onValidateTap: () => _handleValidation(r, isSaved),
+              onTap: () {
+                HistoryService.instance.addToHistory(r);
+                Navigator.pushNamed(
+                  context,
+                  AppRoutes.recipeDetail,
+                  arguments: {'recipe': r, 'isPreview': !isSaved},
                 );
-
-                SharePlus.instance.share(
-                  ShareParams(
-                    text: template,
-                    sharePositionOrigin: sharePositionOrigin,
-                  ),
+              },
+              onAddToCookbookTap: () {
+                showModalBottomSheet(
+                  context: ctx,
+                  backgroundColor: Colors.transparent,
+                  isScrollControlled: true,
+                  builder: (_) => AddToCookbookSheet(recipe: r),
                 );
-              } catch (e) {
-                if (ctx.mounted) {
-                  IosToast.show(
-                    ctx,
-                    message: ErrorHelper.getFriendlyMessage(e),
-                    type: ToastType.error,
+              },
+              onShareTap: () async {
+                try {
+                  final RenderBox? box =
+                      context.findRenderObject() as RenderBox?;
+                  final Rect? sharePositionOrigin = box != null
+                      ? box.localToGlobal(Offset.zero) & box.size
+                      : null;
+                  final l10n = context.l10n;
+                  final rawLink = await RecipeService.instance.getShareLink(
+                    r.id,
                   );
+                  final link = rawLink
+                      .replaceAll('cooked.nixacom.com', 'link.cookedapp.com')
+                      .replaceAll(
+                        'https://cookedapp.app',
+                        'https://link.cookedapp.com',
+                      );
+                  final name = r.name;
+                  final template = recipeShareText(
+                    l10n,
+                    name: name,
+                    link: link,
+                    creator: r.creator != null ? r.creator!.displayName : null,
+                  );
+
+                  SharePlus.instance.share(
+                    ShareParams(
+                      text: template,
+                      sharePositionOrigin: sharePositionOrigin,
+                    ),
+                  );
+                } catch (e) {
+                  if (ctx.mounted) {
+                    IosToast.show(
+                      ctx,
+                      message: ErrorHelper.getFriendlyMessage(e),
+                      type: ToastType.error,
+                    );
+                  }
                 }
-              }
-            },
-          ),
+              },
+            ),
           );
         },
       ),
@@ -2861,71 +2910,73 @@ class _SuggestedRecipesSectionState extends State<_SuggestedRecipesSection> {
               onceId: 'suggested-${r.id}-${r.name}',
               index: i + 1,
               child: RecipeCard(
-              recipe: r,
-              index: i,
-              useValidationIcon: true,
-              isValidated: isSaved,
-              disableSlide: true,
-              onValidateTap: () => _handleValidation(r, isSaved),
-              onTap: () {
-                HistoryService.instance.addToHistory(r);
-                Navigator.pushNamed(
-                  context,
-                  AppRoutes.recipeDetail,
-                  arguments: {'recipe': r, 'isPreview': !isSaved},
-                );
-              },
-              onAddToCookbookTap: () {
-                showModalBottomSheet(
-                  context: ctx,
-                  backgroundColor: Colors.transparent,
-                  isScrollControlled: true,
-                  builder: (_) => AddToCookbookSheet(recipe: r),
-                );
-              },
-              onShareTap: () async {
-                try {
-                  final RenderBox? box =
-                      context.findRenderObject() as RenderBox?;
-                  final Rect? sharePositionOrigin = box != null
-                      ? box.localToGlobal(Offset.zero) & box.size
-                      : null;
+                recipe: r,
+                index: i,
+                useValidationIcon: true,
+                isValidated: isSaved,
+                disableSlide: true,
+                onValidateTap: () => _handleValidation(r, isSaved),
+                onTap: () {
+                  HistoryService.instance.addToHistory(r);
+                  Navigator.pushNamed(
+                    context,
+                    AppRoutes.recipeDetail,
+                    arguments: {'recipe': r, 'isPreview': !isSaved},
+                  );
+                },
+                onAddToCookbookTap: () {
+                  showModalBottomSheet(
+                    context: ctx,
+                    backgroundColor: Colors.transparent,
+                    isScrollControlled: true,
+                    builder: (_) => AddToCookbookSheet(recipe: r),
+                  );
+                },
+                onShareTap: () async {
+                  try {
+                    final RenderBox? box =
+                        context.findRenderObject() as RenderBox?;
+                    final Rect? sharePositionOrigin = box != null
+                        ? box.localToGlobal(Offset.zero) & box.size
+                        : null;
 
-                  final l10n = context.l10n;
-                  final rawLink = await RecipeService.instance.getShareLink(
-                    r.id,
-                  );
-                  final link = rawLink
-                      .replaceAll('cooked.nixacom.com', 'link.cookedapp.com')
-                      .replaceAll(
-                        'https://cookedapp.app',
-                        'https://link.cookedapp.com',
-                      );
-                  final name = r.name;
-                  final template = recipeShareText(
-                    l10n,
-                    name: name,
-                    link: link,
-                    creator: r.creator != null ? r.creator!.displayName : null,
-                  );
-
-                  SharePlus.instance.share(
-                    ShareParams(
-                      text: template,
-                      sharePositionOrigin: sharePositionOrigin,
-                    ),
-                  );
-                } catch (e) {
-                  if (ctx.mounted) {
-                    IosToast.show(
-                      ctx,
-                      message: ErrorHelper.getFriendlyMessage(e),
-                      type: ToastType.error,
+                    final l10n = context.l10n;
+                    final rawLink = await RecipeService.instance.getShareLink(
+                      r.id,
                     );
+                    final link = rawLink
+                        .replaceAll('cooked.nixacom.com', 'link.cookedapp.com')
+                        .replaceAll(
+                          'https://cookedapp.app',
+                          'https://link.cookedapp.com',
+                        );
+                    final name = r.name;
+                    final template = recipeShareText(
+                      l10n,
+                      name: name,
+                      link: link,
+                      creator: r.creator != null
+                          ? r.creator!.displayName
+                          : null,
+                    );
+
+                    SharePlus.instance.share(
+                      ShareParams(
+                        text: template,
+                        sharePositionOrigin: sharePositionOrigin,
+                      ),
+                    );
+                  } catch (e) {
+                    if (ctx.mounted) {
+                      IosToast.show(
+                        ctx,
+                        message: ErrorHelper.getFriendlyMessage(e),
+                        type: ToastType.error,
+                      );
+                    }
                   }
-                }
-              },
-            ),
+                },
+              ),
             ),
           );
         },

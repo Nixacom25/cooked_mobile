@@ -5,6 +5,7 @@ import '../models/cookbook.dart';
 import '../models/recipe.dart';
 import '../core/theme/app_theme.dart';
 import '../core/motion/motion_widgets.dart';
+import 'recipe_image_placeholder.dart';
 
 class CookbookCover extends StatelessWidget {
   final Cookbook cookbook;
@@ -18,12 +19,11 @@ class CookbookCover extends StatelessWidget {
     this.height,
   });
 
-
   @override
   Widget build(BuildContext context) {
     final recipes = List<Recipe>.from(cookbook.recipes);
-    
-    // Sort logic: 
+
+    // Sort logic:
     // 1. Prioritize recipes WITH images first
     // 2. Among those, prioritize 'IMPORT' origin
     // 3. Among those, prioritize recipes with sourceUrl
@@ -31,29 +31,29 @@ class CookbookCover extends StatelessWidget {
     recipes.sort((a, b) {
       final aHasImage = a.image != null && a.image!.isNotEmpty;
       final bHasImage = b.image != null && b.image!.isNotEmpty;
-      
+
       // If one has an image and the other doesn't, image wins
       if (aHasImage && !bHasImage) return -1;
       if (!aHasImage && bHasImage) return 1;
-      
+
       // If both have images (or both don't), prioritize IMPORT origin
       final aIsImport = a.origin?.toUpperCase() == 'IMPORT';
       final bIsImport = b.origin?.toUpperCase() == 'IMPORT';
-      
+
       if (aIsImport && !bIsImport) return -1;
       if (!aIsImport && bIsImport) return 1;
 
       // Then prioritize those with source URLs
       final aHasUrl = a.sourceUrl != null && a.sourceUrl!.isNotEmpty;
       final bHasUrl = b.sourceUrl != null && b.sourceUrl!.isNotEmpty;
-      
+
       if (aHasUrl && !bHasUrl) return -1;
       if (!aHasUrl && bHasUrl) return 1;
-      
+
       // Finally by date
       return b.createdAt.compareTo(a.createdAt);
     });
-    
+
     final displayRecipes = recipes.take(3).toList();
     final bool isPinned = cookbook.isPinned;
 
@@ -67,7 +67,7 @@ class CookbookCover extends StatelessWidget {
             borderRadius: BorderRadius.circular(16.r),
           ),
           clipBehavior: Clip.antiAlias,
-          child: displayRecipes.isEmpty 
+          child: displayRecipes.isEmpty
               ? _buildEmptyState(context)
               : _buildCollage(displayRecipes),
         ),
@@ -108,10 +108,7 @@ class CookbookCover extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            context.colors.surface,
-            context.colors.surface,
-          ],
+          colors: [context.colors.surface, context.colors.surface],
         ),
       ),
       child: Center(
@@ -140,13 +137,9 @@ class CookbookCover extends StatelessWidget {
     } else if (recipes.length == 2) {
       return Row(
         children: [
-          Expanded(
-            child: _buildImage(recipes[0].image),
-          ),
+          Expanded(child: _buildImage(recipes[0].image)),
           Container(width: 1.5, color: Colors.white),
-          Expanded(
-            child: _buildImage(recipes[1].image),
-          ),
+          Expanded(child: _buildImage(recipes[1].image)),
         ],
       );
     } else {
@@ -158,23 +151,16 @@ class CookbookCover extends StatelessWidget {
       return Row(
         children: [
           // Left - Large image
-          Expanded(
-            flex: 3,
-            child: _buildImage(img1),
-          ),
+          Expanded(flex: 3, child: _buildImage(img1)),
           Container(width: 1.5, color: Colors.white),
           // Right - Two small images stacked
           Expanded(
             flex: 2,
             child: Column(
               children: [
-                Expanded(
-                  child: _buildImage(img2),
-                ),
+                Expanded(child: _buildImage(img2)),
                 Container(height: 1.5, color: Colors.white),
-                Expanded(
-                  child: _buildImage(img3),
-                ),
+                Expanded(child: _buildImage(img3)),
               ],
             ),
           ),
@@ -185,12 +171,7 @@ class CookbookCover extends StatelessWidget {
 
   Widget _buildImage(String? imageUrl) {
     if (imageUrl == null || imageUrl.isEmpty) {
-      return Image.asset(
-        'assets/images/recipes.webp',
-        width: double.infinity,
-        height: double.infinity,
-        fit: BoxFit.cover,
-      );
+      return const RecipeImagePlaceholder();
     }
 
     return CachedNetworkImage(
@@ -198,17 +179,12 @@ class CookbookCover extends StatelessWidget {
       width: double.infinity,
       height: double.infinity,
       fit: BoxFit.cover,
-      errorWidget: (_, __, ___) => Image.asset(
-        'assets/images/recipes.webp',
-        width: double.infinity,
-        height: double.infinity,
-        fit: BoxFit.cover,
-      ),
-      placeholder: (_, __) => const SkeletonBox(borderRadius: BorderRadius.zero),
+      errorWidget: (_, __, ___) => const RecipeImagePlaceholder(),
+      placeholder: (_, __) =>
+          const SkeletonBox(borderRadius: BorderRadius.zero),
       fadeInDuration: Motion.imageFade,
       fadeOutDuration: Duration.zero,
       fadeInCurve: Motion.enter,
     );
   }
-
 }

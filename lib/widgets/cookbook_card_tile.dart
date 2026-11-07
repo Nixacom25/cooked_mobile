@@ -11,6 +11,7 @@ import 'cookbook_context_menu.dart';
 import '../core/theme/app_theme.dart';
 import '../core/motion/motion_widgets.dart';
 import '../core/l10n/l10n.dart';
+import 'recipe_image_placeholder.dart';
 
 /// Cookbook tile shared by Home's "Your Cookbooks" row and the Cookbooks
 /// "View All" grid so both look exactly the same. [isMain] renders the
@@ -298,17 +299,20 @@ class CookbookCardTile extends StatelessWidget {
                     ? CachedNetworkImage(
                         imageUrl: images[idx],
                         fit: BoxFit.cover,
-                        errorWidget: (_, __, ___) => Image.asset(
-                          'assets/images/recipes.webp',
-                          fit: BoxFit.cover,
-                        ),
+                        errorWidget: (_, __, ___) =>
+                            const RecipeImagePlaceholder(),
                         placeholder: (_, __) =>
                             const SkeletonBox(borderRadius: BorderRadius.zero),
                         fadeInDuration: Motion.imageFade,
                         fadeOutDuration: Duration.zero,
                         fadeInCurve: Motion.enter,
                       )
-                    : Image.asset(images[idx], fit: BoxFit.cover),
+                    : Image.asset(
+                        images[idx],
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) =>
+                            const RecipeImagePlaceholder(),
+                      ),
               ),
             ),
           );

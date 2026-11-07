@@ -7,6 +7,7 @@ import '../services/recipe_service.dart';
 import '../core/theme/app_theme.dart';
 import '../core/motion/motion_widgets.dart';
 import '../core/l10n/l10n.dart';
+import 'recipe_image_placeholder.dart';
 
 class SavedRecipeCard extends StatefulWidget {
   final Recipe? recipe;
@@ -60,7 +61,9 @@ class _SavedRecipeCardState extends State<SavedRecipeCard> {
   void initState() {
     super.initState();
     _isFavorite = _isRegistered(widget.recipe, widget.isRegistered);
-    RecipeService.instance.favoriteStatesNotifier.addListener(_onFavoriteStateChanged);
+    RecipeService.instance.favoriteStatesNotifier.addListener(
+      _onFavoriteStateChanged,
+    );
   }
 
   void _onFavoriteStateChanged() {
@@ -69,7 +72,8 @@ class _SavedRecipeCardState extends State<SavedRecipeCard> {
     final key = recipe.id.isNotEmpty
         ? 'id:${recipe.id}'
         : 'name:${recipe.name.trim().toLowerCase()}';
-    final sharedState = RecipeService.instance.favoriteStatesNotifier.value[key];
+    final sharedState =
+        RecipeService.instance.favoriteStatesNotifier.value[key];
     if (sharedState != null && sharedState != _isFavorite) {
       setState(() => _isFavorite = sharedState);
     }
@@ -77,7 +81,9 @@ class _SavedRecipeCardState extends State<SavedRecipeCard> {
 
   @override
   void dispose() {
-    RecipeService.instance.favoriteStatesNotifier.removeListener(_onFavoriteStateChanged);
+    RecipeService.instance.favoriteStatesNotifier.removeListener(
+      _onFavoriteStateChanged,
+    );
     super.dispose();
   }
 
@@ -103,7 +109,10 @@ class _SavedRecipeCardState extends State<SavedRecipeCard> {
 
     widget.onFavoriteTap!.call();
     if (widget.recipe != null) {
-      setState(() => _isFavorite = RecipeService.instance.isRecipeSaved(widget.recipe!));
+      setState(
+        () =>
+            _isFavorite = RecipeService.instance.isRecipeSaved(widget.recipe!),
+      );
     }
   }
 
@@ -111,12 +120,126 @@ class _SavedRecipeCardState extends State<SavedRecipeCard> {
   Widget build(BuildContext context) {
     final colors = context.colors;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final String displayName = widget.title ?? widget.recipe?.name ?? context.l10n.commonRecipe;
+    final String displayName =
+        widget.title ?? widget.recipe?.name ?? context.l10n.commonRecipe;
     final String? imgPath = widget.image ?? widget.recipe?.image;
 
     if (widget.isSavingsMode) {
       return RecipeHeroArea(
         child: PressScale(
+          onTap: widget.onTap,
+          onLongPressStart: widget.onLongPressStart,
+          onLongPress: widget.onLongPress,
+          child: Container(
+            height: 135.h,
+            decoration: BoxDecoration(
+              // Light mode keeps the original cream (0xFFFAF3E6) exactly as
+              // designed. Dark mode uses elevatedSurface, not surface: this
+              // card is frequently nested inside a surface-colored panel (e.g.
+              // the Home screen's Saved Recipes section), and using the same
+              // surface tone for both flattens the nested card to invisible.
+              color: isDark ? colors.elevatedSurface : const Color(0xFFFAF3E6),
+              borderRadius: BorderRadius.circular(24.r),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  flex: 5,
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 16.w,
+                      vertical: 16.h,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              displayName,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontFamily: 'Rubik',
+                                fontWeight: FontWeight.w700,
+                                fontSize: 16.sp,
+                                color: colors.textPrimary,
+                                height: 1.2,
+                              ),
+                            ),
+                            SizedBox(height: 6.h),
+                            Text(
+                              widget.subtitle ??
+                                  context.l10n.savingsScannedAtHome,
+                              style: TextStyle(
+                                fontFamily: 'Rubik',
+                                fontWeight: FontWeight.w400,
+                                fontSize: 13.sp,
+                                color: colors.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 10.w,
+                            vertical: 4.h,
+                          ),
+                          decoration: BoxDecoration(
+                            color: isDark
+                                ? const Color(
+                                    0xFF15803D,
+                                  ).withValues(alpha: 0.18)
+                                : const Color(0xFFDCFCE7),
+                            borderRadius: BorderRadius.circular(20.r),
+                          ),
+                          child: Text(
+                            widget.savingsBadgeText ?? '+14\$',
+                            style: TextStyle(
+                              fontFamily: 'Rubik',
+                              fontWeight: FontWeight.w700,
+                              fontSize: 12.sp,
+                              color: const Color(0xFF15803D),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                Expanded(
+                  flex: 5,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(24.r),
+                    child: SizedBox(
+                      height: double.infinity,
+                      child: RecipeHeroImage(child: _buildThumbnail(imgPath)),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    final int timeVal =
+        (widget.recipe?.prepTime != null && widget.recipe!.prepTime! > 0)
+        ? widget.recipe!.prepTime!
+        : ((widget.recipe?.cookTime ?? 0) > 0 ? widget.recipe!.cookTime : 10);
+    final String prepTimeStr = widget.time ?? '$timeVal min';
+
+    final int kcalVal = (widget.recipe?.kcal ?? 0) > 0
+        ? widget.recipe!.kcal
+        : 217;
+    final String caloriesStr = widget.kcal ?? '$kcalVal kcal';
+    final bool pinned = widget.recipe?.isPinned ?? widget.isPinned;
+
+    return RecipeHeroArea(
+      child: PressScale(
         onTap: widget.onTap,
         onLongPressStart: widget.onLongPressStart,
         onLongPress: widget.onLongPress,
@@ -124,10 +247,10 @@ class _SavedRecipeCardState extends State<SavedRecipeCard> {
           height: 135.h,
           decoration: BoxDecoration(
             // Light mode keeps the original cream (0xFFFAF3E6) exactly as
-            // designed. Dark mode uses elevatedSurface, not surface: this
-            // card is frequently nested inside a surface-colored panel (e.g.
-            // the Home screen's Saved Recipes section), and using the same
-            // surface tone for both flattens the nested card to invisible.
+            // designed. Dark mode uses elevatedSurface, not surface: this card
+            // is frequently nested inside a surface-colored panel (e.g. the
+            // Home screen's Saved Recipes section), and using the same surface
+            // tone for both flattens the nested card to invisible.
             color: isDark ? colors.elevatedSurface : const Color(0xFFFAF3E6),
             borderRadius: BorderRadius.circular(24.r),
           ),
@@ -136,52 +259,71 @@ class _SavedRecipeCardState extends State<SavedRecipeCard> {
               Expanded(
                 flex: 5,
                 child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 16.w,
+                    vertical: 14.h,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            displayName,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontFamily: 'Rubik',
-                              fontWeight: FontWeight.w700,
-                              fontSize: 16.sp,
-                              color: colors.textPrimary,
-                              height: 1.2,
+                      GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: _handleFavoriteTap,
+                        child: Container(
+                          width: 32.r,
+                          height: 32.r,
+                          decoration: const BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Center(
+                            child: HeartBump(
+                              active: _isFavorite,
+                              ringColor: context.colors.accent,
+                              ringSize: 32.r,
+                              iconSize: 16.r,
+                              child: SvgPicture.asset(
+                                _isFavorite
+                                    ? 'assets/icones/coeur.svg'
+                                    : 'assets/icones/coeur1.svg',
+                                width: 16.r,
+                                height: 16.r,
+                                colorFilter: ColorFilter.mode(
+                                  _isFavorite
+                                      ? context.colors.accent
+                                      : context.colors.textMuted,
+                                  BlendMode.srcIn,
+                                ),
+                              ),
                             ),
                           ),
-                          SizedBox(height: 6.h),
-                          Text(
-                            widget.subtitle ?? context.l10n.savingsScannedAtHome,
-                            style: TextStyle(
-                              fontFamily: 'Rubik',
-                              fontWeight: FontWeight.w400,
-                              fontSize: 13.sp,
-                              color: colors.textSecondary,
-                            ),
-                          ),
-                        ],
-                      ),
-                      Container(
-                        padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
-                        decoration: BoxDecoration(
-                          color: isDark ? const Color(0xFF15803D).withValues(alpha: 0.18) : const Color(0xFFDCFCE7),
-                          borderRadius: BorderRadius.circular(20.r),
                         ),
-                        child: Text(
-                          widget.savingsBadgeText ?? '+14\$',
-                          style: TextStyle(
-                            fontFamily: 'Rubik',
-                            fontWeight: FontWeight.w700,
-                            fontSize: 12.sp,
-                            color: const Color(0xFF15803D),
-                          ),
+                      ),
+                      Text(
+                        displayName,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontFamily: 'Rubik',
+                          fontWeight: FontWeight.w700,
+                          fontSize: 16.sp,
+                          color: colors.textPrimary,
+                          height: 1.2,
+                        ),
+                      ),
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerLeft,
+                        child: Row(
+                          children: [
+                            _buildBadge(Icons.access_time_rounded, prepTimeStr),
+                            SizedBox(width: 6.w),
+                            _buildBadge(
+                              Icons.local_fire_department_outlined,
+                              caloriesStr,
+                            ),
+                          ],
                         ),
                       ),
                     ],
@@ -190,156 +332,38 @@ class _SavedRecipeCardState extends State<SavedRecipeCard> {
               ),
               Expanded(
                 flex: 5,
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(24.r),
-                  child: SizedBox(
-                    height: double.infinity,
-                    child: RecipeHeroImage(child: _buildThumbnail(imgPath)),
-                  ),
+                child: Stack(
+                  children: [
+                    Positioned.fill(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(24.r),
+                        child: RecipeHeroImage(child: _buildThumbnail(imgPath)),
+                      ),
+                    ),
+                    if (pinned)
+                      Positioned(
+                        bottom: 10.h,
+                        right: 10.w,
+                        child: GestureDetector(
+                          onTap: widget.onPinTap,
+                          child: Icon(
+                            Icons.push_pin_rounded,
+                            size: 20.sp,
+                            color: Colors.white,
+                            shadows: const [
+                              Shadow(color: Colors.black54, blurRadius: 6),
+                            ],
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
               ),
             ],
           ),
         ),
       ),
-      );
-    }
-
-    final int timeVal = (widget.recipe?.prepTime != null && widget.recipe!.prepTime! > 0)
-        ? widget.recipe!.prepTime!
-        : ((widget.recipe?.cookTime ?? 0) > 0 ? widget.recipe!.cookTime : 10);
-    final String prepTimeStr = widget.time ?? '$timeVal min';
-
-    final int kcalVal = (widget.recipe?.kcal ?? 0) > 0 ? widget.recipe!.kcal : 217;
-    final String caloriesStr = widget.kcal ?? '$kcalVal kcal';
-    final bool pinned = widget.recipe?.isPinned ?? widget.isPinned;
-
-    return RecipeHeroArea(
-      child: PressScale(
-      onTap: widget.onTap,
-      onLongPressStart: widget.onLongPressStart,
-      onLongPress: widget.onLongPress,
-      child: Container(
-        height: 135.h,
-        decoration: BoxDecoration(
-          // Light mode keeps the original cream (0xFFFAF3E6) exactly as
-          // designed. Dark mode uses elevatedSurface, not surface: this card
-          // is frequently nested inside a surface-colored panel (e.g. the
-          // Home screen's Saved Recipes section), and using the same surface
-          // tone for both flattens the nested card to invisible.
-          color: isDark ? colors.elevatedSurface : const Color(0xFFFAF3E6),
-          borderRadius: BorderRadius.circular(24.r),
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              flex: 5,
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    GestureDetector(
-                      behavior: HitTestBehavior.opaque,
-                      onTap: _handleFavoriteTap,
-                      child: Container(
-                        width: 32.r,
-                        height: 32.r,
-                        decoration: const BoxDecoration(
-                          color: Colors.white,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Center(
-                          child: HeartBump(
-                            active: _isFavorite,
-                            ringColor: context.colors.accent,
-                            ringSize: 32.r,
-                            iconSize: 16.r,
-                            child: SvgPicture.asset(
-                              _isFavorite
-                                  ? 'assets/icones/coeur.svg'
-                                  : 'assets/icones/coeur1.svg',
-                              width: 16.r,
-                              height: 16.r,
-                              colorFilter: ColorFilter.mode(
-                                _isFavorite
-                                    ? context.colors.accent
-                                    : context.colors.textMuted,
-                                BlendMode.srcIn,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    Text(
-                      displayName,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontFamily: 'Rubik',
-                        fontWeight: FontWeight.w700,
-                        fontSize: 16.sp,
-                        color: colors.textPrimary,
-                        height: 1.2,
-                      ),
-                    ),
-                    FittedBox(
-                      fit: BoxFit.scaleDown,
-                      alignment: Alignment.centerLeft,
-                      child: Row(
-                        children: [
-                          _buildBadge(Icons.access_time_rounded, prepTimeStr),
-                          SizedBox(width: 6.w),
-                          _buildBadge(
-                            Icons.local_fire_department_outlined,
-                            caloriesStr,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            Expanded(
-              flex: 5,
-              child: Stack(
-                children: [
-                  Positioned.fill(
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(24.r),
-                      child: RecipeHeroImage(child: _buildThumbnail(imgPath)),
-                    ),
-                  ),
-                  if (pinned)
-                    Positioned(
-                      bottom: 10.h,
-                      right: 10.w,
-                      child: GestureDetector(
-                        onTap: widget.onPinTap,
-                        child: Icon(
-                          Icons.push_pin_rounded,
-                          size: 20.sp,
-                          color: Colors.white,
-                          shadows: const [
-                            Shadow(
-                              color: Colors.black54,
-                              blurRadius: 6,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    ),
-      );
+    );
   }
 
   Widget _buildBadge(IconData icon, String label) {
@@ -348,7 +372,9 @@ class _SavedRecipeCardState extends State<SavedRecipeCard> {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
       decoration: BoxDecoration(
-        color: isDark ? Colors.white.withValues(alpha: 0.08) : const Color(0xFFF1EAD9),
+        color: isDark
+            ? Colors.white.withValues(alpha: 0.08)
+            : const Color(0xFFF1EAD9),
         borderRadius: BorderRadius.circular(20.r),
       ),
       child: Row(
@@ -371,16 +397,16 @@ class _SavedRecipeCardState extends State<SavedRecipeCard> {
   }
 
   Widget _buildThumbnail(String? image) {
-    const fallback = 'assets/images/recipes.webp';
     if (image == null || image.isEmpty || image == 'null') {
-      return Image.asset(fallback, fit: BoxFit.cover);
+      return const RecipeImagePlaceholder();
     }
     if (image.startsWith('http')) {
       return CachedNetworkImage(
         imageUrl: image,
         fit: BoxFit.cover,
-        errorWidget: (_, __, ___) => Image.asset(fallback, fit: BoxFit.cover),
-        placeholder: (_, __) => const SkeletonBox(borderRadius: BorderRadius.zero),
+        errorWidget: (_, __, ___) => const RecipeImagePlaceholder(),
+        placeholder: (_, __) =>
+            const SkeletonBox(borderRadius: BorderRadius.zero),
         fadeInDuration: Motion.imageFade,
         fadeOutDuration: Duration.zero,
         fadeInCurve: Motion.enter,
@@ -389,7 +415,7 @@ class _SavedRecipeCardState extends State<SavedRecipeCard> {
     return Image.asset(
       image,
       fit: BoxFit.cover,
-      errorBuilder: (_, __, ___) => Image.asset(fallback, fit: BoxFit.cover),
+      errorBuilder: (_, __, ___) => const RecipeImagePlaceholder(),
     );
   }
 }
@@ -405,7 +431,9 @@ class SavedRecipeCardSkeleton extends StatelessWidget {
     return Container(
       height: 135.h,
       decoration: BoxDecoration(
-        color: isDark ? context.colors.elevatedSurface : const Color(0xFFFAF3E6),
+        color: isDark
+            ? context.colors.elevatedSurface
+            : const Color(0xFFFAF3E6),
         borderRadius: BorderRadius.circular(24.r),
       ),
       child: Row(
@@ -418,7 +446,11 @@ class SavedRecipeCardSkeleton extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  SkeletonBox(width: 32.r, height: 32.r, shape: BoxShape.circle),
+                  SkeletonBox(
+                    width: 32.r,
+                    height: 32.r,
+                    shape: BoxShape.circle,
+                  ),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [

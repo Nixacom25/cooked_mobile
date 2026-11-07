@@ -17,6 +17,7 @@ import '../widgets/skeleton_list.dart';
 import '../widgets/recipe_shortcut_card.dart';
 import '../screens/home/home_screen.dart';
 import '../core/theme/app_theme.dart';
+import 'recipe_image_placeholder.dart';
 import '../main.dart' show appNavigatorKey;
 import '../core/motion/motion_widgets.dart';
 import '../core/l10n/l10n.dart';
@@ -50,16 +51,20 @@ class _CookbookFormModalState extends State<CookbookFormModal> {
   bool _isPickingRecipes = false;
   bool _isPopping = false;
   String? _createdPreviewName;
-  final DraggableScrollableController _dragCtrl = DraggableScrollableController();
+  final DraggableScrollableController _dragCtrl =
+      DraggableScrollableController();
 
   @override
   void initState() {
     super.initState();
     _nameCtrl = TextEditingController(
-        text: widget.cookbook?.name ?? widget.initialName ?? '');
+      text: widget.cookbook?.name ?? widget.initialName ?? '',
+    );
     _selectedRecipes = widget.cookbook?.recipes != null
         ? List.from(widget.cookbook!.recipes)
-        : (widget.initialRecipes != null ? List.from(widget.initialRecipes!) : []);
+        : (widget.initialRecipes != null
+              ? List.from(widget.initialRecipes!)
+              : []);
   }
 
   @override
@@ -77,14 +82,18 @@ class _CookbookFormModalState extends State<CookbookFormModal> {
     HapticFeedback.mediumImpact();
     final RenderBox? button = buttonContext.findRenderObject() as RenderBox?;
     final RenderBox? overlay =
-        Navigator.of(buttonContext).overlay?.context.findRenderObject() as RenderBox?;
+        Navigator.of(buttonContext).overlay?.context.findRenderObject()
+            as RenderBox?;
 
     double topPos = 60.h;
     if (button != null && overlay != null) {
       final position = RelativeRect.fromRect(
         Rect.fromPoints(
           button.localToGlobal(Offset.zero, ancestor: overlay),
-          button.localToGlobal(button.size.bottomRight(Offset.zero), ancestor: overlay),
+          button.localToGlobal(
+            button.size.bottomRight(Offset.zero),
+            ancestor: overlay,
+          ),
         ),
         Offset.zero & overlay.size,
       );
@@ -157,10 +166,15 @@ class _CookbookFormModalState extends State<CookbookFormModal> {
                     filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
                     child: Container(
                       width: 150.w,
-                      padding: EdgeInsets.symmetric(vertical: 6.h, horizontal: 6.w),
+                      padding: EdgeInsets.symmetric(
+                        vertical: 6.h,
+                        horizontal: 6.w,
+                      ),
                       decoration: BoxDecoration(
                         color: Theme.of(context).brightness == Brightness.dark
-                            ? context.colors.elevatedSurface.withValues(alpha: 0.75)
+                            ? context.colors.elevatedSurface.withValues(
+                                alpha: 0.75,
+                              )
                             : Colors.white.withValues(alpha: 0.28),
                         borderRadius: BorderRadius.circular(24.r),
                         border: Border.all(
@@ -252,7 +266,10 @@ class _CookbookFormModalState extends State<CookbookFormModal> {
     );
   }
 
-  Widget _buildContent(BuildContext context, ScrollController? scrollController) {
+  Widget _buildContent(
+    BuildContext context,
+    ScrollController? scrollController,
+  ) {
     final bool canSave = _nameCtrl.text.trim().isNotEmpty && !_isSaving;
     final bool isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -281,330 +298,345 @@ class _CookbookFormModalState extends State<CookbookFormModal> {
           ),
           child: Stack(
             children: [
-          Column(
-        children: [
-          // ── Header Row ──
-          Padding(
-            padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 12.h),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                // Top Left Circle Back Button
-                GlassIconButton(
-                  onTap: () {
-                    if (_isPickingRecipes) {
-                      setState(() => _isPickingRecipes = false);
-                      if (!widget.isEmbedded) {
-                        _dragCtrl.animateTo(0.85,
-                            duration: const Duration(milliseconds: 300),
-                            curve: Curves.easeOut);
-                      }
-                    } else if (widget.onCancel != null) {
-                      widget.onCancel!();
-                    } else {
-                      Navigator.pop(context);
-                    }
-                  },
-                  size: 42.r,
-                  child: Icon(
-                    Icons.arrow_back_rounded,
-                    color: context.colors.textPrimary,
-                    size: 20.sp,
-                  ),
-                ),
-
-                // Center Title
-                Text(
-                  _isPickingRecipes
-                      ? (_nameCtrl.text.trim().isNotEmpty
-                          ? _nameCtrl.text.trim().toTitleCase()
-                          : context.l10n.cookbookSelectRecipes)
-                      : (_isEdit ? context.l10n.cookbookEdit : context.l10n.cookbookNew),
-                  style: TextStyle(
-                    color: context.colors.textPrimary,
-                    fontSize: 20.sp,
-                    fontWeight: FontWeight.w800,
-                    fontFamily: 'Rubik',
-                  ),
-                ),
-
-                // Top Right Circle Action Button (+ when picking recipes, Close X when on form)
-                Builder(
-                  builder: (btnContext) {
-                    return GlassIconButton(
-                      onTap: () {
-                        if (_isPickingRecipes) {
-                          _showAddOptionsMenu(btnContext);
-                        } else if (widget.onCancel != null) {
-                          widget.onCancel!();
-                        } else {
-                          Navigator.pop(context);
-                        }
-                      },
-                      size: 42.r,
-                      child: Icon(
-                        _isPickingRecipes ? Icons.add_rounded : Icons.close_rounded,
-                        color: context.colors.textPrimary,
-                        size: 22.sp,
-                      ),
-                    );
-                  },
-                ),
-              ],
-            ),
-          ),
-
-          Expanded(
-            child: ListView(
-              controller: scrollController,
-              padding: EdgeInsets.only(
-                top: 8.h,
-                bottom: 20.h,
-              ),
-              children: [
-                if (!_isPickingRecipes) ...[
-                  // Cookbook Name field input
+              Column(
+                children: [
+                  // ── Header Row ──
                   Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16.w),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: context.colors.pageBackground,
-                        borderRadius: BorderRadius.circular(16.r),
-                      ),
-                      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: TextField(
-                              controller: _nameCtrl,
-                              textCapitalization: TextCapitalization.sentences,
-                              autofocus: !widget.isEmbedded && !_isEdit,
-                              style: TextStyle(
-                                color: context.colors.textPrimary,
-                                fontFamily: 'Rubik',
-                                fontSize: 15.sp,
-                                fontWeight: FontWeight.w600,
-                              ),
-                              onChanged: (_) => setState(() {}),
-                              decoration: InputDecoration(
-                                hintText: context.l10n.cookbookNameHint,
-                                hintStyle: TextStyle(
-                                  color: context.colors.textMuted,
-                                  fontFamily: 'Rubik',
-                                  fontSize: 15.sp,
-                                  fontWeight: FontWeight.w400,
-                                ),
-                                border: InputBorder.none,
-                              ),
-                            ),
+                    padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 12.h),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        // Top Left Circle Back Button
+                        GlassIconButton(
+                          onTap: () {
+                            if (_isPickingRecipes) {
+                              setState(() => _isPickingRecipes = false);
+                              if (!widget.isEmbedded) {
+                                _dragCtrl.animateTo(
+                                  0.85,
+                                  duration: const Duration(milliseconds: 300),
+                                  curve: Curves.easeOut,
+                                );
+                              }
+                            } else if (widget.onCancel != null) {
+                              widget.onCancel!();
+                            } else {
+                              Navigator.pop(context);
+                            }
+                          },
+                          size: 42.r,
+                          child: Icon(
+                            Icons.arrow_back_rounded,
+                            color: context.colors.textPrimary,
+                            size: 20.sp,
                           ),
-                          if (_nameCtrl.text.isNotEmpty)
-                            GestureDetector(
-                              onTap: () {
-                                _nameCtrl.clear();
-                                setState(() {});
-                              },
-                              child: Icon(
-                                Icons.close_rounded,
-                                color: context.colors.textMuted,
-                                size: 18.sp,
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  SizedBox(height: 16.h),
-
-                  // Add recipes action tile
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16.w),
-                    child: GestureDetector(
-                      onTap: _pickRecipes,
-                      child: Container(
-                        padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
-                        decoration: BoxDecoration(
-                          color: context.colors.surface,
-                          borderRadius: BorderRadius.circular(20.r),
                         ),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 40.r,
-                              height: 40.r,
-                              decoration: BoxDecoration(
-                                color: context.colors.pageBackground,
-                                shape: BoxShape.circle,
-                              ),
-                              child: Icon(
-                                Icons.add_rounded,
-                                color: context.colors.textPrimary,
-                                size: 22.sp,
-                              ),
-                            ),
-                            SizedBox(width: 14.w),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    context.l10n.cookbookAddRecipesLower,
-                                    style: TextStyle(
-                                      color: context.colors.textPrimary,
-                                      fontSize: 15.sp,
-                                      fontWeight: FontWeight.w700,
-                                      fontFamily: 'Rubik',
-                                    ),
-                                  ),
-                                  SizedBox(height: 2.h),
-                                  Text(
-                                    context.l10n.cookbookSelectForThis,
-                                    style: TextStyle(
-                                      color: context.colors.textSecondary,
-                                      fontSize: 13.sp,
-                                      fontFamily: 'Rubik',
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Icon(
-                              Icons.chevron_right_rounded,
-                              color: context.colors.textPrimary,
-                              size: 22.sp,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
 
-                  if (_selectedRecipes.isNotEmpty) ...[
-                    SizedBox(height: 24.h),
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 16.w),
-                      child: Text(
-                        context.l10n.cookbookSelectedRecipes,
-                        style: TextStyle(
-                          fontFamily: 'Rubik',
-                          fontWeight: FontWeight.w700,
-                          fontSize: 16.sp,
-                          color: context.colors.textPrimary,
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 12.h),
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 16.w),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: _selectedRecipes
-                            .map(
-                              (r) => Padding(
-                                padding: EdgeInsets.only(bottom: 10.h),
-                                child: _SelectedRecipePill(
-                                  recipe: r,
-                                  onRemove: () => setState(
-                                    () => _selectedRecipes.removeWhere((x) => x.id == r.id),
-                                  ),
-                                ),
-                              ),
-                            )
-                            .toList(),
-                      ),
-                    ),
-                  ],
-                ],
-
-                if (_isPickingRecipes)
-                  _InlineRecipePicker(
-                    alreadySelected: _selectedRecipes,
-                    onToggleRecipe: (r) {
-                      setState(() {
-                        if (_selectedRecipes.any((x) => x.id == r.id)) {
-                          _selectedRecipes.removeWhere((x) => x.id == r.id);
-                        } else {
-                          _selectedRecipes.add(r);
-                        }
-                      });
-                    },
-                  ),
-              ],
-            ),
-          ),
-
-          // ── Bottom Fixed Save Button ──
-          SafeArea(
-            top: false,
-            bottom: true,
-            child: Padding(
-              padding: EdgeInsets.fromLTRB(
-                16.w,
-                12.h,
-                16.w,
-                12.h,
-              ),
-              child: SizedBox(
-                width: double.infinity,
-                height: 52.h,
-                child: ElevatedButton(
-                  onPressed: _isPickingRecipes
-                      ? () => setState(() => _isPickingRecipes = false)
-                      : (canSave ? _save : null),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: context.colors.accent,
-                    disabledBackgroundColor: context.colors.border,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(26.r),
-                    ),
-                  ),
-                  child: _isSaving
-                      ? SizedBox(
-                          width: 20.w,
-                          height: 20.w,
-                          child: const AppLoadingIndicator(
-                            color: Colors.white,
-                          ),
-                        )
-                      : Text(
-                          context.l10n.commonSave,
+                        // Center Title
+                        Text(
+                          _isPickingRecipes
+                              ? (_nameCtrl.text.trim().isNotEmpty
+                                    ? _nameCtrl.text.trim().toTitleCase()
+                                    : context.l10n.cookbookSelectRecipes)
+                              : (_isEdit
+                                    ? context.l10n.cookbookEdit
+                                    : context.l10n.cookbookNew),
                           style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16.sp,
-                            fontWeight: FontWeight.w700,
+                            color: context.colors.textPrimary,
+                            fontSize: 20.sp,
+                            fontWeight: FontWeight.w800,
                             fontFamily: 'Rubik',
                           ),
                         ),
+
+                        // Top Right Circle Action Button (+ when picking recipes, Close X when on form)
+                        Builder(
+                          builder: (btnContext) {
+                            return GlassIconButton(
+                              onTap: () {
+                                if (_isPickingRecipes) {
+                                  _showAddOptionsMenu(btnContext);
+                                } else if (widget.onCancel != null) {
+                                  widget.onCancel!();
+                                } else {
+                                  Navigator.pop(context);
+                                }
+                              },
+                              size: 42.r,
+                              child: Icon(
+                                _isPickingRecipes
+                                    ? Icons.add_rounded
+                                    : Icons.close_rounded,
+                                color: context.colors.textPrimary,
+                                size: 22.sp,
+                              ),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  Expanded(
+                    child: ListView(
+                      controller: scrollController,
+                      padding: EdgeInsets.only(top: 8.h, bottom: 20.h),
+                      children: [
+                        if (!_isPickingRecipes) ...[
+                          // Cookbook Name field input
+                          Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 16.w),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: context.colors.pageBackground,
+                                borderRadius: BorderRadius.circular(16.r),
+                              ),
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 16.w,
+                                vertical: 4.h,
+                              ),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: TextField(
+                                      controller: _nameCtrl,
+                                      textCapitalization:
+                                          TextCapitalization.sentences,
+                                      autofocus: !widget.isEmbedded && !_isEdit,
+                                      style: TextStyle(
+                                        color: context.colors.textPrimary,
+                                        fontFamily: 'Rubik',
+                                        fontSize: 15.sp,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                      onChanged: (_) => setState(() {}),
+                                      decoration: InputDecoration(
+                                        hintText: context.l10n.cookbookNameHint,
+                                        hintStyle: TextStyle(
+                                          color: context.colors.textMuted,
+                                          fontFamily: 'Rubik',
+                                          fontSize: 15.sp,
+                                          fontWeight: FontWeight.w400,
+                                        ),
+                                        border: InputBorder.none,
+                                      ),
+                                    ),
+                                  ),
+                                  if (_nameCtrl.text.isNotEmpty)
+                                    GestureDetector(
+                                      onTap: () {
+                                        _nameCtrl.clear();
+                                        setState(() {});
+                                      },
+                                      child: Icon(
+                                        Icons.close_rounded,
+                                        color: context.colors.textMuted,
+                                        size: 18.sp,
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ),
+                          ),
+
+                          SizedBox(height: 16.h),
+
+                          // Add recipes action tile
+                          Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 16.w),
+                            child: GestureDetector(
+                              onTap: _pickRecipes,
+                              child: Container(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 14.w,
+                                  vertical: 12.h,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: context.colors.surface,
+                                  borderRadius: BorderRadius.circular(20.r),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      width: 40.r,
+                                      height: 40.r,
+                                      decoration: BoxDecoration(
+                                        color: context.colors.pageBackground,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: Icon(
+                                        Icons.add_rounded,
+                                        color: context.colors.textPrimary,
+                                        size: 22.sp,
+                                      ),
+                                    ),
+                                    SizedBox(width: 14.w),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            context
+                                                .l10n
+                                                .cookbookAddRecipesLower,
+                                            style: TextStyle(
+                                              color: context.colors.textPrimary,
+                                              fontSize: 15.sp,
+                                              fontWeight: FontWeight.w700,
+                                              fontFamily: 'Rubik',
+                                            ),
+                                          ),
+                                          SizedBox(height: 2.h),
+                                          Text(
+                                            context.l10n.cookbookSelectForThis,
+                                            style: TextStyle(
+                                              color:
+                                                  context.colors.textSecondary,
+                                              fontSize: 13.sp,
+                                              fontFamily: 'Rubik',
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    Icon(
+                                      Icons.chevron_right_rounded,
+                                      color: context.colors.textPrimary,
+                                      size: 22.sp,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+
+                          if (_selectedRecipes.isNotEmpty) ...[
+                            SizedBox(height: 24.h),
+                            Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 16.w),
+                              child: Text(
+                                context.l10n.cookbookSelectedRecipes,
+                                style: TextStyle(
+                                  fontFamily: 'Rubik',
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 16.sp,
+                                  color: context.colors.textPrimary,
+                                ),
+                              ),
+                            ),
+                            SizedBox(height: 12.h),
+                            Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 16.w),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: _selectedRecipes
+                                    .map(
+                                      (r) => Padding(
+                                        padding: EdgeInsets.only(bottom: 10.h),
+                                        child: _SelectedRecipePill(
+                                          recipe: r,
+                                          onRemove: () => setState(
+                                            () => _selectedRecipes.removeWhere(
+                                              (x) => x.id == r.id,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    )
+                                    .toList(),
+                              ),
+                            ),
+                          ],
+                        ],
+
+                        if (_isPickingRecipes)
+                          _InlineRecipePicker(
+                            alreadySelected: _selectedRecipes,
+                            onToggleRecipe: (r) {
+                              setState(() {
+                                if (_selectedRecipes.any((x) => x.id == r.id)) {
+                                  _selectedRecipes.removeWhere(
+                                    (x) => x.id == r.id,
+                                  );
+                                } else {
+                                  _selectedRecipes.add(r);
+                                }
+                              });
+                            },
+                          ),
+                      ],
+                    ),
+                  ),
+
+                  // ── Bottom Fixed Save Button ──
+                  SafeArea(
+                    top: false,
+                    bottom: true,
+                    child: Padding(
+                      padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 12.h),
+                      child: SizedBox(
+                        width: double.infinity,
+                        height: 52.h,
+                        child: ElevatedButton(
+                          onPressed: _isPickingRecipes
+                              ? () => setState(() => _isPickingRecipes = false)
+                              : (canSave ? _save : null),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: context.colors.accent,
+                            disabledBackgroundColor: context.colors.border,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(26.r),
+                            ),
+                          ),
+                          child: _isSaving
+                              ? SizedBox(
+                                  width: 20.w,
+                                  height: 20.w,
+                                  child: const AppLoadingIndicator(
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : Text(
+                                  context.l10n.commonSave,
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16.sp,
+                                    fontWeight: FontWeight.w700,
+                                    fontFamily: 'Rubik',
+                                  ),
+                                ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              // "Create" confirmation: the new cookbook materializes (cover,
+              // title, first thumbnails, check) before the modal closes.
+              if (_createdPreviewName != null)
+                Positioned.fill(
+                  child: _CookbookCreatedPreview(
+                    name: _createdPreviewName!,
+                    recipes: _selectedRecipes.take(3).toList(),
+                  ),
                 ),
-              ),
-            ),
+            ],
           ),
-        ],
+        ),
       ),
-          // "Create" confirmation: the new cookbook materializes (cover,
-          // title, first thumbnails, check) before the modal closes.
-          if (_createdPreviewName != null)
-            Positioned.fill(
-              child: _CookbookCreatedPreview(
-                name: _createdPreviewName!,
-                recipes: _selectedRecipes.take(3).toList(),
-              ),
-            ),
-          ],
-          ),
-    ),
-  ),
-);
+    );
   }
 
   Future<void> _pickRecipes() async {
     setState(() => _isPickingRecipes = true);
     if (!widget.isEmbedded) {
-      _dragCtrl.animateTo(0.85,
-          duration: const Duration(milliseconds: 400),
-          curve: Curves.easeOutQuart);
+      _dragCtrl.animateTo(
+        0.85,
+        duration: const Duration(milliseconds: 400),
+        curve: Curves.easeOutQuart,
+      );
     }
   }
 
@@ -636,7 +668,9 @@ class _CookbookFormModalState extends State<CookbookFormModal> {
     if (mounted) {
       IosToast.show(
         context,
-        message: isEdit ? context.l10n.cookbookUpdated : context.l10n.cookbookCreated,
+        message: isEdit
+            ? context.l10n.cookbookUpdated
+            : context.l10n.cookbookCreated,
         type: ToastType.success,
       );
     }
@@ -646,18 +680,19 @@ class _CookbookFormModalState extends State<CookbookFormModal> {
       if (!widget.isEmbedded && mounted) {
         try {
           Navigator.of(context).pop();
-        } catch (e) {
-        }
+        } catch (e) {}
       }
     }
 
-    unawaited(_saveInBackground(
-      name: name,
-      recipes: recipesSnapshot,
-      isEdit: isEdit,
-      cookbookId: cookbookId,
-      onComplete: onComplete,
-    ));
+    unawaited(
+      _saveInBackground(
+        name: name,
+        recipes: recipesSnapshot,
+        isEdit: isEdit,
+        cookbookId: cookbookId,
+        onComplete: onComplete,
+      ),
+    );
   }
 
   static Future<void> _saveInBackground({
@@ -688,10 +723,16 @@ class _CookbookFormModalState extends State<CookbookFormModal> {
 
       Cookbook cb;
       if (isEdit) {
-        cb = await CookbookService.instance
-            .updateCookbook(cookbookId!, name, validRecipeIds);
+        cb = await CookbookService.instance.updateCookbook(
+          cookbookId!,
+          name,
+          validRecipeIds,
+        );
       } else {
-        cb = await CookbookService.instance.createCookbook(name, validRecipeIds);
+        cb = await CookbookService.instance.createCookbook(
+          name,
+          validRecipeIds,
+        );
       }
       onComplete?.call(cb);
     } catch (e) {
@@ -702,7 +743,10 @@ class _CookbookFormModalState extends State<CookbookFormModal> {
       if (ctx != null && ctx.mounted) {
         IosToast.show(
           ctx,
-          message: ctx.l10n.cookbookSaveFailed(name, ErrorHelper.getFriendlyMessage(e)),
+          message: ctx.l10n.cookbookSaveFailed(
+            name,
+            ErrorHelper.getFriendlyMessage(e),
+          ),
           type: ToastType.error,
         );
       }
@@ -745,10 +789,14 @@ class _SelectedRecipePill extends StatelessWidget {
                       width: 28.r,
                       height: 28.r,
                       color: context.colors.border,
-                      child: Icon(Icons.fastfood_rounded,
-                          size: 14.sp, color: Colors.white),
+                      child: Icon(
+                        Icons.fastfood_rounded,
+                        size: 14.sp,
+                        color: Colors.white,
+                      ),
                     ),
-                    placeholder: (_, __) => const SkeletonBox(borderRadius: BorderRadius.zero),
+                    placeholder: (_, __) =>
+                        const SkeletonBox(borderRadius: BorderRadius.zero),
                     fadeInDuration: Motion.imageFade,
                     fadeOutDuration: Duration.zero,
                     fadeInCurve: Motion.enter,
@@ -757,8 +805,11 @@ class _SelectedRecipePill extends StatelessWidget {
                     width: 28.r,
                     height: 28.r,
                     color: context.colors.border,
-                    child: Icon(Icons.fastfood_rounded,
-                        size: 14.sp, color: Colors.white),
+                    child: Icon(
+                      Icons.fastfood_rounded,
+                      size: 14.sp,
+                      color: Colors.white,
+                    ),
                   ),
           ),
           SizedBox(width: 10.w),
@@ -803,8 +854,10 @@ class _SelectedRecipePill extends StatelessWidget {
 class _InlineRecipePicker extends StatefulWidget {
   final List<Recipe> alreadySelected;
   final Function(Recipe) onToggleRecipe;
-  const _InlineRecipePicker(
-      {required this.alreadySelected, required this.onToggleRecipe});
+  const _InlineRecipePicker({
+    required this.alreadySelected,
+    required this.onToggleRecipe,
+  });
 
   @override
   State<_InlineRecipePicker> createState() => _InlineRecipePickerState();
@@ -865,8 +918,10 @@ class _InlineRecipePickerState extends State<_InlineRecipePicker> {
   @override
   Widget build(BuildContext context) {
     final filtered = (_allRecipes ?? [])
-        .where((r) =>
-            r.name.toLowerCase().contains(_searchQuery.trim().toLowerCase()))
+        .where(
+          (r) =>
+              r.name.toLowerCase().contains(_searchQuery.trim().toLowerCase()),
+        )
         .toList();
 
     return Column(
@@ -1006,7 +1061,7 @@ class _InlineRecipePickerState extends State<_InlineRecipePicker> {
                 ),
               ),
             ),
-          )
+          ),
         ] else ...[
           Padding(
             padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
@@ -1046,7 +1101,9 @@ class _InlineRecipePickerState extends State<_InlineRecipePicker> {
                     color: context.colors.surface,
                     borderRadius: BorderRadius.circular(24.r),
                     border: Border.all(
-                      color: isSelected ? context.colors.accent : Colors.transparent,
+                      color: isSelected
+                          ? context.colors.accent
+                          : Colors.transparent,
                       width: 1.5.w,
                     ),
                   ),
@@ -1063,30 +1120,27 @@ class _InlineRecipePickerState extends State<_InlineRecipePicker> {
                               color: context.colors.surface,
                               child: (r.image != null && r.image!.isNotEmpty)
                                   ? (r.image!.startsWith('http')
-                                      ? CachedNetworkImage(
-                                          imageUrl: r.image!,
-                                          fit: BoxFit.cover,
-                                          errorWidget: (_, __, ___) => Image.asset(
-                                            'assets/images/recipes.webp',
+                                        ? CachedNetworkImage(
+                                            imageUrl: r.image!,
                                             fit: BoxFit.cover,
-                                          ),
-                                          placeholder: (_, __) => const SkeletonBox(borderRadius: BorderRadius.zero),
-                                          fadeInDuration: Motion.imageFade,
-                                          fadeOutDuration: Duration.zero,
-                                          fadeInCurve: Motion.enter,
-                                        )
-                                      : Image.asset(
-                                          r.image!,
-                                          fit: BoxFit.cover,
-                                          errorBuilder: (_, __, ___) => Image.asset(
-                                            'assets/images/recipes.webp',
+                                            errorWidget: (_, __, ___) =>
+                                                const RecipeImagePlaceholder(),
+                                            placeholder: (_, __) =>
+                                                const SkeletonBox(
+                                                  borderRadius:
+                                                      BorderRadius.zero,
+                                                ),
+                                            fadeInDuration: Motion.imageFade,
+                                            fadeOutDuration: Duration.zero,
+                                            fadeInCurve: Motion.enter,
+                                          )
+                                        : Image.asset(
+                                            r.image!,
                                             fit: BoxFit.cover,
-                                          ),
-                                        ))
-                                  : Image.asset(
-                                      'assets/images/recipes.webp',
-                                      fit: BoxFit.cover,
-                                    ),
+                                            errorBuilder: (_, __, ___) =>
+                                                const RecipeImagePlaceholder(),
+                                          ))
+                                  : const RecipeImagePlaceholder(),
                             ),
                           ),
                         ),
@@ -1114,7 +1168,9 @@ class _InlineRecipePickerState extends State<_InlineRecipePicker> {
                               height: 20.r,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: isSelected ? context.colors.accent : Colors.transparent,
+                                color: isSelected
+                                    ? context.colors.accent
+                                    : Colors.transparent,
                                 border: isSelected
                                     ? null
                                     : Border.all(
@@ -1139,11 +1195,10 @@ class _InlineRecipePickerState extends State<_InlineRecipePicker> {
               );
             },
           ),
-        ]
+        ],
       ],
     );
   }
-
 }
 
 class _CookbookCreatedPreview extends StatelessWidget {
@@ -1180,8 +1235,14 @@ class _CookbookCreatedPreview extends StatelessWidget {
                         child: cover != null && cover.startsWith('http')
                             ? ImageCrossfade(url: cover)
                             : ColoredBox(
-                                color: context.colors.accent.withValues(alpha: 0.12),
-                                child: Icon(Icons.menu_book_rounded, color: context.colors.accent, size: 48.sp),
+                                color: context.colors.accent.withValues(
+                                  alpha: 0.12,
+                                ),
+                                child: Icon(
+                                  Icons.menu_book_rounded,
+                                  color: context.colors.accent,
+                                  size: 48.sp,
+                                ),
                               ),
                       ),
                     ),
@@ -1192,8 +1253,16 @@ class _CookbookCreatedPreview extends StatelessWidget {
                         width: 34.r,
                         height: 34.r,
                         padding: EdgeInsets.all(6.r),
-                        decoration: const BoxDecoration(color: Color(0xFF16A34A), shape: BoxShape.circle),
-                        child: AnimatedCheck(size: 22.r, color: Colors.white, strokeWidth: 2.4, showCircle: false),
+                        decoration: const BoxDecoration(
+                          color: Color(0xFF16A34A),
+                          shape: BoxShape.circle,
+                        ),
+                        child: AnimatedCheck(
+                          size: 22.r,
+                          color: Colors.white,
+                          strokeWidth: 2.4,
+                          showCircle: false,
+                        ),
                       ),
                     ),
                   ],
@@ -1230,7 +1299,9 @@ class _CookbookCreatedPreview extends StatelessWidget {
                               height: 40.r,
                               child: (recipes[i].image ?? '').startsWith('http')
                                   ? ImageCrossfade(url: recipes[i].image!)
-                                  : ColoredBox(color: context.colors.pageBackground),
+                                  : ColoredBox(
+                                      color: context.colors.pageBackground,
+                                    ),
                             ),
                           ),
                         ),

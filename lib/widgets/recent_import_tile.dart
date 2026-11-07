@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../core/extensions/string_extensions.dart';
 import '../core/theme/app_theme.dart';
 import '../core/motion/motion_widgets.dart';
+import 'recipe_image_placeholder.dart';
 
 class RecentImportTile extends StatelessWidget {
   final String img;
@@ -43,23 +44,27 @@ class RecentImportTile extends StatelessWidget {
     }
   }
 
-  Widget _buildImage(BuildContext context, String path) {
+  Widget _buildImage(String path) {
     if (path.isEmpty) {
-      return Image.asset('assets/images/recipes.webp', fit: BoxFit.cover);
+      return const RecipeImagePlaceholder();
     }
     if (path.startsWith('http')) {
       return CachedNetworkImage(
         imageUrl: path,
         fit: BoxFit.cover,
-        placeholder: (_, __) => const SkeletonBox(borderRadius: BorderRadius.zero),
+        placeholder: (_, __) =>
+            const SkeletonBox(borderRadius: BorderRadius.zero),
         fadeInDuration: Motion.imageFade,
         fadeOutDuration: Duration.zero,
         fadeInCurve: Motion.enter,
-        errorWidget: (_, __, ___) =>
-            Image.asset('assets/images/recipes.webp', fit: BoxFit.cover),
+        errorWidget: (_, __, ___) => const RecipeImagePlaceholder(),
       );
     }
-    return Image.asset(path, fit: BoxFit.cover);
+    return Image.asset(
+      path,
+      fit: BoxFit.cover,
+      errorBuilder: (_, __, ___) => const RecipeImagePlaceholder(),
+    );
   }
 
   @override
@@ -79,7 +84,7 @@ class RecentImportTile extends StatelessWidget {
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(16.r),
-            child: SizedBox(width: 80.w, height: 80.h, child: _buildImage(context, img)),
+            child: SizedBox(width: 80.w, height: 80.h, child: _buildImage(img)),
           ),
           SizedBox(width: 14.w),
           Expanded(

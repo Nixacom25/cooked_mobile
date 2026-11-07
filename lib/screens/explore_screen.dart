@@ -283,7 +283,9 @@ class _ExploreScreenState extends State<ExploreScreen> {
               final filter = kRecipeFilters[i];
               Motion.selectionHaptic();
               setState(() {
-                _activeFilterId = _activeFilterId == filter.id ? null : filter.id;
+                _activeFilterId = _activeFilterId == filter.id
+                    ? null
+                    : filter.id;
               });
             },
             itemBuilder: (context, i, isActive) {
@@ -291,10 +293,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
               return AnimatedContainer(
                 duration: Motion.of(context, Motion.short),
                 curve: Motion.standard,
-                padding: EdgeInsets.symmetric(
-                  horizontal: 14.w,
-                  vertical: 8.h,
-                ),
+                padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 8.h),
                 decoration: BoxDecoration(
                   // Transparent fill: the sliding pill behind provides the
                   // selected background, and stays visible while it moves.
@@ -419,7 +418,8 @@ class _ExploreScreenState extends State<ExploreScreen> {
                                 AppRoutes.viewAll,
                                 arguments: {
                                   'type': ViewAllType.exploreCategories,
-                                  'title': context.l10n.explorePopularCategories,
+                                  'title':
+                                      context.l10n.explorePopularCategories,
                                 },
                               );
                             },
@@ -440,21 +440,32 @@ class _ExploreScreenState extends State<ExploreScreen> {
                     SizedBox(height: 14.h),
 
                     // ── For You Category Cards (Horizontal Scrollable) ──
-                  Builder(builder: (context) {
-                    ScrollHint.play(context, _forYouScroll, 'explore-for-you');
-                    return const SizedBox.shrink();
-                  }),
+                    Builder(
+                      builder: (context) {
+                        ScrollHint.play(
+                          context,
+                          _forYouScroll,
+                          'explore-for-you',
+                        );
+                        return const SizedBox.shrink();
+                      },
+                    ),
                     SizedBox(
                       height: 200.h,
                       child: ListView.builder(
-                      controller: _forYouScroll,
+                        controller: _forYouScroll,
                         scrollDirection: Axis.horizontal,
                         padding: EdgeInsets.symmetric(horizontal: 16.w),
                         itemCount: categories.length,
                         itemBuilder: (context, i) {
                           final item = categories[i];
-                          final name = (item['name'] as String?) ?? context.l10n.exploreCategory;
-                          final count = recipeCountLabel(context.l10n, item['recipeCount']);
+                          final name =
+                              (item['name'] as String?) ??
+                              context.l10n.exploreCategory;
+                          final count = recipeCountLabel(
+                            context.l10n,
+                            item['recipeCount'],
+                          );
                           final img = (item['image'] as String?) ?? "";
 
                           return Padding(
@@ -559,7 +570,9 @@ class _ExploreScreenState extends State<ExploreScreen> {
                 SizedBox(height: 4.h),
                 Text(
                   activeFilter != null && lowerQuery.isEmpty
-                      ? context.l10n.exploreNoFilterMatch(activeFilter.localizedLabel(context.l10n))
+                      ? context.l10n.exploreNoFilterMatch(
+                          activeFilter.localizedLabel(context.l10n),
+                        )
                       : context.l10n.commonTryDifferentSearch,
                   textAlign: TextAlign.center,
                   style: TextStyle(
@@ -861,7 +874,9 @@ class _ExploreScreenState extends State<ExploreScreen> {
                   itemCount: list.length,
                   itemBuilder: (context, i) {
                     final item = list[i];
-                    final name = (item['name'] as String?) ?? context.l10n.viewAllCuisine;
+                    final name =
+                        (item['name'] as String?) ??
+                        context.l10n.viewAllCuisine;
                     final count = item['count'] != null
                         ? item['count'].toString()
                         : recipeCountLabel(context.l10n, item['recipeCount']);
@@ -1072,7 +1087,10 @@ class _ExploreScreenState extends State<ExploreScreen> {
                           } else {
                             RecipeService.instance.markRecipeAsUnsaved(r);
                             if (r.id.isNotEmpty) {
-                              RecipeService.instance.deleteRecipe(r.id, name: r.name);
+                              RecipeService.instance.deleteRecipe(
+                                r.id,
+                                name: r.name,
+                              );
                             }
                             r.isFavorite = false;
                             r.isInCookbook = false;
@@ -1096,7 +1114,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                     title: "Chicken Stir-Fry",
                     time: "25 min",
                     kcal: "317 kcal",
-                    image: "assets/images/plat4.png",
+                    image: "",
                     onTap: () {},
                   ),
                   SizedBox(height: 12.h),
@@ -1104,7 +1122,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                     title: "Tacos",
                     time: "10 min",
                     kcal: "217 kcal",
-                    image: "assets/images/plat3.png",
+                    image: "",
                     onTap: () {},
                   ),
                 ],

@@ -15,6 +15,7 @@ import '../../core/utils/error_helper.dart';
 import '../../widgets/add_to_grocery_modal.dart';
 import '../../widgets/add_to_cookbook_sheet.dart';
 import '../../widgets/skeleton_loader.dart';
+import '../../widgets/recipe_image_placeholder.dart';
 import '../../widgets/app_loading_indicator.dart';
 import '../../services/user_service.dart';
 import '../../services/cookbook_service.dart';
@@ -47,7 +48,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
     _recipe = r;
     _currentServings = r.servings != null && r.servings! > 0 ? r.servings! : 2;
     _originalServings = r.servings != null && r.servings! > 0 ? r.servings! : 2;
-    
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       HistoryService.instance.addToHistory(r);
     });
@@ -62,8 +63,11 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
       final r = await RecipeService.instance.getRecipe(id);
       if (mounted) {
         setState(() {
-          final currentUserId = UserService.instance.currentUserNotifier.value?['id'];
-          if (r.creator?.id != null && currentUserId != null && r.creator!.id != currentUserId) {
+          final currentUserId =
+              UserService.instance.currentUserNotifier.value?['id'];
+          if (r.creator?.id != null &&
+              currentUserId != null &&
+              r.creator!.id != currentUserId) {
             _isPreview = true;
           }
           _initRecipeData(r);
@@ -91,13 +95,17 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
       final String? id = args['recipeId'] as String?;
       _isPreview = args['isPreview'] ?? false;
       final viewedId = r?.id ?? id;
-      if (viewedId != null && !_isPreview) AppEventsService.instance.track('RECIPE_VIEW', detail: viewedId);
+      if (viewedId != null && !_isPreview)
+        AppEventsService.instance.track('RECIPE_VIEW', detail: viewedId);
       _infoMessage = args['infoMessage'] as String?;
       _cookbookId = args['cookbookId'] as String?;
 
       if (r != null) {
-        final currentUserId = UserService.instance.currentUserNotifier.value?['id'];
-        if (r.creator?.id != null && currentUserId != null && r.creator!.id != currentUserId) {
+        final currentUserId =
+            UserService.instance.currentUserNotifier.value?['id'];
+        if (r.creator?.id != null &&
+            currentUserId != null &&
+            r.creator!.id != currentUserId) {
           _isPreview = true;
         }
         _initRecipeData(r);
@@ -170,9 +178,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
           context: context,
           barrierColor: Colors.black26,
           barrierDismissible: false,
-          builder: (context) => const Center(
-            child: AppLoadingIndicator(),
-          ),
+          builder: (context) => const Center(child: AppLoadingIndicator()),
         );
         try {
           final createdRecipe = await RecipeService.instance.createRecipe(r);
@@ -193,14 +199,18 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
       if (!mounted) return;
       final l10n = context.l10n;
       final rawLink = await RecipeService.instance.getShareLink(r.id);
-      final link = rawLink.replaceAll('cooked.nixacom.com', 'link.cookedapp.com').replaceAll('https://cookedapp.app', 'https://link.cookedapp.com');
+      final link = rawLink
+          .replaceAll('cooked.nixacom.com', 'link.cookedapp.com')
+          .replaceAll('https://cookedapp.app', 'https://link.cookedapp.com');
 
       final name = r.name;
       final template = recipeShareText(
         l10n,
         name: name,
         link: link,
-        creator: r.creator != null && r.creator!.firstname.isNotEmpty ? r.creator!.displayName : null,
+        creator: r.creator != null && r.creator!.firstname.isNotEmpty
+            ? r.creator!.displayName
+            : null,
       );
 
       SharePlus.instance.share(ShareParams(text: template));
@@ -224,7 +234,9 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
     final confirmed = await showDialog<bool?>(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24.r)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24.r),
+        ),
         backgroundColor: context.colors.surface,
         title: Text(
           context.l10n.reportPhotoConfirmTitle,
@@ -262,7 +274,9 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
             onPressed: () => Navigator.pop(ctx, true),
             style: ElevatedButton.styleFrom(
               backgroundColor: context.colors.accent,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16.r),
+              ),
               elevation: 0,
             ),
             child: Text(
@@ -289,7 +303,11 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
     );
 
     if (!mounted) return;
-    IosToast.show(context, message: context.l10n.reportPhotoSuccess, type: ToastType.success);
+    IosToast.show(
+      context,
+      message: context.l10n.reportPhotoSuccess,
+      type: ToastType.success,
+    );
   }
 
   Widget _buildServingsSelector(Recipe? r) {
@@ -420,10 +438,13 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
         {};
     final Recipe? r = _recipe ?? args['recipe'] as Recipe?;
     final String img = r?.image ?? args['img'] as String? ?? '';
-    final String name = (r?.name ??
-            args['name'] as String? ??
-            (_isLoading ? context.l10n.commonLoadingDots : context.l10n.commonRecipe))
-        .toTitleCase();
+    final String name =
+        (r?.name ??
+                args['name'] as String? ??
+                (_isLoading
+                    ? context.l10n.commonLoadingDots
+                    : context.l10n.commonRecipe))
+            .toTitleCase();
     final String time = r != null
         ? '${r.prepTime ?? r.cookTime} min'
         : (args['time'] as String? ?? '20 min');
@@ -518,7 +539,8 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                           padding: EdgeInsets.fromLTRB(20.w, 4.h, 20.w, 0),
                           sliver: SliverToBoxAdapter(
                             child: ValueListenableBuilder<List<Recipe>?>(
-                              valueListenable: RecipeService.instance.myRecipesNotifier,
+                              valueListenable:
+                                  RecipeService.instance.myRecipesNotifier,
                               builder: (context, savedRecipes, _) {
                                 final bool isFav = _checkIsFavorite(r);
                                 return Row(
@@ -547,19 +569,47 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                                             r.isFavorite = newFavState;
                                           });
                                           if (newFavState) {
-                                            RecipeService.instance.markRecipeAsSaved(r);
-                                            IosToast.show(context, message: context.l10n.recipeSavedToast, type: ToastType.success);
+                                            RecipeService.instance
+                                                .markRecipeAsSaved(r);
+                                            IosToast.show(
+                                              context,
+                                              message:
+                                                  context.l10n.recipeSavedToast,
+                                              type: ToastType.success,
+                                            );
                                           } else {
-                                            RecipeService.instance.markRecipeAsUnsaved(r);
+                                            RecipeService.instance
+                                                .markRecipeAsUnsaved(r);
                                             if (r.id.isNotEmpty) {
-                                              RecipeService.instance.deleteRecipe(r.id, name: r.name);
+                                              RecipeService.instance
+                                                  .deleteRecipe(
+                                                    r.id,
+                                                    name: r.name,
+                                                  );
                                             }
                                             if (savedRecipes != null) {
-                                              RecipeService.instance.myRecipesNotifier.value = savedRecipes
-                                                  .where((item) => item.id != r.id && (item.name.isEmpty || item.name.toLowerCase() != r.name.toLowerCase()))
+                                              RecipeService
+                                                  .instance
+                                                  .myRecipesNotifier
+                                                  .value = savedRecipes
+                                                  .where(
+                                                    (item) =>
+                                                        item.id != r.id &&
+                                                        (item.name.isEmpty ||
+                                                            item.name
+                                                                    .toLowerCase() !=
+                                                                r.name
+                                                                    .toLowerCase()),
+                                                  )
                                                   .toList();
                                             }
-                                            IosToast.show(context, message: context.l10n.recipeRemovedToast, type: ToastType.success);
+                                            IosToast.show(
+                                              context,
+                                              message: context
+                                                  .l10n
+                                                  .recipeRemovedToast,
+                                              type: ToastType.success,
+                                            );
                                           }
                                         }
                                       },
@@ -569,8 +619,12 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                                         ringSize: 44.sp,
                                         iconSize: 26.sp,
                                         child: Icon(
-                                          isFav ? Icons.favorite_rounded : Icons.favorite_border_rounded,
-                                          color: isFav ? context.colors.accent : context.colors.textMuted,
+                                          isFav
+                                              ? Icons.favorite_rounded
+                                              : Icons.favorite_border_rounded,
+                                          color: isFav
+                                              ? context.colors.accent
+                                              : context.colors.textMuted,
                                           size: 26.sp,
                                         ),
                                       ),
@@ -600,7 +654,9 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                                 ),
                                 _TagPill(
                                   icon: Icons.people_outline_rounded,
-                                  label: context.l10n.recipeServingsPeople(_currentServings),
+                                  label: context.l10n.recipeServingsPeople(
+                                    _currentServings,
+                                  ),
                                 ),
                               ],
                             ),
@@ -610,7 +666,10 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                         // Add to Grocery Button Row
                         SliverToBoxAdapter(
                           child: Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 20.w,
+                              vertical: 10.h,
+                            ),
                             child: GestureDetector(
                               onTap: () {
                                 if (r != null) {
@@ -658,7 +717,10 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                             height: 52.h,
                             child: Container(
                               color: context.colors.surface,
-                              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 4.h),
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 20.w,
+                                vertical: 4.h,
+                              ),
                               child: Center(
                                 child: Container(
                                   padding: const EdgeInsets.all(4),
@@ -671,12 +733,16 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                                       _TabPill(
                                         label: context.l10n.recipeSteps,
                                         active: _activeTab == DetailTab.steps,
-                                        onTap: () => _onTabChanged(DetailTab.steps),
+                                        onTap: () =>
+                                            _onTabChanged(DetailTab.steps),
                                       ),
                                       _TabPill(
                                         label: context.l10n.recipeIngredients,
-                                        active: _activeTab == DetailTab.ingredients,
-                                        onTap: () => _onTabChanged(DetailTab.ingredients),
+                                        active:
+                                            _activeTab == DetailTab.ingredients,
+                                        onTap: () => _onTabChanged(
+                                          DetailTab.ingredients,
+                                        ),
                                       ),
                                     ],
                                   ),
@@ -705,10 +771,14 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                                       ingredients: r?.ingredients ?? [],
                                       currentServings: _currentServings,
                                       originalServings: _originalServings,
-                                      showSavings: (r != null &&
+                                      showSavings:
+                                          (r != null &&
                                           (r.origin?.toUpperCase() == 'SCAN' ||
-                                              r.origin?.toUpperCase() == 'SUGGESTED' ||
-                                              (r.isSuggested && (r.sourceUrl == null || r.sourceUrl!.isEmpty)))),
+                                              r.origin?.toUpperCase() ==
+                                                  'SUGGESTED' ||
+                                              (r.isSuggested &&
+                                                  (r.sourceUrl == null ||
+                                                      r.sourceUrl!.isEmpty)))),
                                       totalPrice: r?.totalPrice,
                                     )
                                   else
@@ -731,7 +801,8 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                     left: 0,
                     right: 0,
                     child: ValueListenableBuilder<List<Cookbook>?>(
-                      valueListenable: CookbookService.instance.myCookbooksNotifier,
+                      valueListenable:
+                          CookbookService.instance.myCookbooksNotifier,
                       builder: (context, cookbooks, _) {
                         final bool isAdded = _checkIsInCookbook(r, cookbooks);
                         return Container(
@@ -741,7 +812,12 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                           color: Theme.of(context).brightness == Brightness.dark
                               ? context.colors.pageBackground
                               : Colors.white,
-                          padding: EdgeInsets.fromLTRB(20.w, 10.h, 20.w, 10.h + bottomPad),
+                          padding: EdgeInsets.fromLTRB(
+                            20.w,
+                            10.h,
+                            20.w,
+                            10.h + bottomPad,
+                          ),
                           child: GestureDetector(
                             onTap: () async {
                               if (r == null) return;
@@ -750,7 +826,9 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                                 final removeBoth = await showDialog<bool?>(
                                   context: context,
                                   builder: (ctx) => AlertDialog(
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24.r)),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(24.r),
+                                    ),
                                     backgroundColor: context.colors.surface,
                                     title: Text(
                                       context.l10n.recipeRemoveFromCookbook,
@@ -770,10 +848,14 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                                         height: 1.4,
                                       ),
                                     ),
-                                    actionsPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+                                    actionsPadding: EdgeInsets.symmetric(
+                                      horizontal: 16.w,
+                                      vertical: 12.h,
+                                    ),
                                     actions: [
                                       TextButton(
-                                        onPressed: () => Navigator.pop(ctx, false),
+                                        onPressed: () =>
+                                            Navigator.pop(ctx, false),
                                         child: Text(
                                           context.l10n.commonNo,
                                           style: TextStyle(
@@ -785,10 +867,16 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                                         ),
                                       ),
                                       ElevatedButton(
-                                        onPressed: () => Navigator.pop(ctx, true),
+                                        onPressed: () =>
+                                            Navigator.pop(ctx, true),
                                         style: ElevatedButton.styleFrom(
-                                          backgroundColor: context.colors.accent,
-                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+                                          backgroundColor:
+                                              context.colors.accent,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              16.r,
+                                            ),
+                                          ),
                                           elevation: 0,
                                         ),
                                         child: Text(
@@ -810,12 +898,41 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                                   r.isInCookbook = false;
                                   if (cookbooks != null) {
                                     for (final cb in cookbooks) {
-                                      if (cb.recipes.any((item) => item.id == r.id || (item.name.isNotEmpty && item.name.toLowerCase() == r.name.toLowerCase()))) {
-                                        CookbookService.instance.removeRecipeFromCookbook(cb.id, r.id).catchError((_) => Cookbook(id: '', name: '', recipes: [], createdAt: DateTime.now(), updatedAt: DateTime.now()));
+                                      if (cb.recipes.any(
+                                        (item) =>
+                                            item.id == r.id ||
+                                            (item.name.isNotEmpty &&
+                                                item.name.toLowerCase() ==
+                                                    r.name.toLowerCase()),
+                                      )) {
+                                        CookbookService.instance
+                                            .removeRecipeFromCookbook(
+                                              cb.id,
+                                              r.id,
+                                            )
+                                            .catchError(
+                                              (_) => Cookbook(
+                                                id: '',
+                                                name: '',
+                                                recipes: [],
+                                                createdAt: DateTime.now(),
+                                                updatedAt: DateTime.now(),
+                                              ),
+                                            );
                                       }
                                     }
-                                    final updatedCookbooks = cookbooks.map((cb) {
-                                      final updatedRecipes = cb.recipes.where((item) => item.id != r.id && (item.name.isEmpty || item.name.toLowerCase() != r.name.toLowerCase())).toList();
+                                    final updatedCookbooks = cookbooks.map((
+                                      cb,
+                                    ) {
+                                      final updatedRecipes = cb.recipes
+                                          .where(
+                                            (item) =>
+                                                item.id != r.id &&
+                                                (item.name.isEmpty ||
+                                                    item.name.toLowerCase() !=
+                                                        r.name.toLowerCase()),
+                                          )
+                                          .toList();
                                       return Cookbook(
                                         id: cb.id,
                                         name: cb.name,
@@ -826,29 +943,59 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                                         isPlaceholder: cb.isPlaceholder,
                                       );
                                     }).toList();
-                                    CookbookService.instance.myCookbooksNotifier.value = updatedCookbooks;
+                                    CookbookService
+                                            .instance
+                                            .myCookbooksNotifier
+                                            .value =
+                                        updatedCookbooks;
                                   }
 
                                   if (removeBoth == true) {
                                     // Yes: Remove from Cookbook + Saved Recipes, and unfill heart
                                     r.isFavorite = false;
-                                    RecipeService.instance.markRecipeAsUnsaved(r);
+                                    RecipeService.instance.markRecipeAsUnsaved(
+                                      r,
+                                    );
                                     if (r.id.isNotEmpty) {
-                                      RecipeService.instance.deleteRecipe(r.id, name: r.name).catchError((_) => false);
+                                      RecipeService.instance
+                                          .deleteRecipe(r.id, name: r.name)
+                                          .catchError((_) => false);
                                     }
-                                    final saved = RecipeService.instance.myRecipesNotifier.value;
+                                    final saved = RecipeService
+                                        .instance
+                                        .myRecipesNotifier
+                                        .value;
                                     if (saved != null) {
-                                      RecipeService.instance.myRecipesNotifier.value = saved
-                                          .where((item) => item.id != r.id && (item.name.isEmpty || item.name.toLowerCase() != r.name.toLowerCase()))
+                                      RecipeService
+                                          .instance
+                                          .myRecipesNotifier
+                                          .value = saved
+                                          .where(
+                                            (item) =>
+                                                item.id != r.id &&
+                                                (item.name.isEmpty ||
+                                                    item.name.toLowerCase() !=
+                                                        r.name.toLowerCase()),
+                                          )
                                           .toList();
                                     }
                                     if (context.mounted) {
-                                      IosToast.show(context, message: context.l10n.recipeRemovedBoth, type: ToastType.success);
+                                      IosToast.show(
+                                        context,
+                                        message: context.l10n.recipeRemovedBoth,
+                                        type: ToastType.success,
+                                      );
                                     }
                                   } else {
                                     // No: Remove only from Cookbook, keep it saved/hearted
                                     if (context.mounted) {
-                                      IosToast.show(context, message: context.l10n.recipeRemovedFromCookbook, type: ToastType.success);
+                                      IosToast.show(
+                                        context,
+                                        message: context
+                                            .l10n
+                                            .recipeRemovedFromCookbook,
+                                        type: ToastType.success,
+                                      );
                                     }
                                   }
 
@@ -859,9 +1006,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                                   context: context,
                                   backgroundColor: Colors.transparent,
                                   isScrollControlled: true,
-                                  builder: (_) => AddToCookbookSheet(
-                                    recipe: r,
-                                  ),
+                                  builder: (_) => AddToCookbookSheet(recipe: r),
                                 );
                               }
                             },
@@ -869,20 +1014,29 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                               duration: const Duration(milliseconds: 200),
                               height: 52.h,
                               decoration: BoxDecoration(
-                                color: isAdded ? context.colors.pageBackground : context.colors.accent,
+                                color: isAdded
+                                    ? context.colors.pageBackground
+                                    : context.colors.accent,
                                 borderRadius: BorderRadius.circular(28.r),
                                 border: isAdded
-                                    ? Border.all(color: context.colors.border, width: 1.w)
+                                    ? Border.all(
+                                        color: context.colors.border,
+                                        width: 1.w,
+                                      )
                                     : null,
                               ),
                               child: Center(
                                 child: Text(
-                                  isAdded ? context.l10n.recipeRemoveFromCookbook : context.l10n.recipeAddToCookbook,
+                                  isAdded
+                                      ? context.l10n.recipeRemoveFromCookbook
+                                      : context.l10n.recipeAddToCookbook,
                                   style: TextStyle(
                                     fontFamily: 'Rubik',
                                     fontWeight: FontWeight.w700,
                                     fontSize: 15.sp,
-                                    color: isAdded ? context.colors.textSecondary : Colors.white,
+                                    color: isAdded
+                                        ? context.colors.textSecondary
+                                        : Colors.white,
                                   ),
                                 ),
                               ),
@@ -999,7 +1153,6 @@ class _RecipeDetailHeaderDelegate extends SliverPersistentHeaderDelegate {
               tag: heroTag,
               transitionOnUserGestures: true,
               child: _buildImage(
-                context,
                 img,
                 MediaQuery.of(context).size.width,
                 maxExtent - shrinkOffset,
@@ -1022,15 +1175,17 @@ class _RecipeDetailHeaderDelegate extends SliverPersistentHeaderDelegate {
                   ),
                   border: Border(
                     top: BorderSide(
-                      color: context.colors.border
-                          .withValues(alpha: (1 - progress)),
+                      color: context.colors.border.withValues(
+                        alpha: (1 - progress),
+                      ),
                       width: 1.w,
                     ),
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black
-                          .withValues(alpha: 0.08 * (1 - progress)),
+                      color: Colors.black.withValues(
+                        alpha: 0.08 * (1 - progress),
+                      ),
                       blurRadius: 10,
                       offset: const Offset(0, -4),
                     ),
@@ -1063,7 +1218,9 @@ class _RecipeDetailHeaderDelegate extends SliverPersistentHeaderDelegate {
                       final double titleStartOffset = maxShrinkOffset + 40.h;
                       final double titleEndOffset = titleStartOffset + 25.h;
                       final double opacity = (currentOffset >= titleStartOffset)
-                          ? ((currentOffset - titleStartOffset) / (titleEndOffset - titleStartOffset)).clamp(0.0, 1.0)
+                          ? ((currentOffset - titleStartOffset) /
+                                    (titleEndOffset - titleStartOffset))
+                                .clamp(0.0, 1.0)
                           : 0.0;
 
                       if (opacity <= 0) return const SizedBox.shrink();
@@ -1121,15 +1278,10 @@ class _RecipeDetailHeaderDelegate extends SliverPersistentHeaderDelegate {
     );
   }
 
-  Widget _buildImage(BuildContext context, String path, double width, double height) {
+  Widget _buildImage(String path, double width, double height) {
     const fit = BoxFit.cover;
     if (path.isEmpty) {
-      return Image.asset(
-        'assets/images/recipes.webp',
-        width: width,
-        height: height,
-        fit: fit,
-      );
+      return RecipeImagePlaceholder(width: width, height: height);
     }
     if (path.startsWith('http')) {
       return CachedNetworkImage(
@@ -1137,13 +1289,10 @@ class _RecipeDetailHeaderDelegate extends SliverPersistentHeaderDelegate {
         width: width,
         height: height,
         fit: fit,
-        errorWidget: (_, __, ___) => Image.asset(
-          'assets/images/recipes.webp',
-          width: width,
-          height: height,
-          fit: fit,
-        ),
-        placeholder: (_, __) => const SkeletonBox(borderRadius: BorderRadius.zero),
+        errorWidget: (_, __, ___) =>
+            RecipeImagePlaceholder(width: width, height: height),
+        placeholder: (_, __) =>
+            const SkeletonBox(borderRadius: BorderRadius.zero),
         fadeInDuration: Motion.imageFade,
         fadeOutDuration: Duration.zero,
         fadeInCurve: Motion.enter,
@@ -1154,12 +1303,8 @@ class _RecipeDetailHeaderDelegate extends SliverPersistentHeaderDelegate {
       width: width,
       height: height,
       fit: fit,
-      errorBuilder: (_, __, ___) => Image.asset(
-        'assets/images/recipes.webp',
-        width: width,
-        height: height,
-        fit: fit,
-      ),
+      errorBuilder: (_, __, ___) =>
+          RecipeImagePlaceholder(width: width, height: height),
     );
   }
 }
@@ -1349,7 +1494,10 @@ class _IngredientsList extends StatelessWidget {
                           borderRadius: BorderRadius.circular(10.r),
                         ),
                         alignment: Alignment.center,
-                        child: Text(ing.icon!, style: TextStyle(fontSize: 18.sp)),
+                        child: Text(
+                          ing.icon!,
+                          style: TextStyle(fontSize: 18.sp),
+                        ),
                       ),
                     ] else ...[
                       Container(
@@ -1365,7 +1513,11 @@ class _IngredientsList extends StatelessWidget {
                           borderRadius: BorderRadius.circular(10.r),
                         ),
                         alignment: Alignment.center,
-                        child: Icon(Icons.fastfood_rounded, size: 16.sp, color: const Color(0xFFD97706)),
+                        child: Icon(
+                          Icons.fastfood_rounded,
+                          size: 16.sp,
+                          color: const Color(0xFFD97706),
+                        ),
                       ),
                     ],
                     Expanded(
@@ -1415,7 +1567,8 @@ class _IngredientsList extends StatelessWidget {
             // data. The card scales both figures linearly from this base
             // whenever servings change, instead of recalculating from an
             // already-scaled total.
-            pricePerServing: (totalPrice != null && totalPrice! > 0 && originalServings > 0)
+            pricePerServing:
+                (totalPrice != null && totalPrice! > 0 && originalServings > 0)
                 ? totalPrice! / originalServings
                 : 3.50,
             servings: currentServings,
@@ -1642,7 +1795,10 @@ class _ServingsButton extends StatelessWidget {
 class _SavingsBreakdownCard extends StatelessWidget {
   final double pricePerServing;
   final int servings;
-  const _SavingsBreakdownCard({required this.pricePerServing, required this.servings});
+  const _SavingsBreakdownCard({
+    required this.pricePerServing,
+    required this.servings,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1683,7 +1839,11 @@ class _SavingsBreakdownCard extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Icon(Icons.restaurant_rounded, color: context.colors.textSecondary, size: 18.sp),
+                  Icon(
+                    Icons.restaurant_rounded,
+                    color: context.colors.textSecondary,
+                    size: 18.sp,
+                  ),
                   SizedBox(width: 8.w),
                   Text(
                     context.l10n.recipeOrderingNearby,
@@ -1714,7 +1874,11 @@ class _SavingsBreakdownCard extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Icon(Icons.shopping_cart_outlined, color: context.colors.textSecondary, size: 18.sp),
+                  Icon(
+                    Icons.shopping_cart_outlined,
+                    color: context.colors.textSecondary,
+                    size: 18.sp,
+                  ),
                   SizedBox(width: 8.w),
                   Text(
                     context.l10n.recipeMakingAtHome,

@@ -6,6 +6,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../core/extensions/string_extensions.dart';
 import '../models/recipe.dart';
 import 'skeleton_loader.dart';
+import 'recipe_image_placeholder.dart';
 import 'animated_validation_button.dart';
 import 'standard_plus_button.dart';
 import 'haptic_context_menu.dart';
@@ -69,8 +70,10 @@ class RecipeCard extends StatelessWidget {
   });
 
   String get displayName => (recipe?.name ?? name ?? '').toTitleCase();
-  String get displayTime => recipe != null ? '${recipe!.cookTime} min' : (time ?? '');
-  String get displayKcal => recipe != null ? '${recipe!.kcal} kcal' : (kcal ?? '');
+  String get displayTime =>
+      recipe != null ? '${recipe!.cookTime} min' : (time ?? '');
+  String get displayKcal =>
+      recipe != null ? '${recipe!.kcal} kcal' : (kcal ?? '');
 
   @override
   Widget build(BuildContext context) {
@@ -97,119 +100,105 @@ class RecipeCard extends StatelessWidget {
 
     return RecipeHeroArea(
       child: PressScale(
-      onTap: onTap,
-      onLongPressStart: (onEditTap == null && onShareTap == null && onPinTap == null && onDeleteTap == null && onAddToCookbookTap == null && onRemoveFromCookbookTap == null)
-          ? null
-          : (details) {
-              HapticFeedback.heavyImpact();
-              _showContextMenu(context, details.globalPosition);
-            },
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // ── Photo area ─────────────────────────────────────────────────
-          Expanded(
-            child: Stack(
-              children: [
-                Positioned.fill(
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.all(Radius.circular(12.r)),
-                    child: Container(
-                      width: double.infinity,
-                      height: double.infinity,
-                      color: context.colors.surface,
-                      child: RecipeHeroImage(child: _buildImage(displayImg)),
-                    ),
-                  ),
-                ),
-                // Top-right icon (Validation)
-                if (useValidationIcon)
-                  Positioned(
-                    top: 8.h,
-                    right: 8.w,
-                    child: _buildValidationButton(),
-                  ),
-                if (recipe?.isPinned == true)
-                  Positioned(
-                    top: 4.h,
-                    right: useValidationIcon ? 46.w : 4.w,
-                    child: Container(
-                      padding: EdgeInsets.all(5.r),
-                      child: Icon(
-                        Icons.push_pin_rounded,
-                        size: 16.sp,
-                        color: context.colors.accent,
+        onTap: onTap,
+        onLongPressStart:
+            (onEditTap == null &&
+                onShareTap == null &&
+                onPinTap == null &&
+                onDeleteTap == null &&
+                onAddToCookbookTap == null &&
+                onRemoveFromCookbookTap == null)
+            ? null
+            : (details) {
+                HapticFeedback.heavyImpact();
+                _showContextMenu(context, details.globalPosition);
+              },
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ── Photo area ─────────────────────────────────────────────────
+            Expanded(
+              child: Stack(
+                children: [
+                  Positioned.fill(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.all(Radius.circular(12.r)),
+                      child: Container(
+                        width: double.infinity,
+                        height: double.infinity,
+                        color: context.colors.surface,
+                        child: RecipeHeroImage(child: _buildImage(displayImg)),
                       ),
                     ),
                   ),
-              ],
-            ),
-          ),
-          SizedBox(height: 10.h),
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 4.w),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                if (rank != null) ...[
-                  Text(
-                    '$rank',
-                    style: TextStyle(
-                      fontFamily: 'SF Pro',
-                      fontWeight: FontWeight.bold,
-                      fontSize: 20.sp,
-                      color: context.colors.textMuted,
+                  // Top-right icon (Validation)
+                  if (useValidationIcon)
+                    Positioned(
+                      top: 8.h,
+                      right: 8.w,
+                      child: _buildValidationButton(),
                     ),
-                  ),
-                  SizedBox(width: 8.w),
-                ],
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        displayName,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontFamily: 'SF Pro',
-                          fontWeight: FontWeight.w700,
-                          fontSize: 14.sp,
-                          color: context.colors.textPrimary,
+                  if (recipe?.isPinned == true)
+                    Positioned(
+                      top: 4.h,
+                      right: useValidationIcon ? 46.w : 4.w,
+                      child: Container(
+                        padding: EdgeInsets.all(5.r),
+                        child: Icon(
+                          Icons.push_pin_rounded,
+                          size: 16.sp,
+                          color: context.colors.accent,
                         ),
                       ),
-                      SizedBox(height: 4.h),
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.timer_outlined,
-                            size: 12.sp,
-                            color: context.colors.textMuted,
+                    ),
+                ],
+              ),
+            ),
+            SizedBox(height: 10.h),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 4.w),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  if (rank != null) ...[
+                    Text(
+                      '$rank',
+                      style: TextStyle(
+                        fontFamily: 'SF Pro',
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20.sp,
+                        color: context.colors.textMuted,
+                      ),
+                    ),
+                    SizedBox(width: 8.w),
+                  ],
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          displayName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontFamily: 'SF Pro',
+                            fontWeight: FontWeight.w700,
+                            fontSize: 14.sp,
+                            color: context.colors.textPrimary,
                           ),
-                          SizedBox(width: 4.w),
-                          Flexible(
-                            child: Text(
-                              displayTime,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontFamily: 'SF Pro',
-                                fontSize: 11.sp,
-                                color: context.colors.textMuted,
-                              ),
-                            ),
-                          ),
-                          if (displayKcal.isNotEmpty) ...[
-                            SizedBox(width: 8.w),
+                        ),
+                        SizedBox(height: 4.h),
+                        Row(
+                          children: [
                             Icon(
-                              Icons.local_fire_department_outlined,
+                              Icons.timer_outlined,
                               size: 12.sp,
                               color: context.colors.textMuted,
                             ),
-                            SizedBox(width: 2.w),
+                            SizedBox(width: 4.w),
                             Flexible(
                               child: Text(
-                                displayKcal,
+                                displayTime,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
@@ -219,19 +208,39 @@ class RecipeCard extends StatelessWidget {
                                 ),
                               ),
                             ),
+                            if (displayKcal.isNotEmpty) ...[
+                              SizedBox(width: 8.w),
+                              Icon(
+                                Icons.local_fire_department_outlined,
+                                size: 12.sp,
+                                color: context.colors.textMuted,
+                              ),
+                              SizedBox(width: 2.w),
+                              Flexible(
+                                child: Text(
+                                  displayKcal,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontFamily: 'SF Pro',
+                                    fontSize: 11.sp,
+                                    color: context.colors.textMuted,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ],
-                        ],
-                      ),
-                    ],
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
-    ),
-      );
+    );
   }
 
   void _showContextMenu(BuildContext context, Offset position) {
@@ -239,7 +248,8 @@ class RecipeCard extends StatelessWidget {
       context,
       targetPosition: position,
       actions: [
-        if (onAddToCookbookTap != null && (recipe == null || !recipe!.isInCookbook))
+        if (onAddToCookbookTap != null &&
+            (recipe == null || !recipe!.isInCookbook))
           HapticMenuAction(
             title: context.l10n.recipeAddToCookbook,
             icon: Icons.add_circle_outline_rounded,
@@ -254,8 +264,12 @@ class RecipeCard extends StatelessWidget {
           ),
         if (onPinTap != null)
           HapticMenuAction(
-            title: (recipe?.isPinned == true) ? context.l10n.recipeUnpin : context.l10n.recipePin,
-            icon: (recipe?.isPinned == true) ? Icons.push_pin_rounded : Icons.push_pin_outlined,
+            title: (recipe?.isPinned == true)
+                ? context.l10n.recipeUnpin
+                : context.l10n.recipePin,
+            icon: (recipe?.isPinned == true)
+                ? Icons.push_pin_rounded
+                : Icons.push_pin_outlined,
             onTap: onPinTap!,
           ),
         if (onShareTap != null)
@@ -302,16 +316,16 @@ class RecipeCard extends StatelessWidget {
     final cleanPath = path.replaceAll('"', '').trim();
 
     if (cleanPath.isEmpty || cleanPath == 'null') {
-      return Image.asset('assets/images/recipes.webp', fit: BoxFit.cover);
+      return const RecipeImagePlaceholder();
     }
 
     if (cleanPath.startsWith('http')) {
       return CachedNetworkImage(
         imageUrl: cleanPath,
         fit: BoxFit.cover,
-        errorWidget: (_, __, ___) =>
-            Image.asset('assets/images/recipes.webp', fit: BoxFit.cover),
-        placeholder: (_, __) => const SkeletonBox(borderRadius: BorderRadius.zero),
+        errorWidget: (_, __, ___) => const RecipeImagePlaceholder(),
+        placeholder: (_, __) =>
+            const SkeletonBox(borderRadius: BorderRadius.zero),
         fadeInDuration: Motion.imageFade,
         fadeOutDuration: Duration.zero,
         fadeInCurve: Motion.enter,
@@ -322,8 +336,7 @@ class RecipeCard extends StatelessWidget {
     return Image.asset(
       cleanPath,
       fit: BoxFit.cover,
-      errorBuilder: (_, __, ___) =>
-          Image.asset('assets/images/recipes.webp', fit: BoxFit.cover),
+      errorBuilder: (_, __, ___) => const RecipeImagePlaceholder(),
     );
   }
 }

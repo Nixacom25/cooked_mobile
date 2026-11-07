@@ -5,6 +5,7 @@ import '../models/recipe.dart';
 import '../core/theme/app_theme.dart';
 import '../core/motion/motion_widgets.dart';
 import '../core/l10n/l10n.dart';
+import 'recipe_image_placeholder.dart';
 
 class RecipeHorizontalCard extends StatelessWidget {
   final Recipe? recipe;
@@ -38,211 +39,220 @@ class RecipeHorizontalCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final displayTitle = title ?? recipe?.name ?? context.l10n.commonRecipe;
-    final displaySubtitle = subtitle ??
+    final displaySubtitle =
+        subtitle ??
         (recipe?.origin?.toUpperCase() == 'SCAN'
             ? context.l10n.savingsScannedAtHome
             : recipe != null
-                ? context.l10n.recipeSavedInCookbook
-                : null);
+            ? context.l10n.recipeSavedInCookbook
+            : null);
 
-    final displayTime = time ?? (recipe?.cookTime != null ? '${recipe!.cookTime} min' : null);
-    final displayKcal = kcal ?? (recipe?.kcal != null ? '${recipe!.kcal} kcal' : null);
+    final displayTime =
+        time ?? (recipe?.cookTime != null ? '${recipe!.cookTime} min' : null);
+    final displayKcal =
+        kcal ?? (recipe?.kcal != null ? '${recipe!.kcal} kcal' : null);
     final displayImage = image ?? recipe?.image;
 
-    final isNetwork = displayImage != null &&
+    final isNetwork =
+        displayImage != null &&
         displayImage.isNotEmpty &&
-        (displayImage.startsWith('http://') || displayImage.startsWith('https://'));
+        (displayImage.startsWith('http://') ||
+            displayImage.startsWith('https://'));
     final isAsset = displayImage != null && displayImage.startsWith('assets/');
 
     return RecipeHeroArea(
       child: PressScale(
-      onTap: onTap,
-      child: Container(
-        margin: EdgeInsets.only(bottom: 16.h),
-        height: 140.h,
-        clipBehavior: Clip.antiAlias,
-        decoration: BoxDecoration(
-          color: context.colors.surface,
-          borderRadius: BorderRadius.circular(24.r),
-        ),
-        child: Row(
-          children: [
-            // Left Info Content
-            Expanded(
-              child: Padding(
-                padding: EdgeInsets.fromLTRB(16.w, 14.h, 12.w, 14.h),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    // Top Row (Favorite Heart / Subtitle)
-                    if (onFavoriteTap != null || isFavorite)
-                      GestureDetector(
-                        onTap: onFavoriteTap,
-                        child: Container(
-                          width: 34.r,
-                          height: 34.r,
-                          decoration: const BoxDecoration(
-                            color: Colors.white,
-                            shape: BoxShape.circle,
-                          ),
-                          child: HeartBump(
-                            active: isFavorite,
-                            ringColor: context.colors.accent,
-                            ringSize: 34.r,
-                            iconSize: 18.sp,
-                            child: Icon(
-                              isFavorite
-                                  ? Icons.favorite_rounded
-                                  : Icons.favorite_border_rounded,
-                              size: 18.sp,
-                              color: isFavorite
-                                  ? context.colors.accent
-                                  : context.colors.textMuted,
+        onTap: onTap,
+        child: Container(
+          margin: EdgeInsets.only(bottom: 16.h),
+          height: 140.h,
+          clipBehavior: Clip.antiAlias,
+          decoration: BoxDecoration(
+            color: context.colors.surface,
+            borderRadius: BorderRadius.circular(24.r),
+          ),
+          child: Row(
+            children: [
+              // Left Info Content
+              Expanded(
+                child: Padding(
+                  padding: EdgeInsets.fromLTRB(16.w, 14.h, 12.w, 14.h),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // Top Row (Favorite Heart / Subtitle)
+                      if (onFavoriteTap != null || isFavorite)
+                        GestureDetector(
+                          onTap: onFavoriteTap,
+                          child: Container(
+                            width: 34.r,
+                            height: 34.r,
+                            decoration: const BoxDecoration(
+                              color: Colors.white,
+                              shape: BoxShape.circle,
+                            ),
+                            child: HeartBump(
+                              active: isFavorite,
+                              ringColor: context.colors.accent,
+                              ringSize: 34.r,
+                              iconSize: 18.sp,
+                              child: Icon(
+                                isFavorite
+                                    ? Icons.favorite_rounded
+                                    : Icons.favorite_border_rounded,
+                                size: 18.sp,
+                                color: isFavorite
+                                    ? context.colors.accent
+                                    : context.colors.textMuted,
+                              ),
                             ),
                           ),
-                        ),
-                      )
-                    else if (displaySubtitle != null)
-                      Text(
-                        displaySubtitle,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontFamily: 'Rubik',
-                          fontSize: 12.sp,
-                          fontWeight: FontWeight.w500,
-                          color: context.colors.textSecondary,
-                        ),
-                      ),
-
-                    // Recipe Title
-                    Text(
-                      displayTitle,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontFamily: 'Rubik',
-                        fontSize: 16.sp,
-                        fontWeight: FontWeight.w700,
-                        color: context.colors.textPrimary,
-                        height: 1.2,
-                      ),
-                    ),
-
-                    // Bottom Row Badges (Time/Calorie OR Savings Badge)
-                    if (savingsText != null)
-                      Container(
-                        padding: EdgeInsets.symmetric(
-                            horizontal: 12.w, vertical: 5.h),
-                        decoration: BoxDecoration(
-                          color: isDark ? const Color(0xFF16A34A).withValues(alpha: 0.18) : const Color(0xFFDCFCE7),
-                          borderRadius: BorderRadius.circular(20.r),
-                        ),
-                        child: Text(
-                          savingsText!,
+                        )
+                      else if (displaySubtitle != null)
+                        Text(
+                          displaySubtitle,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                           style: TextStyle(
                             fontFamily: 'Rubik',
                             fontSize: 12.sp,
-                            fontWeight: FontWeight.w700,
-                            color: const Color(0xFF16A34A),
+                            fontWeight: FontWeight.w500,
+                            color: context.colors.textSecondary,
                           ),
                         ),
-                      )
-                    else
-                      Row(
-                        children: [
-                          if (displayTime != null)
-                            _buildPillBadge(
-                              context: context,
-                              icon: Icons.access_time_rounded,
-                              text: displayTime,
-                            ),
-                          if (displayTime != null && displayKcal != null)
-                            SizedBox(width: 8.w),
-                          if (displayKcal != null)
-                            _buildPillBadge(
-                              context: context,
-                              icon: Icons.local_fire_department_rounded,
-                              text: displayKcal,
-                            ),
-                        ],
+
+                      // Recipe Title
+                      Text(
+                        displayTitle,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontFamily: 'Rubik',
+                          fontSize: 16.sp,
+                          fontWeight: FontWeight.w700,
+                          color: context.colors.textPrimary,
+                          height: 1.2,
+                        ),
                       ),
-                  ],
+
+                      // Bottom Row Badges (Time/Calorie OR Savings Badge)
+                      if (savingsText != null)
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 12.w,
+                            vertical: 5.h,
+                          ),
+                          decoration: BoxDecoration(
+                            color: isDark
+                                ? const Color(
+                                    0xFF16A34A,
+                                  ).withValues(alpha: 0.18)
+                                : const Color(0xFFDCFCE7),
+                            borderRadius: BorderRadius.circular(20.r),
+                          ),
+                          child: Text(
+                            savingsText!,
+                            style: TextStyle(
+                              fontFamily: 'Rubik',
+                              fontSize: 12.sp,
+                              fontWeight: FontWeight.w700,
+                              color: const Color(0xFF16A34A),
+                            ),
+                          ),
+                        )
+                      else
+                        Row(
+                          children: [
+                            if (displayTime != null)
+                              _buildPillBadge(
+                                context: context,
+                                icon: Icons.access_time_rounded,
+                                text: displayTime,
+                              ),
+                            if (displayTime != null && displayKcal != null)
+                              SizedBox(width: 8.w),
+                            if (displayKcal != null)
+                              _buildPillBadge(
+                                context: context,
+                                icon: Icons.local_fire_department_rounded,
+                                text: displayKcal,
+                              ),
+                          ],
+                        ),
+                    ],
+                  ),
                 ),
               ),
-            ),
 
-            // Right Image Container with Overlaid Action Chevron
-            Stack(
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.only(
-                    topRight: Radius.circular(24.r),
-                    bottomRight: Radius.circular(24.r),
-                  ),
-                  child: SizedBox(
-                    width: 155.w,
-                    height: double.infinity,
-                    child: RecipeHeroImage(
-                      child: isNetwork
-                        ? CachedNetworkImage(
-                            imageUrl: displayImage,
-                            fit: BoxFit.cover,
-                            errorWidget: (_, __, ___) => Image.asset(
-                              'assets/images/plat4.png',
-                              fit: BoxFit.cover,
-                            ),
-                            placeholder: (_, __) => const SkeletonBox(borderRadius: BorderRadius.zero),
-                            fadeInDuration: Motion.imageFade,
-                            fadeOutDuration: Duration.zero,
-                            fadeInCurve: Motion.enter,
-                          )
-                        : isAsset
+              // Right Image Container with Overlaid Action Chevron
+              Stack(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.only(
+                      topRight: Radius.circular(24.r),
+                      bottomRight: Radius.circular(24.r),
+                    ),
+                    child: SizedBox(
+                      width: 155.w,
+                      height: double.infinity,
+                      child: RecipeHeroImage(
+                        child: isNetwork
+                            ? CachedNetworkImage(
+                                imageUrl: displayImage,
+                                fit: BoxFit.cover,
+                                errorWidget: (_, __, ___) =>
+                                    const RecipeImagePlaceholder(),
+                                placeholder: (_, __) => const SkeletonBox(
+                                  borderRadius: BorderRadius.zero,
+                                ),
+                                fadeInDuration: Motion.imageFade,
+                                fadeOutDuration: Duration.zero,
+                                fadeInCurve: Motion.enter,
+                              )
+                            : isAsset
                             ? Image.asset(
                                 displayImage,
                                 fit: BoxFit.cover,
-                                errorBuilder: (_, __, ___) => Container(
-                                  color: context.colors.pageBackground,
-                                  child: Icon(Icons.restaurant,
-                                      color: Colors.grey[400]),
-                                ),
+                                errorBuilder: (_, __, ___) =>
+                                    const RecipeImagePlaceholder(),
                               )
-                            : Image.asset(
-                                'assets/images/plat4.png',
-                                fit: BoxFit.cover,
-                              ),
-                    ),
-                  ),
-                ),
-                if (showChevron)
-                  Positioned(
-                    top: 12.h,
-                    right: 12.w,
-                    child: Container(
-                      width: 32.r,
-                      height: 32.r,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.9),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        Icons.chevron_right_rounded,
-                        size: 20.sp,
-                        color: context.colors.textPrimary,
+                            : const RecipeImagePlaceholder(),
                       ),
                     ),
                   ),
-              ],
-            ),
-          ],
+                  if (showChevron)
+                    Positioned(
+                      top: 12.h,
+                      right: 12.w,
+                      child: Container(
+                        width: 32.r,
+                        height: 32.r,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.9),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.chevron_right_rounded,
+                          size: 20.sp,
+                          color: context.colors.textPrimary,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
-    ),
-      );
+    );
   }
 
-  Widget _buildPillBadge({required BuildContext context, required IconData icon, required String text}) {
+  Widget _buildPillBadge({
+    required BuildContext context,
+    required IconData icon,
+    required String text,
+  }) {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
       decoration: BoxDecoration(
