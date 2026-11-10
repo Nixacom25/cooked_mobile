@@ -384,7 +384,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsDeleteAccountConfirm =>
-      'Are you sure you want to permanently delete your account? This action cannot be undone and you will lose all your data (Cookbooks, grocery items, etc.).';
+      'Your account and all your data (cookbooks, grocery items, etc.) will be permanently deleted in 30 days. Changed your mind? Just log in again before then to keep everything.';
 
   @override
   String get settingsDeleteAccount => 'Delete Account';

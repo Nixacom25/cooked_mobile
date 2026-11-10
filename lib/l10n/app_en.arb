@@ -139,7 +139,7 @@
   "notifPush": "Push Notifications",
   "settingsNotifications": "Notifications",
   "settingsDeletePermanently": "Delete permanently",
-  "settingsDeleteAccountConfirm": "Are you sure you want to permanently delete your account? This action cannot be undone and you will lose all your data (Cookbooks, grocery items, etc.).",
+  "settingsDeleteAccountConfirm": "Your account and all your data (cookbooks, grocery items, etc.) will be permanently deleted in 30 days. Changed your mind? Just log in again before then to keep everything.",
   "settingsDeleteAccount": "Delete Account",
   "settingsLogout": "Logout",
   "settingsLogoutConfirm": "Are you sure you want to log out of your account? You will need to enter your credentials to log back in.",

@@ -811,7 +811,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsDeleteAccountConfirm.
   ///
   /// In en, this message translates to:
-  /// **'Are you sure you want to permanently delete your account? This action cannot be undone and you will lose all your data (Cookbooks, grocery items, etc.).'**
+  /// **'Your account and all your data (cookbooks, grocery items, etc.) will be permanently deleted in 30 days. Changed your mind? Just log in again before then to keep everything.'**
   String get settingsDeleteAccountConfirm;
 
   /// No description provided for @settingsDeleteAccount.

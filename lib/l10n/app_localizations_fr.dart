@@ -388,7 +388,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get settingsDeleteAccountConfirm =>
-      'Voulez-vous vraiment supprimer définitivement votre compte ? Cette action est irréversible et toutes vos données seront perdues (livres de recettes, liste de courses, etc.).';
+      'Votre compte et toutes vos données (livres de recettes, liste de courses, etc.) seront définitivement supprimés dans 30 jours. Vous changez d’avis ? Reconnectez-vous avant pour tout conserver.';
 
   @override
   String get settingsDeleteAccount => 'Supprimer le compte';

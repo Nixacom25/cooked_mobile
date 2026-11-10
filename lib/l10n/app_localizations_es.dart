@@ -386,7 +386,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get settingsDeleteAccountConfirm =>
-      '¿Seguro que quieres eliminar tu cuenta de forma permanente? Esta acción no se puede deshacer y perderás todos tus datos (recetarios, lista de la compra, etc.).';
+      'Tu cuenta y todos tus datos (recetarios, lista de la compra, etc.) se eliminarán de forma permanente en 30 días. ¿Cambias de idea? Vuelve a iniciar sesión antes para conservarlo todo.';
 
   @override
   String get settingsDeleteAccount => 'Eliminar cuenta';
