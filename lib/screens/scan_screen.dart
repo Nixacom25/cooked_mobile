@@ -15,6 +15,7 @@ import '../services/user_service.dart';
 import '../widgets/skeleton_loader.dart';
 import '../widgets/glass_icon_button.dart';
 import '../widgets/ingredient_icon.dart';
+import '../widgets/scan_recipe_photo.dart';
 import '../widgets/loading_text.dart';
 import '../widgets/app_loading_indicator.dart';
 import '../widgets/skeleton_list.dart';
@@ -328,6 +329,9 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin, 
           _overlayGeneratedRecipes = generatedRecipes;
         });
       }
+
+      // Photos are being generated server side: start loading them now.
+      if (mounted) ScanRecipePhoto.precache(context, generatedRecipes.map((r) => r.image));
 
       // Save to temporary home suggestions for 3 days
       RecipeService.instance.saveScanResults(generatedRecipes);
@@ -1856,28 +1860,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin, 
               child: SizedBox(
                 height: 200.h,
                 width: double.infinity,
-                child: (recipe.image != null && recipe.image!.isNotEmpty)
-                    ? (recipe.image!.startsWith('http')
-                        ? Image.network(
-                            recipe.image!,
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => Image.asset(
-                              'assets/images/plat1.png',
-                              fit: BoxFit.cover,
-                            ),
-                          )
-                        : Image.asset(
-                            recipe.image!,
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => Image.asset(
-                              'assets/images/plat1.png',
-                              fit: BoxFit.cover,
-                            ),
-                          ))
-                    : Image.asset(
-                        'assets/images/plat1.png',
-                        fit: BoxFit.cover,
-                      ),
+                child: ScanRecipePhoto(url: recipe.image),
               ),
             ),
 
@@ -2222,6 +2205,10 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin, 
           _overlayGeneratedRecipes = generatedRecipes;
         });
       }
+
+      // Photos are being generated server side: start loading them now,
+      // during the results animation.
+      if (mounted) ScanRecipePhoto.precache(context, generatedRecipes.map((r) => r.image));
 
       RecipeService.instance.saveScanResults(generatedRecipes);
     } catch (e) {
