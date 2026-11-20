@@ -14,6 +14,7 @@ import '../services/recipe_service.dart';
 import '../services/user_service.dart';
 import '../widgets/skeleton_loader.dart';
 import '../widgets/glass_icon_button.dart';
+import '../widgets/ingredient_icon.dart';
 import '../widgets/loading_text.dart';
 import '../widgets/app_loading_indicator.dart';
 import '../widgets/skeleton_list.dart';
@@ -2028,14 +2029,25 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin, 
                           color: context.colors.surface,
                           borderRadius: BorderRadius.circular(16.r),
                         ),
-                        child: Text(
-                          '${_getEmojiForIngredient(ingName)} ${_capitalize(ingName)}',
-                          style: TextStyle(
-                            fontFamily: 'Rubik',
-                            fontSize: 12.sp,
-                            fontWeight: FontWeight.w600,
-                            color: context.colors.textPrimary,
-                          ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IngredientIcon(
+                              name: ingName,
+                              size: 18.r,
+                              fallbackEmoji: _getEmojiForIngredient(ingName),
+                            ),
+                            SizedBox(width: 5.w),
+                            Text(
+                              _capitalize(ingName),
+                              style: TextStyle(
+                                fontFamily: 'Rubik',
+                                fontSize: 12.sp,
+                                fontWeight: FontWeight.w600,
+                                color: context.colors.textPrimary,
+                              ),
+                            ),
+                          ],
                         ),
                       );
                     }).toList(),

@@ -1,6 +1,7 @@
 import 'core/api_config.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'services/app_events_service.dart';
+import 'services/ingredient_catalog_service.dart';
 import 'package:cooked/services/auth_service.dart';
 import 'package:cooked/services/revenuecat_service.dart';
 import 'package:cooked/services/error_monitoring_service.dart';
@@ -112,6 +113,8 @@ Future<void> _startApp() async {
   });
   await ErrorMonitoringService.instance.initialize();
   await PostHogService.instance.init();
+  // Ingredient art: cached catalog first, newer published version in the background (not awaited).
+  IngredientCatalogService.instance.ensureLoaded();
   UserService.instance.currentUserNotifier.addListener(() {
     PostHogService.instance.syncUser(
       UserService.instance.currentUserNotifier.value?['id']?.toString(),
