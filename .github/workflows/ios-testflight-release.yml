@@ -7,8 +7,10 @@ on:
 
 jobs:
   build:
-    runs-on: macos-15
-    
+    # macOS 26 image: ships Xcode 27 (iOS 27 SDK). App Store Connect warning 90725:
+    # from April 2027 uploads must be built with the iOS 27 SDK or later.
+    runs-on: macos-26
+
     steps:
     - uses: actions/checkout@v4
 
@@ -16,18 +18,19 @@ jobs:
       run: |
         echo "Recherche des versions de Xcode disponibles..."
         ls -d /Applications/Xcode*.app
-        
-        # On cherche la version 26. Si pas trouvé, on prend la plus récente
-        XCODE_PATH=$(ls -d /Applications/Xcode_26*.app 2>/dev/null | tail -n 1)
-        
+
+        # Xcode 27 (iOS 27 SDK) en priorité, sinon la version la plus récente.
+        XCODE_PATH=$(ls -d /Applications/Xcode_27*.app 2>/dev/null | grep -viE "beta|_RC" | sort -V | tail -n 1)
+
         if [ -z "$XCODE_PATH" ]; then
-          echo "Xcode 26 non trouvé. Recherche de la version la plus haute disponible..."
+          echo "::warning::Xcode 27 introuvable sur ce runner : Apple affichera l'avertissement 90725 (SDK iOS 27 requis)."
           XCODE_PATH=$(ls -d /Applications/Xcode*.app | sort -V | tail -n 1)
         fi
-        
+
         echo "✅ Xcode sélectionné : $XCODE_PATH"
         sudo xcode-select -s "$XCODE_PATH/Contents/Developer"
         xcodebuild -version
+        xcodebuild -showsdks | grep -i iphoneos
 
     - name: Install the Apple certificate and provisioning profile
       env:
