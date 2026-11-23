@@ -7,30 +7,33 @@ on:
 
 jobs:
   build:
-    # macOS 26 image: ships Xcode 27 (iOS 27 SDK). App Store Connect warning 90725:
-    # from April 2027 uploads must be built with the iOS 27 SDK or later.
-    runs-on: macos-26
+    # Xcode 27 image (macOS 27, Apple Silicon): the only GitHub-hosted runner with the iOS 27 SDK.
+    # App Store Connect warning 90725: from April 2027 uploads must be built with the iOS 27 SDK or later.
+    # (macos-26 tops out at the iOS 26.5 SDK, which is why builds 113-117 still got the warning.)
+    runs-on: xcode-27
 
     steps:
     - uses: actions/checkout@v4
 
-    - name: Select Latest Xcode Version
+    - name: Select Xcode 27 (iOS 27 SDK)
       run: |
-        echo "Recherche des versions de Xcode disponibles..."
         ls -d /Applications/Xcode*.app
-
-        # Xcode 27 (iOS 27 SDK) en priorité, sinon la version la plus récente.
+        # Highest stable Xcode 27.x (betas/RC cannot upload to App Store Connect).
         XCODE_PATH=$(ls -d /Applications/Xcode_27*.app 2>/dev/null | grep -viE "beta|_RC" | sort -V | tail -n 1)
-
         if [ -z "$XCODE_PATH" ]; then
-          echo "::warning::Xcode 27 introuvable sur ce runner : Apple affichera l'avertissement 90725 (SDK iOS 27 requis)."
-          XCODE_PATH=$(ls -d /Applications/Xcode*.app | sort -V | tail -n 1)
+          echo "::error::Xcode 27 not found on this runner."
+          exit 1
         fi
-
-        echo "✅ Xcode sélectionné : $XCODE_PATH"
+        echo "Selected: $XCODE_PATH"
         sudo xcode-select -s "$XCODE_PATH/Contents/Developer"
         xcodebuild -version
-        xcodebuild -showsdks | grep -i iphoneos
+        # Guard: never ship an IPA built with an older SDK again (ITMS-90725).
+        SDK=$(xcrun --sdk iphoneos --show-sdk-version)
+        echo "iOS SDK: $SDK"
+        if [ "${SDK%%.*}" -lt 27 ]; then
+          echo "::error::iOS SDK $SDK < 27: App Store Connect would flag ITMS-90725."
+          exit 1
+        fi
 
     - name: Install the Apple certificate and provisioning profile
       env:

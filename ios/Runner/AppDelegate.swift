@@ -3,21 +3,23 @@ import UIKit
 import UserNotifications
 
 @main
-@objc class AppDelegate: FlutterAppDelegate {
+@objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
   override func application(
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
-    GeneratedPluginRegistrant.register(with: self)
-    
-    // Configure notification center delegate for iOS
-    if #available(iOS 10.0, *) {
-      UNUserNotificationCenter.current().delegate = self
-    }
-    
-    let controller : FlutterViewController = window?.rootViewController as! FlutterViewController
+    // Must be set before launch finishes (UIScene lifecycle, iOS 27 SDK).
+    UNUserNotificationCenter.current().delegate = self
+    return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+  }
+
+  /// UIScene lifecycle: the window / FlutterViewController do not exist yet in didFinishLaunching,
+  /// so plugins and channels are registered on the implicit engine here.
+  func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {
+    GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
+
     let clipboardChannel = FlutterMethodChannel(name: "com.cooked.app/clipboard",
-                                              binaryMessenger: controller.binaryMessenger)
+                                                binaryMessenger: engineBridge.applicationRegistrar.messenger())
     clipboardChannel.setMethodCallHandler({
       (call: FlutterMethodCall, result: @escaping FlutterResult) -> Void in
       if call.method == "hasWebURL" {
@@ -43,12 +45,6 @@ import UserNotifications
         result(FlutterMethodNotImplemented)
       }
     })
-
-    return super.application(application, didFinishLaunchingWithOptions: launchOptions)
-  }
-
-  override func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey : Any] = [:]) -> Bool {
-    return super.application(app, open: url, options: options)
   }
 }
 
