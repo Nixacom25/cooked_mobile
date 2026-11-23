@@ -7,6 +7,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../core/extensions/string_extensions.dart';
 import '../../models/recipe.dart';
+import '../../widgets/ingredient_icon.dart';
 import '../../widgets/glass_icon_button.dart';
 import '../../services/recipe_service.dart';
 import '../../services/error_monitoring_service.dart';
@@ -1482,44 +1483,26 @@ class _IngredientsList extends StatelessWidget {
                 padding: EdgeInsets.symmetric(vertical: 12.h),
                 child: Row(
                   children: [
-                    if (ing.icon != null && ing.icon!.isNotEmpty) ...[
-                      Container(
-                        width: 32.w,
-                        height: 32.w,
-                        margin: EdgeInsets.only(right: 12.w),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).brightness == Brightness.dark
-                              ? const Color(0xFFD97706).withValues(alpha: 0.18)
-                              : const Color(0xFFFFF6D6),
-                          borderRadius: BorderRadius.circular(10.r),
-                        ),
-                        alignment: Alignment.center,
-                        child: Text(
-                          ing.icon!,
-                          style: TextStyle(fontSize: 18.sp),
-                        ),
+                    Container(
+                      width: 32.w,
+                      height: 32.w,
+                      margin: EdgeInsets.only(right: 12.w),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? const Color(0xFFD97706).withValues(alpha: 0.18)
+                            : const Color(0xFFFFF6D6),
+                        borderRadius: BorderRadius.circular(10.r),
                       ),
-                    ] else ...[
-                      Container(
-                        width: 32.w,
-                        height: 32.w,
-                        margin: EdgeInsets.only(right: 12.w),
-                        decoration: BoxDecoration(
-                          // Light mode keeps the original cream (0xFFFAF5E8)
-                          // exactly as designed; only dark mode gets pageBackground.
-                          color: Theme.of(context).brightness == Brightness.dark
-                              ? context.colors.pageBackground
-                              : const Color(0xFFFAF5E8),
-                          borderRadius: BorderRadius.circular(10.r),
-                        ),
-                        alignment: Alignment.center,
-                        child: Icon(
-                          Icons.fastfood_rounded,
-                          size: 16.sp,
-                          color: const Color(0xFFD97706),
-                        ),
+                      alignment: Alignment.center,
+                      // Catalog drawing of the ingredient; the stored emoji / generic icon only before any catalog loads.
+                      child: IngredientIcon(
+                        name: ing.name,
+                        size: 24.w,
+                        fallback: ing.icon != null && ing.icon!.isNotEmpty
+                            ? Text(ing.icon!, style: TextStyle(fontSize: 18.sp))
+                            : Icon(Icons.fastfood_rounded, size: 16.sp, color: const Color(0xFFD97706)),
                       ),
-                    ],
+                    ),
                     Expanded(
                       flex: 3,
                       child: Text(

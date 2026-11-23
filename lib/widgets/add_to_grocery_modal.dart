@@ -1,3 +1,4 @@
+import 'ingredient_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../models/recipe.dart';
@@ -301,9 +302,13 @@ class _AddToGroceryModalState extends State<AddToGroceryModal> {
                             color: context.colors.textSecondary,
                           ),
                         ),
-                        secondary: ing.icon != null && ing.icon!.isNotEmpty
-                            ? Text(ing.icon!, style: TextStyle(fontSize: 18.sp))
-                            : null,
+                        secondary: IngredientIcon(
+                          name: ing.name,
+                          size: 30.r,
+                          fallback: ing.icon != null && ing.icon!.isNotEmpty
+                              ? Text(ing.icon!, style: TextStyle(fontSize: 18.sp))
+                              : const SizedBox.shrink(),
+                        ),
                       );
                     },
                   ),

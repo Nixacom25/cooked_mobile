@@ -10,6 +10,7 @@ import '../services/ingredient_service.dart';
 import '../models/grocery_item.dart';
 import '../models/recipe.dart';
 import '../core/widgets/ios_toast.dart';
+import '../widgets/ingredient_icon.dart';
 import '../widgets/app_top_header.dart';
 import '../widgets/red_header_background.dart';
 import '../core/utils/error_helper.dart';
@@ -791,13 +792,14 @@ class _ItemRow extends StatelessWidget {
               children: [
                 _AnimatedCheckbox(isBought: item.isBought),
                 SizedBox(width: 14.w),
-                if (item.ingredientIcon != null && item.ingredientIcon!.isNotEmpty) ...[
-                  Text(
-                    item.ingredientIcon!,
-                    style: TextStyle(fontSize: 16.sp),
-                  ),
-                  SizedBox(width: 8.w),
-                ],
+                IngredientIcon(
+                  name: item.ingredientName,
+                  size: 26.r,
+                  fallback: item.ingredientIcon != null && item.ingredientIcon!.isNotEmpty
+                      ? Text(item.ingredientIcon!, style: TextStyle(fontSize: 16.sp))
+                      : const SizedBox.shrink(),
+                ),
+                SizedBox(width: 8.w),
                 Expanded(
                   flex: 3,
                   child: AnimatedDefaultTextStyle(
@@ -1327,6 +1329,8 @@ class _AddGrocerySheetState extends State<_AddGrocerySheet> {
                           final name = (ing['name'] ?? '').toString().toTitleCase();
                           return ListTile(
                             dense: true,
+                            leading: IngredientIcon(name: name, size: 26.r),
+                            minLeadingWidth: 26.r,
                             title: Text(
                               name,
                               style: TextStyle(

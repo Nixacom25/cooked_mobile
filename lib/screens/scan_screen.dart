@@ -1338,6 +1338,8 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin, 
                           final item = _suggestedIngredients[i];
                           return ListTile(
                             dense: true,
+                            leading: IngredientIcon(name: (item['name'] ?? '').toString(), size: 26.r),
+                            minLeadingWidth: 26.r,
                             title: Text(_capitalize(item['name'] ?? '')),
                             onTap: () {
                               _ingCtrl.text = _capitalize(item['name'] ?? '');
@@ -1414,13 +1416,20 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin, 
                                 borderRadius: BorderRadius.circular(20.r),
                                 border: Border.all(color: context.colors.border),
                               ),
-                              child: Text(
-                                name,
-                                style: TextStyle(
-                                  color: context.colors.textPrimary,
-                                  fontSize: 13.sp,
-                                  fontWeight: FontWeight.w500,
-                                ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  IngredientIcon(name: name.toString(), size: 18.r),
+                                  SizedBox(width: 6.w),
+                                  Text(
+                                    name,
+                                    style: TextStyle(
+                                      color: context.colors.textPrimary,
+                                      fontSize: 13.sp,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           );
@@ -1610,6 +1619,14 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin, 
                 ),
               ),
 
+            Padding(
+              padding: EdgeInsets.only(right: 12.w),
+              child: IngredientIcon(
+                name: name,
+                size: 32.r,
+                fallbackEmoji: icon != null && icon.isNotEmpty ? icon : _getEmojiForIngredient(name),
+              ),
+            ),
             Expanded(
               child: Text(
                 name,

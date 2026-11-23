@@ -21,6 +21,7 @@ class IngredientCatalogService {
 
   Map<String, String> _hashByKey = const {};
   Map<String, String> _art = const {};
+  String? _genericSvg;
   int _version = 0;
   final Map<String, String?> _resolved = {};
   Future<void>? _loading;
@@ -30,6 +31,12 @@ class IngredientCatalogService {
 
   /// Loads the cached catalog, then checks once per app run for a newer one. Safe to call often.
   Future<void> ensureLoaded() => _loading ??= _load();
+
+  /// True once a catalog (cached or downloaded) is available.
+  bool get isReady => _art.isNotEmpty;
+
+  /// The catalog's generic ingredient drawing, used when a name matches no catalog ingredient.
+  String? get genericSvg => _genericSvg;
 
   /// The SVG for this ingredient name, or null when the catalog has no art for it.
   String? svgFor(String name) {
@@ -67,6 +74,7 @@ class IngredientCatalogService {
     if (c == null) return;
     _hashByKey = c.hashByKey;
     _art = c.art;
+    _genericSvg = c.genericHash == null ? null : c.art[c.genericHash];
     _version = c.version;
     _resolved.clear();
     revision.value++;
@@ -134,7 +142,8 @@ class _Catalog {
   final int version;
   final Map<String, String> hashByKey;
   final Map<String, String> art;
-  const _Catalog(this.version, this.hashByKey, this.art);
+  final String? genericHash;
+  const _Catalog(this.version, this.hashByKey, this.art, this.genericHash);
 }
 
 /// Runs in a background isolate: the manifest is a few MB.
@@ -144,20 +153,24 @@ _Catalog? _parse(String body) {
   final art = <String, String>{};
   final rawArt = root['art'];
   if (rawArt is Map) rawArt.forEach((k, v) => art['$k'] = '$v');
+  final fallback = root['fallback']?.toString();
+  String? genericHash;
   final byKey = <String, String>{};
   for (final item in (root['ingredients'] as List? ?? const [])) {
     if (item is! Map) continue;
     final hash = item['hash']?.toString();
     if (hash == null) continue;
+    if (fallback != null && item['id']?.toString() == fallback) genericHash = hash;
     if (!art.containsKey(hash) && item['svg'] is String) art[hash] = item['svg']; // format 1
     if (!art.containsKey(hash)) continue;
     for (final k in (item['keys'] as List? ?? const [])) {
       byKey.putIfAbsent('$k', () => hash);
     }
   }
-  final fallback = root['fallback']?.toString();
-  byKey.remove(fallback); // the generic drawing is not a match for every name
-  return _Catalog((root['version'] as num?)?.toInt() ?? 0, byKey, art);
+  // The generic drawing is not a match for every name, but it replaces the emoji for unknown ones.
+  if (fallback != null) genericHash ??= byKey.remove(fallback);
+  byKey.removeWhere((_, h) => h == genericHash);
+  return _Catalog((root['version'] as num?)?.toInt() ?? 0, byKey, art, genericHash);
 }
 
 /// Same normalization as the backend's IngredientKeys: case, accent and simple-plural insensitive.
