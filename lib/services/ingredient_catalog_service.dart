@@ -25,12 +25,24 @@ class IngredientCatalogService {
   int _version = 0;
   final Map<String, String?> _resolved = {};
   Future<void>? _loading;
+  DateTime? _lastTry;
+
+  /// After a failed check (offline, server error, nothing served yet), wait this long before asking again.
+  static const _retryAfter = Duration(minutes: 2);
 
   /// Words that are usually a unit or a second ingredient ("garlic cloves", "salt pork"), never preferred.
   static const _weak = {'clove', 'salt', 'sprig', 'stick', 'sheet', 'strip', 'water', 'ice'};
 
-  /// Loads the cached catalog, then checks once per app run for a newer one. Safe to call often.
-  Future<void> ensureLoaded() => _loading ??= _load();
+  /// Loads the cached catalog, then checks once per app run for a newer one. Safe to call often:
+  /// when the check failed, the next call after [_retryAfter] tries again, so icons appear without a restart.
+  Future<void> ensureLoaded() {
+    final pending = _loading;
+    if (pending != null) return pending;
+    final last = _lastTry;
+    if (last != null && DateTime.now().difference(last) < _retryAfter) return Future.value();
+    _lastTry = DateTime.now();
+    return _loading = _load();
+  }
 
   /// True once a catalog (cached or downloaded) is available.
   bool get isReady => _art.isNotEmpty;
@@ -49,19 +61,29 @@ class IngredientCatalogService {
 
   Future<void> _load() async {
     final file = await _cacheFile();
-    try {
-      if (file != null && await file.exists()) _apply(await compute(_parse, await file.readAsString()));
-    } catch (e) {
-      debugPrint('Ingredient catalog cache unreadable: $e');
+    if (_art.isEmpty) {
+      try {
+        if (file != null && await file.exists()) _apply(await compute(_parse, await file.readAsString()));
+      } catch (e) {
+        debugPrint('Ingredient catalog cache unreadable: $e');
+      }
     }
     try {
       final res = await http
           .get(Uri.parse('${ApiConfig.baseUrl}/public/ingredient-catalog/manifest'), headers: ApiConfig.clientHeaders)
           .timeout(const Duration(seconds: 30));
-      if (res.statusCode != 200) return;
+      if (res.statusCode != 200) {
+        debugPrint('Ingredient catalog not served (HTTP ${res.statusCode})');
+        _loading = null; // asked again later (see ensureLoaded)
+        return;
+      }
       final body = utf8.decode(res.bodyBytes);
       final parsed = await compute(_parse, body);
-      if (parsed == null || parsed.version <= _version) return;
+      if (parsed == null) {
+        _loading = null;
+        return;
+      }
+      if (parsed.version <= _version) return;
       _apply(parsed);
       await file?.writeAsString(body, flush: true);
     } catch (e) {
